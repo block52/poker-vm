@@ -1,0 +1,8 @@
+{
+  "name": "poker-vm",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:bitcoinbrisbane/poker-vm.git",
+  "author": "Lucas Cullen <lucas@bitcoinbrisbane.com.au>",
+  "license": "MIT"
+}
