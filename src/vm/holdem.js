@@ -1,9 +1,11 @@
-class Table {
+class Holdem {
   _maxPlayers = 9;
   _deck = [];
+  _nextToAct = 0;
 
   constructor(maxPlayers) {
     this.players = [];
+    this._maxPlayers = maxPlayers || 9;
   }
 
   addPlayer(player) {
@@ -26,5 +28,9 @@ class Table {
     this.players.forEach((player) => {
       player.hand = ["2c", "3c"];
     });
+  }
+
+  performAction(player, action) {
+    // Perform an action
   }
 }
