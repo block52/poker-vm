@@ -6,7 +6,7 @@
   "author": "Lucas Cullen <lucas@bitcoinbrisbane.com.au>",
   "license": "MIT",
   "scripts": {
-    "start": "bun run index.js"
+    "start": "bun run src/index.js"
   },
   "devDependencies": {
     "@types/bun": "latest"

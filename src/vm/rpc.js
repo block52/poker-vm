@@ -4,11 +4,21 @@ const cors = require("cors");
 
 const app = express();
 
+const Contract = require("./models/contract");
+
 app.use(cors());
 app.use(bodyParser.json());
 
 app.post("/rpc", (req, res) => {
   const { method, params } = req.body;
+
+  const data = params?.data;
+
+  if (!data) {
+    return res.status(400).json({ error: "Data is required" });
+  }
+
+  
 
   //   switch (method) {
   //     case "add":
@@ -23,7 +33,6 @@ app.post("/rpc", (req, res) => {
   //       return res.status(404).json({ error: "Method not found" });
   //   }
 
-
   switch (method) {
     case "join":
       return res.json({ result: holdem.addPlayer(params[0]) });
@@ -33,6 +42,6 @@ app.post("/rpc", (req, res) => {
       return res.status(404).json({ error: "Method not found" });
   }
 
-//   const result = rpc[method](...params);
-//   res.json({ result });
+  //   const result = rpc[method](...params);
+  //   res.json({ result });
 });
