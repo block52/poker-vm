@@ -18,8 +18,6 @@ app.post("/rpc", (req, res) => {
     return res.status(400).json({ error: "Data is required" });
   }
 
-  
-
   //   switch (method) {
   //     case "add":
   //       return res.json({ result: params[0] + params[1] });
@@ -34,6 +32,8 @@ app.post("/rpc", (req, res) => {
   //   }
 
   switch (method) {
+    case "transfer":
+
     case "join":
       return res.json({ result: holdem.addPlayer(params[0]) });
     case "deal":
