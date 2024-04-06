@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const blockSchema = new mongoose.Schema({
+const accountSchema = new mongoose.Schema({
   address: {
     required: true,
     type: String,
@@ -11,4 +11,4 @@ const blockSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Block", blockSchema);
+module.exports = mongoose.model("Account", accountSchema);

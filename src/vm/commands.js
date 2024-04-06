@@ -1,7 +1,7 @@
 const Account = require("./account");
 
-const sendCommand = (amount, to, from) => {
-  const fromAccount = Account.findOne({ address: from });
+const sendCommand = async (amount, to, from) => {
+  const fromAccount = await Account.findOne({ address: from });
 
   if (!fromAccount) {
     throw new Error("Account not found");
@@ -9,6 +9,18 @@ const sendCommand = (amount, to, from) => {
 
   if (fromAccount.balance < amount) {
     throw new Error("Insufficient funds");
+  }
+
+  const toAccount = await Account.findOne({ address: to });
+  if (!toAccount) {
+    const account = new Account({
+      address: to,
+      balance: amount,
+    });
+    await account.save();
+  } else {
+    toAccount.balance += amount;
+    await toAccount.save();
   }
 
   console.log(`Sending ${amount} from ${from} to ${to}`);
