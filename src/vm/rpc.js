@@ -5,6 +5,7 @@ const cors = require("cors");
 const app = express();
 
 const Contract = require("./models/contract");
+const { verify_signature } = require("./crypto_utils");
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -16,6 +17,13 @@ app.post("/rpc", (req, res) => {
 
   if (!data) {
     return res.status(400).json({ error: "Data is required" });
+  }
+
+  const account = params?.account;
+  const signature = params?.signature;
+
+  if (!verify_signature(account, signature, data)) {
+    return res.status(401).json({ error: "Invalid signature" });
   }
 
   //   switch (method) {

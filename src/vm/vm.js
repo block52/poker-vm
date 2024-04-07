@@ -1,7 +1,16 @@
 const fs = require("fs");
 
+const account = require("./account");
+
 class VM {
   blocks = [];
+
+  async getAccountNonce(account) {
+    const query = { account };
+    const height = await account.countDocuments(query);
+
+    return height;
+  }
 
   addTx(nonce, action, signature) {
     // Create a new transaction
