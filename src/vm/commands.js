@@ -1,6 +1,6 @@
 const Account = require("./account");
 
-const sendCommand = async (amount, to, from) => {
+const transferCommand = async (amount, to, from) => {
   const fromAccount = await Account.findOne({ address: from });
 
   if (!fromAccount) {
@@ -26,4 +26,4 @@ const sendCommand = async (amount, to, from) => {
   console.log(`Sending ${amount} from ${from} to ${to}`);
 };
 
-export { sendCommand };
+export { transferCommand };
