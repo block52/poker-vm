@@ -40,6 +40,8 @@ app.post("/rpc", (req, res) => {
   //   }
 
   switch (method) {
+    case "shuffle":
+      
     case "transfer":
 
     case "join":
