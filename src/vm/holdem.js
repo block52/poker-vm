@@ -3,6 +3,8 @@ class Holdem {
   _deck = [];
   _nextToAct = 0;
 
+  _actions = ["fold", "check", "call", "bet", "raise"];
+
   constructor(maxPlayers) {
     this.players = [];
     this._maxPlayers = maxPlayers || 9;

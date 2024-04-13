@@ -4,7 +4,8 @@ const cors = require("cors");
 
 const app = express();
 
-const Contract = require("./models/contract");
+const accounts = require("./models/account");
+const contracts = require("./models/contract");
 const { verify_signature } = require("./crypto_utils");
 
 app.use(cors());
@@ -41,7 +42,7 @@ app.post("/rpc", (req, res) => {
 
   switch (method) {
     case "shuffle":
-      
+
     case "transfer":
 
     case "join":

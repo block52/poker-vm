@@ -4,6 +4,12 @@ const account = require("./account");
 
 class VM {
   blocks = [];
+  privateKey = "";
+  isValidator = false;
+
+  constructor(privateKey) {
+    this.blocks = [];
+  }
 
   async getAccountNonce(account) {
     const query = { account };
