@@ -6,7 +6,8 @@
   "author": "Lucas Cullen <lucas@bitcoinbrisbane.com.au>",
   "license": "MIT",
   "scripts": {
-    "start": "bun run src/index.js"
+    "start": "bun run src/index.js",
+    "express": "node src/express.js"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -18,6 +19,8 @@
     "node": "20.11.1"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
     "mongoose": "^8.3.0"
   }
 }

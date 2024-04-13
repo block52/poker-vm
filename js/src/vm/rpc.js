@@ -1,17 +1,26 @@
 const express = require("express");
-const bodyParser = require("body-parser");
+const router = express.Router();
 const cors = require("cors");
 
 const app = express();
 
-const accounts = require("./models/account");
-const contracts = require("./models/contract");
-const { verify_signature } = require("./crypto_utils");
+const accounts = require("../models/account");
+const contracts = require("../models/contract");
+// const { verify_signature } = require("crypto_utils");
 
-app.use(cors());
-app.use(bodyParser.json());
+// const { verify_signature, sign_data } = require("../vm/crypto_utils");
 
-app.post("/rpc", (req, res) => {
+const verify_signature = (public_key, signature, data) => {
+  const key = ec.keyFromPublic(public_key, "hex");
+  return key.verify(data, signature);
+};
+
+const sign_data = (private_key, data) => {
+  const key = ec.keyFromPrivate(private_key, "hex");
+  return key.sign(data).toDER("hex");
+};
+
+router.post("/rpc", (req, res) => {
   const { method, params } = req.body;
 
   const data = params?.data;
@@ -56,3 +65,5 @@ app.post("/rpc", (req, res) => {
   //   const result = rpc[method](...params);
   //   res.json({ result });
 });
+
+module.exports = router;

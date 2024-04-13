@@ -9,6 +9,11 @@ class VM {
 
   constructor(privateKey) {
     this.blocks = [];
+    this.privateKey = privateKey;
+
+    if (this.privateKey) {
+      this.isValidator = true;
+    }
   }
 
   async getAccountNonce(account) {
