@@ -7,6 +7,12 @@ const rpc = require("./vm/rpc");
 app.use(cors());
 app.use(express.json());
 
+const version = "0.0.1";
+
+app.get("/", (req, res) => {
+  res.send(`PVM server running version ${version}`);
+});
+
 app.use("/rpc", rpc);
 
 app.listen(3000, () => {

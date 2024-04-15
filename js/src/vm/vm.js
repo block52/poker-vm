@@ -3,12 +3,13 @@ const fs = require("fs");
 const account = require("./account");
 
 class VM {
-  blocks = [];
   privateKey = "";
   isValidator = false;
 
+  mempool = [];
+
   constructor(privateKey) {
-    this.blocks = [];
+    this.mempool = [];
     this.privateKey = privateKey;
 
     if (this.privateKey) {
@@ -23,9 +24,10 @@ class VM {
     return height;
   }
 
-  addTx(nonce, action, signature) {
+  addTx(account, nonce, action, signature) {
     // Create a new transaction
-    const tx = new Transaction(nonce, action, signature);
+    const timestamp = Date.now();
+    const tx = new Transaction(account, nonce, action, signature, timestamp);
 
     // Add transaction to the blockchain
     blockchain.push(tx);
@@ -34,7 +36,7 @@ class VM {
     return tx;
   }
 
-  addBlock(block) {
+  writeBlock(block) {
     // Add block to the blockchain
     blockchain.push(block);
 

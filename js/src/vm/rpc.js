@@ -1,8 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const cors = require("cors");
-
-const app = express();
 
 const accounts = require("../models/account");
 const contracts = require("../models/contract");
@@ -23,18 +20,18 @@ const sign_data = (private_key, data) => {
 router.post("/rpc", (req, res) => {
   const { method, params } = req.body;
 
-  const data = params?.data;
+  // const data = params?.data;
 
-  if (!data) {
-    return res.status(400).json({ error: "Data is required" });
-  }
+  // if (!data) {
+  //   return res.status(400).json({ error: "Data is required" });
+  // }
 
-  const account = params?.account;
-  const signature = params?.signature;
+  // const account = params?.account;
+  // const signature = params?.signature;
 
-  if (!verify_signature(account, signature, data)) {
-    return res.status(401).json({ error: "Invalid signature" });
-  }
+  // if (!verify_signature(account, signature, data)) {
+  //   return res.status(401).json({ error: "Invalid signature" });
+  // }
 
   //   switch (method) {
   //     case "add":
@@ -50,6 +47,14 @@ router.post("/rpc", (req, res) => {
   //   }
 
   switch (method) {
+    // readonly methods
+    case "getAccount":
+      return res.json({ result: accounts.getAccount(params[0]) });
+    case "getBalance":
+      return res.json({ result: accounts.getBalance(params[0]) });
+  }
+
+  switch (method) {
     case "shuffle":
 
     case "transfer":
@@ -58,10 +63,9 @@ router.post("/rpc", (req, res) => {
       return res.json({ result: holdem.addPlayer(params[0]) });
     case "deal":
       throw new Error("Not implemented");
-    default:
-      return res.status(404).json({ error: "Method not found" });
   }
 
+  return res.status(404).json({ error: "Method not found" });
   //   const result = rpc[method](...params);
   //   res.json({ result });
 });
