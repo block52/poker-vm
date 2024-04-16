@@ -4,13 +4,13 @@ const app = express();
 const cors = require("cors");
 const rpc = require("./vm/rpc");
 
+const version = "1.0.0";
+
 app.use(cors());
 app.use(express.json());
 
-const version = "0.0.1";
-
 app.get("/", (req, res) => {
-  res.send(`PVM server running version ${version}`);
+  res.json({ version });
 });
 
 app.use("/rpc", rpc);
