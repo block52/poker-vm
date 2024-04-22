@@ -1,10 +1,15 @@
+import game from "../models/game";
+
 const express = require("express");
 const router = express.Router();
 
 const accounts = require("../models/account");
 const contracts = require("../models/contract");
-// const { verify_signature } = require("crypto_utils");
+const games = require("../models/game");
 
+const { Holdem } = require("../vm/holdem");
+
+// const { verify_signature } = require("crypto_utils");
 // const { verify_signature, sign_data } = require("../vm/crypto_utils");
 
 const verify_signature = (public_key, signature, data) => {
@@ -17,7 +22,9 @@ const sign_data = (private_key, data) => {
   return key.sign(data).toDER("hex");
 };
 
-router.post("/rpc", (req, res) => {
+const _validator_account = "0x";
+
+router.post("/rpc", async (req, res) => {
   const { method, params } = req.body;
 
   // const data = params?.data;
@@ -49,18 +56,49 @@ router.post("/rpc", (req, res) => {
   switch (method) {
     // readonly methods
     case "getAccount":
-      return res.json({ result: accounts.getAccount(params[0]) });
-    case "getBalance":
-      return res.json({ result: accounts.getBalance(params[0]) });
+      const account = accounts.find(params[0]);
+      return res.json({ result: account });
+    // case "getBalance":
+    //   const account = accounts.find(params[0]);
+    //   return res.json({ result: accounts.getBalance(params[0]) });
   }
 
+
+  const account = await accounts.find(params[0]);
+  const validator_account = await accounts.find(_validator_account);
+
   switch (method) {
+    case "new":
+
+      if (account.balance < 100) {
+        return res.status(400).json({ error: "Insufficient funds" });
+      }
+
+      const game = new Game({
+        owner: account,
+        contract_hash: "",
+        type: "holdem",
+        hash: "",
+      });
+      
+      await game.save();
+
+      // PVM to write and subtract a fee from the account
+      account.balance -= 100;
+      await account.save();
+
+      validator_account.balance += 100;
+      await validator_account.save();
+      
+      return res.json({ result: game.id });
+
     case "shuffle":
+
 
     case "transfer":
 
     case "join":
-      return res.json({ result: holdem.addPlayer(params[0]) });
+      // return res.json({ result: holdem.addPlayer(params[0]) });
     case "deal":
       throw new Error("Not implemented");
   }
