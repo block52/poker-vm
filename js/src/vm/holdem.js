@@ -1,3 +1,5 @@
+const fs = require("filesystem");
+
 class Holdem {
   playerMap = new Map();
   _maxPlayers = 9;
@@ -7,9 +9,14 @@ class Holdem {
 
   _actions = ["fold", "check", "call", "bet", "raise"];
 
-  constructor(maxPlayers) {
+  _instance = "";
+
+  constructor(config, instance) {
+
+
+
     this.players = [];
-    this._maxPlayers = maxPlayers || 9;
+    this._maxPlayers = maxPlayers;
 
     // Initialize the deck
     _deck = [
