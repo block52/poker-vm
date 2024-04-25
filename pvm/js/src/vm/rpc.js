@@ -7,7 +7,7 @@ const accounts = require("../models/account");
 const contracts = require("../models/contract");
 const games = require("../models/game");
 
-const { Holdem } = require("../vm/holdem");
+const { Holdem } = require("./holdem");
 
 // const { verify_signature } = require("crypto_utils");
 // const { verify_signature, sign_data } = require("../vm/crypto_utils");
