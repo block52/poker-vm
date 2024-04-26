@@ -1,4 +1,5 @@
-const fs = require("filesystem");
+const crypto = require("crypto");
+const { Player } = require("./player");
 
 class Holdem {
   playerMap = new Map();
@@ -9,12 +10,11 @@ class Holdem {
 
   _actions = ["fold", "check", "call", "bet", "raise"];
 
-  _instance = "";
-
-  constructor(config, instance) {
-    this.players = [];
-    this._maxPlayers = maxPlayers;
-
+  constructor(players) {
+    for (let i = 0; i < players.length; i++) {
+      const player = new Player(players[i].account, players[i].balance);
+      this.addPlayer(player);
+    }
   }
 
   addPlayer(player) {
@@ -83,6 +83,10 @@ class Holdem {
     const card2 = _deck.pop();
 
     player.hand = [card1, card2];
+  }
+
+  showDown() {
+    // Compare hands
   }
 
   performAction(player, action) {
