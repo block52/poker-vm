@@ -6,8 +6,14 @@ inquirer
     {
       type: "list",
       name: "prize",
-      message: "Select a prize",
-      choices: ["cake", "fries"],
+      message: "Select an option",
+      choices: [
+        "New account",
+        "Start a node",
+        "List nodes",
+        "Join a node",
+        "Join a game",
+      ],
     },
   ])
   .then((answers) => {

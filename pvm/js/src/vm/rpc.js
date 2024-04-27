@@ -96,7 +96,11 @@ router.post("/rpc", async (req, res) => {
     case "transfer":
 
     case "join":
-      // return res.json({ result: holdem.addPlayer(params[0]) });
+      const address = params[1];
+      const amount = params[2];
+      // const game = await games.find(params[0]);
+
+      break
     case "deal":
       throw new Error("Not implemented");
   }
