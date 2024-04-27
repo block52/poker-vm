@@ -1,5 +1,4 @@
 const fs = require("fs");
-
 const account = require("./account");
 
 class VM {

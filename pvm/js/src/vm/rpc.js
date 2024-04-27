@@ -1,5 +1,3 @@
-import game from "../models/game";
-
 const express = require("express");
 const router = express.Router();
 
