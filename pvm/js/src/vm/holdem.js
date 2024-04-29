@@ -13,8 +13,11 @@ class Holdem {
 
   _actions = ["fold", "check", "call", "bet", "raise"];
 
-  constructor(players) {
-    for (let i = 0; i < players.length; i++) {
+  constructor(instance) {
+    this._maxPlayers = instance.maxPlayers;
+    this._deck = instance.deck;
+
+    for (let i = 0; i < instance.players.length; i++) {
       const player = new Player(players[i].account, players[i].balance);
       this.addPlayer(player);
     }

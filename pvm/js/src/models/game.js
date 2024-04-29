@@ -9,6 +9,10 @@ const gameSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
+  index : {
+    required: true,
+    type: Number,
+  },
   type: {
     required: true,
     type: String,

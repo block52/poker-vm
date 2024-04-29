@@ -98,7 +98,8 @@ router.post("/rpc", async (req, res) => {
     case "join":
       const address = params[1];
       const amount = params[2];
-      // const game = await games.find(params[0]);
+      const index = params[3];
+      const game = await games.find(params[0]);
 
       break
     case "deal":
