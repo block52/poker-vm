@@ -35,6 +35,14 @@ class VM {
     return tx;
   }
 
+  getTx(tx_id) {
+    // Find the transaction
+    const tx = blockchain.find((tx) => tx.id === tx_id);
+
+    // Return the transaction
+    return tx;
+  }
+
   writeBlock(block) {
     // Add block to the blockchain
     blockchain.push(block);

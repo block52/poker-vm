@@ -4,6 +4,7 @@ const router = express.Router();
 const accounts = require("../models/account");
 const contracts = require("../models/contract");
 const games = require("../models/game");
+const transactions = require("../models/transaction");
 
 const { Holdem } = require("./holdem");
 
@@ -56,18 +57,19 @@ router.post("/rpc", async (req, res) => {
     case "getAccount":
       const account = accounts.find(params[0]);
       return res.json({ result: account });
+    case "tx":
+      break;
     // case "getBalance":
     //   const account = accounts.find(params[0]);
     //   return res.json({ result: accounts.getBalance(params[0]) });
   }
 
-
   const account = await accounts.find(params[0]);
   const validator_account = await accounts.find(_validator_account);
 
+  // Write methods
   switch (method) {
     case "new":
-
       if (account.balance < 100) {
         return res.status(400).json({ error: "Insufficient funds" });
       }
@@ -78,7 +80,7 @@ router.post("/rpc", async (req, res) => {
         type: "holdem",
         hash: "",
       });
-      
+
       await game.save();
 
       // PVM to write and subtract a fee from the account
@@ -87,11 +89,10 @@ router.post("/rpc", async (req, res) => {
 
       validator_account.balance += 100;
       await validator_account.save();
-      
+
       return res.json({ result: game.id });
 
     case "shuffle":
-
 
     case "transfer":
 
@@ -99,11 +100,13 @@ router.post("/rpc", async (req, res) => {
       const address = params[1];
       const amount = params[2];
       const index = params[3];
-      const game = await games.find(params[0]);
+      // const game = await games.find(params[0]);
 
-      break
+      break;
     case "deal":
       throw new Error("Not implemented");
+    case "action":
+      break;
   }
 
   return res.status(404).json({ error: "Method not found" });

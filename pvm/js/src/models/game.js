@@ -21,6 +21,10 @@ const gameSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
+  previous_hash: {
+    required: true,
+    type: String,
+  },
 });
 
 module.exports = mongoose.model("Game", gameSchema);
