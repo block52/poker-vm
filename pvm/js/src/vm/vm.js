@@ -14,6 +14,8 @@ class VM {
     if (this.privateKey) {
       this.isValidator = true;
     }
+
+    // set account 0 to the total supply
   }
 
   async getAccountNonce(account) {
