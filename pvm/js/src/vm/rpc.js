@@ -61,25 +61,31 @@ router.post("/rpc", async (req, res) => {
     //   return res.json({ result: accounts.getBalance(params[0]) });
   }
 
-
   const account = await accounts.find(params[0]);
   const validator_account = await accounts.find(_validator_account);
 
   switch (method) {
-    case "new":
+    case "new_account":
+      const private_key = crypto.randomBytes(32).toString("hex");
+      const public_key = ec
+        .keyFromPrivate(private_key)
+        .getPublic()
+        .encode("hex");
 
+      return res.json({ result: { private_key, public_key } });
+    case "new":
       if (account.balance < 100) {
         return res.status(400).json({ error: "Insufficient funds" });
       }
 
-      const game = new Game({
+      const new_game = new Game({
         owner: account,
         contract_hash: "",
         type: "holdem",
         hash: "",
       });
-      
-      await game.save();
+
+      await new_game.save();
 
       // PVM to write and subtract a fee from the account
       account.balance -= 100;
@@ -87,21 +93,23 @@ router.post("/rpc", async (req, res) => {
 
       validator_account.balance += 100;
       await validator_account.save();
-      
+
       return res.json({ result: game.id });
 
     case "shuffle":
-
 
     case "transfer":
 
     case "join":
       const address = params[1];
       const amount = params[2];
-      const index = params[3];
-      const game = await games.find(params[0]);
 
-      break
+      const result = await game.findOne(
+        { address: address },
+        { sort: { index: -1 } }
+      );
+
+      break;
     case "deal":
       throw new Error("Not implemented");
   }
