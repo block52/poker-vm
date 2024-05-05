@@ -81,7 +81,7 @@ router.post("/", async (req, res) => {
         return res.status(400).json({ error: "Insufficient funds" });
       }
 
-      const game = new Game({
+      const new_game = new Game({
         owner: account,
         contract_hash: "",
         type: "holdem",
@@ -106,8 +106,11 @@ router.post("/", async (req, res) => {
     case "join":
       const address = params[1];
       const amount = params[2];
-      const index = params[3];
-      // const game = await games.find(params[0]);
+
+      const result = await game.findOne(
+        { address: address },
+        { sort: { index: -1 } }
+      );
 
       break;
     case "deal":

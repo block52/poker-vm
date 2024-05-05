@@ -5,7 +5,7 @@ const gameSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
-  contract_hash: {
+  address: {
     required: true,
     type: String,
   },
