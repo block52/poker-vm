@@ -45,6 +45,25 @@ class VM {
     return tx;
   }
 
+  transfer(from, to, amount) {
+    // Get the nonce for the from account
+    const nonce = this.getAccountNonce(from);
+
+    // Create the action
+    const action = {
+      type: "transfer",
+      from,
+      to,
+      amount,
+    };
+
+    // Sign the action
+    const signature = sign_data(this.privateKey, action);
+
+    // Add the transaction to the blockchain
+    return this.addTx(from, nonce, action, signature);
+  }
+
   writeBlock(block) {
     // Add block to the blockchain
     blockchain.push(block);

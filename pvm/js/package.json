@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "start": "bun run src/index.js",
-    "express": "nodemon src/express.js"
+    "express": "nodemon src/express.js",
+    "rpc": "nodemon src/express.js"
   },
   "devDependencies": {
     "@types/bun": "latest"

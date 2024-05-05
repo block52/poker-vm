@@ -22,8 +22,10 @@ const sign_data = (private_key, data) => {
 };
 
 const _validator_account = "0x";
+const _evm_account = "0x8bF18655DFEfc8A4615AB7eb3aB01F6E8cC6134E";
 
-router.post("/rpc", async (req, res) => {
+router.post("/", async (req, res) => {
+
   const { method, params } = req.body;
 
   // const data = params?.data;
@@ -64,11 +66,16 @@ router.post("/rpc", async (req, res) => {
     //   return res.json({ result: accounts.getBalance(params[0]) });
   }
 
-  const account = await accounts.find(params[0]);
-  const validator_account = await accounts.find(_validator_account);
+  // const account = await accounts.find(params[0]);
+  // const validator_account = await accounts.find(_validator_account);
 
   // Write methods
   switch (method) {
+    case "mint":
+      // add tokens to the owner
+      const owner_account = await accounts.find("0x8bF18655DFEfc8A4615AB7eb3aB01F6E8cC6134E");
+      owner_account.balance += 1000;
+      await owner_account.save();
     case "new":
       if (account.balance < 100) {
         return res.status(400).json({ error: "Insufficient funds" });
@@ -95,7 +102,7 @@ router.post("/rpc", async (req, res) => {
     case "shuffle":
 
     case "transfer":
-
+      await vm.transfer(params[0], params[1], params[2]);
     case "join":
       const address = params[1];
       const amount = params[2];

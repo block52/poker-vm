@@ -9,7 +9,7 @@ const account = new ethers.Wallet(
   "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68"
 );
 
-console.log("Test account: ", account.address);
+console.log("EVM owner account: ", account.address);
 
 const { createECDH, createHash } = require("node:crypto");
 

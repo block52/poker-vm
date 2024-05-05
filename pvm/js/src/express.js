@@ -1,10 +1,15 @@
 const express = require("express");
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 const cors = require("cors");
+const mongoose = require("mongoose");
 const rpc = require("./vm/rpc");
 
 const version = "1.0.0";
+
+const connectDB = require("./config/dbConfig");
+connectDB();
 
 app.use(cors());
 app.use(express.json());
@@ -13,8 +18,12 @@ app.get("/", (req, res) => {
   res.json({ version });
 });
 
-app.use("/rpc", rpc);
+app.use("/", rpc);
 
-app.listen(3000, () => {
-  console.log("PVM server running on port 3000");
+mongoose.connection.once("open", () => {
+  app.listen(PORT, async () => {
+    // const client = new MongoClient(uri);
+    // await client.connect();
+    console.log(`PVM server running on port ${PORT}`);
+  });
 });
