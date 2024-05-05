@@ -17,6 +17,17 @@ class VM {
     }
   }
 
+  async init() {
+    // // Connect to the database
+    // await mongoose.connect(this.uri, {
+    //   useNewUrlParser: true,
+    //   useUnifiedTopology: true,
+    // });
+
+    // Load the blocks
+    this.loadBlocks();
+  }
+
   async getAccountNonce(account) {
     const query = { account };
     const height = await account.countDocuments(query);
