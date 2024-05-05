@@ -14,6 +14,8 @@ class VM {
     if (this.privateKey) {
       this.isValidator = true;
     }
+
+    // set account 0 to the total supply
   }
 
   async getAccountNonce(account) {
@@ -30,6 +32,14 @@ class VM {
 
     // Add transaction to the blockchain
     blockchain.push(tx);
+
+    // Return the transaction
+    return tx;
+  }
+
+  getTx(tx_id) {
+    // Find the transaction
+    const tx = blockchain.find((tx) => tx.id === tx_id);
 
     // Return the transaction
     return tx;

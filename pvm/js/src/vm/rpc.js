@@ -4,6 +4,7 @@ const router = express.Router();
 const accounts = require("../models/account");
 const contracts = require("../models/contract");
 const games = require("../models/game");
+const transactions = require("../models/transaction");
 
 const { Holdem } = require("./holdem");
 
@@ -56,6 +57,8 @@ router.post("/rpc", async (req, res) => {
     case "getAccount":
       const account = accounts.find(params[0]);
       return res.json({ result: account });
+    case "tx":
+      break;
     // case "getBalance":
     //   const account = accounts.find(params[0]);
     //   return res.json({ result: accounts.getBalance(params[0]) });
@@ -64,15 +67,8 @@ router.post("/rpc", async (req, res) => {
   const account = await accounts.find(params[0]);
   const validator_account = await accounts.find(_validator_account);
 
+  // Write methods
   switch (method) {
-    case "new_account":
-      const private_key = crypto.randomBytes(32).toString("hex");
-      const public_key = ec
-        .keyFromPrivate(private_key)
-        .getPublic()
-        .encode("hex");
-
-      return res.json({ result: { private_key, public_key } });
     case "new":
       if (account.balance < 100) {
         return res.status(400).json({ error: "Insufficient funds" });
@@ -85,7 +81,7 @@ router.post("/rpc", async (req, res) => {
         hash: "",
       });
 
-      await new_game.save();
+      await game.save();
 
       // PVM to write and subtract a fee from the account
       account.balance -= 100;
@@ -112,6 +108,8 @@ router.post("/rpc", async (req, res) => {
       break;
     case "deal":
       throw new Error("Not implemented");
+    case "action":
+      break;
   }
 
   return res.status(404).json({ error: "Method not found" });
