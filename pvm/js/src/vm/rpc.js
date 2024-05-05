@@ -7,6 +7,7 @@ const games = require("../models/game");
 const transactions = require("../models/transaction");
 
 const { Holdem } = require("./holdem");
+const VM = require("./vm.js");
 
 // const { verify_signature } = require("crypto_utils");
 // const { verify_signature, sign_data } = require("../vm/crypto_utils");
@@ -21,14 +22,13 @@ const sign_data = (private_key, data) => {
   return key.sign(data).toDER("hex");
 };
 
-const _validator_account = "0x";
+const _validator_account = "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
 const _evm_account = "0x8bF18655DFEfc8A4615AB7eb3aB01F6E8cC6134E";
 
 router.post("/", async (req, res) => {
 
   const { method, params } = req.body;
-
-  // const data = params?.data;
+  const vm = new VM(_validator_account);
 
   // if (!data) {
   //   return res.status(400).json({ error: "Data is required" });
@@ -57,7 +57,7 @@ router.post("/", async (req, res) => {
   switch (method) {
     // readonly methods
     case "getAccount":
-      const account = accounts.find(params[0]);
+      const account = vm.getAccount(params[0]);
       return res.json({ result: account });
     case "tx":
       break;
