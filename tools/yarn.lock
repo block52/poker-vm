@@ -42,11 +42,6 @@ ethers@^6.12.1:
     tslib "2.4.0"
     ws "8.5.0"
 
-ethersjs@^0.0.1-security:
-  version "0.0.1-security"
-  resolved "https://registry.yarnpkg.com/ethersjs/-/ethersjs-0.0.1-security.tgz#f0d2df01f8eb18c75bc65238dc434b731f65a91d"
-  integrity sha512-kY0ubUHWAlf+awHtXyMQgMHQrwq8XuIshiCL3CZWHsmAEIzUdHttIO3pccc7Cp2HS0y2ChBGW7hmn+RmKwp6OA==
-
 tslib@2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.0.tgz#7cecaa7f073ce680a05847aa77be941098f36dc3"
