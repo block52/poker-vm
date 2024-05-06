@@ -1,9 +1,10 @@
 const fs = require("fs");
-const account = require("./account");
+const Account = require("../models/account");
 
 class VM {
   privateKey = "";
   isValidator = false;
+  uri = "mongodb://localhost:27017/pvm";
 
   mempool = [];
 
@@ -14,8 +15,17 @@ class VM {
     if (this.privateKey) {
       this.isValidator = true;
     }
+  }
 
-    // set account 0 to the total supply
+  async init() {
+    // // Connect to the database
+    // await mongoose.connect(this.uri, {
+    //   useNewUrlParser: true,
+    //   useUnifiedTopology: true,
+    // });
+
+    // Load the blocks
+    this.loadBlocks();
   }
 
   getAccount(account) {
@@ -27,6 +37,13 @@ class VM {
     const height = await account.countDocuments(query);
 
     return height;
+  }
+
+  async getAccount(account) {
+    const query = { account };
+    const result = await Account.findOne(query);
+
+    return result;
   }
 
   addTx(account, nonce, action, signature) {
@@ -87,3 +104,5 @@ class VM {
     });
   }
 }
+
+module.exports = VM;
