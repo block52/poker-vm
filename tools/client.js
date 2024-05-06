@@ -4,7 +4,6 @@ const ethers = require("ethers");
 // const private_key = crypto.randomBytes(32).toString("hex");
 // console.log(private_key);
 
-// const account = new ethers.Wallet(private_key);
 const account = new ethers.Wallet(
   "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68"
 );
@@ -24,6 +23,9 @@ const pub = ecdh.getPublicKey();
 
 console.log(pk.toString("hex"));
 console.log(pub.toString("hex"));
+
+const alice_eth = new ethers.Wallet(pk.toString("hex"));
+console.log("Alice PVM account: ", alice_eth.address);
 
 // // This is a shortcut way of specifying one of Alice's previous private
 // // keys. It would be unwise to use such a predictable private key in a real

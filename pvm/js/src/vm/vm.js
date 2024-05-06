@@ -18,6 +18,10 @@ class VM {
     // set account 0 to the total supply
   }
 
+  getAccount(account) {
+    return account.find({ account });
+  }
+
   async getAccountNonce(account) {
     const query = { account };
     const height = await account.countDocuments(query);
