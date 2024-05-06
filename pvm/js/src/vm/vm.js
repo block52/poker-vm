@@ -62,6 +62,20 @@ class VM {
     return tx;
   }
 
+  commit() {
+
+    // can validator write
+
+    // Write the block to the blockchain
+    const block = new Block(blockchain);
+    this.writeBlock(block);
+
+    // Clear the mempool
+    this.mempool = [];
+
+    // broadcast the block
+  }
+
   transfer(from, to, amount) {
     // Get the nonce for the from account
     const nonce = this.getAccountNonce(from);
