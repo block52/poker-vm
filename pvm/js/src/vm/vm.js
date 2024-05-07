@@ -1,20 +1,34 @@
 const fs = require("fs");
 const Account = require("../models/account");
+const Block = require("../models/block");
+
+const { verify_signature } = require("./crypto_utils");
 
 class VM {
-  privateKey = "";
+  private_key = "";
+  public_key = "";
   isValidator = false;
+  validator_index = 0;
   uri = "mongodb://localhost:27017/pvm";
 
   mempool = [];
 
-  constructor(privateKey) {
+  constructor(private_key = "") {
     this.mempool = [];
-    this.privateKey = privateKey;
+    this.private_key = private_key;
 
-    if (this.privateKey) {
+    if (this.private_key) {
+      this.public_key = ec
+        .keyFromPrivate(this.private_key, "hex")
+        .getPublic("hex");
       this.isValidator = true;
+
+      // todo: call the mainnet to get the validator index from the smart contract
+      this.validator_index = 1;
     }
+
+    // Initialize the VM
+    this.init();
   }
 
   async init() {
@@ -23,13 +37,8 @@ class VM {
     //   useNewUrlParser: true,
     //   useUnifiedTopology: true,
     // });
-
     // Load the blocks
-    this.loadBlocks();
-  }
-
-  getAccount(account) {
-    return account.find({ account });
+    // this.loadBlocks();
   }
 
   async getAccountNonce(account) {
@@ -46,43 +55,57 @@ class VM {
     return result;
   }
 
-  addTx(account, nonce, action, signature) {
+  addTx(account, nonce, action, signature, timestamp) {
     // Create a new transaction
-    const timestamp = Date.now();
+    if (timestamp > Date.now()) {
+      console.log("Invalid timestamp");
+      return false;
+    }
+
+    if (!verify_signature(account, signature, action)) {
+      console.log("Invalid signature");
+      return false;
+    }
+
     const tx = new Transaction(account, nonce, action, signature, timestamp);
 
-    // Add transaction to the blockchain
-    blockchain.push(tx);
+    // // Add transaction to the blockchain
+    this.mempool.push(tx);
 
     // Return the transaction
     return tx;
   }
 
   getTx(tx_id) {
-    // Find the transaction
-    const tx = blockchain.find((tx) => tx.id === tx_id);
-
-    // Return the transaction
-    return tx;
+    // // Find the transaction
+    // const tx = blockchain.find((tx) => tx.id === tx_id);
+    // // Return the transaction
+    // return tx;
   }
 
-  commit() {
+  async commit() {
+    if (!this.isValidator) {
+      console.log("Only validators can commit");
+      return false;
+    }
 
-    // can validator write
+    const previous_block = await Block.findOne({}).sort({ index: -1 });
+    if (previous_block.validator_index + 1 !== this.validator_index) {
+      console.log("Invalid validator index");
+      return false;
+    }
 
     // Write the block to the blockchain
-    const block = new Block(blockchain);
-    this.writeBlock(block);
-
-    // Clear the mempool
+    // const block = new Block(blockchain);
+    // this.writeBlock(block);
+    // // Clear the mempool
     this.mempool = [];
-
     // broadcast the block
   }
 
-  transfer(from, to, amount) {
+  async transfer(from, to, amount) {
     // Get the nonce for the from account
-    const nonce = this.getAccountNonce(from);
+    const nonce = await this.getAccountNonce(from);
 
     // Create the action
     const action = {
@@ -99,12 +122,25 @@ class VM {
     return this.addTx(from, nonce, action, signature);
   }
 
-  writeBlock(block) {
+  // add a block to the db / chain
+  async writeBlock(block) {
+    // Do some checks
+    const index = block.index;
+    const hash = block.hash;
+    const previous_hash = block.previous_hash;
+
+    
+
+    // Return the block
+    return block;
+  }
+
+  addBlock(block) {
     // Add block to the blockchain
     blockchain.push(block);
 
     // Return the block
-    return block;
+    return true;
   }
 
   loadBlocks() {
