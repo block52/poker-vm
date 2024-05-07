@@ -1,4 +1,4 @@
-import { Deck, Player } from "../types";
+import { Deck, Player } from "./types";
 
 class Holdem {
   private readonly deck: Deck;

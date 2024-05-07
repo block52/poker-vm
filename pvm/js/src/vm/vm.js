@@ -55,19 +55,30 @@ class VM {
     return result;
   }
 
-  addTx(account, nonce, action, signature, timestamp) {
+  addTx(account, nonce, data, signature, timestamp) {
     // Create a new transaction
     if (timestamp > Date.now()) {
       console.log("Invalid timestamp");
       return false;
     }
 
-    if (!verify_signature(account, signature, action)) {
+    if (!verify_signature(account, signature, data)) {
       console.log("Invalid signature");
       return false;
     }
 
-    const tx = new Transaction(account, nonce, action, signature, timestamp);
+    const tx = {
+      account,
+      nonce,
+      data,
+      signature,
+      timestamp,
+    };
+
+    const hash = sha256(JSON.stringify(tx));
+    tx.id = hash;
+
+    // Check to see if its in the mempool already
 
     // // Add transaction to the blockchain
     this.mempool.push(tx);
@@ -77,10 +88,8 @@ class VM {
   }
 
   getTx(tx_id) {
-    // // Find the transaction
-    // const tx = blockchain.find((tx) => tx.id === tx_id);
-    // // Return the transaction
-    // return tx;
+    const tx = this.mempool.find((tx) => tx.id === tx_id);
+    return tx;
   }
 
   async commit() {
@@ -94,6 +103,18 @@ class VM {
       console.log("Invalid validator index");
       return false;
     }
+
+    const block = {
+      index: previous_block.index + 1,
+      version: 1,
+      previous_block_hash: previous_block.hash,
+      timestamp: Date.now(),
+      transactions: this.mempool,
+      validator: this.public_key,
+    };
+
+    const hash = sha256(JSON.stringify(block));
+    block.hash = hash;
 
     // Write the block to the blockchain
     // const block = new Block(blockchain);
