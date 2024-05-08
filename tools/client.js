@@ -8,6 +8,7 @@ const account = new ethers.Wallet(
   "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68"
 );
 
+// 0x8bF18655DFEfc8A4615AB7eb3aB01F6E8cC6134E
 console.log("EVM owner account: ", account.address);
 
 const { createECDH, createHash } = require("node:crypto");

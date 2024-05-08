@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const accounts = require("../models/account");
+const Account = require("../models/account");
 const contracts = require("../models/contract");
 const games = require("../models/game");
 const transactions = require("../models/transaction");
@@ -9,21 +9,7 @@ const transactions = require("../models/transaction");
 const { Holdem } = require("./holdem");
 const VM = require("./vm.js");
 
-// const { verify_signature } = require("crypto_utils");
-// const { verify_signature, sign_data } = require("../vm/crypto_utils");
-
-const verify_signature = (public_key, signature, data) => {
-  const key = ec.keyFromPublic(public_key, "hex");
-  return key.verify(data, signature);
-};
-
-const sign_data = (private_key, data) => {
-  const key = ec.keyFromPrivate(private_key, "hex");
-  return key.sign(data).toDER("hex");
-};
-
 const _validator_account = "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
-const _evm_account = "0x8bF18655DFEfc8A4615AB7eb3aB01F6E8cC6134E";
 
 router.post("/", async (req, res) => {
 
@@ -56,11 +42,12 @@ router.post("/", async (req, res) => {
 
   switch (method) {
     // readonly methods
-    case "getAccount":
+    case "get_account":
       const account = vm.getAccount(params[0]);
       return res.json({ result: account });
-    case "tx":
-      break;
+    case "get_tx":
+      const tx = vm.getTx(params[0]);
+      return res.json({ result: tx });
     // case "getBalance":
     //   const account = accounts.find(params[0]);
     //   return res.json({ result: accounts.getBalance(params[0]) });
@@ -73,9 +60,10 @@ router.post("/", async (req, res) => {
   switch (method) {
     case "mint":
       // add tokens to the owner
-      const owner_account = await accounts.find("0x8bF18655DFEfc8A4615AB7eb3aB01F6E8cC6134E");
+      const owner_account = await Account.findOne("");
       owner_account.balance += 1000;
       await owner_account.save();
+      break;
     case "new":
       if (account.balance < 100) {
         return res.status(400).json({ error: "Insufficient funds" });
@@ -88,7 +76,7 @@ router.post("/", async (req, res) => {
         hash: "",
       });
 
-      await game.save();
+      await new_game.save();
 
       // PVM to write and subtract a fee from the account
       account.balance -= 100;

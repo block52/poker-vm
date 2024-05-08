@@ -14,7 +14,7 @@ const blockSchema = new mongoose.Schema({
     type: String,
   },
   merkle_root: {
-    required: true,
+    required: false,
     type: String,
   },
   previous_block_hash: {
@@ -34,7 +34,7 @@ const blockSchema = new mongoose.Schema({
     type: String,
   },
   txs: {
-    required: true,
+    required: false,
     type: Array,
   },
 });
