@@ -1,8 +1,11 @@
 const fs = require("fs");
+const { createECDH, createHash } = require("node:crypto");
+const ethers = require("ethers");
+
 const Account = require("../models/account");
 const Block = require("../models/block");
 
-const { verify_signature } = require("./crypto_utils");
+const { sign_data, verify_signature } = require("./crypto_utils");
 
 class VM {
   private_key = "";
@@ -18,9 +21,7 @@ class VM {
     this.private_key = private_key;
 
     if (this.private_key) {
-      this.public_key = ec
-        .keyFromPrivate(this.private_key, "hex")
-        .getPublic("hex");
+      this.public_key = new ethers.Wallet(this.private_key);
       this.isValidator = true;
 
       // todo: call the mainnet to get the validator index from the smart contract
@@ -104,7 +105,7 @@ class VM {
       return false;
     }
 
-    const block = {
+    const data = {
       index: previous_block.index + 1,
       version: 1,
       previous_block_hash: previous_block.hash,
@@ -113,8 +114,23 @@ class VM {
       validator: this.public_key,
     };
 
-    const hash = sha256(JSON.stringify(block));
-    block.hash = hash;
+    const hash = sha256(JSON.stringify(data));
+    data.hash = hash;
+
+    const signature = sign_data(this.private_key, data);
+
+    const block = new Block({
+      index: data.index,
+      version: data.version,
+      hash: data.hash,
+      previous_block_hash: data.previous_block_hash,
+      timestamp: data.timestamp,
+      validator: data.validator,
+      txs: data.transactions,
+      signature,
+    });
+
+    await block.save();
 
     // Write the block to the blockchain
     // const block = new Block(blockchain);
@@ -149,8 +165,6 @@ class VM {
     const index = block.index;
     const hash = block.hash;
     const previous_hash = block.previous_hash;
-
-    
 
     // Return the block
     return block;

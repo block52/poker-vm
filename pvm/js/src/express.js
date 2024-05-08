@@ -20,7 +20,7 @@ app.get("/", (req, res) => {
 
 app.use("/", rpc);
 
-// MOVE THIS TO THE PVM
+// MOVE THIS TO THE PVM?
 mongoose.connection.once("open", () => {
   app.listen(PORT, async () => {
     // const client = new MongoClient(uri);
