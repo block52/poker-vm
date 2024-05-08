@@ -140,7 +140,7 @@ class VM {
     const signature = sign_data(this.privateKey, action);
 
     // Add the transaction to the blockchain
-    return this.addTx(from, nonce, action, signature);
+    return this.mempool(from, nonce, action, signature);
   }
 
   // add a block to the db / chain
