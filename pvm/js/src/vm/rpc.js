@@ -60,9 +60,8 @@ router.post("/", async (req, res) => {
   switch (method) {
     case "mint":
       // add tokens to the owner
-      const owner_account = await Account.findOne("");
-      owner_account.balance += 1000;
-      await owner_account.save();
+      // const signature = params[2];
+      await vm.mint(params[0], params[1]);
       break;
     case "new":
       if (account.balance < 100) {

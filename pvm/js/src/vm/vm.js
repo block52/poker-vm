@@ -42,6 +42,40 @@ class VM {
     // this.loadBlocks();
   }
 
+  async mint(account, amount) {
+    const query = { account };
+    const recipient = await Account.findOne(query);
+
+    if (!recipient) {
+      const new_account = new Account({
+        account,
+        balance: amount,
+      });
+
+      await new_account.save();
+      return;
+    }
+
+    recipient.balance += amount;
+    await recipient.save();
+    
+    // // Get the nonce for the from account
+    // const nonce = await this.getAccountNonce(account);
+
+    // // Create the action
+    // const action = {
+    //   type: "mint",
+    //   account,
+    //   amount,
+    // };
+
+    // // Sign the action
+    // const signature = sign_data(this.private_key, action);
+
+    // // Add the transaction to the blockchain
+    // return this.mempool(account, nonce, action, signature);
+  }
+
   async getAccountNonce(account) {
     const query = { account };
     const height = await account.countDocuments(query);
