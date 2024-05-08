@@ -2,9 +2,14 @@ const express = require("express");
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+const http = require("http");
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+
 const cors = require("cors");
 const mongoose = require("mongoose");
 const rpc = require("./vm/rpc");
+const io = new Server(server);
 
 const version = "1.0.0";
 
