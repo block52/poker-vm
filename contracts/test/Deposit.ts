@@ -6,7 +6,7 @@ import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import hre from "hardhat";
 
-describe("Lock", function () {
+describe("Deposit", () => {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
@@ -26,7 +26,7 @@ describe("Lock", function () {
     return { lock, unlockTime, lockedAmount, owner, otherAccount };
   }
 
-  describe("Deployment", function () {
+  describe("Deployment", () => {
     it("Should set the right unlockTime", async function () {
       const { lock, unlockTime } = await loadFixture(deployOneYearLockFixture);
 
