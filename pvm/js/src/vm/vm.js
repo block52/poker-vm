@@ -42,13 +42,13 @@ class VM {
     // this.loadBlocks();
   }
 
-  async mint(account, amount) {
-    const query = { account };
+  async mint(address, amount) {
+    const query = { address };
     const recipient = await Account.findOne(query);
 
     if (!recipient) {
       const new_account = new Account({
-        account,
+        address,
         balance: amount,
       });
 
@@ -58,7 +58,7 @@ class VM {
 
     recipient.balance += amount;
     await recipient.save();
-    
+
     // // Get the nonce for the from account
     // const nonce = await this.getAccountNonce(account);
 
@@ -76,15 +76,15 @@ class VM {
     // return this.mempool(account, nonce, action, signature);
   }
 
-  async getAccountNonce(account) {
-    const query = { account };
-    const height = await account.countDocuments(query);
+  async getAccountNonce(address) {
+    const query = { address };
+    const height = await Account.countDocuments(query);
 
     return height;
   }
 
-  async getAccount(account) {
-    const query = { account };
+  async getAccount(address) {
+    const query = { address };
     const result = await Account.findOne(query);
 
     return result;

@@ -7,10 +7,7 @@ const uri = process.env.DB_URL || "mongodb://localhost:27017/pvm";
 
 const initConnection = async () => {
   try {
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(uri);
 
     console.log("Connected to MongoDB");
   } catch (error) {

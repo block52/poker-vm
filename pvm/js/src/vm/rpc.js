@@ -62,7 +62,7 @@ router.post("/", async (req, res) => {
       // add tokens to the owner
       // const signature = params[2];
       await vm.mint(params[0], params[1]);
-      break;
+      res.status(200).json({ result: "Ok", error: null, id: id });
     case "new":
       if (account.balance < 100) {
         return res.status(400).json({ error: "Insufficient funds" });
