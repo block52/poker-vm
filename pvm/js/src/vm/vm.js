@@ -4,6 +4,7 @@ const ethers = require("ethers");
 
 const Account = require("../models/account");
 const Block = require("../models/block");
+const Transaction = require("../models/transaction");
 
 const { sign_data, verify_signature } = require("./crypto_utils");
 
@@ -42,6 +43,13 @@ class VM {
     // this.loadBlocks();
   }
 
+  async checkNonce(account, nonce) {
+    const query = { address: account, nonce };
+    const result = await Transaction.findOne(query);
+
+    return result;
+  };
+
   async mint(address, amount) {
     const query = { address };
     const recipient = await Account.findOne(query);
@@ -76,12 +84,12 @@ class VM {
     // return this.mempool(account, nonce, action, signature);
   }
 
-  async getAccountNonce(address) {
-    const query = { address };
-    const height = await Account.countDocuments(query);
+  // async getAccountNonce(address) {
+  //   const query = { address };
+  //   const height = await Account.countDocuments(query);
 
-    return height;
-  }
+  //   return height;
+  // }
 
   async getAccount(address) {
     const query = { address };
@@ -187,10 +195,16 @@ class VM {
     };
 
     // Sign the action
-    const signature = sign_data(this.privateKey, action);
+    const data = JSON.stringify(action);
+    const signature = sign_data(this.privateKey, data);
+    const hash = sha256(data);
 
     // Add the transaction to the blockchain
-    return this.mempool(from, nonce, action, signature);
+    // needs to be a map
+    this.mempool(from, nonce, action, signature);
+    // hash => data
+
+    return hash;
   }
 
   // add a block to the db / chain

@@ -13,7 +13,7 @@ const _validator_account = "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49d
 
 router.post("/", async (req, res) => {
 
-  const { method, params } = req.body;
+  const { method, params, id } = req.body;
   const vm = new VM(_validator_account);
 
   // if (!data) {
@@ -61,10 +61,14 @@ router.post("/", async (req, res) => {
     case "mint":
       // add tokens to the owner
       // const signature = params[2];
-      await vm.mint(params[0], params[1]);
-      res.status(200).json({ result: "Ok", error: null, id: id });
+      // await vm.mint(params[0], params[1]);
+
+      const mint_tx = vm.addTx(account, nonce, data, signature, timestamp);
+
+
+      return res.status(200).json({ result: mint_tx, error: null, id: id });
     case "new":
-      if (account.balance < 100) {
+      if (vm.getAccount(params[0]).balance < 100){
         return res.status(400).json({ error: "Insufficient funds" });
       }
 
@@ -77,19 +81,20 @@ router.post("/", async (req, res) => {
 
       await new_game.save();
 
-      // PVM to write and subtract a fee from the account
-      account.balance -= 100;
-      await account.save();
+      // // PVM to write and subtract a fee from the account
+      // account.balance -= 100;
+      // await account.save();
 
-      validator_account.balance += 100;
-      await validator_account.save();
+      // validator_account.balance += 100;
+      // await validator_account.save();
 
-      return res.json({ result: game.id });
-
+      return res.json({ result: game.id, error: null, id: id});
+      
     case "shuffle":
-
+      break;
     case "transfer":
-      await vm.transfer(params[0], params[1], params[2]);
+      const tx = await vm.transfer(params[0], params[1], params[2]);
+      return res.status(200).json({ result: tx, error: null, id: id });
     case "join":
       const address = params[1];
       const amount = params[2];
@@ -103,7 +108,7 @@ router.post("/", async (req, res) => {
     case "deal":
       throw new Error("Not implemented");
     case "action":
-      break;
+      throw new Error("Not implemented");
   }
 
   return res.status(404).json({ error: "Method not found" });
