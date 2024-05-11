@@ -91,12 +91,6 @@ class VM {
   //   return height;
   // }
 
-  async getAccount(address) {
-    const query = { address };
-    const result = await Account.findOne(query);
-
-    return result;
-  }
 
   addTx(account, nonce, data, signature, timestamp) {
     // Create a new transaction
@@ -182,29 +176,30 @@ class VM {
     // broadcast the block
   }
 
-  async transfer(from, to, amount) {
-    // Get the nonce for the from account
-    const nonce = await this.getAccountNonce(from);
 
-    // Create the action
-    const action = {
-      type: "transfer",
-      from,
-      to,
-      amount,
-    };
+  async verify_tx(tx) {
+    // Check the signature
+    if (!verify_signature(tx.account, tx.signature, tx.data)) {
+      console.log("Invalid signature");
+      return false;
+    }
 
-    // Sign the action
-    const data = JSON.stringify(action);
-    const signature = sign_data(this.privateKey, data);
-    const hash = sha256(data);
+    // Check the nonce
+    const result = await this.checkNonce(tx.account, tx.nonce);
+    if (result) {
+      console.log("Invalid nonce");
+      return false;
+    }
 
-    // Add the transaction to the blockchain
-    // needs to be a map
-    this.mempool(from, nonce, action, signature);
-    // hash => data
+    return true;
+  }
 
-    return hash;
+  async mine() {
+
+    // order transactions
+
+    // create block
+
   }
 
   // add a block to the db / chain

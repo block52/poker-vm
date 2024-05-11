@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const Account = require("../models/account");
+const AccountState = require("./account_state.js");
 const contracts = require("../models/contract");
 const games = require("../models/game");
 const transactions = require("../models/transaction");
@@ -109,6 +110,8 @@ router.post("/", async (req, res) => {
       throw new Error("Not implemented");
     case "action":
       throw new Error("Not implemented");
+    case "mine":
+      // hack for PVM to mine a block
   }
 
   return res.status(404).json({ error: "Method not found" });
