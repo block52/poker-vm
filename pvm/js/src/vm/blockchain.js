@@ -1,8 +1,8 @@
 const Blocks = require("../models/block");
 
 class Blockchain {
-  setValidators(validator) {
-    this.validators = validator;
+  setValidator(validator) {
+    this.validator = validator;
   }
 
   addBlock(block) {
