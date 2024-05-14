@@ -5,8 +5,19 @@ class Blockchain {
     this.validator = validator;
   }
 
-  addBlock(block) {
-    this.blocks.push(block);
+  async addBlock(block) {
+    const block = new Block({
+      index: data.index,
+      version: data.version,
+      hash: data.hash,
+      previous_block_hash: data.previous_block_hash,
+      timestamp: data.timestamp,
+      validator: data.validator,
+      txs: data.transactions,
+      signature,
+    });
+
+    await block.save();
   }
 
   height() {
