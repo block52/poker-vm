@@ -23,7 +23,7 @@ class Holdem {
     }
   }
 
-  // this should be from the previous game, roated to the left
+  // this should be from the previous game, rotated to the left
   buyIn(player, amount) {
     if (this.players.length >= _maxPlayers) {
       throw new Error("Table is full");
