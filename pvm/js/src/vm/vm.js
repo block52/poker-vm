@@ -6,7 +6,7 @@ const Account = require("../models/account");
 const Block = require("../models/block");
 const Transaction = require("../models/transaction");
 
-const { sign_data, verify_signature } = require("./crypto_utils");
+const { sign_data, verify_signature } = require("../crypto_utils");
 
 class VM {
   private_key = "";

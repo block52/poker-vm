@@ -103,3 +103,5 @@ class Deck {
     return hash.digest("hex");
   }
 }
+
+module.exports = Deck;

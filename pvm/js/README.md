@@ -69,7 +69,11 @@ To join the game, the player must transfer the minimum amount of tokens to the c
 
 ## Run an end to end test
 
-Using curl to hit our node, 
+Using curl to hit our node.   This can be found in the `/scripts` directory.
+
+```bash
+./scripts/e2e.sh
+```
 
 * Mint 100 tokens to the first account
 * Transfer 50 tokens from the first account to the second account

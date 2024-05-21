@@ -10,36 +10,13 @@ const transactions = require("../models/transaction");
 const { Holdem } = require("./holdem");
 const VM = require("./vm.js");
 
-const _validator_account = "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
+const _validator_account =
+  "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
 
 router.post("/", async (req, res) => {
-
   const { method, params, id } = req.body;
   const vm = new VM(_validator_account);
-
-  // if (!data) {
-  //   return res.status(400).json({ error: "Data is required" });
-  // }
-
-  // const account = params?.account;
-  // const signature = params?.signature;
-
-  // if (!verify_signature(account, signature, data)) {
-  //   return res.status(401).json({ error: "Invalid signature" });
-  // }
-
-  //   switch (method) {
-  //     case "add":
-  //       return res.json({ result: params[0] + params[1] });
-  //     case "sub":
-  //       return res.json({ result: params[0] - params[1] });
-  //     case "mul":
-  //       return res.json({ result: params[0] * params[1] });
-  //     case "div":
-  //       return res.json({ result: params[0] / params[1] });
-  //     default:
-  //       return res.status(404).json({ error: "Method not found" });
-  //   }
+  const account_state = new AccountState();
 
   switch (method) {
     // readonly methods
@@ -54,8 +31,29 @@ router.post("/", async (req, res) => {
     //   return res.json({ result: accounts.getBalance(params[0]) });
   }
 
-  // const account = await accounts.find(params[0]);
-  // const validator_account = await accounts.find(_validator_account);
+  let response,
+    error = await handleWriteTransaction(req.body);
+  if (error) {
+    return res.status(400).json({ error, id });
+  }
+
+  if (response) {
+    return res.status(200).json({ result: response, error: null, id });
+  }
+
+  return res.status(404).json({ error: "Method not found", id });
+});
+
+const handleWriteTransaction = async (tx) => {
+  let response = null;
+  let error = null;
+
+  const { method, params, id, data, signature } = tx;
+
+  // if (await is_nonce_valid(nonce, account)) {
+  //   error = "Invalid nonce";
+  //   return response, error;
+  // }
 
   // Write methods
   switch (method) {
@@ -64,13 +62,13 @@ router.post("/", async (req, res) => {
       // const signature = params[2];
       // await vm.mint(params[0], params[1]);
 
-      const mint_tx = vm.addTx(account, nonce, data, signature, timestamp);
-
-
-      return res.status(200).json({ result: mint_tx, error: null, id: id });
+      const account = params[0];
+      response = vm.addTx(account, nonce, data, signature, timestamp);
+      break;
     case "new":
-      if (vm.getAccount(params[0]).balance < 100){
-        return res.status(400).json({ error: "Insufficient funds" });
+      if (vm.getAccount(params[0]).balance < 100) {
+        error = "Insufficient funds";
+        return response, error;
       }
 
       const new_game = new Game({
@@ -89,12 +87,13 @@ router.post("/", async (req, res) => {
       // validator_account.balance += 100;
       // await validator_account.save();
 
-      return res.json({ result: game.id, error: null, id: id});
-      
+      response = new_game.id;
+      break;
     case "shuffle":
       break;
     case "transfer":
-      const tx = await vm.transfer(params[0], params[1], params[2]);
+      await account_state.transfer(params[0], params[1], params[2]);
+      const tx = "";
       return res.status(200).json({ result: tx, error: null, id: id });
     case "join":
       const address = params[1];
@@ -112,11 +111,8 @@ router.post("/", async (req, res) => {
       throw new Error("Not implemented");
     case "mine":
       // hack for PVM to mine a block
+      await vm.mine();
   }
-
-  return res.status(404).json({ error: "Method not found" });
-  //   const result = rpc[method](...params);
-  //   res.json({ result });
-});
+};
 
 module.exports = router;
