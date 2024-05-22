@@ -1,4 +1,4 @@
-class TxPool {
+export class TxPool {
   _maxLength;
 
   constructor(maxLength = 1000) {
@@ -17,6 +17,9 @@ class TxPool {
   clear() {
     this._transactions = [];
   }
-}
 
-module.exports = TxPool;
+  contains(tx) {
+    const tx = this._transactions.find((t) => t.hash === tx.hash);
+    return tx !== undefined;
+  }
+}
