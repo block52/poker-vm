@@ -9,7 +9,11 @@ export class Server {
     }
 
     validatorLoop() {
+        // listen for incoming messages
 
+        // process messages
+
+        // if block message, process block
     }
 
     ProcessMessage() {
