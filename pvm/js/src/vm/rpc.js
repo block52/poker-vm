@@ -1,14 +1,16 @@
 const express = require("express");
 const router = express.Router();
 
-const Account = require("../schemas/account.js");
-const AccountState = require("./account_state.js");
+const Account = require("../schemas/account");
+const AccountState = require("./account_state");
 const contracts = require("../models/contract");
 const games = require("../models/game");
 const transactions = require("../models/transaction");
 
 const { Holdem } = require("./holdem");
-const VM = require("./vm.js");
+const VM = require("./vm");
+
+const { getServer } = require("../server");
 
 const _validator_account =
   "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
@@ -18,21 +20,29 @@ router.post("/", async (req, res) => {
   const vm = new VM(_validator_account);
   const account_state = new AccountState();
 
-  switch (method) {
-    // readonly methods
-    case "get_account":
-      const account = vm.getAccount(params[0]);
-      return res.json({ result: account });
-    case "get_tx":
-      const tx = vm.getTx(params[0]);
-      return res.json({ result: tx });
-    // case "getBalance":
-    //   const account = accounts.find(params[0]);
-    //   return res.json({ result: accounts.getBalance(params[0]) });
-  }
+  const messageType = "rpc";
+  const timestamp = Date.now();
 
-  let response,
-    error = await handleWriteTransaction(req.body);
+  const server = getServer();
+  const { response, error } = await server.processMessage(req.body);
+
+
+  // switch (method) {
+  //   // readonly methods
+  //   case "get_account":
+  //     const account = vm.getAccount(params[0]);
+  //     return res.json({ result: account });
+  //   case "get_tx":
+  //     const tx = vm.getTx(params[0]);
+  //     return res.json({ result: tx });
+  //   // case "getBalance":
+  //   //   const account = accounts.find(params[0]);
+  //   //   return res.json({ result: accounts.getBalance(params[0]) });
+  // }
+
+  // let response,
+  //   error = await handleWriteTransaction(req.body);
+
   if (error) {
     return res.status(400).json({ error, id });
   }

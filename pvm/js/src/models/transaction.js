@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 
 // Core transaction
-export class Transaction {
+class Transaction {
   constructor(to, data, value, from, signature, nonce) {
     this.to = to;
     this.data = data;
@@ -33,3 +33,5 @@ export class Transaction {
     return true;
   }
 }
+
+module.exports = { Transaction };
