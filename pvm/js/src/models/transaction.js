@@ -2,6 +2,7 @@ const crypto = require("crypto");
 
 // Core transaction
 class Transaction {
+  // Convert rpc call to transaction object
   constructor(to, data, value, from, signature, nonce) {
     this.to = to;
     this.data = data;
@@ -27,6 +28,13 @@ class Transaction {
     hash.update(txString);
     const _hash = hash.digest("hex");
     return _hash;
+  }
+
+  sign(privateKey) {
+    // sign transaction
+
+    // get public key from private key
+    // this.from = "0x" + crypto.createHash("sha256").update(privateKey).digest("hex");
   }
 
   verify() {

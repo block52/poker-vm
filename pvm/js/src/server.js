@@ -14,7 +14,19 @@ class Server {
     // if block message, process block
   }
 
-  ProcessMessage() {}
+  processMessage(message) {
+    // if transaction, process transaction
+    // if block, process block
+
+    const { method, params, id, data, signature } = message;
+    const to = params[0];
+    const value = params[1];
+    const nonce = 0;
+
+    const tx = new Transaction(to, data, value, "", signature, nonce);
+
+    return this.processTransaction(tx);
+  }
 
   processBlock() {}
 
