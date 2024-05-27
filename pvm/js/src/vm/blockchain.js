@@ -1,4 +1,4 @@
-const Blocks = require("../models/block");
+const Blocks = require("../schemas/block");
 
 class Blockchain {
   setValidator(validator) {

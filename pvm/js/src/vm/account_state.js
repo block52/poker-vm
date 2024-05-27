@@ -1,4 +1,4 @@
-const Account = require("../models/account");
+const Account = require("../schemas/account");
 
 class AccountState {
   async createAccount(address) {

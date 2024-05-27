@@ -17,6 +17,7 @@ export class Server {
     }
 
     ProcessMessage() {
+        
     }
 
     processBlock() {

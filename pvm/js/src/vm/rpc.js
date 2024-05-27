@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const Account = require("../models/account");
+const Account = require("../schemas/account.js");
 const AccountState = require("./account_state.js");
 const contracts = require("../models/contract");
 const games = require("../models/game");

@@ -2,8 +2,8 @@ const fs = require("fs");
 const { createECDH, createHash } = require("node:crypto");
 const ethers = require("ethers");
 
-const Account = require("../models/account");
-const Block = require("../models/block");
+const Account = require("../schemas/account");
+const Block = require("../schemas/block");
 const Transaction = require("../models/transaction");
 
 const { sign_data, verify_signature } = require("../crypto_utils");

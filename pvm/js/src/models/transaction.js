@@ -1,32 +1,4 @@
-const mongoose = require("mongoose");
 const crypto = require("crypto");
-
-const transactionSchema = new mongoose.Schema({
-  account: {
-    required: true,
-    type: String,
-  },
-  nonce: {
-    required: true,
-    type: Number,
-  },
-  amount: {
-    required: true,
-    type: Number,
-  },
-  data: {
-    required: true,
-    type: String,
-  },
-  signature: {
-    required: true,
-    type: String,
-  },
-  timestamp: {
-    required: true,
-    type: Number,
-  },
-});
 
 // Core transaction
 export class Transaction {
@@ -48,7 +20,7 @@ export class Transaction {
       value: this.value,
       from: this.from,
       nonce: this.nonce,
-    }
+    };
 
     const txString = JSON.stringify(tx);
     const hash = crypto.createHash("sha256");
@@ -61,5 +33,3 @@ export class Transaction {
     return true;
   }
 }
-
-module.exports = mongoose.model("Transaction", transactionSchema);
