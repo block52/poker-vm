@@ -1,11 +1,13 @@
 const Transaction = require("./models/transaction");
 const TxPool = require("./txpool");
+const AccountState = require("./vm/account_state");
 
 class Server {
   constructor() {
     this.validator = null;
     this.blocks = [];
     this.mempool = new TxPool();
+    this.account_state = new AccountState();
   }
 
   validatorLoop() {
@@ -14,7 +16,7 @@ class Server {
     // if block message, process block
   }
 
-  processMessage(message) {
+  async processMessage(message) {
     // if transaction, process transaction
     // if block, process block
 
@@ -25,12 +27,22 @@ class Server {
 
     const tx = new Transaction(to, data, value, "", signature, nonce);
 
-    return this.processTransaction(tx);
+    return await this.processTransaction(tx);
+  }
+
+  async createNewBlock() {
+    const header = "";
   }
 
   processBlock() {}
 
-  processTransaction(tx) {
+  async processTransaction(tx) {
+
+    if (tx.method !== "get_balance") {
+      const balance = await this.account_state.getBalance(tx.to);
+      return { response: balance };
+    }
+
     if (this.mempool.contains(tx)) {
       return { error: "Transaction already in mempool" };
     }
@@ -44,6 +56,15 @@ class Server {
   }
 
   bootstrapNetwork() {}
+
+  genisisBlock() {}
+
+  async validatorLoop() {
+    const ticker = new Date().getTime();
+    console.log(`Starting validator loop ${ticker} ...`);
+
+
+  }
 }
 
 let server;
