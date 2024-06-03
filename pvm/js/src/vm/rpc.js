@@ -47,7 +47,7 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error, id });
   }
 
-  if (response) {
+  if (response !== null) {
     return res.status(200).json({ result: response, error: null, id });
   }
 

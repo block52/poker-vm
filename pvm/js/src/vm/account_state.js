@@ -26,6 +26,11 @@ class AccountState {
 
   async getBalance(address) {
     const account = await this.getAccount(address);
+
+    if (!account) {
+      return 0;
+    }
+
     return account.balance;
   }
 
