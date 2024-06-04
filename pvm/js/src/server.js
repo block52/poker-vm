@@ -57,7 +57,9 @@ class Server {
 
   bootstrapNetwork() {}
 
-  genisisBlock() {}
+  genesisBlock() {
+    // load the genesis block with the initial state
+  }
 
   async validatorLoop() {
     const ticker = new Date().getTime();

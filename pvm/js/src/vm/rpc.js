@@ -20,7 +20,7 @@ router.post("/", async (req, res) => {
   const vm = new VM(_validator_account);
   const account_state = new AccountState();
 
-  const messageType = "rpc";
+  const message_type = "rpc";
   const timestamp = Date.now();
 
   const server = getServer();
