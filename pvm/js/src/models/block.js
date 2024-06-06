@@ -1,10 +1,10 @@
 class Block {
-  constructor(index, previous_hash, hash, timestamp, validator_index) {
+  constructor(index, previous_hash, hash, timestamp, validator) {
     this.index = index;
     this.previous_hash = previous_hash;
     this.hash = hash;
     this.timestamp = timestamp;
-    this.validator_index = validator_index;
+    this.validator = validator;
   }
 
   addTx(tx) {
