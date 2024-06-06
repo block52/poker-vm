@@ -30,7 +30,7 @@ class Transaction {
     return _hash;
   }
 
-  sign(privateKey) {
+  sign(private_key) {
     // sign transaction
 
     // get public key from private key

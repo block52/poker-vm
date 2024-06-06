@@ -1,23 +1,27 @@
 const Blocks = require("../schemas/block");
+const Block = require("../models/block");
 
 export class Blockchain {
   setValidator(validator) {
     this.validator = validator;
   }
 
-  async addBlock(block) {
-    const block = new Block({
-      index: data.index,
-      version: data.version,
-      hash: data.hash,
-      previous_block_hash: data.previous_block_hash,
-      timestamp: data.timestamp,
-      validator: data.validator,
-      txs: data.transactions,
-      signature,
-    });
+  async addBlock(data) {
+
 
     await block.save();
+  }
+
+  async generateBlock() {
+
+    const timestamp = Date.now();
+
+    const previous_block = await this.getBlock(this.height() - 1);
+
+    const block = new Block(previous_block.index + 1, previous_block.hash, "", timestamp, this.validator.index);
+
+    // hash the block
+    const hash = block.hash();
   }
 
   height() {
@@ -25,7 +29,8 @@ export class Blockchain {
   }
 
   async getBlock(block_number) {
-    return this.blocks[block_number];
+    const block = await Blocks.findOne({ block_number });
+    return block;
   }
 
   async getBlockByHash(hash) {

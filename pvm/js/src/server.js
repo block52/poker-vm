@@ -1,11 +1,11 @@
 const Transaction = require("./models/transaction");
 const TxPool = require("./txpool");
 const AccountState = require("./vm/account_state");
+const Block = require("./models/block");
 
 class Server {
   constructor() {
     this.validator = null;
-    this.blocks = [];
     this.mempool = new TxPool();
     this.account_state = new AccountState();
   }
@@ -32,17 +32,22 @@ class Server {
 
   async createNewBlock() {
     const header = "";
+
+    const txs = this.mempool.getTransactions();
+    const block = new Block(header, txs);
+
+    await block.save();
   }
 
   processBlock() {}
 
   async processTransaction(tx) {
-
-    if (tx.method !== "get_balance") {
+    if (tx.method === "get_balance") {
       const balance = await this.account_state.getBalance(tx.to);
       return { response: balance };
     }
 
+    // write transactions
     if (this.mempool.contains(tx)) {
       return { error: "Transaction already in mempool" };
     }
@@ -62,10 +67,15 @@ class Server {
   }
 
   async validatorLoop() {
-    const ticker = new Date().getTime();
-    console.log(`Starting validator loop ${ticker} ...`);
+    while (true) {
+      const ticker = new Date().getTime();
+      console.log(`Starting validator loop ${ticker} ...`);
 
+      const block = this.createNewBlock();
+      this.processBlock(block);
 
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
   }
 }
 
