@@ -121,7 +121,7 @@ class VM {
     this.mempool.push(tx);
 
     // Return the transaction
-    return tx;
+    return tx.id;
   }
 
   getTx(tx_id) {

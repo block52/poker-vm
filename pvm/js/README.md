@@ -45,6 +45,17 @@ Sends tokens on the layer 2 network.
 }
 ```
 
+### Balance
+
+```json
+{
+    "method": "getAccount",
+    "params": ["0xe05Af8f0689F0BcB7A90FA97B877b4CD14373e5F"],
+    "id": 1,
+    "jsonrpc": "2.0"
+}
+```
+
 ### Join
 
 To join the game, the player must transfer the minimum amount of tokens to the contract.
