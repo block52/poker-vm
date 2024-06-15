@@ -26,7 +26,6 @@ router.post("/", async (req, res) => {
   const server = getServer();
   const { response, error } = await server.processMessage(req.body);
 
-
   // switch (method) {
   //   // readonly methods
   //   case "get_account":

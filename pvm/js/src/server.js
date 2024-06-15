@@ -10,12 +10,6 @@ class Server {
     this.account_state = new AccountState();
   }
 
-  validatorLoop() {
-    // listen for incoming messages
-    // process messages
-    // if block message, process block
-  }
-
   async processMessage(message) {
     // if transaction, process transaction
     // if block, process block
@@ -60,7 +54,9 @@ class Server {
     return { error: "Transaction failed verification" };
   }
 
-  bootstrapNetwork() {}
+  bootstrapNetwork() {
+
+  }
 
   genesisBlock() {
     // load the genesis block with the initial state
