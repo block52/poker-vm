@@ -2,7 +2,7 @@ const Transaction = require("./models/transaction");
 const TxPool = require("./txpool");
 const AccountState = require("./vm/account_state");
 const Block = require("./models/block");
-const Blocks = require("./schemas/blocks");
+const Blocks = require("./schemas/block");
 
 class Server {
   constructor() {

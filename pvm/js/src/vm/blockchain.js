@@ -77,5 +77,12 @@ export class Blockchain {
     const account_state = new AccountState();
     const result = await account_state.transfer(from, to, amount);
   }
+
+  genesisBlock() {
+    const timestamp = Date.now();
+    const block = new Block(0, "", "", timestamp, this.validator.index);
+    block.hash = block.hash();
+    return block;
+  }
 }
 
