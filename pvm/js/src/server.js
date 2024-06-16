@@ -2,12 +2,14 @@ const Transaction = require("./models/transaction");
 const TxPool = require("./txpool");
 const AccountState = require("./vm/account_state");
 const Block = require("./models/block");
+const Blocks = require("./schemas/blocks");
 
 class Server {
   constructor() {
-    this.validator = null;
+    this.validator = ""; // validator public key
     this.mempool = new TxPool();
     this.account_state = new AccountState();
+    this.version = 1;
   }
 
   async processMessage(message) {
@@ -28,12 +30,44 @@ class Server {
     const header = "";
 
     const txs = this.mempool.getTransactions();
-    const block = new Block(header, txs);
 
-    await block.save();
+    // get the last block
+    const lastBlock = await Blocks.findOne().sort({ index: -1 });
+    const index = lastBlock.index + 1;
+    const timestamp = new Date().getTime();
+
+    const block = new Block(index, lastBlock.hash, timestamp, this.validator);
+    block.addTxs(txs);
+
+    // sign the block
+    block.sign("795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68");
+
+    // clear the mempool
+    this.mempool.clear();
+
+    // save the block to the database
+    const blockToAdd = new Blocks({
+      index,
+      version: this.version,
+      hash: block.hash,
+      merkle_root: "",
+      previous_block_hash: lastBlock.previous_block_hash,
+      timestamp,
+      validator: block.validator,
+      signature: block.signature,
+      txs: txs,
+    });
+
+    await blockToAdd.save();
+    return block;
   }
 
-  processBlock() {}
+  // if someone sends us a block, we need to process it and add to the chain
+  processBlock(block) {
+    // check if the block is valid
+    // if valid, add to the chain
+    // if invalid, discard
+  }
 
   async processTransaction(tx) {
     if (tx.method === "get_balance") {
@@ -65,7 +99,7 @@ class Server {
   async validatorLoop() {
     while (true) {
       const ticker = new Date().getTime();
-      console.log(`Starting validator loop ${ticker} ...`);
+      console.log(`Starting validator loop at ${ticker} ...`);
 
       const block = this.createNewBlock();
       this.processBlock(block);
