@@ -8,6 +8,7 @@ class Server {
     this.validator = null;
     this.mempool = new TxPool();
     this.account_state = new AccountState();
+    this.blockchain = new Blockchain();
   }
 
   validatorLoop() {
@@ -30,14 +31,14 @@ class Server {
     return await this.processTransaction(tx);
   }
 
-  async createNewBlock() {
-    const header = "";
+  // async createNewBlock() {
+  //   const header = "";
 
-    const txs = this.mempool.getTransactions();
-    const block = new Block(header, txs);
+  //   const txs = this.mempool.getTransactions();
+  //   const block = new Block(header, txs);
 
-    await block.save();
-  }
+  //   await block.save();
+  // }
 
   processBlock() {}
 
@@ -54,20 +55,26 @@ class Server {
 
     if (tx.verify()) {
       this.mempool.add(tx);
-      return { response: "Transaction added to mempool" };
+      return { response: tx.hash };
     }
 
     return { error: "Transaction failed verification" };
   }
 
-  bootstrapNetwork() {}
+  bootstrapNetwork() {
+    // connect to other validators
+    // get the latest block
+    // get the latest state
+
+    console.log("Bootstrapping network ...");
+  }
 
   genesisBlock() {
     // load the genesis block with the initial state
   }
 
   async validatorLoop() {
-    while (true) {
+    // while (true) {
       const ticker = new Date().getTime();
       console.log(`Starting validator loop ${ticker} ...`);
 
@@ -75,7 +82,7 @@ class Server {
       this.processBlock(block);
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
+    // }
   }
 }
 

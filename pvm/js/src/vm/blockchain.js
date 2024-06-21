@@ -11,7 +11,8 @@ export class Blockchain {
       return false;
     }
 
-    const block = new Block(data.index, data.previous_hash, data.hash, data.timestamp, data.validator);
+    // Create a block entity
+    const block = new Blocks({ index: data.index, version: 1, data.previous_hash, data.hash, data.timestamp, data.validator});
     await block.save();
   }
 
@@ -33,7 +34,7 @@ export class Blockchain {
     return true;
   }
 
-  async generateBlock() {
+  async newBlock() {
 
     const timestamp = Date.now();
     const previous_block = await this.getBlock(this.height() - 1);
@@ -42,6 +43,7 @@ export class Blockchain {
 
     // hash the block
     const hash = block.hash();
+    return block;
   }
 
   async height() {

@@ -15,6 +15,14 @@ class Block {
     this.signature = "signature";
   }
 
+  verify() {
+    if (!this.signature) {
+      return false;
+    }
+    
+    return true;
+  }
+
   hash() {
     this.hash = this.calculateHash();
   }

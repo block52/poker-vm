@@ -18,10 +18,6 @@ const _validator_account =
 router.post("/", async (req, res) => {
   const { method, params, id } = req.body;
   const vm = new VM(_validator_account);
-  const account_state = new AccountState();
-
-  const message_type = "rpc";
-  const timestamp = Date.now();
 
   const server = getServer();
   const { response, error } = await server.processMessage(req.body);
