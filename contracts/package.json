@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "hh:build": "hardhat compile",
+		"hh:compile": "hardhat compile",
+		"hh:test": "hardhat test",
+		"hh:node": "npx hardhat node",
+		"hh:deploy": "npx hardhat ignition deploy ./ignition/modules/Token.ts --network sepolia"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",

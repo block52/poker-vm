@@ -7,7 +7,7 @@ const accountSchema = new mongoose.Schema({
   },
   balance: {
     required: true,
-    type: Number,
+    type: Number // BigInt
   },
 });
 

@@ -1,4 +1,8 @@
-const { getServer } = require("../src/server");
+const server = require("./server");
+
+// const _server = server.getServer();
+// _server.validatorLoop();
+
 // while (true) {
 //   await _server.validatorLoop();
 
