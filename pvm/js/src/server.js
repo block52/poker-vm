@@ -12,11 +12,43 @@ class Server {
     this.version = 1;
   }
 
+  async mempool() {
+    const txs = this.mempool.getTransactions();
+    return txs;
+  }
+
   async processMessage(message) {
     // if transaction, process transaction
     // if block, process block
 
     const { method, params, id, data, signature } = message;
+
+    if (method === "get_balance") {
+      const balance = await this.account_state.getBalance(params[0]);
+      return { response: balance };
+      // return await this.getBalance(params[0]);
+    }
+
+    if (method === "get_tx") {
+      return await this.getTx(params[0]);
+    }
+
+    if (method === "get_account") {
+      return await this.getAccount(params[0]);
+    }
+
+    if (method === "get_block") {
+      return await this.getBlock(params[0]);
+    }
+
+    if (method === "get_blocks") {
+      return await this.getBlocks();
+    }
+
+    if (method === "get_mempool") {
+      return await this.mempool();
+    }
+
     const to = params[0];
     const value = params[1];
     const nonce = 0;
@@ -72,11 +104,6 @@ class Server {
   }
 
   async processTransaction(tx) {
-    if (tx.method === "get_balance") {
-      const balance = await this.account_state.getBalance(tx.to);
-      return { response: balance };
-    }
-
     // write transactions
     if (this.mempool.contains(tx)) {
       return { error: "Transaction already in mempool" };
