@@ -12,3 +12,11 @@ curl --location 'http://localhost:3000/' \
     "id": 1,
     "jsonrpc": "2.0"
 }'
+
+curl --location 'http://localhost:3000/' \
+--header 'Content-Type: application/json' \
+--data '{
+    "method": "get_mempool",
+    "params": [],
+    "id": 1, "jsonrpc": "2.0"
+}'

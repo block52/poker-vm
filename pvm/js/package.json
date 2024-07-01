@@ -10,7 +10,8 @@
     "start": "node src/express.js",
     "dev": "nodemon src/express.js",
     "express": "nodemon src/express.js",
-    "rpc": "nodemon src/express.js"
+    "rpc": "nodemon src/express.js",
+    "server": "nodemon src/server.js"
   },
   "devDependencies": {
     "@types/bun": "latest"

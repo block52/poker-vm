@@ -16,37 +16,48 @@ const _validator_account =
   "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
 
 router.post("/", async (req, res) => {
-  const { method, params, id } = req.body;
-  const vm = new VM(_validator_account);
 
-  const server = getServer();
-  const { response, error } = await server.processMessage(req.body);
+  const response = {
+    result: null,
+    error: null,
+    id: null,
+  };
 
-  // switch (method) {
-  //   // readonly methods
-  //   case "get_account":
-  //     const account = vm.getAccount(params[0]);
-  //     return res.json({ result: account });
-  //   case "get_tx":
-  //     const tx = vm.getTx(params[0]);
-  //     return res.json({ result: tx });
-  //   // case "getBalance":
-  //   //   const account = accounts.find(params[0]);
-  //   //   return res.json({ result: accounts.getBalance(params[0]) });
-  // }
+  try {
+    const { method, params, id } = req.body;
+    response.id = id;
 
-  // let response,
-  //   error = await handleWriteTransaction(req.body);
+    const vm = new VM(_validator_account);
 
-  if (error) {
-    return res.status(400).json({ error, id });
+    const server = getServer();
+    response.result = await server.processMessage(req.body);
+
+    // switch (method) {
+    //   // readonly methods
+    //   case "get_account":
+    //     const account = vm.getAccount(params[0]);
+    //     return res.json({ result: account });
+    //   case "get_tx":
+    //     const tx = vm.getTx(params[0]);
+    //     return res.json({ result: tx });
+    //   // case "getBalance":
+    //   //   const account = accounts.find(params[0]);
+    //   //   return res.json({ result: accounts.getBalance(params[0]) });
+    // }
+
+    // let response,
+    //   error = await handleWriteTransaction(req.body);
+
+
+    if (response.result !== null) {
+      return res.status(200).json(response);
+    }
+
+    response.error = "Method not found";
+    return res.status(400).json(response);
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
   }
-
-  if (response !== null) {
-    return res.status(200).json({ result: response, error: null, id });
-  }
-
-  return res.status(404).json({ error: "Method not found", id });
 });
 
 const handleWriteTransaction = async (tx) => {

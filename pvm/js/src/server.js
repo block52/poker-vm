@@ -10,57 +10,62 @@ class Server {
     this.mempool = new TxPool();
     this.account_state = new AccountState();
     this.version = 1;
+    this.private_key =
+      "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
   }
 
-  async mempool() {
+  async processMessage(message) {
+    try {
+      // if transaction, process transaction
+      // if block, process block
+
+      const { method, params, id, data, signature } = message;
+
+      if (method === "get_balance") {
+        const balance = await this.account_state.getBalance(params[0]);
+        return balance;
+      }
+
+      if (method === "get_tx") {
+        return await this.getTx(params[0]);
+      }
+
+      if (method === "get_account") {
+        return await this.getAccount(params[0]);
+      }
+
+      if (method === "get_block") {
+        return await this.getBlock(params[0]);
+      }
+
+      if (method === "get_blocks") {
+        return await this.getBlocks();
+      }
+
+      if (method === "get_mempool") {
+        const txs = await this.getMempool();
+        return txs;
+      }
+
+      const to = params[0];
+      const value = params[1];
+      const nonce = 0;
+
+      const tx = new Transaction(to, data, value, "", signature, nonce);
+
+      return await this.processTransaction(tx);
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+
+  async getMempool() {
     const txs = this.mempool.getTransactions();
     return txs;
   }
 
-  async processMessage(message) {
-    // if transaction, process transaction
-    // if block, process block
-
-    const { method, params, id, data, signature } = message;
-
-    if (method === "get_balance") {
-      const balance = await this.account_state.getBalance(params[0]);
-      return { response: balance };
-      // return await this.getBalance(params[0]);
-    }
-
-    if (method === "get_tx") {
-      return await this.getTx(params[0]);
-    }
-
-    if (method === "get_account") {
-      return await this.getAccount(params[0]);
-    }
-
-    if (method === "get_block") {
-      return await this.getBlock(params[0]);
-    }
-
-    if (method === "get_blocks") {
-      return await this.getBlocks();
-    }
-
-    if (method === "get_mempool") {
-      return await this.mempool();
-    }
-
-    const to = params[0];
-    const value = params[1];
-    const nonce = 0;
-
-    const tx = new Transaction(to, data, value, "", signature, nonce);
-
-    return await this.processTransaction(tx);
-  }
-
   async createNewBlock() {
     const header = "";
-
     const txs = this.mempool.getTransactions();
 
     // get the last block
@@ -72,9 +77,7 @@ class Server {
     block.addTxs(txs);
 
     // sign the block
-    block.sign(
-      "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68"
-    );
+    block.sign(this.private_key);
 
     // clear the mempool
     this.mempool.clear();
@@ -106,15 +109,15 @@ class Server {
   async processTransaction(tx) {
     // write transactions
     if (this.mempool.contains(tx)) {
-      return { error: "Transaction already in mempool" };
+      throw new Error("Transaction already in mempool");
     }
 
     if (tx.verify()) {
       this.mempool.add(tx);
-      return { response: tx.hash };
+      return tx.hash;
     }
 
-    return { error: "Transaction failed verification" };
+    throw new Error("Transaction is invalid");
   }
 
   bootstrapNetwork() {
