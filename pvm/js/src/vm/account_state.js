@@ -12,6 +12,7 @@ class AccountState {
     const new_account = new Account({
       address,
       balance: 0,
+      nonce: 0,
     });
 
     await new_account.save();
@@ -34,6 +35,18 @@ class AccountState {
     return account.balance;
   }
 
+  async nonce(address) {
+    const account = await this.getAccount(address);
+
+    if (!account) {
+      // create account
+      await this.createAccount(address);
+      return 0;
+    }
+
+    return account.nonce;
+  }
+
   async transfer(from, to, amount) {
     const from_account = await this.getAccount(from);
     const to_account = await this.getAccount(to);
@@ -43,6 +56,7 @@ class AccountState {
     }
 
     from_account.balance -= amount;
+    from_account.nonce += 1;
     to_account.balance += amount;
 
     await from_account.save();

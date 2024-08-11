@@ -12,3 +12,9 @@ Blockchain Poker... again
 4. The transaction is added to the mempool
 
 5. The transaction is added to the block
+
+
+## Scripts
+
+
+### Test accounts

@@ -17,7 +17,7 @@ const _validator_account =
 
 router.post("/", async (req, res) => {
 
-  const response = {
+  let response = {
     result: null,
     error: null,
     id: null,
@@ -26,7 +26,7 @@ router.post("/", async (req, res) => {
   try {
     const { method, params, id } = req.body;
     response.id = id;
-
+    
     const vm = new VM(_validator_account);
 
     const server = getServer();

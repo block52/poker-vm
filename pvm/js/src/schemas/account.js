@@ -9,6 +9,10 @@ const accountSchema = new mongoose.Schema({
     required: true,
     type: Number // BigInt
   },
+  nonce: {
+    required: true,
+    type: Number
+  }
 });
 
 module.exports = mongoose.model("Account", accountSchema);
