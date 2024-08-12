@@ -19,7 +19,7 @@ class Server {
       // if transaction, process transaction
       // if block, process block
 
-      const { method, params, id, data, signature } = message;
+      let { method, params, id, data, signature, nonce } = message;
 
       if (method === "get_balance") {
         const balance = await this.account_state.getBalance(params[0]);
@@ -47,13 +47,30 @@ class Server {
         return txs;
       }
 
+      const from = data;
       const to = params[0];
       const value = params[1];
-      const nonce = 0;
 
-      const tx = new Transaction(to, data, value, "", signature, nonce);
+      if (!nonce) {
+        nonce = await this.account_state.nonce(from);
+      } else {
+        // check if the nonce is valid
+        const account = await this.account_state.getAccount(from);
+        if (account.nonce !== parseInt(nonce)) {
+          throw new Error("Invalid nonce");
+        }
+      }
 
-      return await this.processTransaction(tx);
+      if (method === "send_transaction" || method == "mint") {
+        const tx = new Transaction(to, data, value, "", signature, nonce);
+        return await this.processTransaction(tx);
+      }
+
+      if (method === "create_block") {
+        return await this.createNewBlock();
+      }
+
+      return null;
     } catch (e) {
       throw new Error(e);
     }
