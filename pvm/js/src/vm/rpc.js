@@ -28,8 +28,9 @@ router.post("/", async (req, res) => {
     response.id = id;
     
     const vm = new VM(_validator_account);
-
     const server = getServer();
+
+    response.id = id;
     response.result = await server.processMessage(req.body);
 
     // switch (method) {

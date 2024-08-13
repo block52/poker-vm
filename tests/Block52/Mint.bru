@@ -1,0 +1,22 @@
+meta {
+  name: Mint
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "method": "mint",
+    "params": [
+      "0x8bF18655DFEfc8A4615AB7eb3aB01F6E8cC6134E"
+    ],
+    "id": 1,
+    "jsonrpc": "2.0"
+  }
+}
