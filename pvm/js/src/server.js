@@ -4,14 +4,19 @@ const AccountState = require("./vm/account_state");
 const Block = require("./models/block");
 const Blocks = require("./schemas/block");
 
+const ethers = require("ethers");
+
 class Server {
   constructor() {
-    this.validator = ""; // validator public key
     this.mempool = new TxPool();
     this.account_state = new AccountState();
     this.version = 1;
     this.private_key =
       "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
+
+    // get public key from private key
+    const wallet = new ethers.Wallet(this.private_key);
+    this.validator = wallet.address;
   }
 
   async processMessage(message) {
@@ -61,7 +66,17 @@ class Server {
         }
       }
 
-      if (method === "send_transaction" || method == "mint") {
+      if (method == "mint") {
+
+        // Get signature
+
+        
+
+        const tx = new Transaction(to, data, value, "", signature, nonce);
+        return await this.mint(tx);
+      }
+
+      if (method === "send_transaction") {
         const tx = new Transaction(to, data, value, "", signature, nonce);
         return await this.processTransaction(tx);
       }
@@ -121,6 +136,16 @@ class Server {
     // check if the block is valid
     // if valid, add to the chain
     // if invalid, discard
+  }
+
+  async mint(tx) {
+    // mint new coins
+    if (tx.verify()) {
+      this.account_state.addBalance(tx.to, tx.value);
+      return tx.hash;
+    }
+
+    throw new Error("Transaction is invalid");
   }
 
   async processTransaction(tx) {
