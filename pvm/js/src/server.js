@@ -66,7 +66,7 @@ class Server {
         return await this.processTransaction(tx);
       }
 
-      if (method === "create_block") {
+      if (method === "create_block" || method === "mine") {
         return await this.createNewBlock();
       }
 

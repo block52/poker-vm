@@ -66,31 +66,7 @@ class VM {
 
     recipient.balance += amount;
     await recipient.save();
-
-    // // Get the nonce for the from account
-    // const nonce = await this.getAccountNonce(account);
-
-    // // Create the action
-    // const action = {
-    //   type: "mint",
-    //   account,
-    //   amount,
-    // };
-
-    // // Sign the action
-    // const signature = sign_data(this.private_key, action);
-
-    // // Add the transaction to the blockchain
-    // return this.mempool(account, nonce, action, signature);
   }
-
-  // async getAccountNonce(address) {
-  //   const query = { address };
-  //   const height = await Account.countDocuments(query);
-
-  //   return height;
-  // }
-
 
   addTx(account, nonce, data, signature, timestamp) {
     // Create a new transaction
