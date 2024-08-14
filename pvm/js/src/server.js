@@ -26,6 +26,18 @@ class Server {
 
       let { method, params, id, data, signature, nonce } = message;
 
+      if (!method) {
+        throw new Error("Method is required");
+      }
+
+      if (method === "get_version") {
+        return this.version;
+      }
+
+      if (method === "get_height") {
+        return this.validator;
+      }
+
       if (method === "get_balance") {
         const balance = await this.account_state.getBalance(params[0]);
         return balance;
@@ -67,10 +79,8 @@ class Server {
       }
 
       if (method == "mint") {
-
         // Get signature
 
-        
 
         const tx = new Transaction(to, data, value, "", signature, nonce);
         return await this.mint(tx);
