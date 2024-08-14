@@ -18,3 +18,10 @@ Blockchain Poker... again
 
 
 ### Test accounts
+
+
+### Tokens and contracts
+
+| Contract | Description | Address | Network |
+| --- | --- | --- | --- |
+| `Token` | The token used for the poker game | `0x75A09716c08c4BB18Ad43F576c7A51CD446E2c36` | `sepolia` |
