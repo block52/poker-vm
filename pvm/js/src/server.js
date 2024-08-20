@@ -2,6 +2,9 @@ const Transaction = require("./models/transaction");
 const TxPool = require("./txpool");
 const AccountState = require("./vm/account_state");
 const Block = require("./models/block");
+const Blockchain = require("./vm/blockchain");
+
+// this shouldnt be public
 const Blocks = require("./schemas/block");
 
 const ethers = require("ethers");
@@ -101,6 +104,7 @@ class Server {
       }
 
       if (method === "create_block" || method === "mine") {
+        const Blockchain = 
         return await this.createNewBlock();
       }
 

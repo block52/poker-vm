@@ -35,14 +35,13 @@ export class Blockchain {
   }
 
   async newBlock() {
-
     const timestamp = Date.now();
     const previous_block = await this.getBlock(this.height() - 1);
 
     const block = new Block(previous_block.index + 1, previous_block.hash, "", timestamp, this.validator.index);
 
     // hash the block
-    const hash = block.hash();
+    block.hash();
     return block;
   }
 
@@ -83,7 +82,7 @@ export class Blockchain {
   genesisBlock() {
     const timestamp = Date.now();
     const block = new Block(0, "", "", timestamp, this.validator.index);
-    block.hash = block.hash();
+    block.hash();
     return block;
   }
 }
