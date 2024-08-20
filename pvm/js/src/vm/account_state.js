@@ -19,6 +19,19 @@ class AccountState {
     return new_account;
   }
 
+  async addBalance(address, amount) {
+    const account = await this.getAccount(address);
+
+    if (!account) {
+      return null;
+    }
+
+    account.balance += amount;
+    await account.save();
+
+    return account;
+  }
+
   async getAccount(address) {
     const query = { address };
     const result = await Account.findOne(query);

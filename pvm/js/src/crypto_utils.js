@@ -8,7 +8,13 @@ const sign_data = (private_key, data) => {
   return key.sign(data).toDER("hex");
 };
 
+const recover_public_key = (signature, data) => {
+  const key = ec.recoverPubKey(data, signature, "hex");
+  return key.encode("hex");
+}
+
 module.exports = {
+  recover_public_key,
   verify_signature,
   sign_data,
 };

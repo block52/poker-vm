@@ -7,13 +7,15 @@ const contracts = require("../models/contract");
 const games = require("../models/game");
 const transactions = require("../models/transaction");
 
+const dotenv = require("dotenv");
+dotenv.config();
+
 const { Holdem } = require("./holdem");
 const VM = require("./vm");
 
 const { getServer } = require("../server");
 
-const _validator_account =
-  "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
+const _validator_key = process.env.VALIDATOR_KEY;
 
 router.post("/", async (req, res) => {
 
@@ -27,7 +29,7 @@ router.post("/", async (req, res) => {
     const { method, params, id } = req.body;
     response.id = id;
     
-    const vm = new VM(_validator_account);
+    const vm = new VM(_validator_key);
     const server = getServer();
 
     response.id = id;

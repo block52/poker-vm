@@ -6,13 +6,15 @@ const Blocks = require("./schemas/block");
 
 const ethers = require("ethers");
 
+const dotenv = require("dotenv");
+dotenv.config();
+
 class Server {
   constructor() {
     this.mempool = new TxPool();
     this.account_state = new AccountState();
     this.version = 1;
-    this.private_key =
-      "795844fd4b531b9d764cfa2bf618de808fe048cdec9e030ee49df1e464bddc68";
+    this.private_key = process.env.VALIDATOR_KEY;
 
     // get public key from private key
     const wallet = new ethers.Wallet(this.private_key);
@@ -64,9 +66,12 @@ class Server {
         return txs;
       }
 
+      if (method === "mine" || method === "create_block") {
+        return await this.createNewBlock();
+      }
+
+      // use recover public key to get the public key
       const from = data;
-      const to = params[0];
-      const value = params[1];
 
       if (!nonce) {
         nonce = await this.account_state.nonce(from);
@@ -78,15 +83,19 @@ class Server {
         }
       }
 
-      if (method == "mint") {
+      if (method === "mint") {
         // Get signature
-
+        const to = params[0];
+        const value = params[1];
 
         const tx = new Transaction(to, data, value, "", signature, nonce);
         return await this.mint(tx);
       }
 
       if (method === "send_transaction") {
+        const to = params[0];
+        const value = params[1];
+
         const tx = new Transaction(to, data, value, "", signature, nonce);
         return await this.processTransaction(tx);
       }
@@ -106,40 +115,44 @@ class Server {
     return txs;
   }
 
-  async createNewBlock() {
-    const header = "";
-    const txs = this.mempool.getTransactions();
+  // async createNewBlock() {
+  //   const header = "";
 
-    // get the last block
-    const lastBlock = await Blocks.findOne().sort({ index: -1 });
-    const index = lastBlock.index + 1;
-    const timestamp = new Date().getTime();
+  //   // // get the last block
+  //   // const lastBlock = await Blocks.findOne().sort({ index: -1 });
+  //   // let index = 0;
 
-    const block = new Block(index, lastBlock.hash, timestamp, this.validator);
-    block.addTxs(txs);
+  //   // if (lastBlock) {
+  //   //   lastBlock.index + 1;
+  //   // }
 
-    // sign the block
-    block.sign(this.private_key);
+  //   const timestamp = new Date().getTime();
+  //   const block = new Block(index, lastBlock.hash, timestamp, this.validator);
+  //   const txs = this.mempool.getTransactions();
+  //   block.addTxs(txs);
 
-    // clear the mempool
-    this.mempool.clear();
+  //   // sign the block
+  //   block.sign(this.private_key);
 
-    // save the block to the database
-    const blockToAdd = new Blocks({
-      index,
-      version: this.version,
-      hash: block.hash,
-      merkle_root: "",
-      previous_block_hash: lastBlock.previous_block_hash,
-      timestamp,
-      validator: block.validator,
-      signature: block.signature,
-      txs: txs,
-    });
+  //   // clear the mempool
+  //   this.mempool.clear();
 
-    await blockToAdd.save();
-    return block;
-  }
+  //   // save the block to the database
+  //   const blockToAdd = new Blocks({
+  //     index,
+  //     version: this.version,
+  //     hash: block.hash,
+  //     merkle_root: "",
+  //     previous_block_hash: lastBlock.previous_block_hash,
+  //     timestamp,
+  //     validator: block.validator,
+  //     signature: block.signature,
+  //     txs: txs,
+  //   });
+
+  //   await blockToAdd.save();
+  //   return block;
+  // }
 
   // if someone sends us a block, we need to process it and add to the chain
   processBlock(block) {
@@ -151,7 +164,7 @@ class Server {
   async mint(tx) {
     // mint new coins
     if (tx.verify()) {
-      this.account_state.addBalance(tx.to, tx.value);
+      await this.account_state.addBalance(tx.to, tx.value);
       return tx.hash;
     }
 
@@ -189,7 +202,7 @@ class Server {
     const ticker = new Date().getTime();
     console.log(`Starting validator loop at ${ticker} ...`);
 
-    const block = this.createNewBlock();
+    const block = await this.createNewBlock();
     this.processBlock(block);
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
