@@ -398,3 +398,4 @@ FodyWeavers.xsd
 *.sln.iml
 
 /proxy/venv/*
+pvm/js/.env
