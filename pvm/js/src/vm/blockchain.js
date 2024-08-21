@@ -1,7 +1,7 @@
 const Blocks = require("../schemas/block");
 const Block = require("../models/block");
 
-export class Blockchain {
+class Blockchain {
   setValidator(validator) {
     this.validator = validator;
   }
@@ -12,7 +12,18 @@ export class Blockchain {
     }
 
     // Create a block entity
-    const block = new Blocks({ index: data.index, version: 1, data.previous_hash, data.hash, data.timestamp, data.validator});
+    const block = new Blocks({
+      index: data.index,
+      version: 1,
+      hash: data.hash,
+      merkle_root: data.merkle_root,
+      previous_block_hash: data.previous_hash,
+      timestamp: data.timestamp,
+      validator: data.validator,
+      signature: data.signature,
+      txs: data.txs,
+    });
+    
     await block.save();
   }
 
@@ -38,7 +49,13 @@ export class Blockchain {
     const timestamp = Date.now();
     const previous_block = await this.getBlock(this.height() - 1);
 
-    const block = new Block(previous_block.index + 1, previous_block.hash, "", timestamp, this.validator.index);
+    const block = new Block(
+      previous_block.index + 1,
+      previous_block.hash,
+      "",
+      timestamp,
+      this.validator.index
+    );
 
     // hash the block
     block.hash();
@@ -87,3 +104,4 @@ export class Blockchain {
   }
 }
 
+module.exports = Blockchain;

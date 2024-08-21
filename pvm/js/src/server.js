@@ -1,5 +1,5 @@
 const Transaction = require("./models/transaction");
-const TxPool = require("./txpool");
+const TxPool = require("./core/txpool");
 const AccountState = require("./vm/account_state");
 const Block = require("./models/block");
 const Blockchain = require("./vm/blockchain");
@@ -8,8 +8,8 @@ const Blockchain = require("./vm/blockchain");
 const Blocks = require("./schemas/block");
 
 const ethers = require("ethers");
-
 const dotenv = require("dotenv");
+
 dotenv.config();
 
 class Server {
@@ -34,6 +34,8 @@ class Server {
       if (!method) {
         throw new Error("Method is required");
       }
+
+      console.log(`Processing message: ${method}`);
 
       if (method === "get_version") {
         return this.version;
@@ -69,8 +71,9 @@ class Server {
         return txs;
       }
 
-      if (method === "mine" || method === "create_block") {
-        return await this.createNewBlock();
+      if (method === "mine") {
+        const blockchain = new Blockchain();
+        // return await this.createNewBlock();
       }
 
       // use recover public key to get the public key
@@ -103,11 +106,6 @@ class Server {
         return await this.processTransaction(tx);
       }
 
-      if (method === "create_block" || method === "mine") {
-        const Blockchain = 
-        return await this.createNewBlock();
-      }
-
       return null;
     } catch (e) {
       throw new Error(e);
@@ -119,45 +117,6 @@ class Server {
     return txs;
   }
 
-  // async createNewBlock() {
-  //   const header = "";
-
-  //   // // get the last block
-  //   // const lastBlock = await Blocks.findOne().sort({ index: -1 });
-  //   // let index = 0;
-
-  //   // if (lastBlock) {
-  //   //   lastBlock.index + 1;
-  //   // }
-
-  //   const timestamp = new Date().getTime();
-  //   const block = new Block(index, lastBlock.hash, timestamp, this.validator);
-  //   const txs = this.mempool.getTransactions();
-  //   block.addTxs(txs);
-
-  //   // sign the block
-  //   block.sign(this.private_key);
-
-  //   // clear the mempool
-  //   this.mempool.clear();
-
-  //   // save the block to the database
-  //   const blockToAdd = new Blocks({
-  //     index,
-  //     version: this.version,
-  //     hash: block.hash,
-  //     merkle_root: "",
-  //     previous_block_hash: lastBlock.previous_block_hash,
-  //     timestamp,
-  //     validator: block.validator,
-  //     signature: block.signature,
-  //     txs: txs,
-  //   });
-
-  //   await blockToAdd.save();
-  //   return block;
-  // }
-
   // if someone sends us a block, we need to process it and add to the chain
   processBlock(block) {
     // check if the block is valid
@@ -166,9 +125,13 @@ class Server {
   }
 
   async mint(tx) {
+    // write transactions
+    if (this.mempool.contains(tx)) {
+      throw new Error(`Transaction ${tx.hash} already in mempool`);
+    }
     // mint new coins
     if (tx.verify()) {
-      await this.account_state.addBalance(tx.to, tx.value);
+      this.mempool.add(tx);
       return tx.hash;
     }
 
@@ -178,7 +141,7 @@ class Server {
   async processTransaction(tx) {
     // write transactions
     if (this.mempool.contains(tx)) {
-      throw new Error("Transaction already in mempool");
+      throw new Error(`Transaction ${tx.hash} already in mempool`);
     }
 
     if (tx.verify()) {
