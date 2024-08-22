@@ -8,7 +8,7 @@ const { Server } = require("socket.io");
 
 const cors = require("cors");
 const mongoose = require("mongoose");
-const rpc = require("./vm/rpc");
+const rpc = require("./rpc");
 const io = new Server(server);
 
 const version = "1.0.0";

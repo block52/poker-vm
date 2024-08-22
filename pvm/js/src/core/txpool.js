@@ -7,6 +7,16 @@ class TxPool {
   }
 
   add(tx) {
+    // throw if over the limit
+
+    if (this._transactions.length >= this._maxLength) {
+      throw new Error("Transaction pool is full");
+    }
+
+    if (this.contains(tx)) {
+      throw new Error("Transaction already in pool");
+    }
+
     this._transactions.push(tx);
   }
 

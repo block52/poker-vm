@@ -5,11 +5,8 @@ import {
 import { expect } from "chai";
 import hre from "hardhat";
 
-describe("Vault", () => {
-  async function fixture() {
-    // Contracts are deployed using the first signer/account by default
-    // const [owner, otherAccount] = await hre.ethers.getSigners();
-
+describe("Token", () => {
+  const fixture = async () => {
     const Token = await hre.ethers.getContractFactory("Token");
     const token = await Token.deploy();
 
@@ -19,7 +16,7 @@ describe("Vault", () => {
   describe("Deployment", () => {
     it("Should set the name and symbol", async function () {
       const { token } = await loadFixture(fixture);
-
+      
       expect(await token.name()).to.equal("TEX");
     });
   });
