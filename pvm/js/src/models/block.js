@@ -24,7 +24,10 @@ class Block {
   }
 
   sign(private_key) {
-    this.signature = "signature";
+    const sign = crypto.createSign("SHA256");
+    sign.update(this.hash());
+    sign.end();
+    this.signature = sign.sign(private_key, "hex");
   }
 
   verify() {
@@ -40,7 +43,11 @@ class Block {
   }
 
   calculateHash() {
-    return "hash";
+    const block_json = JSON.stringify(this);
+    // flatten the json
+
+    // hash the json
+    return crypto.createHash("SHA256").update(block_json).digest("hex");
   }
 }
 
