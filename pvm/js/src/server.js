@@ -3,6 +3,7 @@ const TxPool = require("./core/txpool");
 const AccountState = require("./vm/account_state");
 const Block = require("./models/block");
 const Blockchain = require("./vm/blockchain");
+const crypto = require("crypto");
 
 // this shouldnt be public
 const Blocks = require("./schemas/block");
@@ -71,9 +72,30 @@ class Server {
         return txs;
       }
 
+      if (method === "get_random") {
+        const buffer = crypto.randomBytes(32);
+        return buffer.toString("hex");
+      }
+
       if (method === "mine") {
         const blockchain = new Blockchain();
-        // return await this.createNewBlock();
+        const txs = this.mempool.getTransactions();
+        const block = await blockchain.newBlock(txs);
+
+        return block;
+      }
+
+      if (method === "mint") {
+        if (params.length < 2) {
+          throw new Error("Invalid parameters for mint");
+        }
+
+        // Get signature
+        const to = params[0];
+        const value = params[1];
+
+        const tx = new Transaction(to, data, value, "", signature, nonce);
+        return await this.mint(tx);
       }
 
       // use recover public key to get the public key
@@ -87,15 +109,6 @@ class Server {
         if (account.nonce !== parseInt(nonce)) {
           throw new Error("Invalid nonce");
         }
-      }
-
-      if (method === "mint") {
-        // Get signature
-        const to = params[0];
-        const value = params[1];
-
-        const tx = new Transaction(to, data, value, "", signature, nonce);
-        return await this.mint(tx);
       }
 
       if (method === "send_transaction") {

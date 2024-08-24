@@ -13,13 +13,12 @@ class VM {
   public_key = "";
   isValidator = false;
   validator_index = 0;
-  uri = "mongodb://localhost:27017/pvm";
-
   mempool = [];
 
   constructor(private_key = "") {
     this.mempool = [];
     this.private_key = private_key;
+    this.db = process.env.DB || "mongodb://localhost:27017/pvm";
 
     if (this.private_key) {
       this.public_key = new ethers.Wallet(this.private_key);
@@ -151,7 +150,6 @@ class VM {
     this.mempool = [];
     // broadcast the block
   }
-
 
   async verify_tx(tx) {
     // Check the signature

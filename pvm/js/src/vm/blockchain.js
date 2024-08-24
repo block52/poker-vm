@@ -27,6 +27,7 @@ class Blockchain {
     await block.save();
   }
 
+  // move to validator?
   async verifyBlock(block) {
     const previous_block = await this.getBlock(block.index - 1);
 
@@ -45,9 +46,19 @@ class Blockchain {
     return true;
   }
 
-  async newBlock() {
+  async newBlock(txs) {
     const timestamp = Date.now();
-    const previous_block = await this.getBlock(this.height() - 1);
+    const height = await this.height();
+    const index = Number(height) === 0 ? 0 : height - 1;
+    // const previous_block = await this.getBlock(index);
+    let previous_block = null;
+    if (index > 0) {
+      previous_block = await this.getBlock(index);
+    }
+
+    if (index === 0) {
+      previous_block = this.genesisBlock();
+    }
 
     const block = new Block(
       previous_block.index + 1,
