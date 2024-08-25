@@ -18,7 +18,6 @@ const { getServer } = require("./server");
 const _validator_key = process.env.VALIDATOR_KEY;
 
 router.post("/", async (req, res) => {
-
   try {
     const { method, params, id } = req.body;
 
@@ -27,7 +26,7 @@ router.post("/", async (req, res) => {
       error: null,
       id,
     };
-    
+
     const vm = new VM(_validator_key);
     const server = getServer();
 
