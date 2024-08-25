@@ -44,6 +44,14 @@ contract Vault {
         emit Withdrawn(msg.sender, amount);
     }
 
+    function slash(address account, bytes proof) external {
+        uint amount = balances[account];
+        balances[account] = 0;
+
+        IERC20 token = IERC20(underlying);
+        token.transfer(I4626(underlying).validator(), amount);
+    }
+
     event Staked(address indexed user, uint amount);
     event Withdrawn(address indexed user, uint amount);
 }
