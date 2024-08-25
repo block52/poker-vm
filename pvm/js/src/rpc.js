@@ -4,7 +4,7 @@ const router = express.Router();
 const Account = require("./schemas/account");
 const AccountState = require("./vm/account_state");
 const contracts = require("./models/contract");
-const games = require("./models/game");
+const games = require("./schemas/game");
 const transactions = require("./models/transaction");
 
 const dotenv = require("dotenv");

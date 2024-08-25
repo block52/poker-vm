@@ -1,0 +1,74 @@
+{
+    "id": "",
+    "variant": "No Limit Texas Hold'em",
+    "button": 1,
+    "small_blind": 0.5,
+    "big_blind": 1,
+    "ante": 0,
+    "action": 1,
+    "players": [
+        {
+            "id": 1,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        },
+        {
+            "id": 2,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        },
+        {
+            "id": 3,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        },
+        {
+            "id": 4,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        },
+        {
+            "id": 5,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        },
+        {
+            "id": 6,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        },
+        {
+            "id": 7,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        },
+        {
+            "id": 8,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        },
+        {
+            "id": 9,
+            "stack": 100,
+            "hand": [],
+            "bet": 0,
+            "status": "active"
+        }
+    ]
+}

@@ -43,11 +43,11 @@ class Block {
   }
 
   calculateHash() {
-    const block_json = JSON.stringify(this);
+    const json = JSON.stringify(this);
     // flatten the json
 
     // hash the json
-    return crypto.createHash("SHA256").update(block_json).digest("hex");
+    return crypto.createHash("SHA256").update(json).digest("hex");
   }
 }
 
