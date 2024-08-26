@@ -1,6 +1,9 @@
 const Account = require("../schemas/account");
 
 class AccountState {
+  // constructor (mempool) {
+  //   this.mempool = mempool;
+  // }
   async createAccount(address) {
     const query = { address };
     const account = await Account.findOne(query);
