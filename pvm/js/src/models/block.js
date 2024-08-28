@@ -42,12 +42,22 @@ class Block {
     this.hash = this.calculateHash();
   }
 
+  merkle_root() {
+    // calculate the merkle root of the transactions
+    this.merkle_root = this.calculateMerkleRoot();
+  }
+
   calculateHash() {
     const json = JSON.stringify(this);
     // flatten the json
 
     // hash the json
     return crypto.createHash("SHA256").update(json).digest("hex");
+  }
+
+  calculateMerkleRoot() {
+    // calculate the merkle root of the transactions
+    this.merkle_root = "merkle_root";
   }
 }
 

@@ -23,7 +23,7 @@ class Blockchain {
       signature: data.signature,
       txs: data.txs,
     });
-    
+
     await block.save();
   }
 
@@ -60,12 +60,14 @@ class Blockchain {
       previous_block = this.genesisBlock();
     }
 
+    const version = 1;
     const block = new Block(
       previous_block.index + 1,
+      version,
       previous_block.hash,
       "",
       timestamp,
-      this.validator.index
+      this.validator
     );
 
     // hash the block

@@ -82,6 +82,8 @@ class Server {
         const txs = this.mempool.getTransactions();
         const block = await blockchain.newBlock(txs);
 
+        // notify all the other nodes via websockets
+
         return block;
       }
 
@@ -157,12 +159,12 @@ class Server {
       throw new Error(`Transaction ${tx.hash} already in mempool`);
     }
 
-    if (tx.verify()) {
-      this.mempool.add(tx);
-      return tx.hash;
+    if (!tx.verify()) {
+      throw new Error("Transaction is invalid");
     }
 
-    throw new Error("Transaction is invalid");
+    this.mempool.add(tx);
+    return tx.hash;
   }
 
   bootstrapNetwork() {
