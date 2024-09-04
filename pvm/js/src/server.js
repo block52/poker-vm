@@ -172,6 +172,8 @@ class Server {
     // get the latest block
     // get the latest state
 
+    // verify the block
+
     console.log("Bootstrapping network ...");
   }
 
