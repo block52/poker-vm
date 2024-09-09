@@ -1,6 +1,8 @@
 const Blocks = require("../schemas/block");
 const Block = require("../models/block");
 
+const ethers = require("ethers");
+
 class Blockchain {
   setValidator(validator) {
     this.validator = validator;
@@ -46,11 +48,11 @@ class Blockchain {
     return true;
   }
 
-  async newBlock(txs) {
+  async newBlock() {
     const timestamp = Date.now();
     const height = await this.height();
     const index = Number(height) === 0 ? 0 : height - 1;
-    // const previous_block = await this.getBlock(index);
+    
     let previous_block = null;
     if (index > 0) {
       previous_block = await this.getBlock(index);
@@ -60,18 +62,15 @@ class Blockchain {
       previous_block = this.genesisBlock();
     }
 
-    const version = 1;
     const block = new Block(
       previous_block.index + 1,
-      version,
       previous_block.hash,
-      "",
       timestamp,
       this.validator
     );
 
     // hash the block
-    block.hash();
+    // block.hash();
     return block;
   }
 
@@ -111,8 +110,8 @@ class Blockchain {
 
   genesisBlock() {
     const timestamp = Date.now();
-    const block = new Block(0, "", "", timestamp, this.validator.index);
-    block.hash();
+    const block = new Block(0, ethers.ZeroAddress, timestamp, ethers.ZeroAddress);
+    // block.hash();
     return block;
   }
 }

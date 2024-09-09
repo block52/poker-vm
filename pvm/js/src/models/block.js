@@ -4,6 +4,8 @@ class Block {
     this.previous_hash = previous_hash;
     this.timestamp = timestamp;
     this.validator = validator;
+    this.transactions = [];
+    this.version = 1;
   }
 
   addTx(tx) {
@@ -48,12 +50,15 @@ class Block {
   }
 
   calculateHash() {
+
+    // merkle_root();
+
     const blockData = {
       index: this.index,
       previous_hash: this.previous_hash,
       timestamp: this.timestamp,
       validator: this.validator,
-      transactions: this.transactions,
+      transactions: [], // this.transactions,
       merkle_root: this.merkle_root,
     };
 

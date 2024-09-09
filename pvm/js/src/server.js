@@ -60,15 +60,15 @@ class Server {
       }
 
       if (method === "get_block") {
-        return await this.getBlock(params[0]);
-      }
-
-      if (method === "get_blocks") {
-        return await this.getBlocks();
+        const block = await Blocks.findOne({ hash: params[0] });
+        return block;
       }
 
       if (method === "get_mempool") {
         const txs = await this.getMempool();
+
+        // TODO: RESHAPE
+
         return txs;
       }
 
@@ -82,7 +82,7 @@ class Server {
         const txs = this.mempool.getTransactions();
         const block = await blockchain.newBlock(txs);
 
-        // notify all the other nodes via websockets
+        // notify all the other nodes via web sockets
 
         return block;
       }
