@@ -52,7 +52,8 @@ class Server {
       }
 
       if (method === "get_tx") {
-        return await this.getTx(params[0]);
+        const tx = await this.mempool.getTransaction(params[0]);
+        return tx;
       }
 
       if (method === "get_account") {
@@ -60,6 +61,17 @@ class Server {
       }
 
       if (method === "get_block") {
+        // get block by index
+
+        // do a regex to see if the params is a number
+
+        const isNumber = /^\d+$/.test(params[0]);
+
+        if (isNumber) {
+          const block = await Blocks.findOne({ index: params[0] });
+          return block;
+        }
+
         const block = await Blocks.findOne({ hash: params[0] });
         return block;
       }
@@ -78,9 +90,19 @@ class Server {
       }
 
       if (method === "mine") {
+        if (!this.private_key) {
+          throw new Error("Not a validator");
+        }
+
         const blockchain = new Blockchain();
         const txs = this.mempool.getTransactions();
         const block = await blockchain.newBlock(txs);
+
+        // sign the block
+        await block.sign(this.private_key);
+
+        // add the block to the chain
+        await blockchain.addBlock(block);
 
         // notify all the other nodes via web sockets
 

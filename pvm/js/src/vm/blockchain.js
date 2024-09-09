@@ -9,7 +9,7 @@ class Blockchain {
   }
 
   async addBlock(data) {
-    if (!this.validator.verifyBlock(data)) {
+    if (!this.verifyBlock(data)) {
       return false;
     }
 
@@ -23,15 +23,24 @@ class Blockchain {
       timestamp: data.timestamp,
       validator: data.validator,
       signature: data.signature,
-      txs: data.txs,
+      txs: data.transactions,
     });
 
     await block.save();
+
+    return block.hash;
   }
 
   // move to validator?
   async verifyBlock(block) {
-    const previous_block = await this.getBlock(block.index - 1);
+    let previous_block = null;
+    if (block.index > 1) {
+      previous_block = await this.getBlock(block.index - 1);
+    }
+
+    if (block.index <= 1) {
+      previous_block = this.genesisBlock();
+    }
 
     if (!previous_block) {
       return false;
@@ -41,9 +50,9 @@ class Blockchain {
       return false;
     }
 
-    if (block.hash() !== block.hash) {
-      return false;
-    }
+    // if (block.hash() !== block.hash) {
+    //   return false;
+    // }
 
     return true;
   }
@@ -52,7 +61,7 @@ class Blockchain {
     const timestamp = Date.now();
     const height = await this.height();
     const index = Number(height) === 0 ? 0 : height - 1;
-    
+
     let previous_block = null;
     if (index > 0) {
       previous_block = await this.getBlock(index);
@@ -66,11 +75,9 @@ class Blockchain {
       previous_block.index + 1,
       previous_block.hash,
       timestamp,
-      this.validator
+      undefined // validator
     );
 
-    // hash the block
-    // block.hash();
     return block;
   }
 
@@ -110,8 +117,13 @@ class Blockchain {
 
   genesisBlock() {
     const timestamp = Date.now();
-    const block = new Block(0, ethers.ZeroAddress, timestamp, ethers.ZeroAddress);
-    // block.hash();
+    const block = new Block(
+      0,
+      ethers.ZeroAddress,
+      timestamp,
+      ethers.ZeroAddress
+    );
+    block.calculateHash();
     return block;
   }
 }

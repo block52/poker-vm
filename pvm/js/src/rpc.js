@@ -30,7 +30,7 @@ router.post("/", async (req, res) => {
       return res.status(200).json(response);
     }
 
-    response.error = "Method not found";
+    response.error = "error processing request";
     return res.status(400).json(response);
   } catch (e) {
     return res.status(500).json({ error: e.message });

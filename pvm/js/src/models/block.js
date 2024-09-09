@@ -1,11 +1,18 @@
+const ethers = require("ethers");
+// const crypto = globalThis.crypto;
+const crypto = require("crypto");
+
 class Block {
   constructor(index, previous_hash, timestamp, validator) {
     this.index = index;
+    this.hash = null;
     this.previous_hash = previous_hash;
+    this.merkle_root = null;
     this.timestamp = timestamp;
     this.validator = validator;
     this.transactions = [];
     this.version = 1;
+    this.signature = null;
   }
 
   addTx(tx) {
@@ -25,11 +32,12 @@ class Block {
     }
   }
 
-  sign(private_key) {
-    const sign = crypto.createSign("SHA256");
-    sign.update(this.hash());
-    sign.end();
-    this.signature = sign.sign(private_key, "hex");
+  async sign(private_key) {
+    const wallet = new ethers.Wallet(private_key);
+    this.validator = wallet.address;
+    this.signature = await wallet.signMessage(this.calculateHash());
+
+    return this.signature;
   }
 
   verify() {
@@ -40,18 +48,18 @@ class Block {
     return true;
   }
 
-  hash() {
-    this.hash = this.calculateHash();
-  }
+  // hash() {
+  //   this.merkle_root = this.calculateMerkleRoot();
+  //   return this.calculateHash();
+  // }
 
-  merkle_root() {
-    // calculate the merkle root of the transactions
-    this.merkle_root = this.calculateMerkleRoot();
-  }
+  // merkle_root() {
+  //   // calculate the merkle root of the transactions
+  //   this.merkle_root = this.calculateMerkleRoot();
+  // }
 
   calculateHash() {
-
-    // merkle_root();
+    this.merkle_root = this.calculateMerkleRoot();
 
     const blockData = {
       index: this.index,
@@ -63,7 +71,9 @@ class Block {
     };
 
     const json = JSON.stringify(blockData);
-    return crypto.createHash("SHA256").update(json).digest("hex");
+
+    this.hash = crypto.createHash("SHA256").update(json).digest("hex");
+    return this.hash;
   }
 
   calculateMerkleRoot() {
@@ -96,11 +106,6 @@ class Block {
     }
 
     return nextLevel;
-  }
-
-  hash() {
-    this.merkle_root = this.calculateMerkleRoot();
-    return this.calculateHash();
   }
 }
 
