@@ -10,12 +10,7 @@ const transactions = require("./models/transaction");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const { Holdem } = require("./vm/holdem");
-const VM = require("./vm/vm");
-
 const { getServer } = require("./server");
-
-const _validator_key = process.env.VALIDATOR_KEY;
 
 router.post("/", async (req, res) => {
   try {
@@ -27,8 +22,7 @@ router.post("/", async (req, res) => {
       id,
     };
 
-    const vm = new VM(_validator_key);
-    const server = getServer();
+    const server = getServer(process.env.VALIDATOR_KEY);
 
     response.result = await server.processMessage(req.body);
 

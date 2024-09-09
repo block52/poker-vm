@@ -14,11 +14,11 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 class Server {
-  constructor() {
+  constructor(private_key) {
     this.mempool = new TxPool();
     this.account_state = new AccountState();
     this.version = 1;
-    this.private_key = process.env.VALIDATOR_KEY;
+    this.private_key = private_key;
 
     // get public key from private key
     const wallet = new ethers.Wallet(this.private_key);
@@ -196,9 +196,9 @@ class Server {
 
 let server;
 
-const getServer = () => {
+const getServer = (private_key) => {
   if (!server) {
-    server = new Server();
+    server = new Server(private_key);
   }
 
   return server;
