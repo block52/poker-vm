@@ -18,6 +18,14 @@ const transactionSchema = new mongoose.Schema(
       required: true,
       type: String,
     },
+    hash: {
+      required: true,
+      type: String,
+    },
+    block_hash: {
+      required: true,
+      type: String
+    },
     signature: {
       required: true,
       type: String,

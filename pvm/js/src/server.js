@@ -5,7 +5,7 @@ const Block = require("./models/block");
 const Blockchain = require("./vm/blockchain");
 const crypto = require("crypto");
 
-// this shouldnt be public
+// this shouldn't be public
 const Blocks = require("./schemas/block");
 
 const ethers = require("ethers");
@@ -97,6 +97,9 @@ class Server {
 
         // add the block to the chain
         await blockchain.addBlock(block);
+
+        // clear the mempool
+        this.mempool.clear();
 
         // notify all the other nodes via web sockets
 

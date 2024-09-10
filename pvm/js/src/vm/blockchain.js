@@ -1,4 +1,6 @@
 const Blocks = require("../schemas/block");
+const AccountState = require("../vm/account_state");
+const Transaction = require("../schemas/transaction");
 const Block = require("../models/block");
 
 const ethers = require("ethers");
@@ -24,9 +26,26 @@ class Blockchain {
       validator: data.validator,
       signature: data.signature,
       txs: data.transactions,
+      tx_count: data.transactions.length,
     });
 
     await block.save();
+
+    for (let i = 0; i < data.transactions.length; i++) {
+      const tx = data.transactions[i];
+      const transaction = new Transaction({
+        account: tx.from,
+        nonce: tx.nonce,
+        amount: tx.amount,
+        data: tx.data,
+        hash: tx.hash,
+        block_hash: data.hash,
+        signature: tx.signature,
+        timestamp: tx.timestamp,
+      });
+
+      await transaction.save();
+    }
 
     return block.hash;
   }
@@ -57,6 +76,7 @@ class Blockchain {
     return true;
   }
 
+  // Create a new block to be mined / signed by the validator
   async newBlock() {
     const timestamp = Date.now();
     const height = await this.height();
@@ -83,6 +103,18 @@ class Blockchain {
     );
 
     return block;
+  }
+
+  async processBlock(block) {
+    if (!this.verifyBlock(block)) {
+      return false;
+    }
+
+    const txs = block.txs;
+    for (let i = 0; i < txs.length; i++) {
+      const tx = txs[i];
+      await this.handleTransaction(tx);
+    }
   }
 
   async height() {
@@ -116,6 +148,7 @@ class Blockchain {
     // }
 
     // this.mempool.push(tx);
+
     if (tx.value > 0) {
       return this.handleNativeTransfer(tx);
     }

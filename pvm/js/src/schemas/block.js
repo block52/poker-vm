@@ -37,6 +37,10 @@ const blockSchema = new mongoose.Schema({
     required: false,
     type: Array,
   },
+  tx_count: {
+    required: false,
+    type: Number,
+  },
 });
 
 module.exports = mongoose.model("Block", blockSchema);

@@ -23,10 +23,10 @@ class AccountState {
   }
 
   async addBalance(address, amount) {
-    const account = await this.getAccount(address);
+    let account = await this.getAccount(address);
 
     if (!account) {
-      return null;
+      account = await this.createAccount(address);
     }
 
     account.balance += amount;
@@ -68,7 +68,7 @@ class AccountState {
     const to_account = await this.getAccount(to);
 
     if (from_account.balance < amount) {
-      return null;
+      throw new Error("Insufficient funds");
     }
 
     from_account.balance -= amount;
