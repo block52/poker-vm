@@ -61,18 +61,8 @@ class Server {
       }
 
       if (method === "get_block") {
-        // get block by index
-
-        // do a regex to see if the params is a number
-
-        const isNumber = /^\d+$/.test(params[0]);
-
-        if (isNumber) {
-          const block = await Blocks.findOne({ index: params[0] });
-          return block;
-        }
-
-        const block = await Blocks.findOne({ hash: params[0] });
+        const blockchain = new Blockchain();
+        const block = await blockchain.getBlock(params[0]);
         return block;
       }
 
@@ -98,6 +88,10 @@ class Server {
         const txs = this.mempool.getTransactions();
         const block = await blockchain.newBlock(txs);
 
+        if (!block) {
+          throw new Error("Failed to create block");
+        }
+
         // sign the block
         await block.sign(this.private_key);
 
@@ -106,7 +100,7 @@ class Server {
 
         // notify all the other nodes via web sockets
 
-        return block;
+        return block?.hash;
       }
 
       if (method === "mint") {
@@ -197,10 +191,6 @@ class Server {
     // verify the block
 
     console.log("Bootstrapping network ...");
-  }
-
-  genesisBlock() {
-    // load the genesis block with the initial state
   }
 
   async validatorLoop() {
