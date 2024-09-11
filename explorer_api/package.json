@@ -2,5 +2,14 @@
   "name": "explorer_api",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": "20.13"
+  },
+  "dependencies": {
+    "express": "^4.20.0"
+  }
 }
