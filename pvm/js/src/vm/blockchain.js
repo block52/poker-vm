@@ -1,4 +1,6 @@
 const Blocks = require("../schemas/block");
+const AccountState = require("../vm/account_state");
+const Transaction = require("../schemas/transaction");
 const Block = require("../models/block");
 
 const ethers = require("ethers");
@@ -24,9 +26,26 @@ class Blockchain {
       validator: data.validator,
       signature: data.signature,
       txs: data.transactions,
+      tx_count: data.transactions.length,
     });
 
     await block.save();
+
+    for (let i = 0; i < data.transactions.length; i++) {
+      const tx = data.transactions[i];
+      const transaction = new Transaction({
+        account: tx.from,
+        nonce: tx.nonce,
+        amount: tx.amount,
+        data: tx.data,
+        hash: tx.hash,
+        block_hash: data.hash,
+        signature: tx.signature,
+        timestamp: tx.timestamp,
+      });
+
+      await transaction.save();
+    }
 
     return block.hash;
   }
@@ -57,10 +76,11 @@ class Blockchain {
     return true;
   }
 
+  // Create a new block to be mined / signed by the validator
   async newBlock() {
     const timestamp = Date.now();
     const height = await this.height();
-    const index = Number(height) === 0 ? 0 : height - 1;
+    const index = Number(height) === 0 ? 0 : height;
 
     let previous_block = null;
     if (index > 0) {
@@ -69,6 +89,10 @@ class Blockchain {
 
     if (index === 0) {
       previous_block = this.genesisBlock();
+    }
+
+    if (!previous_block) {
+      return undefined;
     }
 
     const block = new Block(
@@ -81,17 +105,40 @@ class Blockchain {
     return block;
   }
 
+  async processBlock(block) {
+    if (!this.verifyBlock(block)) {
+      return false;
+    }
+
+    const txs = block.txs;
+    for (let i = 0; i < txs.length; i++) {
+      const tx = txs[i];
+      await this.handleTransaction(tx);
+    }
+  }
+
   async height() {
     return await Blocks.countDocuments();
   }
 
-  async getBlock(index) {
-    const block = await Blocks.findOne({ index });
-    return block;
-  }
+  async getBlock(id) {
+    const isNumber = /^\d+$/.test(id);
 
-  async getBlockByHash(hash) {
-    const block = await Blocks.findOne({ hash });
+    if (isNumber) {
+      if (parseInt(id) === 0) {
+        return this.genesisBlock();
+      }
+
+      const block = await Blocks.findOne({ index: parseInt(id) });
+      return block;
+    }
+
+    if (id === "latest") {
+      const block = await Blocks.findOne().sort({ index: -1 });
+      return block;
+    }
+
+    const block = await Blocks.findOne({ id });
     return block;
   }
 
@@ -101,6 +148,7 @@ class Blockchain {
     // }
 
     // this.mempool.push(tx);
+
     if (tx.value > 0) {
       return this.handleNativeTransfer(tx);
     }
