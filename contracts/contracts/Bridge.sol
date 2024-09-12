@@ -5,6 +5,7 @@ pragma solidity ^0.8.24;
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IValidator } from "./Vault.sol";
+import { IOracle } from "./Oracle.sol";
 
 contract Bridge {
 
@@ -12,6 +13,7 @@ contract Bridge {
 
     address public immutable underlying;
     address public immutable vault;
+    address private immutable oracle;
     address private immutable _self;
     uint256 public immutable lockTime;
 
@@ -19,9 +21,10 @@ contract Bridge {
     mapping(address => uint256) public balances;
     mapping(bytes32 => bool) private usedNonces;
 
-    constructor(address _underlying, address _vault, uint256 _lockTime) {
-        _underlying = underlying;
+    constructor(address _underlying, address _vault, addres _oracle, uint256 _lockTime) {
+        underlying = _underlying;
         vault = _vault;
+        oracle = _oracle;
         _self = address(this);
         lockTime = _lockTime;
     }
@@ -31,6 +34,9 @@ contract Bridge {
 
         lockTimes[msg.sender] += block.timestamp + lockTime;
         token.transferFrom(msg.sender, _self, amount);
+        
+        // Get exchange rate from oracle
+        uint256 rate = IOracle(oracle).getExchangeRate(underlying);
         balances[msg.sender] += amount;
 
         emit Deposited(msg.sender, amount);
