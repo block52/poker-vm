@@ -4,7 +4,11 @@ pragma solidity ^0.8.24;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // import { I4626 } from "@openzeppelin/contracts/token/ERC20/I4626.sol";
 
-contract Vault {
+interface IValidator {
+    function isValidator(address account) external view returns (bool);
+}
+
+contract Vault is IValidator {
     mapping(address => uint) public balances;
     mapping(address => uint) public lockTimes;
 
@@ -13,6 +17,10 @@ contract Vault {
     uint256 public minValidatorStake;
 
     function isValidator(address account) external view returns (bool) {
+        if (account == address(0)) {
+            return false;
+        }
+
         return balances[account] > minValidatorStake;
     }
 
