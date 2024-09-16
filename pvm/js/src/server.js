@@ -6,12 +6,14 @@ const Blockchain = require("./vm/blockchain");
 const crypto = require("crypto");
 
 // this shouldn't be public
-const Blocks = require("./schemas/block");
+const Transactions = require("./schemas/Transactions");
 
 const ethers = require("ethers");
 const dotenv = require("dotenv");
 
 dotenv.config();
+
+// const vault_abi = require("./contracts/vault.json");
 
 class Server {
   constructor(private_key) {
@@ -75,7 +77,7 @@ class Server {
       }
 
       if (method === "get_random") {
-        const buffer = crypto.randomBytes(32);
+        const buffer = await crypto.randomBytes(32);
         return buffer.toString("hex");
       }
 
@@ -109,6 +111,33 @@ class Server {
       if (method === "mint") {
         if (params.length < 2) {
           throw new Error("Invalid parameters for mint");
+        }
+
+        // Do a regex check for the data, must be a hex string of 64 characters
+        const dataRegex = /^[0-9a-fA-F]{64}$/;
+
+        if (!dataRegex.test(data)) {
+          throw new Error("Valid tx id is required");
+        }
+
+        if (data !== "TEST") {
+
+          // Verify the tx event id has not been used before
+          const found = await Transactions.findOne({
+            data: data,
+          });
+
+          if (found) {
+            throw new Error("Transaction already exists");
+          }
+
+          // Check the event is on chain
+          const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+          const txReceipt = await provider.waitForTransaction(params[0], 1);
+
+          if (!txReceipt) {
+            throw new Error("Transaction not found");
+          }
         }
 
         // Get signature

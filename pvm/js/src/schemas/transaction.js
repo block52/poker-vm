@@ -15,7 +15,7 @@ const transactionSchema = new mongoose.Schema(
       type: Number,
     },
     data: {
-      required: true,
+      required: false,
       type: String,
     },
     hash: {
@@ -40,4 +40,4 @@ const transactionSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Transaction", transactionSchema);
+module.exports = mongoose.model("Transactions", transactionSchema);
