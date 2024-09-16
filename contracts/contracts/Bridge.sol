@@ -21,7 +21,7 @@ contract Bridge {
     mapping(address => uint256) public balances;
     mapping(bytes32 => bool) private usedNonces;
 
-    constructor(address _underlying, address _vault, addres _oracle, uint256 _lockTime) {
+    constructor(address _underlying, address _vault, address _oracle, uint256 _lockTime) {
         underlying = _underlying;
         vault = _vault;
         oracle = _oracle;

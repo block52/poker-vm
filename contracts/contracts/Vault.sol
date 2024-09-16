@@ -56,8 +56,8 @@ contract Vault is IValidator {
         uint amount = balances[account];
         balances[account] = 0;
 
-        IERC20 token = IERC20(underlying);
-        token.transfer(I4626(underlying).validator(), amount);
+        // IERC20 token = IERC20(underlying);
+        // token.transfer(I4626(underlying).validator(), amount);
     }
 
     event Staked(address indexed user, uint amount);
