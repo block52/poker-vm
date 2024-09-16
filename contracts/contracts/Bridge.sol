@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-// import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IValidator } from "./Vault.sol";
@@ -21,7 +20,7 @@ contract Bridge {
     mapping(address => uint256) public balances;
     mapping(bytes32 => bool) private usedNonces;
 
-    constructor(address _underlying, address _vault, addres _oracle, uint256 _lockTime) {
+    constructor(address _underlying, address _vault, address _oracle, uint256 _lockTime) {
         underlying = _underlying;
         vault = _vault;
         oracle = _oracle;
@@ -36,8 +35,8 @@ contract Bridge {
         token.transferFrom(msg.sender, _self, amount);
         
         // Get exchange rate from oracle
-        uint256 rate = IOracle(oracle).getExchangeRate(underlying);
-        balances[msg.sender] += amount;
+        uint256 rate = IOracle(oracle).getRate(amount);
+        balances[msg.sender] += rate;
 
         emit Deposited(msg.sender, amount);
     }
@@ -45,11 +44,11 @@ contract Bridge {
     function withdraw(uint256 amount, address to, bytes32 nonce, bytes32 signature) external {
         require(!usedNonces[nonce], "Bridge: nonce already used");
         require(lockTimes[to] >= block.timestamp, "Bridge: funds are locked");
-        require(balanceOf(to) >= amount, "Bridge: insufficient balance");
+        require(IERC20(underlying).balanceOf(to) >= amount, "Bridge: insufficient balance");
 
         bytes32 message = keccak256(abi.encodePacked(to, amount, nonce));
         address signer = ECDSA.recover(message, signature);
-        require(IValidator(validator).isValidator(signer), "Bridge: invalid signature");
+        require(IValidator(vault).isValidator(signer), "Bridge: invalid signature");
 
         balances[to] -= amount;
         IERC20 token = IERC20(underlying);
