@@ -148,6 +148,11 @@ class Server {
         return await this.mint(tx);
       }
 
+      // GAME LOGIC
+      if (method === "fold" || method === "call" || method === "raise" || method === "check" || method === "bet") {
+
+      }
+
       // use recover public key to get the public key
       const from = data;
 
