@@ -399,3 +399,4 @@ FodyWeavers.xsd
 
 /proxy/venv/*
 pvm/js/.env
+explorer_api/.env

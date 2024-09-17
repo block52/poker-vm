@@ -46,15 +46,23 @@ contract Bridge {
         require(lockTimes[to] >= block.timestamp, "Bridge: funds are locked");
         require(IERC20(underlying).balanceOf(to) >= amount, "Bridge: insufficient balance");
 
-        bytes32 message = keccak256(abi.encodePacked(to, amount, nonce));
-        address signer = ECDSA.recover(message, signature);
-        require(IValidator(vault).isValidator(signer), "Bridge: invalid signature");
+        bytes32 digest = keccak256(abi.encodePacked(to, amount, nonce));
+        require(digest.recover(signature) == vault, "Bridge: invalid signature");
+
+        // address signer = ECDSA.recover(message, signature);
+        // require(IValidator(vault).isValidator(signer), "Bridge: invalid signature");
 
         balances[to] -= amount;
         IERC20 token = IERC20(underlying);
         token.transfer(to, amount);
 
         emit Withdrawn(to, amount);
+    }
+
+    function _verify(bytes32 signature, address account) private pure returns (bool) {
+        return keccak256(signature)
+            .toEthSignedMessageHash()
+            .recover(signature) == account;
     }
 
     event Deposited(address indexed account, uint256 amount);
