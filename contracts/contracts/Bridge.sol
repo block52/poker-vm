@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+// import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IValidator } from "./Vault.sol";
 import { IOracle } from "./Oracle.sol";
 
 contract Bridge {
-
-    // using ECDSA for bytes32;
-
     address public immutable underlying;
     address public immutable vault;
     address private immutable oracle;
@@ -49,21 +46,21 @@ contract Bridge {
         bytes32 messageHash = keccak256(abi.encodePacked(to, amount, nonce));
         address signer = recoverSignerAddress(messageHash, signature);
 
-        // address signer = ECDSA.recover(message, signature);
-        // require(IValidator(vault).isValidator(signer), "Bridge: invalid signature");
+        require(IValidator(vault).isValidator(signer), "Bridge: invalid signature");
 
+        usedNonces[nonce] = true;
         balances[to] -= amount;
         IERC20 token = IERC20(underlying);
         token.transfer(to, amount);
 
-        emit Withdrawn(to, amount);
+        emit Withdrawn(to, amount, nonce);
     }
 
-    function _verify(bytes32 signature, address account) private pure returns (bool) {
-        return keccak256(signature)
-            .toEthSignedMessageHash()
-            .recover(signature) == account;
-    }
+    // function _verify(bytes32 signature, address account) private pure returns (bool) {
+    //     return keccak256(signature)
+    //         .toEthSignedMessageHash()
+    //         .recover(signature) == account;
+    // }
 
     function recoverSignerAddress(bytes32 messageHash, bytes memory signature) private pure returns (address) {
         require(signature.length == 65, "Invalid signature length");
@@ -92,5 +89,5 @@ contract Bridge {
     }
 
     event Deposited(address indexed account, uint256 amount);
-    event Withdrawn(address indexed account, uint256 amount);
+    event Withdrawn(address indexed account, uint256 amount, bytes32 nonce);
 }
