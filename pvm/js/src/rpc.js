@@ -8,7 +8,7 @@ const { getServer } = require("./server");
 
 router.post("/", async (req, res) => {
   try {
-    const { method, params, id } = req.body;
+    const { id } = req.body;
 
     let response = {
       result: null,
@@ -17,7 +17,6 @@ router.post("/", async (req, res) => {
     };
 
     const server = getServer(process.env.VALIDATOR_KEY);
-
     response.result = await server.processMessage(req.body);
 
     if (response.result !== null) {

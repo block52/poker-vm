@@ -1,5 +1,4 @@
 const ethers = require("ethers");
-// const crypto = globalThis.crypto;
 const crypto = require("crypto");
 
 class Block {

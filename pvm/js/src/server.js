@@ -121,7 +121,6 @@ class Server {
         }
 
         if (data !== "TEST") {
-
           // Verify the tx event id has not been used before
           const found = await Transactions.findOne({
             data: data,
@@ -149,7 +148,16 @@ class Server {
       }
 
       // GAME LOGIC
-      if (method === "fold" || method === "call" || method === "raise" || method === "check" || method === "bet") {
+      if (
+        method === "fold" ||
+        method === "call" ||
+        method === "raise" ||
+        method === "check" ||
+        method === "bet"
+      ) {
+        // Get game state
+        const contract_address = params[0];
+        const contract = 
 
       }
 

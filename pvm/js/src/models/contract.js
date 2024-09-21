@@ -1,26 +1,8 @@
-const mongoose = require("mongoose");
+const ethers = require("ethers");
+const crypto = require("crypto");
 
-const contractSchema = new mongoose.Schema({
-  title: {
-    required: true,
-    type: String,
-  },
-  description: {
-    required: true,
-    type: String,
-  },
-  data: {
-    required: true,
-    type: Object,
-  },
-  version: {
-    required: true,
-    type: String,
-  },
-  hash: {
-    required: true,
-    type: String,
-  },
-});
-
-module.exports = mongoose.model("Contract", contractSchema);
+class Contract {
+  constructor(address) {
+    this.address = address;
+  }
+}
