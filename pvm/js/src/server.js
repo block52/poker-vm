@@ -1,13 +1,15 @@
 const Transaction = require("./models/transaction");
 const TxPool = require("./core/txpool");
 const AccountState = require("./vm/account_state");
+
 const Block = require("./models/block");
+const Contract = require("./models/contract");
+
+
 const Blockchain = require("./vm/blockchain");
 const crypto = require("crypto");
 
-// this shouldn't be public
-const Contracts = require("./schemas/Contracts");
-const Transactions = require("./schemas/Transactions");
+const Transactions = require("./schemas/transaction");
 
 const ethers = require("ethers");
 const dotenv = require("dotenv");
@@ -166,6 +168,7 @@ class Server {
           throw new Error("Contract not found");
         }
 
+        contract.processAction({ method, params });
       }
 
       // use recover public key to get the public key
@@ -179,6 +182,21 @@ class Server {
         if (account.nonce !== parseInt(nonce)) {
           throw new Error("Invalid nonce");
         }
+      }
+
+      if (method === "deploy" || method === "deploy_contract") {
+
+        const object = {
+          "type": "poker",
+          "variant": "texas_holdem",
+        }
+
+        const _data = JSON.stringify(object);
+
+        const contract = new Contract();
+        return await contract.deploy(_data, signature, nonce);
+
+        // add to mempool
       }
 
       if (method === "send_transaction") {

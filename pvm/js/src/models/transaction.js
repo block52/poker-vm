@@ -30,6 +30,16 @@ class Transaction {
     return _hash;
   }
 
+  // async getTransaction(id) {
+  //   // get transaction from db
+  //   // Verify the tx event id has not been used before
+  //   const tx = await Transactions.findOne({
+  //     data: id,
+  //   });
+
+  //   return tx;
+  // }
+
   sign(private_key) {
     // sign transaction
 
