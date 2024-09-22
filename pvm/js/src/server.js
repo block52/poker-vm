@@ -6,6 +6,7 @@ const Blockchain = require("./vm/blockchain");
 const crypto = require("crypto");
 
 // this shouldn't be public
+const Contracts = require("./schemas/Contracts");
 const Transactions = require("./schemas/Transactions");
 
 const ethers = require("ethers");
@@ -157,7 +158,13 @@ class Server {
       ) {
         // Get game state
         const contract_address = params[0];
-        const contract = 
+        const contract = await Contracts.findOne({
+          address: contract_address,
+        });
+
+        if (!contract) {
+          throw new Error("Contract not found");
+        }
 
       }
 
