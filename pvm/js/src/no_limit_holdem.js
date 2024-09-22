@@ -10,4 +10,16 @@ class NoLimitHoldem {
   async loadState() {
     // Get the tip of the game from the db
   }
+
+  nextAction() {
+    // Get the next action from the player
+  }
+
+  async processAction(action) {
+    // Process the action
+  }
+
+  players() {
+    // Get the players
+  }
 }
