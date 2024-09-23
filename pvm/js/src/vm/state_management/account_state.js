@@ -1,4 +1,4 @@
-const Account = require("../schemas/account");
+const Account = require("../../schemas/account");
 
 class AccountState {
   // constructor (mempool) {

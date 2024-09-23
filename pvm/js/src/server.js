@@ -1,12 +1,12 @@
 const Transaction = require("./models/transaction");
-const TxPool = require("./core/txpool");
-const AccountState = require("./vm/account_state");
+const TxPool = require("./vm/txpool");
+const AccountState = require("./vm/state_management/account_state");
 
 const Block = require("./models/block");
 const Contract = require("./models/contract");
 
 
-const Blockchain = require("./vm/blockchain");
+const Blockchain = require("./vm/state_management/blockchain");
 const crypto = require("crypto");
 
 const Transactions = require("./schemas/transaction");
@@ -194,6 +194,8 @@ class Server {
         const _data = JSON.stringify(object);
 
         const contract = new Contract();
+
+
         return await contract.deploy(_data, signature, nonce);
 
         // add to mempool

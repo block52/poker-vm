@@ -1,7 +1,7 @@
-const Blocks = require("../schemas/block");
-const AccountState = require("../vm/account_state");
-const Transaction = require("../schemas/transaction");
-const Block = require("../models/block");
+const Blocks = require("../../schemas/block");
+const AccountState = require("./account_state");
+const Transaction = require("../../schemas/transaction");
+const Block = require("../../models/block");
 
 const ethers = require("ethers");
 
