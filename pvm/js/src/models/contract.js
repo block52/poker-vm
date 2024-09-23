@@ -15,7 +15,6 @@ class Contract {
     // Get the tip of the game from the db
 
     const contract = await contracts.findOne({ address: this.address });
-
     const metadata = contract.metadata.split(":");
 
     if (metadata[0] === "no_limit_holdem") {
@@ -41,8 +40,8 @@ class Contract {
       // contract.deploy(data, signature, nonce);
 
       const owner = ethers.utils.verifyMessage(hash, signature);
-
       const found = await contracts.findOneBy({ hash: hash });
+
       if (found) {
         throw new Error("Contract already exists");
       }

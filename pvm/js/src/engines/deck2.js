@@ -1,4 +1,4 @@
-class Deck {
+class Deck2 {
   _deck = [];
   _salt = "";
 
