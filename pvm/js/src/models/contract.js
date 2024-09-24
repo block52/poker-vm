@@ -4,7 +4,11 @@ const crypto = require("crypto");
 const contracts = require("../schemas/contract");
 
 class Contract {
-  constructor() {}
+  constructor() {
+  }
+
+  async hydrate(data) {
+  }
 
   async getContract(address) {
     this.contract = await contracts.findOne({ address });
