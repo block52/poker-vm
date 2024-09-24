@@ -1,15 +1,16 @@
-const Transaction = require("./models/transaction");
+const crypto = require("crypto");
 const TxPool = require("./vm/txpool");
-const AccountState = require("./vm/state_management/account_state");
 
 const Block = require("./models/block");
 const Contract = require("./models/contract");
+const Transaction = require("./models/transaction");
 
-
+const AccountState = require("./vm/state_management/account_state");
 const Blockchain = require("./vm/state_management/blockchain");
-const crypto = require("crypto");
 
 const Transactions = require("./schemas/transaction");
+
+const { recover_public_key } = require("./crypto_utils");
 
 const ethers = require("ethers");
 const dotenv = require("dotenv");
@@ -123,7 +124,7 @@ class Server {
           throw new Error("Valid tx id is required");
         }
 
-        if (data !== "TEST") {
+        if (signature !== "TEST") {
           // Verify the tx event id has not been used before
           const found = await Transactions.findOne({
             data: data,
@@ -145,6 +146,7 @@ class Server {
         // Get signature
         const to = params[0];
         const value = params[1];
+        const sender = recover_public_key(signature, data);
 
         const tx = new Transaction(to, data, value, "", signature, nonce);
         return await this.mint(tx);
@@ -185,27 +187,24 @@ class Server {
       }
 
       if (method === "deploy" || method === "deploy_contract") {
-
         const object = {
-          "type": "poker",
-          "variant": "texas_holdem",
-        }
+          type: "poker",
+          variant: "texas_holdem",
+        };
 
         const _data = JSON.stringify(object);
+        const sender = recover_public_key(signature);
+        const tx = new Transaction(from, _data, 0, sender, signature, nonce);
 
-        const contract = new Contract();
-
-
-        return await contract.deploy(_data, signature, nonce);
-
-        // add to mempool
+        return await this.processTransaction(tx);
       }
 
       if (method === "send_transaction") {
         const to = params[0];
         const value = params[1];
+        const sender = recover_public_key(signature);
 
-        const tx = new Transaction(to, data, value, "", signature, nonce);
+        const tx = new Transaction(to, data, value, sender, signature, nonce);
         return await this.processTransaction(tx);
       }
 
@@ -232,6 +231,7 @@ class Server {
     if (this.mempool.contains(tx)) {
       throw new Error(`Transaction ${tx.hash} already in mempool`);
     }
+
     // mint new coins
     if (tx.verify()) {
       this.mempool.add(tx);

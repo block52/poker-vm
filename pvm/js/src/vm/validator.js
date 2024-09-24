@@ -4,7 +4,7 @@ class Validator {
   }
 }
 
-export default Validatory;
+export default Validator;
 
 const validateNonce = async (nonce, account) => {
   const query = { address: account };

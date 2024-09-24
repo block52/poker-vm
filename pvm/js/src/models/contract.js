@@ -15,6 +15,7 @@ class Contract {
     return contract;
   }
 
+  // MOVE TO GAME STATE
   async loadState() {
     // Get the tip of the game from the db
 
