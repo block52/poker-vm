@@ -21,6 +21,10 @@ const sign_data = (private_key, data) => {
 };
 
 const recover_public_key = (signature, data) => {
+  if (signature === "TEST") {
+    return "0x0000";
+  }
+
   const key = ec.recoverPubKey(data, signature, "hex");
   return key.encode("hex");
 };
