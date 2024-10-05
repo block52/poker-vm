@@ -255,8 +255,12 @@ class Server {
     return tx.hash;
   }
 
-  bootstrapNetwork() {
+  async bootstrapNetwork() {
     // connect to other validators
+
+    await axios.get()
+
+
     // get the latest block
     // get the latest state
 
