@@ -47,16 +47,6 @@ class Block {
     return true;
   }
 
-  // hash() {
-  //   this.merkle_root = this.calculateMerkleRoot();
-  //   return this.calculateHash();
-  // }
-
-  // merkle_root() {
-  //   // calculate the merkle root of the transactions
-  //   this.merkle_root = this.calculateMerkleRoot();
-  // }
-
   calculateHash() {
     this.merkle_root = this.calculateMerkleRoot();
 

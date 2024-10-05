@@ -80,6 +80,14 @@ class AccountState {
 
     return { from: from_account, to: to_account, amount };
   }
+
+  async handleNativeTransfer(tx) {
+    const { from, to, amount } = tx;
+    console.log(`Handling transfer from ${from} to ${to} amount ${amount}`);
+    const result = await this.transfer(from, to, amount);
+
+    return result;
+  }
 }
 
 module.exports = AccountState;
