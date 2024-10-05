@@ -10,6 +10,7 @@ class Blockchain {
     this.validator = validator;
   }
 
+  // Allows blocks to be added to the blockchain.  These may come from other nodes.
   async addBlock(data) {
     if (!this.verifyBlock(data)) {
       return false;
@@ -31,6 +32,8 @@ class Blockchain {
 
     await block.save();
 
+    const account_state = new AccountState();
+
     for (let i = 0; i < data.transactions.length; i++) {
       const tx = data.transactions[i];
       const transaction = new Transaction({
@@ -44,6 +47,7 @@ class Blockchain {
         timestamp: tx.timestamp,
       });
 
+      await account_state.handleNativeTransfer(tx);
       await transaction.save();
     }
 

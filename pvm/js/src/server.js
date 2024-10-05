@@ -90,8 +90,12 @@ class Server {
           throw new Error("Not a validator");
         }
 
+        console.log("Mining block ...");
+
         const blockchain = new Blockchain();
         const txs = this.mempool.getTransactions();
+        console.log(`Mempool size: ${txs.length}`);
+
         const block = await blockchain.newBlock(txs);
 
         if (!block) {
@@ -118,9 +122,9 @@ class Server {
         }
 
         // Do a regex check for the data, must be a hex string of 64 characters
-        const dataRegex = /^[0-9a-fA-F]{64}$/;
+        const signatureRegex = /^[0-9a-fA-F]{64}$/;
 
-        if (!dataRegex.test(data)) {
+        if (!signatureRegex.test(data)) {
           throw new Error("Valid tx id is required");
         }
 
