@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "chai": "^5.1.1",
     "mocha": "^10.7.3"
   },
   "peerDependencies": {
@@ -25,7 +26,6 @@
     "node": "20.12.2"
   },
   "dependencies": {
-    "chai": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.2",
@@ -34,6 +34,5 @@
     "mongoose": "^8.6.1",
     "nodemon": "^3.1.4",
     "socket.io": "^4.7.5"
-  },
-  "type": "module"
+  }
 }

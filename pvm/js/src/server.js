@@ -17,8 +17,6 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-// const vault_abi = require("./contracts/vault.json");
-
 class Server {
   constructor(private_key) {
     this.mempool = new TxPool();
@@ -124,8 +122,14 @@ class Server {
         // Do a regex check for the data, must be a hex string of 64 characters
         const signatureRegex = /^[0-9a-fA-F]{64}$/;
 
-        if (!signatureRegex.test(data)) {
-          throw new Error("Valid tx id is required");
+        if (!signatureRegex.test(signature) && signature !== "TEST") {
+          throw new Error("Valid signature id is required");
+        }
+
+        const dataRegex = /^[0-9a-fA-F]{32}$/;
+
+        if (!dataRegex.test(data) && signature !== "TEST") {
+          throw new Error("Valid Mainnet tx id is required");
         }
 
         if (signature !== "TEST") {
@@ -150,6 +154,7 @@ class Server {
         // Get signature
         const to = params[0];
         const value = params[1];
+        const from = recover_public_key(signature, data); // TODO: should be this validator's public key
         const sender = recover_public_key(signature, data);
 
         const tx = new Transaction(to, data, value, "", signature, nonce);

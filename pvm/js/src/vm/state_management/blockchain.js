@@ -137,7 +137,7 @@ class Blockchain {
       return block;
     }
 
-    if (id === "latest") {
+    if (id === "latest" || id === undefined) {
       const block = await Blocks.findOne().sort({ index: -1 });
       return block;
     }

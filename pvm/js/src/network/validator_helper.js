@@ -1,4 +1,6 @@
 const validator_abi = require("../data/abis/IValidator.json");
+
+// TODO: USE WEB3 INSTEAD OF ETHERS
 const ethers = require("ethers");
 
 const isValidator = async (address) => {
@@ -12,4 +14,14 @@ const isValidator = async (address) => {
   return Boolean(is_validator);
 };
 
-export default isValidator;
+const isSignatureFromValidator = async (signature, data) => {
+  if (signature === "TEST") {
+    return true;
+  }
+
+  // Recover the signer from the signature
+  const signer = ethers.utils.verifyMessage(data, signature);
+  return await isValidator(signer);
+};
+
+export { isValidator, isSignatureFromValidator };
