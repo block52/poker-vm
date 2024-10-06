@@ -11,7 +11,8 @@
     "dev": "nodemon src/express.js",
     "express": "nodemon src/express.js",
     "rpc": "nodemon src/express.js",
-    "server": "nodemon src/server.js"
+    "server": "nodemon src/server.js",
+    "test": "mocha test/server.test.js"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -24,6 +25,7 @@
     "node": "20.12.2"
   },
   "dependencies": {
+    "chai": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.2",
@@ -32,5 +34,6 @@
     "mongoose": "^8.6.1",
     "nodemon": "^3.1.4",
     "socket.io": "^4.7.5"
-  }
+  },
+  "type": "module"
 }
