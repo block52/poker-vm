@@ -104,7 +104,7 @@ class Server {
         await block.sign(this.private_key);
 
         // add the block to the chain
-        await blockchain.addBlock(block);
+        await blockchain.addBlock();
 
         // clear the mempool
         this.mempool.clear();
