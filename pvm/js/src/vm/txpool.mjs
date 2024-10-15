@@ -34,4 +34,4 @@ class TxPool {
   }
 }
 
-module.exports = TxPool;
+export default TxPool;

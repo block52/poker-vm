@@ -1,3 +1,5 @@
+import exp from "constants";
+
 const crypto = require("crypto");
 
 // Core transaction
@@ -52,4 +54,5 @@ class Transaction {
   }
 }
 
-module.exports = Transaction;
+// module.exports = Transaction;
+export default Transaction;

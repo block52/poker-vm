@@ -1,5 +1,4 @@
-const server = require("./server");
-
+import { getServer } from "./server";
 // const _server = server.getServer();
 // _server.validatorLoop();
 

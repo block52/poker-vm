@@ -11,3 +11,5 @@ const getEngine = (name) => {
       throw new Error(`Unknown engine: ${name}`);
   }
 };
+
+export default getEngine;

@@ -34,7 +34,8 @@ class Block {
   async sign(private_key) {
     const wallet = new ethers.Wallet(private_key);
     this.validator = wallet.address;
-    this.signature = await wallet.signMessage(this.calculateHash());
+    const hash = this.calculateHash();
+    this.signature = await wallet.signMessage(hash);
 
     return this.signature;
   }
@@ -59,9 +60,9 @@ class Block {
       merkle_root: this.merkle_root,
     };
 
-    const json = JSON.stringify(blockData);
+    const data = JSON.stringify(blockData);
 
-    this.hash = crypto.createHash("SHA256").update(json).digest("hex");
+    this.hash = crypto.createHash("SHA256").update(data).digest("hex");
     return this.hash;
   }
 
@@ -98,4 +99,5 @@ class Block {
   }
 }
 
-module.exports = Block;
+// module.exports = Block;
+export default Block;

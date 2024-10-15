@@ -5,12 +5,12 @@
   "repository": "git@github.com:bitcoinbrisbane/poker-vm.git",
   "author": "Lucas Cullen <lucas@bitcoinbrisbane.com.au>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "bun": "bun run src/index.js",
-    "start": "node src/express.js",
-    "dev": "nodemon src/express.js",
-    "express": "nodemon src/express.js",
-    "rpc": "nodemon src/express.js",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "express": "nodemon src/app.js",
+    "rpc": "nodemon src/app.js",
     "server": "nodemon src/server.js",
     "test": "mocha test/server.test.js"
   },

@@ -1,4 +1,5 @@
-const Account = require("../../schemas/account");
+// const Account = require("../../schemas/account");
+import Account from "../../schemas/account.mjs";
 
 class AccountState {
   // constructor (mempool) {
@@ -90,4 +91,5 @@ class AccountState {
   }
 }
 
-module.exports = AccountState;
+// module.exports = AccountState;
+export default AccountState;

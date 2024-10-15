@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import { Schema, model } from "mongoose";
 
-const blockHeaderSchema = new mongoose.Schema({
+const blockHeaderSchema = new Schema({
   height: {
     required: true,
     type: Number,
@@ -35,4 +35,4 @@ const blockHeaderSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("BlockHeader", blockHeaderSchema);
+export default model("BlockHeader", blockHeaderSchema);

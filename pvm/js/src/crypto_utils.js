@@ -1,4 +1,4 @@
-const ethers = require("ethers");
+import { ZeroAddress } from "ethers";
 
 const verify_signature = (public_key, signature, data) => {
   if (signature === "TEST") {
@@ -24,14 +24,14 @@ const sign_data = (private_key, data) => {
 
 const recover_public_key = (signature, data) => {
   if (signature === "TEST") {
-    return ethers.ZeroAddress;
+    return ZeroAddress;
   }
 
   const key = ec.recoverPubKey(data, signature, "hex");
   return key.encode("hex");
 };
 
-module.exports = {
+export default {
   recover_public_key,
   verify_signature,
   sign_data,

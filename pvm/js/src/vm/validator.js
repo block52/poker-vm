@@ -14,3 +14,4 @@ const validateNonce = async (nonce, account) => {
 };
 
 module.exports = validateNonce;
+// export default { validateNonce };

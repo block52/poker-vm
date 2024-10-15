@@ -4,3 +4,5 @@ class Player {
     this.balance = balance;
   }
 }
+
+export default Player;

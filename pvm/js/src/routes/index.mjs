@@ -1,10 +1,12 @@
-const express = require("express");
+// const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const dotenv = require("dotenv");
+// const dotenv = require("dotenv");
+import dotenv from "dotenv";
 dotenv.config();
 
-const { getServer } = require("./server");
+import { getServer } from "../server.js";
 
 router.post("/", async (req, res) => {
   try {
@@ -30,4 +32,4 @@ router.post("/", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

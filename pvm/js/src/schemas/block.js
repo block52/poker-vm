@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import { Schema, model } from "mongoose";
 
-const blockSchema = new mongoose.Schema({
+const blockSchema = new Schema({
   index: {
     required: true,
     type: Number,
@@ -43,4 +43,4 @@ const blockSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Block", blockSchema);
+export default model("Block", blockSchema);

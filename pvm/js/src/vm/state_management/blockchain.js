@@ -1,9 +1,9 @@
-const Blocks = require("../../schemas/block");
-const AccountState = require("./account_state");
-const Transaction = require("../../schemas/transaction");
-const Block = require("../../models/block");
+import Blocks, { countDocuments, findOne } from "../../schemas/block";
+import AccountState from "./account_state.mjs";
+import Transaction from "../../schemas/transaction";
+import Block from "../../models/block.mjs";
 
-const ethers = require("ethers");
+import { ZeroAddress } from "ethers";
 
 class Blockchain {
   setValidator(validator) {
@@ -127,7 +127,7 @@ class Blockchain {
   }
 
   async height() {
-    return await Blocks.countDocuments();
+    return await countDocuments();
   }
 
   async getBlock(id) {
@@ -138,16 +138,16 @@ class Blockchain {
         return this.genesisBlock();
       }
 
-      const block = await Blocks.findOne({ index: parseInt(id) });
+      const block = await findOne({ index: parseInt(id) });
       return block;
     }
 
     if (id === "latest" || id === undefined) {
-      const block = await Blocks.findOne().sort({ index: -1 });
+      const block = await findOne().sort({ index: -1 });
       return block;
     }
 
-    const block = await Blocks.findOne({ id });
+    const block = await findOne({ id });
     return block;
   }
 
@@ -176,13 +176,13 @@ class Blockchain {
     const timestamp = Date.now();
     const block = new Block(
       0,
-      ethers.ZeroAddress,
+      ZeroAddress,
       timestamp,
-      ethers.ZeroAddress
+      ZeroAddress
     );
     block.calculateHash();
     return block;
   }
 }
 
-module.exports = Blockchain;
+export default Blockchain;
