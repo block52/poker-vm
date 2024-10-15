@@ -11,38 +11,38 @@ class Blockchain {
   }
 
   // Allows blocks to be added to the blockchain.  These may come from other nodes.
-  async addBlock(data) {
-    if (!this.verifyBlock(data)) {
+  async addBlock() {
+    if (!this.verifyBlock(this.block)) {
       return false;
     }
 
     // Create a block entity
     const block = new Blocks({
-      index: data.index,
+      index: this.block.index,
       version: 1,
-      hash: data.hash,
-      merkle_root: data.merkle_root,
-      previous_block_hash: data.previous_hash,
-      timestamp: data.timestamp,
-      validator: data.validator,
-      signature: data.signature,
-      txs: data.transactions,
-      tx_count: data.transactions.length,
+      hash: this.block.hash,
+      merkle_root: this.block.merkle_root,
+      previous_block_hash: this.block.previous_hash,
+      timestamp: this.block.timestamp,
+      validator: this.block.validator,
+      signature: this.block.signature,
+      txs: this.block.transactions,
+      tx_count: this.block.transactions.length,
     });
 
     await block.save();
 
     const account_state = new AccountState();
 
-    for (let i = 0; i < data.transactions.length; i++) {
-      const tx = data.transactions[i];
+    for (let i = 0; i < this.block.transactions.length; i++) {
+      const tx = this.block.transactions[i];
       const transaction = new Transaction({
         account: tx.from,
         nonce: tx.nonce,
         amount: tx.amount,
         data: tx.data,
         hash: tx.hash,
-        block_hash: data.hash,
+        block_hash: this.block.hash,
         signature: tx.signature,
         timestamp: tx.timestamp,
       });
@@ -81,7 +81,7 @@ class Blockchain {
   }
 
   // Create a new block to be mined / signed by the validator
-  async newBlock() {
+  async newBlock(txs) {
     const timestamp = Date.now();
     const height = await this.height();
     const index = Number(height) === 0 ? 0 : height;
@@ -99,14 +99,19 @@ class Blockchain {
       return undefined;
     }
 
-    const block = new Block(
+    this.block = new Block(
       previous_block.index + 1,
       previous_block.hash,
       timestamp,
       undefined // validator
     );
 
-    return block;
+    if (txs) {
+      this.block.transactions.push(txs);
+      // this.block.transactions = txs;
+    }
+
+    return this.block;
   }
 
   async processBlock(block) {
@@ -137,7 +142,7 @@ class Blockchain {
       return block;
     }
 
-    if (id === "latest") {
+    if (id === "latest" || id === undefined) {
       const block = await Blocks.findOne().sort({ index: -1 });
       return block;
     }

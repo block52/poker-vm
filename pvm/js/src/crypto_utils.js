@@ -1,4 +1,4 @@
-
+const ethers = require("ethers");
 
 const verify_signature = (public_key, signature, data) => {
   if (signature === "TEST") {
@@ -24,7 +24,7 @@ const sign_data = (private_key, data) => {
 
 const recover_public_key = (signature, data) => {
   if (signature === "TEST") {
-    return "0x0000";
+    return ethers.ZeroAddress;
   }
 
   const key = ec.recoverPubKey(data, signature, "hex");
