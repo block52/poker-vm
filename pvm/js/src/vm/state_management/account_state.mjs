@@ -1,5 +1,5 @@
 // const Account = require("../../schemas/account");
-import Account from "../../schemas/account.mjs";
+import Account from "../../schemas/accounts.mjs";
 
 class AccountState {
   // constructor (mempool) {

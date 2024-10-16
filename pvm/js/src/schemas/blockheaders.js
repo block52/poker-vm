@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 
-const blockSchema = new Schema({
-  index: {
+const blockHeaderSchema = new Schema({
+  height: {
     required: true,
     type: Number,
   },
@@ -14,7 +14,7 @@ const blockSchema = new Schema({
     type: String,
   },
   merkle_root: {
-    required: false,
+    required: true,
     type: String,
   },
   previous_block_hash: {
@@ -33,14 +33,6 @@ const blockSchema = new Schema({
     required: true,
     type: String,
   },
-  txs: {
-    required: false,
-    type: Array,
-  },
-  tx_count: {
-    required: false,
-    type: Number,
-  },
 });
 
-export default model("Block", blockSchema);
+export default model("BlockHeaders", blockHeaderSchema);

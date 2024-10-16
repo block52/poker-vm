@@ -1,6 +1,4 @@
-import exp from "constants";
-
-const crypto = require("crypto");
+import crypto from "crypto";
 
 // Core transaction
 class Transaction {

@@ -1,7 +1,7 @@
-import Blocks, { countDocuments, findOne } from "../../schemas/block";
+import Blocks, { countDocuments, findOne } from "../../schemas/block.mjs";
 import AccountState from "./account_state.mjs";
-import Transaction from "../../schemas/transaction";
-import Block from "../../models/block.mjs";
+import { Transaction } from "../../schemas/index.mjs";
+import Block from "../../models/index.mjs";
 
 import { ZeroAddress } from "ethers";
 
@@ -174,12 +174,7 @@ class Blockchain {
 
   genesisBlock() {
     const timestamp = Date.now();
-    const block = new Block(
-      0,
-      ZeroAddress,
-      timestamp,
-      ZeroAddress
-    );
+    const block = new Block(0, ZeroAddress, timestamp, ZeroAddress);
     block.calculateHash();
     return block;
   }
