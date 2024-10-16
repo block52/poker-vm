@@ -77,6 +77,10 @@ class Blockchain {
     //   return false;
     // }
 
+    // Get the account state
+
+    // Verify the transactions
+
     return true;
   }
 
