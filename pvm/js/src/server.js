@@ -1,15 +1,15 @@
 import { randomBytes } from "crypto";
 import TxPool from "./vm/txpool.mjs";
 
-import Block from "./models/block.mjs";
-import Contract from "./models/contract.mjs";
-import Transaction from "./models/transaction.mjs";
+// import Block from "./models/block.mjs";
+// import Contract from "./models/contract.mjs";
+import { Transaction } from "./models/index.mjs";
 
 import AccountState from "./vm/state_management/account_state.mjs";
-import Blockchain from "./vm/state_management/blockchain";
+import Blockchain from "./vm/state_management/blockchain.mjs";
 
 import { findOne } from "./schemas/transaction";
-import { recover_public_key } from "./crypto_utils";
+import { recover_public_key } from "./crypto_utils.mjs";
 import { Wallet, JsonRpcProvider } from "ethers";
 import { config } from "dotenv";
 

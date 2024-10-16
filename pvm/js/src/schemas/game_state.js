@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import { Schema, model } from "mongoose";
 
-const gameStateSchema = new mongoose.Schema({
+const gameStateSchema = new Schema({
   index : {
     required: true,
     type: Number,
@@ -27,4 +27,4 @@ const gameStateSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("GameState", gameStateSchema);
+export default model("GameState", gameStateSchema);

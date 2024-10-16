@@ -1,7 +1,7 @@
 const ethers = require("ethers");
 const crypto = require("crypto");
 
-const contracts = require("../schemas/contract");
+const contracts = require("../schemas/contract").default;
 
 class Contract {
   constructor() {}
