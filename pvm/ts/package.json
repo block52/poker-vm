@@ -4,11 +4,17 @@
   "main": "index.ts",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js",
+    "dev": "npx ts-node src/index.ts",
+    "start": "node dist/index.js",
     "build": "tsc"
   },
   "dependencies": {
-    "@types/node": "^20.12.7",
-    "typescript": "^5.4.5"
+    "@types/node": "^22.7.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0"
   }
 }

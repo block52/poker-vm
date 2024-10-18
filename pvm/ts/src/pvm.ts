@@ -1,5 +1,3 @@
-class PVM {
-    
-}
+class PVM { }
 
 export default PVM;
