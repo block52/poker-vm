@@ -1,6 +1,6 @@
 import { ICommand } from "./interfaces";
 
-export class Mint implements ICommand {
+class Mint implements ICommand {
     constructor(readonly receiver: string, readonly amount: number, readonly tx: string) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
@@ -30,3 +30,5 @@ export class Mint implements ICommand {
         return "Minted!";
     }
 }
+
+export default Mint;

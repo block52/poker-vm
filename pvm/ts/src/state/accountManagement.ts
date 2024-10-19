@@ -1,7 +1,7 @@
 import { Account } from "../models/account";
-import { Accounts } from "../schema/accounts";
+import Accounts from "../schema/accounts";
 
-export class AccountManagement {
+class AccountManagement {
   constructor() {
 
   }
@@ -32,3 +32,6 @@ export class AccountManagement {
     await Accounts.updateOne({ address }, { $inc: { balance } });
   }
 }
+
+
+export default AccountManagement;

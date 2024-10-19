@@ -3,11 +3,6 @@ import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 
-
-
-
-
-
 // Define the Bitcoin color
 const bitcoinColor = "#f69018";
 
@@ -19,9 +14,6 @@ const theme = extendTheme({
     },
   },
 });
-
-
-
 
 const AppContent = () => {
   return (
