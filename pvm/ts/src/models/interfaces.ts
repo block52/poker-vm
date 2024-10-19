@@ -1,5 +1,9 @@
 export interface IModel {
     getId(): string;
-    isValid(): boolean;
     toJson(): any;
+}
+
+export interface ICryptoModel extends IModel {
+    getHash(): string;
+    isValid(): boolean;
 }

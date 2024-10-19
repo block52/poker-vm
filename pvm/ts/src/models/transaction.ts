@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
-import { IModel } from "./interfaces";
+import { ICryptoModel } from "./interfaces";
 
-export class Transaction implements IModel {
+export class Transaction implements ICryptoModel {
   constructor(
     readonly to: string,
     readonly from: string,
@@ -16,17 +16,23 @@ export class Transaction implements IModel {
   }
 
   public isValid(): boolean {
-    const signature = createHash("sha256")
-      .update(`${this.to}${this.from}${this.value}${this.timestamp}`)
-      .digest("hex");
+    // const signature = createHash("sha256")
+    //   .update(`${this.to}${this.from}${this.value}${this.timestamp}`)
+    //   .digest("hex");
 
-    return signature === this.signature;
+    // return signature === this.signature;
+
+    throw new Error("Method not implemented.");
   }
 
-  public getId(): string {
+  public getHash(): string {
     return createHash("sha256")
       .update(`${this.to}${this.from}${this.value}${this.timestamp}`)
       .digest("hex");
+  }
+
+  public getId(): string {
+    return this.getHash();
   }
 
   public toJson(): any {
