@@ -1,17 +1,30 @@
 # poker-vm
 Blockchain Poker... again
 
-## Order of operations
+# Order of operations
 
-1. The request is made via the RPC
+## Creating the transaction
 
-2. The signature and nonce is verified
+* Transactions are sent to the node
+* Node validates the transaction signature
+* Node validates the transaction nonce
+* Node validates the transaction balance, via the account state manager
+* Transaction is added to the transaction mem pool
 
-3. The logic of the game is executed to verify this is a valid transaction
+## Creating the block
 
-4. The transaction is added to the mempool
+* Nodes are selected in a round robin fashion
+* Transactions are pulled from the mem pool
+* Transactions are replayed in the order they were received, and by the nonce
+* The account state manager is updated with the new balances
+* The block is created and signed by the node
+* The block is sent to the network
 
-5. The transaction is added to the block
+## Receiving the block
+
+* The block is received by another node
+* The block is validated by the node, with validators public key, merkle root, and signature
+* The block is added to the block state manager
 
 
 ## Scripts
