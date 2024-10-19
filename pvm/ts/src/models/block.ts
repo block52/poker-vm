@@ -1,37 +1,69 @@
+import { ethers } from "ethers";
+import { Transaction } from "./transaction";
+
 export class Block {
+
+  private readonly transactions: Transaction[];
 
   constructor(readonly index: number, readonly previousHash: string, readonly timestamp: number, readonly validator: string) {
     this.index = index;
     this.previousHash = previousHash;
     this.timestamp = timestamp;
     this.validator = validator;
-    // this.transactions = [];
+    this.transactions = [];
   }
 
-  public async sign(privateKey: string): Promise<string> {
-    // const wallet = new ethers.Wallet(privateKey);
-    // this.validator = wallet.address;
-    // this.signature = await wallet.signMessage(this.calculateHash());
-    // return this.signature;
+  public static create(index: number, previousHash: string, timestamp: number, privateKey: string): Block {
+    const wallet = new ethers.Wallet(privateKey);
+    const validator = wallet.address;
+    return new Block(index, previousHash, timestamp, validator);
+  }
+
+  public calculateHash(): string {
+    // this.merkleRoot = this.calculateMerkleRoot();
+
+    const blockData = {
+      index: this.index,
+      previousHash: this.previousHash,
+      timestamp: this.timestamp,
+      validator: this.validator,
+      transactions: [], // this.transactions,
+      // merkleRoot: this.merkleRoot,
+    };
+
+    const json = JSON.stringify(blockData);
+
+    // this.hash = crypto.createHash("SHA256").update(json).digest("hex");
+    // return this.hash;
     return "";
   }
 
-  // addTx(tx) {
-  //   // check if the tx has been added previously
-  //   if (this.transactions.includes(tx)) {
-  //     return;
-  //   }
+  public verify(): boolean {
+    // if (!this.signature) {
+    //   return false;
+    // }
+    // return true;
+    return false;
+  }
 
-  //   // check the signature of the tx?
+  addTx(tx: Transaction) {
+    // check if the tx has been added previously
+    if (this.transactions.includes(tx)) {
+      return;
+    }
 
-  //   this.transactions.push(tx);
-  // }
+    if (!tx.isValid()) {
+      throw new Error("Invalid transaction");
+    }
 
-  // addTxs(txs) {
-  //   for (const tx of txs) {
-  //     this.addTx(tx);
-  //   }
-  // }
+    this.transactions.push(tx);
+  }
+
+  addTxs(txs: Transaction[]) {
+    for (const tx of txs) {
+      this.addTx(tx);
+    }
+  }
 
   // async sign(private_key) {
   //   const wallet = new ethers.Wallet(private_key);

@@ -1,0 +1,1 @@
+// create blocks here too, with last index

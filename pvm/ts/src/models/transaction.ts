@@ -25,14 +25,14 @@ export class Transaction implements ICryptoModel {
     throw new Error("Method not implemented.");
   }
 
-  public getHash(): string {
+  public calculateHash(): string {
     return createHash("sha256")
       .update(`${this.to}${this.from}${this.value}${this.timestamp}`)
       .digest("hex");
   }
 
   public getId(): string {
-    return this.getHash();
+    return this.calculateHash();
   }
 
   public toJson(): any {
