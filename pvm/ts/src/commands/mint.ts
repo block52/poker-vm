@@ -1,4 +1,4 @@
-import { ICommand } from "../types/interfaces";
+import { ICommand } from "./interfaces";
 
 export class Mint implements ICommand {
     constructor(readonly receiver: string, readonly amount: number, readonly tx: string) {

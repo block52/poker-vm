@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Set the command name
 COMMAND_NAME="$(echo "$1" | awk '{print toupper(substr($0, 1, 1)) tolower(substr($0, 2))}')"
 
@@ -6,7 +8,7 @@ cd src/commands
 # Create the command file with interface implemented
 COMMAND_FILE="$(echo "$1" | tr '[:upper:]' '[:lower:]').ts"
 cat <<EOL > "$COMMAND_FILE"
-import { ICommand } from "./index";
+import { ICommand } from "./interfaces";
 
 class ${COMMAND_NAME} implements ICommand {
   execute() {

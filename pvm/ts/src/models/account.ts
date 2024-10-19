@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import { ethers } from "ethers";
 
 export class Account {
