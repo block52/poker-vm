@@ -52,7 +52,7 @@ export class Block {
       return;
     }
 
-    if (!tx.isValid()) {
+    if (!tx.verify()) {
       throw new Error("Invalid transaction");
     }
 

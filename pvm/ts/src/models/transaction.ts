@@ -15,7 +15,7 @@ export class Transaction implements ICryptoModel {
 
   }
 
-  public isValid(): boolean {
+  public verify(): boolean {
     // const signature = createHash("sha256")
     //   .update(`${this.to}${this.from}${this.value}${this.timestamp}`)
     //   .digest("hex");

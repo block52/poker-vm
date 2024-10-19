@@ -5,5 +5,5 @@ export interface IModel {
 
 export interface ICryptoModel extends IModel {
     calculateHash(): string;
-    validate(): boolean;
+    verify(): boolean;
 }
