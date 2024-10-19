@@ -42,7 +42,6 @@ class Transaction {
 
   sign(private_key) {
     // sign transaction
-
     // get public key from private key
     // this.from = "0x" + crypto.createHash("sha256").update(privateKey).digest("hex");
   }
