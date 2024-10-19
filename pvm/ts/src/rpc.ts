@@ -1,10 +1,10 @@
 import { Mint } from "./commands";
+import { BlockCommand } from "./commands/blockCommand";
 import { ICommand } from "./commands/interfaces";
 import { RPCRequest, RPCResponse } from "./types/rpc";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse> {
-
         const id = request.id;
 
         const response: RPCResponse = {
@@ -21,8 +21,21 @@ export class RPC {
         const method = request.method;
 
         switch (request.method) {
-            case "get_balance":
+            case "get_block":
+                if (!request.params) {
+                    // Get the last block
 
+                    return response;
+                }
+
+                const index = request.params[0];
+                const blockCommand = new BlockCommand();
+                break;
+            case "get_last_block":
+                const command = new BlockCommand();
+                break;
+            default:
+                response.error = "Method not found";
         }
 
         // Write methods
