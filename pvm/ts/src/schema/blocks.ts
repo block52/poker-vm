@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const blockSchema = new Schema({
+const blocksSchema = new Schema({
   index: {
     required: true,
     type: Number,
@@ -43,4 +43,4 @@ const blockSchema = new Schema({
   },
 });
 
-export default model("Blocks", blockSchema);
+export default model("Blocks", blocksSchema);
