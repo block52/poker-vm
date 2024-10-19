@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import { Schema, model } from "mongoose";
 
-const contractSchema = new mongoose.Schema({
+const contractSchema = new Schema({
   data: {
     required: true,
     type: Object,
@@ -11,4 +11,4 @@ const contractSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Contract", contractSchema);
+export default model("Contract", contractSchema);

@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { Player } = require("../vm/player");
+const { Player } = require("../models/player");
 
 class Holdem {
   playerMap = new Map();

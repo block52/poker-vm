@@ -1,4 +1,4 @@
-const axios = require("axios");
+import { get } from "axios";
 
 class Network {
   contract_address = "";
@@ -20,10 +20,9 @@ class Network {
     // const block = await provider.getBlock(block_number);
 
     const node = this._nodes[0];
-    const block = await axios.get(`${node.url}/block/${block_number}`);
+    const block = await get(`${node.url}/block/${block_number}`);
 
     return block;
   }
 }
 
-module.exports = Network;

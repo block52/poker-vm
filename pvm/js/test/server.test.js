@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { verify_signature } from "../src/crypto_utils";
+import { verify_signature } from "../src/crypto_utils.mjs";
 
 describe("Server", function () {
   it("should process messages", function () {

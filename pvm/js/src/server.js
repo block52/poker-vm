@@ -1,21 +1,20 @@
-const crypto = require("crypto");
-const TxPool = require("./vm/txpool");
+import { randomBytes } from "crypto";
+import TxPool from "./vm/txpool.mjs";
 
-const Block = require("./models/block");
-const Contract = require("./models/contract");
-const Transaction = require("./models/transaction");
+// import Block from "./models/block.mjs";
+// import Contract from "./models/contract.mjs";
+// import { Transaction } from "./models/index.mjs";
+// import Transaction from "./models/transaction.mjs";
 
-const AccountState = require("./vm/state_management/account_state");
-const Blockchain = require("./vm/state_management/blockchain");
+import AccountState from "./vm/state_management/account_state.mjs";
+import Blockchain from "./vm/state_management/blockchain.mjs";
 
-const Transactions = require("./schemas/transaction");
+// import { findOne } from "./schemas/transaction";
+import { recover_public_key } from "./crypto_utils.mjs";
+import { Wallet, JsonRpcProvider } from "ethers";
+import { config } from "dotenv";
 
-const { recover_public_key } = require("./crypto_utils");
-
-const ethers = require("ethers");
-const dotenv = require("dotenv");
-
-dotenv.config();
+config();
 
 class Server {
   constructor(private_key) {
@@ -25,7 +24,7 @@ class Server {
     this.private_key = private_key;
 
     // get public key from private key
-    const wallet = new ethers.Wallet(this.private_key);
+    const wallet = new Wallet(this.private_key);
     this.validator = wallet.address;
   }
 
@@ -79,7 +78,7 @@ class Server {
       }
 
       if (method === "get_random") {
-        const buffer = await crypto.randomBytes(32);
+        const buffer = await randomBytes(32);
         return buffer.toString("hex");
       }
 
@@ -134,7 +133,7 @@ class Server {
 
         if (signature !== "TEST") {
           // Verify the tx event id has not been used before
-          const found = await Transactions.findOne({
+          const found = await findOne({
             data: data,
           });
 
@@ -143,7 +142,7 @@ class Server {
           }
 
           // Check the event is on chain
-          const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+          const provider = new JsonRpcProvider(process.env.RPC_URL);
           const txReceipt = await provider.waitForTransaction(params[0], 1);
 
           if (!txReceipt) {
@@ -267,8 +266,7 @@ class Server {
   async bootstrapNetwork() {
     // connect to other validators
 
-    await axios.get()
-
+    await axios.get();
 
     // get the latest block
     // get the latest state
@@ -301,4 +299,4 @@ const getServer = (private_key) => {
   return server;
 };
 
-module.exports = { getServer, Server };
+export default { getServer, Server };

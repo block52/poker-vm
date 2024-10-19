@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import { Schema, model } from "mongoose";
 
-const transactionSchema = new mongoose.Schema(
+const transactionSchema = new Schema(
   {
     account: {
       required: true,
@@ -40,4 +40,4 @@ const transactionSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Transactions", transactionSchema);
+export default model("Transactions", transactionSchema);

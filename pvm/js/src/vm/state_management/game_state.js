@@ -1,7 +1,6 @@
-class ContractState {
-    constructor() {
-    }
-  }
-  
-  module.exports = ContractState;
-  
+class GameState {
+  constructor() {}
+}
+
+// module.exports = ContractState;
+export default GameState;

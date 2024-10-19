@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import { Schema, model } from "mongoose";
 
-const secretSchema = new mongoose.Schema({
+const secretSchema = new Schema({
   account: {
     required: true,
     type: String,
@@ -23,4 +23,4 @@ const secretSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Secret", secretSchema);
+export default model("Secret", secretSchema);
