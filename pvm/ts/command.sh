@@ -10,7 +10,7 @@ COMMAND_FILE="$(echo "$1" | tr '[:upper:]' '[:lower:]').ts"
 cat <<EOL > "$COMMAND_FILE"
 import { ICommand } from "./interfaces";
 
-class ${COMMAND_NAME} implements ICommand {
+class ${COMMAND_NAME} implements ICommand<T> {
   execute() {
     // TODO: Implement the ${COMMAND_NAME} command logic here
     console.log("Executing ${COMMAND_NAME} command...");

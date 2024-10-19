@@ -26,7 +26,7 @@ export class Server {
     }
 
     public async bootstrap() {
-        const bootnodes = await axios.get("https://bootnodes.io");
+        const bootnodes = await axios.get("https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json");
         console.log("Server bootstrapped");
     }
 }

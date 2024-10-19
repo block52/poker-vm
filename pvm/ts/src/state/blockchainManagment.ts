@@ -1,11 +1,17 @@
 import { Block } from "../models/index";
 import Blocks from "../schema/blocks";
 import { ZeroAddress } from "ethers";
+import { StateManager } from "./stateManager";
 
-export class BlockchainManagement {
-  constructor() {}
+export class BlockchainManagement extends StateManager {
+  constructor() {
+    super(process.env.MONGO_URI || "mongodb://localhost:27017/pvm");
+  }
 
   public async addBlock(block: Block): Promise<void> {
+
+    await this.connect();
+
     const newBlock = new Blocks({
       index: block.index,
       previous_block_hash: block.previousHash,
@@ -21,6 +27,8 @@ export class BlockchainManagement {
   }
 
   public async getLastBlock(): Promise<Block> {
+    await this.connect();
+    
     const lastBlock = await Blocks.findOne().sort({ index: -1 });
     if (!lastBlock) {
       return this.getGenesisBlock();
