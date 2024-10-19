@@ -1,6 +1,6 @@
 
 ```bash
-yarn express
+yarn start
 ```
 
 # PVM work flow
