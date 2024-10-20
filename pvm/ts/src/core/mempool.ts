@@ -1,4 +1,6 @@
-import { Transaction } from "ethers";
+//import { Transaction } from "ethers";
+
+import { Transaction } from "../models/transaction";
 
 export class Mempool {
 
@@ -30,4 +32,13 @@ export class Mempool {
     get() {
         return this.transactions;
     }
+
+}
+
+let instance: Mempool;
+export const mempool = () => {
+    if (!instance) {
+        instance = new Mempool();
+    }
+    return instance;
 }
