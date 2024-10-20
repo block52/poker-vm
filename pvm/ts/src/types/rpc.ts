@@ -2,8 +2,8 @@
 export type RPCRequest = {
     id: number;
     method: string;
-    params?: any[];
-    data?: any;
+    params: any[];
+    data: string;
 };
 
 export type RPCResponse = {
