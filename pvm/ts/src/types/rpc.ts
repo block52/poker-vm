@@ -8,6 +8,6 @@ export type RPCRequest = {
 
 export type RPCResponse = {
     id: number;
-    result?: any;
+    result: string;
     error?: string;
 };

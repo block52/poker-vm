@@ -11,6 +11,10 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello, World!");
 });
 
+app.post("/rpc", (req: Request, res: Response) => {
+  res.send("RPC");
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

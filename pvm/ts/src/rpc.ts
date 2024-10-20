@@ -4,6 +4,9 @@ import { ICommand } from "./commands/interfaces";
 import { RPCRequest, RPCResponse } from "./types/rpc";
 
 export class RPC {
+
+    // get the mempool
+
     static async handle(request: RPCRequest): Promise<RPCResponse> {
         const id = request.id;
 
@@ -48,8 +51,14 @@ export class RPC {
                 const to: string = request.params[0];
                 const command = new Mint(request.params[0], params[1], params[2]);
 
+                // return tx
+
+                // push to mmepool
+
+                // result is the tx.hash
+
                 break;
-            case "sayHello":
+            case "transfer":
                 response.result = "Hello!";
                 break;
             default:

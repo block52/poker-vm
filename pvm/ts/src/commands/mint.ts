@@ -1,6 +1,6 @@
 import { ICommand } from "./interfaces";
 
-class Mint implements ICommand<string> {
+export class Mint implements ICommand<string> {
     constructor(readonly receiver: string, readonly amount: number, readonly tx: string) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
@@ -19,7 +19,7 @@ class Mint implements ICommand<string> {
         this.tx = tx;
     }
 
-    public async execute(): Promise<string> {
+    public async execute(): Promise<Transaction> {
         // Minting logic
         // Check tx hash is in the staking mainnet contract and has not be validated
 
@@ -30,5 +30,3 @@ class Mint implements ICommand<string> {
         return "Minted!";
     }
 }
-
-export default Mint;
