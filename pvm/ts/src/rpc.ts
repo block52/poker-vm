@@ -53,12 +53,13 @@ export class RPC {
                 const to: string = params[0] === null ? "" : "";
                 const command = new Mint(request.params[0], params[1], params[2]);
 
+                const transaction = await command.execute();
                 // return tx
 
                 // push to mmepool
 
                 // result is the tx.hash
-
+                response.result = transaction.getId();
                 break;
             case "transfer":
                 response.result = "Hello!";

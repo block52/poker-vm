@@ -1,6 +1,7 @@
+import { Transaction } from "../models/transaction";
 import { ICommand } from "./interfaces";
 
-export class Mint implements ICommand<string> {
+export class Mint implements ICommand {
     constructor(readonly receiver: string, readonly amount: number, readonly tx: string) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
@@ -27,6 +28,6 @@ export class Mint implements ICommand<string> {
 
         // Update the account balance via the account manager
         console.log("Minting...");
-        return "Minted!";
+        throw new Error("Method not implemented.");
     }
 }
