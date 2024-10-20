@@ -14,11 +14,13 @@
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
     "express": "^4.21.1",
-    "mogoose": "^0.0.1-security",
     "mongoose": "^8.7.2",
     "typescript": "^5.6.3"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0"
+    "@types/express": "^5.0.0",
+    "@types/mocha": "^10.0.9",
+    "chai": "^5.1.1",
+    "mocha": "^10.7.3"
   }
 }

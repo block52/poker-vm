@@ -19,8 +19,9 @@ export class RPC {
         }
 
         const method = request.method;
+        const params = request.params;
 
-        switch (request.method) {
+        switch (method) {
             case "get_block":
                 if (!request.params) {
                     // Get the last block
@@ -41,11 +42,12 @@ export class RPC {
         // Write methods
         switch (request.method) {
             case "mint":
-                if (!request.params || request.params.length !== 3) {
+                if (!request.params || request.params.length !== 2) {
                     response.error = "Invalid params";
                 }
 
-                const to: string = request.params[0];
+                // Check null or throw if undefined
+                const to: string = params[0] === null ? "" : "";
                 const command = new Mint(request.params[0], params[1], params[2]);
 
                 break;
