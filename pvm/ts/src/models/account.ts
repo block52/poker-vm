@@ -2,11 +2,11 @@ import { ethers } from "ethers";
 
 export class Account {
     address: string;
-    balance: number;
+    balance: bigint;
     // private nonce: number;
     // private privateKey: string;
 
-    constructor(address: string, balance: number) {
+    constructor(address: string, balance: bigint) {
         this.address = address;
         this.balance = balance;
         // this.nonce = 0;
@@ -31,6 +31,6 @@ export class Account {
         const wallet = new ethers.Wallet(privateKey);
         const address = wallet.address;
 
-        return new Account(address, 0);
+        return new Account(address, 0n);
     }
 }
