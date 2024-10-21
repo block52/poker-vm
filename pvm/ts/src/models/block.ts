@@ -2,11 +2,15 @@ import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { Transaction } from "./transaction";
 
-export class Block {
-
+export class Block implements IJSONModel {
   private readonly transactions: Transaction[];
 
-  constructor(readonly index: number, readonly previousHash: string, readonly timestamp: number, readonly validator: string) {
+  constructor(
+    readonly index: number,
+    readonly previousHash: string,
+    readonly timestamp: number,
+    readonly validator: string
+  ) {
     this.index = index;
     this.previousHash = previousHash;
     this.timestamp = timestamp;
@@ -14,7 +18,12 @@ export class Block {
     this.transactions = [];
   }
 
-  public static create(index: number, previousHash: string, timestamp: number, privateKey: string): Block {
+  public static create(
+    index: number,
+    previousHash: string,
+    timestamp: number,
+    privateKey: string
+  ): Block {
     const wallet = new ethers.Wallet(privateKey);
     const validator = wallet.address;
     return new Block(index, previousHash, timestamp, validator);
@@ -50,7 +59,7 @@ export class Block {
     return false;
   }
 
-  addTx(tx: Transaction) {
+  public addTx(tx: Transaction) {
     // check if the tx has been added previously
     if (this.transactions.includes(tx)) {
       return;
@@ -63,10 +72,19 @@ export class Block {
     this.transactions.push(tx);
   }
 
-  addTxs(txs: Transaction[]) {
+  public addTxs(txs: Transaction[]) {
     for (const tx of txs) {
       this.addTx(tx);
     }
   }
-}
 
+  public toJson(): any {
+    return {
+      index: this.index,
+      previousHash: this.previousHash,
+      timestamp: this.timestamp,
+      validator: this.validator,
+      transactions: this.transactions.map((tx) => tx.toJson()),
+    };
+  }
+}

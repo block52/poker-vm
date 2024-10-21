@@ -1,3 +1,7 @@
+export interface IJSONModel {
+    toJson(): any;
+}
+
 export interface IModel {
     getId(): string;
     toJson(): any;

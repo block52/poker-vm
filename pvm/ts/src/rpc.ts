@@ -5,6 +5,7 @@ import { ICommand } from "./commands/interfaces";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "./types/rpc";
 import { MeCommand } from "./commands/meCommand";
+import { IJSONModel } from "./models/interfaces";
 
 export class RPC {
     // get the mempool
@@ -36,6 +37,8 @@ export class RPC {
                 if (request.params) {
                     const index = BigInt(request.params[0] as string);
                     command = new BlockCommand(index);
+                    const result: IJSONModel = await command.execute();
+                    response.result = result.toJson();
                 }
 
                 response.result = await command.execute();
@@ -44,7 +47,8 @@ export class RPC {
 
             case RPCMethods.GET_LAST_BLOCK: {
                 const command = new BlockCommand(undefined);
-                response.result = await command.execute();
+                const result: IJSONModel = await command.execute();
+                response.result = result.toJson();
                 break;
             }
 
