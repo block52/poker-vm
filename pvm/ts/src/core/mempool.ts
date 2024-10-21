@@ -1,5 +1,3 @@
-//import { Transaction } from "ethers";
-
 import { IJSONModel } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
 import { TransactionDTO } from "../types/chain";
