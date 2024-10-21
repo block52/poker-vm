@@ -36,17 +36,6 @@ export class Mempool {
 
 }
 
-export class MempoolTransactions implements IJSONModel {
-    constructor(private transactions: Transaction[]) {
-      this.transactions = transactions;
-    }
-  
-    public toJson(): TransactionDTO[] {
-      return this.transactions.map((tx) => tx.toJson());
-    }
-  }
-  
-
 let instance: Mempool;
 export const getInstance = () => {
     if (!instance) {
@@ -54,3 +43,4 @@ export const getInstance = () => {
     }
     return instance;
 }
+

@@ -1,8 +1,5 @@
-import { getInstance, Mempool, MempoolTransactions } from "../core/mempool";
-import { Transaction } from "../models";
-import { IJSONModel } from "../models/interfaces";
-import { TransactionDTO } from "../types/chain";
-
+import { getInstance, Mempool } from "../core/mempool";
+import { MempoolTransactions } from "../models/mempoolTransactions";
 import { ICommand } from "./interfaces";
 
 export class MempoolCommand implements ICommand<MempoolTransactions> {
