@@ -13,6 +13,6 @@ export class MempoolCommand implements ICommand<TransactionDTO[]> {
   }
 
   public async execute(): Promise<TransactionDTO[]> {
-    return this.mempool.get();
+    return this.mempool.get().map((tx) => tx.toJson());
   }
 }

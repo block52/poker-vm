@@ -28,7 +28,7 @@ export class Mempool {
         this.transactions.push(transaction);
     }
 
-    public get() {
+    public get(): Transaction[] {
         return this.transactions;
     }
 
