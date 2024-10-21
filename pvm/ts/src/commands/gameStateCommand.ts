@@ -1,4 +1,3 @@
-import { ethers } from "ethers";
 import { ICommand } from "./interfaces";
 import { Round, TexasHoldemState } from "../engine/types";
 
