@@ -41,7 +41,8 @@ export class RPC {
                     response.result = result.toJson();
                 }
 
-                response.result = await command.execute();
+                const result: IJSONModel = await command.execute();
+                response.result = result.toJson();
                 break;
             }
 
@@ -54,7 +55,7 @@ export class RPC {
 
             case RPCMethods.GET_CLIENT: {
                 const command = new MeCommand();
-                response.result = command.execute();
+                //response.result = command.execute();
                 break;
             }
 
