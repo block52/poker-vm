@@ -52,21 +52,24 @@ export class Server {
       "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
     );
 
-    // TODO: PARALLELIZE
-    for (const node of bootnodes.data) {
-      const request: RPCRequest = {
-        id: BigInt(1),
-        method: RPCMethods.GET_NODES,
-        params: [],
-        data: undefined,
-      };
+    // // TODO: PARALLELIZE
+    // for (const node of bootnodes.data) {
+    //   let id = 1;
+    //   const request: RPCRequest = {
+    //     id: `${id}`,
+    //     method: RPCMethods.GET_NODES,
+    //     params: [],
+    //     data: undefined,
+    //   };
 
-      const response = await axios.post(`${node.url}`, request);
-      console.log(response.data);
+    //   const response = await axios.post(`${node.url}`, request);
+    //   console.log(response.data);
 
-      // Connect to the node
-      console.log(`Connected to node ${node.publicKey}`);
-    }
+    //   // Connect to the node
+    //   console.log(`Connected to node ${node.publicKey}`);
+
+    //   id += 1;
+    // }
 
     console.log("Server bootstrapped");
   }

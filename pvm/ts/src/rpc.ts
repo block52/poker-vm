@@ -1,7 +1,6 @@
 import { ZeroHash } from "ethers";
 import { MintCommand, TransferCommand } from "./commands";
 import { BlockCommand } from "./commands/blockCommand";
-import { ICommand } from "./commands/interfaces";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "./types/rpc";
 import { MeCommand } from "./commands/meCommand";

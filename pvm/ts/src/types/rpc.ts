@@ -1,13 +1,13 @@
 // RPC Class
 export type RPCRequest = {
-    id: bigint;
+    id: string;
     method: RPCMethods;
     params: RPCRequestParams[RPCMethods];
     data?: string;
 };
 
 export type RPCResponse = {
-    id: bigint;
+    id: string;
     result: any;
     error?: string;
 };
