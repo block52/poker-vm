@@ -71,7 +71,7 @@ export class RPC {
                 const transaction = await command.execute();
                 // return tx
 
-                // push to mmepool
+                // push to mempool
 
                 // result is the tx.hash
                 response.result = transaction.getId();
