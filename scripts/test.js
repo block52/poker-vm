@@ -13,3 +13,5 @@ const mint = async () => {
     console.error(e);
   }
 };
+
+mint();

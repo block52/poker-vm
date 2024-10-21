@@ -2,18 +2,26 @@ import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { Transaction } from "./transaction";
 import { IJSONModel } from "./interfaces";
+import e from "express";
 
 export class Block implements IJSONModel {
   private readonly transactions: Transaction[];
+  public hash: string;
+  public merkleRoot: string;
+  public signature: string;
 
   constructor(
     readonly index: number,
     readonly previousHash: string,
     readonly timestamp: number,
-    readonly validator: string
+    readonly validator: string,
+    signature?: string
   ) {
     this.index = index;
+    this.hash = ethers.ZeroHash;
     this.previousHash = previousHash;
+    this.merkleRoot = ethers.ZeroHash
+    this.signature = ethers.ZeroHash;
     this.timestamp = timestamp;
     this.validator = validator;
     this.transactions = [];
@@ -27,29 +35,61 @@ export class Block implements IJSONModel {
   ): Block {
     const wallet = new ethers.Wallet(privateKey);
     const validator = wallet.address;
-    return new Block(index, previousHash, timestamp, validator);
+    const block = new Block(index, previousHash, timestamp, validator);
+
+    block.calculateHash();
+    block.sign(privateKey);
+
+    return block;
   }
 
-  public calculateHash(): string {
-    const merkleRoot = this.createMerkleRoot();
+  public calculateHash(): void {
+    this.createMerkleRoot();
 
     const blockData = {
       index: this.index,
       previousHash: this.previousHash,
       timestamp: this.timestamp,
       validator: this.validator,
-      transactions: [], // this.transactions,
-      // merkleRoot: this.merkleRoot,
+      transactions: this.transactions,
+      merkleRoot: this.merkleRoot,
     };
 
     const json = JSON.stringify(blockData);
 
-    const hash = createHash("SHA256").update(json).digest("hex");
-    return hash;
+    this.hash = createHash("SHA256").update(json).digest("hex");
   }
 
   public createMerkleRoot(): string {
-    return ethers.ZeroHash;
+    if (this.transactions.length === 0) {
+      return ethers.ZeroHash;
+    }
+
+    // Convert transactions to an array of transaction hashes
+    let transactionHashes = this.transactions.map((tx) => createHash("SHA256").update(tx.toString()).digest("hex"));
+
+    // Recursively compute the Merkle Root
+    while (transactionHashes.length > 1) {
+      // If the number of hashes is odd, duplicate the last one
+      if (transactionHashes.length % 2 !== 0) {
+        transactionHashes.push(transactionHashes[transactionHashes.length - 1]);
+      }
+
+      // Hash each pair of nodes together
+      const newLevel: string[] = [];
+      for (let i = 0; i < transactionHashes.length; i += 2) {
+        const hashPair = transactionHashes[i] + transactionHashes[i + 1];
+        const newHash = createHash("SHA256").update(hashPair).digest("hex");
+        newLevel.push(newHash);
+      }
+
+      // Move up to the next level of the tree
+      transactionHashes = newLevel;
+    }
+
+    // The final remaining hash is the Merkle Root
+    this.merkleRoot = transactionHashes[0];
+    return transactionHashes[0];
   }
 
   public verify(): boolean {
@@ -58,6 +98,12 @@ export class Block implements IJSONModel {
     // }
     // return true;
     return false;
+  }
+
+  public async sign(privateKey: string): Promise<void> {
+    const wallet = new ethers.Wallet(privateKey);
+    this.calculateHash();
+    this.signature = await wallet.signMessage(this.hash);
   }
 
   public addTx(tx: Transaction) {
@@ -82,7 +128,10 @@ export class Block implements IJSONModel {
   public toJson(): any {
     return {
       index: this.index,
+      hash: this.hash,
       previousHash: this.previousHash,
+      merkleRoot: this.merkleRoot,
+      signature: this.signature,
       timestamp: this.timestamp,
       validator: this.validator,
       transactions: this.transactions.map((tx) => tx.toJson()),
