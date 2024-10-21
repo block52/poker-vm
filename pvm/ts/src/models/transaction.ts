@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { ICryptoModel } from "./interfaces";
+import { TransactionDTO } from "../types/chain";
 
 export class Transaction implements ICryptoModel {
   constructor(
@@ -31,11 +32,15 @@ export class Transaction implements ICryptoModel {
       .digest("hex");
   }
 
+  get hash(): string {
+    return this.calculateHash();
+  }
+
   public getId(): string {
     return this.calculateHash();
   }
 
-  public toJson(): any {
+  public toJson(): TransactionDTO {
     return {
       to: this.to,
       from: this.from,
@@ -43,6 +48,7 @@ export class Transaction implements ICryptoModel {
       signature: this.signature,
       timestamp: this.timestamp,
       index: this.index,
+      hash: this.hash,
     };
   }
 
@@ -59,13 +65,14 @@ export class Transaction implements ICryptoModel {
     return new Transaction(to, from, value, signature, timestamp);
   }
 
-  public static fromJson(json: any): Transaction {
+  public static fromJson(json: TransactionDTO): Transaction {
     return new Transaction(
       json.to,
       json.from,
       json.value,
       json.signature,
-      json.timestamp
+      json.timestamp,
+      json.index
     );
   }
 }

@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+// import { ethers } from "ethers";
 import { Transaction } from "./transaction";
 
 export class BlockData {
@@ -17,6 +17,10 @@ export class BlockData {
     // return wallet.signMessage(this.calculateHash());
 
     throw new Error("Method not implemented.");
+  }
+
+  public addTransaction(transaction: Transaction): void {
+    this.transactions.push(transaction);
   }
 }
 

@@ -1,8 +1,8 @@
 import { Transaction } from "../models/transaction";
 import { ICommand } from "./interfaces";
 
-export class Mint implements ICommand {
-    constructor(readonly receiver: string, readonly amount: number, readonly tx: string) {
+export class MintCommand implements ICommand<Transaction> {
+    constructor(readonly receiver: string, readonly amount: bigint, readonly tx: string) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
         }
