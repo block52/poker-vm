@@ -12,6 +12,9 @@ import {
 } from "./types/rpc";
 import { Transaction } from "./models";
 import { getInstance } from "./core/mempool";
+import { IJSONModel } from "./models/interfaces";
+import { MeCommand } from "./commands/meCommand";
+
 
 export class RPC {
     // get the mempool
@@ -50,7 +53,7 @@ export class RPC {
         request: RPCRequest
     ): Promise<RPCResponse> {
         const id = request.id;
-        let result: any;
+        let result: IJSONModel;
         switch (method) {
             case RPCMethods.GET_BLOCK: {
                 let command = new BlockCommand(undefined);
@@ -58,6 +61,8 @@ export class RPC {
                 if (request.params) {
                     const index = BigInt(request.params[0] as string);
                     command = new BlockCommand(index);
+                    result = await command.execute();
+                    
                 }
                 result = await command.execute();
                 break;
@@ -66,6 +71,19 @@ export class RPC {
             case RPCMethods.GET_LAST_BLOCK: {
                 const command = new BlockCommand(undefined);
                 result = await command.execute();
+                
+                break;
+            }
+
+            case RPCMethods.GET_CLIENT: {
+                const command = new MeCommand();
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.GET_NODES: {
+                // Get the nodes
+                const nodes = [];
                 break;
             }
 
@@ -84,7 +102,7 @@ export class RPC {
 
         return {
             id,
-            result
+            result: result.toJson()
         };
     }
     static async handleWriteMethod(
