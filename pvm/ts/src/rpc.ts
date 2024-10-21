@@ -1,3 +1,4 @@
+import { ZeroHash } from "ethers";
 import { MintCommand } from "./commands";
 import { BlockCommand } from "./commands/blockCommand";
 import { ICommand } from "./commands/interfaces";
@@ -58,7 +59,7 @@ export class RPC {
                     response.error = "Invalid params";
                 }
                 const [to, amount] = request.params as RPCRequestParams[RPCMethods.MINT];
-                const privateKey = "FAKE_PRIVATE_KEY";
+                const privateKey = ZeroHash;
                     
                 const command = new MintCommand(
                     to,
