@@ -25,7 +25,7 @@ export enum RPCMethods {
 export type RPCRequestParams = {
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
     [RPCMethods.GET_MEMPOOL]: []; // No parameters
-    [RPCMethods.MINT]: [string, bigint]; // [address, amount]
+    [RPCMethods.MINT]: [string, bigint, string]; // [address, amount, transactionId]
     [RPCMethods.TRANSFER]: [string, string, bigint]; // [from, to, amount]
     [RPCMethods.GET_BLOCK]: [bigint]; // [index]
     [RPCMethods.GET_LAST_BLOCK]: []; // No parameters
