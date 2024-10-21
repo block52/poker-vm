@@ -21,8 +21,6 @@ export class RPC {
             result: null,
         };
 
-        // let command: ICommand;
-
         if (!request.method) {
             response.error = "Method not found";
             return response;
