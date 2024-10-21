@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { ICommand } from "./interfaces";
-import { TexasHoldemState } from "../engine/types";
+import { Round, TexasHoldemState } from "../engine/types";
 
 export class GameStateCommand implements ICommand<TexasHoldemState> {
     constructor(readonly address: string) {
@@ -19,8 +19,10 @@ export class GameStateCommand implements ICommand<TexasHoldemState> {
             currentBet: 2,
             dealer: 0,
             nextPlayer: 1,
-            
+            round: Round.PREFLOP,
+            handNumber: 0
         };
+        
         return mockState;
     }
 }
