@@ -1,8 +1,9 @@
-import Block from "./blockCommand";
+import { BlockCommand } from "./blockCommand";
+
 
 describe("Block Command", () => {
   it("should execute without errors", () => {
-    const command = new Block();
+    const command = new BlockCommand();
     command.execute();
     // TODO: Add assertions to verify the command behavior
   });

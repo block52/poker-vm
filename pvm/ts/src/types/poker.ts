@@ -29,8 +29,8 @@ export type Player = {
     public_key: string[];
 }
 
-export type Transaction = {
-    from: string;
-    to: string;
-    amount: number;
-}
+// export type Transaction = {
+//     from: string;
+//     to: string;
+//     amount: number;
+// }
