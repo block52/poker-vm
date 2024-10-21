@@ -40,6 +40,11 @@ export class RPC {
                 break;
             }
 
+            case RPCMethods.GET_MEMPOOL: {
+                // Get the mempool
+                break;
+            }
+
             // Write methods
             case RPCMethods.MINT:
                 if (request.params?.length !== 2) {

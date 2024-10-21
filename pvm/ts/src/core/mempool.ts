@@ -35,7 +35,7 @@ export class Mempool {
 }
 
 let instance: Mempool;
-export const mempool = () => {
+export const getInstance = () => {
     if (!instance) {
         instance = new Mempool();
     }
