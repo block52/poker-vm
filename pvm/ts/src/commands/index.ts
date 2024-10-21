@@ -1,5 +1,5 @@
-import { MintCommand } from "./mint";
-import { TransferCommand } from "./transfer";
+import { MintCommand } from "./mintCommand";
+import { TransferCommand } from "./transferCommand";
 
 export {
     MintCommand,

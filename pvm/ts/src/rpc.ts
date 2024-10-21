@@ -1,66 +1,113 @@
 import { ZeroHash } from "ethers";
 import { MintCommand, TransferCommand } from "./commands";
 import { BlockCommand } from "./commands/blockCommand";
-import { ICommand } from "./commands/interfaces";
 import { MempoolCommand } from "./commands/mempoolCommand";
-import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "./types/rpc";
+import {
+    READ_METHODS,
+    RPCMethods,
+    RPCRequest,
+    RPCRequestParams,
+    RPCResponse,
+    WRITE_METHODS
+} from "./types/rpc";
+import { Transaction } from "./models";
+import { getInstance } from "./core/mempool";
 
 export class RPC {
     // get the mempool
 
     static async handle(request: RPCRequest): Promise<RPCResponse> {
-
         if (!request) {
             throw new Error("Null request");
         }
 
-        const id = request.id;
-
-        const response: RPCResponse = {
-            id,
-            result: null,
-        };
-
         if (!request.method) {
-            response.error = "Method not found";
-            return response;
+            return {
+                id: request.id,
+                error: "Missing method",
+                result: null
+            };
         }
 
         const method: RPCMethods = request.method as RPCMethods;
+        if (!Object.values(RPCMethods).includes(method)) {
+            return {
+                id: request.id,
+                error: "Method not found",
+                result: null
+            };
+        }
 
+        if (READ_METHODS.includes(method)) {
+            return this.handleReadMethod(method, request);
+        } else {
+            return this.handleWriteMethod(method, request);
+        }
+    }
+
+    static async handleReadMethod(
+        method: RPCMethods,
+        request: RPCRequest
+    ): Promise<RPCResponse> {
+        const id = request.id;
+        let result: any;
         switch (method) {
             case RPCMethods.GET_BLOCK: {
                 let command = new BlockCommand(undefined);
-                
+
                 if (request.params) {
                     const index = BigInt(request.params[0] as string);
                     command = new BlockCommand(index);
                 }
-
-                response.result = await command.execute();
+                result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_LAST_BLOCK: {
                 const command = new BlockCommand(undefined);
-                response.result = await command.execute();
+                result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_MEMPOOL: {
                 const command = new MempoolCommand();
-                response.result = await command.execute();
+                result = await command.execute();
                 break;
             }
+            default:
+                return {
+                    id,
+                    error: "Method not found",
+                    result: null
+                };
+        }
 
+        return {
+            id,
+            result
+        };
+    }
+    static async handleWriteMethod(
+        method: RPCMethods,
+        request: RPCRequest
+    ): Promise<RPCResponse> {
+        const id = request.id;
+
+        let transaction: Transaction;
+        switch (method) {
             // Write methods
             case RPCMethods.MINT: {
                 if (request.params?.length !== 3) {
-                    response.error = "Invalid params";
+                    return {
+                        id,
+                        error: "Invalid params",
+                        result: null
+                    };
                 }
-                const [to, amount, transactionId] = request.params as RPCRequestParams[RPCMethods.MINT];
+                const [to, amount, transactionId] =
+                    request.params as RPCRequestParams[RPCMethods.MINT];
                 const privateKey = ZeroHash;
-                    
+
                 const command = new MintCommand(
                     to,
                     amount,
@@ -68,33 +115,50 @@ export class RPC {
                     privateKey
                 );
 
-                const transaction = await command.execute();
-                // return tx
+                transaction = await command.execute();
 
-                // push to mmepool
-
-                // result is the tx.hash
-                response.result = transaction.getId();
                 break;
             }
 
             case RPCMethods.TRANSFER: {
                 if (request.params?.length !== 3) {
-                    response.error = "Invalid params";
+                    return {
+                        id,
+                        error: "Invalid params",
+                        result: null
+                    };
                 }
-                const [from, to, amount] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
+                const [from, to, amount] =
+                    request.params as RPCRequestParams[RPCMethods.TRANSFER];
                 const privateKey = ZeroHash;
-                const command = new TransferCommand(from, to, amount, privateKey);
-                const transaction = await command.execute();
-                response.result = transaction.getId();
-                break;  
-            }
-   
-            default:
-                response.error = "Method not found";
-        }
+                const command = new TransferCommand(
+                    from,
+                    to,
+                    amount,
+                    privateKey
+                );
+                transaction = await command.execute();
 
-        // response.result = await command.execute();
-        return response;
+                break;
+            }
+
+            default:
+                return {
+                    id,
+                    error: "Method not found",
+                    result: null
+                };
+        }
+        if (!transaction) {
+            throw new Error("No transaction created");
+        }
+        // push to mempool
+        const mempool = getInstance();
+        mempool.add(transaction);
+
+        return {
+            id,
+            result: transaction.getId()
+        };
     }
 }

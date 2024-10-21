@@ -31,3 +31,15 @@ export type RPCRequestParams = {
     [RPCMethods.GET_LAST_BLOCK]: []; // No parameters
     [RPCMethods.MINE]: []; // No parameters
 }
+
+export const READ_METHODS = [
+    RPCMethods.GET_ACCOUNT,
+    RPCMethods.GET_MEMPOOL,
+    RPCMethods.GET_BLOCK,
+    RPCMethods.GET_LAST_BLOCK,
+];
+
+export const WRITE_METHODS = [
+    RPCMethods.MINT,
+    RPCMethods.TRANSFER,
+];
