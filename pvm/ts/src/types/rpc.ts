@@ -8,7 +8,7 @@ export type RPCRequest = {
 
 export type RPCResponse = {
     id: bigint;
-    result: string;
+    result: any;
     error?: string;
 };
 
