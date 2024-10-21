@@ -1,10 +1,12 @@
-import { HTMLChakraProps, chakra } from '@chakra-ui/react';
-import { Image, Text } from '@chakra-ui/react';
+import { HTMLChakraProps, chakra } from "@chakra-ui/react";
+import { Image, Text } from "@chakra-ui/react";
 
-export const Logo = (props: HTMLChakraProps<'img'>) => (
+export const Logo = (props: HTMLChakraProps<"img">) => (
   // Use the logo from /logo.png
   <>
-    <Text fontSize="2xl" fontWeight="bold">Block52/Explorer</Text>
+    <Text fontSize="2xl" fontWeight="bold">
+      Block52/Explorer
+    </Text>
     {/* <Image
       src="/logo.png"
       alt="Logo"
@@ -12,7 +14,6 @@ export const Logo = (props: HTMLChakraProps<'img'>) => (
       width="auto"
       {...props}
     /> */}
-
   </>
 );
 

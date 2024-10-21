@@ -1,16 +1,18 @@
-import React from 'react';
-import { Button, Drawer, DrawerBody, DrawerContent, DrawerProps, Spacer, Stack } from '@chakra-ui/react';
+import React from "react";
+import {
+  Button,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerProps,
+  Spacer,
+  Stack,
+} from "@chakra-ui/react";
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
-export const MobileDrawer = (props: Omit<DrawerProps, 'children'>) => {
-
+export const MobileDrawer = (props: Omit<DrawerProps, "children">) => {
   const navigate = useNavigate();
-
-
-
-
-
 
   const handleAuthAction = async () => {
     // if (user) {
@@ -21,7 +23,6 @@ export const MobileDrawer = (props: Omit<DrawerProps, 'children'>) => {
     // }
     // props.onClose();
   };
-
 
   return (
     <Drawer placement="top" {...props}>
@@ -34,7 +35,7 @@ export const MobileDrawer = (props: Omit<DrawerProps, 'children'>) => {
             {/* {user && <Button onClick={handleBuyBitcoinClick} size="lg" variant="text" colorScheme="gray">
               Buy Bitcoin
             </Button>} */}
-{/* 
+            {/* 
             <Button onClick={handleMarketPlaceClick} size="lg" variant="text" colorScheme="gray">
               Restaurants
             </Button> */}
