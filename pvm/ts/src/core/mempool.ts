@@ -1,4 +1,6 @@
-import { Transaction } from "ethers";
+//import { Transaction } from "ethers";
+
+import { Transaction } from "../models/transaction";
 
 export class Mempool {
     private transactions: Transaction[];
@@ -29,4 +31,13 @@ export class Mempool {
     public get() {
         return this.transactions;
     }
+
+}
+
+let instance: Mempool;
+export const mempool = () => {
+    if (!instance) {
+        instance = new Mempool();
+    }
+    return instance;
 }
