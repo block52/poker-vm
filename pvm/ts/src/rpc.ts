@@ -7,6 +7,11 @@ export class RPC {
     // get the mempool
 
     static async handle(request: RPCRequest): Promise<RPCResponse> {
+
+        if (!request) {
+            throw new Error("Null request");
+        }
+
         const id = request.id;
 
         const response: RPCResponse = {

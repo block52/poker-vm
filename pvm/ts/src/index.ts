@@ -5,6 +5,7 @@ import { RPC } from "./rpc";
 dotenv.config();
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 3001;
 
 // Define a simple route
@@ -13,7 +14,13 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.post("/", async (req: Request, res: Response) => {
-  const response = await RPC.handle(req.body)
+  const body = req.body;
+
+  if (!body) {
+    res.status(400).json({ error: "Invalid request" });
+  }
+
+  const response = await RPC.handle(body)
   res.json(response);
 });
 
