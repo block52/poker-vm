@@ -1,6 +1,7 @@
 import { MintCommand } from "./commands";
 import { BlockCommand } from "./commands/blockCommand";
 import { ICommand } from "./commands/interfaces";
+import { MempoolCommand } from "./commands/mempoolCommand";
 import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "./types/rpc";
 
 export class RPC {
@@ -16,7 +17,7 @@ export class RPC {
 
         const response: RPCResponse = {
             id,
-            result: "",
+            result: null,
         };
 
         // let command: ICommand;
@@ -46,7 +47,8 @@ export class RPC {
             }
 
             case RPCMethods.GET_MEMPOOL: {
-                // Get the mempool
+                const command = new MempoolCommand();
+                response.result = await command.execute();
                 break;
             }
 
