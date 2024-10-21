@@ -58,11 +58,13 @@ export class RPC {
                     response.error = "Invalid params";
                 }
                 const [to, amount] = request.params as RPCRequestParams[RPCMethods.MINT];
+                const privateKey = "FAKE_PRIVATE_KEY";
                     
                 const command = new MintCommand(
                     to,
                     amount,
-                    request.data
+                    request.data,
+                    privateKey
                 );
 
                 const transaction = await command.execute();
