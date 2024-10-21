@@ -62,7 +62,7 @@ export class RPC {
                     const index = BigInt(request.params[0] as string);
                     command = new BlockCommand(index);
                     result = await command.execute();
-                    
+
                 }
                 result = await command.execute();
                 break;
@@ -71,7 +71,7 @@ export class RPC {
             case RPCMethods.GET_LAST_BLOCK: {
                 const command = new BlockCommand(undefined);
                 result = await command.execute();
-                
+
                 break;
             }
 

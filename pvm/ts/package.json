@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npx ts-node src/index.ts",
     "start": "node dist/index.js",
-    "start-server": "npx ts-node src/server.ts",
+    "start-server": "npx ts-node src/core/server.ts",
     "test": "mocha -r ts-node/register 'src/**/*.test.ts'",
     "build": "tsc"
   },

@@ -4,89 +4,92 @@ import { Node } from "./types";
 import { RPCMethods, RPCRequest } from "../types/rpc";
 
 export class Server {
-  public readonly contractAddress: string;
-  public readonly publicKey: string;
-  private readonly isValidator: boolean;
-  private readonly Nodes: Node[] = [];
+    public readonly contractAddress: string;
+    public readonly publicKey: string;
+    private readonly isValidator: boolean;
+    private readonly Nodes: Node[] = [];
 
-  constructor(privateKey: string = "") {
-    this.isValidator = false;
-    this.publicKey = ethers.ZeroAddress;
+    constructor(privateKey: string = "") {
+        this.isValidator = false;
+        this.publicKey = ethers.ZeroAddress;
 
-    if (privateKey) {
-      const wallet = new ethers.Wallet(privateKey);
-      this.publicKey = wallet.address;
-      this.isValidator = true;
+        if (privateKey) {
+            const wallet = new ethers.Wallet(privateKey);
+            this.publicKey = wallet.address;
+            this.isValidator = true;
+        }
+
+        this.contractAddress = ethers.ZeroAddress;
     }
 
-    this.contractAddress = ethers.ZeroAddress;
-  }
+    public me(): Node {
+        return new Node(
+            "pvm-typescript",
+            this.publicKey,
+            "http://localhost:3000",
+            "1.0.0",
+            this.isValidator
+        );
+    }
 
-  public me(): Node {
-    return new Node(
-      "pvm-typescript",
-      this.publicKey,
-      "http://localhost:3000",
-      "1.0.0",
-      this.isValidator
-    );
-  }
+    public async mine() {
+        // Mine a block
+        console.log("Block mined");
+    }
 
-  public async mine() {
-    // Mine a block
-    console.log("Block mined");
-  }
+    public async start() {
+        // Start the server
+        console.log("Server started");
+    }
 
-  public async start() {
-    // Start the server
-    console.log("Server started");
-  }
+    public async stop() {
+        // Stop the server
+        console.log("Server stopped");
+    }
 
-  public async stop() {
-    // Stop the server
-    console.log("Server stopped");
-  }
+    public async bootstrap() {
+        const bootnodes = await axios.get(
+            "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
+        );
 
-  public async bootstrap() {
-    const bootnodes = await axios.get(
-      "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
-    );
+        console.log(bootnodes.data);
+        const nodes = bootnodes.data as string[];
 
-    // // TODO: PARALLELIZE
-    // for (const node of bootnodes.data) {
-    //   let id = 1;
-    //   const request: RPCRequest = {
-    //     id: `${id}`,
-    //     method: RPCMethods.GET_NODES,
-    //     params: [],
-    //     data: undefined,
-    //   };
+        // TODO: PARALLELIZE
+        for (const node of nodes) {
+            let id = 1;
+            const request: RPCRequest = {
+                id: `${id}`,
+                method: RPCMethods.GET_NODES,
+                params: [],
+                data: undefined,
+            };
 
-    //   const response = await axios.post(`${node.url}`, request);
-    //   console.log(response.data);
+            const response = await axios.post(`${node}`, request);
+            console.log(response.data);
 
-    //   // Connect to the node
-    //   console.log(`Connected to node ${node.publicKey}`);
+            // Connect to the node
+            // console.log(`Connected to node ${node.publicKey}`);
 
-    //   id += 1;
-    // }
+            id += 1;
+        }
 
-    console.log("Server bootstrapped");
-  }
+        console.log("Server bootstrapped");
+    }
 }
 
 let instance: Server;
 export const getInstance = () => {
-  if (!instance) {
-    instance = new Server();
-  }
-  return instance;
+    if (!instance) {
+        instance = new Server();
+    }
+    return instance;
 };
 
 const start = async () => {
-  const server = new Server();
-  await server.bootstrap();
-  await server.start();
+    const server = new Server();
+    await server.bootstrap();
+    await server.start();
 };
 
-start();
+// start();
