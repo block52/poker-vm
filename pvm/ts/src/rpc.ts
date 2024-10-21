@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { MintCommand } from "./commands";
+import { MintCommand, TransferCommand } from "./commands";
 import { BlockCommand } from "./commands/blockCommand";
 import { ICommand } from "./commands/interfaces";
 import { MempoolCommand } from "./commands/mempoolCommand";
@@ -54,17 +54,17 @@ export class RPC {
             }
 
             // Write methods
-            case RPCMethods.MINT:
-                if (request.params?.length !== 2) {
+            case RPCMethods.MINT: {
+                if (request.params?.length !== 3) {
                     response.error = "Invalid params";
                 }
-                const [to, amount] = request.params as RPCRequestParams[RPCMethods.MINT];
+                const [to, amount, transactionId] = request.params as RPCRequestParams[RPCMethods.MINT];
                 const privateKey = ZeroHash;
                     
                 const command = new MintCommand(
                     to,
                     amount,
-                    request.data,
+                    transactionId,
                     privateKey
                 );
 
@@ -76,9 +76,20 @@ export class RPC {
                 // result is the tx.hash
                 response.result = transaction.getId();
                 break;
-            case RPCMethods.TRANSFER:
-                response.result = "Hello!";
-                break;
+            }
+
+            case RPCMethods.TRANSFER: {
+                if (request.params?.length !== 3) {
+                    response.error = "Invalid params";
+                }
+                const [from, to, amount] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
+                const privateKey = ZeroHash;
+                const command = new TransferCommand(from, to, amount, privateKey);
+                const transaction = await command.execute();
+                response.result = transaction.getId();
+                break;  
+            }
+   
             default:
                 response.error = "Method not found";
         }
