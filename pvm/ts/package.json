@@ -21,6 +21,7 @@
     "typescript": "^5.6.3"
   },
   "devDependencies": {
+    "@types/chai": "^5.0.0",
     "@types/express": "^5.0.0",
     "@types/mocha": "^10.0.9",
     "chai": "^5.1.1",
