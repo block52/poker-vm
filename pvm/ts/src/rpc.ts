@@ -31,18 +31,20 @@ export class RPC {
 
         switch (method) {
             case RPCMethods.GET_BLOCK: {
-                if (!request.params) {
-                    // Get the last block
-                    return response;
+                let command = new BlockCommand(undefined);
+                
+                if (request.params) {
+                    const index = BigInt(request.params[0] as string);
+                    command = new BlockCommand(index);
                 }
 
-                const index = request.params[0];
-                const blockCommand = new BlockCommand();
+                response.result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_LAST_BLOCK: {
-                const command = new BlockCommand();
+                const command = new BlockCommand(undefined);
+                response.result = await command.execute();
                 break;
             }
 

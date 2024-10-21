@@ -39,7 +39,7 @@ export class Block {
   }
 
   public createMerkleRoot(): string {
-    return "";
+    return ethers.ZeroHash;
   }
 
   public verify(): boolean {
