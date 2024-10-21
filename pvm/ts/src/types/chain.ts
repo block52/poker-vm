@@ -1,9 +1,9 @@
 export type TransactionDTO = {
     to: string;
-    from: string;
-    value: number;
+    from: string | null;
+    value: string;
     signature: string;
-    timestamp: number;
+    timestamp: string;
     hash: string;
-    index?: number;
+    index?: string;
 }
