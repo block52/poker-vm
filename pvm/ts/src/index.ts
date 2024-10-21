@@ -1,7 +1,6 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { RPC } from "./rpc";
-import { createProvider, listenToOracle } from "./core/oracle";
 import { getInstance, Server } from "./core/server";
 
 dotenv.config();
