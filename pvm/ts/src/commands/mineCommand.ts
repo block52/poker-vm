@@ -1,4 +1,4 @@
-import { getInstance, Mempool } from "../core/mempool";
+import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block, Transaction } from "../models";
 
 import { ICommand } from "./interfaces";
@@ -9,7 +9,7 @@ export class MineCommand implements ICommand<Block> {
 
 
   constructor() {
-    this.mempool = getInstance();
+    this.mempool = getMempoolInstance();
   }
 
   public async execute(): Promise<Block> {

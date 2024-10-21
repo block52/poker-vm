@@ -6,9 +6,9 @@ export type RPCRequest = {
     data?: string;
 };
 
-export type RPCResponse = {
+export type RPCResponse<T> = {
     id: string;
-    result: any;
+    result: T;
     error?: string;
 };
 

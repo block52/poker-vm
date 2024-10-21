@@ -26,6 +26,7 @@ export class Mempool {
         // if (!transaction.isValid) {
         //     throw new Error("Invalid transaction");
         // }
+        console.log(`Adding transaction to mempool: ${transaction.hash}`);
 
         this.transactions.push(transaction);
     }
@@ -37,7 +38,7 @@ export class Mempool {
 }
 
 let instance: Mempool;
-export const getInstance = () => {
+export const getMempoolInstance = () => {
     if (!instance) {
         instance = new Mempool();
     }
