@@ -4,6 +4,7 @@ import { BlockCommand } from "./commands/blockCommand";
 import { ICommand } from "./commands/interfaces";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "./types/rpc";
+import { MeCommand } from "./commands/meCommand";
 
 export class RPC {
     // get the mempool
@@ -47,9 +48,21 @@ export class RPC {
                 break;
             }
 
+            case RPCMethods.GET_CLIENT: {
+                const command = new MeCommand();
+                response.result = command.execute();
+                break;
+            }
+
             case RPCMethods.GET_MEMPOOL: {
                 const command = new MempoolCommand();
                 response.result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.GET_NODES: {
+                // Get the nodes
+                const nodes = [];
                 break;
             }
 

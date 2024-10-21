@@ -9,13 +9,17 @@ export class Server {
     private readonly isValidator: boolean;
     private readonly Nodes: Node[] = [];
 
-    constructor(private readonly privateKey: string = "") {
-        const wallet = new ethers.Wallet(privateKey);
-        this.publicKey = wallet.address;
-        this.contractAddress = "";
-
-        // Check if the public key is a validator
+    constructor(privateKey: string = "") {
         this.isValidator = false;
+        this.publicKey = ethers.ZeroAddress;
+
+        if (privateKey) {
+            const wallet = new ethers.Wallet(privateKey);
+            this.publicKey = wallet.address;
+            this.isValidator = true;
+        }
+
+        this.contractAddress = ethers.ZeroAddress;
     }
 
     public me(): Node {
@@ -46,6 +50,7 @@ export class Server {
     public async bootstrap() {
         const bootnodes = await axios.get("https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json");
 
+        // TODO: PARALLELIZE
         for (const node of bootnodes.data) {
             const request: RPCRequest = {
                 id: BigInt(1),
