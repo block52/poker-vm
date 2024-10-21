@@ -402,3 +402,4 @@ pvm/js/.env
 explorer_api/.env
 pvm/ts/dist/index.js
 pvm/ts/.env
+explorer_frontend/build/*

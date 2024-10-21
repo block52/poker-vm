@@ -8,12 +8,12 @@ import {
   HStack,
   useBreakpointValue,
   useDisclosure,
-} from '@chakra-ui/react';
-import { Logo } from '../../Logo';
-import { MobileDrawer } from './MobileNavbar';
-import { ToggleButton } from './ToggleButton';
+} from "@chakra-ui/react";
+import { Logo } from "../../Logo";
+import { MobileDrawer } from "./MobileNavbar";
+import { ToggleButton } from "./ToggleButton";
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 export const NavbarWithCallToAction = () => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
@@ -43,7 +43,7 @@ export const NavbarWithCallToAction = () => {
   };
 
   const handleLogoClick = () => {
-    navigate('/');
+    navigate("/");
   };
 
   const handleEarnClick = () => {
@@ -56,7 +56,12 @@ export const NavbarWithCallToAction = () => {
 
   return (
     <Box>
-      <Box borderBottomWidth="1px" bg="bg.surface" position="relative" zIndex="tooltip">
+      <Box
+        borderBottomWidth="1px"
+        bg="bg.surface"
+        position="relative"
+        zIndex="tooltip"
+      >
         <Container py="4" maxW="6xl">
           <HStack justify="space-between">
             <Box onClick={handleLogoClick} cursor="pointer">
@@ -64,7 +69,12 @@ export const NavbarWithCallToAction = () => {
             </Box>
             {isDesktop ? (
               <HStack spacing="8">
-                <ButtonGroup size="lg" variant="text" colorScheme="gray" spacing="8">
+                <ButtonGroup
+                  size="lg"
+                  variant="text"
+                  colorScheme="gray"
+                  spacing="8"
+                >
                   {/* {user && <Button onClick={handleBuyBitcoinClick}>Buy Bitcoin</Button>} */}
                   {/* <Button onClick={handleMarketPlaceClick}>Explorer</Button> */}
                   {/* <Button onClick={handleEarnClick}>Earn</Button> */}
@@ -87,7 +97,10 @@ export const NavbarWithCallToAction = () => {
                   isOpen={mobileNavbar.isOpen}
                   aria-label="Open Menu"
                 />
-                <MobileDrawer isOpen={mobileNavbar.isOpen} onClose={mobileNavbar.onClose} />
+                <MobileDrawer
+                  isOpen={mobileNavbar.isOpen}
+                  onClose={mobileNavbar.onClose}
+                />
               </>
             )}
           </HStack>
