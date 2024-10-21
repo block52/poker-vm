@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
+import { RPC } from "./rpc";
 
 dotenv.config();
 
@@ -11,8 +12,9 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello, World!");
 });
 
-app.post("/rpc", (req: Request, res: Response) => {
-  res.send("RPC");
+app.post("/", async (req: Request, res: Response) => {
+  const response = await RPC.handle(req.body)
+  res.json(response);
 });
 
 // Start the server
