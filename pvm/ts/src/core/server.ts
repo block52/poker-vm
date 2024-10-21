@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ethers } from "ethers";
+import { Node } from "./types";
 
 export class Server {
     public readonly contractAddress: string;
@@ -13,6 +14,20 @@ export class Server {
 
         // Check if the public key is a validator
         this.isValidator = false;
+    }
+
+    public me(): Node {
+        return {
+            publicKey: this.publicKey,
+            version: "1.0.0",
+            isValidator: this.isValidator,
+            url: "http://localhost:3000",
+        };
+    }
+
+    public async mine() {
+        // Mine a block
+        console.log("Block mined");
     }
 
     public async start() {
@@ -30,3 +45,11 @@ export class Server {
         console.log("Server bootstrapped");
     }
 }
+
+const start = async () => {
+    const server = new Server();
+    await server.bootstrap();
+    await server.start();
+}
+
+start();

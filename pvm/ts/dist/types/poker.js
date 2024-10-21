@@ -7,4 +7,9 @@ class Deck {
     }
 }
 exports.Deck = Deck;
+// export type Transaction = {
+//     from: string;
+//     to: string;
+//     amount: number;
+// }
 //# sourceMappingURL=poker.js.map
