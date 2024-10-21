@@ -1,7 +1,12 @@
 import axios from "axios";
-import { ethers } from "ethers";
+import { ethers, id } from "ethers";
 import { Node } from "./types";
-import { RPCMethods, RPCRequest } from "../types/rpc";
+import { RPCMethods, RPCRequest, RPCResponse } from "../types/rpc";
+import fs from "fs";
+import { getMempoolInstance } from "./mempool";
+import { Transaction } from "../models";
+import { MempoolTransactions } from "../models/mempoolTransactions";
+import { TransactionDTO } from "../types/chain";
 
 export class Server {
     public readonly contractAddress: string;
@@ -26,7 +31,7 @@ export class Server {
         return new Node(
             "pvm-typescript",
             this.publicKey,
-            "http://localhost:3000",
+            `http://localhost:${process.env.PORT}`,
             "1.0.0",
             this.isValidator
         );
@@ -48,31 +53,43 @@ export class Server {
     }
 
     public async bootstrap() {
-        const bootnodes = await axios.get(
-            "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
-        );
+        // const bootnodes = await axios.get(
+        //     "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
+        // );
+        const mempool = getMempoolInstance();
+        // Get own node
+        const ownNode = this.me();
 
-        console.log(bootnodes.data);
-        const nodes = bootnodes.data as string[];
+        // Get all nodes except own node
+        // Read from file
+        const data = fs.readFileSync("../../bootnodes.json", "utf8");
+        const bootNodeUrls = JSON.parse(data) as string[];
+        const nodeUrls = bootNodeUrls.filter((url) => url !== ownNode.url);
+        let id = 0;
 
-        // TODO: PARALLELIZE
-        for (const node of nodes) {
-            let id = 1;
-            const request: RPCRequest = {
-                id: `${id}`,
-                method: RPCMethods.GET_NODES,
-                params: [],
-                data: undefined,
-            };
+        setInterval(async () => {
+          console.log("Polling...");
+       
+          for (const url of nodeUrls) {
+              const request: RPCRequest = {
+                  id: `${nodeUrls.indexOf(url) + 1}`,
+                  method: RPCMethods.GET_MEMPOOL,
+                  params: [],
+                  data: undefined,
+              };
 
-            const response = await axios.post(`${node}`, request);
-            console.log(response.data);
+              const response = await axios.post(`${url}`, request);
+              const data = response.data as RPCResponse<TransactionDTO[]>
+              const otherMempool = data.result as TransactionDTO[]
 
-            // Connect to the node
-            // console.log(`Connected to node ${node.publicKey}`);
+              // Add to own mempool
+              for (const transaction of otherMempool) {
+                mempool.add(Transaction.fromJson(transaction));
+              }
 
-            id += 1;
-        }
+              id += 1;
+            }
+        }, 10000);
 
         console.log("Server bootstrapped");
     }

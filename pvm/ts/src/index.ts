@@ -1,6 +1,8 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { RPC } from "./rpc";
+import { createProvider, listenToOracle } from "./core/oracle";
+import { getInstance, Server } from "./core/server";
 
 dotenv.config();
 
@@ -29,4 +31,8 @@ app.post("/", async (req: Request, res: Response) => {
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  getInstance().bootstrap();
 });
+
+// listenToOracle();
+

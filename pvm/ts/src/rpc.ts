@@ -11,15 +11,16 @@ import {
     WRITE_METHODS
 } from "./types/rpc";
 import { Transaction } from "./models";
-import { getInstance } from "./core/mempool";
+import { getMempoolInstance } from "./core/mempool";
 import { IJSONModel } from "./models/interfaces";
 import { MeCommand } from "./commands/meCommand";
+import { TransactionDTO } from "./types/chain";
 
 
 export class RPC {
     // get the mempool
 
-    static async handle(request: RPCRequest): Promise<RPCResponse> {
+    static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
         if (!request) {
             throw new Error("Null request");
         }
@@ -51,7 +52,7 @@ export class RPC {
     static async handleReadMethod(
         method: RPCMethods,
         request: RPCRequest
-    ): Promise<RPCResponse> {
+    ): Promise<RPCResponse<any>> {
         const id = request.id;
         let result: IJSONModel;
         switch (method) {
@@ -112,7 +113,7 @@ export class RPC {
     static async handleWriteMethod(
         method: RPCMethods,
         request: RPCRequest
-    ): Promise<RPCResponse> {
+    ): Promise<RPCResponse<string | null>> {
         const id = request.id;
 
         let transaction: Transaction;
@@ -175,12 +176,12 @@ export class RPC {
             throw new Error("No transaction created");
         }
         // push to mempool
-        const mempool = getInstance();
+        const mempool = getMempoolInstance();
         mempool.add(transaction);
 
         return {
             id,
-            result: transaction.getId()
+            result: transaction.getId().toString()
         };
     }
 }
