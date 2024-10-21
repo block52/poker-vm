@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { Transaction } from "./transaction";
+import { IJSONModel } from "./interfaces";
 
 export class Block implements IJSONModel {
   private readonly transactions: Transaction[];
