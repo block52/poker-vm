@@ -60,6 +60,7 @@ export class Server {
             }
 
             const response = await axios.post(`${node.url}`, request);
+            console.log(response.data);
 
             // Connect to the node
             console.log(`Connected to node ${node.publicKey}`);
