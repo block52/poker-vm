@@ -23,13 +23,13 @@ export class Server {
   }
 
   public me(): Node {
-    return {
-      client: "pvm-typescript",
-      publicKey: this.publicKey,
-      version: "1.0.0",
-      isValidator: this.isValidator,
-      url: "http://localhost:3000",
-    };
+    return new Node(
+      "pvm-typescript",
+      this.publicKey,
+      "http://localhost:3000",
+      "1.0.0",
+      this.isValidator
+    );
   }
 
   public async mine() {

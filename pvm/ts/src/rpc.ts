@@ -83,7 +83,11 @@ export class RPC {
 
             case RPCMethods.GET_NODES: {
                 // Get the nodes
-                const nodes = [];
+                result = {
+                    toJson: () => {
+                        return [];
+                    }
+                }
                 break;
             }
 

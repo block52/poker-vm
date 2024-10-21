@@ -1,8 +1,8 @@
 import { createHash } from "crypto";
-import { ICryptoModel } from "./interfaces";
+import { ICryptoModel, IJSONModel } from "./interfaces";
 import { TransactionDTO } from "../types/chain";
 
-export class Transaction implements ICryptoModel {
+export class Transaction implements ICryptoModel, IJSONModel {
   constructor(
     readonly to: string,
     readonly from: string | null,

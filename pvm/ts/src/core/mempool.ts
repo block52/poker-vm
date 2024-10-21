@@ -1,6 +1,8 @@
 //import { Transaction } from "ethers";
 
+import { IJSONModel } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
+import { TransactionDTO } from "../types/chain";
 
 export class Mempool {
     private transactions: Transaction[];
@@ -33,6 +35,17 @@ export class Mempool {
     }
 
 }
+
+export class MempoolTransactions implements IJSONModel {
+    constructor(private transactions: Transaction[]) {
+      this.transactions = transactions;
+    }
+  
+    public toJson(): TransactionDTO[] {
+      return this.transactions.map((tx) => tx.toJson());
+    }
+  }
+  
 
 let instance: Mempool;
 export const getInstance = () => {

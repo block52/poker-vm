@@ -38,9 +38,11 @@ export type RPCRequestParams = {
 
 export const READ_METHODS = [
     RPCMethods.GET_ACCOUNT,
-    RPCMethods.GET_MEMPOOL,
     RPCMethods.GET_BLOCK,
+    RPCMethods.GET_CLIENT,
     RPCMethods.GET_LAST_BLOCK,
+    RPCMethods.GET_MEMPOOL,
+    RPCMethods.GET_NODES,
 ];
 
 export const WRITE_METHODS = [

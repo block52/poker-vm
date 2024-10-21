@@ -1,10 +1,11 @@
-import { getInstance, Mempool } from "../core/mempool";
+import { getInstance, Mempool, MempoolTransactions } from "../core/mempool";
 import { Transaction } from "../models";
+import { IJSONModel } from "../models/interfaces";
 import { TransactionDTO } from "../types/chain";
 
 import { ICommand } from "./interfaces";
 
-export class MempoolCommand implements ICommand<TransactionDTO[]> {
+export class MempoolCommand implements ICommand<MempoolTransactions> {
 
   private readonly mempool: Mempool;
 
@@ -12,7 +13,8 @@ export class MempoolCommand implements ICommand<TransactionDTO[]> {
     this.mempool = getInstance();
   }
 
-  public async execute(): Promise<TransactionDTO[]> {
-    return this.mempool.get().map((tx) => tx.toJson());
+  public async execute(): Promise<MempoolTransactions> {
+    return new MempoolTransactions(this.mempool.get());
   }
 }
+
