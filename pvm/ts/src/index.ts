@@ -8,9 +8,11 @@ const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 3001;
 
+const version = "0.1.0";
+
 // Define a simple route
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello, World!");
+  res.send(`PVM RPC Server v${version}`);
 });
 
 app.post("/", async (req: Request, res: Response) => {
