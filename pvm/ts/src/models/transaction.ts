@@ -5,11 +5,11 @@ import { TransactionDTO } from "../types/chain";
 export class Transaction implements ICryptoModel {
   constructor(
     readonly to: string,
-    readonly from: string,
-    readonly value: number,
+    readonly from: string | null,
+    readonly value: bigint,
     readonly signature: string,
-    readonly timestamp: number,
-    readonly index?: number
+    readonly timestamp: bigint,
+    readonly index?: bigint
   ) { 
 
     // If the index is not provided, set it to 0 or look for the last index in the blockchain
@@ -44,21 +44,21 @@ export class Transaction implements ICryptoModel {
     return {
       to: this.to,
       from: this.from,
-      value: this.value,
+      value: this.value.toString(),
       signature: this.signature,
-      timestamp: this.timestamp,
-      index: this.index,
+      timestamp: this.timestamp.toString(),
+      index: this.index?.toString(),
       hash: this.hash,
     };
   }
 
   public static create(
     to: string,
-    from: string,
-    value: number,
+    from: string | null,
+    value: bigint,
     privateKey: string
   ): Transaction {
-    const timestamp = Date.now();
+    const timestamp = BigInt(Date.now());
     const signature = createHash("sha256")
       .update(`${to}${from}${value}${timestamp}${privateKey}`)
       .digest("hex");
@@ -69,10 +69,10 @@ export class Transaction implements ICryptoModel {
     return new Transaction(
       json.to,
       json.from,
-      json.value,
+      BigInt(json.value),
       json.signature,
-      json.timestamp,
-      json.index
+      BigInt(json.timestamp),
+      json.index ? BigInt(json.index) : undefined
     );
   }
 }
