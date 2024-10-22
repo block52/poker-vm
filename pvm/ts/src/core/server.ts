@@ -53,17 +53,15 @@ export class Server {
     }
 
     public async bootstrap() {
-        // const bootnodes = await axios.get(
-        //     "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
-        // );
+        const response = await axios.get(
+            "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
+        );
+        const bootNodeUrls = response.data as string[];
         const mempool = getMempoolInstance();
         // Get own node
         const ownNode = this.me();
 
         // Get all nodes except own node
-        // Read from file
-        const data = fs.readFileSync("../../bootnodes.json", "utf8");
-        const bootNodeUrls = JSON.parse(data) as string[];
         const nodeUrls = bootNodeUrls.filter((url) => url !== ownNode.url);
         let id = 0;
 
