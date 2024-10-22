@@ -7,9 +7,8 @@ dotenv.config();
 const createGenesisBlock = (): Block => {
     const index = 0;
     const previousHash = ethers.ZeroHash;
-    const timestamp = 0;
     const privateKey = process.env.GENESIS_PRIVATE_KEY || "";
-    const block = Block.create(index, previousHash, timestamp, privateKey);
+    const block = Block.create(index, previousHash, [], privateKey);
 
     return block;
 }

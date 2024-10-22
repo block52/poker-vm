@@ -42,7 +42,7 @@ export class Block implements IJSONModel {
       throw new Error("Private key is required to create a block");
     }
 
-    const timestamp = Date.now();
+    const timestamp = index > 0 ? Date.now() : 0;
     const wallet = new ethers.Wallet(privateKey);
     const validator = wallet.address;
     const block = new Block(
