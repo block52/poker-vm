@@ -12,8 +12,10 @@
     "gen": "npx ts-node scripts/createGenesisBlock.ts"
   },
   "dependencies": {
+    "@types/cors": "^2.8.17",
     "@types/node": "^22.7.6",
     "axios": "^1.7.7",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
     "express": "^4.21.1",
@@ -25,8 +27,13 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "testMatch": ["**/*.test.ts"],
-    "testPathIgnorePatterns": ["/node_modules/", "/dist/"]
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ]
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

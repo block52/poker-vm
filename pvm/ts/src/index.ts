@@ -2,11 +2,13 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { RPC } from "./rpc";
 import { getInstance } from "./core/server";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cors()); // Add this line to enable CORS for all routes
 const PORT = process.env.PORT || 3001;
 
 const version = "0.1.0";
@@ -34,4 +36,3 @@ app.listen(PORT, () => {
 });
 
 // listenToOracle();
-
