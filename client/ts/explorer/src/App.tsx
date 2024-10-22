@@ -1,16 +1,16 @@
-import { useMempoolTransactions } from './hooks/useMempoolTransactions'
-import Transaction from './components/Transaction'
-import './App.css'
+import { useMempoolTransactions } from "./hooks/useMempoolTransactions";
+import Transaction from "./components/Transaction";
+import "./App.css";
 
 function App() {
   const { transactions, loading, error } = useMempoolTransactions();
 
   if (loading) {
-    return <div>Loading mempool transactions...</div>
+    return <div>Loading mempool transactions...</div>;
   }
 
   if (error) {
-    return <div>Error: {error.message}</div>
+    return <div>Error: {error.message}</div>;
   }
 
   return (
@@ -28,7 +28,7 @@ function App() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
