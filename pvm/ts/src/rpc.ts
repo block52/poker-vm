@@ -3,19 +3,19 @@ import { MintCommand, TransferCommand } from "./commands";
 import { BlockCommand } from "./commands/blockCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import {
+    CONTROL_METHODS,
     READ_METHODS,
+    WRITE_METHODS,
     RPCMethods,
     RPCRequest,
     RPCRequestParams,
-    RPCResponse,
-    WRITE_METHODS
+    RPCResponse
 } from "./types/rpc";
 import { Transaction } from "./models";
 import { getMempoolInstance } from "./core/mempool";
 import { IJSONModel } from "./models/interfaces";
 import { MeCommand } from "./commands/meCommand";
-import { TransactionDTO } from "./types/chain";
-
+import { getServerInstance } from "./core/server";
 
 export class RPC {
     // get the mempool
@@ -44,9 +44,39 @@ export class RPC {
 
         if (READ_METHODS.includes(method)) {
             return this.handleReadMethod(method, request);
-        } else {
+        } else if (WRITE_METHODS.includes(method)) {
             return this.handleWriteMethod(method, request);
+        } else if (CONTROL_METHODS.includes(method)) {
+            return this.handleControlMethod(method, request);
+        } else {
+            return {
+                id: request.id,
+                error: "Method not found",
+                result: null
+            };
         }
+    }
+
+    static async handleControlMethod(
+        method: RPCMethods,
+        request: RPCRequest
+    ): Promise<RPCResponse<any>> {
+        switch (method) {
+            case RPCMethods.START: {
+                const server = getServerInstance();
+                await server.start();
+                break;
+            }
+            case RPCMethods.STOP: {
+                const server = getServerInstance();
+                await server.stop();
+                break;
+            }
+        }
+        return {
+            id: request.id,
+            result: null
+        };
     }
 
     static async handleReadMethod(
@@ -63,7 +93,6 @@ export class RPC {
                     const index = BigInt(request.params[0] as string);
                     command = new BlockCommand(index);
                     result = await command.execute();
-
                 }
                 result = await command.execute();
                 break;
@@ -88,7 +117,7 @@ export class RPC {
                     toJson: () => {
                         return [];
                     }
-                }
+                };
                 break;
             }
 
@@ -110,6 +139,7 @@ export class RPC {
             result: result.toJson()
         };
     }
+
     static async handleWriteMethod(
         method: RPCMethods,
         request: RPCRequest

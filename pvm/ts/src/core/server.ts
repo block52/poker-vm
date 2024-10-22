@@ -1,19 +1,15 @@
 import axios from "axios";
-import { ethers, id } from "ethers";
+import { ethers } from "ethers";
 import { Node } from "./types";
-import { RPCMethods, RPCRequest, RPCResponse } from "../types/rpc";
-import fs from "fs";
 import { getMempoolInstance } from "./mempool";
 import { Transaction } from "../models";
-import { MempoolTransactions } from "../models/mempoolTransactions";
-import { TransactionDTO } from "../types/chain";
+import { NodeRpcClient } from "../client/client";
 
 export class Server {
     public readonly contractAddress: string;
     public readonly publicKey: string;
     private readonly isValidator: boolean;
-    private readonly Nodes: Node[] = [];
-
+    private _started: boolean = false;
     constructor(privateKey: string = "") {
         this.isValidator = false;
         this.publicKey = ethers.ZeroAddress;
@@ -37,6 +33,10 @@ export class Server {
         );
     }
 
+    get started(): boolean {
+        return this._started;
+    }
+
     public async mine() {
         // Mine a block
         console.log("Block mined");
@@ -44,62 +44,64 @@ export class Server {
 
     public async start() {
         // Start the server
-        console.log("Server started");
+        this._started = true;
+        console.log("Server starting...");
     }
 
     public async stop() {
         // Stop the server
-        console.log("Server stopped");
+        this._started = false;
+        console.log("Server stopping...");
     }
 
-    public async bootstrap() {
+    private async getBootNodes(): Promise<string[]> {
         const response = await axios.get(
             "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
         );
-        const bootNodeUrls = response.data as string[];
-        const mempool = getMempoolInstance();
-        // Get own node
         const ownNode = this.me();
+        const bootNodeUrls = response.data as string[];
+        const nodeUrls = bootNodeUrls.filter(url => url !== ownNode.url);
+        return nodeUrls;
+    }
 
-        // Get all nodes except own node
-        const nodeUrls = bootNodeUrls.filter((url) => url !== ownNode.url);
-        let id = 0;
+    public async bootstrap() {
+        const intervalId = setInterval(async () => {
+            if (!this._started) {
+                clearInterval(intervalId);
+                console.log("Polling stopped.");
+                return;
+            }
+            console.log("Polling...");
+            await this.syncMempool();
+        }, 15000);
 
-        setInterval(async () => {
-          console.log("Polling...");
-       
-          for (const url of nodeUrls) {
-              const request: RPCRequest = {
-                  id: `${nodeUrls.indexOf(url) + 1}`,
-                  method: RPCMethods.GET_MEMPOOL,
-                  params: [],
-                  data: undefined,
-              };
+        this._started = true;
+        console.log("Server started");
+    }
 
-              try {
-                const response = await axios.post(`${url}`, request);
-                const data = response.data as RPCResponse<TransactionDTO[]>
-                const otherMempool = data.result as TransactionDTO[]
-
+    private async syncMempool() {
+        if (!this.started) {
+            return;
+        }
+        const mempool = getMempoolInstance();
+        const nodeUrls = await this.getBootNodes();
+        for (const nodeUrl of nodeUrls) {
+            try {
+                const client = new NodeRpcClient(nodeUrl);
+                const otherMempool = await client.getMempool();
                 // Add to own mempool
                 for (const transaction of otherMempool) {
                     mempool.add(Transaction.fromJson(transaction));
                 }
-
-                id += 1;
-              } catch (error) {
-                console.warn(`Missing node ${url}`);
-              }
-
+            } catch (error) {
+                console.warn(`Missing node ${nodeUrl}`);
             }
-        }, 10000);
-
-        console.log("Server bootstrapped");
+        }
     }
 }
 
 let instance: Server;
-export const getInstance = () => {
+export const getServerInstance = () => {
     if (!instance) {
         instance = new Server();
     }
@@ -107,9 +109,10 @@ export const getInstance = () => {
 };
 
 const start = async () => {
-    const server = new Server();
+    const server = getServerInstance();
+    if (server.started) {
+        return;
+    }
     await server.bootstrap();
     await server.start();
 };
-
-// start();
