@@ -1,4 +1,5 @@
 import { IJSONModel } from "../models/interfaces";
+import { TransactionDTO } from "../types/chain";
 
 export class Node implements IJSONModel {
     client: string;
@@ -33,3 +34,16 @@ export type NodeDTO = {
     version: string;
     isValidator: boolean;
 };
+
+export type BlockDTO = {
+    index: number;
+    version: string;
+    hash: string;
+    merkleRoot: string;
+    previousHash: string;
+    timestamp: number;
+    validator: string;
+    signature: string;
+    transactions: TransactionDTO[];
+};
+

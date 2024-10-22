@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { Transaction } from "./transaction";
 import { IBlockDocument, IJSONModel } from "./interfaces";
-import e from "express";
+import { BlockDTO } from "../core/types";
 
 export class Block implements IJSONModel {
   private readonly transactions: Transaction[];
@@ -159,7 +159,7 @@ export class Block implements IJSONModel {
     };
   }
 
-  public static fromJson(json: any): Block {
+  public static fromJson(json: BlockDTO): Block {
     const block = new Block(
       json.index,
       json.previousHash,

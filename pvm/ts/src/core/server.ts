@@ -65,13 +65,13 @@ export class Server {
     }
 
     public async bootstrap() {
+        console.log("Polling...");
         const intervalId = setInterval(async () => {
             if (!this._started) {
                 clearInterval(intervalId);
                 console.log("Polling stopped.");
                 return;
             }
-            console.log("Polling...");
             await this.syncMempool();
         }, 15000);
 
@@ -88,10 +88,10 @@ export class Server {
         for (const nodeUrl of nodeUrls) {
             try {
                 const client = new NodeRpcClient(nodeUrl);
-                const otherMempool = await client.getMempool();
+                const otherMempool: Transaction[] = await client.getMempool();
                 // Add to own mempool
                 for (const transaction of otherMempool) {
-                    mempool.add(Transaction.fromJson(transaction));
+                    mempool.add(transaction);
                 }
             } catch (error) {
                 console.warn(`Missing node ${nodeUrl}`);
