@@ -3,6 +3,7 @@ import Blocks from "../schema/blocks";
 import { ZeroAddress } from "ethers";
 import { StateManager } from "./stateManager";
 
+import GenesisBlock from "../data/genesisblock.json";
 
 export class BlockchainManagement extends StateManager {
   constructor() {
@@ -10,7 +11,6 @@ export class BlockchainManagement extends StateManager {
   }
 
   public async addBlock(block: Block): Promise<void> {
-
     await this.connect();
 
     const newBlock = new Blocks({
@@ -24,12 +24,12 @@ export class BlockchainManagement extends StateManager {
   }
 
   public getGenesisBlock(): Block {
-    return new Block(0, ZeroAddress, 0, ZeroAddress);
+    return Block.fromJson(GenesisBlock);
   }
 
   public async getLastBlock(): Promise<Block> {
     await this.connect();
-    
+
     const lastBlock = await Blocks.findOne().sort({ index: -1 });
     if (!lastBlock) {
       return this.getGenesisBlock();

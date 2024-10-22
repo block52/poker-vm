@@ -6,36 +6,55 @@ import e from "express";
 
 export class Block implements IJSONModel {
   private readonly transactions: Transaction[];
+  public version = 1;
   public hash: string;
   public merkleRoot: string;
   public signature: string;
+  public validator: string;
 
   constructor(
     readonly index: number,
     readonly previousHash: string,
     readonly timestamp: number,
-    readonly validator: string,
-    signature?: string
+    validator?: string,
+    hash?: string,
+    merkleRoot?: string,
+    signature?: string,
+    transactions?: Transaction[]
   ) {
     this.index = index;
     this.hash = ethers.ZeroHash;
     this.previousHash = previousHash;
-    this.merkleRoot = ethers.ZeroHash
+    this.merkleRoot = ethers.ZeroHash;
     this.signature = ethers.ZeroHash;
     this.timestamp = timestamp;
-    this.validator = validator;
+    this.validator = validator || ethers.ZeroAddress;
     this.transactions = [];
   }
 
   public static create(
     index: number,
     previousHash: string,
-    timestamp: number,
+    transactions: Transaction[],
     privateKey: string
   ): Block {
+    if (!privateKey) {
+      throw new Error("Private key is required to create a block");
+    }
+
+    const timestamp = Date.now();
     const wallet = new ethers.Wallet(privateKey);
     const validator = wallet.address;
-    const block = new Block(index, previousHash, timestamp, validator);
+    const block = new Block(
+      index,
+      previousHash,
+      timestamp,
+      validator,
+      undefined,
+      undefined,
+      undefined,
+      transactions
+    );
 
     block.calculateHash();
     block.sign(privateKey);
@@ -66,7 +85,9 @@ export class Block implements IJSONModel {
     }
 
     // Convert transactions to an array of transaction hashes
-    let transactionHashes = this.transactions.map((tx) => createHash("SHA256").update(tx.toString()).digest("hex"));
+    let transactionHashes = this.transactions.map((tx) =>
+      createHash("SHA256").update(tx.toString()).digest("hex")
+    );
 
     // Recursively compute the Merkle Root
     while (transactionHashes.length > 1) {
@@ -136,5 +157,23 @@ export class Block implements IJSONModel {
       validator: this.validator,
       transactions: this.transactions.map((tx) => tx.toJson()),
     };
+  }
+
+  public static fromJson(json: any): Block {
+    const block = new Block(
+      json.index,
+      json.previousHash,
+      json.timestamp,
+      json.validator,
+      json.hash,
+      json.merkleRoot,
+      json.signature
+    );
+
+    for (const tx of json.transactions) {
+      block.addTx(Transaction.fromJson(tx));
+    }
+
+    return block;
   }
 }
