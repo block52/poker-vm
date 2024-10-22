@@ -9,7 +9,7 @@ export class AccountManagement {
 
   async createAccount(address: string): Promise<Account> {
     const account = new Account(address, 0n);
-    await Accounts.create(account.toJson());
+    await Accounts.create(account.toDocument());
     return account;
   }
 
@@ -20,7 +20,7 @@ export class AccountManagement {
       return Account.create(address);
     }
 
-    return Account.fromJson(account);
+    return Account.fromDocument(account);
   }
 
   // Helper functions

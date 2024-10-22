@@ -23,3 +23,9 @@ export interface IBlockDocument {
   transactions?: any[];
   tx_count?: number;
 }
+
+export interface IAccountDocument {
+  address: string;
+  balance: number;
+  nonce: number;
+}

@@ -1,6 +1,7 @@
 import { model, Schema } from "mongoose";
+import { IAccountDocument } from "../models/interfaces";
 
-const accountSchema = new Schema(
+const accountSchema = new Schema<IAccountDocument>(
     {
         address: {
             required: true,

@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { IAccountDocument } from "./interfaces";
 
 export class Account {
     address: string;
@@ -25,6 +26,18 @@ export class Account {
 
     public static fromJson(json: any): Account {
         return new Account(json.address, json.balance);
+    }
+
+    public static fromDocument(document: IAccountDocument): Account {
+        return new Account(document.address, BigInt(document.balance));
+    }
+
+    public toDocument(): IAccountDocument {
+        return {
+            address: this.address,
+            balance: Number(this.balance),
+            nonce: 0,
+        };
     }
 
     public static create(privateKey: string): Account {

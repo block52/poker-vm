@@ -78,16 +78,21 @@ export class Server {
                   data: undefined,
               };
 
-              const response = await axios.post(`${url}`, request);
-              const data = response.data as RPCResponse<TransactionDTO[]>
-              const otherMempool = data.result as TransactionDTO[]
+              try {
+                const response = await axios.post(`${url}`, request);
+                const data = response.data as RPCResponse<TransactionDTO[]>
+                const otherMempool = data.result as TransactionDTO[]
 
-              // Add to own mempool
-              for (const transaction of otherMempool) {
-                mempool.add(Transaction.fromJson(transaction));
+                // Add to own mempool
+                for (const transaction of otherMempool) {
+                    mempool.add(Transaction.fromJson(transaction));
+                }
+
+                id += 1;
+              } catch (error) {
+                console.warn(`Missing node ${url}`);
               }
 
-              id += 1;
             }
         }, 10000);
 
