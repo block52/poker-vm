@@ -10,3 +10,16 @@ export interface ICryptoModel extends IModel {
   calculateHash(): string;
   verify(): boolean;
 }
+
+export interface IBlockDocument {
+  index: number;
+  version: number;
+  hash: string;
+  merkle_root: string;
+  previous_block_hash: string;
+  timestamp: number;
+  validator: string;
+  signature: string;
+  transactions?: any[];
+  tx_count?: number;
+}

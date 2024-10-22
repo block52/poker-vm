@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
+import { IBlockDocument } from "../models/interfaces";
 
-const blocksSchema = new Schema({
+const blocksSchema = new Schema<IBlockDocument>({
   index: {
     required: true,
     type: Number,
@@ -33,7 +34,7 @@ const blocksSchema = new Schema({
     required: true,
     type: String,
   },
-  txs: {
+  transactions: {
     required: false,
     type: Array,
   },

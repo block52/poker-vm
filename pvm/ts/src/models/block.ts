@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { Transaction } from "./transaction";
-import { IJSONModel } from "./interfaces";
+import { IBlockDocument, IJSONModel } from "./interfaces";
 import e from "express";
 
 export class Block implements IJSONModel {
@@ -175,5 +175,33 @@ export class Block implements IJSONModel {
     }
 
     return block;
+  }
+
+  public static fromDocument(document: IBlockDocument): Block {
+    return new Block(
+      document.index,
+      document.previous_block_hash,
+      document.timestamp,
+      document.validator,
+      document.hash,
+      document.merkle_root,
+      document.signature,
+      document.transactions
+    );
+  }
+
+  public toDocument(): IBlockDocument {
+    return {
+      index: this.index,
+      version: this.version,
+      hash: this.hash,
+      merkle_root: this.merkleRoot,
+      previous_block_hash: this.previousHash,
+      timestamp: this.timestamp,
+      validator: this.validator,
+      signature: this.signature,
+      transactions: this.transactions,
+      tx_count: this.transactions.length,
+    };
   }
 }

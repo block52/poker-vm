@@ -1,9 +1,9 @@
 import { Block } from "../models/index";
 import Blocks from "../schema/blocks";
-import { ZeroAddress } from "ethers";
 import { StateManager } from "./stateManager";
 
 import GenesisBlock from "../data/genesisblock.json";
+import { IBlockDocument } from "../models/interfaces";
 
 export class BlockchainManagement extends StateManager {
   constructor() {
@@ -13,13 +13,7 @@ export class BlockchainManagement extends StateManager {
   public async addBlock(block: Block): Promise<void> {
     await this.connect();
 
-    const newBlock = new Blocks({
-      index: block.index,
-      previous_block_hash: block.previousHash,
-      timestamp: block.timestamp,
-      validator: block.validator,
-    });
-
+    const newBlock = new Blocks(block.toDocument());
     await newBlock.save();
   }
 
@@ -30,17 +24,11 @@ export class BlockchainManagement extends StateManager {
   public async getLastBlock(): Promise<Block> {
     await this.connect();
 
-    const lastBlock = await Blocks.findOne().sort({ index: -1 });
+    const lastBlock: IBlockDocument | null = await Blocks.findOne().sort({ index: -1 });
     if (!lastBlock) {
       return this.getGenesisBlock();
     }
-
-    return new Block(
-      lastBlock.index,
-      lastBlock.previous_block_hash,
-      lastBlock.timestamp,
-      lastBlock.validator
-    );
+    return Block.fromDocument(lastBlock);
   }
 
   public async getBlock(index: number): Promise<Block> {
@@ -48,12 +36,6 @@ export class BlockchainManagement extends StateManager {
     if (!block) {
       throw new Error("Block not found");
     }
-
-    return new Block(
-      block.index,
-      block.previous_block_hash,
-      block.timestamp,
-      block.validator
-    );
+    return Block.fromDocument(block);
   }
 }
