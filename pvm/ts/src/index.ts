@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { RPC } from "./rpc";
-import { getInstance, Server } from "./core/server";
+import { getInstance } from "./core/server";
 
 dotenv.config();
 
