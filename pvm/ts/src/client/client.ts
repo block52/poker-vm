@@ -66,4 +66,12 @@ export class NodeRpcClient {
         return Block.fromJson(response.data.result);
     }
 
+    public async sendBlockHash(blockHash: string) {
+        await axios.post(`${this.url}`, {
+            id: this.getRequestId(),
+            method: RPCMethods.SEND_BLOCK_HASH,
+            params: [blockHash],
+            data: undefined
+        });
+    }
 }

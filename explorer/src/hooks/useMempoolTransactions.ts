@@ -1,15 +1,5 @@
 import { useEffect, useState } from "react";
-import { RPCRequest, RPCResponse } from "../types/types";
-
-interface Transaction {
-  to: string;
-  from: string | null;
-  value: string;
-  signature: string;
-  timestamp: string;
-  index?: string;
-  hash: string;
-}
+import { RPCRequest, RPCResponse, Transaction } from "../types/types";
 
 export function useMempoolTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);

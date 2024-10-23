@@ -21,6 +21,7 @@ export enum RPCMethods {
     GET_NODES = "get_nodes",
     MINE = "mine",
     MINT = "mint",
+    SEND_BLOCK_HASH = "send_block_hash",
     START = "start",
     STOP = "stop",
     TRANSFER = "transfer"
@@ -35,6 +36,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_NODES]: []; // No parameters
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINT]: [string, bigint, string]; // [address, amount, transactionId]
+    [RPCMethods.SEND_BLOCK_HASH]: [string]; // [blockHash]
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
     [RPCMethods.TRANSFER]: [string, string, bigint]; // [from, to, amount]

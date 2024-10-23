@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { ICryptoModel, IJSONModel } from "./interfaces";
+import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
 import { TransactionDTO } from "../types/chain";
 
 export class Transaction implements ICryptoModel, IJSONModel {
@@ -74,5 +74,21 @@ export class Transaction implements ICryptoModel, IJSONModel {
       BigInt(json.timestamp),
       json.index ? BigInt(json.index) : undefined
     );
+  }
+
+  public static fromDocument(document: ITransactionDocument): Transaction {
+    return new Transaction(document.to, document.from ?? null, BigInt(document.value), document.signature, BigInt(document.timestamp), document.index ? BigInt(document.index) : undefined);
+  }
+
+  public static toDocument(transaction: Transaction): ITransactionDocument {
+    return {
+      to: transaction.to,
+      from: transaction.from ?? undefined,
+      value: transaction.value.toString(),
+      signature: transaction.signature,
+      timestamp: transaction.timestamp.toString(),
+      index: transaction.index?.toString(),
+      hash: transaction.hash,
+    };
   }
 }
