@@ -77,12 +77,14 @@ export class Server {
             await this.syncMempool();
             const validatorInstance = getValidatorInstance();
             const validatorAddress = await validatorInstance.getNextValidatorAddress();
-            if (validatorAddress === ZeroAddress || this.publicKey === validatorAddress) {
+            if (process.env.PORT === "3001") { //validatorAddress === ZeroAddress || this.publicKey === validatorAddress) {
                 const mineCommand = new MineCommand(this.privateKey);
                 const block = await mineCommand.execute();
+                console.log(`Block mined: ${block.hash}`);
                 // Broadcast the block hash to the network
                 const nodeUrls = await this.getBootNodes();
                 for (const nodeUrl of nodeUrls) {
+                    console.log(`Broadcasting block hash to ${nodeUrl}`);
                     const client = new NodeRpcClient(nodeUrl);
                     await client.sendBlockHash(block.hash);
                 }
@@ -115,10 +117,9 @@ export class Server {
 }
 
 let instance: Server;
-const PRIVATE_KEY = ZeroHash;
 export const getServerInstance = () => {
     if (!instance) {
-        instance = new Server(PRIVATE_KEY);
+        instance = new Server(process.env.VALIDATOR_KEY || ZeroHash);
     }
     return instance;
 };

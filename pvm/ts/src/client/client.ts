@@ -4,6 +4,9 @@ import { TransactionDTO } from "../types/chain";
 import { RPCMethods, RPCRequest, RPCResponse } from "../types/rpc";
 import axios from "axios";
 
+/**
+ * NodeRpcClient class for interacting with a remote node via RPC
+ */
 export class NodeRpcClient {
     constructor(private url: string) {}
 
@@ -19,8 +22,8 @@ export class NodeRpcClient {
     }
 
     /**
-     * Get the mempool from the other node
-     * @returns The list of transactions in the mempool of the other node
+     * Get the mempool from the remote node
+     * @returns A Promise resolving to an array of Transaction objects
      */
     public async getMempool(): Promise<Transaction[]> {
         const response = await axios.post<
@@ -32,12 +35,13 @@ export class NodeRpcClient {
             params: [],
             data: undefined
         });
+        // Convert the received TransactionDTO objects to Transaction instances
         return response.data.result.map(Transaction.fromJson);
     }
 
     /**
-     * Get the list of nodes that the other node knows about
-     * @returns The list of node URLs
+     * Get the list of nodes known to the remote node
+     * @returns A Promise resolving to an array of node URLs
      */
     public async getNodes(): Promise<string[]> {
         const response = await axios.post<
@@ -53,8 +57,8 @@ export class NodeRpcClient {
     }
 
     /**
-     * Get the last block from the other node
-     * @returns The last block
+     * Get the last block from the remote node
+     * @returns A Promise resolving to a Block object
      */
     public async getLastBlock(): Promise<Block> {
         const response = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO>}>(`${this.url}`, {
@@ -63,13 +67,19 @@ export class NodeRpcClient {
             params: [],
             data: undefined
         });
+        // Convert the received BlockDTO to a Block instance
         return Block.fromJson(response.data.result);
     }
 
-    public async sendBlockHash(blockHash: string) {
+    /**
+     * Send a block hash to the remote node
+     * @param blockHash The hash of the block to send
+     * @returns A Promise that resolves when the request is complete
+     */
+    public async sendBlockHash(blockHash: string): Promise<void> {
         await axios.post(`${this.url}`, {
             id: this.getRequestId(),
-            method: RPCMethods.SEND_BLOCK_HASH,
+            method: RPCMethods.MINED_BLOCK_HASH,
             params: [blockHash],
             data: undefined
         });

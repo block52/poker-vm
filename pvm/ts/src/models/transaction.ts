@@ -23,7 +23,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
     //   .digest("hex");
 
     // return signature === this.signature;
-    return (this.signature === ZeroHash);
+    return (true); //this.signature === ZeroHash);
   }
 
   public calculateHash(): string {

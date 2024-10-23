@@ -21,7 +21,7 @@ export enum RPCMethods {
     GET_NODES = "get_nodes",
     MINE = "mine",
     MINT = "mint",
-    SEND_BLOCK_HASH = "send_block_hash",
+    MINED_BLOCK_HASH = "mined_block_hash",
     START = "start",
     STOP = "stop",
     TRANSFER = "transfer"
@@ -36,7 +36,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_NODES]: []; // No parameters
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINT]: [string, bigint, string]; // [address, amount, transactionId]
-    [RPCMethods.SEND_BLOCK_HASH]: [string]; // [blockHash]
+    [RPCMethods.MINED_BLOCK_HASH]: [string]; // [blockHash]
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
     [RPCMethods.TRANSFER]: [string, string, bigint]; // [from, to, amount]
@@ -48,7 +48,8 @@ export const READ_METHODS = [
     RPCMethods.GET_CLIENT,
     RPCMethods.GET_LAST_BLOCK,
     RPCMethods.GET_MEMPOOL,
-    RPCMethods.GET_NODES
+    RPCMethods.GET_NODES,
+    RPCMethods.MINED_BLOCK_HASH,
 ];
 
 export const WRITE_METHODS = [

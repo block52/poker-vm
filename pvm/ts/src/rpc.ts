@@ -126,6 +126,17 @@ export class RPC {
                 result = await command.execute();
                 break;
             }
+
+            case RPCMethods.MINED_BLOCK_HASH: {
+                console.log(`Received mined block hash: ${request.params[0]}`);
+                result = {
+                    toJson: () => {
+                        return null;
+                    }
+                };
+                break;
+            }
+
             default:
                 return {
                     id,
@@ -145,6 +156,7 @@ export class RPC {
         request: RPCRequest
     ): Promise<RPCResponse<string | null>> {
         const id = request.id;
+        const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
         let transaction: Transaction;
         switch (method) {
@@ -159,7 +171,6 @@ export class RPC {
                 }
                 const [to, amount, transactionId] =
                     request.params as RPCRequestParams[RPCMethods.MINT];
-                const privateKey = ZeroHash;
 
                 const command = new MintCommand(
                     to,
@@ -183,7 +194,7 @@ export class RPC {
                 }
                 const [from, to, amount] =
                     request.params as RPCRequestParams[RPCMethods.TRANSFER];
-                const privateKey = ZeroHash;
+
                 const command = new TransferCommand(
                     from,
                     to,
