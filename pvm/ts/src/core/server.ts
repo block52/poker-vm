@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ethers, ZeroAddress } from "ethers";
+import { ethers, ZeroAddress, ZeroHash } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
 import { Transaction } from "../models";
@@ -12,7 +12,7 @@ export class Server {
     public readonly publicKey: string;
     private readonly isValidator: boolean;
     private _started: boolean = false;
-    constructor(privateKey: string = "") {
+    constructor(private readonly privateKey: string) {
         this.isValidator = false;
         this.publicKey = ethers.ZeroAddress;
 
@@ -78,7 +78,7 @@ export class Server {
             const validatorInstance = getValidatorInstance();
             const validatorAddress = await validatorInstance.getNextValidatorAddress();
             if (validatorAddress === ZeroAddress || this.publicKey === validatorAddress) {
-                const mineCommand = new MineCommand();
+                const mineCommand = new MineCommand(this.privateKey);
                 const block = await mineCommand.execute();
                 // Broadcast the block hash to the network
                 const nodeUrls = await this.getBootNodes();
@@ -115,9 +115,10 @@ export class Server {
 }
 
 let instance: Server;
+const PRIVATE_KEY = ZeroHash;
 export const getServerInstance = () => {
     if (!instance) {
-        instance = new Server();
+        instance = new Server(PRIVATE_KEY);
     }
     return instance;
 };

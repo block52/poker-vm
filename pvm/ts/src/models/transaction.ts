@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
 import { TransactionDTO } from "../types/chain";
+import { ZeroHash } from "ethers";
 
 export class Transaction implements ICryptoModel, IJSONModel {
   constructor(
@@ -22,8 +23,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
     //   .digest("hex");
 
     // return signature === this.signature;
-
-    throw new Error("Method not implemented.");
+    return (this.signature === ZeroHash);
   }
 
   public calculateHash(): string {

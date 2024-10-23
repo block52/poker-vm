@@ -129,7 +129,7 @@ export class Block implements IJSONModel {
 
   public addTx(tx: Transaction) {
     // check if the tx has been added previously
-    if (this.transactions.includes(tx)) {
+    if (this.transactions.find(t => t.hash === tx.hash)) {
       return;
     }
 

@@ -21,16 +21,21 @@ export class Mempool {
         }
 
         // Check if the transaction is valid
-        // if (!transaction.isValid) {
-        //     throw new Error("Invalid transaction");
-        // }
+        if (!transaction.verify()) {
+            throw new Error("Invalid transaction");
+        }
         console.log(`Adding transaction to mempool: ${transaction.hash}`);
 
         this.transactions.push(transaction);
     }
 
     public get(): Transaction[] {
-        return this.transactions;
+        // Order transactions by timestamp
+        return this.transactions.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+    }
+
+    public clear() {
+        this.transactions = [];
     }
 
 }
