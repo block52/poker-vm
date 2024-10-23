@@ -79,7 +79,7 @@ export class Server {
             // TODO: Move to function
             const validatorInstance = getValidatorInstance();
             const validatorAddress = await validatorInstance.getNextValidatorAddress();
-            if (process.env.PORT === "3001") { //validatorAddress === ZeroAddress || this.publicKey === validatorAddress) {
+            if (process.env.PORT === "3000") { //validatorAddress === ZeroAddress || this.publicKey === validatorAddress) {
                 const mineCommand = new MineCommand(this.privateKey);
                 const block = await mineCommand.execute();
                 console.log(`Block mined: ${block.hash}`);
