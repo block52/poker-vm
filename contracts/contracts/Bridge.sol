@@ -55,12 +55,6 @@ contract Bridge {
         emit Withdrawn(to, amount, nonce);
     }
 
-    // function _verify(bytes32 signature, address account) private pure returns (bool) {
-    //     return keccak256(signature)
-    //         .toEthSignedMessageHash()
-    //         .recover(signature) == account;
-    // }
-
     function recoverSignerAddress(bytes32 messageHash, bytes memory signature) private pure returns (address) {
         require(signature.length == 65, "Invalid signature length");
 

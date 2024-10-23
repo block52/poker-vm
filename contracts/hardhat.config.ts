@@ -4,6 +4,8 @@ import "@nomicfoundation/hardhat-toolbox";
 import dotenv from "dotenv";
 dotenv.config();
 
+const PK = process.env.PK;
+
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
@@ -20,6 +22,11 @@ const config: HardhatUserConfig = {
         passphrase: "",
       },
     },
+    base: {
+			accounts: PK ? [PK] : [],
+			chainId: 8453,
+			url: "https://mainnet.base.org",
+		},
   },
   solidity: "0.8.24",
   paths: {
@@ -33,6 +40,16 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+    customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org",
+        },
+      },
+    ],
   },
 };
 

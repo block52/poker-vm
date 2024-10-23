@@ -9,7 +9,6 @@ contract Oracle is IOracle {
     address private immutable _underlying;
 
     function name() external view returns (string memory) {
-        // string memory _name = "Vault";
         return IERC20Metadata(_underlying).name();
     }
 

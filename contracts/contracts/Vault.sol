@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC1363Receiver} from "./ERC1363/IERC1363Receiver.sol";
@@ -54,6 +55,7 @@ contract Vault is IValidator, IERC1363Receiver {
 
         lockTimes[msg.sender] = block.timestamp + lockTime;
         balances[msg.sender] += amount;
+        validators.push(msg.sender);
 
         emit Staked(msg.sender, amount);
     }
