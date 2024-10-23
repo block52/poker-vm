@@ -36,7 +36,7 @@ Blockchain Poker... again
 | Contract | Description                            | Address                                      | Network   |
 | -------- | -------------------------------------- | -------------------------------------------- | --------- |
 | `Token`  | The token used for the poker game      | `0x7D9aAe2950a2c703159Bc42d2D28882904029130` | `sepolia` |
-| `Vault`  | The vault contract for the poker game  | `0x36c347E374Bf272AdD3B0FDfA5821795eBC0Fc9d` | `sepolia` |
+| `Vault`  | The vault contract for the poker game  | `0x81553C5c695C5eF915D0c54508FC3F90a8330796` | `sepolia` |
 | `Bridge` | The bridge contract for the poker game | ``                                           | `sepolia` |
 
 ## Genesis block

@@ -16,9 +16,13 @@ contract Vault is IValidator, IERC1363Receiver {
     address public immutable underlying;
     uint256 public immutable lockTime;
     uint256 public minValidatorStake;
+    address[] public validators;
+
+    function validatorCount() external view returns (uint256) {
+        return validators.length;
+    }
 
     function name() external view returns (string memory) {
-        // string memory _name = "Vault";
         return IERC20Metadata(underlying).name();
     }
 
