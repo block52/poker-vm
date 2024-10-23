@@ -75,6 +75,8 @@ export class Server {
                 return;
             }
             await this.syncMempool();
+            
+            // TODO: Move to function
             const validatorInstance = getValidatorInstance();
             const validatorAddress = await validatorInstance.getNextValidatorAddress();
             if (process.env.PORT === "3001") { //validatorAddress === ZeroAddress || this.publicKey === validatorAddress) {
@@ -85,8 +87,12 @@ export class Server {
                 const nodeUrls = await this.getBootNodes();
                 for (const nodeUrl of nodeUrls) {
                     console.log(`Broadcasting block hash to ${nodeUrl}`);
-                    const client = new NodeRpcClient(nodeUrl);
-                    await client.sendBlockHash(block.hash);
+                    try {
+                        const client = new NodeRpcClient(nodeUrl);
+                        await client.sendBlockHash(block.hash);
+                    } catch (error) {
+                        console.warn(`Missing node ${nodeUrl}`);
+                    }
                 }
             }
         }, 15000);
