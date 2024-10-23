@@ -43,6 +43,7 @@ export class Deck {
                 throw new Error("Invalid deck type");
         }
 
+        this.hash = ethers.ZeroHash;
         this.createHash();
         this.seedHash = ethers.ZeroHash;
     }
