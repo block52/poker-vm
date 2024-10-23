@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ethers, ZeroAddress } from "ethers";
 
 export class Validator {
     public readonly token = "0xe7d69c2351cdb850D5DB9e4eCd9C7a1059Db806a";
@@ -14,4 +14,17 @@ export class Validator {
 
         return await contract.isValidator(address);
     }
+
+    public async getNextValidatorAddress(): Promise<string> {
+        return ZeroAddress;
+    }
+}
+
+let validatorInstance: Validator | null = null;
+
+export function getValidatorInstance(): Validator {
+    if (!validatorInstance) {
+        validatorInstance = new Validator();
+    }
+    return validatorInstance;
 }

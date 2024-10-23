@@ -29,3 +29,13 @@ export interface IAccountDocument {
   balance: number;
   nonce: number;
 }
+
+export interface ITransactionDocument {
+  to: string;
+  from?: string;
+  value: string;
+  signature: string;
+  timestamp: string;
+  index?: string;
+  hash: string;
+}

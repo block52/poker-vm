@@ -1,9 +1,11 @@
 import axios from "axios";
-import { ethers } from "ethers";
+import { ethers, ZeroAddress } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
 import { Transaction } from "../models";
 import { NodeRpcClient } from "../client/client";
+import { MineCommand } from "../commands/mineCommand";
+import { getValidatorInstance } from "./validator";
 
 export class Server {
     public readonly contractAddress: string;
@@ -73,6 +75,18 @@ export class Server {
                 return;
             }
             await this.syncMempool();
+            const validatorInstance = getValidatorInstance();
+            const validatorAddress = await validatorInstance.getNextValidatorAddress();
+            if (validatorAddress === ZeroAddress || this.publicKey === validatorAddress) {
+                const mineCommand = new MineCommand();
+                const block = await mineCommand.execute();
+                // Broadcast the block hash to the network
+                const nodeUrls = await this.getBootNodes();
+                for (const nodeUrl of nodeUrls) {
+                    const client = new NodeRpcClient(nodeUrl);
+                    await client.sendBlockHash(block.hash);
+                }
+            }
         }, 15000);
 
         this._started = true;
