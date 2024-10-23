@@ -7,13 +7,15 @@ export class Node implements IJSONModel {
     url: string;
     version: string;
     isValidator: boolean;
+    name: string;
 
-    constructor(client: string, publicKey: string, url: string, version: string, isValidator: boolean) {
+    constructor(client: string, publicKey: string, url: string, version: string, isValidator: boolean, name?: string) {
         this.client = client;
         this.publicKey = publicKey;
         this.url = url;
         this.version = version;
         this.isValidator = isValidator;
+        this.name = name || url;
     }
 
     public toJson(): NodeDTO {
@@ -22,7 +24,8 @@ export class Node implements IJSONModel {
             publicKey: this.publicKey,
             url: this.url,
             version: this.version,
-            isValidator: this.isValidator
+            isValidator: this.isValidator,
+            name: this.name
         };
     }
 };
@@ -33,6 +36,7 @@ export type NodeDTO = {
     url: string;
     version: string;
     isValidator: boolean;
+    name: string;
 };
 
 export type BlockDTO = {

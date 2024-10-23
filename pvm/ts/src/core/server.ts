@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ethers, ZeroAddress, ZeroHash } from "ethers";
+import { ethers, ZeroHash } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
 import { Transaction } from "../models";
