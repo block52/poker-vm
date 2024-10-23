@@ -25,7 +25,7 @@ export class Deck {
 
     // todo make this a stack
     private cards: Card[] = [];
-    public hash: string;
+    public hash: string = "";
     public seedHash: string;
 
     constructor(type: DeckType) {
