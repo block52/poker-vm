@@ -1,4 +1,5 @@
 [
+    "http://node1.block52.zyz:3000",
     "http://localhost:3001",
     "http://localhost:3002"
 ]
