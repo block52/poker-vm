@@ -1,46 +1,58 @@
 # poker-vm
+
 Blockchain Poker... again
 
 # Order of operations
 
 ## Creating the transaction
 
-* Transactions are sent to the node
-* Node validates the transaction signature
-* Node validates the transaction nonce
-* Node validates the transaction balance, via the account state manager
-* Transaction is added to the transaction mem pool
+- Transactions are sent to the node
+- Node validates the transaction signature
+- Node validates the transaction nonce
+- Node validates the transaction balance, via the account state manager
+- Transaction is added to the transaction mem pool
 
 ## Creating the block
 
-* Nodes are selected in a round robin fashion
-* Transactions are pulled from the mem pool
-* Transactions are replayed in the order they were received, and by the nonce
-* The account state manager is updated with the new balances
-* The block is created and signed by the node
-* The block is sent to the network
+- Nodes are selected in a round robin fashion
+- Transactions are pulled from the mem pool
+- Transactions are replayed in the order they were received, and by the nonce
+- The account state manager is updated with the new balances
+- The block is created and signed by the node
+- The block is sent to the network
 
 ## Receiving the block
 
-* The block is received by another node
-* The block is validated by the node, with validators public key, merkle root, and signature
-* The block is added to the block state manager
-
+- The block is received by another node
+- The block is validated by the node, with validators public key, merkle root, and signature
+- The block is added to the block state manager
 
 ## Scripts
 
-
 ### Test accounts
-
 
 ### Tokens and contracts
 
-| Contract | Description | Address | Network |
-| --- | --- | --- | --- |
-| `Token` | The token used for the poker game | `0xe7d69c2351cdb850D5DB9e4eCd9C7a1059Db806a` | `sepolia` |
-| `Vault` | The vault contract for the poker game | `0x36c347E374Bf272AdD3B0FDfA5821795eBC0Fc9d` | `sepolia` |
-| `Bridge` | The bridge contract for the poker game | `` | `sepolia` |
+| Contract | Description                            | Address                                      | Network   |
+| -------- | -------------------------------------- | -------------------------------------------- | --------- |
+| `Token`  | The token used for the poker game      | `0xe7d69c2351cdb850D5DB9e4eCd9C7a1059Db806a` | `sepolia` |
+| `Vault`  | The vault contract for the poker game  | `0x36c347E374Bf272AdD3B0FDfA5821795eBC0Fc9d` | `sepolia` |
+| `Bridge` | The bridge contract for the poker game | ``                                           | `sepolia` |
 
+## Genesis block
+
+```json
+{
+  "index": 0,
+  "hash": "24f7acd3b289b5dc7eaf96e9f119fecb7a24a3626c5b26602792d0d1ee8571b7",
+  "previousHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "merkleRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "signature": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "timestamp": 0,
+  "validator": "0x7f99aD0e59b90EAB7e776cefcdaE7a920ee1864c",
+  "transactions": []
+}
+```
 
 ```text
 {
@@ -50,4 +62,4 @@ Blockchain Poker... again
   "version": "3",
   "signer": "MEW"
 }
-```
+````
