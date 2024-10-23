@@ -12,12 +12,13 @@ export class Mempool {
     public add(transaction: Transaction) {
         // Check if the transaction is already in the mempool
         if (this.transactions.find((tx) => tx.hash === transaction.hash)) {
+            console.log(`Transaction already in mempool: ${transaction.hash}`);
             return;
         }
 
         // Check if the mempool is full
         if (this.transactions.length >= this.maxSize) {
-            throw new Error("Mempool is full");
+            console.log(`Mempool is full: ${this.transactions.length} / ${this.maxSize}`);
         }
 
         // Check if the transaction is valid
