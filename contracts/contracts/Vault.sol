@@ -46,7 +46,8 @@ contract Vault is IValidator, IERC1363Receiver {
     ) {
         underlying = _underlying;
         lockTime = _lockTime;
-        minValidatorStake = _minValidatorStake;
+        uint256 decimals = IERC20Metadata(_underlying).decimals();
+        minValidatorStake = _minValidatorStake * 10**decimals;
     }
 
     function stake(uint256 amount) external {
