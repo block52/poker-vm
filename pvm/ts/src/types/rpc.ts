@@ -24,6 +24,7 @@ export enum RPCMethods {
     MINED_BLOCK_HASH = "mined_block_hash",
     START = "start",
     STOP = "stop",
+    SHUTDOWN = "shutdown",
     TRANSFER = "transfer"
 }
 
@@ -40,6 +41,7 @@ export type RPCRequestParams = {
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
     [RPCMethods.TRANSFER]: [string, string, bigint]; // [from, to, amount]
+    [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
 };
 
 export const READ_METHODS = [
@@ -58,4 +60,4 @@ export const WRITE_METHODS = [
     RPCMethods.TRANSFER
 ];
 
-export const CONTROL_METHODS = [RPCMethods.START, RPCMethods.STOP];
+export const CONTROL_METHODS = [RPCMethods.START, RPCMethods.STOP, RPCMethods.SHUTDOWN];

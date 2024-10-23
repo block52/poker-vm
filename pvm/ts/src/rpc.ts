@@ -72,6 +72,13 @@ export class RPC {
                 await server.stop();
                 break;
             }
+            case RPCMethods.SHUTDOWN: {
+                const [username, password] = request.params as RPCRequestParams[RPCMethods.SHUTDOWN];
+                if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+                    process.exit(0);
+                }
+                break;
+            }
         }
         return {
             id: request.id,
