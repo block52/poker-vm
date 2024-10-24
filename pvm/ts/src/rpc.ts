@@ -99,7 +99,7 @@ export class RPC {
         request: RPCRequest
     ): Promise<RPCResponse<any>> {
         const id = request.id;
-        let result: IJSONModel | null = null;
+        let result: IJSONModel;
         switch (method) {
             case RPCMethods.GET_BLOCK: {
                 let command = new BlockCommand(undefined);
