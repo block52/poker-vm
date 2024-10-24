@@ -5,11 +5,11 @@ import contractSchemas from "../../schema/contractSchemas";
 export class GetContractSchemaCommand implements ICommand<ContractSchema | null> {
     constructor(private readonly hash: string) {}
 
-    public async execute(): Promise<ContractSchema | null> {
+    public async execute(): Promise<ContractSchema> {
         const existingContractSchema = await contractSchemas.findOne({ hash: this.hash });
         
         if (!existingContractSchema) {
-            return null;
+            throw new Error(`Contract schema not found: ${this.hash}`);
         }
 
         return ContractSchema.fromDocument(existingContractSchema);
