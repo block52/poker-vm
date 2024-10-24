@@ -16,6 +16,8 @@ import { getMempoolInstance } from "./core/mempool";
 import { IJSONModel } from "./models/interfaces";
 import { MeCommand } from "./commands/meCommand";
 import { getServerInstance } from "./core/server";
+import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
+import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
 
 export class RPC {
     // get the mempool
@@ -61,6 +63,7 @@ export class RPC {
         method: RPCMethods,
         request: RPCRequest
     ): Promise<RPCResponse<any>> {
+        let result: string | null = null;
         switch (method) {
             case RPCMethods.START: {
                 const server = getServerInstance();
@@ -79,13 +82,18 @@ export class RPC {
                 }
                 break;
             }
+            case RPCMethods.CREATE_CONTRACT_SCHEMA: {
+                const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
+                const command = new CreateContractSchemaCommand(category, name, schema);
+                result = await command.execute();
+                break;
+            }
         }
         return {
             id: request.id,
-            result: null
+            result: result
         };
     }
-
     static async handleReadMethod(
         method: RPCMethods,
         request: RPCRequest
@@ -99,8 +107,14 @@ export class RPC {
                 if (request.params) {
                     const index = BigInt(request.params[0] as string);
                     command = new BlockCommand(index);
-                    result = await command.execute();
                 }
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.GET_CONTRACT_SCHEMA: {
+                const [hash] = request.params as RPCRequestParams[RPCMethods.GET_CONTRACT_SCHEMA];
+                const command = new GetContractSchemaCommand(hash);
                 result = await command.execute();
                 break;
             }
@@ -108,7 +122,6 @@ export class RPC {
             case RPCMethods.GET_LAST_BLOCK: {
                 const command = new BlockCommand(undefined);
                 result = await command.execute();
-
                 break;
             }
 
@@ -152,12 +165,21 @@ export class RPC {
                 };
         }
 
+        if (result === null) {
+            return {
+                id,
+                error: "Operation failed",
+                result: null
+            };
+        }
+
         return {
             id,
             result: result.toJson()
         };
     }
 
+    // These always return a transaction hash
     static async handleWriteMethod(
         method: RPCMethods,
         request: RPCRequest

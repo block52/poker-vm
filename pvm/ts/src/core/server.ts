@@ -1,4 +1,3 @@
-import axios from "axios";
 import { ethers, ZeroHash } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
@@ -6,12 +5,15 @@ import { Transaction } from "../models";
 import { NodeRpcClient } from "../client/client";
 import { MineCommand } from "../commands/mineCommand";
 import { getValidatorInstance } from "./validator";
+import { getBootNodes } from "../state/nodeManagement";
 
 export class Server {
     public readonly contractAddress: string;
     public readonly publicKey: string;
     private readonly isValidator: boolean;
     private _started: boolean = false;
+    private readonly _port: number = parseInt(process.env.PORT || "3000");
+
     constructor(private readonly privateKey: string) {
         this.isValidator = false;
         this.publicKey = ethers.ZeroAddress;
@@ -29,7 +31,7 @@ export class Server {
         return new Node(
             "pvm-typescript",
             this.publicKey,
-            `http://localhost:${process.env.PORT}`,
+            `http://localhost:${this._port}`,
             "1.0.0",
             this.isValidator
         );
@@ -40,30 +42,39 @@ export class Server {
     }
 
     public async mine() {
-        // Mine a block
-        console.log("Block mined");
+        const validatorInstance = getValidatorInstance();
+        const validatorAddress = await validatorInstance.getNextValidatorAddress();
+        if (validatorAddress === this.publicKey) {
+            console.log(`I am the validator. Mining block...`);
+            const mineCommand = new MineCommand(this.privateKey);
+            const block = await mineCommand.execute();
+            console.log(`Block mined: ${block.hash}`);
+            // Broadcast the block hash to the network
+            const nodeUrls = await getBootNodes(this.me().url);
+            for (const nodeUrl of nodeUrls) {
+                console.log(`Broadcasting block hash to ${nodeUrl}`);
+                try {
+                    const client = new NodeRpcClient(nodeUrl);
+                    await client.sendBlockHash(block.hash);
+                } catch (error) {
+                    console.warn(`Missing node ${nodeUrl}`);
+                }
+            }
+        } else {
+            console.log(`I am not the validator. Waiting for next block...`);
+        }
     }
 
     public async start() {
         // Start the server
         this._started = true;
-        console.log("Server starting...");
+        console.log(`Server starting on port ${this._port} ...`);
     }
 
     public async stop() {
         // Stop the server
         this._started = false;
         console.log("Server stopping...");
-    }
-
-    private async getBootNodes(): Promise<string[]> {
-        const response = await axios.get(
-            "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
-        );
-        const ownNode = this.me();
-        const bootNodeUrls = response.data as string[];
-        const nodeUrls = bootNodeUrls.filter(url => url !== ownNode.url);
-        return nodeUrls;
     }
 
     public async bootstrap() {
@@ -75,26 +86,7 @@ export class Server {
                 return;
             }
             await this.syncMempool();
-            
-            // TODO: Move to function
-            const validatorInstance = getValidatorInstance();
-            const validatorAddress = await validatorInstance.getNextValidatorAddress();
-            if (process.env.PORT === "3000") { //validatorAddress === ZeroAddress || this.publicKey === validatorAddress) {
-                const mineCommand = new MineCommand(this.privateKey);
-                const block = await mineCommand.execute();
-                console.log(`Block mined: ${block.hash}`);
-                // Broadcast the block hash to the network
-                const nodeUrls = await this.getBootNodes();
-                for (const nodeUrl of nodeUrls) {
-                    console.log(`Broadcasting block hash to ${nodeUrl}`);
-                    try {
-                        const client = new NodeRpcClient(nodeUrl);
-                        await client.sendBlockHash(block.hash);
-                    } catch (error) {
-                        console.warn(`Missing node ${nodeUrl}`);
-                    }
-                }
-            }
+            await this.mine();
         }, 15000);
 
         this._started = true;
@@ -106,7 +98,7 @@ export class Server {
             return;
         }
         const mempool = getMempoolInstance();
-        const nodeUrls = await this.getBootNodes();
+        const nodeUrls = await getBootNodes(this.me().url);
         for (const nodeUrl of nodeUrls) {
             try {
                 const client = new NodeRpcClient(nodeUrl);

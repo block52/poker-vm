@@ -42,7 +42,7 @@ Blockchain Poker... again
 
 ## Genesis block
 
-Genisis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
+Genesis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
 
 ```json
 {
@@ -57,7 +57,7 @@ Genisis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
 }
 ```
 
-```text
+```json
 {
   "address": "0x513d31f0aa9380c5a0f16a996850b9538f74f936",
   "msg": "0x513d31f0aA9380C5A0F16A996850B9538f74F936",

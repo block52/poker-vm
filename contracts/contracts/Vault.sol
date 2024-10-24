@@ -47,7 +47,7 @@ contract Vault is IValidator, IERC1363Receiver {
         underlying = _underlying;
         lockTime = _lockTime;
         uint256 decimals = IERC20Metadata(_underlying).decimals();
-        minValidatorStake = _minValidatorStake * 10**decimals;
+        minValidatorStake = _minValidatorStake * 10 ** decimals;
     }
 
     function stake(uint256 amount) external {
@@ -82,9 +82,7 @@ contract Vault is IValidator, IERC1363Receiver {
         uint256 amount,
         address token,
         bytes calldata extraData
-    ) external {
-
-    }
+    ) external {}
 
     function slash(address account, bytes32 proof) external {
         // address signer = ECDSA.recover(account, proof);
