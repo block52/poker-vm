@@ -20,8 +20,9 @@ export type Card = {
 
 import { createHash } from "crypto";
 import { ethers } from "ethers";
+import { IJSONModel } from "./interfaces";
 
-export class Deck {
+export class Deck implements IJSONModel {
 
     // todo make this a stack
     private cards: Card[] = [];
@@ -110,12 +111,12 @@ export class Deck {
         return this.cards[0];
     }
 
-    // public toJson(): any {
-    //     return {
-    //         address: this.address,
-    //         balance: this.balance,
-    //     };
-    // }
+    public toJson(): any {
+        return {
+            address: this.address,
+            balance: this.balance,
+        };
+    }
 
     // public static fromJson(json: any): Account {
     //     return new Account(json.address, json.balance);
