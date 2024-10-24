@@ -13,7 +13,7 @@ export const Wallet: React.FC = () => {
     <div className="wallet-box">
       <h2>Wallet</h2>
       <p><strong>Address:</strong> {wallet.address}</p>
-      <p><strong>Balance:</strong> 0 B52 tokens</p>
+      <p><strong>Balance:</strong> 0 USD</p>
     </div>
   );
 };
