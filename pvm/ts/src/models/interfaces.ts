@@ -39,3 +39,10 @@ export interface ITransactionDocument {
   index?: string;
   hash: string;
 }
+
+export interface IContractSchemaDocument {
+  category: string;
+  name: string;
+  schema: any;
+  hash: string;
+}
