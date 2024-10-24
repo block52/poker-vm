@@ -1,4 +1,3 @@
-import axios from "axios";
 import { ethers, ZeroHash } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
@@ -13,6 +12,8 @@ export class Server {
     public readonly publicKey: string;
     private readonly isValidator: boolean;
     private _started: boolean = false;
+    private readonly _port: number = parseInt(process.env.PORT || "3000");
+
     constructor(private readonly privateKey: string) {
         this.isValidator = false;
         this.publicKey = ethers.ZeroAddress;
@@ -30,7 +31,7 @@ export class Server {
         return new Node(
             "pvm-typescript",
             this.publicKey,
-            `http://localhost:${process.env.PORT}`,
+            `http://localhost:${this._port}`,
             "1.0.0",
             this.isValidator
         );
@@ -67,7 +68,7 @@ export class Server {
     public async start() {
         // Start the server
         this._started = true;
-        console.log("Server starting...");
+        console.log(`Server starting on port ${this._port} ...`);
     }
 
     public async stop() {
