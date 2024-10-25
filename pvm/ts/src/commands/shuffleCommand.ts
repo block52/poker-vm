@@ -1,18 +1,19 @@
-import { Block, Deck } from "../models";
+import { Deck } from "../models";
 import { DeckType } from "../models/deck";
-import { ICommand } from "./interfaces";
+import { AbstractCommand } from "./abstractSignedCommand";
 import { RandomCommand } from "./randomCommand";
 
-export class ShuffleCommand implements ICommand<Deck> {
+export class ShuffleCommand extends AbstractCommand<Deck> {
     private readonly deck: Deck;
 
-    constructor() {
+    constructor(privateKey: string) {
+        super(privateKey);
         this.deck = new Deck(DeckType.STANDARD_52);
     }
 
-    public async execute(): Promise<Deck> {
-        const randomCommand = new RandomCommand(52);
-        const random = await randomCommand.execute();
+    public async executeCommand(): Promise<Deck> {
+        const randomCommand = new RandomCommand(52, Date.now().toString(), this.privateKey);
+        const random = await randomCommand.executeCommand();
 
         // this.deck.shuffle(random);
         throw new Error("Method not implemented.");

@@ -36,7 +36,7 @@ export class NodeRpcClient {
             data: undefined
         });
         // Convert the received TransactionDTO objects to Transaction instances
-        return response.data.result.map(Transaction.fromJson);
+        return response.data.result.result.map(Transaction.fromJson);
     }
 
     /**
@@ -53,7 +53,7 @@ export class NodeRpcClient {
             params: [],
             data: undefined
         });
-        return response.data.result as string[];
+        return response.data.result.result;
     }
 
     /**
@@ -68,7 +68,7 @@ export class NodeRpcClient {
             data: undefined
         });
         // Convert the received BlockDTO to a Block instance
-        return Block.fromJson(response.data.result);
+        return Block.fromJson(response.data.result.result);
     }
 
     /**

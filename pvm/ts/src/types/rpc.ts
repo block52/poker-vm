@@ -1,3 +1,5 @@
+import { ISignedResponse } from "../commands/interfaces";
+
 // RPC Class
 export type RPCRequest = {
     id: string;
@@ -8,8 +10,9 @@ export type RPCRequest = {
 
 export type RPCResponse<T> = {
     id: string;
-    result: T;
+    result: ISignedResponse<T>;
     error?: string;
+    //toJson: () => string;
 };
 
 export enum RPCMethods {

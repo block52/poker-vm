@@ -1,11 +1,13 @@
 import { ethers } from "ethers";
 import { ICommand } from "./interfaces";
+import { AbstractCommand } from "./abstractSignedCommand";
 
-export class ContractsCommand implements ICommand<string[]> {
-  constructor() {
+export class ContractsCommand extends AbstractCommand<string[]> {
+  constructor(privateKey: string) {
+    super(privateKey);
   }
 
-  public async execute(): Promise<string[]> {
+  public async executeCommand(): Promise<string[]> {
     const contracts = [ethers.ZeroAddress]
     return contracts;
   }

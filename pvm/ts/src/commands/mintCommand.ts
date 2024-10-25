@@ -2,9 +2,11 @@ import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models/transaction";
 import transactions from "../schema/transactions";
 import { ICommand } from "./interfaces";
+import { AbstractCommand } from "./abstractSignedCommand";
 
-export class MintCommand implements ICommand<Transaction> {
+export class MintCommand extends AbstractCommand<Transaction> {
     constructor(readonly receiver: string, readonly amount: bigint, readonly transactionId: string, readonly privateKey: string) {
+        super(privateKey);
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
         }
@@ -27,7 +29,7 @@ export class MintCommand implements ICommand<Transaction> {
         this.privateKey = privateKey;
     }
 
-    public async execute(): Promise<Transaction> {
+    public async executeCommand(): Promise<Transaction> {
         // Minting logic
         // Check tx hash is in the staking mainnet contract and has not be validated
         // If we're a validator, we can mint
