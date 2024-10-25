@@ -8,7 +8,7 @@ export abstract class StateManager {
   async connect() {
     try {
       await mongoose.connect(this.connectionString);
-      console.log("MongoDB connected");
+      console.log(`MongoDB connected to ${this.connectionString}`);
     } catch (error) {
       console.error(error);
       process.exit(1);
