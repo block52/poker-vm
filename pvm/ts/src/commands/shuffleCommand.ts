@@ -15,15 +15,13 @@ export class ShuffleCommand implements ICommand<Deck> {
         const randomCommand = new RandomCommand(52);
         const random = await randomCommand.execute();
 
-        const deck = new Deck(DeckType.STANDARD_52);
         const seed: number[] = [];
 
         for (let i = 0; i < 52; i++) {
             seed.push(random[i]);
         }
 
-        deck.shuffle(seed);
-        const json = deck.toJSON();
+        this.deck.shuffle(seed);
 
         if (this.privateKey) {
             const signer = new ethers.Wallet(this.privateKey);

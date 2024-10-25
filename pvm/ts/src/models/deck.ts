@@ -113,26 +113,9 @@ export class Deck implements IJSONModel {
 
     public toJson(): any {
         return {
-            address: this.address,
-            balance: this.balance,
+            cards: this.cards
         };
     }
-
-    // public static fromJson(json: any): Account {
-    //     return new Account(json.address, json.balance);
-    // }
-
-    // public static fromDocument(document: IAccountDocument): Account {
-    //     return new Account(document.address, BigInt(document.balance));
-    // }
-
-    // public toDocument(): IAccountDocument {
-    //     return {
-    //         address: this.address,
-    //         balance: Number(this.balance),
-    //         nonce: 0,
-    //     };
-    // }
 
     private initStandard52(): void {
         for (let suit = 0; suit < 4; suit++) {
