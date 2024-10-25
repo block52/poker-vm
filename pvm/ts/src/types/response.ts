@@ -7,17 +7,17 @@ export function makeErrorRPCResponse(id: string, message: string, ): RPCResponse
         error: message,
         result: {
             signature: "",
-            result: null
+            data: null
         }
     };
 }
 
-export function makeGenericRPCResponse(id: string, result: any, privateKey: string): RPCResponse<any> {
+export async function makeGenericRPCResponse(id: string, data: any, privateKey: string): Promise<RPCResponse<any>> {
     return {
         id,
         result: {
-            signature: crypto.signData(privateKey, JSON.stringify(result)),
-            result: result
+            signature: await crypto.signData(privateKey, JSON.stringify(data)),
+            data: data
         }
     };
 }

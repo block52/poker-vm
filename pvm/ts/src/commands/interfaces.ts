@@ -4,6 +4,6 @@ export interface ICommand<T> {
 }
 
 export interface ISignedResponse<T> {
-  result: T;
+  data: T;
   signature: string;
 }

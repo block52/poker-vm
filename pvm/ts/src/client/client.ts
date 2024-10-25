@@ -26,7 +26,7 @@ export class NodeRpcClient {
      * @returns A Promise resolving to an array of Transaction objects
      */
     public async getMempool(): Promise<Transaction[]> {
-        const response = await axios.post<
+        const { data: body } = await axios.post<
             RPCRequest,
             { data: RPCResponse<TransactionDTO[]> }
         >(`${this.url}`, {
@@ -36,7 +36,7 @@ export class NodeRpcClient {
             data: undefined
         });
         // Convert the received TransactionDTO objects to Transaction instances
-        return response.data.result.result.map(Transaction.fromJson);
+        return body.result.data.map(Transaction.fromJson);
     }
 
     /**
@@ -44,7 +44,7 @@ export class NodeRpcClient {
      * @returns A Promise resolving to an array of node URLs
      */
     public async getNodes(): Promise<string[]> {
-        const response = await axios.post<
+        const { data: body} = await axios.post<
             RPCRequest,
             { data: RPCResponse<string[]> }
         >(`${this.url}`, {
@@ -53,7 +53,7 @@ export class NodeRpcClient {
             params: [],
             data: undefined
         });
-        return response.data.result.result;
+        return body.result.data;
     }
 
     /**
@@ -61,14 +61,14 @@ export class NodeRpcClient {
      * @returns A Promise resolving to a Block object
      */
     public async getLastBlock(): Promise<Block> {
-        const response = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO>}>(`${this.url}`, {
+        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO>}>(`${this.url}`, {
             id: this.getRequestId(),
             method: RPCMethods.GET_LAST_BLOCK,
             params: [],
             data: undefined
         });
         // Convert the received BlockDTO to a Block instance
-        return Block.fromJson(response.data.result.result);
+        return Block.fromJson(body.result.data);
     }
 
     /**

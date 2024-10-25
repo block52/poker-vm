@@ -48,7 +48,7 @@ export class Server {
             console.log(`I am the validator. Mining block...`);
             const mineCommand = new MineCommand(this.privateKey);
             const mineCommandResponse = await mineCommand.execute();
-            const block = mineCommandResponse.result;
+            const block = mineCommandResponse.data;
             if (!block) {
                 throw new Error("No block mined");
             }

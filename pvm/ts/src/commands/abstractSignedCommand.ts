@@ -7,14 +7,14 @@ export abstract class AbstractCommand<T> implements ICommand<T> {
 
     public async execute(): Promise<ISignedResponse<T>> {
         const commandResult = await this.executeCommand();
-        const result = typeof (commandResult as any).toJson === 'function' 
+        const data = typeof (commandResult as any).toJson === 'function' 
             ? (commandResult as IJSONModel).toJson() 
             : commandResult;
 
-        const signature = await this.signResult(result);
+        const signature = await this.signResult(data);
 
         return {
-            result,
+            data,
             signature,
         };
     }
