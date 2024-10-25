@@ -2,8 +2,13 @@ import mongoose from "mongoose";
 
 export abstract class StateManager {
   constructor(
-    readonly connectionString: string = "mongodb://localhost:27017/pvm"
-  ) { }
+    readonly connectionString: string
+  ) {
+
+    if (!connectionString) {
+      throw new Error("Connection string is required");
+    }
+  }
 
   async connect() {
     try {
