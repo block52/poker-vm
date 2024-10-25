@@ -1,16 +1,17 @@
 import { getServerInstance, Server } from "../core/server";
 import { Node } from "../core/types";
-import { ICommand } from "./interfaces";
+import { AbstractCommand } from "./abstractSignedCommand";
 
-export class MeCommand implements ICommand<Node> {
+export class MeCommand extends AbstractCommand<Node> {
 
   private readonly server: Server;
 
-  constructor() {
+  constructor(privateKey: string) {
+    super(privateKey);
     this.server = getServerInstance();
   }
 
-  public async execute(): Promise<Node> {
+  public async executeCommand(): Promise<Node> {
     const node = this.server.me();
     return node;
   }

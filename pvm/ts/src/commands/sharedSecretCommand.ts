@@ -1,11 +1,11 @@
-import { ICommand } from "./interfaces";
-import { ethers } from "ethers";
+import { AbstractCommand } from "./abstractSignedCommand";
 
-export class SharedSecretCommand implements ICommand<string> {
-    constructor(private readonly publicKey: string) {
+export class SharedSecretCommand extends AbstractCommand<string> {
+    constructor(private readonly publicKey: string, privateKey: string) {
+        super(privateKey);
     }
 
-    public async execute(): Promise<string> {
+    public async executeCommand(): Promise<string> {
         // sign1 = new SigningKey(id("some-secret-1"))
         // sign2 = new SigningKey(id("some-secret-2"))
         

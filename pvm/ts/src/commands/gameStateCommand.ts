@@ -1,11 +1,13 @@
 import { ICommand } from "./interfaces";
 import { Round, TexasHoldemState } from "../engine/types";
+import { AbstractCommand } from "./abstractSignedCommand";
 
-export class GameStateCommand implements ICommand<TexasHoldemState> {
-    constructor(readonly address: string) {
+export class GameStateCommand extends AbstractCommand<TexasHoldemState> {
+    constructor(readonly address: string, privateKey: string) {
+        super(privateKey);
     }
 
-    public async execute(): Promise<TexasHoldemState> {
+    public async executeCommand(): Promise<TexasHoldemState> {
         const mockState: TexasHoldemState = {
             smallBlind: 1,
             bigBlind: 2,

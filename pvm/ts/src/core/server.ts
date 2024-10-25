@@ -47,7 +47,11 @@ export class Server {
         if (validatorAddress === this.publicKey) {
             console.log(`I am the validator. Mining block...`);
             const mineCommand = new MineCommand(this.privateKey);
-            const block = await mineCommand.execute();
+            const mineCommandResponse = await mineCommand.execute();
+            const block = mineCommandResponse.result;
+            if (!block) {
+                throw new Error("No block mined");
+            }
             console.log(`Block mined: ${block.hash}`);
             // Broadcast the block hash to the network
             const nodeUrls = await getBootNodes(this.me().url);
