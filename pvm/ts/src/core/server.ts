@@ -28,10 +28,13 @@ export class Server {
     }
 
     public me(): Node {
+
+        const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
+
         return new Node(
             "pvm-typescript",
             this.publicKey,
-            `http://localhost:${this._port}`,
+            url,
             "1.0.0",
             this.isValidator
         );
