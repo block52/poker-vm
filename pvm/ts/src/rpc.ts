@@ -3,15 +3,14 @@ import { MintCommand, TransferCommand } from "./commands";
 import { BlockCommand } from "./commands/blockCommand";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
 import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
+import { GetNodesCommand } from "./commands/getNodesCommand";
 import { ISignedResponse } from "./commands/interfaces";
 import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
+import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
-import { getMempoolInstance } from "./core/mempool";
-import { Transaction } from "./models";
-import { IJSONModel } from "./models/interfaces";
 import { makeErrorRPCResponse } from "./types/response";
 import {
     CONTROL_METHODS,
@@ -22,8 +21,6 @@ import {
     RPCResponse,
     WRITE_METHODS
 } from "./types/rpc";
-import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
-import { GetNodesCommand } from "./commands/getNodesCommand";
 
 export class RPC {
 
