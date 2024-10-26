@@ -1,12 +1,14 @@
-import { AbstractCommand } from "./abstractSignedCommand";
+import { signResult } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class ReceiveMinedBlockHashCommand extends AbstractCommand<string> {
-    constructor(private readonly blockHash: string, privateKey: string) {
-        super(privateKey);
-    }
+export class ReceiveMinedBlockHashCommand implements ISignedCommand<string> {
+    constructor(
+        private readonly blockHash: string,
+        private readonly privateKey: string
+    ) {}
 
-    public async executeCommand(): Promise<string> {
+    public async execute(): Promise<ISignedResponse<string>> {
         console.log(`Received mined block hash: ${this.blockHash}`);
-        return this.blockHash;
+        return signResult(this.blockHash, this.privateKey);
     }
 }

@@ -1,8 +1,9 @@
 import { getServerInstance } from "../core/server";
-import { AbstractCommand } from "./abstractSignedCommand";
+import { ICommand } from "./interfaces";
 
-export class StopServerCommand extends AbstractCommand<boolean> {
-    public async executeCommand(): Promise<boolean> {
+export class StopServerCommand implements ICommand<boolean> {
+    constructor() {}
+    public async execute(): Promise<boolean> {
         const server = getServerInstance();
         await server.stop();
         return true;

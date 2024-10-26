@@ -1,15 +1,13 @@
-import { AbstractCommand } from "./abstractSignedCommand";
+import { signResult } from "./abstractSignedCommand";
+import { ICommand, ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class ShutdownCommand extends AbstractCommand<boolean> {
-    constructor(
+export class ShutdownCommand implements ICommand<boolean> {
+    constructor(    
         private userName: string,
         private password: string,
-        privateKey: string
-    ) {
-        super(privateKey);
-    }
+    ) {}
 
-    public async executeCommand(): Promise<boolean> {
+    public async execute(): Promise<boolean> {
         if (
             this.userName !== process.env.ADMIN_USERNAME ||
             this.password !== process.env.ADMIN_PASSWORD

@@ -1,26 +1,29 @@
-import { ZeroHash } from "ethers";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block } from "../models";
 
-import { ICommand } from "./interfaces";
 import { BlockchainManagement } from "../state/blockchainManagement";
-import { AbstractCommand } from "./abstractSignedCommand";
+import { signResult } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class MineCommand extends AbstractCommand<Block | null> {
+export class MineCommand implements ISignedCommand<Block | null> {
     private readonly mempool: Mempool;
 
-    constructor(privateKey: string) {
-        super(privateKey);
+    constructor(private readonly privateKey: string) {
         this.mempool = getMempoolInstance();
     }
 
-    public async executeCommand(): Promise<Block> {
+    public async execute(): Promise<ISignedResponse<Block | null>> {
         const txs = this.mempool.get();
         const blockchainManagement = new BlockchainManagement();
         const lastBlock = await blockchainManagement.getLastBlock();
-        const block = Block.create(lastBlock.index + 1, lastBlock.hash, txs, this.privateKey);
+        const block = Block.create(
+            lastBlock.index + 1,
+            lastBlock.hash,
+            txs,
+            this.privateKey
+        );
         this.mempool.clear();
-        
-        return block;
+
+        return signResult(block, this.privateKey);
     }
 }

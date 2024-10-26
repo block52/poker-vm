@@ -1,14 +1,12 @@
 import { ethers } from "ethers";
-import { ICommand } from "./interfaces";
-import { AbstractCommand } from "./abstractSignedCommand";
+import { signResult } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class ContractsCommand extends AbstractCommand<string[]> {
-  constructor(privateKey: string) {
-    super(privateKey);
-  }
+export class ContractsCommand implements ISignedCommand<string[]> {
+    constructor(private readonly privateKey: string) {}
 
-  public async executeCommand(): Promise<string[]> {
-    const contracts = [ethers.ZeroAddress]
-    return contracts;
-  }
+    public async execute(): Promise<ISignedResponse<string[]>> {
+        const contracts = [ethers.ZeroAddress];
+        return signResult(contracts, this.privateKey);
+    }
 }

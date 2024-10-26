@@ -59,18 +59,18 @@ export const READ_METHODS = [
     RPCMethods.GET_MEMPOOL,
     RPCMethods.GET_NODES,
     RPCMethods.MINED_BLOCK_HASH,
-    RPCMethods.GET_CONTRACT_SCHEMA
+    RPCMethods.GET_CONTRACT_SCHEMA,
 ];
 
 export const WRITE_METHODS = [
+    RPCMethods.CREATE_CONTRACT_SCHEMA,
     RPCMethods.MINE,
     RPCMethods.MINT,
-    RPCMethods.TRANSFER
+    RPCMethods.TRANSFER,
 ];
 
 export const CONTROL_METHODS = [
     RPCMethods.START,
     RPCMethods.STOP,
     RPCMethods.SHUTDOWN,
-    RPCMethods.CREATE_CONTRACT_SCHEMA
 ];

@@ -1,10 +1,9 @@
 export interface ICommand<T> {
-  executeCommand(): Promise<T>;
+  execute(): Promise<T>;
 }
 
-export interface ISignedCommand<T> extends ICommand<T> {
+export interface ISignedCommand<T> extends ICommand<ISignedResponse<T>> {
   execute(): Promise<ISignedResponse<T>>;
-  // executeCommand(): Promise<T>;
 }
 
 export interface ISignedResponse<T> {

@@ -21,7 +21,7 @@ import {
     RPCResponse,
     WRITE_METHODS
 } from "./types/rpc";
-import { AccountCommand } from "./commands/acccountCommand";
+import { AccountCommand } from "./commands/accountCommand";
 
 export class RPC {
 
@@ -61,35 +61,26 @@ export class RPC {
         request: RPCRequest
     ): Promise<RPCResponse<any>> {
         const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
-        let result: ISignedResponse<any>;
+        let result: any;
         switch (method) {
             case RPCMethods.START: {
-                const command = new StartServerCommand(privateKey);
+                const command = new StartServerCommand();
                 result = await command.execute();
                 break;
             }
             case RPCMethods.STOP: {
-                const command = new StopServerCommand(privateKey);
+                const command = new StopServerCommand();
                 result = await command.execute();
                 break;
             }
             case RPCMethods.SHUTDOWN: {
                 const [username, password] = request.params as RPCRequestParams[RPCMethods.SHUTDOWN];
-                const command = new ShutdownCommand(username, password, privateKey);
-                result = await command.execute();
-                break;
-            }
-            case RPCMethods.CREATE_CONTRACT_SCHEMA: {
-                const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
-                const command = new CreateContractSchemaCommand(category, name, schema, privateKey);
+                const command = new ShutdownCommand(username, password,);
                 result = await command.execute();
                 break;
             }
             default:
                 return makeErrorRPCResponse(request.id, "Method not found");
-        }
-        if (result) {
-
         }
         return {
             id: request.id,
@@ -109,7 +100,7 @@ export class RPC {
                 if (!request.params) {
                     throw new Error("Invalid params");
                 }
-                let command = new AccountCommand(request.params[0] as string);
+                let command = new AccountCommand(request.params[0] as string, privateKey);
                 // result = await command.execute();
                 throw new Error("Method not implemented");
             }
@@ -183,7 +174,7 @@ export class RPC {
     static async handleWriteMethod(
         method: RPCMethods,
         request: RPCRequest
-    ): Promise<RPCResponse<string | null>> {
+    ): Promise<RPCResponse<any>> {
         const id = request.id;
         const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
@@ -225,6 +216,12 @@ export class RPC {
                 );
                 result = await command.execute();
 
+                break;
+            }
+            case RPCMethods.CREATE_CONTRACT_SCHEMA: {
+                const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
+                const command = new CreateContractSchemaCommand(category, name, schema, privateKey);
+                result = await command.execute();
                 break;
             }
 

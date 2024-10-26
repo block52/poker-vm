@@ -1,11 +1,10 @@
-import { AbstractCommand } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
+import { signResult } from "./abstractSignedCommand";
 
-export class GetNodesCommand extends AbstractCommand<[]> {
-    constructor(privateKey: string) {
-        super(privateKey);
-    }
+export class GetNodesCommand implements ISignedCommand<[]> {
+    constructor(private readonly privateKey: string) {}
 
-    public async executeCommand(): Promise<[]> {
-        return [];
+    public async execute(): Promise<ISignedResponse<[]>> {
+        return signResult([], this.privateKey);
     }   
 }

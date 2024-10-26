@@ -1,18 +1,17 @@
-import { ICommand } from "./interfaces";
+import { signResult } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { RandomCommand } from "./randomCommand";
-import { AbstractCommand } from "./abstractSignedCommand";
 
-export class ChallengeCommand extends AbstractCommand<string> {
-    public readonly randomCommand: ICommand<Buffer>;
+export class ChallengeCommand implements ISignedCommand<string> {
+    public readonly randomCommand: RandomCommand;
     
-    constructor(readonly publicKey: string, privateKey: string) {
-        super(privateKey);
+    constructor(readonly publicKey: string, private readonly privateKey: string) {
         this.randomCommand = new RandomCommand(32, "", privateKey);
     }
 
-    public async executeCommand(): Promise<string> {
-        const random = await this.randomCommand.executeCommand();
+    public async execute(): Promise<ISignedResponse<string>> {
+        const random: ISignedResponse<Buffer> = await this.randomCommand.execute();
         const now = new Date();
-        return `Challenge from ${this.publicKey} at ${now}: ${random.toString()}`;
+        return signResult(`Challenge from ${this.publicKey} at ${now}: ${random.data.toString()}`, this.privateKey);
     }
 }

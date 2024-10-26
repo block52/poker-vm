@@ -1,13 +1,14 @@
-import { ICommand } from "./interfaces";
 import { Round, TexasHoldemState } from "../engine/types";
-import { AbstractCommand } from "./abstractSignedCommand";
+import { signResult } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class GameStateCommand extends AbstractCommand<TexasHoldemState> {
-    constructor(readonly address: string, privateKey: string) {
-        super(privateKey);
-    }
+export class GameStateCommand implements ISignedCommand<TexasHoldemState> {
+    constructor(
+        readonly address: string,
+        private readonly privateKey: string
+    ) {}
 
-    public async executeCommand(): Promise<TexasHoldemState> {
+    public async execute(): Promise<ISignedResponse<TexasHoldemState>> {
         const mockState: TexasHoldemState = {
             smallBlind: 1,
             bigBlind: 2,
@@ -23,7 +24,7 @@ export class GameStateCommand extends AbstractCommand<TexasHoldemState> {
             round: Round.PREFLOP,
             handNumber: 0
         };
-        
-        return mockState;
+
+        return signResult(mockState, this.privateKey);
     }
 }
