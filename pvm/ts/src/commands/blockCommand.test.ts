@@ -2,6 +2,8 @@ import { BlockCommand } from "./blockCommand";
 import { BlockchainManagement } from "../state/blockchainManagement";
 import { Block } from "../models";
 
+const privateKey = ZeroHash;
+
 // Mock BlockchainManagement
 jest.mock("../state/blockchainManagement");
 
@@ -18,7 +20,7 @@ describe("BlockCommand", () => {
     const specificBlock = new Block(5, "previousHash", Date.now(), "validator");
     mockBlockchainManagement.getBlock.mockResolvedValue(specificBlock);
 
-    const command = new BlockCommand(BigInt(5));
+    const command = new BlockCommand(BigInt(5), privateKey);
     const result = await command.execute();
 
     expect(result).toBe(specificBlock);
@@ -29,7 +31,7 @@ describe("BlockCommand", () => {
     const lastBlock = new Block(10, "previousHash", Date.now(), "validator");
     mockBlockchainManagement.getLastBlock.mockResolvedValue(lastBlock);
 
-    const command = new BlockCommand(undefined);
+    const command = new BlockCommand(undefined, privateKey);
     const result = await command.execute();
 
     expect(result).toBe(lastBlock);

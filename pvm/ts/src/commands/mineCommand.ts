@@ -4,18 +4,17 @@ import { Block } from "../models";
 
 import { ICommand } from "./interfaces";
 import { BlockchainManagement } from "../state/blockchainManagement";
+import { AbstractCommand } from "./abstractSignedCommand";
 
-export class MineCommand implements ICommand<Block | null> {
+export class MineCommand extends AbstractCommand<Block | null> {
     private readonly mempool: Mempool;
 
-    constructor(private readonly privateKey: string) {
-        if (!privateKey) {
-            throw new Error("Private key is required to mine a block");
-        }
+    constructor(privateKey: string) {
+        super(privateKey);
         this.mempool = getMempoolInstance();
     }
 
-    public async execute(): Promise<Block> {
+    public async executeCommand(): Promise<Block> {
         const txs = this.mempool.get();
         const blockchainManagement = new BlockchainManagement();
         const lastBlock = await blockchainManagement.getLastBlock();

@@ -1,15 +1,26 @@
 import { ZeroHash } from "ethers";
 import { MintCommand, TransferCommand } from "./commands";
 import { BlockCommand } from "./commands/blockCommand";
+import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
+import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
+import { ISignedResponse } from "./commands/interfaces";
+import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
+import { ShutdownCommand } from "./commands/shutdownCommand";
+import { StartServerCommand } from "./commands/startServerCommand";
+import { StopServerCommand } from "./commands/stopServerCommand";
+import { getMempoolInstance } from "./core/mempool";
+import { Transaction } from "./models";
+import { IJSONModel } from "./models/interfaces";
+import { makeErrorRPCResponse } from "./types/response";
 import {
     CONTROL_METHODS,
     READ_METHODS,
-    WRITE_METHODS,
     RPCMethods,
     RPCRequest,
     RPCRequestParams,
-    RPCResponse
+    RPCResponse,
+    WRITE_METHODS
 } from "./types/rpc";
 import { Transaction } from "./models";
 import { getMempoolInstance } from "./core/mempool";
@@ -19,9 +30,10 @@ import { getServerInstance } from "./core/server";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
 import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
 import { AccountCommand } from "./commands/acccountCommand";
+import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
+import { GetNodesCommand } from "./commands/getNodesCommand";
 
 export class RPC {
-    // get the mempool
 
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
         if (!request) {
@@ -29,28 +41,24 @@ export class RPC {
         }
 
         if (!request.method) {
-            return {
-                id: request.id,
-                error: "Missing method",
-                result: null
-            };
+            return makeErrorRPCResponse(request.id, "Missing method");
         }
 
         const method: RPCMethods = request.method as RPCMethods;
         if (!Object.values(RPCMethods).includes(method)) {
-            return {
-                id: request.id,
-                error: "Method not found",
-                result: null
-            };
+            return makeErrorRPCResponse(request.id, "Method not found");
         }
 
         if (READ_METHODS.includes(method)) {
             return this.handleReadMethod(method, request);
         } 
         if (WRITE_METHODS.includes(method)) {
+        }
+        if (WRITE_METHODS.includes(method)) {
             return this.handleWriteMethod(method, request);
         } 
+        if (CONTROL_METHODS.includes(method)) {
+        }
         if (CONTROL_METHODS.includes(method)) {
             return this.handleControlMethod(method, request);
         }
@@ -60,49 +68,57 @@ export class RPC {
             error: `Method ${request.method} not found`,
             result: null
         };
+        return makeErrorRPCResponse(request.id, "Method not found"); 
     }
 
     static async handleControlMethod(
         method: RPCMethods,
         request: RPCRequest
     ): Promise<RPCResponse<any>> {
-        let result: string | null = null;
+        const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
+        let result: ISignedResponse<any>;
         switch (method) {
             case RPCMethods.START: {
-                const server = getServerInstance();
-                await server.start();
+                const command = new StartServerCommand(privateKey);
+                result = await command.execute();
                 break;
             }
             case RPCMethods.STOP: {
-                const server = getServerInstance();
-                await server.stop();
+                const command = new StopServerCommand(privateKey);
+                result = await command.execute();
                 break;
             }
             case RPCMethods.SHUTDOWN: {
                 const [username, password] = request.params as RPCRequestParams[RPCMethods.SHUTDOWN];
-                if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-                    process.exit(0);
-                }
+                const command = new ShutdownCommand(username, password, privateKey);
+                result = await command.execute();
                 break;
             }
             case RPCMethods.CREATE_CONTRACT_SCHEMA: {
                 const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
-                const command = new CreateContractSchemaCommand(category, name, schema);
+                const command = new CreateContractSchemaCommand(category, name, schema, privateKey);
                 result = await command.execute();
                 break;
             }
+            default:
+                return makeErrorRPCResponse(request.id, "Method not found");
+        }
+        if (result) {
+
         }
         return {
             id: request.id,
             result: result
         };
     }
+    // Return a JSONModel
     static async handleReadMethod(
         method: RPCMethods,
         request: RPCRequest
     ): Promise<RPCResponse<any>> {
         const id = request.id;
-        let result: IJSONModel;
+        let result: ISignedResponse<any>;
+        const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
         switch (method) {
             case RPCMethods.GET_ACCOUNT: {
                 if (!request.params) {
@@ -112,12 +128,13 @@ export class RPC {
                 result = await command.execute();
                 break;
             }
+            
             case RPCMethods.GET_BLOCK: {
-                let command = new BlockCommand(undefined);
+                let command = new BlockCommand(undefined, privateKey);
 
                 if (request.params) {
                     const index = BigInt(request.params[0] as string);
-                    command = new BlockCommand(index);
+                    command = new BlockCommand(index, privateKey);
                 }
                 result = await command.execute();
                 break;
@@ -125,68 +142,55 @@ export class RPC {
 
             case RPCMethods.GET_CONTRACT_SCHEMA: {
                 const [hash] = request.params as RPCRequestParams[RPCMethods.GET_CONTRACT_SCHEMA];
-                const command = new GetContractSchemaCommand(hash);
+                const command = new GetContractSchemaCommand(hash, privateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_LAST_BLOCK: {
-                const command = new BlockCommand(undefined);
+                const command = new BlockCommand(undefined, privateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_CLIENT: {
-                const command = new MeCommand();
+                const command = new MeCommand(privateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_NODES: {
-                // Get the nodes
-                result = {
-                    toJson: () => {
-                        return [];
-                    }
-                };
-                break;
-            }
-
-            case RPCMethods.GET_MEMPOOL: {
-                const command = new MempoolCommand();
+                const command = new GetNodesCommand(privateKey);
                 result = await command.execute();
                 break;
             }
 
+            case RPCMethods.GET_MEMPOOL: {
+                const command = new MempoolCommand(privateKey);
+                result = await command.execute();
+                break;
+            }
+
+            //TODO: This should be a write method
             case RPCMethods.MINED_BLOCK_HASH: {
-                console.log(`Received mined block hash: ${request.params[0]}`);
-                result = {
-                    toJson: () => {
-                        return null;
-                    }
-                };
+                const blockHash = request.params[0] as string;
+                const command = new ReceiveMinedBlockHashCommand(blockHash, privateKey);
+                result = await command.execute();
                 break;
             }
 
             default:
-                return {
-                    id,
-                    error: "Method not found",
-                    result: null
-                };
+                return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
+
         }
 
         if (result === null) {
-            return {
-                id,
-                error: "Operation failed",
-                result: null
-            };
+            return makeErrorRPCResponse(id, "Operation failed");
         }
 
         return {
             id,
-            result: result.toJson()
+            result
         };
     }
 
@@ -198,16 +202,13 @@ export class RPC {
         const id = request.id;
         const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
-        let transaction: Transaction;
+        let result: ISignedResponse<any | null>;
         switch (method) {
             // Write methods
             case RPCMethods.MINT: {
                 if (request.params?.length !== 3) {
-                    return {
-                        id,
-                        error: "Invalid params",
-                        result: null
-                    };
+                    return makeErrorRPCResponse(id, "Invalid params");
+
                 }
                 const [to, amount, transactionId] =
                     request.params as RPCRequestParams[RPCMethods.MINT];
@@ -219,18 +220,14 @@ export class RPC {
                     privateKey
                 );
 
-                transaction = await command.execute();
+                result = await command.execute();
 
                 break;
             }
 
             case RPCMethods.TRANSFER: {
                 if (request.params?.length !== 3) {
-                    return {
-                        id,
-                        error: "Invalid params",
-                        result: null
-                    };
+                    return makeErrorRPCResponse(id, "Invalid params");
                 }
                 const [from, to, amount] =
                     request.params as RPCRequestParams[RPCMethods.TRANSFER];
@@ -241,28 +238,18 @@ export class RPC {
                     amount,
                     privateKey
                 );
-                transaction = await command.execute();
+                result = await command.execute();
 
                 break;
             }
 
             default:
-                return {
-                    id,
-                    error: "Method not found",
-                    result: null
-                };
-        }
-        if (!transaction) {
-            throw new Error("No transaction created");
-        }
-        // push to mempool
-        const mempool = getMempoolInstance();
-        mempool.add(transaction);
+                return makeErrorRPCResponse(id, "Method not found");
 
+        }
         return {
             id,
-            result: transaction.getId().toString()
+            result
         };
     }
 }

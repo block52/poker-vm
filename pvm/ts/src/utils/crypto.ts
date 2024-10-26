@@ -1,11 +1,11 @@
 import { ethers } from "ethers";
 import { createHash, createSign, createVerify } from "crypto";
 
-const verifySignature = (
+function verifySignature (
   publicKey: string,
   message: string,
   signature: string
-): boolean => {
+): boolean {
   const verifier = createVerify("SHA256");
   verifier.update(message);
   verifier.end();
@@ -13,14 +13,19 @@ const verifySignature = (
   return verifier.verify(publicKey, signature, "hex");
 };
 
-const signData = (privateKey: string, data: string): string => {
-  const sign = createSign("SHA256");
-  sign.update(data);
-  sign.end();
-  return sign.sign(privateKey, "hex");
+// const signData = (privateKey: string, data: string): string => {
+//   const sign = createSign("SHA256");
+//   sign.update(data);
+//   sign.end();
+//   return sign.sign(privateKey, "hex");
+// };
+
+const signData = (privateKey: string, message: string): Promise<string> => {
+  const signer = new ethers.Wallet(privateKey);
+  return signer.signMessage(message);
 };
 
-const recoverPublicKey = (signature: string, data: string): string => {
+function recoverPublicKey (signature: string, data: string): string {
   return ethers.recoverAddress(data, signature);
 };
 
@@ -28,4 +33,5 @@ export default {
   recoverPublicKey,
   verifySignature,
   signData,
+  // signMessage,
 };

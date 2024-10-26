@@ -1,17 +1,19 @@
 import { Block } from "../models";
 import { BlockchainManagement } from "../state/blockchainManagement";
 import { ICommand } from "./interfaces";
+import { AbstractCommand } from "./abstractSignedCommand";
 
-export class BlockCommand implements ICommand<Block> {
+export class BlockCommand extends AbstractCommand<Block> {
   private readonly blockchainManagement: BlockchainManagement;
   private readonly index: BigInt | undefined;
 
-  constructor(index: BigInt | undefined) {
+  constructor(index: BigInt | undefined, privateKey: string) {
+    super(privateKey);
     this.blockchainManagement = new BlockchainManagement();
     this.index = index;
   }
 
-  public async execute(): Promise<Block> {
+  public async executeCommand(): Promise<Block> {
     if (this.index === BigInt(0)) {
       return this.blockchainManagement.getGenesisBlock();
     }

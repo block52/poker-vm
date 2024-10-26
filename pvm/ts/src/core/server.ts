@@ -28,10 +28,13 @@ export class Server {
     }
 
     public me(): Node {
+
+        const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
+
         return new Node(
             "pvm-typescript",
             this.publicKey,
-            `http://localhost:${this._port}`,
+            url,
             "1.0.0",
             this.isValidator
         );
@@ -47,7 +50,11 @@ export class Server {
         if (validatorAddress === this.publicKey) {
             console.log(`I am the validator. Mining block...`);
             const mineCommand = new MineCommand(this.privateKey);
-            const block = await mineCommand.execute();
+            const mineCommandResponse = await mineCommand.execute();
+            const block = mineCommandResponse.data;
+            if (!block) {
+                throw new Error("No block mined");
+            }
             console.log(`Block mined: ${block.hash}`);
             // Broadcast the block hash to the network
             const nodeUrls = await getBootNodes(this.me().url);
