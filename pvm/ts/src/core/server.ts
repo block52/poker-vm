@@ -47,24 +47,28 @@ export class Server {
     public async mine() {
         const validatorInstance = getValidatorInstance();
         const validatorAddress = await validatorInstance.getNextValidatorAddress();
+        
         if (validatorAddress === this.publicKey) {
             console.log(`I am the validator. Mining block...`);
             const mineCommand = new MineCommand(this.privateKey);
             const mineCommandResponse = await mineCommand.execute();
             const block = mineCommandResponse.data;
+            
             if (!block) {
                 throw new Error("No block mined");
             }
+            
             console.log(`Block mined: ${block.hash}`);
+            
             // Broadcast the block hash to the network
             const nodes = await getBootNodes(this.me().url);
-            for (const { url } of nodes) {
-                console.log(`Broadcasting block hash to ${url}`);
+            for (const node of nodes) {
+                console.log(`Broadcasting block hash to ${node.url}`);
                 try {
-                    const client = new NodeRpcClient(url);
+                    const client = new NodeRpcClient(node.url);
                     await client.sendBlockHash(block.hash);
                 } catch (error) {
-                    console.warn(`Missing node ${url}`);
+                    console.warn(`Missing node ${node.url}`);
                 }
             }
         } else {
@@ -105,17 +109,17 @@ export class Server {
             return;
         }
         const mempool = getMempoolInstance();
-        const validators = await getBootNodes(this.me().url);
-        for (const { url } of validators) {
+        const nodes = await getBootNodes(this.me().url);
+        for (const node of nodes) {
             try {
-                const client = new NodeRpcClient(url);
+                const client = new NodeRpcClient(node.url);
                 const otherMempool: Transaction[] = await client.getMempool();
                 // Add to own mempool
                 for (const transaction of otherMempool) {
                     mempool.add(transaction);
                 }
             } catch (error) {
-                console.warn(`Missing node ${url}`);
+                console.warn(`Missing node ${node.url}`);
             }
         }
     }
