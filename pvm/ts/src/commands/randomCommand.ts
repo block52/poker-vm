@@ -1,15 +1,16 @@
-import { AbstractCommand } from "./abstractSignedCommand";
-import { ICommand } from "./interfaces";
 import { randomBytes } from "crypto";
+import { signResult } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class RandomCommand extends AbstractCommand<Buffer> {
-    constructor(private readonly size: number = 32, private readonly seed: string = "", privateKey: string) {
-        super(privateKey);
-    }
+export class RandomCommand implements ISignedCommand<Buffer> {
+    constructor(
+        private readonly size: number = 32,
+        private readonly seed: string = "",
+        private readonly privateKey: string
+    ) {}
 
-    public async executeCommand(): Promise<Buffer> {
+    public async execute(): Promise<ISignedResponse<Buffer>> {
         const random: Buffer = await randomBytes(this.size);
-        // return as hex string
-        return random;
+        return signResult(random, this.privateKey);
     }
 }

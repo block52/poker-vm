@@ -1,6 +1,5 @@
 
 import { createSign } from "crypto";
-import { AbstractCommand } from "./abstractSignedCommand";
 import { ICommand } from "./interfaces";
 
 export class SignCommand implements ICommand<String> {
@@ -18,7 +17,7 @@ IGxwPjFJZyl5BbHKhgjZBBkGieTthxtX0FSOB3Pcy/W8ZMkP6AvUMqZ7
 -----END PRIVATE KEY-----`;
     }
 
-    public async executeCommand(): Promise<String> {
+    public async execute(): Promise<String> {
         const sign = createSign(this.hashAlgorithm);
         sign.update(this.message);
         sign.end();

@@ -1,34 +1,29 @@
 import { ethers } from "ethers";
 import { Deck } from "../models";
 import { DeckType } from "../models/deck";
-import { AbstractCommand } from "./abstractSignedCommand";
 import { RandomCommand } from "./randomCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
+import { signResult } from "./abstractSignedCommand";
 
-export class ShuffleCommand extends AbstractCommand<Deck> {
+export class ShuffleCommand implements ISignedCommand<Deck> {
     private readonly deck: Deck;
 
-    constructor(privateKey: string) {
-        super(privateKey);
+    constructor(private readonly privateKey: string) {
         this.deck = new Deck(DeckType.STANDARD_52);
     }
 
-    public async executeCommand(): Promise<Deck> {
+    public async execute(): Promise<ISignedResponse<Deck>> {
         const randomCommand = new RandomCommand(52, Date.now().toString(), this.privateKey);
-        const random = await randomCommand.executeCommand();
+        const random: ISignedResponse<Buffer> = await randomCommand.execute();
 
         const seed: number[] = [];
 
         for (let i = 0; i < 52; i++) {
-            seed.push(random[i]);
+            seed.push(random.data[i]);
         }
 
         this.deck.shuffle(seed);
 
-        if (this.privateKey) {
-            const signer = new ethers.Wallet(this.privateKey);
-            const signature = await signer.signMessage(random.toString("hex"));
-        }
-
-        return this.deck;
+        return signResult(this.deck, this.privateKey);
     }
 }

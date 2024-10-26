@@ -1,12 +1,16 @@
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models/transaction";
 import transactions from "../schema/transactions";
-import { ICommand } from "./interfaces";
-import { AbstractCommand } from "./abstractSignedCommand";
+import { signResult } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class MintCommand extends AbstractCommand<Transaction> {
-    constructor(readonly receiver: string, readonly amount: bigint, readonly transactionId: string, readonly privateKey: string) {
-        super(privateKey);
+export class MintCommand implements ISignedCommand<Transaction> {
+    constructor(
+        readonly receiver: string,
+        readonly amount: bigint,
+        readonly transactionId: string,
+        private readonly privateKey: string
+    ) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
         }
@@ -29,7 +33,7 @@ export class MintCommand extends AbstractCommand<Transaction> {
         this.privateKey = privateKey;
     }
 
-    public async executeCommand(): Promise<Transaction> {
+    public async execute(): Promise<ISignedResponse<Transaction>> {
         // Minting logic
         // Check tx hash is in the staking mainnet contract and has not be validated
         // If we're a validator, we can mint
@@ -38,14 +42,14 @@ export class MintCommand extends AbstractCommand<Transaction> {
 
         const existingTx = await transactions.findOne({ hash: this.transactionId });
         if (existingTx) {
-            return Transaction.fromDocument(existingTx);
+            return signResult(Transaction.fromDocument(existingTx), this.privateKey);
         }
 
         const mintTx: Transaction = Transaction.create(this.receiver, null, this.amount, this.privateKey);
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
         mempoolInstance.add(mintTx);
-        return mintTx;
+        return signResult(mintTx, this.privateKey);
 
     }
 }

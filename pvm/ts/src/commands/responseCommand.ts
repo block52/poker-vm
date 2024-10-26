@@ -1,13 +1,18 @@
 import { ethers } from "ethers";
-import { AbstractCommand } from "./abstractSignedCommand";
+import { signResult } from "./abstractSignedCommand";
+import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class ResponseCommand extends AbstractCommand<string> {    
-    constructor(readonly challenge: string, privateKey: string) {
-        super(privateKey);
-    }
+export class ResponseCommand implements ISignedCommand<string> {
+    constructor(
+        readonly challenge: string,
+        private readonly privateKey: string
+    ) {}
 
-    public async executeCommand(): Promise<string> {
+    public async execute(): Promise<ISignedResponse<string>> {
         const wallet = new ethers.Wallet(this.privateKey);
-        return await wallet.signMessage(this.challenge);
+        return signResult(
+            await wallet.signMessage(this.challenge),
+            this.privateKey
+        );
     }
 }
