@@ -98,11 +98,11 @@ export class RPC {
         switch (method) {
             case RPCMethods.GET_ACCOUNT: {
                 if (!request.params) {
-                    throw new Error("Invalid params");
+                    return makeErrorRPCResponse(id, "Invalid params");
                 }
                 let command = new AccountCommand(request.params[0] as string, privateKey);
-                // result = await command.execute();
-                throw new Error("Method not implemented");
+                result = await command.execute();
+                break;
             }
             
             case RPCMethods.GET_BLOCK: {

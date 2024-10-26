@@ -32,7 +32,7 @@ export class Validator {
             return ZeroAddress;
         }
         const validatorIndex = nextBlockIndex % validatorCount;
-        const validatorAddress = nodes[validatorIndex];
+        const { publicKey: validatorAddress } = nodes[validatorIndex];
         console.log(`Next validator: ${validatorIndex}, ${validatorAddress}`);
         return validatorAddress;
     }

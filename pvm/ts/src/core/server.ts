@@ -57,14 +57,14 @@ export class Server {
             }
             console.log(`Block mined: ${block.hash}`);
             // Broadcast the block hash to the network
-            const nodeUrls = await getBootNodes(this.me().url);
-            for (const nodeUrl of nodeUrls) {
-                console.log(`Broadcasting block hash to ${nodeUrl}`);
+            const nodes = await getBootNodes(this.me().url);
+            for (const { url } of nodes) {
+                console.log(`Broadcasting block hash to ${url}`);
                 try {
-                    const client = new NodeRpcClient(nodeUrl);
+                    const client = new NodeRpcClient(url);
                     await client.sendBlockHash(block.hash);
                 } catch (error) {
-                    console.warn(`Missing node ${nodeUrl}`);
+                    console.warn(`Missing node ${url}`);
                 }
             }
         } else {
@@ -105,17 +105,17 @@ export class Server {
             return;
         }
         const mempool = getMempoolInstance();
-        const nodeUrls = await getBootNodes(this.me().url);
-        for (const nodeUrl of nodeUrls) {
+        const validators = await getBootNodes(this.me().url);
+        for (const { url } of validators) {
             try {
-                const client = new NodeRpcClient(nodeUrl);
+                const client = new NodeRpcClient(url);
                 const otherMempool: Transaction[] = await client.getMempool();
                 // Add to own mempool
                 for (const transaction of otherMempool) {
                     mempool.add(transaction);
                 }
             } catch (error) {
-                console.warn(`Missing node ${nodeUrl}`);
+                console.warn(`Missing node ${url}`);
             }
         }
     }

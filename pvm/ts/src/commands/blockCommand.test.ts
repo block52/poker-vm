@@ -16,7 +16,6 @@ describe("BlockCommand", () => {
     (BlockchainManagement as jest.Mock).mockImplementation(() => mockBlockchainManagement);
   });
 
-
   it("should get specific block when index is provided", async () => {
     const specificBlock = new Block(5, "previousHash", Date.now(), "validator");
     mockBlockchainManagement.getBlock.mockResolvedValue(specificBlock);
