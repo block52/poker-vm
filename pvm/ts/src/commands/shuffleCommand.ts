@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import { Deck } from "../models";
 import { DeckType } from "../models/deck";
 import { AbstractCommand } from "./abstractSignedCommand";
@@ -23,7 +24,11 @@ export class ShuffleCommand extends AbstractCommand<Deck> {
 
         this.deck.shuffle(seed);
 
-        // this.deck.shuffle(random);
-        throw new Error("Method not implemented.");
+        if (this.privateKey) {
+            const signer = new ethers.Wallet(this.privateKey);
+            const signature = await signer.signMessage(random.toString("hex"));
+        }
+
+        return this.deck;
     }
 }

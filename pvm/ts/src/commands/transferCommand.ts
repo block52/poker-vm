@@ -2,7 +2,6 @@
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models";
 import { AbstractCommand } from "./abstractSignedCommand";
-import { ICommand } from "./interfaces";
 
 export class TransferCommand extends AbstractCommand<Transaction> {
     constructor(readonly from: string, readonly to: string, readonly amount: bigint, readonly privateKey: string) {

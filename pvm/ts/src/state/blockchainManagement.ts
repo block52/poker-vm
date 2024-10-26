@@ -7,7 +7,7 @@ import { IBlockDocument } from "../models/interfaces";
 
 export class BlockchainManagement extends StateManager {
   constructor() {
-    super(process.env.MONGO_URI || "mongodb://localhost:27017/pvm");
+    super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
   }
 
   public async addBlock(block: Block): Promise<void> {

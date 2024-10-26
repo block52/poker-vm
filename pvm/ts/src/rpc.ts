@@ -21,6 +21,7 @@ import {
     RPCResponse,
     WRITE_METHODS
 } from "./types/rpc";
+import { AccountCommand } from "./commands/acccountCommand";
 
 export class RPC {
 
@@ -40,13 +41,18 @@ export class RPC {
 
         if (READ_METHODS.includes(method)) {
             return this.handleReadMethod(method, request);
+        } 
+        if (WRITE_METHODS.includes(method)) {
         }
         if (WRITE_METHODS.includes(method)) {
             return this.handleWriteMethod(method, request);
+        } 
+        if (CONTROL_METHODS.includes(method)) {
         }
         if (CONTROL_METHODS.includes(method)) {
             return this.handleControlMethod(method, request);
         }
+
         return makeErrorRPCResponse(request.id, "Method not found"); 
     }
 
@@ -99,6 +105,14 @@ export class RPC {
         let result: ISignedResponse<any>;
         const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
         switch (method) {
+            case RPCMethods.GET_ACCOUNT: {
+                if (!request.params) {
+                    throw new Error("Invalid params");
+                }
+                let command = new AccountCommand(request.params[0] as string);
+                // result = await command.execute();
+                throw new Error("Method not implemented");
+            }
             
             case RPCMethods.GET_BLOCK: {
                 let command = new BlockCommand(undefined, privateKey);

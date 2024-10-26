@@ -11,7 +11,7 @@ export class ChallengeCommand extends AbstractCommand<string> {
     }
 
     public async executeCommand(): Promise<string> {
-        const random = await this.randomCommand.execute();
+        const random = await this.randomCommand.executeCommand();
         const now = new Date();
         return `Challenge from ${this.publicKey} at ${now}: ${random.toString()}`;
     }
