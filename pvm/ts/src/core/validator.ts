@@ -1,6 +1,7 @@
 import { ethers, ZeroAddress } from "ethers";
 import { BlockchainManagement } from "../state/blockchainManagement";
 import { getBootNodes } from "../state/nodeManagement";
+import { Node } from "../types/";
 
 export class Validator {
     private readonly stakingContract: ethers.Contract;
@@ -22,15 +23,17 @@ export class Validator {
     }
 
     public async getNextValidatorAddress(): Promise<string> {
-        const nodes = await getBootNodes();
+        const nodes: Node[] = await getBootNodes();
         const blockManager = new BlockchainManagement();
         const lastBlock = await blockManager.getLastBlock();
         const nextBlockIndex = lastBlock.index + 1;
         const validatorCount: number = await this.getValidatorCount();
+        
         if (validatorCount === 0) {
             console.warn("No validators found");
             return ZeroAddress;
         }
+
         const validatorIndex = nextBlockIndex % validatorCount;
         const validatorAddress = nodes[validatorIndex];
         console.log(`Next validator: ${validatorIndex}, ${validatorAddress}`);

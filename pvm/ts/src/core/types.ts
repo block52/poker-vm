@@ -1,6 +1,12 @@
 import { IJSONModel } from "../models/interfaces";
 import { TransactionDTO } from "../types/chain";
 
+// Temporary types to be replaced with the actual types from the PVM
+export type NodeResponse = {
+    pubKey: string;
+    url: string;
+};
+
 export class Node implements IJSONModel {
     client: string;
     publicKey: string;

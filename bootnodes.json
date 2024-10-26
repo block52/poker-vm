@@ -1,5 +1,14 @@
 [
-    "http://node1.block52.xyz:3000",
-    "http://localhost:3001",
-    "http://localhost:3002"
+    {
+        "url": "http://node1.block52.xyz:3000",
+        "publicKey": "0x513d31f0aA9380C5A0F16A996850B9538f74F936"
+    },
+    {
+        "url": "http://localhost:3000",
+        "publicKey": ""
+    },
+    {
+        "url": "http://localhost:3001",
+        "publicKey": ""
+    }
 ]
