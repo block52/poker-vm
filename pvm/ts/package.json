@@ -9,7 +9,8 @@
     "start-server": "npx ts-node src/core/server.ts",
     "test": "jest",
     "build": "tsc",
-    "gen": "npx ts-node scripts/createGenesisBlock.ts"
+    "gen": "npx ts-node scripts/createGenesisBlock.ts",
+    "sign": "npx ts-node scripts/sign.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.17",
@@ -41,5 +42,8 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.13",
     "ts-jest": "^29.2.5"
+  },
+  "engines": {
+    "node": "20.12.2"
   }
 }
