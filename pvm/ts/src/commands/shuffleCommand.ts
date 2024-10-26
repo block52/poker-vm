@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import { Deck } from "../models";
 import { DeckType } from "../models/deck";
 import { AbstractCommand } from "./abstractSignedCommand";

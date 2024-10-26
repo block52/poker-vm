@@ -22,16 +22,9 @@ import {
     RPCResponse,
     WRITE_METHODS
 } from "./types/rpc";
-import { Transaction } from "./models";
-import { getMempoolInstance } from "./core/mempool";
-import { IJSONModel } from "./models/interfaces";
-import { MeCommand } from "./commands/meCommand";
-import { getServerInstance } from "./core/server";
-import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
-import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
-import { AccountCommand } from "./commands/acccountCommand";
 import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
 import { GetNodesCommand } from "./commands/getNodesCommand";
+import { AccountCommand } from "./commands/acccountCommand";
 
 export class RPC {
 
@@ -63,11 +56,6 @@ export class RPC {
             return this.handleControlMethod(method, request);
         }
 
-        return {
-            id: request.id,
-            error: `Method ${request.method} not found`,
-            result: null
-        };
         return makeErrorRPCResponse(request.id, "Method not found"); 
     }
 
@@ -125,8 +113,8 @@ export class RPC {
                     throw new Error("Invalid params");
                 }
                 let command = new AccountCommand(request.params[0] as string);
-                result = await command.execute();
-                break;
+                // result = await command.execute();
+                throw new Error("Method not implemented");
             }
             
             case RPCMethods.GET_BLOCK: {

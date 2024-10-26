@@ -1,4 +1,4 @@
-import { Account, Block } from "../models";
+import { Account } from "../models";
 import AccountManagement from "../state/accountManagement";
 import { ICommand } from "./interfaces";
 
@@ -11,7 +11,8 @@ export class AccountCommand implements ICommand<Account> {
     this.address = address;
   }
 
-  public async execute(): Promise<Account> {
-    return this.accountManagement.getAccount(this.address);
+  public async executeCommand(): Promise<Account> {
+    const account = await this.accountManagement.getAccount(this.address);
+    return account;
   }
 }

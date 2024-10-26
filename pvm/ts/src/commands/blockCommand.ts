@@ -1,6 +1,5 @@
 import { Block } from "../models";
 import { BlockchainManagement } from "../state/blockchainManagement";
-import { ICommand } from "./interfaces";
 import { AbstractCommand } from "./abstractSignedCommand";
 
 export class BlockCommand extends AbstractCommand<Block> {
