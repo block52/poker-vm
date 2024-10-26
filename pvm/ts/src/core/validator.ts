@@ -1,7 +1,7 @@
 import { ethers, ZeroAddress } from "ethers";
 import { BlockchainManagement } from "../state/blockchainManagement";
 import { getBootNodes } from "../state/nodeManagement";
-import { Node } from "../types/";
+import { Node } from "../core/types";
 
 export class Validator {
     private readonly stakingContract: ethers.Contract;
@@ -37,7 +37,7 @@ export class Validator {
         const validatorIndex = nextBlockIndex % validatorCount;
         const validatorAddress = nodes[validatorIndex];
         console.log(`Next validator: ${validatorIndex}, ${validatorAddress}`);
-        return validatorAddress;
+        return validatorAddress.publicKey;
     }
 }
 
