@@ -18,6 +18,7 @@ import { MeCommand } from "./commands/meCommand";
 import { getServerInstance } from "./core/server";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
 import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
+import { AccountCommand } from "./commands/acccountCommand";
 
 export class RPC {
     // get the mempool
@@ -46,17 +47,19 @@ export class RPC {
 
         if (READ_METHODS.includes(method)) {
             return this.handleReadMethod(method, request);
-        } else if (WRITE_METHODS.includes(method)) {
+        } 
+        if (WRITE_METHODS.includes(method)) {
             return this.handleWriteMethod(method, request);
-        } else if (CONTROL_METHODS.includes(method)) {
+        } 
+        if (CONTROL_METHODS.includes(method)) {
             return this.handleControlMethod(method, request);
-        } else {
-            return {
-                id: request.id,
-                error: "Method not found",
-                result: null
-            };
         }
+
+        return {
+            id: request.id,
+            error: `Method ${request.method} not found`,
+            result: null
+        };
     }
 
     static async handleControlMethod(
@@ -101,6 +104,14 @@ export class RPC {
         const id = request.id;
         let result: IJSONModel;
         switch (method) {
+            case RPCMethods.GET_ACCOUNT: {
+                if (!request.params) {
+                    throw new Error("Invalid params");
+                }
+                let command = new AccountCommand(request.params[0] as string);
+                result = await command.execute();
+                break;
+            }
             case RPCMethods.GET_BLOCK: {
                 let command = new BlockCommand(undefined);
 

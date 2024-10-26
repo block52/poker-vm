@@ -1,7 +1,6 @@
 import { BlockCommand } from "./blockCommand";
 import { BlockchainManagement } from "../state/blockchainManagement";
 import { Block } from "../models";
-import { ZeroHash } from "ethers";
 
 // Mock BlockchainManagement
 jest.mock("../state/blockchainManagement");

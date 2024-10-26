@@ -28,7 +28,6 @@ export class ShuffleCommand implements ICommand<Deck> {
             const signature = await signer.signMessage(random.toString("hex"));
         }
 
-        // this.deck.shuffle(random);
-        throw new Error("Method not implemented.");
+        return this.deck;
     }
 }
