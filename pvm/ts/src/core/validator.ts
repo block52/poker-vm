@@ -6,12 +6,14 @@ import { Node } from "../core/types";
 export class Validator {
     private readonly stakingContract: ethers.Contract;
     private readonly provider: ethers.JsonRpcProvider;
+    private readonly blockManager: BlockchainManagement;
     private validatorCount: number = 0;
     private nodes: Node[] = [];
     private synced: boolean = false;
 
     constructor(rpcUrl: string) {
         const vault = process.env.VAULT_CONTRACT_ADDRESS ?? ZeroAddress;
+        this.blockManager = new BlockchainManagement();
         this.provider = new ethers.JsonRpcProvider(rpcUrl);
         this.stakingContract = new ethers.Contract(vault, ["function isValidator(address) view returns (bool)", "function validatorCount() view returns (uint256)"], this.provider);
     }
@@ -26,8 +28,7 @@ export class Validator {
     }
 
     public async getNextValidatorAddress(sync: boolean = false): Promise<string> {
-        const blockManager = new BlockchainManagement();
-        const lastBlock = await blockManager.getLastBlock();
+        const lastBlock = await this.blockManager.getLastBlock();
         const nextBlockIndex = lastBlock.index + 1;
 
         if (sync || !this.synced) {
