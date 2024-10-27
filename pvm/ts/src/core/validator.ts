@@ -44,7 +44,7 @@ export class Validator {
 
         const validatorIndex = nextBlockIndex % this.validatorCount;
         const { publicKey: validatorAddress } = this.nodes[validatorIndex];
-        console.log(`Next validator: ${validatorIndex}, ${validatorAddress}`);
+        console.log(`Next validator index: ${validatorIndex}, ${validatorAddress}`);
         return validatorAddress;
     }
 }
