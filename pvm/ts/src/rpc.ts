@@ -109,6 +109,12 @@ export class RPC {
                 let command = new BlockCommand(undefined, privateKey);
 
                 if (request.params) {
+                    // Use regex to check if the index is a number
+                    const regex = new RegExp("^[0-9]+$");
+                    if (!regex.test(request.params[0] as string)) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+
                     const index = BigInt(request.params[0] as string);
                     command = new BlockCommand(index, privateKey);
                 }
