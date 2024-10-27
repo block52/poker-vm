@@ -6,6 +6,9 @@ import { Node } from "../core/types";
 export class Validator {
     private readonly stakingContract: ethers.Contract;
     private readonly provider: ethers.JsonRpcProvider;
+    private validatorCount: number = 0;
+    private nodes: Node[] = [];
+    private synced: boolean = false;
 
     constructor(rpcUrl: string) {
         const vault = process.env.VAULT_CONTRACT_ADDRESS ?? ZeroAddress;
@@ -22,20 +25,24 @@ export class Validator {
         return Number(count);
     }
 
-    public async getNextValidatorAddress(): Promise<string> {
-        const nodes: Node[] = await getBootNodes();
+    public async getNextValidatorAddress(sync: boolean = false): Promise<string> {
         const blockManager = new BlockchainManagement();
         const lastBlock = await blockManager.getLastBlock();
         const nextBlockIndex = lastBlock.index + 1;
-        const validatorCount: number = await this.getValidatorCount();
-        
-        if (validatorCount === 0) {
+
+        if (sync || !this.synced) {
+            this.nodes = await getBootNodes();
+            this.validatorCount = await this.getValidatorCount();
+            this.synced = true;
+        }
+
+        if (this.validatorCount === 0) {
             console.warn("No validators found");
             return ZeroAddress;
         }
 
-        const validatorIndex = nextBlockIndex % validatorCount;
-        const { publicKey: validatorAddress } = nodes[validatorIndex];
+        const validatorIndex = nextBlockIndex % this.validatorCount;
+        const { publicKey: validatorAddress } = this.nodes[validatorIndex];
         console.log(`Next validator: ${validatorIndex}, ${validatorAddress}`);
         return validatorAddress;
     }
