@@ -186,7 +186,7 @@ export class Block implements IJSONModel {
       document.hash,
       document.merkle_root,
       document.signature,
-      document.transactions
+      document.transactions,
     );
   }
 

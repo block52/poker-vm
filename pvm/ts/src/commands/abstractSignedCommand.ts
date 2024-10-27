@@ -16,7 +16,7 @@ export async function signResult<T>(
     const message = JSON.stringify(data);
     const signature = await crypto.signData(privateKey, message);
     return {
-        data,
+        data: commandResult,
         signature
     };
 }
