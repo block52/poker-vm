@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { RPCRequest, RPCResponse, SignedResponse, Transaction } from "../types/types";
+import { NODE_URL } from "../config";
 
 export function useMempoolTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -15,7 +16,7 @@ export function useMempoolTransactions() {
           params: [],
         };
 
-        const response = await fetch('http://localhost:3000/', {
+        const response = await fetch(NODE_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -42,11 +43,8 @@ export function useMempoolTransactions() {
     };
 
     fetchMempoolTransactions();
-
-    // Optional: Set up polling to fetch transactions periodically
-    const intervalId = setInterval(fetchMempoolTransactions, 10000); // Fetch every 10 seconds
-
-    return () => clearInterval(intervalId); // Clean up on unmount
+    const intervalId = setInterval(fetchMempoolTransactions, 10000);
+    return () => clearInterval(intervalId);
   }, []);
 
   return { transactions, loading, error };

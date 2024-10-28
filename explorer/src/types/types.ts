@@ -21,7 +21,7 @@ export type Transaction = {
     from: string | null;
     value: string;
     signature: string;
-    timestamp: string;
+    timestamp: number;
     index?: string;
     hash: string;
   }
