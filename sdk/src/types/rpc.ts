@@ -1,3 +1,23 @@
+export interface ISignedResponse<T> {
+    data: T;
+    signature: string;
+}
+
+// RPC Class
+export type RPCRequest = {
+    id: string;
+    method: RPCMethods;
+    params: RPCRequestParams[RPCMethods];
+    data?: string;
+};
+
+export type RPCResponse<T> = {
+    id: string;
+    result: ISignedResponse<T>;
+    error?: string;
+    //toJson: () => string;
+};
+
 export enum RPCMethods {
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
     GET_ACCOUNT = "get_account",
@@ -35,7 +55,6 @@ export type RPCRequestParams = {
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
 };
-
 export const READ_METHODS = [
     RPCMethods.GET_ACCOUNT,
     RPCMethods.GET_BLOCK,

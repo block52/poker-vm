@@ -1,40 +1,20 @@
 import { useEffect, useState } from "react";
-import { RPCRequest, RPCResponse, SignedResponse, Transaction } from "../types/types";
 import { NODE_URL } from "../config";
+import { NodeRpcClient, TransactionDTO } from "@block52/sdk";
 
 export function useMempoolTransactions() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<TransactionDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  
 
   useEffect(() => {
     const fetchMempoolTransactions = async () => {
       try {
-        const rpcRequest: RPCRequest = {
-          id: Date.now().toString(),
-          method: "get_mempool",
-          params: [],
-        };
-
-        const response = await fetch(NODE_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(rpcRequest),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch mempool transactions');
-        }
-
-        const rpcResponse: RPCResponse<SignedResponse<Transaction[]>> = (await response.json());
-
-        if (rpcResponse.error) {
-          throw new Error(rpcResponse.error);
-        }
-
-        setTransactions(rpcResponse.result.data);
+        const client = new NodeRpcClient(NODE_URL);
+        const mempool = await client.getMempool();
+        setTransactions(mempool);
+        setLoading(false);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));

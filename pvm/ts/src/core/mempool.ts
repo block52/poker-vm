@@ -1,7 +1,4 @@
-import { IJSONModel } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
-import transactions from "../schema/transactions";
-import { TransactionDTO } from "../types/chain";
 
 export class Mempool {
     private transactions: Transaction[];

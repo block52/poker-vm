@@ -1,9 +1,9 @@
 "use client"
 
-import { Transaction } from "@/types/types"
+import { TransactionDTO } from "@block52/sdk"
 import { ColumnDef } from "@tanstack/react-table"
 
-export const columns: ColumnDef<Transaction>[] = [
+export const columns: ColumnDef<TransactionDTO>[] = [
   {
     accessorKey: "hash",
     header: "Hash",

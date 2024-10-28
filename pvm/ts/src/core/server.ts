@@ -2,7 +2,7 @@ import { ethers, ZeroHash } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
 import { Transaction } from "../models";
-import { NodeRpcClient } from "../client/client";
+import { NodeRpcClient, TransactionDTO } from "@block52/sdk";
 import { MineCommand } from "../commands/mineCommand";
 import { getValidatorInstance } from "./validator";
 import { getBootNodes } from "../state/nodeManagement";
@@ -113,10 +113,10 @@ export class Server {
         for (const node of nodes) {
             try {
                 const client = new NodeRpcClient(node.url);
-                const otherMempool: Transaction[] = await client.getMempool();
+                const otherMempool: TransactionDTO[] = await client.getMempool();
                 // Add to own mempool
                 for (const transaction of otherMempool) {
-                    await mempool.add(transaction);
+                    await mempool.add(Transaction.fromJson(transaction));
                 }
             } catch (error) {
                 console.warn(`Missing node ${node.url}`);

@@ -1,5 +1,5 @@
 import { IJSONModel } from "../models/interfaces";
-import { TransactionDTO } from "../types/chain";
+import { TransactionDTO } from "@block52/sdk";
 
 // Temporary types to be replaced with the actual types from the PVM
 export type NodeResponse = {

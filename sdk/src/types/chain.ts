@@ -7,3 +7,10 @@ export type TransactionDTO = {
     hash: string;
     index?: string;
 }
+
+export type BlockDTO = {
+    hash: string;
+    index: string;
+    timestamp: string;
+    transactions: TransactionDTO[];
+}
