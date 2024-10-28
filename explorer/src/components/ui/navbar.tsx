@@ -9,11 +9,17 @@ export function Navbar() {
                         Explorer
                     </Link>
                     <div className="flex gap-4">
-                        <Link 
-                            to="/mempool" 
+                        <Link
+                            to="/mempool"
                             className="text-muted-foreground hover:text-foreground transition-colors"
                         >
                             Mempool
+                        </Link>
+                        <Link
+                            to="/transactions"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Transactions
                         </Link>
                     </div>
                 </div>

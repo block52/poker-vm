@@ -1,15 +1,15 @@
-import { useMempoolTransactions } from "@/hooks/useMempoolTransactions";
+import { useMinedTransactions } from "@/hooks/useMinedTransactions";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "@/components/transaction/columns";
 import { PageLayout } from "../layout/PageLayout";
 
-export default function MempoolPage() {
-    const { transactions, loading, error } = useMempoolTransactions();
+export default function TransactionsPage() {
+    const { transactions, loading, error } = useMinedTransactions();
 
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
-                Loading mempool transactions...
+                Loading transactions...
             </div>
         );
     }
@@ -25,11 +25,11 @@ export default function MempoolPage() {
     return (
         <PageLayout>
             <h1 className="text-3xl font-light mb-8">
-                Mempool Transactions
+                Mined Transactions
             </h1>
             {transactions.length === 0 ? (
                 <p className="text-muted-foreground">
-                    No transactions in the mempool.
+                    No mined transactions found.
                 </p>
             ) : (
                 <div className="space-y-6">
@@ -39,3 +39,4 @@ export default function MempoolPage() {
         </PageLayout>
     );
 }
+

@@ -3,6 +3,7 @@ import { ThemeProvider } from "./components/theme/theme-provider";
 import MempoolPage from "./components/pages/MempoolPage";
 import HomePage from "./components/pages/HomePage";
 import { Navbar } from "./components/ui/navbar";
+import TransactionsPage from "./components/pages/TransactionsPage";
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
                         <Routes>
                             <Route path="/" element={<HomePage />} />
                             <Route path="/mempool" element={<MempoolPage />} />
+                            <Route path="/transactions" element={<TransactionsPage />} />
                         </Routes>
                     </main>
                 </div>
