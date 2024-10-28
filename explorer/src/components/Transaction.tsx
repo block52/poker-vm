@@ -20,28 +20,31 @@ const Transaction: React.FC<TransactionProps> = ({
   hash,
 }) => {
   return (
-    <div className="transaction">
-      <h3>Transaction: {hash}</h3>
-      <p>
-        <strong>From:</strong> {from || "N/A"}
-      </p>
-      <p>
-        <strong>To:</strong> {to}
-      </p>
-      <p>
-        <strong>Value:</strong> {value}
-      </p>
-      <p>
-        <strong>Signature:</strong> {signature}
-      </p>
-      <p>
-        <strong>Timestamp:</strong> {new Date(timestamp).toLocaleString()}
-      </p>
-      {index && (
-        <p>
-          <strong>Index:</strong> {index}
+    <div className="text-left">
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">Transaction: {hash}</h3>
+      <div className="space-y-2">
+        <p className="text-gray-700">
+          <span className="font-medium">From:</span> {from || "N/A"}
         </p>
-      )}
+        <p className="text-gray-700">
+          <span className="font-medium">To:</span> {to}
+        </p>
+        <p className="text-gray-700">
+          <span className="font-medium">Value:</span> {value}
+        </p>
+        <p className="text-gray-700">
+          <span className="font-medium">Signature:</span> 
+          <span className="font-mono text-sm break-all">{signature}</span>
+        </p>
+        <p className="text-gray-700">
+          <span className="font-medium">Timestamp:</span> {new Date(timestamp).toLocaleString()}
+        </p>
+        {index && (
+          <p className="text-gray-700">
+            <span className="font-medium">Index:</span> {index}
+          </p>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RPCRequest, RPCResponse, Transaction } from "../types/types";
+import { RPCRequest, RPCResponse, SignedResponse, Transaction } from "../types/types";
 
 export function useMempoolTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -22,19 +22,19 @@ export function useMempoolTransactions() {
           },
           body: JSON.stringify(rpcRequest),
         });
-        debugger;
 
         if (!response.ok) {
           throw new Error('Failed to fetch mempool transactions');
         }
 
-        const rpcResponse: RPCResponse<Transaction[]> = (await response.json());
+        const rpcResponse: RPCResponse<SignedResponse<Transaction[]>> = (await response.json());
 
         if (rpcResponse.error) {
           throw new Error(rpcResponse.error);
         }
 
-        setTransactions(rpcResponse.result);
+        debugger;
+        setTransactions(rpcResponse.result.data);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
