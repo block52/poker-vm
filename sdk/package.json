@@ -1,5 +1,5 @@
 {
-  "name": "@block52/sdk",
+  "name": "@bitcoinbrisbane/block52",
   "version": "1.0.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,5 +17,8 @@
   },
   "peerDependencies": {
     "axios": "^1.7.7"
-  }
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
