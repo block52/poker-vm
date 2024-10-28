@@ -1,7 +1,6 @@
+import { TransactionDTO } from "@block52/sdk";
 import { createHash } from "crypto";
 import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
-import { TransactionDTO } from "../types/chain";
-import { ZeroHash } from "ethers";
 
 export class Transaction implements ICryptoModel, IJSONModel {
   constructor(

@@ -1,5 +1,5 @@
 import crypto from "../utils/crypto";
-import { RPCResponse } from "./rpc";
+import { RPCResponse } from "@block52/sdk";
 
 export function makeErrorRPCResponse(id: string, message: string, ): RPCResponse<any> {
     return {

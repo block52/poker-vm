@@ -1,15 +1,13 @@
-import { TransactionDTO } from "../types/chain";
+import { TransactionDTO } from "@block52/sdk";
 import { IJSONModel } from "./interfaces";
 import { Transaction } from "./transaction";
 
 export class TransactionList implements IJSONModel {
     constructor(private transactions: Transaction[]) {
-      this.transactions = transactions;
+        this.transactions = transactions;
     }
-  
+
     public toJson(): TransactionDTO[] {
-      return this.transactions.map((tx) => tx.toJson());
+        return this.transactions.map(tx => tx.toJson());
     }
 }
-  
-

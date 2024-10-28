@@ -1,30 +1,29 @@
 import { ZeroHash } from "ethers";
+import { MintCommand, TransferCommand } from "./commands";
 import { AccountCommand } from "./commands/accountCommand";
 import { BlockCommand } from "./commands/blockCommand";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
 import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
 import { GetNodesCommand } from "./commands/getNodesCommand";
+import { GetTransactionsCommand } from "./commands/getTransactionsCommand";
 import { ISignedResponse } from "./commands/interfaces";
 import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { MineCommand } from "./commands/mineCommand";
-import { MintCommand, TransferCommand } from "./commands";
 import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
-import { GetTransactionsCommand } from "./commands/getTransactionsCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
 import {
     CONTROL_METHODS,
     READ_METHODS,
     RPCMethods,
-    RPCRequest,
     RPCRequestParams,
-    RPCResponse,
     WRITE_METHODS
 } from "./types/rpc";
+import { RPCRequest, RPCResponse } from "@block52/sdk";
 
 
 export class RPC {

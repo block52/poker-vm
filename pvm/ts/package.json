@@ -24,7 +24,8 @@
     "mongoose": "^8.7.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
-    "z-schema": "^6.0.2"
+    "z-schema": "^6.0.2",
+    "@block52/sdk": "file:../../sdk"
   },
   "jest": {
     "preset": "ts-jest",
