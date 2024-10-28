@@ -26,11 +26,17 @@ export enum Round {
     RIVER = "RIVER",
 }
 
+export type Player = {
+    address: string;
+    chips: number;
+    holeCards: string[];
+};
+
 export type TexasHoldemState = {
     smallBlind: number;
     bigBlind: number;
-    players: string[];
-    deck: string[];
+    players: Player[];
+    deck: string; // hash of deck
     communityCards?: string[];
     turn?: string; // Card
     river?: string; // Card
