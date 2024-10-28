@@ -1,5 +1,6 @@
 import { IJSONModel } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
+import transactions from "../schema/transactions";
 import { TransactionDTO } from "../types/chain";
 
 export class Mempool {
@@ -9,7 +10,7 @@ export class Mempool {
         this.transactions = [];
     }
 
-    public add(transaction: Transaction) {
+    public async add(transaction: Transaction): Promise<void> {
         // Check if the transaction is already in the mempool
         if (this.transactions.find((tx) => tx.hash === transaction.hash)) {
             console.log(`Transaction already in mempool: ${transaction.hash}`);
@@ -28,6 +29,10 @@ export class Mempool {
         console.log(`Adding transaction to mempool: ${transaction.hash}`);
 
         this.transactions.push(transaction);
+        // Sae to DB
+        // Write to DB
+        await transactions.create(Transaction.toDocument(transaction));
+        //await transactions.create(transaction.to);
     }
 
     public get(): Transaction[] {

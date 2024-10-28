@@ -116,7 +116,7 @@ export class Server {
                 const otherMempool: Transaction[] = await client.getMempool();
                 // Add to own mempool
                 for (const transaction of otherMempool) {
-                    mempool.add(transaction);
+                    await mempool.add(transaction);
                 }
             } catch (error) {
                 console.warn(`Missing node ${node.url}`);

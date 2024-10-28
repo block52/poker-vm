@@ -7,7 +7,7 @@ const transactionSchema = new Schema<ITransactionDocument>({
     type: String,
   },
   from: {
-    required: true,
+    required: false,
     type: String,
   },
   value: {
