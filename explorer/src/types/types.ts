@@ -11,6 +11,11 @@ export type RPCResponse<T> = {
     error?: string;
 };
 
+export type SignedResponse<T> = {
+    data: T;
+    signature: string;
+}
+
 export type Transaction = {
     to: string;
     from: string | null;

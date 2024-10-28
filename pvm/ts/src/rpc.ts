@@ -91,7 +91,7 @@ export class RPC {
     static async handleReadMethod(
         method: RPCMethods,
         request: RPCRequest
-    ): Promise<RPCResponse<any>> {
+    ): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
         let result: ISignedResponse<any>;
         const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
@@ -172,7 +172,11 @@ export class RPC {
 
         return {
             id,
-            result
+            result: {
+                ...result,
+                data: result.data?.toJson ? result.data.toJson() : result.data,
+            }
+            //result.data?.toJson ? result.data.toJson() : result.data
         };
     }
 
@@ -180,7 +184,7 @@ export class RPC {
     static async handleWriteMethod(
         method: RPCMethods,
         request: RPCRequest
-    ): Promise<RPCResponse<any>> {
+    ): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
         const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
@@ -237,7 +241,7 @@ export class RPC {
         }
         return {
             id,
-            result
+            result: result.data.toJson()
         };
     }
 }
