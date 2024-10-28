@@ -15,7 +15,6 @@ cd ~
 cd poker-vm/pvm/ts
 git stash
 git pull
-# git clone https://github.com/block52/poker-vm.git
 
 yarn install
 yarn build
