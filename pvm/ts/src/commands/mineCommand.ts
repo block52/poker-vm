@@ -6,14 +6,12 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class MineCommand implements ISignedCommand<Block | null> {
-    private readonly mempool: Mempool;
 
-    constructor(private readonly privateKey: string) {
-        this.mempool = getMempoolInstance();
-    }
+    constructor(private readonly privateKey: string) { }
 
     public async execute(): Promise<ISignedResponse<Block | null>> {
-        const txs = this.mempool.get();
+        const mempool = getMempoolInstance();
+        const txs = mempool.get();
         const blockchainManagement = new BlockchainManagement();
         const lastBlock = await blockchainManagement.getLastBlock();
         const block = Block.create(
@@ -22,7 +20,10 @@ export class MineCommand implements ISignedCommand<Block | null> {
             txs,
             this.privateKey
         );
-        this.mempool.clear();
+        // Write to DB
+        await blockchainManagement.addBlock(block);
+
+        await mempool.clear();
 
         return signResult(block, this.privateKey);
     }

@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { MintCommand, TransferCommand } from "./commands";
+import { AccountCommand } from "./commands/accountCommand";
 import { BlockCommand } from "./commands/blockCommand";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
 import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
@@ -7,10 +7,13 @@ import { GetNodesCommand } from "./commands/getNodesCommand";
 import { ISignedResponse } from "./commands/interfaces";
 import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
+import { MineCommand } from "./commands/mineCommand";
+import { MintCommand, TransferCommand } from "./commands";
 import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
+
 import { makeErrorRPCResponse } from "./types/response";
 import {
     CONTROL_METHODS,
@@ -21,7 +24,7 @@ import {
     RPCResponse,
     WRITE_METHODS
 } from "./types/rpc";
-import { AccountCommand } from "./commands/accountCommand";
+
 
 export class RPC {
 
@@ -231,6 +234,12 @@ export class RPC {
             case RPCMethods.CREATE_CONTRACT_SCHEMA: {
                 const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
                 const command = new CreateContractSchemaCommand(category, name, schema, privateKey);
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.MINE: {
+                const command = new MineCommand(privateKey);
                 result = await command.execute();
                 break;
             }

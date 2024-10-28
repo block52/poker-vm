@@ -29,7 +29,7 @@ export class Block implements IJSONModel {
     this.signature = ethers.ZeroHash;
     this.timestamp = timestamp;
     this.validator = validator || ethers.ZeroAddress;
-    this.transactions = [];
+    this.transactions = transactions || [];
   }
 
   public static create(
@@ -70,7 +70,7 @@ export class Block implements IJSONModel {
       previousHash: this.previousHash,
       timestamp: this.timestamp,
       validator: this.validator,
-      transactions: this.transactions,
+      transactions: this.transactions.map((tx) => tx.toJson()),
       merkleRoot: this.merkleRoot,
     };
 

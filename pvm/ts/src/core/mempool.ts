@@ -29,10 +29,6 @@ export class Mempool {
         console.log(`Adding transaction to mempool: ${transaction.hash}`);
 
         this.transactions.push(transaction);
-        // Sae to DB
-        // Write to DB
-        await transactions.create(Transaction.toDocument(transaction));
-        //await transactions.create(transaction.to);
     }
 
     public get(): Transaction[] {
