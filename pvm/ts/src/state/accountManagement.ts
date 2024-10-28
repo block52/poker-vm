@@ -1,8 +1,9 @@
 import { Account } from "../models/account";
 import Accounts from "../schema/accounts";
 import { Transaction } from "../models/transaction";
+import { IAccountManagement } from "./interfaces";
 
-export class AccountManagement {
+export class AccountManagement implements IAccountManagement {
   constructor() {
 
   }
