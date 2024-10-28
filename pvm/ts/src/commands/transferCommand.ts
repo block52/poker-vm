@@ -10,7 +10,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     public async execute(): Promise<ISignedResponse<Transaction>> {
         const transferTx: Transaction = Transaction.create(this.to, this.from, this.amount, this.privateKey);
         const mempool = getMempoolInstance();
-        mempool.add(transferTx);
+        await mempool.add(transferTx);
         return signResult(transferTx, this.privateKey);
     }
 }
