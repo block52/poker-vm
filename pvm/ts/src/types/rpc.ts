@@ -18,6 +18,7 @@ export type RPCResponse<T> = {
 export enum RPCMethods {
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
     GET_ACCOUNT = "get_account",
+    GET_TRANSACTIONS = "get_transactions",
     GET_BLOCK = "get_block",
     GET_CLIENT = "get_client",
     GET_CONTRACT_SCHEMA = "get_contract_schema",
@@ -41,6 +42,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_LAST_BLOCK]: []; // No parameters
     [RPCMethods.GET_MEMPOOL]: []; // No parameters
     [RPCMethods.GET_NODES]: []; // No parameters
+    [RPCMethods.GET_TRANSACTIONS]: [bigint]; // [count]
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINT]: [string, bigint, string]; // [address, amount, transactionId]
     [RPCMethods.MINED_BLOCK_HASH]: [string]; // [blockHash]
@@ -57,6 +59,7 @@ export const READ_METHODS = [
     RPCMethods.GET_CLIENT,
     RPCMethods.GET_LAST_BLOCK,
     RPCMethods.GET_MEMPOOL,
+    RPCMethods.GET_TRANSACTIONS,
     RPCMethods.GET_NODES,
     RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.GET_CONTRACT_SCHEMA,

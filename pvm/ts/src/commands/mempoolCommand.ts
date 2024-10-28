@@ -1,18 +1,18 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import { MempoolTransactions } from "../models/mempoolTransactions";
+import { TransactionList } from "../models/transactionList";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class MempoolCommand implements ISignedCommand<MempoolTransactions> {
+export class MempoolCommand implements ISignedCommand<TransactionList> {
     private readonly mempool: Mempool;
 
     constructor(private readonly privateKey: string) {
         this.mempool = getMempoolInstance();
     }
 
-    public async execute(): Promise<ISignedResponse<MempoolTransactions>> {
+    public async execute(): Promise<ISignedResponse<TransactionList>> {
         return signResult(
-            new MempoolTransactions(this.mempool.get()),
+            new TransactionList(this.mempool.get()),
             this.privateKey
         );
     }

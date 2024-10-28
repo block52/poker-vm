@@ -2,7 +2,7 @@ import { TransactionDTO } from "../types/chain";
 import { IJSONModel } from "./interfaces";
 import { Transaction } from "./transaction";
 
-export class MempoolTransactions implements IJSONModel {
+export class TransactionList implements IJSONModel {
     constructor(private transactions: Transaction[]) {
       this.transactions = transactions;
     }

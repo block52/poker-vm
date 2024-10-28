@@ -1,9 +1,10 @@
-import { Block } from "../models/index";
+import { Block, Transaction } from "../models/index";
 import Blocks from "../schema/blocks";
 import { StateManager } from "./stateManager";
 
 import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
+import { TransactionList } from "../models/transactionList";
 
 export class BlockchainManagement extends StateManager {
   constructor() {
@@ -32,10 +33,24 @@ export class BlockchainManagement extends StateManager {
   }
 
   public async getBlock(index: number): Promise<Block> {
+    await this.connect();
     const block = await Blocks.findOne({ index });
     if (!block) {
       throw new Error("Block not found");
     }
     return Block.fromDocument(block);
+  }
+
+  public async getTransactions(count?: number): Promise<TransactionList> {
+    await this.connect();
+    const blocks = await Blocks.find({}, { transactions: 1 })
+        .sort({ timestamp: -1 })
+        .limit(count ?? 100);
+        
+    const transactions: Transaction[] = blocks
+        .flatMap(block => block.transactions || [])
+        .map(tx => Transaction.fromDocument(tx));
+
+    return new TransactionList(transactions);
   }
 }

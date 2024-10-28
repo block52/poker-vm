@@ -203,5 +203,7 @@ export class Block implements IJSONModel {
       transactions: this.transactions,
       tx_count: this.transactions.length,
     };
+
+    
   }
 }

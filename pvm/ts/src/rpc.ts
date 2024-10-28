@@ -13,6 +13,7 @@ import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCo
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
+import { GetTransactionsCommand } from "./commands/getTransactionsCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
 import {
@@ -160,6 +161,13 @@ export class RPC {
             case RPCMethods.MINED_BLOCK_HASH: {
                 const blockHash = request.params[0] as string;
                 const command = new ReceiveMinedBlockHashCommand(blockHash, privateKey);
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.GET_TRANSACTIONS: {
+                const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
+                const command = new GetTransactionsCommand(Number(count), privateKey);
                 result = await command.execute();
                 break;
             }
