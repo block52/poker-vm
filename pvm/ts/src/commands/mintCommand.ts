@@ -48,7 +48,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         const mintTx: Transaction = Transaction.create(this.receiver, null, this.amount, this.privateKey);
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
-        mempoolInstance.add(mintTx);
+        await mempoolInstance.add(mintTx);
         return signResult(mintTx, this.privateKey);
 
     }
