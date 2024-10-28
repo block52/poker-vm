@@ -5,6 +5,12 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
+    /* For Shadcn UI */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

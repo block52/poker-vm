@@ -33,7 +33,6 @@ export function useMempoolTransactions() {
           throw new Error(rpcResponse.error);
         }
 
-        debugger;
         setTransactions(rpcResponse.result.data);
         setLoading(false);
       } catch (err) {
