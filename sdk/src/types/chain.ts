@@ -10,7 +10,12 @@ export type TransactionDTO = {
 
 export type BlockDTO = {
     hash: string;
-    index: string;
-    timestamp: string;
+    index: number;
+    timestamp: number;
+    validator: string;
+    version: string;
+    signature: string;
+    merkleRoot: string;
+    previousHash: string;
     transactions: TransactionDTO[];
 }
