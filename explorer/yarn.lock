@@ -186,8 +186,10 @@
     "@babel/helper-validator-identifier" "^7.25.7"
     to-fast-properties "^2.0.0"
 
-"@block52/sdk@file:../sdk":
-  version "1.0.0"
+"@bitcoinbrisbane/block52@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.1.tgz#676def160034dccc0df17e4c5f62ca39eece99d1"
+  integrity sha512-8SRmCb2hJCaSjIIjE6wd2Fa/XwU6uh8mzMSVGstkutyYnVGPdCYRAnlV0FhoF/DmxGf2tFGQYFub6XAw6nmlXg==
   dependencies:
     axios "^1.7.7"
 

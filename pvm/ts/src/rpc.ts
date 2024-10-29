@@ -14,6 +14,7 @@ import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCo
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
+import { GetBlocksCommand } from "./commands/getBlocksCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
 import {
@@ -167,6 +168,12 @@ export class RPC {
             case RPCMethods.GET_TRANSACTIONS: {
                 const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
                 const command = new GetTransactionsCommand(Number(count), privateKey);
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.GET_BLOCKS: {
+                const command = new GetBlocksCommand(privateKey);
                 result = await command.execute();
                 break;
             }

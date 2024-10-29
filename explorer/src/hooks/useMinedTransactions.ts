@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NODE_URL } from "../config";
-import { NodeRpcClient, TransactionDTO } from "@block52/sdk";
+import { NodeRpcClient, TransactionDTO } from "@bitcoinbrisbane/block52";
 
 export function useMinedTransactions() {
   const [transactions, setTransactions] = useState<TransactionDTO[]>([]);

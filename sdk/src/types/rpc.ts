@@ -23,6 +23,7 @@ export enum RPCMethods {
     GET_ACCOUNT = "get_account",
     GET_TRANSACTIONS = "get_transactions",
     GET_BLOCK = "get_block",
+    GET_BLOCKS = "get_blocks",
     GET_CLIENT = "get_client",
     GET_CONTRACT_SCHEMA = "get_contract_schema",
     GET_LAST_BLOCK = "get_last_block",
@@ -40,6 +41,7 @@ export enum RPCMethods {
 export type RPCRequestParams = {
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
     [RPCMethods.GET_BLOCK]: [bigint]; // [index]
+    [RPCMethods.GET_BLOCKS]: [bigint]; // [count]
     [RPCMethods.GET_CLIENT]: []; // No parameters
     [RPCMethods.GET_CONTRACT_SCHEMA]: [string]; // [hash]
     [RPCMethods.GET_LAST_BLOCK]: []; // No parameters
