@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { Transaction } from "./transaction";
 import { IBlockDocument, IJSONModel } from "./interfaces";
-import { BlockDTO } from "../core/types";
+import { BlockDTO } from "@bitcoinbrisbane/block52";
 
 export class Block implements IJSONModel {
   private readonly transactions: Transaction[];
@@ -162,9 +162,9 @@ export class Block implements IJSONModel {
 
   public static fromJson(json: BlockDTO): Block {
     const block = new Block(
-      json.index,
+      Number(json.index),
       json.previousHash,
-      json.timestamp,
+      Number(json.timestamp),
       json.validator,
       json.hash,
       json.merkleRoot,

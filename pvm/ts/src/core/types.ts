@@ -45,15 +45,15 @@ export type NodeDTO = {
     name: string;
 };
 
-export type BlockDTO = {
-    index: number;
-    version: string;
-    hash: string;
-    merkleRoot: string;
-    previousHash: string;
-    timestamp: number;
-    validator: string;
-    signature: string;
-    transactions: TransactionDTO[];
-};
+// export type BlockDTO = {
+//     index: number;
+//     version: string;
+//     hash: string;
+//     merkleRoot: string;
+//     previousHash: string;
+//     timestamp: number;
+//     validator: string;
+//     signature: string;
+//     transactions: TransactionDTO[];
+// };
 

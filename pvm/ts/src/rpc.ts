@@ -25,6 +25,7 @@ import {
     WRITE_METHODS
 } from "./types/rpc";
 import { RPCRequest, RPCResponse } from "@bitcoinbrisbane/block52";
+import { GetBlocksCommand } from "./commands/getBlocksCommand";
 
 
 export class RPC {
@@ -115,12 +116,11 @@ export class RPC {
                 if (request.params) {
                     // Use regex to check if the index is a number
                     const regex = new RegExp("^[0-9]+$");
-                    if (!regex.test(request.params[0] as string)) {
+                    const [index] = request.params as RPCRequestParams[RPCMethods.GET_BLOCK];
+                    if (!regex.test(index)) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-
-                    const index = BigInt(request.params[0] as string);
-                    command = new BlockCommand(index, privateKey);
+                    command = new BlockCommand(BigInt(index), privateKey);
                 }
                 result = await command.execute();
                 break;
@@ -173,8 +173,9 @@ export class RPC {
             }
 
             case RPCMethods.GET_BLOCKS: {
-                throw new Error("Not implemented");
-
+                const [count] = request.params as RPCRequestParams[RPCMethods.GET_BLOCKS];
+                const command = new GetBlocksCommand(Number(count), privateKey);
+                result = await command.execute();
                 break;
             }
 
@@ -218,7 +219,7 @@ export class RPC {
 
                 const command = new MintCommand(
                     to,
-                    amount,
+                    BigInt(amount),
                     transactionId,
                     privateKey
                 );
@@ -238,7 +239,7 @@ export class RPC {
                 const command = new TransferCommand(
                     from,
                     to,
-                    amount,
+                    BigInt(amount),
                     privateKey
                 );
                 result = await command.execute();

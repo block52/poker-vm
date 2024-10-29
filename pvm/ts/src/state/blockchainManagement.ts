@@ -5,6 +5,7 @@ import { StateManager } from "./stateManager";
 import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
 import { TransactionList } from "../models/transactionList";
+import { BlockList } from "../models/blockList";
 
 export class BlockchainManagement extends StateManager {
   constructor() {
@@ -41,12 +42,14 @@ export class BlockchainManagement extends StateManager {
     return Block.fromDocument(block);
   }
 
-  public async getBlocks(count?: number): Promise<Block[]> {
+  public async getBlocks(count?: number): Promise<BlockList> {
     await this.connect();
     const blocks = await Blocks.find({}, { transactions: 1 })
         .sort({ timestamp: -1 })
         .limit(count ?? 100);
-    return blocks.map(block => Block.fromDocument(block));
+
+    return new BlockList(blocks.map(block => Block.fromDocument(block)));
+
   }
 
   public async getTransactions(count?: number): Promise<TransactionList> {
