@@ -146,7 +146,7 @@ export class Block implements IJSONModel {
     }
   }
 
-  public toJson(): any {
+  public toJson(): BlockDTO {
     return {
       index: this.index,
       hash: this.hash,
@@ -155,7 +155,8 @@ export class Block implements IJSONModel {
       signature: this.signature,
       timestamp: this.timestamp,
       validator: this.validator,
-      transactions: this.transactions.map((tx) => tx.toJson()),
+      version: this.version.toString(),
+      transactions: this.transactions?.map((tx) => tx.toJson()),
     };
   }
 
@@ -178,6 +179,7 @@ export class Block implements IJSONModel {
   }
 
   public static fromDocument(document: IBlockDocument): Block {
+    const transactions = document.transactions?.map((tx) => Transaction.fromDocument(tx));
     return new Block(
       document.index,
       document.previous_block_hash,
@@ -186,7 +188,7 @@ export class Block implements IJSONModel {
       document.hash,
       document.merkle_root,
       document.signature,
-      document.transactions,
+     transactions,
     );
   }
 
