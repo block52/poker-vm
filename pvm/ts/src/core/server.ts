@@ -2,7 +2,7 @@ import { ethers, ZeroHash } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
 import { Transaction } from "../models";
-import { NodeRpcClient, TransactionDTO } from "@block52/sdk";
+import { NodeRpcClient, TransactionDTO } from "@bitcoinbrisbane/block52";
 import { MineCommand } from "../commands/mineCommand";
 import { getValidatorInstance } from "./validator";
 import { getBootNodes } from "../state/nodeManagement";

@@ -14,7 +14,7 @@ import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCo
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
-import { GetBlocksCommand } from "./commands/getBlocksCommand";
+// import { GetBlocksCommand } from "./commands/getBlocksCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
 import {
@@ -24,7 +24,7 @@ import {
     RPCRequestParams,
     WRITE_METHODS
 } from "./types/rpc";
-import { RPCRequest, RPCResponse } from "@block52/sdk";
+import { RPCRequest, RPCResponse } from "@bitcoinbrisbane/block52";
 
 
 export class RPC {
@@ -173,8 +173,8 @@ export class RPC {
             }
 
             case RPCMethods.GET_BLOCKS: {
-                const command = new GetBlocksCommand(privateKey);
-                result = await command.execute();
+                throw new Error("Not implemented");
+
                 break;
             }
 

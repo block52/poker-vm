@@ -1,4 +1,4 @@
-import { TransactionDTO } from "@block52/sdk"
+import { TransactionDTO } from "@bitcoinbrisbane/block52"
 import { ColumnDef } from "@tanstack/react-table"
 
 export const columns: ColumnDef<TransactionDTO>[] = [

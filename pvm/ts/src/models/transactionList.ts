@@ -1,4 +1,4 @@
-import { TransactionDTO } from "@block52/sdk";
+import { TransactionDTO } from "@bitcoinbrisbane/block52";
 import { IJSONModel } from "./interfaces";
 import { Transaction } from "./transaction";
 
