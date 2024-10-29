@@ -14,7 +14,8 @@ export enum RPCMethods {
     SHUTDOWN = "shutdown",
     START = "start",
     STOP = "stop",
-    TRANSFER = "transfer"
+    TRANSFER = "transfer",
+    GET_BLOCKS = "get_blocks"
 }
 
 export type RPCRequestParams = {
@@ -34,11 +35,13 @@ export type RPCRequestParams = {
     [RPCMethods.TRANSFER]: [string, string, bigint]; // [from, to, amount]
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
+    [RPCMethods.GET_BLOCKS]: []; // No parameters
 };
 
 export const READ_METHODS = [
     RPCMethods.GET_ACCOUNT,
     RPCMethods.GET_BLOCK,
+    RPCMethods.GET_BLOCKS,
     RPCMethods.GET_CLIENT,
     RPCMethods.GET_LAST_BLOCK,
     RPCMethods.GET_MEMPOOL,

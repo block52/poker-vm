@@ -28,7 +28,7 @@ export class NodeRpcClient {
         const { data: body } = await axios.post<
             RPCRequest,
             { data: RPCResponse<TransactionDTO[]> }
-        >(`${this.url}`, {
+        >(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_MEMPOOL,
             params: [],
@@ -46,7 +46,7 @@ export class NodeRpcClient {
         const { data: body} = await axios.post<
             RPCRequest,
             { data: RPCResponse<string[]> }
-        >(`${this.url}`, {
+        >(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_NODES,
             params: [],
@@ -59,7 +59,7 @@ export class NodeRpcClient {
      * @returns A Promise resolving to a Block object
      */
     public async getLastBlock(): Promise<BlockDTO> {
-        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO>}>(`${this.url}`, {
+        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO>}>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_LAST_BLOCK,
             params: [],
@@ -69,13 +69,24 @@ export class NodeRpcClient {
         return body.result.data;
     }
 
+    public async getBlocks(count?: number): Promise<BlockDTO[]> {
+        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO[]>}>
+        (this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_BLOCKS,
+            params: [count ?? 100],
+            data: undefined
+        });
+        return body.result.data;
+    }
+
     /**
      * Send a block hash to the remote node
      * @param blockHash The hash of the block to send
      * @returns A Promise that resolves when the request is complete
      */
     public async sendBlockHash(blockHash: string): Promise<void> {
-        await axios.post(`${this.url}`, {
+        await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.MINED_BLOCK_HASH,
             params: [blockHash],
@@ -88,7 +99,7 @@ export class NodeRpcClient {
      * @returns A Promise resolving to an array of Transaction objects
      */
     public async getTransactions(): Promise<TransactionDTO[]> {
-       const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<TransactionDTO[]>}>(`${this.url}`, {
+       const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<TransactionDTO[]>}>(this.url, {
         id: this.getRequestId(),
         method: RPCMethods.GET_TRANSACTIONS,
         params: [],

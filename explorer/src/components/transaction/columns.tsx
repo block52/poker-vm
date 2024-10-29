@@ -1,5 +1,3 @@
-"use client"
-
 import { TransactionDTO } from "@block52/sdk"
 import { ColumnDef } from "@tanstack/react-table"
 
