@@ -6,7 +6,7 @@ import TransactionsPage from "./components/pages/TransactionsPage";
 
 function App() {
     return (
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="b52-ui-theme">
             <Router>
                 <div className="min-h-screen bg-background text-foreground">
                     <Navbar />

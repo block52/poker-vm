@@ -136,3 +136,21 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .suit-0 {
+    @apply  text-red-500;
+  }
+  .suit-1 {
+    @apply  text-red-500;
+  }
+  .suit-2 {
+    @apply text-red-500;
+  }
+  .suit-3 {
+    @apply text-red-500;
+  }
+  .suit-4 {
+    @apply  text-red-500;
+  }
+}
