@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWallet } from '../../hooks/useWallet';
-import './wallet.css';
+//import './wallet.css';
 
 export const Wallet: React.FC = () => {
   const wallet = useWallet();
