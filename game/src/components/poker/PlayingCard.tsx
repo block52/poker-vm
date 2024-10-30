@@ -1,4 +1,4 @@
-import { PlayingCardEnum, PlayingCardInfo, Suit } from "@/types/game";
+import { PlayingCardInfo, Suit } from "@/types/game";
 
 interface PlayingCardProps {
     card?: PlayingCardInfo | undefined;

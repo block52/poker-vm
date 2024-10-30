@@ -23,7 +23,6 @@ export function saveWallet(wallet: ethers.Wallet) {
 export function loadWallet(): ethers.Wallet {
     // Load from local storage
     console.log(import.meta.env.VITE_ENCRYPTION_KEY);
-    debugger;
     const privateKey: string | null = localStorage.getItem("wallet");
     if (!privateKey) {
         throw new MissingWalletError("No wallet found");
@@ -33,8 +32,8 @@ export function loadWallet(): ethers.Wallet {
     return new ethers.Wallet(decrypted);
 }
 
-export const encryptString = (message: string, key: string) =>
-  CryptoJS.AES.encrypt(message, key).toString();
+export const encryptString = (message: string, key: string) => message;
+  //CryptoJS.AES.encrypt(message, key).toString();
 
-export const decryptString = (cipher: string, key: string) =>
-  CryptoJS.AES.decrypt(cipher, key).toString(CryptoJS.enc.Utf8);
+export const decryptString = (cipher: string, key: string) => cipher;
+  //CryptoJS.AES.decrypt(cipher, key).toString(CryptoJS.enc.Utf8);

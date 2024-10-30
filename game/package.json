@@ -25,6 +25,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@block52/sdk": "1.0.5",
     "@eslint/js": "^9.13.0",
     "@types/node": "^22.8.2",
     "@types/react": "^18.3.11",
