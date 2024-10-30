@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { createWallet, saveWallet, loadWallet, MissingWalletError } from '../wallet';
-import { NodeRpcClient } from '@block52/sdk';
+import { NodeRpcClient } from '@bitcoinbrisbane/block52';
 
 export function useWallet() {
   const [wallet, setWallet] = useState<ethers.Wallet | null>(null);

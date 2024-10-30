@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Wallet } from "./components/wallet/wallet";
+import { Wallet } from "./components/wallet/Wallet";
 import GamePage from "./components/pages/GamePage";
 import HomePage from "./components/pages/HomePage";
 

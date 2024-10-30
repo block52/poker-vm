@@ -96,6 +96,7 @@ export class RPC {
         const id = request.id;
         let result: ISignedResponse<any>;
         const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
+        
         switch (method) {
 
             case RPCMethods.GET_ACCOUNT: {
