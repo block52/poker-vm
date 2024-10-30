@@ -1,7 +1,6 @@
 // assuming that `inquirer` has already been installed
 const inquirer = require("inquirer");
-
-const client = require("../../dist/client/client");
+const client = require("@bitcoinbrisbane/block52-client");
 
 const questions = [
   {
