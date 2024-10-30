@@ -7,8 +7,8 @@ export class AccountManagement {
 
   }
 
-  async createAccount(address: string): Promise<Account> {
-    const account = new Account(address, 0n);
+  async createAccount(privateKey: string): Promise<Account> {
+    const account = Account.create(privateKey);
     await Accounts.create(account.toDocument());
     return account;
   }
@@ -17,7 +17,7 @@ export class AccountManagement {
     const account = await Accounts.findOne({ address });
 
     if (!account) {
-      return Account.create(address);
+      throw new Error("Account not found");
     }
 
     return Account.fromDocument(account);
@@ -26,25 +26,32 @@ export class AccountManagement {
   // Helper functions
   async getBalance(address: string): Promise<bigint> {
     const account = await this.getAccount(address);
+
     return account.balance;
   }
 
   async incrementBalance(address: string, balance: bigint): Promise<void> {
-    await Accounts.updateOne({ address }, { $inc: { balance } });
+    await Accounts.updateOne(
+      { address }, 
+      { $inc: { balance: balance.toString() } }
+    );
   }
 
   async decrementBalance(address: string, balance: bigint): Promise<void> {
-    await Accounts.updateOne({ address }, { $inc: { balance: -balance } });
+    await Accounts.updateOne(
+      { address }, 
+      { $inc: { balance: (-balance).toString() } }
+    );
   }
 
   async applyTransaction(tx: Transaction) {
       // Deduct from sender
       if (tx.from) {
-        this.decrementBalance(tx.from, tx.value);
+        await this.decrementBalance(tx.from, tx.value);
       }
 
       // Add to recipient
-      this.incrementBalance(tx.to, tx.value);
+      await this.incrementBalance(tx.to, tx.value);
   }
 
   async applyTransactions(txs: Transaction[]): Promise<void> {

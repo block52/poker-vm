@@ -1,4 +1,4 @@
-import { BlockDTO, TransactionDTO } from "./types/chain";
+import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
@@ -18,6 +18,20 @@ export class NodeRpcClient {
             Math.random().toString(36).substring(2, 15) +
             Math.random().toString(36).substring(2, 15)
         );
+    }
+
+    /**
+     * Create an account
+     * @param privateKey The private key of the account
+     * @returns A Promise that resolves when the request is complete
+     */
+    public async createAccount(privateKey: string): Promise<void> {
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.CREATE_ACCOUNT,
+            params: [privateKey],
+            data: undefined
+        });
     }
 
     /**
@@ -106,5 +120,40 @@ export class NodeRpcClient {
         data: undefined
        });
        return body.result.data;
+    }
+
+    /**
+     * Transfer funds from one account to another
+     * @param from The address of the sender
+     * @param to The address of the recipient
+     * @param amount The amount to transfer
+     * @returns A Promise that resolves when the request is complete
+     */
+    public async transfer(from: string, to: string, amount: string): Promise<void> {
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.TRANSFER,
+            params: [from, to, amount],
+            data: undefined
+        });
+    }
+
+    public async mint(address: string, amount: string, transactionId: string): Promise<void> {
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.MINT,
+            params: [address, amount, transactionId],
+            data: undefined
+        });
+    }
+
+    public async getAccount(address: string): Promise<AccountDTO> {
+        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<AccountDTO>}>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_ACCOUNT,
+            params: [address],
+            data: undefined
+        });
+        return body.result.data;
     }
 }

@@ -18,6 +18,7 @@ export type RPCResponse<T> = {
 };
 
 export enum RPCMethods {
+    CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
     GET_ACCOUNT = "get_account",
     GET_BLOCK = "get_block",
@@ -38,6 +39,8 @@ export enum RPCMethods {
 }
 
 export type RPCRequestParams = {
+    [RPCMethods.CREATE_ACCOUNT]: []; // No parameters
+    [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
     [RPCMethods.GET_BLOCK]: [string]; // [index]
     [RPCMethods.GET_BLOCKS]: [string]; // [count]

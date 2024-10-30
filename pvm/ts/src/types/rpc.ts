@@ -15,6 +15,7 @@ export const READ_METHODS = [
 
 export const WRITE_METHODS = [
     RPCMethods.CREATE_CONTRACT_SCHEMA,
+    RPCMethods.CREATE_ACCOUNT,
     RPCMethods.MINE,
     RPCMethods.MINT,
     RPCMethods.TRANSFER,

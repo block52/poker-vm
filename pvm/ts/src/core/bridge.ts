@@ -3,7 +3,7 @@
 // The contract is a standard ERC20 token contract
 
 import { ethers } from "ethers";
-import { MintCommand } from "../commands";
+import { MintCommand } from "../commands/mintCommand";
 
 export function createProvider(nodeUrl: string): ethers.JsonRpcProvider {
   return new ethers.JsonRpcProvider(nodeUrl);

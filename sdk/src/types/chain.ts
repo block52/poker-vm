@@ -19,3 +19,8 @@ export type BlockDTO = {
     previousHash: string;
     transactions: TransactionDTO[];
 }
+
+export type AccountDTO = {
+    address: string;
+    balance: string;
+}
