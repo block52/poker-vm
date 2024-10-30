@@ -48,7 +48,7 @@ export class BlockchainManagement extends StateManager {
 
   public async getBlocks(count?: number): Promise<BlockList> {
     await this.connect();
-    const blocks = await Blocks.find({}, { transactions: 1 })
+    const blocks = await Blocks.find({})
         .sort({ timestamp: -1 })
         .limit(count ?? 100);
 
