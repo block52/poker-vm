@@ -10,7 +10,7 @@ export function useMinedTransactions() {
   useEffect(() => {
     const fetchMinedTransactions = async () => {
       try {
-        const client = new NodeRpcClient(NODE_URL);
+        const client = new NodeRpcClient(NODE_URL, "");
         const transactions = await client.getTransactions();
         setTransactions(transactions);
         setLoading(false);

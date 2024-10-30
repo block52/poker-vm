@@ -11,7 +11,7 @@ export function useMempoolTransactions() {
   useEffect(() => {
     const fetchMempoolTransactions = async () => {
       try {
-        const client = new NodeRpcClient(NODE_URL);
+        const client = new NodeRpcClient(NODE_URL, "");
         const mempool = await client.getMempool();
         setTransactions(mempool);
         setLoading(false);
