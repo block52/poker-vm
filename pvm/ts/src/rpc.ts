@@ -95,25 +95,20 @@ export class RPC {
     ): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
         let result: ISignedResponse<any>;
-        const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
+        const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
         switch (method) {
 
-            case RPCMethods.CREATE_ACCOUNT: {
-                const command = new CreateAccountCommand(privateKey);
-                result = await command.execute();
-                break;
-            }
             case RPCMethods.GET_ACCOUNT: {
                 if (!request.params) {
                     return makeErrorRPCResponse(id, "Invalid params");
                 }
-                let command = new AccountCommand(request.params[0] as string, privateKey);
+                let command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
             
             case RPCMethods.GET_BLOCK: {
-                let command = new BlockCommand(undefined, privateKey);
+                let command = new BlockCommand(undefined, validatorPrivateKey);
 
                 if (request.params) {
                     // Use regex to check if the index is a number
@@ -122,7 +117,7 @@ export class RPC {
                     if (!regex.test(index)) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-                    command = new BlockCommand(BigInt(index), privateKey);
+                    command = new BlockCommand(BigInt(index), validatorPrivateKey);
                 }
                 result = await command.execute();
                 break;
@@ -130,31 +125,31 @@ export class RPC {
 
             case RPCMethods.GET_CONTRACT_SCHEMA: {
                 const [hash] = request.params as RPCRequestParams[RPCMethods.GET_CONTRACT_SCHEMA];
-                const command = new GetContractSchemaCommand(hash, privateKey);
+                const command = new GetContractSchemaCommand(hash, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_LAST_BLOCK: {
-                const command = new BlockCommand(undefined, privateKey);
+                const command = new BlockCommand(undefined, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_CLIENT: {
-                const command = new MeCommand(privateKey);
+                const command = new MeCommand(validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_NODES: {
-                const command = new GetNodesCommand(privateKey);
+                const command = new GetNodesCommand(validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_MEMPOOL: {
-                const command = new MempoolCommand(privateKey);
+                const command = new MempoolCommand(validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
@@ -162,21 +157,21 @@ export class RPC {
             //TODO: This should be a write method
             case RPCMethods.MINED_BLOCK_HASH: {
                 const blockHash = request.params[0] as string;
-                const command = new ReceiveMinedBlockHashCommand(blockHash, privateKey);
+                const command = new ReceiveMinedBlockHashCommand(blockHash, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_TRANSACTIONS: {
                 const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
-                const command = new GetTransactionsCommand(Number(count), privateKey);
+                const command = new GetTransactionsCommand(Number(count), validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.GET_BLOCKS: {
                 const [count] = request.params as RPCRequestParams[RPCMethods.GET_BLOCKS];
-                const command = new GetBlocksCommand(Number(count), privateKey);
+                const command = new GetBlocksCommand(Number(count), validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
@@ -206,7 +201,7 @@ export class RPC {
         request: RPCRequest
     ): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
-        const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
+        const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
         let result: ISignedResponse<any | null>;
         switch (method) {
@@ -223,7 +218,7 @@ export class RPC {
                     to,
                     BigInt(amount),
                     transactionId,
-                    privateKey
+                    validatorPrivateKey
                 );
 
                 result = await command.execute();
@@ -242,7 +237,7 @@ export class RPC {
                     from,
                     to,
                     BigInt(amount),
-                    privateKey
+                    validatorPrivateKey
                 );
                 result = await command.execute();
 
@@ -250,19 +245,20 @@ export class RPC {
             }
             case RPCMethods.CREATE_CONTRACT_SCHEMA: {
                 const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
-                const command = new CreateContractSchemaCommand(category, name, schema, privateKey);
+                const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.CREATE_ACCOUNT: {
+                const [privateKey] = request.params as RPCRequestParams[RPCMethods.CREATE_ACCOUNT];
                 const command = new CreateAccountCommand(privateKey);
                 result = await command.execute();
                 break;
             }
 
             case RPCMethods.MINE: {
-                const command = new MineCommand(privateKey);
+                const command = new MineCommand(validatorPrivateKey);
                 result = await command.execute();
                 break;
             }

@@ -191,7 +191,7 @@
     "@babel/helper-validator-identifier" "^7.25.9"
 
 "@block52/sdk@file:../sdk":
-  version "1.0.3"
+  version "1.0.4"
   dependencies:
     axios "^1.7.7"
 
@@ -1228,7 +1228,7 @@ esutils@^2.0.2:
 
 ethers@^6.13.4:
   version "6.13.4"
-  resolved "https://registry.npmjs.org/ethers/-/ethers-6.13.4.tgz"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.13.4.tgz#bd3e1c3dc1e7dc8ce10f9ffb4ee40967a651b53c"
   integrity sha512-21YtnZVg4/zKkCQPjrDj38B1r4nQvTZLopUGMLQ1ePU2zV/joCfDC3t3iKQjWRzjjjbzR+mdAIoikeBRNkdllA==
   dependencies:
     "@adraffy/ens-normalize" "1.10.1"

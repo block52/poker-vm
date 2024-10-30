@@ -25,6 +25,7 @@ export class Server {
         }
 
         this.contractAddress = ethers.ZeroAddress;
+    
     }
 
     public me(): Node {
@@ -47,6 +48,7 @@ export class Server {
     public async mine() {
         const validatorInstance = getValidatorInstance();
         const validatorAddress = await validatorInstance.getNextValidatorAddress();
+
         
         if (validatorAddress === this.publicKey) {
             console.log(`I am the validator. Mining block...`);
@@ -65,7 +67,7 @@ export class Server {
             for (const node of nodes) {
                 console.log(`Broadcasting block hash to ${node.url}`);
                 try {
-                    const client = new NodeRpcClient(node.url);
+                    const client = new NodeRpcClient( node.url, this.privateKey);
                     await client.sendBlockHash(block.hash);
                 } catch (error) {
                     console.warn(`Missing node ${node.url}`);
@@ -110,18 +112,18 @@ export class Server {
         }
         const mempool = getMempoolInstance();
         const nodes = await getBootNodes(this.me().url);
-        for (const node of nodes) {
+        await Promise.all(nodes.map(async (node) => {
             try {
-                const client = new NodeRpcClient(node.url);
+                const client = new NodeRpcClient(node.url, this.privateKey);
                 const otherMempool: TransactionDTO[] = await client.getMempool();
                 // Add to own mempool
-                for (const transaction of otherMempool) {
+                await Promise.all(otherMempool.map(async (transaction) => {
                     await mempool.add(Transaction.fromJson(transaction));
-                }
+                }));
             } catch (error) {
                 console.warn(`Missing node ${node.url}`);
             }
-        }
+        }));
     }
 }
 
