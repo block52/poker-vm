@@ -7,7 +7,7 @@ import axios from "axios";
  * NodeRpcClient class for interacting with a remote node via RPC
  */
 export class NodeRpcClient {
-    constructor(private url: string) {}
+    constructor(private url: string, private privateKey: string) {}
 
     /**
      * Get a random request ID
@@ -148,6 +148,7 @@ export class NodeRpcClient {
     }
 
     public async getAccount(address: string): Promise<AccountDTO> {
+        console.log(`Getting account ${address} from url ${this.url}`);
         const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<AccountDTO>}>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_ACCOUNT,
