@@ -32,7 +32,7 @@ export function useWallet() {
   useEffect(() => {
     if (wallet) {
       const privateKey = wallet.privateKey;
-      const url = "http://localhost:3000"; //import.meta.env.VITE_NODE_RPC_URL;
+      const url = import.meta.env.VITE_NODE_RPC_URL ?? "http://localhost:3000";
       const client = new NodeRpcClient(url, privateKey);
       console.log(privateKey, url);
       setClient(client);

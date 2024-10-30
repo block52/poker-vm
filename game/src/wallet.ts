@@ -1,5 +1,4 @@
 import { ethers } from "ethers";
-import CryptoJS from "crypto-js";
 
 export class MissingWalletError extends Error {
     constructor(message: string) {
