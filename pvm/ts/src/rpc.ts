@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { MintCommand, TransferCommand } from "./commands";
+
 import { AccountCommand } from "./commands/accountCommand";
 import { BlockCommand } from "./commands/blockCommand";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
@@ -10,22 +10,20 @@ import { ISignedResponse } from "./commands/interfaces";
 import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { MineCommand } from "./commands/mineCommand";
+import { MintCommand, TransferCommand } from "./commands";
 import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
-// import { GetBlocksCommand } from "./commands/getBlocksCommand";
 
+import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+import { GetBlocksCommand } from "./commands/getBlocksCommand";
 import { makeErrorRPCResponse } from "./types/response";
 import {
     CONTROL_METHODS,
     READ_METHODS,
-    RPCMethods,
-    RPCRequestParams,
     WRITE_METHODS
 } from "./types/rpc";
-import { RPCRequest, RPCResponse } from "@bitcoinbrisbane/block52";
-import { GetBlocksCommand } from "./commands/getBlocksCommand";
 
 
 export class RPC {
