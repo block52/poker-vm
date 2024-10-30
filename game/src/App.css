@@ -40,3 +40,8 @@
 .read-the-docs {
   color: #888;
 }
+
+h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
