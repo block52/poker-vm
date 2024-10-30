@@ -6,6 +6,7 @@ import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
 import { TransactionList } from "../models/transactionList";
 import { BlockList } from "../models/blockList";
+import AccountManagement from "./accountManagement";
 
 export class BlockchainManagement extends StateManager {
   constructor() {
@@ -14,7 +15,10 @@ export class BlockchainManagement extends StateManager {
 
   public async addBlock(block: Block): Promise<void> {
     await this.connect();
-
+    // Update the account balances
+    const accountManagement = new AccountManagement();
+    await accountManagement.applyTransactions(block.transactions);
+  
     const newBlock = new Blocks(block.toDocument());
     await newBlock.save();
   }

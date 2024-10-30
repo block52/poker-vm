@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { IAccountDocument } from "./interfaces";
+import { AccountDTO } from "@bitcoinbrisbane/block52";
 
 export class Account {
     address: string;
@@ -17,15 +18,16 @@ export class Account {
         return 0;
     }
 
-    public toJson(): any {
+    public toJson(): AccountDTO {
         return {
             address: this.address,
-            balance: this.balance,
+            balance: this.balance.toString(),
         };
     }
-
-    public static fromJson(json: any): Account {
-        return new Account(json.address, json.balance);
+    
+    public static fromJson(json: AccountDTO
+    ): Account {
+        return new Account(json.address, BigInt(json.balance));
     }
 
     public static fromDocument(document: IAccountDocument): Account {

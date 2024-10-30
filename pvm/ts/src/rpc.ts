@@ -1,31 +1,31 @@
 import { ZeroHash } from "ethers";
-import { MintCommand, TransferCommand } from "./commands";
+
+import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+
 import { AccountCommand } from "./commands/accountCommand";
 import { BlockCommand } from "./commands/blockCommand";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
 import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
+import { CreateAccountCommand } from "./commands/createAccountCommand";
+import { GetBlocksCommand } from "./commands/getBlocksCommand";
 import { GetNodesCommand } from "./commands/getNodesCommand";
 import { GetTransactionsCommand } from "./commands/getTransactionsCommand";
 import { ISignedResponse } from "./commands/interfaces";
 import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { MineCommand } from "./commands/mineCommand";
+import { MintCommand } from "./commands/mintCommand";
 import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
-// import { GetBlocksCommand } from "./commands/getBlocksCommand";
-
+import { TransferCommand } from "./commands/transferCommand";
 import { makeErrorRPCResponse } from "./types/response";
 import {
     CONTROL_METHODS,
     READ_METHODS,
-    RPCMethods,
-    RPCRequestParams,
     WRITE_METHODS
 } from "./types/rpc";
-import { RPCRequest, RPCResponse } from "@bitcoinbrisbane/block52";
-import { GetBlocksCommand } from "./commands/getBlocksCommand";
 
 
 export class RPC {
@@ -46,14 +46,10 @@ export class RPC {
 
         if (READ_METHODS.includes(method)) {
             return this.handleReadMethod(method, request);
-        } 
-        if (WRITE_METHODS.includes(method)) {
-        }
+        }      
         if (WRITE_METHODS.includes(method)) {
             return this.handleWriteMethod(method, request);
         } 
-        if (CONTROL_METHODS.includes(method)) {
-        }
         if (CONTROL_METHODS.includes(method)) {
             return this.handleControlMethod(method, request);
         }
@@ -101,6 +97,12 @@ export class RPC {
         let result: ISignedResponse<any>;
         const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
         switch (method) {
+
+            case RPCMethods.CREATE_ACCOUNT: {
+                const command = new CreateAccountCommand(privateKey);
+                result = await command.execute();
+                break;
+            }
             case RPCMethods.GET_ACCOUNT: {
                 if (!request.params) {
                     return makeErrorRPCResponse(id, "Invalid params");
@@ -249,6 +251,12 @@ export class RPC {
             case RPCMethods.CREATE_CONTRACT_SCHEMA: {
                 const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
                 const command = new CreateContractSchemaCommand(category, name, schema, privateKey);
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.CREATE_ACCOUNT: {
+                const command = new CreateAccountCommand(privateKey);
                 result = await command.execute();
                 break;
             }

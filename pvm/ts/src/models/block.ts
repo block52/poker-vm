@@ -5,7 +5,7 @@ import { IBlockDocument, IJSONModel } from "./interfaces";
 import { BlockDTO } from "@bitcoinbrisbane/block52";
 
 export class Block implements IJSONModel {
-  private readonly transactions: Transaction[];
+  public readonly transactions: Transaction[];
   public version = 1;
   public hash: string;
   public merkleRoot: string;
