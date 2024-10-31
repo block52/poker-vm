@@ -1,15 +1,14 @@
 import { ethers } from "ethers";
 import { getMempoolInstance } from "../core/mempool";
-import { Transaction } from "../models/transaction";
-import transactions from "../schema/transactions";
+import { Transaction } from "../models";
+import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class MintCommand implements ISignedCommand<Transaction> {
+export class BurnCommand implements ISignedCommand<Transaction> {
     constructor(
         readonly receiver: string,
         readonly amount: bigint,
-        readonly transactionId: string,
         private readonly privateKey: string
     ) {
         if (amount <= 0) {
@@ -20,17 +19,12 @@ export class MintCommand implements ISignedCommand<Transaction> {
             throw new Error("Receiver must be provided");
         }
 
-        if (!transactionId) {
-            throw new Error("Transaction ID must be provided");
-        }
-
         if (!privateKey) {
             throw new Error("Private key must be provided");
         }
 
         this.receiver = receiver;
         this.amount = amount;
-        this.transactionId = transactionId;
         this.privateKey = privateKey;
     }
 
@@ -41,17 +35,22 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // Check the DB for the tx hash
         // If it's not in the DB, mint
 
-        const existingTx = await transactions.findOne({ hash: this.transactionId });
-        if (existingTx) {
-            return signResult(Transaction.fromDocument(existingTx), this.privateKey);
+        const account = await accounts.findOne({ address: this.receiver });
+        if (account) {
+            // return signResult(Transaction.fromDocument(existingTx), this.privateKey);
+            // throw new Exception();
+        }
+
+        if (this.amount > Number(account?.balance)) {
+            // throw ...
         }
 
         const validator: string = ethers.ZeroAddress;
-        const mintTx: Transaction = Transaction.create(this.receiver, validator, this.amount, this.privateKey);
+        const burnTx: Transaction = Transaction.create(this.receiver, validator, this.amount, this.privateKey);
         
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
-        await mempoolInstance.add(mintTx);
-        return signResult(mintTx, this.privateKey);
+        await mempoolInstance.add(burnTx);
+        return signResult(burnTx, this.privateKey);
     }
 }
