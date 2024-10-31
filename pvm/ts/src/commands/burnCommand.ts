@@ -9,6 +9,7 @@ export class BurnCommand implements ISignedCommand<Transaction> {
     constructor(
         readonly receiver: string,
         readonly amount: bigint,
+        readonly publicKey: string,
         private readonly privateKey: string
     ) {
         if (amount <= 0) {
@@ -26,6 +27,8 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         this.receiver = receiver;
         this.amount = amount;
         this.privateKey = privateKey;
+        const signer = new ethers.Wallet(privateKey);
+        this.publicKey = signer.address;
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -45,8 +48,7 @@ export class BurnCommand implements ISignedCommand<Transaction> {
             // throw ...
         }
 
-        const validator: string = ethers.ZeroAddress;
-        const burnTx: Transaction = Transaction.create(this.receiver, validator, this.amount, this.privateKey);
+        const burnTx: Transaction = Transaction.create(this.receiver, this.publicKey, this.amount, this.privateKey);
         
         // Send to mempool
         const mempoolInstance = getMempoolInstance();

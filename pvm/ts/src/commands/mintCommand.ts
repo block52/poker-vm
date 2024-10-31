@@ -10,6 +10,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         readonly receiver: string,
         readonly amount: bigint,
         readonly transactionId: string,
+        readonly publicKey: string;
         private readonly privateKey: string
     ) {
         if (amount <= 0) {
@@ -32,6 +33,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
         this.amount = amount;
         this.transactionId = transactionId;
         this.privateKey = privateKey;
+        const signer = new ethers.Wallet(privateKey);
+        this.publicKey = signer.address;
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -46,8 +49,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
             return signResult(Transaction.fromDocument(existingTx), this.privateKey);
         }
 
-        const validator: string = ethers.ZeroAddress;
-        const mintTx: Transaction = Transaction.create(this.receiver, validator, this.amount, this.privateKey);
+        const mintTx: Transaction = Transaction.create(this.receiver, this.publicKey, this.amount, this.privateKey);
         
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
