@@ -1,17 +1,13 @@
-import { ethers } from "ethers";
+import { ethers, JsonRpcProvider } from "ethers";
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models";
 import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
+import { randomBytes } from "crypto";
 
 export class BurnCommand implements ISignedCommand<Transaction> {
-    constructor(
-        readonly receiver: string,
-        readonly amount: bigint,
-        readonly publicKey: string,
-        private readonly privateKey: string
-    ) {
+    constructor(readonly receiver: string, readonly amount: bigint, readonly publicKey: string, private readonly privateKey: string) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
         }
@@ -48,8 +44,21 @@ export class BurnCommand implements ISignedCommand<Transaction> {
             // throw ...
         }
 
+        const abi = ["function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature)"];
+        const nonce = randomBytes(32);
+
+        const baseRPCUrl = process.env.RPC_URL;
+        const provider = new JsonRpcProvider(baseRPCUrl, undefined, {
+            staticNetwork: true
+        });
+
+        const bridgeAddress = process.env.BRIDGE_CONTRACT_ADDRESS || "";
+        const bridge = new ethers.Contract(bridgeAddress, abi, provider);
+
+        const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"))
+
         const burnTx: Transaction = Transaction.create(this.receiver, this.publicKey, this.amount, this.privateKey);
-        
+
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
         await mempoolInstance.add(burnTx);
