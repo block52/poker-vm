@@ -28,6 +28,7 @@ export class Deck implements IJSONModel {
     private cards: Card[] = [];
     public hash: string = "";
     public seedHash: string;
+    private top: number = 0;
 
     constructor(type: DeckType) {
         switch (type) {
@@ -108,7 +109,11 @@ export class Deck implements IJSONModel {
     }
 
     public getNext(): Card {
-        return this.cards[0];
+        return this.cards[this.top++];
+    }
+
+    public deal(amount: number): Card[] {
+        return Array.from({ length: amount }, _ => this.getNext());
     }
 
     public toJson(): any {
