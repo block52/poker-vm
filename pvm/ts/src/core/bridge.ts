@@ -51,6 +51,7 @@ export class Bridge {
     if (!privateKey) {
       throw new Error("PRIVATE_KEY is not set");
     }
+    //const publicKey = await (await this.provider.getSigner()).getAddress();
     const mintCommand = new MintCommand(from, value, transactionHash, privateKey);
     await mintCommand.execute();
   }

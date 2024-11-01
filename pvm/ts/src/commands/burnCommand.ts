@@ -7,7 +7,8 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { randomBytes } from "crypto";
 
 export class BurnCommand implements ISignedCommand<Transaction> {
-    constructor(readonly receiver: string, readonly amount: bigint, readonly publicKey: string, private readonly privateKey: string) {
+    private readonly publicKey: string;
+    constructor(readonly receiver: string, readonly amount: bigint, private readonly privateKey: string) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
         }

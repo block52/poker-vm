@@ -6,11 +6,12 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class MintCommand implements ISignedCommand<Transaction> {
+    private readonly publicKey: string;
+
     constructor(
         readonly receiver: string,
         readonly amount: bigint,
         readonly transactionId: string,
-        readonly publicKey: string;
         private readonly privateKey: string
     ) {
         if (amount <= 0) {
@@ -32,7 +33,6 @@ export class MintCommand implements ISignedCommand<Transaction> {
         this.receiver = receiver;
         this.amount = amount;
         this.transactionId = transactionId;
-        this.privateKey = privateKey;
         const signer = new ethers.Wallet(privateKey);
         this.publicKey = signer.address;
     }
