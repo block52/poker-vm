@@ -153,7 +153,7 @@ export const exampleState: TexasHoldemState = {
         {
             address: "0xD332DFf7b5632f293156C3c07F91070aD61E3893",
             chips: 100,
-            holeCards: [33, 34],
+            holeCards: [52, 40],
             lastAction: {
                 action: Actions.BET,
                 amount: 2
