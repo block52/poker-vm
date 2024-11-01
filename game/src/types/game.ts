@@ -122,11 +122,21 @@ export enum Round {
     RIVER = "RIVER"
 }
 
+export enum Seat {
+    DEALER = 0,
+    LB = 1,
+    BB = 2,
+    NORMAL = 3
+}
+
 export type Player = {
     address: string;
     chips: number;
     holeCards?: number[];
     lastAction?: PlayerAction;
+    seat: number;
+    isActive: boolean;
+    isTurn: boolean;
 };
 
 export type TexasHoldemState = {
@@ -157,7 +167,10 @@ export const exampleState: TexasHoldemState = {
             lastAction: {
                 action: Actions.BET,
                 amount: 2
-            }
+            },
+            isTurn: true,
+            seat: Seat.LB,
+            isActive: true
         },
         {
             address: "0xC26E2874B6DAe1fE438361d150f179a5277dc278",
@@ -166,7 +179,10 @@ export const exampleState: TexasHoldemState = {
             lastAction: {
                 action: Actions.CALL,
                 amount: 2
-            }
+            },
+            isTurn: false,
+            seat: Seat.BB,
+            isActive: true
         },
         {
             address: "0xba22370000000000000000000000000000000000",
@@ -174,7 +190,10 @@ export const exampleState: TexasHoldemState = {
             holeCards: [4, 7],
             lastAction: {
                 action: Actions.FOLD
-            }
+            },
+            isTurn: false,
+            seat: Seat.NORMAL,
+            isActive: false
         },
 
     ],
