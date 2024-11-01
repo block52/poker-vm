@@ -77,7 +77,6 @@ export class NodeRpcClient {
             id: this.getRequestId(),
             method: RPCMethods.GET_LAST_BLOCK,
             params: [],
-            data: undefined
         });
         // Convert the received BlockDTO to a Block instance
         return body.result.data;
@@ -89,7 +88,6 @@ export class NodeRpcClient {
             id: this.getRequestId(),
             method: RPCMethods.GET_BLOCKS,
             params: [count ?? 100],
-            data: undefined
         });
         return body.result.data;
     }
@@ -104,7 +102,6 @@ export class NodeRpcClient {
             id: this.getRequestId(),
             method: RPCMethods.MINED_BLOCK_HASH,
             params: [blockHash],
-            data: undefined
         });
     }
 
@@ -117,7 +114,6 @@ export class NodeRpcClient {
         id: this.getRequestId(),
         method: RPCMethods.GET_TRANSACTIONS,
         params: [],
-        data: undefined
        });
        return body.result.data;
     }
@@ -129,12 +125,11 @@ export class NodeRpcClient {
      * @param amount The amount to transfer
      * @returns A Promise that resolves when the request is complete
      */
-    public async transfer(from: string, to: string, amount: string): Promise<void> {
+    public async transfer(from: string, to: string, amount: string, data?: string): Promise<void> {
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [from, to, amount],
-            data: undefined
+            params: [from, to, amount, data],
         });
     }
 
@@ -143,7 +138,6 @@ export class NodeRpcClient {
             id: this.getRequestId(),
             method: RPCMethods.MINT,
             params: [address, amount, transactionId],
-            data: undefined
         });
     }
 
@@ -153,7 +147,6 @@ export class NodeRpcClient {
             id: this.getRequestId(),
             method: RPCMethods.GET_ACCOUNT,
             params: [address],
-            data: undefined
         });
         return body.result.data;
     }

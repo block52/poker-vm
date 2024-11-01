@@ -8,7 +8,6 @@ export type RPCRequest = {
     id: string;
     method: RPCMethods;
     params: RPCRequestParams[RPCMethods];
-    data?: string;
 };
 
 export type RPCResponse<T> = {

@@ -238,6 +238,7 @@ export class RPC {
                     from,
                     to,
                     BigInt(amount),
+                    "",
                     validatorPrivateKey
                 );
                 result = await command.execute();
