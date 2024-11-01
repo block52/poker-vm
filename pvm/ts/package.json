@@ -10,7 +10,8 @@
     "test": "jest",
     "build": "tsc",
     "gen": "npx ts-node scripts/createGenesisBlock.ts",
-    "sign": "npx ts-node scripts/sign.ts"
+    "sign": "npx ts-node scripts/sign.ts",
+    "docker:build": "docker build -t ts_source ."
   },
   "dependencies": {
     "@types/cors": "^2.8.17",

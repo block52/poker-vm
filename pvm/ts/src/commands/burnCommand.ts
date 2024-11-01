@@ -34,7 +34,6 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         // If we're a validator, we can mint
         // Check the DB for the tx hash
         // If it's not in the DB, mint
-
         const account = await accounts.findOne({ address: this.receiver });
         if (account) {
             // return signResult(Transaction.fromDocument(existingTx), this.privateKey);
@@ -46,7 +45,7 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         }
 
         const abi = ["function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature)"];
-        const nonce = randomBytes(32);
+        const nonce = randomBytes(32); // use random command
 
         const baseRPCUrl = process.env.RPC_URL;
         const provider = new JsonRpcProvider(baseRPCUrl, undefined, {
@@ -57,7 +56,6 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         const bridge = new ethers.Contract(bridgeAddress, abi, provider);
 
         const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"))
-
         const burnTx: Transaction = Transaction.create(this.receiver, this.publicKey, this.amount, this.privateKey);
 
         // Send to mempool
