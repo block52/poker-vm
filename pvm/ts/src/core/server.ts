@@ -100,7 +100,7 @@ export class Server {
             }
             await this.syncMempool();
             await this.mine();
-        }, 15000);
+        }, 600000);
 
         this._started = true;
         console.log("Server started");
