@@ -24,7 +24,7 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss": "^3.4.14",
     "tailwindcss-animate": "^1.0.7",
-    "@bitcoinbrisbane/block52": "1.0.5"
+    "@bitcoinbrisbane/block52": "1.0.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",

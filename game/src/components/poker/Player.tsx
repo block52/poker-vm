@@ -29,8 +29,9 @@ const PlayerWidget: React.FC<PlayerProps> = ({ address, chips, seat, isActive, i
   return (
     <Card className={`${color} ${borderColor}`}>
       <CardHeader>
-        <CardTitle>{isUser ? "You" : `Player ${seat}`}</CardTitle>
-        <CardTitle>{formatAddress(address)}</CardTitle>
+        <CardTitle>{`${isUser ? "You" : "Player"}`}</CardTitle>
+        <CardDescription>{seat}</CardDescription>
+        <CardDescription>{formatAddress(address)}</CardDescription>
         <CardDescription>{chips} chips</CardDescription>
       </CardHeader>
       <CardFooter>

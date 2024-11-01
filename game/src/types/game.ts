@@ -123,10 +123,10 @@ export enum Round {
 }
 
 export enum Seat {
-    DEALER = 0,
-    LB = 1,
-    BB = 2,
-    NORMAL = 3
+    DEALER = "Dealer",
+    LB = "LB",
+    BB = "BB",
+    NORMAL = "---"
 }
 
 export type Player = {
@@ -134,12 +134,13 @@ export type Player = {
     chips: number;
     holeCards?: number[];
     lastAction?: PlayerAction;
-    seat: number;
+    seat: Seat;
     isActive: boolean;
     isTurn: boolean;
 };
 
 export type TexasHoldemState = {
+    address: string;
     smallBlind: number;
     bigBlind: number;
     players: Player[];
@@ -157,6 +158,7 @@ export type TexasHoldemState = {
 };
 
 export const exampleState: TexasHoldemState = {
+    address: "0xb52",
     smallBlind: 1,
     bigBlind: 2,
     players: [
@@ -192,8 +194,20 @@ export const exampleState: TexasHoldemState = {
                 action: Actions.FOLD
             },
             isTurn: false,
-            seat: Seat.NORMAL,
+            seat: Seat.DEALER,
             isActive: false
+        },
+        {
+            address: "0xba22370000000000000000000000000000000000",
+            chips: 300,
+            holeCards: [5, 8],
+            lastAction: {
+                action: Actions.CALL,
+                amount: 2
+            },
+            isTurn: false,
+            seat: Seat.NORMAL,
+            isActive: true
         },
 
     ],

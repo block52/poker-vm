@@ -2,12 +2,16 @@ import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
+import { Wallet } from "ethers";
 
 /**
  * NodeRpcClient class for interacting with a remote node via RPC
  */
 export class NodeRpcClient {
-    constructor(private url: string, private privateKey: string) {}
+    private wallet: Wallet;
+    constructor(private url: string, private privateKey: string) {
+        this.wallet = new Wallet(privateKey);
+    }
 
     /**
      * Get a random request ID
@@ -82,6 +86,11 @@ export class NodeRpcClient {
         return body.result.data;
     }
 
+    /**
+     * Get a list of blocks from the remote node
+     * @param count The number of blocks to get
+     * @returns A Promise resolving to an array of Block objects
+     */
     public async getBlocks(count?: number): Promise<BlockDTO[]> {
         const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO[]>}>
         (this.url, {
@@ -133,6 +142,13 @@ export class NodeRpcClient {
         });
     }
 
+    /**
+     * Mint funds to an account
+     * @param address The address of the recipient
+     * @param amount The amount to mint
+     * @param transactionId The transaction ID
+     * @returns A Promise that resolves when the request is complete
+     */
     public async mint(address: string, amount: string, transactionId: string): Promise<void> {
         await axios.post(this.url, {
             id: this.getRequestId(),
@@ -149,5 +165,53 @@ export class NodeRpcClient {
             params: [address],
         });
         return body.result.data;
+    }
+
+    public async fold(gameAddress: string): Promise<void> {
+        const gameCommand = {
+            method: "fold",
+            params: [],
+        };
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.TRANSFER,
+            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
+        });
+    }
+
+    public async call(gameAddress: string): Promise<void> {
+        const gameCommand = {
+            method: "call",
+            params: []
+        };
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.TRANSFER,
+            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
+        });
+    }
+
+    public async raise(gameAddress: string, amount: string): Promise<void> {
+        const gameCommand = {
+            method: "raise",
+            params: [amount],
+        };
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.TRANSFER,
+            params: [ this.wallet.address, gameAddress, amount, JSON.stringify(gameCommand)],
+        });
+    }
+
+    public async check(gameAddress: string): Promise<void> {
+        const gameCommand = {
+            method: "check",
+            params: [],
+        };
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.TRANSFER,
+            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
+        });
     }
 }

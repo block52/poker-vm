@@ -1,6 +1,6 @@
 {
   "name": "@bitcoinbrisbane/block52",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,7 +9,8 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "axios": "^1.7.7"
+    "axios": "^1.7.7",
+    "ethers": "^6.13.4"
   },
   "devDependencies": {
     "@types/node": "^22.7.6",

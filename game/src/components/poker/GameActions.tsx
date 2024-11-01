@@ -30,7 +30,7 @@ export function GameActions({
         <Button onClick={() => onCheck?.()} variant="secondary">
           Check
         </Button>
-        <Button onClick={() => onFold?.()} variant="destructive">
+        <Button onClick={() => onFold?.()} variant="secondary">
           Fold
         </Button>
       </div>
@@ -50,7 +50,7 @@ export function GameActions({
           onChange={(e) => setRaiseAmount(Number(e.target.value))}
           className="w-20"
         />
-        <Button onClick={() => onRaise?.(raiseAmount)} variant="default">
+        <Button variant="secondary" onClick={() => onRaise?.(raiseAmount)}>
           Raise
         </Button>
       </div>

@@ -54,7 +54,7 @@ export type RPCRequestParams = {
     [RPCMethods.MINED_BLOCK_HASH]: [string]; // [blockHash]
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
-    [RPCMethods.TRANSFER]: [string, string, string]; // [from, to, amount]
+    [RPCMethods.TRANSFER]: [string, string, string, string | null]; // [from, to, amount, data]
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
 };

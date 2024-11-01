@@ -4,25 +4,26 @@ import { GameActions } from "./GameActions";
 import { useGame } from "@/hooks/useGame";
 import { useWallet } from "@/hooks/useWallet";
 
-function handleCall() {
-    console.log("Call");
-}
-
-function handleRaise(amount: number) {
-    console.log(`Raise ${amount}`);
-}
-
-function handleCheck() {
-    console.log("Check");
-}
-
-function handleFold() {
-    const { b52 } = useWallet();
-    b52.fold();
-}
 
 export default function Game() {
     const [state] = useGame();
+    const { b52 } = useWallet();
+
+    const handleFold = () => {
+        b52?.fold(state.address);
+    };
+
+    const handleRaise = (amount: number) => {
+        b52?.raise(state.address, amount.toString());
+    };
+
+    const handleCall = () => {
+        b52?.call(state.address);
+    };
+
+    const handleCheck = () => {
+        b52?.check(state.address);
+    };
 
     return (
         <div>
@@ -42,4 +43,6 @@ export default function Game() {
             />
         </div>
     );
+
+    
 }
