@@ -11,7 +11,8 @@ openssl rand -hex 32 > .env
 
 # install node via nvm
 
-# install mongodb
+# start docker mongodb
+docker run -d -p 27017:27017 --name mongodb mongo
 
 # install pm2
 npm install pm2 -g
