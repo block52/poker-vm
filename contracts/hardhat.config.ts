@@ -4,7 +4,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import dotenv from "dotenv";
 dotenv.config();
 
-const DEPLOYER_PRIVATE_KEY = process.env.PK || "";
+const PK = process.env.PK || "";
 
 const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
@@ -13,10 +13,10 @@ const config: HardhatUserConfig = {
             chainId: 1337
         },
         base: {
-            accounts: DEPLOYER_PRIVATE_KEY,
-            chainId: 8453,
-            url: "https://mainnet.base.org"
-        }
+			accounts: PK ? [PK] : [],
+			chainId: 8453,
+			url: "https://mainnet.base.org",
+		},
     },
     solidity: "0.8.24",
     paths: {
