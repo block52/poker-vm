@@ -19,7 +19,7 @@ services:
       context: ./ts
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - 3000:3000
     depends_on:
       - mongo
 
@@ -31,6 +31,3 @@ services:
   #     - "443:443"
   #   depends_on:
   #     - pvm
-
-
-
