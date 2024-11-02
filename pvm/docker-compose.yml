@@ -3,9 +3,9 @@
 version: '3.9'
 
 services:
-  express-app:
+  pvm:
     build:
-      context: ./backend
+      context: ./ts
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
@@ -19,4 +19,14 @@ services:
     depends_on:
       - express-app
 
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: poker
+      # No auth for now
+      # MONGO_INITDB_ROOT_USERNAME: root
+      # MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
 
