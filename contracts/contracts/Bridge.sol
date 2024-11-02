@@ -2,13 +2,12 @@
 pragma solidity ^0.8.24;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IValidator } from "./Vault.sol";
-import { IOracle } from "./Oracle.sol";
 
 contract Bridge {
     address public immutable underlying;
     address public immutable vault;
-    address private immutable oracle;
     address private immutable _self;
     uint256 public immutable lockTime;
 
@@ -16,36 +15,40 @@ contract Bridge {
     mapping(address => uint256) public balances;
     mapping(bytes32 => bool) private usedNonces;
 
-    constructor(address _underlying, address _vault, address _oracle, uint256 _lockTime) {
+    constructor(address _underlying, address _vault, uint256 _lockTime) {
         underlying = _underlying;
         vault = _vault;
-        oracle = _oracle;
         _self = address(this);
         lockTime = _lockTime;
     }
 
+    function name () external view returns (string memory) {
+        return string.concat(IERC20Metadata(underlying).name(), " Bridge");
+    }
+
     function deposit(uint256 amount) external {
+        _deposit(amount, msg.sender);
+    }
+
+    function _deposit(uint256 amount, address to) private {
         IERC20 token = IERC20(underlying);
 
-        lockTimes[msg.sender] += block.timestamp + lockTime;
+        lockTimes[to] += block.timestamp + lockTime;
         token.transferFrom(msg.sender, _self, amount);
-        
-        // Get exchange rate from oracle
-        uint256 rate = IOracle(oracle).getRate(amount);
-        balances[msg.sender] += rate;
+        balances[to] += amount;
 
-        emit Deposited(msg.sender, amount);
+        emit Deposited(to, amount);
     }
 
     function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature) external {
-        require(!usedNonces[nonce], "Bridge: nonce already used");
-        require(lockTimes[to] >= block.timestamp, "Bridge: funds are locked");
-        require(IERC20(underlying).balanceOf(to) >= amount, "Bridge: insufficient balance");
+        require(!usedNonces[nonce], "withdraw: nonce already used");
+        require(lockTimes[to] >= block.timestamp, "withdraw: funds are locked");
+        require(IERC20(underlying).balanceOf(to) >= amount, "withdraw: insufficient balance");
 
         bytes32 messageHash = keccak256(abi.encodePacked(to, amount, nonce));
         address signer = recoverSignerAddress(messageHash, signature);
 
-        require(IValidator(vault).isValidator(signer), "Bridge: invalid signature");
+        require(IValidator(vault).isValidator(signer), "withdraw: invalid signature");
 
         usedNonces[nonce] = true;
         balances[to] -= amount;
@@ -53,6 +56,13 @@ contract Bridge {
         token.transfer(to, amount);
 
         emit Withdrawn(to, amount, nonce);
+    }
+
+    function receiveApproval(address from, uint256 amount, address token, bytes calldata data) external {
+        require(msg.sender == underlying, "receiveApproval: invalid sender");
+        require(token == underlying, "receiveApproval: invalid token");
+
+        _deposit(amount, from);
     }
 
     function recoverSignerAddress(bytes32 messageHash, bytes memory signature) private pure returns (address) {

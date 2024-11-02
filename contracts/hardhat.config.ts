@@ -4,18 +4,13 @@ import "@nomicfoundation/hardhat-toolbox";
 import dotenv from "dotenv";
 dotenv.config();
 
-const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [];
+const DEPLOYER_PRIVATE_KEY = process.env.PK || "";
 
 const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
             chainId: 1337
-        },
-        sepolia: {
-            accounts: DEPLOYER_PRIVATE_KEY,
-            chainId: 11155111,
-            url: process.env.NODE_URL
         },
         base: {
             accounts: DEPLOYER_PRIVATE_KEY,
@@ -35,7 +30,6 @@ const config: HardhatUserConfig = {
     },
     etherscan: {
         apiKey: {
-            sepolia: process.env.ETHERSCAN_API_KEY || "",
             base: process.env.BASESCAN_API_KEY || ""
         },
         customChains: [
