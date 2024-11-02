@@ -8,6 +8,8 @@ import { randomBytes } from "crypto";
 
 export class BurnCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
+    public readonly BridgeAddress = "0xD6c2f28c18Ca44a1199416458e1735F564812F1c";
+
     constructor(readonly receiver: string, readonly amount: bigint, private readonly privateKey: string) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
@@ -52,11 +54,10 @@ export class BurnCommand implements ISignedCommand<Transaction> {
             staticNetwork: true
         });
 
-        const bridgeAddress = process.env.BRIDGE_CONTRACT_ADDRESS || "";
-        const bridge = new ethers.Contract(bridgeAddress, abi, provider);
+        const bridge = new ethers.Contract(this.BridgeAddress, abi, provider);
 
         const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"))
-        const burnTx: Transaction = Transaction.create(this.receiver, this.publicKey, this.amount, this.privateKey);
+        const burnTx: Transaction = Transaction.create(this.BridgeAddress, this.publicKey, this.amount, this.privateKey);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
