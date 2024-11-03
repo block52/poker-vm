@@ -5,10 +5,12 @@ import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { randomBytes } from "crypto";
+import { RandomCommand } from "./randomCommand";
 
 export class BurnCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
     public readonly BridgeAddress = "0xD6c2f28c18Ca44a1199416458e1735F564812F1c";
+    private readonly randomCommand: RandomCommand;
 
     constructor(readonly receiver: string, readonly amount: bigint, private readonly privateKey: string) {
         if (amount <= 0) {
@@ -26,6 +28,7 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         this.receiver = receiver;
         this.amount = amount;
         this.privateKey = privateKey;
+        this.randomCommand = new RandomCommand(32, "", this.privateKey);
         const signer = new ethers.Wallet(privateKey);
         this.publicKey = signer.address;
     }
@@ -47,7 +50,7 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         }
 
         const abi = ["function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature)"];
-        const nonce = randomBytes(32); // use random command
+        const nonce = await this.randomCommand.execute();
 
         const baseRPCUrl = process.env.RPC_URL;
         const provider = new JsonRpcProvider(baseRPCUrl, undefined, {

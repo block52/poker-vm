@@ -17,7 +17,7 @@ describe("Token", () => {
     it("Should set the name and symbol", async function () {
       const { token } = await loadFixture(fixture);
       
-      expect(await token.name()).to.equal("TEX");
+      expect(await token.name()).to.equal("Block52");
     });
   });
 });
