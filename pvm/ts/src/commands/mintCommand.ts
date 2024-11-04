@@ -11,7 +11,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
     constructor(
         readonly receiver: string,
         readonly amount: bigint,
-        readonly transactionId: string,
+        readonly nonce: string,
         private readonly privateKey: string
     ) {
         if (amount <= 0) {
@@ -22,8 +22,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
             throw new Error("Receiver must be provided");
         }
 
-        if (!transactionId) {
-            throw new Error("Transaction ID must be provided");
+        if (!nonce) {
+            throw new Error("Nonce must be provided");
         }
 
         if (!privateKey) {
@@ -32,7 +32,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
 
         this.receiver = receiver;
         this.amount = amount;
-        this.transactionId = transactionId;
+        this.nonce = nonce
         const signer = new ethers.Wallet(privateKey);
         this.publicKey = signer.address;
     }
