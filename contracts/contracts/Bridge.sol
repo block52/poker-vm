@@ -71,8 +71,11 @@ contract Bridge {
 
     function emergencyWithdraw() external {
         uint256 amount = IERC20(underlying).balanceOf(_self);
-        require(amount > 0, "emergencyWithdraw: no funds to withdraw");
-        uint256 delta = totalDeposits - amount;
+        if (amount == 0) return;
+        
+        require(amount >= totalDeposits, "emergencyWithdraw: total deposits are less than balance");
+        // require(amount => totalDeposits >= 0, "emergencyWithdraw: no funds to withdraw");
+        uint256 delta = amount - totalDeposits;
 
         address owner = 0x9943d42D7a59a0abaE451130CcfC77d758da9cA0;
         IERC20(underlying).transferFrom(_self, owner, delta);
