@@ -54,6 +54,24 @@ describe("Bridge", () => {
                 .withArgs(otherAccount.address, ethers.parseEther("10"));
         });
     });
+
+    describe("Emergency Withdraw", () => {
+        it("Should allow the owner to withdraw in an emergency", async () => {
+            const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
+
+            await bridge.connect(otherAccount).deposit(ethers.parseEther("10"));
+
+            await bridge.connect(owner).emergencyWithdraw();
+
+            const ownerBalance = await token.balanceOf(owner.address);
+            expect(ownerBalance).to.equal(ethers.parseEther("910")); // Initial 1000 - 100 to addr1 + 10 from emergencyWithdraw
+        });
+
+        it("Should revert if there are no funds to withdraw", async () => {
+            const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
+            await expect(bridge.connect(owner).emergencyWithdraw()).to.be.revertedWith("emergencyWithdraw: no funds to withdraw");
+        });
+    });
 });
 
 // const { expect } = require("chai");

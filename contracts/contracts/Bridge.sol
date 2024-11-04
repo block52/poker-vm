@@ -15,6 +15,7 @@ contract Bridge {
     mapping(address => uint256) public lockTimes;
     mapping(address => uint256) public balances;
     mapping(bytes32 => bool) private usedNonces;
+    uint256 public depositIndex;
 
     constructor(address _underlying, address _vault, uint256 _lockTime) {
         underlying = _underlying;
@@ -39,8 +40,10 @@ contract Bridge {
 
         balances[to] += amount;
         totalDeposits += amount;
+        
+        emit Deposited(to, amount, depositIndex);
 
-        emit Deposited(to, amount);
+        depositIndex++;
     }
 
     function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature) external {
@@ -105,6 +108,6 @@ contract Bridge {
         return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", message));
     }
 
-    event Deposited(address indexed account, uint256 amount);
+    event Deposited(address indexed account, uint256 amount, uint256 index);
     event Withdrawn(address indexed account, uint256 amount, bytes32 nonce);
 }
