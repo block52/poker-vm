@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ethers, JsonRpcProvider } from "ethers";
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models/transaction";
 import transactions from "../schema/transactions";
@@ -6,6 +6,7 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class MintCommand implements ISignedCommand<Transaction> {
+    public readonly BridgeAddress = "0xD6c2f28c18Ca44a1199416458e1735F564812F1c";
     private readonly publicKey: string;
 
     constructor(
@@ -49,8 +50,27 @@ export class MintCommand implements ISignedCommand<Transaction> {
             return signResult(Transaction.fromDocument(existingTx), this.privateKey);
         }
 
+        // Get amount from the event and check it matches the amount in the transaction
+        const abi = [
+            "event Deposited(address indexed account, uint256 amount, uint256 index)"
+        ];
+
+        const baseRPCUrl = process.env.RPC_URL;
+        const provider = new JsonRpcProvider(baseRPCUrl, undefined, {
+            staticNetwork: true
+        });
+
+        const bridge = new ethers.Contract(this.BridgeAddress, abi, provider);
+        const filter = bridge.filters.Deposited(this.transactionId);
+
+        const logs = await provider.getLogs({
+            ...filter,
+            fromBlock: 0,
+            toBlock: "latest"
+        });
+
         const mintTx: Transaction = Transaction.create(this.receiver, this.publicKey, this.amount, this.privateKey);
-        
+
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
         await mempoolInstance.add(mintTx);

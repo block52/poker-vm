@@ -52,11 +52,13 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         const abi = ["function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature)"];
         const nonce = await this.randomCommand.execute();
 
+        // TODO: Move to constructor
         const baseRPCUrl = process.env.RPC_URL;
         const provider = new JsonRpcProvider(baseRPCUrl, undefined, {
             staticNetwork: true
         });
 
+        // Move to base class
         const bridge = new ethers.Contract(this.BridgeAddress, abi, provider);
 
         const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"))
