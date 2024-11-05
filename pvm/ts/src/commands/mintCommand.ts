@@ -6,7 +6,7 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class MintCommand implements ISignedCommand<Transaction> {
-    public readonly BridgeAddress = "0xD6c2f28c18Ca44a1199416458e1735F564812F1c";
+    public readonly BridgeAddress = "0x81553C5c695C5eF915D0c54508FC3F90a8330796";
     private readonly publicKey: string;
 
     constructor(

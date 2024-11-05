@@ -9,7 +9,7 @@ import { RandomCommand } from "./randomCommand";
 
 export class BurnCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
-    public readonly BridgeAddress = "0xD6c2f28c18Ca44a1199416458e1735F564812F1c";
+    public readonly BridgeAddress = "0x81553C5c695C5eF915D0c54508FC3F90a8330796";
     private readonly randomCommand: RandomCommand;
 
     constructor(readonly receiver: string, readonly amount: bigint, private readonly privateKey: string) {
