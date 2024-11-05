@@ -16,7 +16,7 @@ class CallAction extends BaseAction {
         this.verify(player);
         const amount = this.getAmount(player);
         player.chips -= amount;
-        this.update.addMove({ playerId: player.id, action: ActionType.BET, amount });
+        this.update.addMove({ playerId: player.id, action: ActionType.CALL, amount });
     }
 
     private getAmount(player: Player) {

@@ -3,6 +3,7 @@ import { Card, Deck, DeckType } from "../models/deck";
 import AllInAction from "./actions/allInAction";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
+import BlindAction from "./actions/blindAction";
 import CallAction from "./actions/callAction";
 import CheckAction from "./actions/checkAction";
 import FoldAction from "./actions/foldAction";
@@ -33,13 +34,17 @@ class TexasHoldemGame {
     this._currentStage = StageType.PRE_FLOP;
     this._deck = new Deck(DeckType.STANDARD_52);
     this._communityCards = [];
-    this._currentPlayer = (this.smallBlindPosition + 1) % _players.length;
+    this._currentPlayer = (this._buttonPosition + 3) % _players.length;
 
     const update = new class implements IUpdate {
       constructor(public game: TexasHoldemGame) { }
-      addMove(move: Move): void { this.game._stages[this.game._currentStage].moves.push(move); }
+      addMove(move: Move): void {
+        this.game._stages[this.game._currentStage].moves.push(move);
+        this.game.nextPlayer();
+      }
     }(this);
     this._actions = [
+      new BlindAction(this, update),
       new FoldAction(this, update),
       new CheckAction(this, update),
       new BetAction(this, update),
@@ -54,44 +59,17 @@ class TexasHoldemGame {
   get bigBlind() { return 2 * this.smallBlind }
   get bigBlindPosition() { return (this._buttonPosition + 2) % this._players.length }
   get smallBlindPosition() { return (this._buttonPosition + 1) % this._players.length }
+  get currentPlayer() { return this._players[this._currentPlayer].id };
+  get currentStage() { return this._currentStage };
 
   private start() {
-    /* !!
-    this._deck.shuffle([]);
-    this.placeBet(this.smallBlindPosition, this.smallBlind);
-    this.placeBet(this.bigBlindPosition, this.bigBlind); */
+    // !! this._deck.shuffle([]);
+    this.performAction(this._players[this.bigBlindPosition].id, ActionType.BLIND, this.bigBlind);
+    this.performAction(this._players[this.smallBlindPosition].id, ActionType.BLIND, this.smallBlind);
   }
-
-  /* !!
-  nextPlayer() {
-    do {
-      this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
-    } while (this.players[this.currentPlayer].status !== "active");
-  }
-
-  isRoundComplete() {
-    const activePlayers = this.players.filter((p) => p.status === "active");
-    return (
-      activePlayers.every(
-        (p) => p.currentBet === this.currentBet || p.chipStack === 0
-      ) && this.currentPlayer === this.lastRaiseIndex
-    );
-  }
-  */
 
   performAction(playerId: string, action: ActionType, amount?: number) {
     return this._actions.find(a => a.action == action)?.execute(this.getPlayer(playerId), amount);
-  }
-
-  private nextStage() {
-    if (this._currentStage < StageType.SHOWDOWN)
-      this._currentStage++;
-    this._stages.push({ moves: [] });
-    if (this._currentStage == StageType.FLOP)
-      this._communityCards.push(...this._deck.deal(3));
-    else if ((this._currentStage == StageType.TURN) || (this._currentStage == StageType.RIVER))
-      this._communityCards.push(...this._deck.deal(1));
-    this._currentPlayer = this.smallBlindPosition;
   }
 
   getPlayer(playerId: string): Player {
@@ -102,27 +80,70 @@ class TexasHoldemGame {
   }
 
   getPlayerStatus(player: Player) {
-    // !! need to handle earlier stages
-    if (this._stages[this._currentStage].moves.some(m => m.playerId == player.id && m.action == ActionType.FOLD))
-      return PlayerStatus.FOLD;
-    if (this._stages[this._currentStage].moves.some(m => m.playerId == player.id && m.action == ActionType.ALL_IN))
-      return PlayerStatus.ALL_IN;
+    for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
+      if (this._stages[stage].moves.some(m => (m.playerId == player.id) && (m.action == ActionType.FOLD)))
+        return PlayerStatus.FOLD;
+      if (this._stages[stage].moves.some(m => (m.playerId == player.id) && (m.action == ActionType.ALL_IN)))
+        return PlayerStatus.ALL_IN;
+    }
     return PlayerStatus.ACTIVE;
   }
 
-  getStakes(): Map<string, number> {
-    return this._stages[this._currentStage].moves.reduce(
+  getStakes(stage: StageType = this._currentStage): Map<string, number> {
+    return this._stages[stage].moves.reduce(
       (acc, v) => { acc.set(v.playerId, (acc.get(v.playerId) ?? 0) + (v.amount ?? 0)); return acc; },
       new Map<string, number>());
   }
 
-  getPlayerStake(player: Player): number {
-    return this.getStakes().get(player.id) ?? 0;
+  getPlayerStake(player: Player, stage: StageType = this._currentStage): number {
+    return this.getStakes(stage).get(player.id) ?? 0;
   }
 
-  getMaxStake() {
-    const stakes = this.getStakes();
+  getMaxStake(stage: StageType = this._currentStage) {
+    const stakes = this.getStakes(stage);
     return stakes.size ? Math.max(...stakes.values()) : 0;
+  }
+
+  getPot() {
+    let pot = 0;
+    for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++)
+      pot += Array.from(this.getStakes(stage).values()).reduce((acc, v) => acc + v, 0);
+    return pot;
+  }
+
+  private isPlayerTurnFinished(player: Player, maxStake: number) {
+    return this._stages[this._currentStage].moves.some(m => (m.playerId == player.id)) && (this.getPlayerStake(player) == maxStake);
+  }
+
+  private nextPlayer() {
+    const active = [...Array(this._players.length).keys()].reduce((acc, i) => {
+      const index = (this._currentPlayer + 1 + i) % this._players.length;
+      return this.getPlayerStatus(this._players[index]) === PlayerStatus.ACTIVE ? [...acc, index] : acc;
+    }, [] as Array<number>);
+    const maxStake = this.getMaxStake();
+    if ((active.length <= 1) || active.every(i => this.isPlayerTurnFinished(this._players[i], maxStake)))
+      this.nextStage();
+    else
+      this._currentPlayer = active[0];
+  }
+
+  private nextStage() {
+    if (this._currentStage < StageType.SHOWDOWN)
+      this._currentStage++;
+    if (this._currentStage != StageType.SHOWDOWN) {
+      this._stages.push({ moves: [] });
+      if (this._currentStage == StageType.FLOP)
+        this._communityCards.push(...this._deck.deal(3));
+      else if ((this._currentStage == StageType.TURN) || (this._currentStage == StageType.RIVER))
+        this._communityCards.push(...this._deck.deal(1));
+      this._currentPlayer = this._buttonPosition;
+      this.nextPlayer();
+    }
+    else
+      this.calculateWinner();
+  }
+
+  private calculateWinner() {
   }
 }
 

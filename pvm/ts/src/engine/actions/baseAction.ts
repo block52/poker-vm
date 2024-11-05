@@ -7,6 +7,8 @@ abstract class BaseAction {
     abstract get action(): ActionType;
 
     verify(player: Player, amount?: number): void {
+        if (this.game.currentPlayer != player.id)
+            throw new Error("Must be currently active player.")
         if (this.game.getPlayerStatus(player) != PlayerStatus.ACTIVE)
             throw new Error(`Only active player can ${this.action}.`);
     }

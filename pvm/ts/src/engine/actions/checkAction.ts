@@ -6,14 +6,13 @@ class CheckAction extends BaseAction {
 
     verify(player: Player) {
         super.verify(player);
-        // !! need to check every time to make sure they are the current player also
         if (this.game.getPlayerStake(player) < this.game.getMaxStake())
             throw new Error("Player has insufficient stake to check.")
     }
 
     execute(player: Player) {
         super.execute(player);
-        this.update.addMove({ playerId: player.id, action: ActionType.BET, amount: 0 });
+        this.update.addMove({ playerId: player.id, action: ActionType.CHECK, amount: 0 });
     }
 }
 
