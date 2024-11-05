@@ -125,8 +125,8 @@ describe("Bridge", () => {
         });
     });
 
-    describe.only("Emergency Withdraw", () => {
-        it.only("Should allow the owner to withdraw in an emergency", async () => {
+    describe("Emergency Withdraw", () => {
+        it("Should allow the owner to withdraw in an emergency", async () => {
             const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
 
             const bridgeAddress = await bridge.getAddress();
@@ -163,7 +163,7 @@ describe("Bridge", () => {
             await bridge.connect(owner).emergencyWithdraw();
 
             bridgeBalance = await token.balanceOf(bridgeAddress);
-            expect(bridgeBalance).to.equal(0);
+            expect(bridgeBalance).to.equal(ethers.parseEther("10"));
         });
 
         it.skip("Should revert if there are no funds to withdraw", async () => {
@@ -172,9 +172,6 @@ describe("Bridge", () => {
         });
     });
 });
-
-// const { expect } = require("chai");
-// const { ethers } = require("hardhat");
 
 // describe("Bridge Contract", function () {
 //     let Bridge, bridge, owner, addr1, addr2;

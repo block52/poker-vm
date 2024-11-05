@@ -6,6 +6,12 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { IValidator } from "./Vault.sol";
 
 contract Bridge {
+
+    struct Deposit {
+        address account;
+        uint256 amount;
+    }
+
     address public immutable underlying;
     address public immutable vault;
     address private immutable _self;
@@ -15,6 +21,7 @@ contract Bridge {
     mapping(address => uint256) public lockTimes;
     mapping(address => uint256) public balances;
     mapping(bytes32 => bool) private usedNonces;
+    mapping(uint256 => Deposit) public deposits;
     uint256 public depositIndex;
 
     constructor(address _underlying, address _vault, uint256 _lockTime) {
@@ -27,7 +34,7 @@ contract Bridge {
         lockTime = _lockTime;
     }
 
-    function name () external view returns (string memory) {
+    function name() external view returns (string memory) {
         return string.concat(IERC20Metadata(underlying).name(), " Bridge");
     }
 
@@ -43,7 +50,8 @@ contract Bridge {
 
         balances[to] += amount;
         totalDeposits += amount;
-        
+
+        deposits[depositIndex] = Deposit(to, amount);
         emit Deposited(to, amount, depositIndex);
 
         depositIndex++;
@@ -72,7 +80,7 @@ contract Bridge {
     function emergencyWithdraw() external {
         uint256 amount = IERC20(underlying).balanceOf(_self);
         if (amount == 0) return;
-        
+
         require(amount >= totalDeposits, "emergencyWithdraw: total deposits are less than balance");
         // require(amount => totalDeposits >= 0, "emergencyWithdraw: no funds to withdraw");
         uint256 delta = amount - totalDeposits;
