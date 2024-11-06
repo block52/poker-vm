@@ -21,15 +21,9 @@ import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
 import { TransferCommand } from "./commands/transferCommand";
 import { makeErrorRPCResponse } from "./types/response";
-import {
-    CONTROL_METHODS,
-    READ_METHODS,
-    WRITE_METHODS
-} from "./types/rpc";
-
+import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 
 export class RPC {
-
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
         if (!request) {
             throw new Error("Null request");
@@ -46,21 +40,18 @@ export class RPC {
 
         if (READ_METHODS.includes(method)) {
             return this.handleReadMethod(method, request);
-        }      
+        }
         if (WRITE_METHODS.includes(method)) {
             return this.handleWriteMethod(method, request);
-        } 
+        }
         if (CONTROL_METHODS.includes(method)) {
             return this.handleControlMethod(method, request);
         }
 
-        return makeErrorRPCResponse(request.id, "Method not found"); 
+        return makeErrorRPCResponse(request.id, "Method not found");
     }
 
-    static async handleControlMethod(
-        method: RPCMethods,
-        request: RPCRequest
-    ): Promise<RPCResponse<any>> {
+    static async handleControlMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<any>> {
         const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
         let result: any;
         switch (method) {
@@ -76,7 +67,7 @@ export class RPC {
             }
             case RPCMethods.SHUTDOWN: {
                 const [username, password] = request.params as RPCRequestParams[RPCMethods.SHUTDOWN];
-                const command = new ShutdownCommand(username, password,);
+                const command = new ShutdownCommand(username, password);
                 result = await command.execute();
                 break;
             }
@@ -89,16 +80,12 @@ export class RPC {
         };
     }
     // Return a JSONModel
-    static async handleReadMethod(
-        method: RPCMethods,
-        request: RPCRequest
-    ): Promise<RPCResponse<ISignedResponse<any>>> {
+    static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
         let result: ISignedResponse<any>;
         const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
-        
-        switch (method) {
 
+        switch (method) {
             case RPCMethods.GET_ACCOUNT: {
                 if (!request.params) {
                     return makeErrorRPCResponse(id, "Invalid params");
@@ -107,7 +94,7 @@ export class RPC {
                 result = await command.execute();
                 break;
             }
-            
+
             case RPCMethods.GET_BLOCK: {
                 let command = new BlockCommand(undefined, validatorPrivateKey);
 
@@ -179,7 +166,6 @@ export class RPC {
 
             default:
                 return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
-
         }
 
         if (result === null) {
@@ -190,17 +176,14 @@ export class RPC {
             id,
             result: {
                 ...result,
-                data: result.data?.toJson ? result.data.toJson() : result.data,
+                data: result.data?.toJson ? result.data.toJson() : result.data
             }
             //result.data?.toJson ? result.data.toJson() : result.data
         };
     }
 
     // These always return a transaction hash
-    static async handleWriteMethod(
-        method: RPCMethods,
-        request: RPCRequest
-    ): Promise<RPCResponse<ISignedResponse<any>>> {
+    static async handleWriteMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
         const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
@@ -208,19 +191,12 @@ export class RPC {
         switch (method) {
             // Write methods
             case RPCMethods.MINT: {
-                if (request.params?.length !== 3) {
+                if (request.params?.length !== 1) {
                     return makeErrorRPCResponse(id, "Invalid params");
-
                 }
-                const [to, amount, transactionId] =
-                    request.params as RPCRequestParams[RPCMethods.MINT];
+                const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
 
-                const command = new MintCommand(
-                    to,
-                    BigInt(amount),
-                    transactionId,
-                    validatorPrivateKey
-                );
+                const command = new MintCommand(depositIndex, validatorPrivateKey);
 
                 result = await command.execute();
 
@@ -231,16 +207,9 @@ export class RPC {
                 // if (request.params?.length !== 3) {
                 //     return makeErrorRPCResponse(id, "Invalid params");
                 // }
-                const [from, to, amount, data] =
-                    request.params as RPCRequestParams[RPCMethods.TRANSFER];
+                const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
 
-                const command = new TransferCommand(
-                    from,
-                    to,
-                    BigInt(amount),
-                    data,
-                    validatorPrivateKey,
-                );
+                const command = new TransferCommand(from, to, BigInt(amount), data, validatorPrivateKey);
                 result = await command.execute();
 
                 break;
@@ -267,7 +236,6 @@ export class RPC {
 
             default:
                 return makeErrorRPCResponse(id, "Method not found");
-
         }
         return {
             id,
