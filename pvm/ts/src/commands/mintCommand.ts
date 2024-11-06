@@ -1,41 +1,39 @@
-import { ethers, JsonRpcProvider } from "ethers";
+import { ethers, JsonRpcProvider, Contract, InterfaceAbi, ZeroAddress } from "ethers";
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models/transaction";
-import transactions from "../schema/transactions";
+// import Blocks from "../schema/transactions";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
+import { NativeToken } from "../models/nativeToken";
 
 export class MintCommand implements ISignedCommand<Transaction> {
-    public readonly BridgeAddress = "0x81553C5c695C5eF915D0c54508FC3F90a8330796";
     private readonly publicKey: string;
+    private readonly provider: JsonRpcProvider;
+    private readonly bridge: Contract;
+    private readonly underlyingAssetAbi: InterfaceAbi;
 
-    constructor(
-        readonly receiver: string,
-        readonly amount: bigint,
-        readonly nonce: string,
-        private readonly privateKey: string
-    ) {
-        if (amount <= 0) {
-            throw new Error("Amount must be greater than 0");
-        }
-
-        if (!receiver) {
-            throw new Error("Receiver must be provided");
-        }
-
-        if (!nonce) {
-            throw new Error("Nonce must be provided");
+    constructor(readonly depositIndex: string, private readonly privateKey: string) {
+        if (!depositIndex) {
+            throw new Error("Deposit index must be provided");
         }
 
         if (!privateKey) {
             throw new Error("Private key must be provided");
         }
 
-        this.receiver = receiver;
-        this.amount = amount;
-        this.nonce = nonce
+        this.depositIndex = depositIndex;
         const signer = new ethers.Wallet(privateKey);
         this.publicKey = signer.address;
+
+        const bridgeAbi = ["function deposits(uint256) view returns (tuple(address account, uint256 amount))", "function underlying() view returns (address)"];
+        this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
+
+        const baseRPCUrl = process.env.RPC_URL;
+        this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
+            staticNetwork: true
+        });
+
+        this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -45,31 +43,29 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // Check the DB for the tx hash
         // If it's not in the DB, mint
 
-        const existingTx = await transactions.findOne({ hash: this.transactionId });
-        if (existingTx) {
-            return signResult(Transaction.fromDocument(existingTx), this.privateKey);
+        // const existingTx = await Blocks.findOne({ transactions: { $elemMatch: { identifier: this.depositIndex } } });
+        // console.log(existingTx);
+        // if (existingTx) {
+        //     return signResult(Transaction.fromDocument(existingTx), this.privateKey);
+        // }
+
+        const [receiver, amount] = await this.bridge.deposits(this.depositIndex);
+
+        const underlyingAssetAddress = await this.bridge.underlying();
+        const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
+        const underlyingAssetDecimals = await underlyingAsset.decimals();
+
+        const amountToMint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
+
+        if (receiver == ethers.ZeroAddress) {
+            throw new Error("Receiver must not be zero address");
         }
 
-        // Get amount from the event and check it matches the amount in the transaction
-        const abi = [
-            "event Deposited(address indexed account, uint256 amount, uint256 index)"
-        ];
+        if (amount <= 0) {
+            throw new Error("Amount must be greater than 0");
+        }
 
-        const baseRPCUrl = process.env.RPC_URL;
-        const provider = new JsonRpcProvider(baseRPCUrl, undefined, {
-            staticNetwork: true
-        });
-
-        const bridge = new ethers.Contract(this.BridgeAddress, abi, provider);
-        const filter = bridge.filters.Deposited(this.transactionId);
-
-        const logs = await provider.getLogs({
-            ...filter,
-            fromBlock: 0,
-            toBlock: "latest"
-        });
-
-        const mintTx: Transaction = Transaction.create(this.receiver, this.publicKey, this.amount, this.privateKey);
+        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, amountToMint, this.privateKey);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
