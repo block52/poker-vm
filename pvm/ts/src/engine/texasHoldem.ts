@@ -3,11 +3,12 @@ import { Card, Deck, DeckType } from "../models/deck";
 import AllInAction from "./actions/allInAction";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
-import BlindAction from "./actions/blindAction";
+import BigBlindAction from "./actions/bigBlindAction";
 import CallAction from "./actions/callAction";
 import CheckAction from "./actions/checkAction";
 import FoldAction from "./actions/foldAction";
 import RaiseAction from "./actions/raiseAction";
+import SmallBlindAction from "./actions/smallBlindAction";
 
 type Stage = {
   moves: Move[];
@@ -29,7 +30,7 @@ class TexasHoldemGame {
   private _deck: Deck;
   private _actions: BaseAction[];
 
-  constructor(private _players: Player[], private smallBlind: number, private _buttonPosition: number) {
+  constructor(private _players: Player[], private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number) {
     this._stages = [{ moves: [] }];
     this._currentStage = StageType.PRE_FLOP;
     this._deck = new Deck(DeckType.STANDARD_52);
@@ -44,7 +45,6 @@ class TexasHoldemGame {
       }
     }(this);
     this._actions = [
-      new BlindAction(this, update),
       new FoldAction(this, update),
       new CheckAction(this, update),
       new BetAction(this, update),
@@ -53,23 +53,39 @@ class TexasHoldemGame {
       new AllInAction(this, update)
     ];
 
-    this.start();
+    this.start(update);
   }
 
-  get bigBlind() { return 2 * this.smallBlind }
-  get bigBlindPosition() { return (this._buttonPosition + 2) % this._players.length }
-  get smallBlindPosition() { return (this._buttonPosition + 1) % this._players.length }
-  get currentPlayer() { return this._players[this._currentPlayer].id };
-  get currentStage() { return this._currentStage };
+  get bigBlind() { return this._bigBlind; }
+  get smallBlind() { return this._smallBlind; }
+  get bigBlindPosition() { return (this._buttonPosition + 2) % this._players.length; }
+  get smallBlindPosition() { return (this._buttonPosition + 1) % this._players.length; }
+  get currentPlayerId() { return this._players[this._currentPlayer].id; }
+  get currentStage() { return this._currentStage; }
 
-  private start() {
+  private start(update: IUpdate) {
     // !! this._deck.shuffle([]);
-    this.performAction(this._players[this.bigBlindPosition].id, ActionType.BLIND, this.bigBlind);
-    this.performAction(this._players[this.smallBlindPosition].id, ActionType.BLIND, this.smallBlind);
+    this._players.forEach(p => p.holeCards = this._deck.deal(2) as [Card, Card]);
+    new BigBlindAction(this, update).execute(this._players[this.bigBlindPosition]);
+    new SmallBlindAction(this, update).execute(this._players[this.smallBlindPosition]);
+  }
+
+  getValidActions(playerId: string) {
+    const player = this.getPlayer(playerId);
+    return this._actions.map(verifyAction).filter(a => a);
+
+    function verifyAction(action: BaseAction) {
+      try {
+        const minAmount = action.verify(player);
+        return { action: action.type, ...minAmount ? { minAmount } : {} };
+      } catch {
+        return null;
+      }
+    }
   }
 
   performAction(playerId: string, action: ActionType, amount?: number) {
-    return this._actions.find(a => a.action == action)?.execute(this.getPlayer(playerId), amount);
+    return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
   }
 
   getPlayer(playerId: string): Player {

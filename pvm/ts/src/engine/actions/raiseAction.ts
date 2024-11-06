@@ -2,29 +2,20 @@ import { ActionType, Player } from "../types";
 import BaseAction from "./baseAction";
 
 class RaiseAction extends BaseAction {
-    get action(): ActionType { return ActionType.CALL }
+    get type(): ActionType { return ActionType.RAISE }
 
-    verify(player: Player, amount?: number) {
-        super.verify(player, amount);
+    verify(player: Player) {
+        super.verify(player);
         if (this.game.getMaxStake() == 0)
             throw new Error("A bet must be made before it can be raised.")
-        const raisePlusCallAmount = this.getRaisePlusCallAmount(player, amount!);
-        if (player.chips < raisePlusCallAmount)
+        if (player.chips < this.getDeductAmount(player, this.game.bigBlind))
             throw new Error("Player has insufficient chips to raise.");
-        if (amount! < this.game.bigBlind)
-            throw new Error("Raise is not large enough.");
+        return this.game.bigBlind;
     }
 
-    execute(player: Player, amount?: number) {
-        super.verify(player, amount);
-        player.chips -= amount!;
-        this.update.addMove({ playerId: player.id, action: ActionType.RAISE, amount });
+    protected getDeductAmount(player: Player, amount?: number): number {
+        return this.game.getMaxStake() - this.game.getPlayerStake(player) + amount!;
     }
-
-    private getRaisePlusCallAmount(player: Player, amount: number) {
-        return this.game.getMaxStake() - this.game.getPlayerStake(player) + amount;
-    }
-
 }
 
 export default RaiseAction;

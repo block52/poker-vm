@@ -66,13 +66,14 @@ export type Player = {
 };
 
 export enum ActionType {
-    BLIND,
-    FOLD,
-    CHECK,
-    BET,
-    CALL,
-    RAISE,
-    ALL_IN
+    SMALL_BLIND = "post small blind",
+    BIG_BLIND = "post big blind",
+    FOLD = "fold",
+    CHECK = "check",
+    BET = "bet",
+    CALL = "call",
+    RAISE = "raise",
+    ALL_IN = "going all-in"
 }
 
 export enum PlayerStatus {

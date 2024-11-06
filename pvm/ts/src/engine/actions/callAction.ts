@@ -2,24 +2,18 @@ import { ActionType, Player } from "../types";
 import BaseAction from "./baseAction";
 
 class CallAction extends BaseAction {
-    get action(): ActionType { return ActionType.CALL }
+    get type(): ActionType { return ActionType.CALL }
 
     verify(player: Player) {
         super.verify(player);
         if (this.game.getMaxStake() == 0)
             throw new Error("A bet must be made before it can be called.")
-        if (player.chips < this.getAmount(player))
+        if (player.chips < this.getDeductAmount(player))
             throw new Error("Player has insufficient chips to call.");
+        return undefined;
     }
 
-    execute(player: Player) {
-        this.verify(player);
-        const amount = this.getAmount(player);
-        player.chips -= amount;
-        this.update.addMove({ playerId: player.id, action: ActionType.CALL, amount });
-    }
-
-    private getAmount(player: Player) {
+    protected getDeductAmount(player: Player, _amount?: number): number {
         return this.game.getMaxStake() - this.game.getPlayerStake(player);
     }
 }
