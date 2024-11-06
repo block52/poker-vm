@@ -6,7 +6,6 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { IValidator } from "./Vault.sol";
 
 contract Bridge {
-
     struct Deposit {
         address account;
         uint256 amount;
@@ -45,7 +44,7 @@ contract Bridge {
     function _deposit(uint256 amount, address to) private {
         IERC20 token = IERC20(underlying);
 
-        lockTimes[to] += block.timestamp + lockTime;
+        lockTimes[to] = block.timestamp + lockTime;
         token.transferFrom(msg.sender, _self, amount);
 
         balances[to] += amount;
