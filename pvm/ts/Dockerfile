@@ -19,6 +19,3 @@ EXPOSE 3000
 
 # Start the Express server
 CMD [ "yarn", "start" ]
-
-# # Tempararily using this as it doesn't currently build
-# CMD [ "yarn", "dev" ]
