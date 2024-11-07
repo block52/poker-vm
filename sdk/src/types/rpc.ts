@@ -50,7 +50,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_NODES]: []; // No parameters
     [RPCMethods.GET_TRANSACTIONS]: [string]; // [count]
     [RPCMethods.MINE]: []; // No parameters
-    [RPCMethods.MINT]: [string, string, string]; // [address, amount, transactionId]
+    [RPCMethods.MINT]: [string]; // [depositIndex]
     [RPCMethods.MINED_BLOCK_HASH]: [string]; // [blockHash]
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
