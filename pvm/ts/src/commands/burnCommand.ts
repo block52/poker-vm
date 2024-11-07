@@ -62,7 +62,7 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         const _signer = new ethers.Wallet(this.privateKey, provider);
         const bridge = new ethers.Contract(this.BridgeAddress, abi, _signer);
 
-        const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"));
+        const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString());
         const burnTx: Transaction = Transaction.create(this.BridgeAddress, this.publicKey, this.amount, this.privateKey);
 
         // Send to mempool
