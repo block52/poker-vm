@@ -8,7 +8,7 @@ import { RandomCommand } from "./randomCommand";
 
 export class BurnCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
-    public readonly BridgeAddress = "0x81553C5c695C5eF915D0c54508FC3F90a8330796";
+    public readonly BridgeAddress = "0x0B6052D3951b001E4884eD93a6030f92B1d76cf0";
     private readonly randomCommand: RandomCommand;
     private readonly signer: ethers.Wallet;
 
@@ -60,9 +60,9 @@ export class BurnCommand implements ISignedCommand<Transaction> {
 
         // Move to base class
         const _signer = new ethers.Wallet(this.privateKey, provider);
-        const bridge = new ethers.Contract(this.BridgeAddress, abi, _signer;
+        const bridge = new ethers.Contract(this.BridgeAddress, abi, _signer);
 
-        const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"))
+        const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"));
         const burnTx: Transaction = Transaction.create(this.BridgeAddress, this.publicKey, this.amount, this.privateKey);
 
         // Send to mempool

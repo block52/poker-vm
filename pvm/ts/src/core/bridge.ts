@@ -15,7 +15,7 @@ const infuraUrl = `https://mainnet.infura.io/v3/${INFURA_PROJECT_ID}`;
 const provider = createProvider(infuraUrl);
 
 const tokenAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"; // ERC20 token contract address
-const bridgeAddress = "0xe0554a476a092703abdb3ef35c80e0d76d32939f"; // Address to monitor for deposits
+const bridgeAddress = "0x0B6052D3951b001E4884eD93a6030f92B1d76cf0"; // Address to monitor for deposits
 
 type TransferEvent = {
     from: string;
