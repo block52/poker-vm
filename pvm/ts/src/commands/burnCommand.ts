@@ -11,6 +11,7 @@ export class BurnCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
     public readonly BridgeAddress = "0x81553C5c695C5eF915D0c54508FC3F90a8330796";
     private readonly randomCommand: RandomCommand;
+    private readonly signer: ethers.Wallet;
 
     constructor(readonly receiver: string, readonly amount: bigint, private readonly privateKey: string) {
         if (amount <= 0) {
@@ -29,8 +30,8 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         this.amount = amount;
         this.privateKey = privateKey;
         this.randomCommand = new RandomCommand(32, "", this.privateKey);
-        const signer = new ethers.Wallet(privateKey);
-        this.publicKey = signer.address;
+        this.signer = new ethers.Wallet(privateKey);
+        this.publicKey = this.signer.address;
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -59,7 +60,8 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         });
 
         // Move to base class
-        const bridge = new ethers.Contract(this.BridgeAddress, abi, provider);
+        const _signer = new ethers.Wallet(this.privateKey, provider);
+        const bridge = new ethers.Contract(this.BridgeAddress, abi, _signer;
 
         const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"))
         const burnTx: Transaction = Transaction.create(this.BridgeAddress, this.publicKey, this.amount, this.privateKey);
