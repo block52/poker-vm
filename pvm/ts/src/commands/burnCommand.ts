@@ -4,7 +4,6 @@ import { Transaction } from "../models";
 import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { randomBytes } from "crypto";
 import { RandomCommand } from "./randomCommand";
 
 export class BurnCommand implements ISignedCommand<Transaction> {
