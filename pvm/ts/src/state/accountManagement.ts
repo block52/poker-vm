@@ -1,5 +1,6 @@
 import { Account } from "../models/account";
 import Accounts from "../schema/accounts";
+import { IAccountDocument } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
 
 export class AccountManagement {
@@ -8,30 +9,26 @@ export class AccountManagement {
     async createAccount(privateKey: string): Promise<Account> {
         const account = Account.create(privateKey);
 
-        let accountAlreadyExists;
-        try {
-            await this.getAccount(account.address);
-            accountAlreadyExists = true;
-        } catch (e) {
-            accountAlreadyExists = false;
+        if (await this._getAccount(account.address)) {
+            throw new Error("Account already exists");
         }
 
-        if (accountAlreadyExists) {
-            throw new Error("Account already exists");
-        } else {
-            await Accounts.create(account.toDocument());
-            return account;
-        }
+        await Accounts.create(account.toDocument());
+        return account;
     }
 
     async getAccount(address: string): Promise<Account> {
-        const account = await Accounts.findOne({ address });
+        const account = await this._getAccount(address);
 
         if (!account) {
             throw new Error("Account not found");
         }
 
         return Account.fromDocument(account);
+    }
+
+    async _getAccount(address: string): Promise<IAccountDocument | null> {
+        return Accounts.findOne({ address });
     }
 
     // Helper functions
