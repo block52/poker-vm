@@ -6,11 +6,7 @@ interface PlayingCardProps {
     className?: string;
 }
 
-const PlayingCard: React.FC<PlayingCardProps> = ({
-    card,
-    hidden = false,
-    className = ""
-}) => {
+const PlayingCard: React.FC<PlayingCardProps> = ({ card, hidden = false, className = "" }) => {
     if (!card) {
         return null;
     }
