@@ -4,10 +4,15 @@ import { Transaction } from "../models";
 import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { randomBytes } from "crypto";
+import { RandomCommand } from "./randomCommand";
 
 export class BurnCommand implements ISignedCommand<Transaction> {
-    constructor(readonly receiver: string, readonly amount: bigint, readonly publicKey: string, private readonly privateKey: string) {
+    private readonly publicKey: string;
+    public readonly BridgeAddress = "0x0B6052D3951b001E4884eD93a6030f92B1d76cf0";
+    private readonly randomCommand: RandomCommand;
+    private readonly signer: ethers.Wallet;
+
+    constructor(readonly receiver: string, readonly amount: bigint, private readonly privateKey: string) {
         if (amount <= 0) {
             throw new Error("Amount must be greater than 0");
         }
@@ -23,8 +28,9 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         this.receiver = receiver;
         this.amount = amount;
         this.privateKey = privateKey;
-        const signer = new ethers.Wallet(privateKey);
-        this.publicKey = signer.address;
+        this.randomCommand = new RandomCommand(32, "", this.privateKey);
+        this.signer = new ethers.Wallet(privateKey);
+        this.publicKey = this.signer.address;
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -33,7 +39,6 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         // If we're a validator, we can mint
         // Check the DB for the tx hash
         // If it's not in the DB, mint
-
         const account = await accounts.findOne({ address: this.receiver });
         if (account) {
             // return signResult(Transaction.fromDocument(existingTx), this.privateKey);
@@ -45,19 +50,20 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         }
 
         const abi = ["function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature)"];
-        const nonce = randomBytes(32);
+        const nonce = await this.randomCommand.execute();
 
+        // TODO: Move to constructor
         const baseRPCUrl = process.env.RPC_URL;
         const provider = new JsonRpcProvider(baseRPCUrl, undefined, {
             staticNetwork: true
         });
 
-        const bridgeAddress = process.env.BRIDGE_CONTRACT_ADDRESS || "";
-        const bridge = new ethers.Contract(bridgeAddress, abi, provider);
+        // Move to base class
+        const _signer = new ethers.Wallet(this.privateKey, provider);
+        const bridge = new ethers.Contract(this.BridgeAddress, abi, _signer);
 
-        const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString("hex"))
-
-        const burnTx: Transaction = Transaction.create(this.receiver, this.publicKey, this.amount, this.privateKey);
+        const tx = await bridge.withdraw(this.amount, this.receiver, nonce.toString());
+        const burnTx: Transaction = Transaction.create(this.BridgeAddress, this.publicKey, this.amount, this.privateKey);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();

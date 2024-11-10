@@ -10,8 +10,12 @@ interface PlayerListProps {
 const PlayerList: React.FC<PlayerListProps> = ({ players }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {players.map((player) => (
+      {players.map((player, idx) => (
         <PlayerWidget
+          isActive={player.isActive}
+          seat={player.seat}
+          isUser={idx === 0}
+          isTurn={player.isTurn}
           key={player.address}
           address={player.address}
           chips={player.chips}

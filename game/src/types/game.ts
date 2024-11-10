@@ -122,14 +122,25 @@ export enum Round {
     RIVER = "RIVER"
 }
 
+export enum Seat {
+    DEALER = "Dealer",
+    LB = "LB",
+    BB = "BB",
+    NORMAL = "---"
+}
+
 export type Player = {
     address: string;
     chips: number;
     holeCards?: number[];
     lastAction?: PlayerAction;
+    seat: Seat;
+    isActive: boolean;
+    isTurn: boolean;
 };
 
 export type TexasHoldemState = {
+    address: string;
     smallBlind: number;
     bigBlind: number;
     players: Player[];
@@ -147,17 +158,21 @@ export type TexasHoldemState = {
 };
 
 export const exampleState: TexasHoldemState = {
+    address: "0xb52",
     smallBlind: 1,
     bigBlind: 2,
     players: [
         {
             address: "0xD332DFf7b5632f293156C3c07F91070aD61E3893",
             chips: 100,
-            holeCards: [33, 34],
+            holeCards: [52, 40],
             lastAction: {
                 action: Actions.BET,
                 amount: 2
-            }
+            },
+            isTurn: true,
+            seat: Seat.LB,
+            isActive: true
         },
         {
             address: "0xC26E2874B6DAe1fE438361d150f179a5277dc278",
@@ -166,7 +181,10 @@ export const exampleState: TexasHoldemState = {
             lastAction: {
                 action: Actions.CALL,
                 amount: 2
-            }
+            },
+            isTurn: false,
+            seat: Seat.BB,
+            isActive: true
         },
         {
             address: "0xba22370000000000000000000000000000000000",
@@ -174,8 +192,24 @@ export const exampleState: TexasHoldemState = {
             holeCards: [4, 7],
             lastAction: {
                 action: Actions.FOLD
-            }
-        }
+            },
+            isTurn: false,
+            seat: Seat.DEALER,
+            isActive: false
+        },
+        {
+            address: "0xba22370000000000000000000000000000000000",
+            chips: 300,
+            holeCards: [5, 8],
+            lastAction: {
+                action: Actions.CALL,
+                amount: 2
+            },
+            isTurn: false,
+            seat: Seat.NORMAL,
+            isActive: true
+        },
+
     ],
     deck: ethers.ZeroHash,
     flop: [2, 16, 33],
