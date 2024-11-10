@@ -4,7 +4,7 @@ import { TransferButton } from "./TransferButton";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@radix-ui/react-collapsible";
 import { CaretSortIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
-import './wallet.css';
+import "./wallet.css";
 
 export const Wallet: React.FC = () => {
     const appWallet = useWallet();
@@ -33,23 +33,19 @@ export const Wallet: React.FC = () => {
     return (
         <div className="wallet-box">
             <h2>Wallet</h2>
-            <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-2">
-                <div className="flex items-center justify-between space-x-4">
-                    <div>
-                        <p><strong>Address:</strong> {appWallet.ethereum.address}</p>
-                        <p><strong>B52 Balance:</strong> ${b52Balance} USD</p>
-                    </div>
-                    <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                            <CaretSortIcon className="h-4 w-4" />
-                            <span className="sr-only">Toggle</span>
-                        </Button>
-                    </CollapsibleTrigger>
+
+            <div className="flex items-center justify-between space-x-4">
+                <div>
+                    <p>
+                        <strong>Address:</strong> {appWallet.ethereum.address}
+                    </p>
+                    <p>
+                        <strong>B52 Balance:</strong> ${b52Balance} USD
+                    </p>
                 </div>
-                <CollapsibleContent className="space-y-2">
-                    <TransferButton onTransferComplete={refreshBalance} />
-                </CollapsibleContent>
-            </Collapsible>
+            </div>
+
+            <TransferButton onTransferComplete={refreshBalance} />
         </div>
     );
 };

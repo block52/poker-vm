@@ -44,7 +44,7 @@ export const TransferButton: React.FC<TransferButtonProps> = ({ onTransferComple
   };
 
   return (
-    <div className="flex flex-col gap-2 mt-4">
+    <div className="flex flex-col gap-2 mt-4 w-full">
       <Input
         type="text"
         placeholder="Recipient Address (0x...)"
@@ -61,8 +61,9 @@ export const TransferButton: React.FC<TransferButtonProps> = ({ onTransferComple
       />
       <Button 
         onClick={handleTransfer}
-        disabled={!b52 || !toAddress || !amount || isLoading}
+        // disabled={!b52 || !toAddress || !amount || isLoading}
         variant="default"
+        className="w-full"
       >
         {isLoading ? "Transferring..." : "Transfer"}
       </Button>
