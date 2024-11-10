@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 
 export enum PlayingCardEnum {
-    CARD_BACK = "\u{1F0A0}", 
+    CARD_BACK = "\u{1F0A0}",
 
     SPADES_A = "\u{1F0A1}",
     SPADES_2 = "\u{1F0A2}",
@@ -81,7 +81,7 @@ export function intToPlayingCard(num: number): PlayingCardInfo {
             suit: Suit.UNKNOWN,
             value: 0,
             unicode: PlayingCardEnum.CARD_BACK
-        }
+        };
     }
     const value = ((num - 1) % 13) + 1;
     const suit = Math.floor((num - 1) / 13) + 1;
@@ -175,8 +175,7 @@ export const exampleState: TexasHoldemState = {
             lastAction: {
                 action: Actions.FOLD
             }
-        },
-
+        }
     ],
     deck: ethers.ZeroHash,
     flop: [2, 16, 33],

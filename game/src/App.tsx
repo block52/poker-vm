@@ -17,10 +17,7 @@ function App() {
                     <div className="content">
                         <Routes>
                             <Route path="/" element={<HomePage />} />
-                            <Route
-                                path="/game/:gameId"
-                                element={<GamePage />}
-                            />
+                            <Route path="/game/:gameId" element={<GamePage />} />
                         </Routes>
                     </div>
                 </div>
