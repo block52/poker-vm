@@ -1,4 +1,4 @@
-import { ActionType, IUpdate, Move, Player, PlayerId, PlayerStatus } from "./types";
+import { ActionType, IUpdate, Move, Player, PlayerId, PlayerStatus, StageType } from "./types";
 import { Card, Deck, DeckType } from "../models/deck";
 import PokerSolver from "pokersolver";
 import AllInAction from "./actions/allInAction";
@@ -13,14 +13,6 @@ import SmallBlindAction from "./actions/smallBlindAction";
 
 type Stage = {
     moves: Move[];
-}
-
-enum StageType {
-    PRE_FLOP = 0,
-    FLOP = 1,
-    TURN = 2,
-    RIVER = 3,
-    SHOWDOWN = 4
 }
 
 class TexasHoldemGame {
@@ -145,7 +137,7 @@ class TexasHoldemGame {
         }, [] as Array<number>);
         const stakes = this.getStakes();
         const maxStakes = this.getMaxStake(stakes);
-        const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action == ActionType.BIG_BLIND).length &&
+        const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action != ActionType.BIG_BLIND).length &&
             (this.getPlayerStake(p, stakes) == maxStakes);
         if ((active.length <= 1) || active.map(i => this._players[i]).every(isPlayerTurnFinished))
             this.nextStage();

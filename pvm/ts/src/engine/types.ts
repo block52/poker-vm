@@ -70,6 +70,14 @@ export type Player = {
     holeCards?: [Card, Card]; // Each player has 2 cards, represented as strings like 'As' (Ace of spades)
 };
 
+export enum StageType {
+    PRE_FLOP = 0,
+    FLOP = 1,
+    TURN = 2,
+    RIVER = 3,
+    SHOWDOWN = 4
+}
+
 export enum ActionType {
     SMALL_BLIND = "post small blind",
     BIG_BLIND = "post big blind",

@@ -1,5 +1,5 @@
 import TexasHoldemGame from "../texasHoldem";
-import { ActionType, IUpdate, Player, PlayerStatus, Range } from "../types";
+import { ActionType, IUpdate, Player, PlayerStatus, Range, StageType } from "../types";
 
 abstract class BaseAction {
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
@@ -7,6 +7,8 @@ abstract class BaseAction {
     abstract get type(): ActionType;
 
     verify(player: Player): Range | undefined {
+        if (this.game.currentStage == StageType.SHOWDOWN)
+            throw new Error("Game has ended.");
         if (this.game.currentPlayerId != player.id)
             throw new Error("Must be currently active player.")
         if (this.game.getPlayerStatus(player) != PlayerStatus.ACTIVE)
