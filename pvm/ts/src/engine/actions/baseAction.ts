@@ -1,12 +1,12 @@
 import TexasHoldemGame from "../texasHoldem";
-import { ActionType, IUpdate, Player, PlayerStatus } from "../types";
+import { ActionType, IUpdate, Player, PlayerStatus, Range } from "../types";
 
 abstract class BaseAction {
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
     abstract get type(): ActionType;
 
-    verify(player: Player): number | undefined {
+    verify(player: Player): Range | undefined {
         if (this.game.currentPlayerId != player.id)
             throw new Error("Must be currently active player.")
         if (this.game.getPlayerStatus(player) != PlayerStatus.ACTIVE)
@@ -15,10 +15,14 @@ abstract class BaseAction {
     }
 
     execute(player: Player, amount?: number): void {
-        const minAmount = this.verify(player);
-        if (minAmount) {
-            if (!amount || (amount < minAmount))
-                throw new Error("Amount is less than minimum required.");
+        const range = this.verify(player);
+        if (range) {
+            if (!amount)
+                throw new Error(`Amount needs to be specified for ${this.type}`);
+            if (amount < range.minAmount)
+                throw new Error("Amount is less than minimum allowed.");
+            if (amount > range.maxAmount)
+                throw new Error("Amount is greater than maximum allowed.");
         } else if (amount) {
             throw new Error(`Amount should not be specified for ${this.type}`);
         }

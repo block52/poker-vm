@@ -1,10 +1,10 @@
-import { ActionType, Player } from "../types";
+import { ActionType, Player, Range } from "../types";
 import BaseAction from "./baseAction";
 
 class CallAction extends BaseAction {
     get type(): ActionType { return ActionType.CALL }
 
-    verify(player: Player) {
+    verify(player: Player): Range | undefined {
         super.verify(player);
         if (this.game.getMaxStake() == 0)
             throw new Error("A bet must be made before it can be called.")

@@ -72,8 +72,8 @@ class TexasHoldemGame {
 
         function verifyAction(action: BaseAction) {
             try {
-                const minAmount = action.verify(player);
-                return { action: action.type, ...minAmount ? { minAmount } : {} };
+                const range = action.verify(player);
+                return { action: action.type, ...range ? { minAmount: range.minAmount, maxAmount: range.maxAmount } : {} };
             } catch {
                 return null;
             }

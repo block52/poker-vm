@@ -1,6 +1,11 @@
 import { Card } from "../models/deck";
 import TexasHoldemGame from "./texasHoldem";
 
+export type Range = {
+    minAmount: number;
+    maxAmount: number;
+}
+
 export enum States {
     INIT = "INIT",
     WAITING_FOR_PLAYERS = "WAITING_FOR_PLAYERS",
