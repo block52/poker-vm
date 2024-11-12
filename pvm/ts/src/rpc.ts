@@ -22,9 +22,11 @@ import { StopServerCommand } from "./commands/stopServerCommand";
 import { TransferCommand } from "./commands/transferCommand";
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
+import { GameStateCommand } from "./commands/gameStateCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
+        console.log(request);
         if (!request) {
             throw new Error("Null request");
         }
@@ -160,6 +162,14 @@ export class RPC {
             case RPCMethods.GET_BLOCKS: {
                 const [count] = request.params as RPCRequestParams[RPCMethods.GET_BLOCKS];
                 const command = new GetBlocksCommand(Number(count), validatorPrivateKey);
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.GET_GAME_STATE: {
+                console.log("HERE")
+                const [address] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
+                const command = new GameStateCommand(address, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }

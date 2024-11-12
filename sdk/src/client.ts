@@ -1,4 +1,5 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
+import { TexasHoldemDTO } from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
@@ -213,5 +214,15 @@ export class NodeRpcClient {
             method: RPCMethods.TRANSFER,
             params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
         });
+    }
+
+    public async getGameState(gameAddress: string): Promise<TexasHoldemDTO> {
+        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<TexasHoldemDTO>}>
+        (this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_GAME_STATE,
+            params: [gameAddress],
+        });
+        return body.result.data;
     }
 }

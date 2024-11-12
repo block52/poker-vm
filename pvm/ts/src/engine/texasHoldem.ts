@@ -1,4 +1,5 @@
-import { ActionType, IUpdate, Move, Player, PlayerId, PlayerStatus, StageType } from "./types";
+import { PlayerAction } from "@bitcoinbrisbane/block52";
+import { IUpdate, Move, Player, PlayerId, PlayerStatus, StageType, TexasHoldemState } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import AllInAction from "./actions/allInAction";
 import BaseAction from "./actions/baseAction";
@@ -25,7 +26,7 @@ class TexasHoldemGame {
     private _sidePots: Map<PlayerId, number>;
     private _actions: BaseAction[];
 
-    constructor(private _players: Player[], private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number) {
+    constructor(private _address: string, private _players: Player[], private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number) {
         this._stages = [{ moves: [] }];
         this._currentStage = StageType.PRE_FLOP;
         this._currentPlayer = (this._buttonPosition + 3) % _players.length;
@@ -58,6 +59,18 @@ class TexasHoldemGame {
     get smallBlindPosition() { return (this._buttonPosition + 1) % this._players.length; }
     get currentPlayerId() { return this._players[this._currentPlayer].id; }
     get currentStage() { return this._currentStage; }
+    get pot() { return this.getStartingPot() + this.getTotalStake(); }
+    get state() {
+        return new TexasHoldemState(this._address,
+            this._smallBlind,
+            this._bigBlind,
+            this._players,
+            this._communityCards,
+            this.pot,
+            this.getMaxStake(),
+            this.currentPlayerId,
+            0);
+    }
 
     getValidActions(playerId: string) {
         const player = this.getPlayer(playerId);
@@ -73,7 +86,7 @@ class TexasHoldemGame {
         }
     }
 
-    performAction(playerId: string, action: ActionType, amount?: number) {
+    performAction(playerId: string, action: PlayerAction, amount?: number) {
         return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
 
@@ -87,9 +100,9 @@ class TexasHoldemGame {
     getPlayerStatus(player: Player) {
         for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
             const moves = this.getPlayerMoves(player, stage);
-            if (moves.some(m => m.action == ActionType.FOLD))
+            if (moves.some(m => m.action == PlayerAction.FOLD))
                 return PlayerStatus.FOLD;
-            if (moves.some(m => m.action == ActionType.ALL_IN))
+            if (moves.some(m => m.action == PlayerAction.ALL_IN))
                 return PlayerStatus.ALL_IN;
         }
         return PlayerStatus.ACTIVE;
@@ -113,7 +126,7 @@ class TexasHoldemGame {
         return Array.from(stakes.values()).reduce((acc, v) => acc + v, 0);
     }
 
-    getStartingPot(): number {
+    private getStartingPot(): number {
         let pot = 0;
         for (let stage = StageType.PRE_FLOP; stage < this._currentStage; stage++)
             pot += this.getTotalStake(this.getStakes(stage));
@@ -138,7 +151,7 @@ class TexasHoldemGame {
         }, [] as Array<number>);
         const stakes = this.getStakes();
         const maxStakes = this.getMaxStake(stakes);
-        const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action != ActionType.BIG_BLIND).length &&
+        const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action != PlayerAction.BIG_BLIND).length &&
             (this.getPlayerStake(p, stakes) == maxStakes);
         if ((active.length <= 1) || active.map(i => this._players[i]).every(isPlayerTurnFinished))
             this.nextStage();
@@ -190,8 +203,8 @@ class TexasHoldemGame {
         }
         winningPlayers.forEach(p => p.chips += pot / winningPlayers.length);
 
-        function toPokerSolverMnemonic(cards: Card) {
-            return cards.mnemonic.replace("10", "T");
+        function toPokerSolverMnemonic(card: Card) {
+            return card.mnemonic.replace("10", "T");
         }
     }
 }

@@ -11,6 +11,7 @@ export const READ_METHODS = [
     RPCMethods.GET_NODES,
     RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.GET_CONTRACT_SCHEMA,
+    RPCMethods.GET_GAME_STATE
 ];
 
 export const WRITE_METHODS = [

@@ -28,6 +28,7 @@ export enum RPCMethods {
     GET_MEMPOOL = "get_mempool",
     GET_NODES = "get_nodes",
     GET_TRANSACTIONS = "get_transactions",
+    GET_GAME_STATE = "get_game_state",
     MINE = "mine",
     MINED_BLOCK_HASH = "mined_block_hash",
     MINT = "mint",
@@ -49,6 +50,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_MEMPOOL]: []; // No parameters
     [RPCMethods.GET_NODES]: []; // No parameters
     [RPCMethods.GET_TRANSACTIONS]: [string]; // [count]
+    [RPCMethods.GET_GAME_STATE]: [string]; // [address]
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINT]: [string]; // [depositIndex]
     [RPCMethods.MINED_BLOCK_HASH]: [string]; // [blockHash]

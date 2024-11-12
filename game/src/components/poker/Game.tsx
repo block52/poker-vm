@@ -6,8 +6,11 @@ import { useWallet } from "@/hooks/useWallet";
 
 
 export default function Game() {
-    const [state] = useGame();
+    const { state } = useGame();
     const { b52 } = useWallet();
+
+    if (!state)
+        return (<></>);
 
     const handleFold = () => {
         b52?.fold(state.address);
@@ -25,24 +28,21 @@ export default function Game() {
         b52?.check(state.address);
     };
 
-    return (
-        <div>
-            <PlayerList players={state.players} />
-            <CardSet
-                name="community"
-                cards={[...state.flop, state.turn, state.river]}
-            />
-            <CardSet name="hole" cards={state.players[0].holeCards || []} />
-            <GameActions
-                onCall={() => handleCall()}
-                onRaise={amount => handleRaise(amount)}
-                onCheck={() => handleCheck()}
-                onFold={() => handleFold()}
-                minRaise={10}
-                maxRaise={1000}
-            />
-        </div>
+    return (<div>
+        <PlayerList players={state.players} />
+        <CardSet
+            name="community"
+            cards={[...state.flop, state.turn, state.river]}
+        />
+        <CardSet name="hole" cards={state.players[0].holeCards || []} />
+        <GameActions
+            onCall={() => handleCall()}
+            onRaise={amount => handleRaise(amount)}
+            onCheck={() => handleCheck()}
+            onFold={() => handleFold()}
+            minRaise={10}
+            maxRaise={1000}
+        />
+    </div>
     );
-
-    
 }
