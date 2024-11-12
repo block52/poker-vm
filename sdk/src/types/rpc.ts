@@ -8,7 +8,6 @@ export type RPCRequest = {
     id: string;
     method: RPCMethods;
     params: RPCRequestParams[RPCMethods];
-    data?: string;
 };
 
 export type RPCResponse<T> = {
@@ -51,11 +50,11 @@ export type RPCRequestParams = {
     [RPCMethods.GET_NODES]: []; // No parameters
     [RPCMethods.GET_TRANSACTIONS]: [string]; // [count]
     [RPCMethods.MINE]: []; // No parameters
-    [RPCMethods.MINT]: [string, string, string]; // [address, amount, transactionId]
+    [RPCMethods.MINT]: [string]; // [depositIndex]
     [RPCMethods.MINED_BLOCK_HASH]: [string]; // [blockHash]
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
-    [RPCMethods.TRANSFER]: [string, string, string]; // [from, to, amount]
+    [RPCMethods.TRANSFER]: [string, string, string, string | null]; // [from, to, amount, data]
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
 };

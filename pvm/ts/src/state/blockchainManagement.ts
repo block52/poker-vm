@@ -50,7 +50,7 @@ export class BlockchainManagement extends StateManager {
     await this.connect();
     const blocks = await Blocks.find({})
         .sort({ timestamp: -1 })
-        .limit(count ?? 100);
+        .limit(count ?? 20);
 
     return new BlockList(blocks.map(block => Block.fromDocument(block)));
 

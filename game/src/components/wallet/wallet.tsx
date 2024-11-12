@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useWallet } from "../../hooks/useWallet";
 import { TransferButton } from "./TransferButton";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@radix-ui/react-collapsible";
-import { CaretSortIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import "./wallet.css";
 
 export const Wallet: React.FC = () => {
     const appWallet = useWallet();
     const [b52Balance, setB52Balance] = useState(0);
-    const [isOpen, setIsOpen] = useState(false);
 
     const refreshBalance = async () => {
         if (appWallet.b52 && appWallet.address) {
@@ -43,6 +40,10 @@ export const Wallet: React.FC = () => {
                         <strong>B52 Balance:</strong> ${b52Balance} USD
                     </p>
                 </div>
+
+                <Button variant="ghost" size="sm">
+                    <span className="sr-only">Toggle</span>
+                </Button>
             </div>
 
             <TransferButton onTransferComplete={refreshBalance} />

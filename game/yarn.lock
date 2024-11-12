@@ -330,20 +330,11 @@
     "@babel/helper-string-parser" "^7.25.9"
     "@babel/helper-validator-identifier" "^7.25.9"
 
-"@babel/types@^7.26.0":
-  version "7.26.0"
-  resolved "https://registry.yarnpkg.com/@babel/types/-/types-7.26.0.tgz#deabd08d6b753bc8e0f198f8709fb575e31774ff"
-  integrity sha512-Z/yiTPj+lDVnF7lWeKCIJzaIkI0vYO87dMpZ4bg4TDrFe4XXLFWL1TbXU27gBP3QccxV9mZICCrnjnYlJjXHOA==
-  dependencies:
-    "@babel/helper-string-parser" "^7.25.9"
-    "@babel/helper-validator-identifier" "^7.25.9"
-
-"@bitcoinbrisbane/block52@1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.5.tgz#c4f0108f770aa1c38174ee4b322c1b07cc24699d"
-  integrity sha512-+LBfp/dGhMczWEv+qZ+oOWxkorHWaDcayiosHr44TqhEWg/eJrdbbuxi68i/ttc/o7DTOTUPDn0Sx2p8IElpaQ==
+"@bitcoinbrisbane/block52@file:../sdk":
+  version "1.0.7"
   dependencies:
     axios "^1.7.7"
+    ethers "^6.13.4"
 
 "@esbuild/aix-ppc64@0.21.5":
   version "0.21.5"
