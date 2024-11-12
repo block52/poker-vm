@@ -23,6 +23,7 @@
     "express": "^4.21.1",
     "jest": "^29.7.0",
     "mongoose": "^8.7.2",
+    "pokersolver": "^2.1.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
     "z-schema": "^6.0.2"
