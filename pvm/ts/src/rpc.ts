@@ -198,7 +198,6 @@ export class RPC {
                 const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
 
                 const command = new MintCommand(depositIndex, validatorPrivateKey);
-
                 result = await command.execute();
 
                 break;
@@ -208,10 +207,10 @@ export class RPC {
                 if (request.params?.length !== 3) {
                     return makeErrorRPCResponse(id, "Invalid params");
                 }
-                const [burnFrom, amount, bridgeTo] = request.params as RPCRequestParams[RPCMethods.BURN];
+                const [burnFrom, amountString, bridgeTo] = request.params as RPCRequestParams[RPCMethods.BURN];
+                const amount = BigInt(amountString); // JSON doesn't allow BigInts
 
                 const command = new BurnCommand(burnFrom, amount, bridgeTo, validatorPrivateKey);
-
                 result = await command.execute();
 
                 break;

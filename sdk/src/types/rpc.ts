@@ -39,7 +39,7 @@ export enum RPCMethods {
 }
 
 export type RPCRequestParams = {
-    [RPCMethods.BURN]: [string, bigint, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
+    [RPCMethods.BURN]: [string, string, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
