@@ -58,11 +58,11 @@ contract Bridge {
 
     function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature) external {
         require(!usedNonces[nonce], "withdraw: nonce already used");
-        require(lockTimes[to] >= block.timestamp, "withdraw: funds are locked");
-        require(IERC20(underlying).balanceOf(to) >= amount, "withdraw: insufficient balance");
+        require(lockTimes[to] < block.timestamp, "withdraw: funds are locked");
+        require(balances[to] >= amount, "withdraw: insufficient balance");
 
         bytes32 messageHash = keccak256(abi.encodePacked(to, amount, nonce));
-        address signer = recoverSignerAddress(messageHash, signature);
+        address signer = recoverSignerAddress(getEthSignedMessageHash(messageHash), signature);
 
         require(IValidator(vault).isValidator(signer), "withdraw: invalid signature");
 
@@ -88,7 +88,7 @@ contract Bridge {
         IERC20(underlying).transferFrom(_self, owner, delta);
     }
 
-    function receiveApproval(address from, uint256 amount, address token, bytes calldata data) external {
+    function receiveApproval(address from, uint256 amount, address token /*, bytes calldata data*/) external {
         require(msg.sender == underlying, "receiveApproval: invalid sender");
         require(token == underlying, "receiveApproval: invalid token");
 
