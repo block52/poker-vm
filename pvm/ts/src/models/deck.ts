@@ -5,10 +5,10 @@ export enum DeckType {
 }
 
 export enum SUIT {
-    SPADES = 0,
-    HEARTS = 1,
-    DIAMONDS = 2,
-    CLUBS = 3,
+    SPADES = 1,
+    CLUBS = 2,
+    DIAMONDS = 3,
+    HEARTS = 4
 };
 
 export type Card = {
@@ -28,6 +28,7 @@ export class Deck implements IJSONModel {
     private cards: Card[] = [];
     public hash: string = "";
     public seedHash: string;
+    private top: number = 0;
 
     constructor(type: DeckType) {
         switch (type) {
@@ -55,17 +56,15 @@ export class Deck implements IJSONModel {
         this.hash = createHash("sha256").update(cardsAsString).digest("hex");
     }
 
-    public shuffle(seed: number[]): void {
+    public shuffle(): void {
+        // TODO: Switch to crypto.randomInt for better randomness
+        const seed = Array.from({ length: this.cards.length }, () => Math.random())
         const seedAsString = seed.join("-");
         this.seedHash = createHash("sha256").update(seedAsString).digest("hex");
 
         // Fisher-Yates shuffle
-        if (seed.length != this.cards.length) {
-            throw new Error("Invalid seed length");
-        }
-
         for (let i = this.cards.length - 1; i > 0; i--) {
-            const j = seed[i] % (i + 1);
+            const j = Math.floor(seed[i] * (i + 1));
             [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
         }
     }
@@ -93,14 +92,14 @@ export class Deck implements IJSONModel {
             case SUIT.SPADES:
                 mnemonic += "S";
                 break;
-            case SUIT.HEARTS:
-                mnemonic += "H";
+            case SUIT.CLUBS:
+                mnemonic += "C";
                 break;
             case SUIT.DIAMONDS:
                 mnemonic += "D";
                 break;
-            case SUIT.CLUBS:
-                mnemonic += "C";
+            case SUIT.HEARTS:
+                mnemonic += "H";
                 break;
         }
 
@@ -108,7 +107,11 @@ export class Deck implements IJSONModel {
     }
 
     public getNext(): Card {
-        return this.cards[0];
+        return this.cards[this.top++];
+    }
+
+    public deal(amount: number): Card[] {
+        return Array.from({ length: amount }, () => this.getNext());
     }
 
     public toJson(): any {
@@ -118,7 +121,7 @@ export class Deck implements IJSONModel {
     }
 
     private initStandard52(): void {
-        for (let suit = 0; suit < 4; suit++) {
+        for (let suit = SUIT.SPADES; suit <= SUIT.HEARTS; suit++) {
             for (let rank = 2; rank <= 14; rank++) {
                 this.cards.push({
                     suit: suit,

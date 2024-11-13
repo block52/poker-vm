@@ -1,3 +1,11 @@
+import { Card } from "../models/deck";
+import TexasHoldemGame from "./texasHoldem";
+
+export type Range = {
+    minAmount: number;
+    maxAmount: number;
+}
+
 export enum States {
     INIT = "INIT",
     WAITING_FOR_PLAYERS = "WAITING_FOR_PLAYERS",
@@ -26,11 +34,12 @@ export enum Round {
     RIVER = "RIVER",
 }
 
+/* !!
 export type Player = {
     address: string;
     chips: number;
     holeCards: string[];
-};
+}; */
 
 export type TexasHoldemState = {
     smallBlind: number;
@@ -48,3 +57,50 @@ export type TexasHoldemState = {
     winner?: number;
     handNumber: number;
 };
+
+/*****************************************************************************/
+
+export type PlayerId = string;
+
+export type Player = {
+    id: PlayerId;
+    name: string;
+    address?: string;
+    chips: number;
+    holeCards?: [Card, Card]; // Each player has 2 cards, represented as strings like 'As' (Ace of spades)
+};
+
+export enum StageType {
+    PRE_FLOP = 0,
+    FLOP = 1,
+    TURN = 2,
+    RIVER = 3,
+    SHOWDOWN = 4
+}
+
+export enum ActionType {
+    SMALL_BLIND = "post small blind",
+    BIG_BLIND = "post big blind",
+    FOLD = "fold",
+    CHECK = "check",
+    BET = "bet",
+    CALL = "call",
+    RAISE = "raise",
+    ALL_IN = "going all-in"
+}
+
+export enum PlayerStatus {
+    ACTIVE,
+    FOLD,
+    ALL_IN
+}
+
+export type Move = {
+    playerId: PlayerId;
+    action: ActionType;
+    amount?: number;
+};
+
+export interface IUpdate {
+    addMove(move: Move): void;
+}
