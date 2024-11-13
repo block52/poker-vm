@@ -7,7 +7,6 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { NativeToken } from "../models/nativeToken";
 
 export class MintCommand implements ISignedCommand<Transaction> {
-    private readonly publicKey: string;
     private readonly provider: JsonRpcProvider;
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
@@ -23,7 +22,6 @@ export class MintCommand implements ISignedCommand<Transaction> {
 
         this.depositIndex = depositIndex;
         const signer = new ethers.Wallet(privateKey);
-        this.publicKey = signer.address;
 
         const bridgeAbi = ["function deposits(uint256) view returns (tuple(address account, uint256 amount))", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
@@ -54,18 +52,17 @@ export class MintCommand implements ISignedCommand<Transaction> {
         const underlyingAssetAddress = await this.bridge.underlying();
         const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
         const underlyingAssetDecimals = await underlyingAsset.decimals();
-
         const amountToMint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
 
         if (receiver == ethers.ZeroAddress) {
             throw new Error("Receiver must not be zero address");
         }
 
-        if (amount <= 0) {
+        if (amountToMint <= 0) {
             throw new Error("Amount must be greater than 0");
         }
 
-        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, amountToMint, this.privateKey);
+        const mintTx: Transaction = Transaction.create(receiver, null, amountToMint, this.privateKey);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
