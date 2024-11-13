@@ -1,5 +1,5 @@
 import { PlayerAction } from "@bitcoinbrisbane/block52";
-import { IUpdate, Move, Player, PlayerId, PlayerStatus, StageType, TexasHoldemState } from "../models/game";
+import { IUpdate, Move, Player, PlayerId, PlayerStatus, StageType, TexasHoldemState, ValidMove } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import AllInAction from "./actions/allInAction";
 import BaseAction from "./actions/baseAction";
@@ -64,17 +64,16 @@ class TexasHoldemGame {
         return new TexasHoldemState(this._address,
             this._smallBlind,
             this._bigBlind,
-            this._players,
+            this._players.map((p, i) => p.getPlayerState(this, i)),
             this._communityCards,
             this.pot,
             this.getMaxStake(),
-            this.currentPlayerId,
-            0);
+            this._currentStage);
     }
 
-    getValidActions(playerId: string) {
+    getValidActions(playerId: string): ValidMove[] {
         const player = this.getPlayer(playerId);
-        return this._actions.map(verifyAction).filter(a => a);
+        return this._actions.map(verifyAction).filter(a => a) as ValidMove[];
 
         function verifyAction(action: BaseAction) {
             try {
@@ -84,6 +83,11 @@ class TexasHoldemGame {
                 return null;
             }
         }
+    }
+
+    getLastAction(playerId: string): Move | undefined {
+        const player = this.getPlayer(playerId);
+        return this.getPlayerMoves(player).at(-1);
     }
 
     performAction(playerId: string, action: PlayerAction, amount?: number) {
@@ -97,7 +101,7 @@ class TexasHoldemGame {
         return player;
     }
 
-    getPlayerStatus(player: Player) {
+    getPlayerStatus(player: Player): PlayerStatus {
         for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
             const moves = this.getPlayerMoves(player, stage);
             if (moves.some(m => m.action == PlayerAction.FOLD))

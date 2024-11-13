@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { PlayerAction } from "@bitcoinbrisbane/block52";
 
 export enum PlayingCardEnum {
     CARD_BACK = "\u{1F0A0}", 
@@ -98,42 +98,22 @@ export enum States {
     END = "END"
 }
 
-export enum Actions {
-    JOIN = "JOIN",
-    START = "START",
-    BET = "BET",
-    CHECK = "CHECK",
-    FOLD = "FOLD",
-    CALL = "CALL",
-    RAISE = "RAISE",
-    SHOWDOWN = "SHOWDOWN",
-    END = "END"
-}
-
-export type PlayerAction = {
-    action: Actions;
-    amount?: number;
+export type Move = {
+    action: PlayerAction;
+    amount: number | undefined;
 };
 
-export enum Round {
-    PREFLOP = "PREFLOP",
-    FLOP = "FLOP",
-    TURN = "TURN",
-    RIVER = "RIVER"
-}
-
 export enum Seat {
-    DEALER = "Dealer",
-    LB = "LB",
-    BB = "BB",
+    SB = "Small Blind",
+    BB = "Big Blind",
     NORMAL = "---"
 }
 
 export type Player = {
     address: string;
     chips: number;
-    holeCards?: number[];
-    lastAction?: PlayerAction;
+    holeCards: number[] | undefined;
+    lastMove: Move | undefined;
     seat: Seat;
     isActive: boolean;
     isTurn: boolean;
@@ -145,77 +125,10 @@ export type TexasHoldemState = {
     bigBlind: number;
     players: Player[];
     flop: number[];
-    turn: number; // Card
-    river: number; // Card
+    turn: number;
+    river: number;
     pot: number;
     currentBet: number;
-    nextPlayer: number; // index of next player to act
-    round: Round;
+    round: string;
     winner?: number;
-};
-
-export const exampleState: TexasHoldemState = {
-    address: "0xb52",
-    smallBlind: 1,
-    bigBlind: 2,
-    players: [
-        {
-            address: "0xD332DFf7b5632f293156C3c07F91070aD61E3893",
-            chips: 100,
-            holeCards: [52, 40],
-            lastAction: {
-                action: Actions.BET,
-                amount: 2
-            },
-            isTurn: true,
-            seat: Seat.LB,
-            isActive: true
-        },
-        {
-            address: "0xC26E2874B6DAe1fE438361d150f179a5277dc278",
-            chips: 200,
-            holeCards: [1, 2],
-            lastAction: {
-                action: Actions.CALL,
-                amount: 2
-            },
-            isTurn: false,
-            seat: Seat.BB,
-            isActive: true
-        },
-        {
-            address: "0xba22370000000000000000000000000000000000",
-            chips: 300,
-            holeCards: [4, 7],
-            lastAction: {
-                action: Actions.FOLD
-            },
-            isTurn: false,
-            seat: Seat.DEALER,
-            isActive: false
-        },
-        {
-            address: "0xba22370000000000000000000000000000000000",
-            chips: 300,
-            holeCards: [5, 8],
-            lastAction: {
-                action: Actions.CALL,
-                amount: 2
-            },
-            isTurn: false,
-            seat: Seat.NORMAL,
-            isActive: true
-        },
-
-    ],
-    deck: ethers.ZeroHash,
-    flop: [2, 16, 33],
-    turn: 0,
-    river: 0,
-    pot: 10,
-    currentBet: 2,
-    dealer: 0,
-    nextPlayer: 1,
-    round: Round.PREFLOP,
-    handNumber: 0
 };

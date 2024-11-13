@@ -167,7 +167,6 @@ export class RPC {
             }
 
             case RPCMethods.GET_GAME_STATE: {
-                console.log("HERE")
                 const [address] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
                 const command = new GameStateCommand(address, validatorPrivateKey);
                 result = await command.execute();

@@ -9,15 +9,21 @@ export enum PlayerAction {
     ALL_IN = "going all-in"
 }
 
+export type MoveDTO = {
+    action: PlayerAction;
+    minAmount: number | undefined;
+    maxAmount: number | undefined;
+}
+
 export type PlayerDTO = {
     address: string;
     chips: number;
-    holeCards?: number[];
-    lastAction?: PlayerAction;
+    holeCards: number[] | undefined;
+    lastMove: MoveDTO | undefined;
+    validMoves: MoveDTO[];
     isActive: boolean;
-    isTurn: boolean;
     isSmallBlind: boolean;
-    isBigBling: boolean;
+    isBigBlind: boolean;
 }
 
 export type TexasHoldemDTO = {
@@ -28,7 +34,6 @@ export type TexasHoldemDTO = {
     communityCards: number[];
     pot: number;
     currentBet: number;
-    currentPlayerAddress: string;
     round: string;
     winner?: number;
 }

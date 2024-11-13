@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { PlayerAction, Seat } from "@/types/game";
+import { Move, Seat } from "@/types/game";
 
 interface PlayerProps {
   address: string;
@@ -14,16 +14,16 @@ interface PlayerProps {
   isActive: boolean;
   isUser: boolean;
   isTurn: boolean;
-  lastAction?: PlayerAction; // Optional since player may not have acted yet
+  lastMove?: Move; // Optional since player may not have acted yet
 }
 
-const PlayerWidget: React.FC<PlayerProps> = ({ address, chips, seat, isActive, isUser, isTurn, lastAction }) => {
+const PlayerWidget: React.FC<PlayerProps> = ({ address, chips, seat, isActive, isUser, isTurn, lastMove }) => {
   // Format address to show first 6 and last 4 characters
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
-  const color = isActive ? "bg-white" : "bg-gray-200";
+  const color = isTurn ? "bg-green-100" : isActive ? "bg-white" : "bg-gray-200";
   const borderColor = isTurn ? "border-black border-2" : "border-gray-400";
 
   return (
@@ -35,7 +35,7 @@ const PlayerWidget: React.FC<PlayerProps> = ({ address, chips, seat, isActive, i
         <CardDescription>{chips} chips</CardDescription>
       </CardHeader>
       <CardFooter>
-        {lastAction && <p>Last Action: {lastAction.action} {lastAction.amount}</p>}
+        {lastMove && <p>Last: {lastMove.action.toUpperCase()} {lastMove.amount ? "$" : ""}{lastMove.amount}</p>}
       </CardFooter>
     </Card>
   );

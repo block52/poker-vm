@@ -5,21 +5,22 @@ import { Player } from "@/types/game";
 
 interface PlayerListProps {
   players: Player[];
+  you: Player;
 }
 
-const PlayerList: React.FC<PlayerListProps> = ({ players }) => {
+const PlayerList: React.FC<PlayerListProps> = ({ players, you }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {players.map((player, idx) => (
+      {players.map((player) => (
         <PlayerWidget
           isActive={player.isActive}
           seat={player.seat}
-          isUser={idx === 0}
+          isUser={you === player}
           isTurn={player.isTurn}
           key={player.address}
           address={player.address}
           chips={player.chips}
-          lastAction={player.lastAction}
+          lastMove={player.lastMove}
         />
       ))}
     </div>
