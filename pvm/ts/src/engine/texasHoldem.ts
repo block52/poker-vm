@@ -38,7 +38,8 @@ class TexasHoldemGame {
             constructor(public game: TexasHoldemGame) { }
             addMove(move: Move): void {
                 this.game._stages[this.game._currentStage].moves.push(move);
-                this.game.nextPlayer();
+                if (![PlayerAction.SMALL_BLIND, PlayerAction.BIG_BLIND].includes(move.action))
+                    this.game.nextPlayer();
             }
         }(this);
         this._actions = [

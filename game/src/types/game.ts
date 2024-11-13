@@ -1,4 +1,4 @@
-import { PlayerAction } from "@bitcoinbrisbane/block52";
+import { MoveDTO, PlayerAction } from "@bitcoinbrisbane/block52";
 
 export enum PlayingCardEnum {
     CARD_BACK = "\u{1F0A0}", 
@@ -103,6 +103,8 @@ export type Move = {
     amount: number | undefined;
 };
 
+export type ValidMove = MoveDTO;
+
 export enum Seat {
     SB = "Small Blind",
     BB = "Big Blind",
@@ -114,6 +116,7 @@ export type Player = {
     chips: number;
     holeCards: number[] | undefined;
     lastMove: Move | undefined;
+    validMoves: ValidMove[];
     seat: Seat;
     isActive: boolean;
     isTurn: boolean;

@@ -18,7 +18,7 @@ export function useGame() {
                 const players = dto.players.map(p => {
                     const seat = p.isBigBlind ? Seat.BB : p.isSmallBlind ? Seat.SB : Seat.NORMAL;
                     const lastMove = p.lastMove ? { action: p.lastMove.action, amount: p.lastMove.minAmount } : undefined;
-                    const isTurn = !!p.validMoves?.length;
+                    const isTurn = !!p.validMoves.length;
                     return { ...p, isTurn, seat, lastMove };
                 });
                 setState({ ...dto, flop, turn, river, players });

@@ -1,6 +1,6 @@
 import PlayerList from "./PlayerList";
+import PlayerMoves from "./PlayerMoves";
 import CardSet from "./CardSet";
-import { GameActions } from "./GameActions";
 import { useGame } from "@/hooks/useGame";
 import { useWallet } from "@/hooks/useWallet";
 
@@ -10,22 +10,6 @@ export default function Game() {
 
     if (!state)
         return (<></>);
-
-    const handleFold = () => {
-        b52?.fold(state.address);
-    };
-
-    const handleRaise = (amount: number) => {
-        b52?.raise(state.address, amount.toString());
-    };
-
-    const handleCall = () => {
-        b52?.call(state.address);
-    };
-
-    const handleCheck = () => {
-        b52?.check(state.address);
-    };
 
     const you = state.players.find(p => p.address == state.players[1].address)!;
 
@@ -45,14 +29,6 @@ export default function Game() {
             </div>
         </CardSet>
         <CardSet name="hole" cards={you.holeCards || []} />
-        {you.isTurn && <GameActions
-            onCall={() => handleCall()}
-            onRaise={amount => handleRaise(amount)}
-            onCheck={() => handleCheck()}
-            onFold={() => handleFold()}
-            minRaise={10}
-            maxRaise={1000}
-        />}
-    </div>
-    );
+        {you.isTurn && <PlayerMoves moves={you.validMoves} performAction={(action, amount) => console.log(action, amount)} />}
+    </div>);
 }
