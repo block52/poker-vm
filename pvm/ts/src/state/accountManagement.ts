@@ -53,7 +53,9 @@ export class AccountManagement {
         }
 
         // Add to recipient
-        await this.incrementBalance(tx.to, tx.value);
+        if (tx.to) {
+            await this.incrementBalance(tx.to, tx.value);
+        }
     }
 
     async applyTransactions(txs: Transaction[]): Promise<void> {
