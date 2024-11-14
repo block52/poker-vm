@@ -9,8 +9,9 @@ export class AccountManagement {
     async createAccount(privateKey: string): Promise<Account> {
         const account = Account.create(privateKey);
 
-        if (await this._getAccount(account.address)) {
-            throw new Error("Account already exists");
+        const existingAccount = await this.getAccount(account.address);
+        if (existingAccount) {
+            return existingAccount;
         }
 
         await Accounts.create(account.toDocument());
@@ -21,7 +22,7 @@ export class AccountManagement {
         const account = await this._getAccount(address);
 
         if (!account) {
-            throw new Error("Account not found");
+            return new Account(address, 0n);
         }
 
         return Account.fromDocument(account);
