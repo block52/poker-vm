@@ -24,3 +24,13 @@ export type AccountDTO = {
     address: string;
     balance: string;
 };
+
+export type BurnResponseDTO = {
+    mintSignature: {
+        amount: string;
+        to: string;
+        nonce: string;
+        signature: string;
+    };
+    burnTransaction: TransactionDTO;
+};

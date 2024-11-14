@@ -1,13 +1,12 @@
 import { ethers, JsonRpcProvider, Contract, InterfaceAbi, ZeroAddress } from "ethers";
 import { getMempoolInstance } from "../core/mempool";
-import { Transaction } from "../models";
+import { Transaction, BurnResponse, NativeToken } from "../models";
 import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { RandomCommand } from "./randomCommand";
-import { NativeToken } from "../models/nativeToken";
 
-export class BurnCommand implements ISignedCommand<Transaction> {
+export class BurnCommand implements ISignedCommand<BurnResponse> {
     private readonly randomCommand: RandomCommand;
     private readonly bridge: Contract;
     private readonly provider: JsonRpcProvider;
@@ -53,7 +52,7 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
     }
 
-    public async execute(): Promise<ISignedResponse<Transaction>> {
+    public async execute(): Promise<ISignedResponse<BurnResponse>> {
         const account = await accounts.findOne({ address: this.burnFromWallet.address });
         if (!account) {
             throw new Error("Burn from account not found");
@@ -81,19 +80,15 @@ export class BurnCommand implements ISignedCommand<Transaction> {
         const signature = await this.signer.signMessage(ethers.getBytes(hash));
         console.log(`Signed hash: ${signature}`);
 
-        const bridgeAuthorisation = {
-            amount: amountToMint,
-            to: this.bridgeTo,
-            nonce: nonce,
-            signature: signature
-        };
-
         const burnTx: Transaction = Transaction.create(null, this.burnFromWallet.address, this.amount, this.privateKey);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
         await mempoolInstance.add(burnTx);
 
-        return signResult(burnTx, this.privateKey);
+        const burnResponse = new BurnResponse(amountToMint, this.bridgeTo, nonce.data, signature, burnTx);
+
+        // Should wait till transaction has been successfully mined before returning signature which allows minting
+        return signResult(burnResponse, this.privateKey);
     }
 }
