@@ -204,9 +204,9 @@ export class RPC {
             }
 
             case RPCMethods.TRANSFER: {
-                // if (request.params?.length !== 3) {
-                //     return makeErrorRPCResponse(id, "Invalid params");
-                // }
+                if (![3, 4].includes(request.params?.length)) {
+                    return makeErrorRPCResponse(id, "Invalid params");
+                }
                 const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
 
                 const command = new TransferCommand(from, to, BigInt(amount), data, validatorPrivateKey);
