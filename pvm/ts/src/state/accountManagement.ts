@@ -49,14 +49,10 @@ export class AccountManagement {
 
     async applyTransaction(tx: Transaction) {
         // Deduct from sender
-        if (tx.from) {
-            await this.decrementBalance(tx.from, tx.value);
-        }
+        await this.decrementBalance(tx.from, tx.value);
 
         // Add to recipient
-        if (tx.to) {
-            await this.incrementBalance(tx.to, tx.value);
-        }
+        await this.incrementBalance(tx.to, tx.value);
     }
 
     async applyTransactions(txs: Transaction[]): Promise<void> {

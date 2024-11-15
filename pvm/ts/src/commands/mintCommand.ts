@@ -62,7 +62,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
             throw new Error("Amount must be greater than 0");
         }
 
-        const mintTx: Transaction = Transaction.create(receiver, null, amountToMint, this.privateKey);
+        const mintTx: Transaction = Transaction.create(receiver, ethers.ZeroAddress, amountToMint, this.privateKey);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
