@@ -10,9 +10,9 @@ describe("Game", function () {
         game.join(new Player("3", 300));
         game.nextGame();
         // Pre-flop
-        game.performAction("3", PlayerAction.FOLD);
         game.performAction("1", PlayerAction.CALL);
         game.performAction("2", PlayerAction.CALL);
+        game.performAction("3", PlayerAction.FOLD);
         // Flop
         game.performAction("2", PlayerAction.CHECK);
         game.performAction("1", PlayerAction.BET, 30);

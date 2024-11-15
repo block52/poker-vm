@@ -33,7 +33,6 @@ class TexasHoldemGame {
         this._stages = [{ moves: [] }];
         this._currentStage = StageType.JOIN;
         this._currentPlayer = 0;
-        this._buttonPosition = 0;
         this._deck = new Deck(DeckType.STANDARD_52);
         this._communityCards = [];
         this._sidePots = new Map<PlayerId, number>();
