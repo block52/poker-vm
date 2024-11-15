@@ -9,9 +9,9 @@ export class AccountManagement {
     async createAccount(privateKey: string): Promise<Account> {
         const account = Account.create(privateKey);
 
-        const existingAccount = await this.getAccount(account.address);
+        const existingAccount = await this._getAccount(account.address);
         if (existingAccount) {
-            return existingAccount;
+            return this.getAccount(account.address);
         }
 
         await Accounts.create(account.toDocument());
