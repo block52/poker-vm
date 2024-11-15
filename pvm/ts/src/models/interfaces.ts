@@ -31,8 +31,8 @@ export interface IAccountDocument {
 }
 
 export interface ITransactionDocument {
-    to?: string;
-    from?: string;
+    to: string;
+    from: string;
     value: string;
     signature: string;
     timestamp: string;

@@ -80,7 +80,7 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         const signature = await this.signer.signMessage(ethers.getBytes(hash));
         console.log(`Signed hash: ${signature}`);
 
-        const burnTx: Transaction = Transaction.create(null, this.burnFromWallet.address, this.amount, this.privateKey);
+        const burnTx: Transaction = Transaction.create(ethers.ZeroAddress, this.burnFromWallet.address, this.amount, this.privateKey);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();

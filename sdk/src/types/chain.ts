@@ -1,6 +1,6 @@
 export type TransactionDTO = {
-    to: string | null;
-    from: string | null;
+    to: string;
+    from: string;
     value: string;
     signature: string;
     timestamp: string;

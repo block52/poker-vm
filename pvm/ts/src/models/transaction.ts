@@ -4,8 +4,8 @@ import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
 
 export class Transaction implements ICryptoModel, IJSONModel {
     constructor(
-        readonly to: string | null,
-        readonly from: string | null,
+        readonly to: string,
+        readonly from: string,
         readonly value: bigint,
         readonly signature: string,
         readonly timestamp: bigint,
@@ -47,7 +47,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
         };
     }
 
-    public static create(to: string | null, from: string | null, value: bigint, privateKey: string): Transaction {
+    public static create(to: string, from: string, value: bigint, privateKey: string): Transaction {
         const timestamp = BigInt(Date.now());
         const signature = createHash("sha256").update(`${to}${from}${value}${timestamp}${privateKey}`).digest("hex");
         return new Transaction(to, from, value, signature, timestamp);
@@ -59,8 +59,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
 
     public static fromDocument(document: ITransactionDocument): Transaction {
         return new Transaction(
-            document.to ?? null,
-            document.from ?? null,
+            document.to,
+            document.from,
             BigInt(document.value),
             document.signature,
             BigInt(document.timestamp),
@@ -70,8 +70,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
 
     public static toDocument(transaction: Transaction): ITransactionDocument {
         return {
-            to: transaction.to ?? undefined,
-            from: transaction.from ?? undefined,
+            to: transaction.to,
+            from: transaction.from,
             value: transaction.value.toString(),
             signature: transaction.signature,
             timestamp: transaction.timestamp.toString(),
