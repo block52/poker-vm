@@ -14,23 +14,18 @@ contract Bridge {
     address public immutable underlying;
     address public immutable vault;
     address private immutable _self;
-    uint256 public immutable lockTime;
     uint256 public totalDeposits;
 
-    mapping(address => uint256) public lockTimes;
-    mapping(address => uint256) public balances;
     mapping(bytes32 => bool) private usedNonces;
     mapping(uint256 => Deposit) public deposits;
     uint256 public depositIndex;
 
-    constructor(address _underlying, address _vault, uint256 _lockTime) {
+    constructor(address _underlying, address _vault) {
         underlying = _underlying;
         vault = _vault;
         _self = address(this);
 
         IERC20(underlying).approve(_self, type(uint256).max);
-
-        lockTime = _lockTime;
     }
 
     function name() external view returns (string memory) {
@@ -44,10 +39,8 @@ contract Bridge {
     function _deposit(uint256 amount, address to) private {
         IERC20 token = IERC20(underlying);
 
-        lockTimes[to] = block.timestamp + lockTime;
         token.transferFrom(msg.sender, _self, amount);
 
-        balances[to] += amount;
         totalDeposits += amount;
 
         deposits[depositIndex] = Deposit(to, amount);
@@ -58,16 +51,14 @@ contract Bridge {
 
     function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature) external {
         require(!usedNonces[nonce], "withdraw: nonce already used");
-        require(lockTimes[to] >= block.timestamp, "withdraw: funds are locked");
-        require(IERC20(underlying).balanceOf(to) >= amount, "withdraw: insufficient balance");
+        require(IERC20(underlying).balanceOf(_self) >= amount, "withdraw: insufficient balance");
 
         bytes32 messageHash = keccak256(abi.encodePacked(to, amount, nonce));
-        address signer = recoverSignerAddress(messageHash, signature);
+        address signer = recoverSignerAddress(getEthSignedMessageHash(messageHash), signature);
 
         require(IValidator(vault).isValidator(signer), "withdraw: invalid signature");
 
         usedNonces[nonce] = true;
-        balances[to] -= amount;
         totalDeposits -= amount;
 
         IERC20 token = IERC20(underlying);
@@ -86,13 +77,6 @@ contract Bridge {
 
         address owner = 0x9943d42D7a59a0abaE451130CcfC77d758da9cA0;
         IERC20(underlying).transferFrom(_self, owner, delta);
-    }
-
-    function receiveApproval(address from, uint256 amount, address token, bytes calldata data) external {
-        require(msg.sender == underlying, "receiveApproval: invalid sender");
-        require(token == underlying, "receiveApproval: invalid token");
-
-        _deposit(amount, from);
     }
 
     function recoverSignerAddress(bytes32 messageHash, bytes memory signature) private pure returns (address) {
