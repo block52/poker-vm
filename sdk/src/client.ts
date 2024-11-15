@@ -1,5 +1,5 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { TexasHoldemDTO } from "./types/game";
+import { PlayerAction, TexasHoldemStateDTO } from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
@@ -168,61 +168,36 @@ export class NodeRpcClient {
         return body.result.data;
     }
 
-    public async fold(gameAddress: string): Promise<void> {
-        const gameCommand = {
-            method: "fold",
-            params: [],
-        };
-        await axios.post(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
-            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
-        });
-    }
-
-    public async call(gameAddress: string): Promise<void> {
-        const gameCommand = {
-            method: "call",
-            params: []
-        };
-        await axios.post(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
-            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
-        });
-    }
-
-    public async raise(gameAddress: string, amount: string): Promise<void> {
-        const gameCommand = {
-            method: "raise",
-            params: [amount],
-        };
-        await axios.post(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
-            params: [ this.wallet.address, gameAddress, amount, JSON.stringify(gameCommand)],
-        });
-    }
-
-    public async check(gameAddress: string): Promise<void> {
-        const gameCommand = {
-            method: "check",
-            params: [],
-        };
-        await axios.post(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
-            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
-        });
-    }
-
-    public async getGameState(gameAddress: string): Promise<TexasHoldemDTO> {
-        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<TexasHoldemDTO>}>
+    public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
+        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<TexasHoldemStateDTO>}>
         (this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_GAME_STATE,
             params: [gameAddress],
         });
         return body.result.data;
+    }
+
+    public async playerJoin(gameAddress: string, playerAddress: string): Promise<void> {
+        const gameCommand = {
+            method: "join"
+        };
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.TRANSFER,
+            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
+        });
+    }
+
+    public async playerAction(gameAddress: string, action: PlayerAction, amount: string): Promise<void> {
+        const gameCommand = {
+            method: action,
+            params: [amount],
+        };
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.TRANSFER,
+            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
+        });
     }
 }

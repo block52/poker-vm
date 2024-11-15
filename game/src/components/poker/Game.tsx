@@ -1,17 +1,19 @@
+import { useParams } from "react-router-dom";
+import { useGame } from "@/hooks/useGame";
+import { useWallet } from "@/hooks/useWallet";
 import PlayerList from "./PlayerList";
 import PlayerMoves from "./PlayerMoves";
 import CardSet from "./CardSet";
-import { useGame } from "@/hooks/useGame";
-import { useWallet } from "@/hooks/useWallet";
 
 export default function Game() {
-    const { state } = useGame();
-    const { b52 } = useWallet();
+    const { gameId } = useParams();
+    const { address } = useWallet();
+    const { state, join, performAction } = useGame(gameId);
 
     if (!state)
-        return (<></>);
+        return (<div><button onClick={() => join?.(address)}>Join</button></div>);
 
-    const you = state.players.find(p => p.address == state.players[1].address)!;
+    const you = state.players.find(p => p.address === address)!;
 
     return (<div>
         <PlayerList players={state.players} you={you} />
@@ -29,6 +31,6 @@ export default function Game() {
             </div>
         </CardSet>
         <CardSet name="hole" cards={you.holeCards || []} />
-        {you.isTurn && <PlayerMoves moves={you.validMoves} performAction={(action, amount) => console.log(action, amount)} />}
+        {you.isTurn && <PlayerMoves moves={you.validMoves} performAction={performAction} />}
     </div>);
 }

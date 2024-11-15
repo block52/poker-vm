@@ -26,7 +26,13 @@ export type PlayerDTO = {
     isBigBlind: boolean;
 }
 
-export type TexasHoldemDTO = {
+export type TexasHoldemJoinStateDTO = {
+    type: "join",
+    players: string[];
+}
+
+export type TexasHoldemGameStateDTO = {
+    type: "game",
     address: string;
     smallBlind: number;
     bigBlind: number;
@@ -37,3 +43,5 @@ export type TexasHoldemDTO = {
     round: string;
     winner?: number;
 }
+
+export type TexasHoldemStateDTO = TexasHoldemJoinStateDTO | TexasHoldemGameStateDTO;

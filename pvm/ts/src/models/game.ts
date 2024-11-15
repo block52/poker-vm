@@ -1,4 +1,4 @@
-import { MoveDTO, PlayerAction, PlayerDTO, TexasHoldemDTO } from "@bitcoinbrisbane/block52";
+import { MoveDTO, PlayerAction, PlayerDTO, TexasHoldemGameStateDTO, TexasHoldemJoinStateDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { IJSONModel } from "./interfaces";
 import { Card } from "./deck";
 import TexasHoldemGame from "../engine/texasHoldem";
@@ -15,7 +15,8 @@ export enum StageType {
     FLOP = 1,
     TURN = 2,
     RIVER = 3,
-    SHOWDOWN = 4
+    SHOWDOWN = 4,
+    JOIN = 5
 }
 
 export enum PlayerStatus {
@@ -39,13 +40,11 @@ export interface IUpdate {
 export class Player {
     constructor(
         private _address: string,
-        private _name: string,
         public chips: number,
         public holeCards?: [Card, Card]
     ) { }
 
     get id(): PlayerId { return this._address; }
-    get name(): string { return this._name; }
 
     getPlayerState(game: TexasHoldemGame, position: number) {
         const isActive = game.getPlayerStatus(this) === PlayerStatus.ACTIVE;
@@ -76,7 +75,18 @@ export class PlayerState implements IJSONModel {
     public toJson(): PlayerDTO { return this._dto; }
 }
 
-export class TexasHoldemState implements IJSONModel {
+export class TexasHoldemJoinState implements IJSONModel {
+    private readonly _dto: TexasHoldemJoinStateDTO;
+
+    constructor(players: PlayerId[]) {
+        this._dto = { type: "join", players };
+    }
+
+    public toJson(): TexasHoldemJoinStateDTO { return this._dto; }
+
+}
+
+export class TexasHoldemGameState implements IJSONModel {
     private static RoundMap = new Map<StageType, string>([
         [StageType.PRE_FLOP, "Pre-flop"],
         [StageType.FLOP, "Flop"],
@@ -85,7 +95,7 @@ export class TexasHoldemState implements IJSONModel {
         [StageType.SHOWDOWN, "Showdown"],
     ]);
 
-    private readonly _dto: TexasHoldemDTO;
+    private readonly _dto: TexasHoldemGameStateDTO;
 
     constructor(
         address: string,
@@ -100,9 +110,16 @@ export class TexasHoldemState implements IJSONModel {
     ) {
         const players = players_.map(p => p.toJson());
         const communityCards = communityCards_.map(c => c.value);
-        const round = TexasHoldemState.RoundMap.get(round_)!;
-        this._dto = { address, smallBlind, bigBlind, players, communityCards, pot, currentBet, round };
+        const round = TexasHoldemGameState.RoundMap.get(round_)!;
+        this._dto = { type: "game", address, smallBlind, bigBlind, players, communityCards, pot, currentBet, round };
     }
 
-    public toJson(): TexasHoldemDTO { return this._dto; }
+    public toJson(): TexasHoldemGameStateDTO { return this._dto; }
+}
+
+export class TexasHoldemState implements IJSONModel {
+    constructor(private _state?: TexasHoldemJoinState | TexasHoldemGameState) {
+    }
+
+    public toJson(): TexasHoldemStateDTO { return this._state?.toJson() ?? { type: "join", players: [] } };
 }

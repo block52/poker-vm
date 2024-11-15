@@ -1,5 +1,5 @@
 import { PlayerAction } from "@bitcoinbrisbane/block52";
-import { IUpdate, Move, Player, PlayerId, PlayerStatus, StageType, TexasHoldemState, ValidMove } from "../models/game";
+import { IUpdate, Move, Player, PlayerId, PlayerStatus, StageType, TexasHoldemGameState, TexasHoldemJoinState, ValidMove } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import AllInAction from "./actions/allInAction";
 import BaseAction from "./actions/baseAction";
@@ -18,6 +18,8 @@ type Stage = {
 }
 
 class TexasHoldemGame {
+    private readonly _update: IUpdate
+    private _players: Player[];
     private _stages: Stage[];
     private _currentStage: StageType;
     private _currentPlayer: number;
@@ -26,15 +28,17 @@ class TexasHoldemGame {
     private _sidePots: Map<PlayerId, number>;
     private _actions: BaseAction[];
 
-    constructor(private _address: string, private _players: Player[], private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number) {
+    constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
+        this._players = [];
         this._stages = [{ moves: [] }];
-        this._currentStage = StageType.PRE_FLOP;
-        this._currentPlayer = (this._buttonPosition + 3) % _players.length;
+        this._currentStage = StageType.JOIN;
+        this._currentPlayer = 0;
+        this._buttonPosition = 0;
         this._deck = new Deck(DeckType.STANDARD_52);
         this._communityCards = [];
         this._sidePots = new Map<PlayerId, number>();
 
-        const update = new class implements IUpdate {
+        this._update = new class implements IUpdate {
             constructor(public game: TexasHoldemGame) { }
             addMove(move: Move): void {
                 this.game._stages[this.game._currentStage].moves.push(move);
@@ -43,17 +47,16 @@ class TexasHoldemGame {
             }
         }(this);
         this._actions = [
-            new FoldAction(this, update),
-            new CheckAction(this, update),
-            new BetAction(this, update),
-            new CallAction(this, update),
-            new RaiseAction(this, update),
-            new AllInAction(this, update)
+            new FoldAction(this, this._update),
+            new CheckAction(this, this._update),
+            new BetAction(this, this._update),
+            new CallAction(this, this._update),
+            new RaiseAction(this, this._update),
+            new AllInAction(this, this._update)
         ];
-
-        this.start(update);
     }
 
+    get players() { return [...this._players]; }
     get bigBlind() { return this._bigBlind; }
     get smallBlind() { return this._smallBlind; }
     get bigBlindPosition() { return (this._buttonPosition + 2) % this._players.length; }
@@ -62,14 +65,28 @@ class TexasHoldemGame {
     get currentStage() { return this._currentStage; }
     get pot() { return this.getStartingPot() + this.getTotalStake(); }
     get state() {
-        return new TexasHoldemState(this._address,
-            this._smallBlind,
-            this._bigBlind,
-            this._players.map((p, i) => p.getPlayerState(this, i)),
-            this._communityCards,
-            this.pot,
-            this.getMaxStake(),
-            this._currentStage);
+        return this.currentStage == StageType.JOIN ?
+            new TexasHoldemJoinState(this._players.map(p => p.id)) :
+            new TexasHoldemGameState(this._address,
+                this._smallBlind,
+                this._bigBlind,
+                this._players.map((p, i) => p.getPlayerState(this, i)),
+                this._communityCards,
+                this.pot,
+                this.getMaxStake(),
+                this._currentStage);
+    }
+
+    nextGame() {
+        if (![StageType.JOIN, StageType.SHOWDOWN].includes(this.currentStage))
+            throw new Error("Game currently in progress.");
+        this.start(this._update);
+    }
+
+    join(player: Player) {
+        if (this.currentStage != StageType.JOIN)
+            throw new Error("Cannot join once game started.");
+        this._players.push(player);
     }
 
     getValidActions(playerId: string): ValidMove[] {
@@ -92,6 +109,8 @@ class TexasHoldemGame {
     }
 
     performAction(playerId: string, action: PlayerAction, amount?: number) {
+        if (this.currentStage == StageType.JOIN)
+            throw new Error(`Cannot perform ${action} until game started.`)
         return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
 
@@ -141,6 +160,8 @@ class TexasHoldemGame {
     private start(update: IUpdate) {
         this._deck.shuffle();
         this._players.forEach(p => p.holeCards = this._deck.deal(2) as [Card, Card]);
+        this._currentStage = StageType.PRE_FLOP;
+        this._currentPlayer = (this._buttonPosition + 3) % this._players.length;
         new BigBlindAction(this, update).execute(this._players[this.bigBlindPosition]);
         new SmallBlindAction(this, update).execute(this._players[this.smallBlindPosition]);
     }

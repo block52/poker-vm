@@ -2,20 +2,23 @@ import { Player } from "../models/game";
 import TexasHoldemGame from "../engine/texasHoldem";
 
 export class GameManagement {
-  private static _game: Map<string, TexasHoldemGame> = new Map<string, TexasHoldemGame>();
+    private static _game: Map<string, TexasHoldemGame> = new Map<string, TexasHoldemGame>();
 
-  getGame(address: string): TexasHoldemGame {
-    if (!GameManagement._game.has(address)) {
-      const players: Player[] = [
-        new Player("1", "Joe", 100),
-        new Player("2", "John", 200),
-        new Player("3", "Jack", 300)
-      ];
-      GameManagement._game.set(address, new TexasHoldemGame(address, players, 10, 30, 0));
-
+    join(gameAddress: string, playerAddress: string) {
+        let game = GameManagement._game.get(gameAddress);
+        if (!game) {
+            game = new TexasHoldemGame(gameAddress, 10, 30);
+            GameManagement._game.set(gameAddress, game);
+        }
+        game.join(new Player(playerAddress, 100));
+        console.log(`Player ${playerAddress} joining ${gameAddress}`);
+        if (game.players.length == 3)
+            game.nextGame();
     }
-    return GameManagement._game.get(address)!;
-  }
+
+    get(address: string): TexasHoldemGame | undefined {
+        return GameManagement._game.get(address);
+    }
 }
 
 export default GameManagement;

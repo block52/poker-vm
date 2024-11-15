@@ -4,13 +4,15 @@ import TexasHoldemGame from "./texasHoldem";
 
 describe("Game", function () {
     it("should process messages", function () {
-        const players: Player[] = [new Player("1", "Joe", 100), new Player("2", "John", 200), new Player("3", "Jack", 300)];
-        const game = new TexasHoldemGame("0x1234", players, 10, 30, 0);
+        const game = new TexasHoldemGame("0x1234", 10, 30);
+        game.join(new Player("1", 100));
+        game.join(new Player("2", 200));
+        game.join(new Player("3", 300));
+        game.nextGame();
         // Pre-flop
         game.performAction("3", PlayerAction.FOLD);
         game.performAction("1", PlayerAction.CALL);
         game.performAction("2", PlayerAction.CALL);
-        console.log(players);
         // Flop
         game.performAction("2", PlayerAction.CHECK);
         game.performAction("1", PlayerAction.BET, 30);
@@ -21,12 +23,15 @@ describe("Game", function () {
         // River
         game.performAction("2", PlayerAction.CHECK);
         game.performAction("1", PlayerAction.CHECK);
-        console.log(players);
     });
 
     it("should allow a round to be played", function () {
-        const players: Player[] = [new Player("1", "Joe", 250), new Player("2", "John", 200), new Player("3", "Jack", 100), new Player("4", "Jill", 100)];
-        const game = new TexasHoldemGame("0x12345", players, 10, 25, 2);
+        const game = new TexasHoldemGame("0x12345", 10, 25, 2);
+        game.join(new Player("1", 250));
+        game.join(new Player("2", 200));
+        game.join(new Player("3", 100));
+        game.join(new Player("4", 100));
+        game.nextGame();
 
         expect(game.getStakes().get("4")).toEqual(10); // Small blind
         expect(game.getStakes().get("1")).toEqual(25); // Big blind

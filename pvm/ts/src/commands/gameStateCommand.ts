@@ -9,14 +9,12 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemState> {
     constructor(
         readonly address: string,
         private readonly privateKey: string
-    ) { 
+    ) {
         this.gameManagement = new GameManagement();
     }
 
     public async execute(): Promise<ISignedResponse<TexasHoldemState>> {
-        const gameState = this.gameManagement.getGame(this.address)?.state;
-        if (!gameState)
-            throw new Error("Game not found");
-        return signResult(gameState, this.privateKey);
+        const game = this.gameManagement.get(this.address);
+        return signResult(game?.state ?? new TexasHoldemState(), this.privateKey);
     }
 }

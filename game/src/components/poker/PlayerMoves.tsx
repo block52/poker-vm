@@ -52,7 +52,7 @@ export default function PlayerMoves({ moves, ...remain }: PlayerMovesProps) {
         <CardTitle>Actions</CardTitle>
       </CardHeader>
       <CardContent>
-        {moves.map(m => <PlayerMove move={m} {...remain}></PlayerMove>)}
+        {moves.map(m => <PlayerMove key={m.action} move={m} {...remain}></PlayerMove>)}
       </CardContent>
     </Card>
   );
