@@ -9,8 +9,8 @@ export class AccountManagement {
     async createAccount(privateKey: string): Promise<Account> {
         const account = Account.create(privateKey);
 
-        const existingAccount = await this._getAccount(account.address);
-        if (existingAccount) {
+        // If this account already exists, just return the existing account
+        if (await this._getAccount(account.address)) {
             return this.getAccount(account.address);
         }
 
