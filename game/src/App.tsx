@@ -1,32 +1,15 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Wallet } from "./components/wallet/Wallet";
-import GamePage from "./components/pages/GamePage";
-import HomePage from "./components/pages/HomePage";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import PokerTable from "./PokerTable"; // Adjust this import path as needed
 
-import "./App.css";
-import { ThemeProvider } from "./components/theme/ThemeProvider";
-
-function App() {
-    return (
-        <ThemeProvider defaultTheme="dark" storageKey="b52-ui-theme">
-            <Router>
-                <div className="App">
-                    <div className="banner">
-                        <Wallet />
-                    </div>
-                    <div className="content">
-                        <Routes>
-                            <Route path="/" element={<HomePage />} />
-                            <Route
-                                path="/game/:gameId"
-                                element={<GamePage />}
-                            />
-                        </Routes>
-                    </div>
-                </div>
-            </Router>
-        </ThemeProvider>
-    );
-}
+const App = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/table" element={<PokerTable />} />
+        <Route path="/" element={<Navigate to="/table" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 export default App;

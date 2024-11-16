@@ -14,7 +14,7 @@ export function createWallet() {
 
 export function saveWallet(wallet: ethers.Wallet) {
     // Save to local storage
-   
+
     const encrypted = encryptString(wallet.privateKey, import.meta.env.VITE_ENCRYPTION_KEY ?? "");
     localStorage.setItem("wallet", encrypted);
 }
@@ -31,8 +31,16 @@ export function loadWallet(): ethers.Wallet {
     return new ethers.Wallet(decrypted);
 }
 
-export const encryptString = (message: string, key: string) => message;
-  //CryptoJS.AES.encrypt(message, key).toString();
+export const encryptString = (message: string, key: string) => {
+    console.log(message);
+    console.log(key);
+    return message;
+}
+//CryptoJS.AES.encrypt(message, key).toString();
 
-export const decryptString = (cipher: string, key: string) => cipher;
-  //CryptoJS.AES.decrypt(cipher, key).toString(CryptoJS.enc.Utf8);
+export const decryptString = (cipher: string, key: string) => {
+    console.log(cipher);
+    console.log(key);
+    return cipher;
+}
+//CryptoJS.AES.decrypt(cipher, key).toString(CryptoJS.enc.Utf8);
