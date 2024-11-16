@@ -64,8 +64,7 @@ export type PlayerId = string;
 
 export type Player = {
     id: PlayerId;
-    name: string;
-    address?: string;
+    address: string;
     chips: number;
     holeCards?: [Card, Card]; // Each player has 2 cards, represented as strings like 'As' (Ace of spades)
 };
