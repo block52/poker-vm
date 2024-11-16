@@ -1,9 +1,10 @@
+import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
 import { ActionType, Player } from "./types";
 
-describe("Game", function () {
-    it("should process messages", function () {
-        const players: Player[] = [{ id: "1", name: "Joe", chips: 100 }, { id: "2", name: "John", chips: 200 }, { id: "3", name: "Jack", chips: 300 }];
+describe("Game", () => {
+    it("should process messages", () => {
+        const players: Player[] = [{ id: "1", chips: 100, address: ethers.ZeroAddress }, { id: "2", chips: 200, address: ethers.ZeroAddress }, { id: "3", chips: 300, address: ethers.ZeroAddress }];
         const game = new TexasHoldemGame(players, 10, 30, 0);
         // Pre-flop
         game.performAction("3", ActionType.FOLD);
