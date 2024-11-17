@@ -2,7 +2,7 @@
 FROM golang:1.21-alpine AS builder
 
 # Set working directory
-WORKDIR /app
+WORKDIR /cmd
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -19,10 +19,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 # Final stage
 FROM alpine:latest
 
-WORKDIR /app
+WORKDIR /cmd
 
 # Copy the binary from builder
-COPY --from=builder /app/main .
+COPY --from=builder /app/cmd .
 
 # Expose port 8080
 EXPOSE 8080
