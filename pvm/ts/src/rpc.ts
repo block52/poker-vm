@@ -23,6 +23,7 @@ import { TransferCommand } from "./commands/transferCommand";
 import { BurnCommand } from "./commands/burnCommand";
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
+import { BalanceCommand } from "./commands/balanceCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -92,6 +93,15 @@ export class RPC {
                     return makeErrorRPCResponse(id, "Invalid params");
                 }
                 let command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.GET_BALANCE: {
+                if (!request.params) {
+                    return makeErrorRPCResponse(id, "Invalid params");
+                }
+                let command = new BalanceCommand(request.params[0] as string, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
