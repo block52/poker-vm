@@ -6,10 +6,11 @@
 package main
 
 import (
-	"log"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"log"
+	"math/big"
+	"net/http"
+	"net/rpc"
 )
 
 type Response struct {
@@ -22,7 +23,28 @@ type RPCRequest struct {
 }
 
 type RPCResponse struct {
+	Id     string `json:"id"`
 	Result string `json:"result"`
+}
+
+type AccountResponse struct {
+	Balance string
+	Exists  bool
+}
+
+type BalanceRequest struct {
+	AccountID string
+}
+
+type BalanceResponse struct {
+	Balance string
+	Exists  bool
+}
+
+type APIBalanceResponse struct {
+	AccountID string   `json:"accountId"`
+	Balance   *big.Int `json:"balance"`
+	Exists    bool     `json:"exists"`
 }
 
 const node = "https://node1.block52.xyz"
@@ -36,6 +58,7 @@ func main() {
 	api := router.Group("/api")
 	{
 		api.GET("/", helloHandler)
+		api.GET("/balance/:accountId", balanceHandler)
 	}
 
 	// Start server on port 8080
@@ -53,14 +76,48 @@ func helloHandler(c *gin.Context) {
 }
 
 func balanceHandler(c *gin.Context) {
-	var request RPCRequest
-	if err := c.BindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Connect to RPC server
+	client, err := rpc.Dial("tcp", "rpc:1234")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to connect to RPC server: " + err.Error(),
+		})
+		return
+	}
+	defer client.Close()
+
+	// Get account ID from path parameter
+	accountID := c.Param("accountId")
+	if accountID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Account ID is required",
+		})
 		return
 	}
 
-	response := RPCResponse{
-		Result: "1000",
+	// Prepare request and response objects
+	req := &BalanceRequest{AccountID: accountID}
+	var res BalanceResponse
+
+	// Make RPC call
+	err = client.Call("BalanceService.GetBalance", req, &res)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "RPC call failed: " + err.Error(),
+		})
+		return
 	}
-	c.JSON(http.StatusOK, response)
+
+	// Convert string balance back to big.Int
+	balance := new(big.Int)
+	balance.SetString(res.Balance, 10)
+
+	// Prepare API response
+	apiResponse := APIBalanceResponse{
+		AccountID: accountID,
+		Balance:   balance,
+		Exists:    res.Exists,
+	}
+
+	c.JSON(http.StatusOK, apiResponse)
 }
