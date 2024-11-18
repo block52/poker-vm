@@ -20,6 +20,7 @@ import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
 import { TransferCommand } from "./commands/transferCommand";
+import { BurnCommand } from "./commands/burnCommand";
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { GameStateCommand } from "./commands/gameStateCommand";
@@ -206,7 +207,19 @@ export class RPC {
                 const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
 
                 const command = new MintCommand(depositIndex, validatorPrivateKey);
+                result = await command.execute();
 
+                break;
+            }
+
+            case RPCMethods.BURN: {
+                if (request.params?.length !== 3) {
+                    return makeErrorRPCResponse(id, "Invalid params");
+                }
+                const [burnFrom, amountString, bridgeTo] = request.params as RPCRequestParams[RPCMethods.BURN];
+                const amount = BigInt(amountString); // JSON doesn't allow BigInts
+
+                const command = new BurnCommand(burnFrom, amount, bridgeTo, validatorPrivateKey);
                 result = await command.execute();
 
                 break;

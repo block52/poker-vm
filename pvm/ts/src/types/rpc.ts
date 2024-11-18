@@ -15,15 +15,12 @@ export const READ_METHODS = [
 ];
 
 export const WRITE_METHODS = [
+    RPCMethods.BURN,
     RPCMethods.CREATE_CONTRACT_SCHEMA,
     RPCMethods.CREATE_ACCOUNT,
     RPCMethods.MINE,
     RPCMethods.MINT,
-    RPCMethods.TRANSFER,
+    RPCMethods.TRANSFER
 ];
 
-export const CONTROL_METHODS = [
-    RPCMethods.START,
-    RPCMethods.STOP,
-    RPCMethods.SHUTDOWN,
-];
+export const CONTROL_METHODS = [RPCMethods.START, RPCMethods.STOP, RPCMethods.SHUTDOWN];

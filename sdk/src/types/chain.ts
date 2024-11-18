@@ -1,12 +1,12 @@
 export type TransactionDTO = {
     to: string;
-    from: string | null;
+    from: string;
     value: string;
     signature: string;
     timestamp: string;
     hash: string;
     index?: string;
-}
+};
 
 export type BlockDTO = {
     hash: string;
@@ -18,9 +18,19 @@ export type BlockDTO = {
     merkleRoot: string;
     previousHash: string;
     transactions: TransactionDTO[];
-}
+};
 
 export type AccountDTO = {
     address: string;
     balance: string;
-}
+};
+
+export type BurnResponseDTO = {
+    mintSignature: {
+        amount: string;
+        to: string;
+        nonce: string;
+        signature: string;
+    };
+    burnTransaction: TransactionDTO;
+};

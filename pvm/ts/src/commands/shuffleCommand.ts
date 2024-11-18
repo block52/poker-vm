@@ -22,7 +22,7 @@ export class ShuffleCommand implements ISignedCommand<Deck> {
             seed.push(random.data[i]);
         }
 
-        this.deck.shuffle(seed);
+        this.deck.shuffle();
 
         return signResult(this.deck, this.privateKey);
     }

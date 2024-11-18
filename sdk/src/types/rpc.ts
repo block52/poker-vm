@@ -17,6 +17,7 @@ export type RPCResponse<T> = {
 };
 
 export enum RPCMethods {
+    BURN = "burn",
     CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
     GET_ACCOUNT = "get_account",
@@ -39,6 +40,7 @@ export enum RPCMethods {
 }
 
 export type RPCRequestParams = {
+    [RPCMethods.BURN]: [string, string, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
