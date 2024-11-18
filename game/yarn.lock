@@ -190,8 +190,10 @@
     "@babel/helper-string-parser" "^7.25.9"
     "@babel/helper-validator-identifier" "^7.25.9"
 
-"@bitcoinbrisbane/block52@file:../sdk":
-  version "1.0.7"
+"@bitcoinbrisbane/block52@1.0.14":
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.14.tgz#adb6563fce4051319da1b6d0580c4013d4d27ed4"
+  integrity sha512-HDc0aI55y5C0Dwur7o2mZBUs0OnYnpKiVjATs9OTNDr+GL4qgeFO9XuEl3F1g2VjgmxYe97mP4AUZD8/lIyHKA==
   dependencies:
     axios "^1.7.7"
     ethers "^6.13.4"
