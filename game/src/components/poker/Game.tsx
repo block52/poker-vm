@@ -1,9 +1,11 @@
 import { useParams } from "react-router-dom";
 import { useGame } from "@/hooks/useGame";
 import { useWallet } from "@/hooks/useWallet";
+import WinnerList from "./WinnerList";
 import PlayerList from "./PlayerList";
 import PlayerMoves from "./PlayerMoves";
 import CardSet from "./CardSet";
+import { Button } from "../ui/button";
 
 export default function Game() {
     const { gameId } = useParams();
@@ -11,12 +13,15 @@ export default function Game() {
     const { state, join, performAction } = useGame(gameId);
 
     if (!state)
-        return (<div><button onClick={() => join?.(address)}>Join</button></div>);
+        return (<div><Button variant="default" onClick={() => join?.(address)}>Join</Button></div>);
 
     const you = state.players.find(p => p.address === address)!;
 
     return (<div>
-        <PlayerList players={state.players} you={you} />
+
+        {state.winners.length ?
+            <WinnerList winners={state.winners} /> :
+            <PlayerList players={state.players} you={you} />}
         <CardSet name="community" cards={[...state.flop, state.turn, state.river]} >
             <div className="flex justify-between m-6 mt-0">
                 <div className="text-start">

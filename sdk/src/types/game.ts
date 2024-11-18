@@ -15,6 +15,11 @@ export type MoveDTO = {
     maxAmount: number | undefined;
 }
 
+export type WinnerDTO = {
+    address: string;
+    amount: number;    
+}
+
 export type PlayerDTO = {
     address: string;
     chips: number;
@@ -22,6 +27,7 @@ export type PlayerDTO = {
     lastMove: MoveDTO | undefined;
     validMoves: MoveDTO[];
     isActive: boolean;
+    isEliminated: boolean;
     isSmallBlind: boolean;
     isBigBlind: boolean;
 }
@@ -41,7 +47,7 @@ export type TexasHoldemGameStateDTO = {
     pot: number;
     currentBet: number;
     round: string;
-    winner?: number;
+    winners: WinnerDTO[];
 }
 
 export type TexasHoldemStateDTO = TexasHoldemJoinStateDTO | TexasHoldemGameStateDTO;

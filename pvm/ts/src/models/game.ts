@@ -22,7 +22,8 @@ export enum StageType {
 export enum PlayerStatus {
     ACTIVE,
     FOLD,
-    ALL_IN
+    ALL_IN,
+    ELIMINATED
 }
 
 export type Move = {
@@ -47,12 +48,14 @@ export class Player {
     get id(): PlayerId { return this._address; }
 
     getPlayerState(game: TexasHoldemGame, position: number) {
-        const isActive = game.getPlayerStatus(this) === PlayerStatus.ACTIVE;
+        const status = game.getPlayerStatus(this);
+        const isActive = status === PlayerStatus.ACTIVE;
+        const isEliminated = status == PlayerStatus.ELIMINATED;
         const isSmallBlind = game.smallBlindPosition === position;
         const isBigBlind = game.bigBlindPosition === position;
         const lastMove = game.getLastAction(this.id);
         const validMoves = game.getValidActions(this.id);
-        return new PlayerState(this, isActive, isSmallBlind, isBigBlind, lastMove, validMoves);
+        return new PlayerState(this, isActive, isEliminated, isSmallBlind, isBigBlind, lastMove, validMoves);
     }
 }
 
@@ -62,6 +65,7 @@ export class PlayerState implements IJSONModel {
     constructor(
         player: Player,
         isActive: boolean,
+        isEliminated: boolean,
         isSmallBlind: boolean,
         isBigBlind: boolean,
         lastMove_: Move | undefined,
@@ -69,7 +73,7 @@ export class PlayerState implements IJSONModel {
     ) {
         const holeCards = player.holeCards?.map(p => p.value);
         const lastMove = lastMove_ ? { action: lastMove_.action, minAmount: lastMove_.amount, maxAmount: undefined } : undefined;
-        this._dto = { address: player.id, chips: player.chips, holeCards, lastMove, validMoves, isActive, isSmallBlind, isBigBlind };
+        this._dto = { address: player.id, chips: player.chips, holeCards, lastMove, validMoves, isActive, isEliminated, isSmallBlind, isBigBlind };
     }
 
     public toJson(): PlayerDTO { return this._dto; }
@@ -106,12 +110,13 @@ export class TexasHoldemGameState implements IJSONModel {
         pot: number,
         currentBet: number,
         round_: StageType,
-        winner?: number,
+        winners_?: Map<PlayerId, number>
     ) {
         const players = players_.map(p => p.toJson());
         const communityCards = communityCards_.map(c => c.value);
         const round = TexasHoldemGameState.RoundMap.get(round_)!;
-        this._dto = { type: "game", address, smallBlind, bigBlind, players, communityCards, pot, currentBet, round };
+        const winners = winners_ ? Array.from(winners_.entries()).map(([address, amount]) => ({ address, amount })) : [];
+        this._dto = { type: "game", address, smallBlind, bigBlind, players, communityCards, pot, currentBet, round, winners };
     }
 
     public toJson(): TexasHoldemGameStateDTO { return this._dto; }

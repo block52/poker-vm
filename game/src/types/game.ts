@@ -1,4 +1,4 @@
-import { MoveDTO, PlayerAction } from "@bitcoinbrisbane/block52";
+import { MoveDTO, PlayerAction, WinnerDTO } from "@bitcoinbrisbane/block52";
 
 export enum PlayingCardEnum {
     CARD_BACK = "\u{1F0A0}", 
@@ -89,15 +89,6 @@ export function intToPlayingCard(num: number): PlayingCardInfo {
     return { suit, rank, unicode };
 }
 
-export enum States {
-    INIT = "INIT",
-    WAITING_FOR_PLAYERS = "WAITING_FOR_PLAYERS",
-    DEALING = "DEALING",
-    BETTING = "BETTING",
-    SHOWDOWN = "SHOWDOWN",
-    END = "END"
-}
-
 export type Move = {
     action: PlayerAction;
     amount: number | undefined;
@@ -111,6 +102,8 @@ export enum Seat {
     NORMAL = "---"
 }
 
+export type Winner = WinnerDTO;
+
 export type Player = {
     address: string;
     chips: number;
@@ -119,6 +112,7 @@ export type Player = {
     validMoves: ValidMove[];
     seat: Seat;
     isActive: boolean;
+    isEliminated: boolean;
     isTurn: boolean;
 };
 
@@ -133,5 +127,5 @@ export type TexasHoldemState = {
     pot: number;
     currentBet: number;
     round: string;
-    winner?: number;
+    winners: Winner[];
 };

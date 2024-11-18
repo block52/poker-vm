@@ -26,6 +26,7 @@ class TexasHoldemGame {
     private _deck: Deck;
     private _communityCards: Card[];
     private _sidePots: Map<PlayerId, number>;
+    private _winners?: Map<PlayerId, number>;
     private _actions: BaseAction[];
 
     constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
@@ -63,6 +64,7 @@ class TexasHoldemGame {
     get currentPlayerId() { return this._players[this._currentPlayer].id; }
     get currentStage() { return this._currentStage; }
     get pot() { return this.getStartingPot() + this.getTotalStake(); }
+    get winners() { return this._winners; }
     get state() {
         return this.currentStage == StageType.JOIN ?
             new TexasHoldemJoinState(this._players.map(p => p.id)) :
@@ -73,7 +75,8 @@ class TexasHoldemGame {
                 this._communityCards,
                 this.pot,
                 this.getMaxStake(),
-                this._currentStage);
+                this._currentStage,
+                this._winners);
     }
 
     nextGame() {
@@ -104,7 +107,14 @@ class TexasHoldemGame {
 
     getLastAction(playerId: string): Move | undefined {
         const player = this.getPlayer(playerId);
-        return this.getPlayerMoves(player).at(-1);
+        const status = this.getPlayerStatus(player);
+        if (status == PlayerStatus.ACTIVE)
+            return this.getPlayerMoves(player).at(-1);
+        else if (status == PlayerStatus.ALL_IN)
+            return { playerId, action: PlayerAction.ALL_IN };
+        else if (status == PlayerStatus.FOLD)
+            return { playerId, action: PlayerAction.FOLD };
+        return undefined;
     }
 
     performAction(playerId: string, action: PlayerAction, amount?: number) {
@@ -121,14 +131,16 @@ class TexasHoldemGame {
     }
 
     getPlayerStatus(player: Player): PlayerStatus {
+        let totalMoves: number = 0;
         for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
             const moves = this.getPlayerMoves(player, stage);
+            totalMoves += moves.length;
             if (moves.some(m => m.action == PlayerAction.FOLD))
                 return PlayerStatus.FOLD;
             if (moves.some(m => m.action == PlayerAction.ALL_IN))
                 return PlayerStatus.ALL_IN;
         }
-        return PlayerStatus.ACTIVE;
+        return !totalMoves && !player.chips ? PlayerStatus.ELIMINATED : PlayerStatus.ACTIVE;
     }
 
     getStakes(stage: StageType = this._currentStage): Map<string, number> {
@@ -161,6 +173,7 @@ class TexasHoldemGame {
         this._players.forEach(p => p.holeCards = this._deck.deal(2) as [Card, Card]);
         this._currentStage = StageType.PRE_FLOP;
         this._currentPlayer = (this._buttonPosition + 3) % this._players.length;
+        this._winners = undefined;
         new BigBlindAction(this, update).execute(this._players[this.bigBlindPosition]);
         new SmallBlindAction(this, update).execute(this._players[this.smallBlindPosition]);
     }
@@ -214,19 +227,25 @@ class TexasHoldemGame {
         const hands = new Map<PlayerId, any>(this._players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))]));
         const active = this._players.filter(p => this.getPlayerStatus(p) == PlayerStatus.ACTIVE);
         const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
+        this._winners = new Map<PlayerId, number>();
         let pot = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
         let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
         while (orderedPots.length) {
             const [playerId, sidePot] = orderedPots[0];
             const remainder = pot - sidePot;
-            winningPlayers.forEach(p => p.chips += remainder / winningPlayers.length);
+            winningPlayers.forEach(p => update(p, remainder / winningPlayers.length, this._winners!));
             winningHands = PokerSolver.Hand.winners(winningHands.concat(hands.get(playerId)));
             winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
             pot = sidePot;
             orderedPots.shift();
         }
-        winningPlayers.forEach(p => p.chips += pot / winningPlayers.length);
+        winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
+
+        function update(player: Player, portion: number, winners: Map<PlayerId, number>) {
+            player.chips += portion;
+            winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
+        }
 
         function toPokerSolverMnemonic(card: Card) {
             return card.mnemonic.replace("10", "T");

@@ -14,6 +14,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ players, you }) => {
       {players.map((player) => (
         <PlayerWidget
           isActive={player.isActive}
+          isEliminated={player.isEliminated}
           seat={player.seat}
           isUser={you === player}
           isTurn={player.isTurn}
