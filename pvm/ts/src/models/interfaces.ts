@@ -26,7 +26,7 @@ export interface IBlockDocument {
 
 export interface IAccountDocument {
     address: string;
-    balance: number;
+    balance: string;
     nonce: number;
 }
 

@@ -5,19 +5,19 @@ const accountSchema = new Schema<IAccountDocument>(
     {
         address: {
             required: true,
-            type: String,
+            type: String
         },
         balance: {
             required: true,
-            type: Number, // BigInt
+            type: String
         },
         nonce: {
             required: true,
-            type: Number,
-        },
+            type: Number
+        }
     },
     {
-        timestamps: true,
+        timestamps: true
     }
 );
 

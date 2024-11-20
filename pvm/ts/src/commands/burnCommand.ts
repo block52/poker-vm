@@ -1,10 +1,10 @@
 import { ethers, JsonRpcProvider, Contract, InterfaceAbi, ZeroAddress } from "ethers";
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction, BurnResponse, NativeToken } from "../models";
-import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { RandomCommand } from "./randomCommand";
+import AccountManagement from "../state/accountManagement";
 
 export class BurnCommand implements ISignedCommand<BurnResponse> {
     private readonly randomCommand: RandomCommand;
@@ -53,12 +53,7 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
     }
 
     public async execute(): Promise<ISignedResponse<BurnResponse>> {
-        const account = await accounts.findOne({ address: this.burnFromWallet.address });
-        if (!account) {
-            throw new Error("Burn from account not found");
-        }
-
-        if (this.amount > account.balance) {
+        if (this.amount > (await new AccountManagement().getBalance(this.burnFromWallet.address))) {
             throw new Error("Burn from account has insufficient funds");
         }
 

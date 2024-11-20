@@ -39,12 +39,14 @@ export class AccountManagement {
         return account.balance;
     }
 
-    async incrementBalance(address: string, balance: bigint): Promise<void> {
-        await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+    async incrementBalance(address: string, amount: bigint): Promise<void> {
+        const adjustedBalance = (await this.getBalance(address)) + amount;
+        await Accounts.updateOne({ address }, { balance: adjustedBalance.toString() });
     }
 
-    async decrementBalance(address: string, balance: bigint): Promise<void> {
-        await Accounts.updateOne({ address }, { $inc: { balance: (-balance).toString() } });
+    async decrementBalance(address: string, amount: bigint): Promise<void> {
+        const adjustedBalance = (await this.getBalance(address)) - amount;
+        await Accounts.updateOne({ address }, { balance: adjustedBalance.toString() });
     }
 
     async applyTransaction(tx: Transaction) {
