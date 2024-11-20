@@ -54,12 +54,16 @@ func main() {
 	// (logger and recovery middleware)
 	router := gin.Default()
 
-	// Group API routes
-	api := router.Group("/api")
-	{
-		api.GET("/", helloHandler)
-		api.GET("/balance/:accountId", balanceHandler)
-	}
+	router.GET("/", helloHandler)
+	router.GET("/account/:accountId", accountHandler)
+	router.GET("/balance/:accountId", balanceHandler)
+
+	// // Group API routes
+	// api := router.Group("/api")
+	// {
+	// 	api.GET("/", helloHandler)
+	// 	api.GET("/balance/:accountId", balanceHandler)
+	// }
 
 	// Start server on port 8080
 	log.Println("Server starting on port 8080...")
@@ -69,6 +73,14 @@ func main() {
 }
 
 func helloHandler(c *gin.Context) {
+	response := Response{
+		Message: "Hello, World!",
+	}
+	c.JSON(http.StatusOK, response)
+}
+
+
+func accountHandler(c *gin.Context) {
 	response := Response{
 		Message: "Hello, World!",
 	}
