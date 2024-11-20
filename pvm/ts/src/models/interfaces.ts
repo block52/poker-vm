@@ -20,7 +20,7 @@ export interface IBlockDocument {
     timestamp: number;
     validator: string;
     signature: string;
-    transactions?: any[];
+    transactions?: ITransactionDocument[];
     tx_count?: number;
 }
 
