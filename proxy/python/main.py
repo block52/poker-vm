@@ -6,14 +6,19 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
+from models.account import Account
 
 load_dotenv()
-app = FastAPI()
+app = FastAPI(
+    title="Block 52 Proxy API",
+    description="API for Block 52 Proxy",
+    version="0.1.0",
+)
 
 origins = [
     "*",
     "http://localhost",
-    "http://localhost:3000",
+    "http://localhost:8080",
 ]
 
 app.add_middleware(
@@ -29,7 +34,15 @@ def root():
     return {"message": "Hello Poker World!"}
 
 
+@app.get("/account/{account}", response_model=Account)
+def get_account(account: str) -> Account:
+    account = Account(account)
+    return account
+
+
 if __name__ == "__main__":
+    # PORT = os.getenv("PORT", 8000)
+    import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
     
