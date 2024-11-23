@@ -48,7 +48,6 @@ export class Server {
     public async mine() {
         const validatorInstance = getValidatorInstance();
         const validatorAddress = await validatorInstance.getNextValidatorAddress();
-
         
         if (validatorAddress === this.publicKey) {
             console.log(`I am the validator. Mining block...`);
