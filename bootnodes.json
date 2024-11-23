@@ -5,10 +5,6 @@
     },
     {
         "url": "http://localhost:3000",
-        "publicKey": ""
-    },
-    {
-        "url": "http://localhost:3001",
-        "publicKey": ""
+        "publicKey": "0x0000000000000000000000000000000000000000"
     }
 ]

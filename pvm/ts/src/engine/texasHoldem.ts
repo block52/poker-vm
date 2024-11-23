@@ -1,4 +1,5 @@
-import { ActionType, IUpdate, Move, Player, PlayerId, PlayerStatus, StageType } from "./types";
+import { PlayerAction } from "@bitcoinbrisbane/block52";
+import { IUpdate, Move, Player, PlayerId, PlayerStatus, StageType, TexasHoldemGameState, TexasHoldemJoinState, ValidMove } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import AllInAction from "./actions/allInAction";
 import BaseAction from "./actions/baseAction";
@@ -17,51 +18,82 @@ type Stage = {
 }
 
 class TexasHoldemGame {
+    private readonly _update: IUpdate
+    private _players: Player[];
     private _stages: Stage[];
     private _currentStage: StageType;
     private _currentPlayer: number;
     private _deck: Deck;
     private _communityCards: Card[];
     private _sidePots: Map<PlayerId, number>;
+    private _winners?: Map<PlayerId, number>;
     private _actions: BaseAction[];
 
-    constructor(private _players: Player[], private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number) {
+    constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
+        this._players = [];
         this._stages = [{ moves: [] }];
-        this._currentStage = StageType.PRE_FLOP;
-        this._currentPlayer = (this._buttonPosition + 3) % _players.length;
+        this._currentStage = StageType.JOIN;
+        this._currentPlayer = 0;
         this._deck = new Deck(DeckType.STANDARD_52);
         this._communityCards = [];
         this._sidePots = new Map<PlayerId, number>();
 
-        const update = new class implements IUpdate {
+        this._update = new class implements IUpdate {
             constructor(public game: TexasHoldemGame) { }
             addMove(move: Move): void {
                 this.game._stages[this.game._currentStage].moves.push(move);
-                this.game.nextPlayer();
+                if (![PlayerAction.SMALL_BLIND, PlayerAction.BIG_BLIND].includes(move.action))
+                    this.game.nextPlayer();
             }
         }(this);
         this._actions = [
-            new FoldAction(this, update),
-            new CheckAction(this, update),
-            new BetAction(this, update),
-            new CallAction(this, update),
-            new RaiseAction(this, update),
-            new AllInAction(this, update)
+            new FoldAction(this, this._update),
+            new CheckAction(this, this._update),
+            new BetAction(this, this._update),
+            new CallAction(this, this._update),
+            new RaiseAction(this, this._update),
+            new AllInAction(this, this._update)
         ];
-
-        this.start(update);
     }
 
+    get players() { return [...this._players]; }
     get bigBlind() { return this._bigBlind; }
     get smallBlind() { return this._smallBlind; }
     get bigBlindPosition() { return (this._buttonPosition + 2) % this._players.length; }
     get smallBlindPosition() { return (this._buttonPosition + 1) % this._players.length; }
     get currentPlayerId() { return this._players[this._currentPlayer].id; }
     get currentStage() { return this._currentStage; }
+    get pot() { return this.getStartingPot() + this.getTotalStake(); }
+    get winners() { return this._winners; }
+    get state() {
+        return this.currentStage == StageType.JOIN ?
+            new TexasHoldemJoinState(this._players.map(p => p.id)) :
+            new TexasHoldemGameState(this._address,
+                this._smallBlind,
+                this._bigBlind,
+                this._players.map((p, i) => p.getPlayerState(this, i)),
+                this._communityCards,
+                this.pot,
+                this.getMaxStake(),
+                this._currentStage,
+                this._winners);
+    }
 
-    getValidActions(playerId: string) {
+    nextGame() {
+        if (![StageType.JOIN, StageType.SHOWDOWN].includes(this.currentStage))
+            throw new Error("Game currently in progress.");
+        this.start(this._update);
+    }
+
+    join(player: Player) {
+        if (this.currentStage != StageType.JOIN)
+            throw new Error("Cannot join once game started.");
+        this._players.push(player);
+    }
+
+    getValidActions(playerId: string): ValidMove[] {
         const player = this.getPlayer(playerId);
-        return this._actions.map(verifyAction).filter(a => a);
+        return this._actions.map(verifyAction).filter(a => a) as ValidMove[];
 
         function verifyAction(action: BaseAction) {
             try {
@@ -73,7 +105,21 @@ class TexasHoldemGame {
         }
     }
 
-    performAction(playerId: string, action: ActionType, amount?: number) {
+    getLastAction(playerId: string): Move | undefined {
+        const player = this.getPlayer(playerId);
+        const status = this.getPlayerStatus(player);
+        if (status == PlayerStatus.ACTIVE)
+            return this.getPlayerMoves(player).at(-1);
+        else if (status == PlayerStatus.ALL_IN)
+            return { playerId, action: PlayerAction.ALL_IN };
+        else if (status == PlayerStatus.FOLD)
+            return { playerId, action: PlayerAction.FOLD };
+        return undefined;
+    }
+
+    performAction(playerId: string, action: PlayerAction, amount?: number) {
+        if (this.currentStage == StageType.JOIN)
+            throw new Error(`Cannot perform ${action} until game started.`)
         return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
 
@@ -84,15 +130,17 @@ class TexasHoldemGame {
         return player;
     }
 
-    getPlayerStatus(player: Player) {
+    getPlayerStatus(player: Player): PlayerStatus {
+        let totalMoves: number = 0;
         for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
             const moves = this.getPlayerMoves(player, stage);
-            if (moves.some(m => m.action == ActionType.FOLD))
+            totalMoves += moves.length;
+            if (moves.some(m => m.action == PlayerAction.FOLD))
                 return PlayerStatus.FOLD;
-            if (moves.some(m => m.action == ActionType.ALL_IN))
+            if (moves.some(m => m.action == PlayerAction.ALL_IN))
                 return PlayerStatus.ALL_IN;
         }
-        return PlayerStatus.ACTIVE;
+        return !totalMoves && !player.chips ? PlayerStatus.ELIMINATED : PlayerStatus.ACTIVE;
     }
 
     getStakes(stage: StageType = this._currentStage): Map<string, number> {
@@ -113,7 +161,7 @@ class TexasHoldemGame {
         return Array.from(stakes.values()).reduce((acc, v) => acc + v, 0);
     }
 
-    getStartingPot(): number {
+    private getStartingPot(): number {
         let pot = 0;
         for (let stage = StageType.PRE_FLOP; stage < this._currentStage; stage++)
             pot += this.getTotalStake(this.getStakes(stage));
@@ -123,6 +171,9 @@ class TexasHoldemGame {
     private start(update: IUpdate) {
         this._deck.shuffle();
         this._players.forEach(p => p.holeCards = this._deck.deal(2) as [Card, Card]);
+        this._currentStage = StageType.PRE_FLOP;
+        this._currentPlayer = (this._buttonPosition + 3) % this._players.length;
+        this._winners = undefined;
         new BigBlindAction(this, update).execute(this._players[this.bigBlindPosition]);
         new SmallBlindAction(this, update).execute(this._players[this.smallBlindPosition]);
     }
@@ -138,7 +189,7 @@ class TexasHoldemGame {
         }, [] as Array<number>);
         const stakes = this.getStakes();
         const maxStakes = this.getMaxStake(stakes);
-        const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action != ActionType.BIG_BLIND).length &&
+        const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action != PlayerAction.BIG_BLIND).length &&
             (this.getPlayerStake(p, stakes) == maxStakes);
         if ((active.length <= 1) || active.map(i => this._players[i]).every(isPlayerTurnFinished))
             this.nextStage();
@@ -176,22 +227,28 @@ class TexasHoldemGame {
         const hands = new Map<PlayerId, any>(this._players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))]));
         const active = this._players.filter(p => this.getPlayerStatus(p) == PlayerStatus.ACTIVE);
         const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
+        this._winners = new Map<PlayerId, number>();
         let pot = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
         let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
         while (orderedPots.length) {
             const [playerId, sidePot] = orderedPots[0];
             const remainder = pot - sidePot;
-            winningPlayers.forEach(p => p.chips += remainder / winningPlayers.length);
+            winningPlayers.forEach(p => update(p, remainder / winningPlayers.length, this._winners!));
             winningHands = PokerSolver.Hand.winners(winningHands.concat(hands.get(playerId)));
             winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
             pot = sidePot;
             orderedPots.shift();
         }
-        winningPlayers.forEach(p => p.chips += pot / winningPlayers.length);
+        winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
 
-        function toPokerSolverMnemonic(cards: Card) {
-            return cards.mnemonic.replace("10", "T");
+        function update(player: Player, portion: number, winners: Map<PlayerId, number>) {
+            player.chips += portion;
+            winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
+        }
+
+        function toPokerSolverMnemonic(card: Card) {
+            return card.mnemonic.replace("10", "T");
         }
     }
 }

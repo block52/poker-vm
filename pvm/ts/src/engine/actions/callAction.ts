@@ -1,8 +1,9 @@
-import { ActionType, Player, Range } from "../types";
+import { PlayerAction } from "@bitcoinbrisbane/block52";
+import { Player, Range } from "../../models/game";
 import BaseAction from "./baseAction";
 
 class CallAction extends BaseAction {
-    get type(): ActionType { return ActionType.CALL }
+    get type(): PlayerAction { return PlayerAction.CALL }
 
     verify(player: Player): Range | undefined {
         super.verify(player);

@@ -18,7 +18,7 @@ export class ShuffleCommand implements ISignedCommand<Deck> {
 
         const seed: number[] = [];
 
-        for (let i = 0; i < 52; i++) {
+        for (let i = 0; i < 52; i++) { // TODO: Fix this as sufferes modulo bias
             seed.push(random.data[i]);
         }
 

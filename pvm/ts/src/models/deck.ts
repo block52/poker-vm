@@ -5,10 +5,10 @@ export enum DeckType {
 }
 
 export enum SUIT {
-    SPADES = 1,
-    CLUBS = 2,
-    DIAMONDS = 3,
-    HEARTS = 4
+    CLUBS = 1,
+    DIAMONDS = 2,
+    HEARTS = 3,
+    SPADES = 4
 };
 
 export type Card = {
@@ -56,15 +56,16 @@ export class Deck implements IJSONModel {
         this.hash = createHash("sha256").update(cardsAsString).digest("hex");
     }
 
-    public shuffle(): void {
+    public shuffle(seed?: number[]): void {
         // TODO: Switch to crypto.randomInt for better randomness
-        const seed = Array.from({ length: this.cards.length }, () => Math.random())
+        if (!seed)
+            seed = Array.from({ length: this.cards.length }, () => Math.floor(1000000 * Math.random()))
         const seedAsString = seed.join("-");
         this.seedHash = createHash("sha256").update(seedAsString).digest("hex");
 
         // Fisher-Yates shuffle
         for (let i = this.cards.length - 1; i > 0; i--) {
-            const j = Math.floor(seed[i] * (i + 1));
+            const j = seed[i] % (i + 1);
             [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
         }
     }
@@ -89,9 +90,6 @@ export class Deck implements IJSONModel {
         }
 
         switch (suit) {
-            case SUIT.SPADES:
-                mnemonic += "S";
-                break;
             case SUIT.CLUBS:
                 mnemonic += "C";
                 break;
@@ -100,6 +98,9 @@ export class Deck implements IJSONModel {
                 break;
             case SUIT.HEARTS:
                 mnemonic += "H";
+                break;
+            case SUIT.SPADES:
+                mnemonic += "S";
                 break;
         }
 
@@ -121,12 +122,12 @@ export class Deck implements IJSONModel {
     }
 
     private initStandard52(): void {
-        for (let suit = SUIT.SPADES; suit <= SUIT.HEARTS; suit++) {
+        for (let suit = SUIT.CLUBS; suit <= SUIT.SPADES; suit++) {
             for (let rank = 2; rank <= 14; rank++) {
                 this.cards.push({
                     suit: suit,
                     rank: rank,
-                    value: rank,
+                    value: 13 * (suit - 1) + (rank - 1),
                     mnemonic: this.getCardMnemonic(suit, rank),
                 });
             }

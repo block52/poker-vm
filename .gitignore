@@ -403,4 +403,7 @@ explorer_api/.env
 pvm/ts/dist/index.js
 explorer_frontend/build/*
 pvm/ts/.env
+pvm/ts/.env
+
 proxy/python/venv/*
+proxy/python/.env

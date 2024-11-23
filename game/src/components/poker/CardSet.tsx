@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface CardSetProps {
     cards: number[];
-    name: string
+    name: string,
+    children?: React.ReactNode;
 }
 
-export default function CardSet({ cards, name }: CardSetProps) {
+export default function CardSet({ cards, name, children }: CardSetProps) {
     const cardSet: PlayingCardInfo[] = cards.map(card => intToPlayingCard(card));
     return (
         <Card className="mt-2">
@@ -21,6 +22,7 @@ export default function CardSet({ cards, name }: CardSetProps) {
                     ))}
                 </div>
             </CardContent>
+            {children}
         </Card>
     );
 }
