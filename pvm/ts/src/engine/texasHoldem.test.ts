@@ -5,21 +5,26 @@ import TexasHoldemGame from "./texasHoldem";
 describe("Game", function () {
     it("should process messages", function () {
         const game = new TexasHoldemGame("0x1234", 10, 30);
+
         game.join(new Player("1", 100));
         game.join(new Player("2", 200));
         game.join(new Player("3", 300));
-        game.nextGame();
+        game.nextHand();
+
         // Pre-flop
         game.performAction("1", PlayerAction.CALL);
         game.performAction("2", PlayerAction.CALL);
         game.performAction("3", PlayerAction.FOLD);
+
         // Flop
         game.performAction("2", PlayerAction.CHECK);
         game.performAction("1", PlayerAction.BET, 30);
         game.performAction("2", PlayerAction.CALL);
+
         // Turn
         game.performAction("2", PlayerAction.CHECK);
         game.performAction("1", PlayerAction.CHECK);
+
         // River
         game.performAction("2", PlayerAction.CHECK);
         game.performAction("1", PlayerAction.CHECK);

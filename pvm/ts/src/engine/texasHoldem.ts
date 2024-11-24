@@ -46,6 +46,7 @@ class TexasHoldemGame {
                     this.game.nextPlayer();
             }
         }(this);
+
         this._actions = [
             new FoldAction(this, this._update),
             new CheckAction(this, this._update),
@@ -79,7 +80,7 @@ class TexasHoldemGame {
                 this._winners);
     }
 
-    nextGame() {
+    nextHand() {
         if (![StageType.JOIN, StageType.SHOWDOWN].includes(this.currentStage))
             throw new Error("Game currently in progress.");
         this.start(this._update);
@@ -228,9 +229,11 @@ class TexasHoldemGame {
         const active = this._players.filter(p => this.getPlayerStatus(p) == PlayerStatus.ACTIVE);
         const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
         this._winners = new Map<PlayerId, number>();
+        
         let pot = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
         let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
+        
         while (orderedPots.length) {
             const [playerId, sidePot] = orderedPots[0];
             const remainder = pot - sidePot;
@@ -240,6 +243,7 @@ class TexasHoldemGame {
             pot = sidePot;
             orderedPots.shift();
         }
+
         winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
 
         function update(player: Player, portion: number, winners: Map<PlayerId, number>) {

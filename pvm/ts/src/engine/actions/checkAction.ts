@@ -8,7 +8,7 @@ class CheckAction extends BaseAction {
     verify(player: Player): Range | undefined {
         super.verify(player);
         if (this.game.getPlayerStake(player) < this.game.getMaxStake())
-            throw new Error("Player has insufficient stake to check.")
+            throw new Error("Player has insufficient stack to check.")
         return undefined;
     }
 }
