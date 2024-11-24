@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from models.account import Account
+from RPCClient import RPCClient
 
 load_dotenv()
 app = FastAPI(
@@ -36,6 +37,14 @@ def root():
 
 @app.get("/account/{account}", response_model=Account)
 def get_account(account: str) -> Account:
+    account = Account(account)
+    return account
+
+
+@app.get("/account/{account}/balance", response_model=float)
+def get_account(account: str) -> float:
+    client = RPCClient("https://node1.block52.xyz")
+    response = client.call_json_rpc("get_account", [])
     account = Account(account)
     return account
 

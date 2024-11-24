@@ -1,14 +1,10 @@
 from pydantic import BaseModel
-# from web3 import Web3
-
-# w3 = Web3()
-
 
 # Account Model
 class Account(BaseModel):
     account: str
     balance: float
 
-    def __init__(self, account: str):
+    def __init__(self, account: str, balance: float):
         self.account = account
-        # self.balance = self.get_balance()
+        self.balance = balance

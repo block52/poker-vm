@@ -1,13 +1,12 @@
 import requests
 import json
 from typing import Any, Dict, Optional
-from jsonrpclib import ServerProxy  # For XML-RPC
 from urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 
 class RPCClient:
-    def __init__(self, url: str, username: Optional[str] = None, password: Optional[str] = None):
+    def __init__(self, url: str):
         """
         Initialize RPC client
 
@@ -18,11 +17,10 @@ class RPCClient:
         """
         self.url = url
         self.session = requests.Session()
-        if username and password:
-            self.session.auth = (username, password)
 
         # Request ID counter
         self.id_counter = 0
+
 
     def call_json_rpc(self, method: str, params: Any = None) -> Dict:
         """
