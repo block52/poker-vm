@@ -1,14 +1,12 @@
 import { PlayerAction } from "@bitcoinbrisbane/block52";
 import { IUpdate, Move, Player, PlayerId, PlayerStatus, StageType, TexasHoldemGameState, TexasHoldemJoinState, ValidMove } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
-import AllInAction from "./actions/allInAction";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
 import BigBlindAction from "./actions/bigBlindAction";
 import CallAction from "./actions/callAction";
 import CheckAction from "./actions/checkAction";
 import FoldAction from "./actions/foldAction";
-import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
@@ -51,9 +49,7 @@ class TexasHoldemGame {
             new FoldAction(this, this._update),
             new CheckAction(this, this._update),
             new BetAction(this, this._update),
-            new CallAction(this, this._update),
-            new RaiseAction(this, this._update),
-            new AllInAction(this, this._update)
+            new CallAction(this, this._update)
         ];
     }
 
@@ -78,6 +74,14 @@ class TexasHoldemGame {
                 this.getMaxStake(),
                 this._currentStage,
                 this._winners);
+    }
+
+    init() {
+        if (this.currentStage != StageType.JOIN)
+            throw new Error("Game already started.");
+        if (this._players.length < 2)
+            throw new Error("Not enough players to start game.");
+        this.start
     }
 
     nextHand() {
@@ -109,11 +113,11 @@ class TexasHoldemGame {
     getLastAction(playerId: string): Move | undefined {
         const player = this.getPlayer(playerId);
         const status = this.getPlayerStatus(player);
-        if (status == PlayerStatus.ACTIVE)
-            return this.getPlayerMoves(player).at(-1);
-        else if (status == PlayerStatus.ALL_IN)
+        if (status === PlayerStatus.ACTIVE)
+            return this.getPlayerActions(player).at(-1);
+        else if (status === PlayerStatus.ALL_IN)
             return { playerId, action: PlayerAction.ALL_IN };
-        else if (status == PlayerStatus.FOLD)
+        else if (status === PlayerStatus.FOLD)
             return { playerId, action: PlayerAction.FOLD };
         return undefined;
     }
@@ -134,7 +138,7 @@ class TexasHoldemGame {
     getPlayerStatus(player: Player): PlayerStatus {
         let totalMoves: number = 0;
         for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
-            const moves = this.getPlayerMoves(player, stage);
+            const moves = this.getPlayerActions(player, stage);
             totalMoves += moves.length;
             if (moves.some(m => m.action == PlayerAction.FOLD))
                 return PlayerStatus.FOLD;
@@ -179,7 +183,7 @@ class TexasHoldemGame {
         new SmallBlindAction(this, update).execute(this._players[this.smallBlindPosition]);
     }
 
-    private getPlayerMoves(player: Player, stage: StageType = this._currentStage) {
+    private getPlayerActions(player: Player, stage: StageType = this._currentStage) {
         return this._stages[stage].moves.filter(m => m.playerId == player.id);
     }
 
@@ -190,7 +194,7 @@ class TexasHoldemGame {
         }, [] as Array<number>);
         const stakes = this.getStakes();
         const maxStakes = this.getMaxStake(stakes);
-        const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action != PlayerAction.BIG_BLIND).length &&
+        const isPlayerTurnFinished = (p: Player) => this.getPlayerActions(p).filter(m => m.action != PlayerAction.BIG_BLIND).length &&
             (this.getPlayerStake(p, stakes) == maxStakes);
         if ((active.length <= 1) || active.map(i => this._players[i]).every(isPlayerTurnFinished))
             this.nextStage();
