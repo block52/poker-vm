@@ -97,9 +97,6 @@ describe("Game", function () {
                 action: "check"
             },
             {
-                action: "call" // Probably shouldn't be allowed to call given they can check
-            },
-            {
                 action: "raise",
                 maxAmount: 225,
                 minAmount: 25

@@ -9,7 +9,10 @@ class CallAction extends BaseAction {
         super.verify(player);
         if (this.game.getMaxStake() == 0)
             throw new Error("A bet must be made before it can be called.")
-        if (player.chips < this.getDeductAmount(player))
+        const deductAmount = this.getDeductAmount(player);
+        if (deductAmount == 0)
+            throw new Error("Player has already met maximum so can check instead.");
+        if (player.chips < deductAmount)
             throw new Error("Player has insufficient chips to call.");
         return undefined;
     }

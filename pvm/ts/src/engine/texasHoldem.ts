@@ -215,7 +215,8 @@ class TexasHoldemGame {
         const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action != PlayerAction.BIG_BLIND).length &&
             (this.getPlayerStake(p, stakes) == maxStakes);
         const active = this.getActivePlayers();
-        if ((active.length <= 1) || active.map(i => this._players[i]).every(isPlayerTurnFinished))
+        const anyAllIn = this._players.some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
+        if (!active.length || ((active.length == 1) && !anyAllIn) || active.map(i => this._players[i]).every(isPlayerTurnFinished))
             this.nextStage();
         else
             this._currentPlayer = active[0];
