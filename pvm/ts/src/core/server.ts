@@ -25,20 +25,12 @@ export class Server {
         }
 
         this.contractAddress = ethers.ZeroAddress;
-    
     }
 
     public me(): Node {
-
         const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
 
-        return new Node(
-            "pvm-typescript",
-            this.publicKey,
-            url,
-            "1.0.0",
-            this.isValidator
-        );
+        return new Node("pvm-typescript", this.publicKey, url, "1.0.0", this.isValidator);
     }
 
     get started(): boolean {
@@ -48,25 +40,25 @@ export class Server {
     public async mine() {
         const validatorInstance = getValidatorInstance();
         const validatorAddress = await validatorInstance.getNextValidatorAddress();
-        
+
         if (validatorAddress === this.publicKey) {
             console.log(`I am the validator. Mining block...`);
             const mineCommand = new MineCommand(this.privateKey);
             const mineCommandResponse = await mineCommand.execute();
             const block = mineCommandResponse.data;
-            
+
             if (!block) {
                 throw new Error("No block mined");
             }
-            
+
             console.log(`Block mined: ${block.hash}`);
-            
+
             // Broadcast the block hash to the network
             const nodes = await getBootNodes(this.me().url);
             for (const node of nodes) {
                 console.log(`Broadcasting block hash to ${node.url}`);
                 try {
-                    const client = new NodeRpcClient( node.url, this.privateKey);
+                    const client = new NodeRpcClient(node.url, this.privateKey);
                     await client.sendBlockHash(block.hash);
                 } catch (error) {
                     console.warn(`Missing node ${node.url}`);
@@ -111,18 +103,22 @@ export class Server {
         }
         const mempool = getMempoolInstance();
         const nodes = await getBootNodes(this.me().url);
-        await Promise.all(nodes.map(async (node) => {
-            try {
-                const client = new NodeRpcClient(node.url, this.privateKey);
-                const otherMempool: TransactionDTO[] = await client.getMempool();
-                // Add to own mempool
-                await Promise.all(otherMempool.map(async (transaction) => {
-                    await mempool.add(Transaction.fromJson(transaction));
-                }));
-            } catch (error) {
-                console.warn(`Missing node ${node.url}`);
-            }
-        }));
+        await Promise.all(
+            nodes.map(async node => {
+                try {
+                    const client = new NodeRpcClient(node.url, this.privateKey);
+                    const otherMempool: TransactionDTO[] = await client.getMempool();
+                    // Add to own mempool
+                    await Promise.all(
+                        otherMempool.map(async transaction => {
+                            await mempool.add(Transaction.fromJson(transaction));
+                        })
+                    );
+                } catch (error) {
+                    console.warn(`Missing node ${node.url}`);
+                }
+            })
+        );
     }
 }
 
