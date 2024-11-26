@@ -21,7 +21,7 @@ export const Wallet: React.FC = () => {
         const intervalId = setInterval(refreshBalance, 30000);
 
         return () => clearInterval(intervalId);
-    }, [appWallet.b52, appWallet.address]);
+        }, [appWallet.b52, appWallet.address]);
 
     if (!appWallet.ethereum || !appWallet.b52) {
         return <div className="wallet-box">Loading wallet...</div>;
