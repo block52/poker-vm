@@ -20,23 +20,24 @@ type Stage = {
 class TexasHoldemGame {
     private readonly _update: IUpdate
     private _players: Player[];
-    private _stages: Stage[];
+    private _stages!: Stage[];
+    private _deck!: Deck;
+    private _communityCards!: Card[];
+    private _sidePots!: Map<PlayerId, number>;
+    private _winners?: Map<PlayerId, number>;
     private _currentStage: StageType;
     private _currentPlayer: number;
-    private _deck: Deck;
-    private _communityCards: Card[];
-    private _sidePots: Map<PlayerId, number>;
-    private _winners?: Map<PlayerId, number>;
+    private _bigBlindPosition: number;
+    private _smallBlindPosition: number;
     private _actions: BaseAction[];
 
     constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
         this._players = [];
-        this._stages = [{ moves: [] }];
         this._currentStage = StageType.JOIN;
         this._currentPlayer = 0;
-        this._deck = new Deck(DeckType.STANDARD_52);
-        this._communityCards = [];
-        this._sidePots = new Map<PlayerId, number>();
+        this._bigBlindPosition = 0;
+        this._smallBlindPosition = 0;
+        this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new class implements IUpdate {
             constructor(public game: TexasHoldemGame) { }
@@ -59,8 +60,8 @@ class TexasHoldemGame {
     get players() { return [...this._players]; }
     get bigBlind() { return this._bigBlind; }
     get smallBlind() { return this._smallBlind; }
-    get bigBlindPosition() { return (this._buttonPosition + 2) % this._players.length; }
-    get smallBlindPosition() { return (this._buttonPosition + 1) % this._players.length; }
+    get bigBlindPosition() { return this._bigBlindPosition; }
+    get smallBlindPosition() { return this._smallBlindPosition; }
     get currentPlayerId() { return this._players[this._currentPlayer].id; }
     get currentStage() { return this._currentStage; }
     get pot() { return this.getStartingPot() + this.getTotalStake(); }
@@ -132,18 +133,23 @@ class TexasHoldemGame {
 
     getPlayerStatus(player: Player): PlayerStatus {
         let totalMoves: number = 0;
-        for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
-            const moves = this.getPlayerMoves(player, stage);
-            totalMoves += moves.length;
-            if (moves.some(m => m.action == PlayerAction.FOLD))
-                return PlayerStatus.FOLD;
-            if (moves.some(m => m.action == PlayerAction.ALL_IN))
-                return PlayerStatus.ALL_IN;
+        if (this._currentStage != StageType.JOIN) {
+            for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
+                const moves = this.getPlayerMoves(player, stage);
+                totalMoves += moves.length;
+                if (moves.some(m => m.action == PlayerAction.FOLD))
+                    return PlayerStatus.FOLD;
+                if (moves.some(m => m.action == PlayerAction.ALL_IN))
+                    return PlayerStatus.ALL_IN;
+            }
         }
         return !totalMoves && !player.chips ? PlayerStatus.ELIMINATED : PlayerStatus.ACTIVE;
     }
 
     getStakes(stage: StageType = this._currentStage): Map<string, number> {
+        if (this._currentStage == StageType.JOIN)
+            throw new Error("Cannot retrieve stakes until game started.");
+
         return this._stages[stage].moves.reduce(
             (acc, v) => { acc.set(v.playerId, (acc.get(v.playerId) ?? 0) + (v.amount ?? 0)); return acc; },
             new Map<string, number>());
@@ -169,28 +175,46 @@ class TexasHoldemGame {
     }
 
     private start(update: IUpdate) {
+        this._stages = [{ moves: [] }];
+        this._deck = new Deck(DeckType.STANDARD_52);
+        this._communityCards = [];
+        this._sidePots = new Map<PlayerId, number>();
+        this._winners = undefined;
+        this._currentStage = StageType.PRE_FLOP;
+        this._currentPlayer = this._buttonPosition;
+
+        const active = this.getActivePlayers();
+        if (active.length <= 1)
+            throw new Error("Not enough active players to start next game.");
+        this._buttonPosition = active[0]; // find the next free player from the previous button position and allocate the button to them
+        this._smallBlindPosition = active[1];
+        this._bigBlindPosition = active[2 % active.length];
+        this._currentPlayer = active[3 % active.length];
+        // TODO: Handle scenario where position can't cover the blind
+
         this._deck.shuffle();
         this._players.forEach(p => p.holeCards = this._deck.deal(2) as [Card, Card]);
-        this._currentStage = StageType.PRE_FLOP;
-        this._currentPlayer = (this._buttonPosition + 3) % this._players.length;
-        this._winners = undefined;
-        new BigBlindAction(this, update).execute(this._players[this.bigBlindPosition]);
-        new SmallBlindAction(this, update).execute(this._players[this.smallBlindPosition]);
+        new BigBlindAction(this, update).execute(this._players[this._bigBlindPosition]);
+        new SmallBlindAction(this, update).execute(this._players[this._smallBlindPosition]);
     }
 
     private getPlayerMoves(player: Player, stage: StageType = this._currentStage) {
         return this._stages[stage].moves.filter(m => m.playerId == player.id);
     }
 
-    private nextPlayer() {
-        const active = [...Array(this._players.length).keys()].reduce((acc, i) => {
+    private getActivePlayers() {
+        return [...Array(this._players.length).keys()].reduce((acc, i) => {
             const index = (this._currentPlayer + 1 + i) % this._players.length;
             return this.getPlayerStatus(this._players[index]) === PlayerStatus.ACTIVE ? [...acc, index] : acc;
         }, [] as Array<number>);
+    }
+
+    private nextPlayer() {
         const stakes = this.getStakes();
         const maxStakes = this.getMaxStake(stakes);
         const isPlayerTurnFinished = (p: Player) => this.getPlayerMoves(p).filter(m => m.action != PlayerAction.BIG_BLIND).length &&
             (this.getPlayerStake(p, stakes) == maxStakes);
+        const active = this.getActivePlayers();
         if ((active.length <= 1) || active.map(i => this._players[i]).every(isPlayerTurnFinished))
             this.nextStage();
         else
