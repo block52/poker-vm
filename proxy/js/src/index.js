@@ -32,6 +32,21 @@ app.get("/games", (req, res) => {
     res.send(response);
 });
 
+app.get("/tables", (req, res) => {
+    const id1 = ethers.ZeroAddress;
+    const id2 = ethers.ZeroAddress;
+
+    const min = 50; // ethers.utils.parseEther("50");
+    const max = 200; //ethers.utils.parseEther("200");
+
+    const response = [
+        { id: id1, type: "No Limit Texas Holdem", max_players: 9, min, max, bb: 1, sb: 0.5 },
+        { id: id2, type: "No Limit Texas Holdem", max_players: 6, min, max, bb: 2, sb: 1 }
+    ];
+
+    res.send(response);
+});
+
 app.post("/join", (req, res) => {
     const response = {
         id: 1,
