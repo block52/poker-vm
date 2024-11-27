@@ -12,8 +12,8 @@ export class GameManagement {
         }
         game.join(new Player(playerAddress, 100));
         console.log(`Player ${playerAddress} joining ${gameAddress}`);
-        if (game.players.length == 3)
-            game.nextGame();
+        if (game.deal.length === 3)
+            game.deal();
     }
 
     get(address: string): TexasHoldemGame | undefined {

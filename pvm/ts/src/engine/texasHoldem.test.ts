@@ -2,13 +2,15 @@ import { PlayerAction } from "@bitcoinbrisbane/block52";
 import { Player, StageType } from "../models/game";
 import TexasHoldemGame from "./texasHoldem";
 
+import { ethers } from "ethers";
+
 describe("Game", function () {
-    it("should process messages", function () {
-        const game = new TexasHoldemGame("0x1234", 10, 30);
+    it("should process messages", () => {
+        const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30);
         game.join(new Player("1", 100));
         game.join(new Player("2", 200));
         game.join(new Player("3", 300));
-        game.nextGame();
+        game.deal();
         // Pre-flop
         game.performAction("1", PlayerAction.CALL);
         game.performAction("2", PlayerAction.CALL);
@@ -25,13 +27,13 @@ describe("Game", function () {
         game.performAction("1", PlayerAction.CHECK);
     });
 
-    it("should allow a round to be played", function () {
-        const game = new TexasHoldemGame("0x12345", 10, 25, 2);
+    it("should allow a round to be played", () => {
+        const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 25, 2);
         game.join(new Player("1", 250));
         game.join(new Player("2", 200));
         game.join(new Player("3", 100));
         game.join(new Player("4", 100));
-        game.nextGame();
+        game.deal();
 
         expect(game.getStakes().get("4")).toEqual(10); // Small blind
         expect(game.getStakes().get("1")).toEqual(25); // Big blind
