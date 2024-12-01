@@ -1,9 +1,36 @@
 const express = require("express");
 const ethers = require("ethers");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJSDoc = require("swagger-jsdoc");
 const app = express();
 
 // Add JSON middleware
 app.use(express.json());
+
+// Swagger configuration
+const swaggerOptions = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "Block 52 Proxy API Documentation",
+            version: "1.0.0",
+            description: "Proxy calls to the RPC layer 2"
+        },
+        servers: [
+            {
+                url: "https://proxy.block52.xyz",
+                description: "Mainnet server"
+            }
+        ]
+    },
+    // Path to the API docs
+    apis: ["./*.js"] // Path to your API route files
+};
+
+// Initialize swagger-jsdoc
+const swaggerDocs = swaggerJSDoc(swaggerOptions);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.get("/", (req, res) => {
     res.send("Hello World!");
