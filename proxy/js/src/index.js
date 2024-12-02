@@ -36,6 +36,21 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
+app.post("/authenticate", (req, res) => {
+    const response = {
+        email: req.body.email,
+        password: req.body.password,
+    };
+
+    const passwordHash = bcrypt.hashSync(req.body.password, 10);
+
+    res.send(response);
+});
+
+/** 
+ * @swagger
+ * /account/{id}:
+ */
 app.get("/account/:id", (req, res) => {
     const response = {
         id: req.params.id,
