@@ -60,12 +60,33 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
+const getUnixTime = () => {
+    return Math.floor(Date.now() / 1000);
+}
+
+app.get("/time", (req, res) => {
+    // Return the current time in UNIX format
+    const response = {
+        time: getUnixTime()
+    };
+
+    res.send(response);
+});
+
+app.post("/nonce", (req, res) => {
+    const response = {
+        nonce: getUnixTime()
+    };
+
+    res.send(response);
+});
+
 app.get("/games", (req, res) => {
     const id1 = ethers.ZeroAddress;
     const id2 = ethers.ZeroAddress;
 
-    const min = 50; // ethers.utils.parseEther("50");
-    const max = 200; //ethers.utils.parseEther("200");
+    const min = "50.00"; // ethers.utils.parseEther("50");
+    const max = "200.00"; //ethers.utils.parseEther("200");
 
     const response = [
         { id: id1, type: "No Limit Texas Holdem", max_players: 9, min, max },
@@ -79,32 +100,39 @@ app.get("/tables", (req, res) => {
     const id1 = ethers.ZeroAddress;
     const id2 = ethers.ZeroAddress;
 
-    const min = 50; // ethers.utils.parseEther("50");
-    const max = 200; //ethers.utils.parseEther("200");
+    const min = "50.00"; // ethers.utils.parseEther("50");
+    const max = "200.00"; //ethers.utils.parseEther("200");
 
     const response = [
-        { id: id1, type: "No Limit Texas Holdem", max_players: 9, min, max, bb: 1, sb: 0.5 },
-        { id: id2, type: "No Limit Texas Holdem", max_players: 6, min, max, bb: 2, sb: 1 }
+        { id: id1, type: "No Limit Texas Holdem", max_players: 9, min, max, bb: 1, sb: "0.50" },
+        { id: id2, type: "No Limit Texas Holdem", max_players: 6, min, max, bb: 2, sb: "1.00" }
     ];
 
     res.send(response);
 });
 
-app.get("/table/:id", (req, res) => {
+app.get("/table/:id/:nonce", (req, res) => {
     const id = req.params.id;
     const seed = process.env.SEED;
     const wallet = ethers.HDNodeWallet.fromPhrase(seed);
 
+    const idHash = crypto.createHash("sha256").update(id).digest("hex");
+
     const response = {
+        id: idHash,
         button: 1,
         playerCount: 9,
         players: [],
-        pot: "50.00",
+        pots: ["50.00", "10.00"],
         sb: "0.50",
         bb: "1.00",
         board: [],
-        signature : ethers.ZeroHash
+        signature: ethers.ZeroHash
     };
+
+    if (nonce) {
+        response.nonce = nonce;
+    }
 
     for (let i = 0; i < response.playerCount; i++) {
         // const stack = ethers.utils.parseEther("100.0").toString();
@@ -120,6 +148,18 @@ app.get("/table/:id", (req, res) => {
             action: "check"
         });
     }
+
+    res.send(response);
+});
+
+app.get("/table/:id/player/:player", (req, res) => {
+    const response = {
+        stack: "100.00",
+        hand: [],
+        status: "active",
+        actions: ["check", "bet", "fold"],
+        isTurn: true
+    };
 
     res.send(response);
 });
