@@ -1,11 +1,14 @@
 const express = require("express");
 const ethers = require("ethers");
+const { HDNodeWallet, Mnemonic } = require("ethers");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const app = express();
 
 // Add JSON middleware
 app.use(express.json());
+
+const account = require("./routes/account");
 
 // Swagger configuration
 const swaggerOptions = {
@@ -32,31 +35,29 @@ const swaggerDocs = swaggerJSDoc(swaggerOptions);
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-app.get("/", (req, res) => {
-    res.send("Hello World!");
-});
-
-app.post("/authenticate", (req, res) => {
-    const response = {
-        email: req.body.email,
-        password: req.body.password,
-    };
-
-    const passwordHash = bcrypt.hashSync(req.body.password, 10);
-
-    res.send(response);
-});
-
-/** 
- * @swagger
- * /account/{id}:
- */
+// Routes
+// app.use("/account", () => account);
 app.get("/account/:id", (req, res) => {
+    const seed = process.env.SEED;
+    const i = Number(req.params.id);
+
+    const wallet = ethers.HDNodeWallet.fromPhrase(seed);
+    const child = wallet.deriveChild(`${i}`);
+
     const response = {
         id: req.params.id,
-        balance: ethers.parseEther("1.0")
+        address: child.address,
+        privateKey: child.privateKey,
+        path: `m/44'/60'/0'/0/${i}`,
+        balance: ethers.parseEther("1.0").toString()
     };
+
     res.send(response);
+    return;
+});
+
+app.get("/", (req, res) => {
+    res.send("Hello World!");
 });
 
 app.get("/games", (req, res) => {
@@ -85,6 +86,40 @@ app.get("/tables", (req, res) => {
         { id: id1, type: "No Limit Texas Holdem", max_players: 9, min, max, bb: 1, sb: 0.5 },
         { id: id2, type: "No Limit Texas Holdem", max_players: 6, min, max, bb: 2, sb: 1 }
     ];
+
+    res.send(response);
+});
+
+app.get("/table/:id", (req, res) => {
+    const id = req.params.id;
+    const seed = process.env.SEED;
+    const wallet = ethers.HDNodeWallet.fromPhrase(seed);
+
+    const response = {
+        button: 1,
+        playerCount: 9,
+        players: [],
+        pot: "50.00",
+        sb: "0.50",
+        bb: "1.00",
+        board: [],
+        signature : ethers.ZeroHash
+    };
+
+    for (let i = 0; i < response.playerCount; i++) {
+        // const stack = ethers.utils.parseEther("100.0").toString();
+        const child = wallet.deriveChild(`${i}`);
+
+        response.players.push({
+            id: child.address,
+            seat: i + 1,
+            stack: "100.00",
+            bet: "1.00",
+            hand: [],
+            status: "active",
+            action: "check"
+        });
+    }
 
     res.send(response);
 });

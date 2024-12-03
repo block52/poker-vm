@@ -407,3 +407,4 @@ pvm/ts/.env
 
 proxy/python/venv/*
 proxy/python/.env
+proxy/js/.env
