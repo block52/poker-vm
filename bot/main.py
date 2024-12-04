@@ -91,7 +91,7 @@ class PokerBot:
 
         try:
             response = requests.post(
-                f"{self.api_url}/table/{self.table_id}/",
+                f"{self.api_url}/table/{self.table_id}/action",
                 json={
                     'playerId': self.bot_wallet_id,
                     'action': action_data['action'],
