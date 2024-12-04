@@ -32,8 +32,9 @@ export class Validator {
         const nextBlockIndex = lastBlock.index + 1;
 
         if (sync || !this.synced) {
-            this.nodes = await getBootNodes();
-            this.validatorCount = await this.getValidatorCount();
+            [this.nodes, this.validatorCount] = await Promise.all([getBootNodes(), this.getValidatorCount()]);
+            // this.nodes = await getBootNodes();
+            // this.validatorCount = await this.getValidatorCount();
             this.synced = true;
         }
 
@@ -42,8 +43,9 @@ export class Validator {
             return ZeroAddress;
         }
 
-        const validatorIndex = nextBlockIndex % this.validatorCount;
-        
+        // For now, we will just use the first validator in the list
+        const validatorIndex = 0; // nextBlockIndex % this.validatorCount;
+
         const { publicKey: validatorAddress } = this.nodes[validatorIndex];
         console.log(`Next validator index: ${validatorIndex}, ${validatorAddress}`);
         return validatorAddress;
