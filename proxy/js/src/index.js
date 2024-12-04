@@ -1,6 +1,6 @@
 const express = require("express");
 const ethers = require("ethers");
-const { HDNodeWallet, Mnemonic } = require("ethers");
+const crypto = require("crypto");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const app = express();
@@ -73,7 +73,7 @@ app.get("/time", (req, res) => {
     res.send(response);
 });
 
-app.post("/nonce", (req, res) => {
+app.get("/nonce", (req, res) => {
     const response = {
         nonce: getUnixTime()
     };
@@ -111,7 +111,7 @@ app.get("/tables", (req, res) => {
     res.send(response);
 });
 
-app.get("/table/:id/:nonce", (req, res) => {
+app.get("/table/:id", (req, res) => {
     const id = req.params.id;
     const seed = process.env.SEED;
     const wallet = ethers.HDNodeWallet.fromPhrase(seed);
@@ -129,10 +129,6 @@ app.get("/table/:id/:nonce", (req, res) => {
         board: [],
         signature: ethers.ZeroHash
     };
-
-    if (nonce) {
-        response.nonce = nonce;
-    }
 
     for (let i = 0; i < response.playerCount; i++) {
         // const stack = ethers.utils.parseEther("100.0").toString();
@@ -164,6 +160,20 @@ app.get("/table/:id/player/:player", (req, res) => {
     res.send(response);
 });
 
+app.post("/table/:id", (req, res) => {
+    const signature = req.body.signature;
+    if (!signature) {
+        res.status(400).send("Signature required");
+        return;
+    }
+
+    const nonce = req.body?.nonce;
+    if (!nonce) {
+        res.status(400).send("Nonce required");
+        return;
+    }
+});
+
 app.post("/join", (req, res) => {
     const response = {
         id: 1,
@@ -189,6 +199,6 @@ app.post("/transfer", (req, res) => {
     res.send(response);
 });
 
-app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
+app.listen(3001, () => {
+    console.log("Server is running on http://localhost:3001");
 });

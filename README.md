@@ -1,6 +1,10 @@
 # poker-vm
 
-Blockchain Poker... again
+The Layer 2 poker game virtual machine.
+
+## Proxy API
+
+The proxy API is a simple REST API that allows the poker game to interact with the blockchain.
 
 # Order of operations
 
