@@ -22,7 +22,6 @@ class DatabaseConnection implements IDB {
         }
 
         try {
-            // const uri = process.env.DB_URL || "mongodb://localhost:27017/pvm";
             await mongoose.connect(uri);
             this.isConnected = true;
             console.log(`MongoDB connected to ${uri}`);

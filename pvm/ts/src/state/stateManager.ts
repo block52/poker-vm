@@ -10,8 +10,6 @@ export abstract class StateManager {
   async connect() {
     try {
       await connectDB.connect(this.connectionString);
-
-      console.log(`MongoDB connected to db`);
     } catch (error) {
       console.error(error);
       process.exit(1);
