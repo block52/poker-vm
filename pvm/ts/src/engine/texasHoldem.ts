@@ -10,15 +10,16 @@ import FoldAction from "./actions/foldAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
+import { IPoker } from "./types";
 
 type Stage = {
     moves: Move[];
 };
 
-class TexasHoldemGame {
-    private readonly _update: IUpdate;
-    private readonly _players: Player[];
-    private readonly _stages!: Stage[];
+class TexasHoldemGame implements IPoker {
+    private readonly _update: IUpdate
+    private _players: Player[];
+    private _stages!: Stage[];
     private _deck!: Deck;
     private _communityCards!: Card[];
     private _sidePots!: Map<PlayerId, number>;
@@ -96,14 +97,9 @@ class TexasHoldemGame {
               );
     }
 
-    init() {
-        if (this.currentStage != StageType.JOIN) throw new Error("Game already started.");
-        if (this._players.length < 2) throw new Error("Not enough players to start game.");
-        this.start;
-    }
-
-    nextHand() {
-        if (![StageType.JOIN, StageType.SHOWDOWN].includes(this.currentStage)) throw new Error("Game currently in progress.");
+    deal() {
+        if (![StageType.JOIN, StageType.SHOWDOWN].includes(this.currentStage))
+            throw new Error("Game currently in progress.");
         this.start(this._update);
     }
 
@@ -129,9 +125,12 @@ class TexasHoldemGame {
     getLastAction(playerId: string): Move | undefined {
         const player = this.getPlayer(playerId);
         const status = this.getPlayerStatus(player);
-        if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
-        else if (status === PlayerStatus.ALL_IN) return { playerId, action: PlayerAction.ALL_IN };
-        else if (status === PlayerStatus.FOLD) return { playerId, action: PlayerAction.FOLD };
+        if (status == PlayerStatus.ACTIVE)
+            return this.getPlayerActions(player).at(-1);
+        else if (status == PlayerStatus.ALL_IN)
+            return { playerId, action: PlayerAction.ALL_IN };
+        else if (status == PlayerStatus.FOLD)
+            return { playerId, action: PlayerAction.FOLD };
         return undefined;
     }
 
@@ -152,8 +151,10 @@ class TexasHoldemGame {
             for (let stage = StageType.PRE_FLOP; stage <= this._currentStage; stage++) {
                 const actions = this.getPlayerActions(player, stage);
                 totalActions += actions.length;
-                if (actions.some(m => m.action == PlayerAction.FOLD)) return PlayerStatus.FOLD;
-                if (actions.some(m => m.action == PlayerAction.ALL_IN)) return PlayerStatus.ALL_IN;
+                if (actions.some(m => m.action == PlayerAction.FOLD))
+                    return PlayerStatus.FOLD;
+                if (actions.some(m => m.action == PlayerAction.ALL_IN))
+                    return PlayerStatus.ALL_IN;
             }
         }
         return !totalActions && !player.chips ? PlayerStatus.ELIMINATED : PlayerStatus.ACTIVE;
@@ -223,8 +224,8 @@ class TexasHoldemGame {
     private nextPlayer() {
         const stakes = this.getStakes();
         const maxStakes = this.getMaxStake(stakes);
-        const isPlayerTurnFinished = (p: Player) =>
-            this.getPlayerActions(p).filter(m => m.action != PlayerAction.BIG_BLIND).length && this.getPlayerStake(p, stakes) == maxStakes;
+        const isPlayerTurnFinished = (p: Player) => this.getPlayerActions(p).filter(m => m.action != PlayerAction.BIG_BLIND).length &&
+            (this.getPlayerStake(p, stakes) == maxStakes);
         const active = this.getActivePlayers();
         const anyAllIn = this._players.some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
         if (!active.length || (active.length == 1 && !anyAllIn) || active.map(i => this._players[i]).every(isPlayerTurnFinished)) this.nextRound();

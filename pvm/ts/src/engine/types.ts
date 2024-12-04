@@ -1,5 +1,7 @@
 // !! TODO: Cleanup
 
+import { Player } from "../models/game";
+
 export enum States {
     INIT = "INIT",
     WAITING_FOR_PLAYERS = "WAITING_FOR_PLAYERS",
@@ -26,4 +28,9 @@ export enum Round {
     FLOP = "FLOP",
     TURN = "TURN",
     RIVER = "RIVER",
+}
+
+export interface IPoker {
+    deal(): void;
+    join(player: Player): void;
 }
