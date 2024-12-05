@@ -7,6 +7,10 @@ export const columns: ColumnDef<BlockDTO>[] = [
         header: "Index"
     },
     {
+        accessorKey: "hash",
+        header: "Hash"
+    },
+    {
         header: "Transactions",
         cell: ({ row }) => {
             return row.original.transactions.length;
