@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IValidator } from "./Vault.sol";
+import { IUniswapV3, ISwapRouter } from "./uniswap/Interfaces.sol";
 
 contract Bridge {
     struct Deposit {
@@ -13,8 +14,9 @@ contract Bridge {
 
     address public immutable underlying;
     address public immutable vault;
-    address private immutable _self;
+    address public immutable router;;
     uint256 public totalDeposits;
+    address private immutable _self;
 
     mapping(bytes32 => bool) private usedNonces;
     mapping(uint256 => Deposit) public deposits;
@@ -36,9 +38,10 @@ contract Bridge {
         return IERC20(underlying).balanceOf(_self);
     }
 
-    constructor(address _underlying, address _vault) {
+    constructor(address _underlying, address _vault, address _router) {
         underlying = _underlying;
         vault = _vault;
+        router = _router;
         _self = address(this);
 
         IERC20(underlying).approve(_self, type(uint256).max);
