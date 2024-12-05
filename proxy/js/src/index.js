@@ -111,52 +111,28 @@ app.get("/tables", (req, res) => {
     const id1 = ethers.ZeroAddress;
     const id2 = ethers.ZeroAddress;
 
-    const min = "50.00"; // ethers.utils.parseEther("50");
-    const max = "200.00"; //ethers.utils.parseEther("200");
+    const min = ethers.utils.parseEther("50");
+    const max = ethers.utils.parseEther("200");
 
     const response = [
-        { id: id1, type: "No Limit Texas Holdem", max_players: 9, min, max, bb: 1, sb: "0.50" },
-        { id: id2, type: "No Limit Texas Holdem", max_players: 6, min, max, bb: 2, sb: "1.00" }
+        { id: id1, type: "No Limit Texas Holdem", max_players: 9, min: min.toString(), max: max.toString(), bb: 1, sb: "0.50" },
+        { id: id2, type: "No Limit Texas Holdem", max_players: 6, min: min.toString(), max: max.toString(), bb: 2, sb: "1.00" }
     ];
 
     res.send(response);
 });
 
-app.get("/table/:id", (req, res) => {
+app.get("/table/:id", async (req, res) => {
     const id = req.params.id;
-    const seed = process.env.SEED;
-    const wallet = ethers.HDNodeWallet.fromPhrase(seed);
 
-    const idHash = crypto.createHash("sha256").update(id).digest("hex");
-
-    const response = {
-        id: idHash,
-        button: 1,
-        playerCount: 9,
-        players: [],
-        pots: ["50.00", "10.00"],
-        sb: "0.50",
-        bb: "1.00",
-        board: [],
-        signature: ethers.ZeroHash
-    };
-
-    for (let i = 0; i < response.playerCount; i++) {
-        // const stack = ethers.utils.parseEther("100.0").toString();
-        const child = wallet.deriveChild(`${i}`);
-
-        response.players.push({
-            id: child.address,
-            seat: i + 1,
-            stack: "100.00",
-            bet: "1.00",
-            hand: [],
-            status: "active",
-            action: "check"
-        });
+    let client = null;
+    if (proxy === "mock") {
+        client = Mocks.getInstance();
     }
 
-    res.send(response);
+    const table = await client.getTable(id);
+
+    res.send(table);
 });
 
 app.get("/table/:id/player/:player", (req, res) => {
