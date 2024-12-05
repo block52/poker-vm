@@ -32,18 +32,21 @@ contract Bridge {
         return string.concat(IERC20Metadata(underlying).name(), " Bridge");
     }
 
-    function deposit(uint256 amount) external {
-        _deposit(amount, msg.sender);
+    function deposit(uint256 amount) external returns(uint256) {
+        uint256 index = _deposit(amount, msg.sender);
+        emit Deposited(msg.sender, amount, index);
+
+        return index;
     }
 
-    function _deposit(uint256 amount, address receiver) private {
+    function _deposit(uint256 amount, address receiver) private (returns uint256) {
         IERC20(underlying).transferFrom(receiver, _self, amount);
         totalDeposits += amount;
 
         deposits[depositIndex] = Deposit(receiver, amount);
-        emit Deposited(receiver, amount, depositIndex);
-
         depositIndex++;
+
+        return depositIndex;
     }
 
     function withdraw(uint256 amount, address receiver, bytes32 nonce, bytes calldata signature) external {
