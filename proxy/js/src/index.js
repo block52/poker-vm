@@ -3,7 +3,16 @@ const ethers = require("ethers");
 const crypto = require("crypto");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
+const dotenv = require("dotenv");
+
+// Clients
+const Mocks = require("./clients/mocks");
+
 const app = express();
+
+// Load environment variables
+dotenv.config();
+const proxy = process.env.PROXY || "mock";
 
 // Add JSON middleware
 app.use(express.json());
@@ -45,19 +54,21 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Routes
 // app.use("/account", () => account);
-app.get("/account/:id", (req, res) => {
-    const seed = process.env.SEED;
-    const i = Number(req.params.id);
+app.get("/account/:id", async (req, res) => {
+    let client = null;
 
-    const wallet = ethers.HDNodeWallet.fromPhrase(seed);
-    const child = wallet.deriveChild(`${i}`);
+    if (proxy === "mock") {
+        client = new Mocks();
+    }
+
+    const account = client.getAccount(req.params.id);
 
     const response = {
-        id: req.params.id,
-        address: child.address,
-        privateKey: child.privateKey,
-        path: `m/44'/60'/0'/0/${i}`,
-        balance: ethers.parseEther("1.0").toString()
+        index: req.params.id,
+        address: account.address,
+        privateKey: account.privateKey,
+        path: account.path,
+        balance: account.balance
     };
 
     res.send(response);
