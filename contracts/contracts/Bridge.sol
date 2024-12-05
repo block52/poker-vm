@@ -36,24 +36,21 @@ contract Bridge {
         _deposit(amount, msg.sender);
     }
 
-    function _deposit(uint256 amount, address to) private {
-        IERC20 token = IERC20(underlying);
-
-        token.transferFrom(msg.sender, _self, amount);
-
+    function _deposit(uint256 amount, address receiver) private {
+        IERC20(underlying).transferFrom(receiver, _self, amount);
         totalDeposits += amount;
 
-        deposits[depositIndex] = Deposit(to, amount);
-        emit Deposited(to, amount, depositIndex);
+        deposits[depositIndex] = Deposit(receiver, amount);
+        emit Deposited(receiver, amount, depositIndex);
 
         depositIndex++;
     }
 
-    function withdraw(uint256 amount, address to, bytes32 nonce, bytes calldata signature) external {
+    function withdraw(uint256 amount, address receiver, bytes32 nonce, bytes calldata signature) external {
         require(!usedNonces[nonce], "withdraw: nonce already used");
         require(IERC20(underlying).balanceOf(_self) >= amount, "withdraw: insufficient balance");
 
-        bytes32 messageHash = keccak256(abi.encodePacked(to, amount, nonce));
+        bytes32 messageHash = keccak256(abi.encodePacked(receiver, amount, nonce));
         address signer = recoverSignerAddress(getEthSignedMessageHash(messageHash), signature);
 
         require(IValidator(vault).isValidator(signer), "withdraw: invalid signature");
@@ -62,9 +59,9 @@ contract Bridge {
         totalDeposits -= amount;
 
         IERC20 token = IERC20(underlying);
-        token.transfer(to, amount);
+        token.transfer(receiver, amount);
 
-        emit Withdrawn(to, amount, nonce);
+        emit Withdrawn(receiver, amount, nonce);
     }
 
     function emergencyWithdraw() external {
