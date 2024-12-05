@@ -7,7 +7,6 @@ const dotenv = require("dotenv");
 
 // Clients
 const Mocks = require("./clients/mocks");
-
 const app = express();
 
 // Load environment variables
@@ -17,15 +16,13 @@ const proxy = process.env.PROXY || "mock";
 // Add JSON middleware
 app.use(express.json());
 
-const account = require("./routes/account");
-
 // Swagger configuration
 const swaggerOptions = {
     definition: {
         openapi: "3.0.0",
         info: {
             title: "Block 52 Proxy API Documentation",
-            version: "1.0.0",
+            version: "1.0.1",
             description: "Proxy calls to the RPC layer 2"
         },
         servers: [
@@ -52,20 +49,18 @@ app.get("/", (req, res) => {
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+const getClient = () => {
+    if (proxy === "mock") {
+        return new Mocks();
+    }
+
+    throw new Error("Client not found");
+}
+
 // Routes
 // app.use("/account", () => account);
 app.get("/account/:id", async (req, res) => {
-    let client = null;
-
-    if (proxy === "mock") {
-        client = new Mocks();
-    }
-
-    if (!client) {
-        res.status(500).send("Client not found");
-        return;
-    }
-
+    const client = getClient();
     const account = client.getAccount(req.params.id);
 
     const response = {
@@ -130,29 +125,17 @@ app.get("/tables", (req, res) => {
 app.get("/table/:id", async (req, res) => {
     const id = req.params.id;
 
-    let client = null;
-    if (proxy === "mock") {
-        client = Mocks.getInstance();
-    }
-
-    if (!client) {
-        res.status(500).send("Client not found");
-        return;
-    }
-
+    const client = getClient();
     const table = await client.getTable(id);
 
     res.send(table);
 });
 
 app.get("/table/:id/player/:player", (req, res) => {
-    const response = {
-        stack: "100.00",
-        hand: [],
-        status: "active",
-        actions: ["check", "bet", "fold"],
-        isTurn: true
-    };
+    const client = getClient();
+    const id = req.params.id;
+    const playerId = req.params.player;
+    const player = client.getPlayer(id, player);
 
     res.send(response);
 });
@@ -181,10 +164,32 @@ app.post("/join", (req, res) => {
 
 // Deposit to the layer 2
 app.post("/deposit", (req, res) => {
+    const signature = req.body.signature;
+    if (!signature) {
+        res.status(400).send("Signature required");
+        return;
+    }
+
+    const nonce = req.body?.nonce;
+    if (!nonce) {
+        res.status(400).send("Nonce required");
+        return;
+    }
+
+    const txId = req.body.txId;
+    if (!txId) {
+        res.status(400).send("Transaction ID required");
+        return;
+    }
+
+
+
     const response = {
         id: 1,
-        balance: ethers.utils.formatEther(req.body.balance)
+        balance: ethers.utils.formatEther(req.body.balance),
+        tx: ethers.ZeroHash
     };
+
     res.send(response);
 });
 

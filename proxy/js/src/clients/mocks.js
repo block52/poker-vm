@@ -1,3 +1,5 @@
+import { time } from "console";
+
 const ethers = require("ethers");
 const crypto = require("crypto");
 
@@ -9,6 +11,10 @@ class Mocks {
         this.tables = [];
     }
 
+    getUnixTime = () => {
+        return Math.floor(Date.now());
+    }
+
     getAccount(i) {
         const j = Number(i);
 
@@ -16,6 +22,7 @@ class Mocks {
         const child = wallet.deriveChild(`${j}`);
 
         return {
+            nonce: 0,
             address: child.address,
             privateKey: child.privateKey,
             path: `m/44'/60'/0'/0/${j}`,
@@ -23,12 +30,27 @@ class Mocks {
         };
     }
 
-    getPlayer(i) {
-        
+    getPlayer(id, i) {
+        const account = this.getAccount(i);
+        const timeout = this.getUnixTime() + 30;
+
+        const player = {
+            id: account.address,
+            seat: 1,
+            stack: ethers.parseEther("100.0").toString(),
+            bet: ethers.parseEther("1.0").toString(),
+            hand: [],
+            status: "active",
+            actions:["check", "bet", "fold"],
+            action: "check",
+            timeout,
+            signature: ethers.ZeroHash
+        };
+
+        return player;
     }
 
     async getTable(id) {
-
         if (this.tables[id]) {
             return this.tables[id];
         }
