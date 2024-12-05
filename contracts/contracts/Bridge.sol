@@ -20,16 +20,28 @@ contract Bridge {
     mapping(uint256 => Deposit) public deposits;
     uint256 public depositIndex;
 
+    function decimals() external view returns (uint8) {
+        return IERC20Metadata(underlying).decimals();
+    }
+
+    function symbol() external view returns (string memory) {
+        return string.concat(IERC20Metadata(underlying).symbol(), "b");
+    }
+
+    function name() external view returns (string memory) {
+        return string.concat(IERC20Metadata(underlying).name(), " Bridge");
+    }
+
+    function totalSupply() external view returns (uint256) {
+        return IERC20(underlying).balanceOf(_self);
+    }
+
     constructor(address _underlying, address _vault) {
         underlying = _underlying;
         vault = _vault;
         _self = address(this);
 
         IERC20(underlying).approve(_self, type(uint256).max);
-    }
-
-    function name() external view returns (string memory) {
-        return string.concat(IERC20Metadata(underlying).name(), " Bridge");
     }
 
     function deposit(uint256 amount) external returns(uint256) {
