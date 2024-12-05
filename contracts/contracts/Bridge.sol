@@ -51,7 +51,7 @@ contract Bridge {
         return index;
     }
 
-    function _deposit(uint256 amount, address receiver) private (returns uint256) {
+    function _deposit(uint256 amount, address receiver) private returns (uint256) {
         IERC20(underlying).transferFrom(receiver, _self, amount);
         totalDeposits += amount;
 
