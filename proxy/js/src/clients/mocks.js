@@ -23,6 +23,10 @@ class Mocks {
         };
     }
 
+    getPlayer(i) {
+        
+    }
+
     async getTable(id) {
 
         if (this.tables[id]) {
@@ -70,7 +74,6 @@ class Mocks {
 
         const _response = JSON.parse(JSON.stringify(response));
         // const signature = await wallet.signMessage(_response)
-
         // response.signature = signature;
 
         this.tables[id] = response;

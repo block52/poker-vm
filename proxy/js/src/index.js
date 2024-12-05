@@ -61,6 +61,11 @@ app.get("/account/:id", async (req, res) => {
         client = new Mocks();
     }
 
+    if (!client) {
+        res.status(500).send("Client not found");
+        return;
+    }
+
     const account = client.getAccount(req.params.id);
 
     const response = {
@@ -128,6 +133,11 @@ app.get("/table/:id", async (req, res) => {
     let client = null;
     if (proxy === "mock") {
         client = Mocks.getInstance();
+    }
+
+    if (!client) {
+        res.status(500).send("Client not found");
+        return;
     }
 
     const table = await client.getTable(id);
