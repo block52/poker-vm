@@ -33,6 +33,14 @@ const swaggerOptions = {
 // Initialize swagger-jsdoc
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 
+const getUnixTime = () => {
+    return Math.floor(Date.now() / 1000);
+}
+
+app.get("/", (req, res) => {
+    res.send("Hello World!");
+});
+
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Routes
@@ -55,14 +63,6 @@ app.get("/account/:id", (req, res) => {
     res.send(response);
     return;
 });
-
-app.get("/", (req, res) => {
-    res.send("Hello World!");
-});
-
-const getUnixTime = () => {
-    return Math.floor(Date.now() / 1000);
-}
 
 app.get("/time", (req, res) => {
     // Return the current time in UNIX format
@@ -199,6 +199,7 @@ app.post("/transfer", (req, res) => {
     res.send(response);
 });
 
-app.listen(3001, () => {
-    console.log("Server is running on http://localhost:3001");
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });

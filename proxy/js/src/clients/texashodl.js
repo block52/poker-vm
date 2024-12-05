@@ -1,11 +1,12 @@
-class TexasHodlClient extends Client {
-    constructor() {
-        super("texashodl", "Texas Hodl", "https://texashodl.com");
+const axios = require("axios");
+
+class TexasHodlClient {
+    constructor(jwt) {
+        this.jwt = jwt;
     }
 
-    async fetch() {
-        const response = await fetch("https://texashodl.com/api/v1/price");
-        const json = await response.json();
-        return json.price;
+    async getBalance(id) {
     }
 }
+
+module.exports = TexasHodlClient;
