@@ -10,12 +10,11 @@ export function createProvider(nodeUrl: string): ethers.JsonRpcProvider {
 }
 
 // Listen to Oracle
-const INFURA_PROJECT_ID = "663bcd65903948a6b53cd96866fc1a4a";
-const infuraUrl = `https://mainnet.infura.io/v3/${INFURA_PROJECT_ID}`;
+const infuraUrl = process.env.RPC_URL ?? "";
 const provider = createProvider(infuraUrl);
 
-const tokenAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"; // ERC20 token contract address
-const bridgeAddress = "0x0B6052D3951b001E4884eD93a6030f92B1d76cf0"; // Address to monitor for deposits
+const tokenAddress = process.env.TOKEN_CONTRACT_ADDRESS ?? "";
+const bridgeAddress = process.env.BRIDGE_CONTRACT_ADDRESS ?? "";
 
 type TransferEvent = {
     from: string;
