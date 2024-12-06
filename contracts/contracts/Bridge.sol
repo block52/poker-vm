@@ -14,7 +14,7 @@ contract Bridge {
 
     address public immutable underlying;
     address public immutable vault;
-    address public immutable router;;
+    address public immutable router;
     uint256 public totalDeposits;
     address private immutable _self;
 
