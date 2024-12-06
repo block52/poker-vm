@@ -21,6 +21,7 @@ export enum RPCMethods {
     CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
     GET_ACCOUNT = "get_account",
+    GET_BALANCE = "get_balance",
     GET_BLOCK = "get_block",
     GET_BLOCKS = "get_blocks",
     GET_CLIENT = "get_client",
@@ -44,6 +45,7 @@ export type RPCRequestParams = {
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
+    [RPCMethods.GET_BALANCE]: [string]; // [address]
     [RPCMethods.GET_BLOCK]: [string]; // [index]
     [RPCMethods.GET_BLOCKS]: [string]; // [count]
     [RPCMethods.GET_CLIENT]: []; // No parameters
