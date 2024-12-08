@@ -11,7 +11,7 @@ describe("Game", function () {
         game.join(new Player("1", 100));
         game.join(new Player("2", 200));
         game.join(new Player("3", 300));
-        game.nextHand();
+        game.deal();
 
         // Pre-flop
         game.performAction("1", PlayerAction.CALL);

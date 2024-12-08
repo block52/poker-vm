@@ -99,14 +99,14 @@ export class RPC {
                 break;
             }
 
-            case RPCMethods.GET_BALANCE: {
-                if (!request.params) {
-                    return makeErrorRPCResponse(id, "Invalid params");
-                }
-                let command = new BalanceCommand(request.params[0] as string, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+            // case RPCMethods.GET_BALANCE: {
+            //     if (!request.params) {
+            //         return makeErrorRPCResponse(id, "Invalid params");
+            //     }
+            //     let command = new BalanceCommand(request.params[0] as string, validatorPrivateKey);
+            //     result = await command.execute();
+            //     break;
+            // }
 
             case RPCMethods.GET_BLOCK: {
                 let command = new BlockCommand(undefined, validatorPrivateKey);
