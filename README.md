@@ -6,7 +6,12 @@ The Layer 2 poker game virtual machine.
 
 The proxy API is a simple REST API that allows the poker game to interact with the blockchain.
 
-# Order of operations
+### Get Account
+
+GET `/account/<id>`
+
+### Get Account Balance
+
 
 ## Creating the transaction
 

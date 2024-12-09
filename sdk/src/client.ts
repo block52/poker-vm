@@ -11,7 +11,9 @@ import { Wallet } from "ethers";
 export class NodeRpcClient {
     private wallet: Wallet;
     constructor(private url: string, private privateKey: string) {
-        this.wallet = new Wallet(privateKey);
+        if (privateKey.length !== 66) {
+            this.wallet = new Wallet(privateKey);
+        }
     }
 
     /**

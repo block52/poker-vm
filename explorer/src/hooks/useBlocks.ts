@@ -10,8 +10,9 @@ export function useBlocks() {
     useEffect(() => {
         const fetchBlocks = async () => {
             try {
-                const client = new NodeRpcClient(NODE_URL, "");
-                const blocks = await client.getBlocks();
+                console.log("Fetching blocks from node", NODE_URL);
+                const client = new NodeRpcClient(NODE_URL, "0x357ecd78b54a4dcaf8b0f8b01585b22293c557adc72ffd8beede1a973a8f98f1");
+                const blocks = await client.getBlocks(20);
                 setBlocks(blocks);
                 setLoading(false);
             } catch (err) {
