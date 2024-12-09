@@ -53,7 +53,6 @@ export class BlockchainManagement extends StateManager {
         .limit(count ?? 20);
 
     return new BlockList(blocks.map(block => Block.fromDocument(block)));
-
   }
 
   public async getTransactions(count?: number): Promise<TransactionList> {

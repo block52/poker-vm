@@ -1,0 +1,33 @@
+name: poker-vm
+
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: poker
+      # No auth for now
+      # MONGO_INITDB_ROOT_USERNAME: root
+      # MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
+
+  # pvm:
+  #   profiles: [pvm]
+  #   container_name: pvm
+  #   image: pokervm-pvm
+  #   pull_policy: build
+  #   build:
+  #     context: ../pvm/ts
+  #   depends_on:
+  #     - mongo
+  #   ports:
+  #     - 3000:3000
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway" # Needed on linux to allow us to use "host.docker.internal" in the container to connect to the host's "localhost"
+  #   environment:
+  #     DB_URL: "mongodb://host.docker.internal:27017/pvm" # Override the env_file value as we need to use host.docker.internal
+  #   env_file:
+  #     - ../pvm/ts/.env
+
