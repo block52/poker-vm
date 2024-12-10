@@ -6,7 +6,10 @@ class Mocks {
 
     constructor() {
         this.seed = process.env.SEED;
-        this.wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
+
+        if (!this.seed) {
+            this.wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
+        }
         this.tables = [];
     }
 
