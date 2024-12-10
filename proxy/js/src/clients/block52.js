@@ -18,6 +18,11 @@ class Block52 {
         const response = await axios.post(this.node, rpc_request);
         return response.data?.balance;
     }
+
+    async getNonce(id) {
+        const response = await this.getBalance(id);
+        return response.data?.nonce;
+    }
 }
 
 module.exports = Block52;
