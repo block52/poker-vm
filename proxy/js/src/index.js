@@ -163,7 +163,7 @@ app.post("/join", (req, res) => {
 
 // Deposit to the layer 2
 app.post("/deposit", (req, res) => {
-    const signature = req.body.signature;
+    const signature = req.body?.signature;
     if (!signature) {
         res.status(400).send("Signature required");
         return;
@@ -175,7 +175,7 @@ app.post("/deposit", (req, res) => {
         return;
     }
 
-    const txId = req.body.txId;
+    const txId = req.body?.txId;
     if (!txId) {
         res.status(400).send("Transaction ID required");
         return;
