@@ -1,5 +1,3 @@
-import { time } from "console";
-
 const ethers = require("ethers");
 const crypto = require("crypto");
 
@@ -8,18 +6,24 @@ class Mocks {
 
     constructor() {
         this.seed = process.env.SEED;
+        this.wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
         this.tables = [];
     }
 
-    getUnixTime = () => {
+    getUnixTime () {
         return Math.floor(Date.now());
     }
 
     getAccount(i) {
-        const j = Number(i);
+        // do a regex check for number
+        const isNumber = /^\d+$/.test(i);
+        let j = 0;
+        if (isNumber) {
+            j = Number(i);
+        }
 
-        const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
-        const child = wallet.deriveChild(`${j}`);
+        // const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
+        const child = this.wallet.deriveChild(`${j}`);
 
         return {
             nonce: 0,
@@ -55,7 +59,7 @@ class Mocks {
             return this.tables[id];
         }
 
-        const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
+        // const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
         const idHash = crypto.createHash("sha256").update(id).digest("hex");
 
         const sb = ethers.parseEther("0.50").toString();
@@ -81,7 +85,7 @@ class Mocks {
             const _stake = Math.floor(Math.random() * (200 - 50 + 1)) + 50;
 
             const stack = ethers.parseEther(_stake.toString());
-            const child = wallet.deriveChild(`${i}`);
+            const child = this.wallet.deriveChild(`${i}`);
 
             response.players.push({
                 id: child.address,
@@ -102,8 +106,6 @@ class Mocks {
 
         return response;
     }
-
-    // create singleton
 
     static getInstance() {
         if (!Mocks.instance) {

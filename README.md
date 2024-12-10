@@ -74,3 +74,8 @@ Genesis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
     "signer": "MEW"
 }
 ```
+
+
+## Notes
+
+RANDO https://eth2book.info/capella/part2/building_blocks/randomness/#the-randao

@@ -58,7 +58,6 @@ const getClient = () => {
 }
 
 // Routes
-// app.use("/account", () => account);
 app.get("/account/:id", async (req, res) => {
     const client = getClient();
     const account = client.getAccount(req.params.id);
@@ -181,8 +180,6 @@ app.post("/deposit", (req, res) => {
         res.status(400).send("Transaction ID required");
         return;
     }
-
-
 
     const response = {
         id: 1,
