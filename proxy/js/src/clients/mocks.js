@@ -63,7 +63,7 @@ class Mocks {
         }
 
         // const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
-        const idHash = crypto.createHash("sha256").update(id).digest("hex");
+        const _id = crypto.createHash("sha256").update(id).digest("hex");
 
         const sb = ethers.parseEther("0.50").toString();
         const bb = ethers.parseEther("1.0").toString();
@@ -71,7 +71,7 @@ class Mocks {
         const pot2 = ethers.parseEther("10.0").toString();
 
         const response = {
-            id: idHash,
+            id: _id,
             button: 1,
             playerCount: 9,
             players: [],

@@ -106,7 +106,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const nextPlayerIndex = nextPlayer(playerIndex, 1);
         const checkPot = lastPot - updatedPlayers[playerIndex].pot;
         console.log(`POT, LASTPOT`, updatedPlayers[playerIndex].pot, lastPot);
-        if (updatedPlayers[playerIndex].pot == lastPot) {
+        if (updatedPlayers[playerIndex].pot === lastPot) {
 
             if (showThreeCards) {
                 if (openOneMore) {
@@ -169,7 +169,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
 
         const nextPlayerIndex = nextPlayer(playerIndex, 1);
-
         let updatedPlayers = players;
 
         if (updatedPlayers[playerIndex].balance === amount) {
