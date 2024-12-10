@@ -18,6 +18,7 @@ import { BiBorderAll } from "react-icons/bi";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { HiPlus } from "react-icons/hi2";
+
 //* Define the interface for the position object
 interface PositionArray {
     left?: string;
