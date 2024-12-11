@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { usePlayerContext } from "../context/usePlayerContext";
-import ChipPurchase from "./playPage/reusable/ChipPurchase";
 import CheckboxList from "./playPage/reusable/CheckboxList";
 
 const PokerActionPanel: React.FC = () => {

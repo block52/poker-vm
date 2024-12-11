@@ -11,7 +11,6 @@ import Player from "./Players/Player";
 import Dealer from "./reusable/Dealer";
 import Chip from "./reusable/Chip";
 import { usePlayerContext } from "../../context/usePlayerContext";
-import useBalance from "../../hooks/useBalance";
 import { PlayerStatus } from "../../context/types";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
@@ -52,7 +51,7 @@ function PlayPage() {
     const [isCardVisible, setCardVisible] = useState(-1);
 
     const { account, balance, isLoading} = useUserWallet();
-    // const { balance, isLoading, error, refetch } = useBalance(account || "");
+    console.log(account, balance, isLoading);
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
