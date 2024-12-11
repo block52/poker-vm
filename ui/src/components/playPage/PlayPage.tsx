@@ -11,6 +11,7 @@ import Player from "./Players/Player";
 import Dealer from "./reusable/Dealer";
 import Chip from "./reusable/Chip";
 import { usePlayerContext } from "../../context/usePlayerContext";
+import useBalance from "../../hooks/useBalance";
 import { PlayerStatus } from "../../context/types";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
@@ -48,6 +49,8 @@ function PlayPage() {
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+
+    const { balance, isLoading, error, refetch } = useBalance("0x742d35Cc6634C0532925a3b844Bc454e4438f44e");
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -177,7 +180,7 @@ function PlayPage() {
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
-                            <span>{"Balance: $14.2 (USD)"}</span>
+                            <span>{`Balance: $ ${balance} (USD)`}</span>
                         </div>
 
                         <div className="flex items-center justify-center w-10 h-10">
@@ -336,8 +339,9 @@ function PlayPage() {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
-                        }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
+                        openSidebar ? "w-[300px]" : "w-0"
+                    }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}

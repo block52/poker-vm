@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const ethers = require("ethers");
 const crypto = require("crypto");
 const swaggerUi = require("swagger-ui-express");
@@ -11,6 +12,8 @@ const Mocks = require("./clients/mocks");
 const Block52 = require("./clients/block52");
 
 const app = express();
+// use cors
+app.use(cors());
 
 // Load environment variables
 dotenv.config();
