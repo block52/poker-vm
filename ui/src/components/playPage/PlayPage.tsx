@@ -177,7 +177,7 @@ function PlayPage() {
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
-                            <span>{"Balance: $ 14.2 (USD)"}</span>
+                            <span>{"Balance: $14.2 (USD)"}</span>
                         </div>
 
                         <div className="flex items-center justify-center w-10 h-10">
