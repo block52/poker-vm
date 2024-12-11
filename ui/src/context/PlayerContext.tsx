@@ -5,6 +5,7 @@ export const PlayerContext = createContext<PlayerContextType | undefined>(undefi
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const isInitialized = useRef(false);
+    
     const [players, setPlayers] = useState<Player[]>(
         Array.from({ length: 9 }, (_, index) => ({
             index,
@@ -13,6 +14,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             pot: 0
         }))
     );
+
     const [lastPot, setLastPot] = useState<number>(0);
     const [openOneMore, setOpenOneMore] = useState<boolean>(false);
     const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
@@ -250,7 +252,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const setPlayerAction = (action: "fold" | "check" | "raise", amount?: number) => {
         if (action === "fold") {
             fold();
-        } else if (action === "check") {
+        } 
+        if (action === "check") {
             check();
         } else if (action === "raise" && amount !== undefined) {
             raise(amount);

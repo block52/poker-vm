@@ -20,9 +20,7 @@ const useBalance = (address: string): UseBalanceResult => {
         setError(null);
 
         try {
-            // const response = await axios.get(`https://proxy.block52.xyz/account/${address}`);
-            const response = await axios.get(`http://localhost:8080/account/${address}`);
-
+            const response = await axios.get(`https://proxy.block52.xyz/account/${address}`);
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

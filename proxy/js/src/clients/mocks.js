@@ -61,12 +61,12 @@ class Mocks {
         return player;
     }
 
-    async getTable(id) {
+    getTable(id) {
         if (this.tables[id]) {
             return this.tables[id];
         }
 
-        // const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
+        const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
         const _id = crypto.createHash("sha256").update(id).digest("hex");
 
         const sb = ethers.parseEther("0.50").toString();
@@ -91,7 +91,7 @@ class Mocks {
             const _stake = Math.floor(Math.random() * (200 - 50 + 1)) + 50;
 
             const stack = ethers.parseEther(_stake.toString());
-            const child = this.wallet.deriveChild(`${i}`);
+            const child = wallet.deriveChild(`${i}`);
 
             response.players.push({
                 id: child.address,
