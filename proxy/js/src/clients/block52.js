@@ -25,15 +25,15 @@ class Block52 {
             id: 1
         };
 
-        const response = await axios.post(this.node_url, rpc_request);
-        console.log("Block52 getAccount", response.data);
+        const { data } = await axios.post(this.node_url, rpc_request);
+        console.log("Block52 getAccount", data);
         
         return {
             nonce: 0,
-            address: response.data.result.address,
+            address: data.result.data.address,
             privateKey: "",
             path: "",
-            balance: response.data.result.balance
+            balance: data.result.data.balance
         };
     }
 

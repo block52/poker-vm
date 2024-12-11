@@ -71,7 +71,7 @@ const getClient = () => {
 // Routes
 app.get("/account/:id", async (req, res) => {
     const client = getClient();
-    const account = client.getAccount(req.params.id);
+    const account = await client.getAccount(req.params.id);
 
     const response = {
         index: req.params.id,
