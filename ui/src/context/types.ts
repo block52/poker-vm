@@ -8,6 +8,7 @@ export enum PlayerStatus {
 
 // types.ts
 export interface Player {
+    id: string; // Unique identifier for the player
     index: number; // Unique identifier for the player
     balance: number; // Player's current balance
     status: PlayerStatus; // Player's current choice (e.g., "fold", "call")

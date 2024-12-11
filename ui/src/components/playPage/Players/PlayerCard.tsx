@@ -10,7 +10,7 @@ type PlayerCardProps = {
     setStartIndex: (index: number) => void;
 };
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ id, label, left, top, color, onClose, setStartIndex }) => {
+const PlayerCard: React.FC<PlayerCardProps> = ({ id, label, left, top, color, onClose }) => {
     const [note, setNote] = useState("");
 
     const handleNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,6 +1,8 @@
 import React, { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "react";
 import { Player, PlayerContextType, PlayerStatus } from "./types";
 
+import axios from "axios";
+
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -8,8 +10,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     
     const [players, setPlayers] = useState<Player[]>(
         Array.from({ length: 9 }, (_, index) => ({
+            id: `player-${index}`,
             index,
-            balance: 200,
+            stack: 200,
             status: PlayerStatus.Idle,
             pot: 0
         }))
@@ -28,6 +31,18 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // const updatePlayer = (index: number, updatedPlayer: Player) => {
     //     setPlayers(prev => prev.map(player => (player.index === index ? updatedPlayer : player)));
     // };
+
+    const getTable = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/table`);
+
+            setDealerIndex(response.data.button);
+
+            console.log(response.data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     const nextPlayer = (turn: number, amount: number) => {
         console.log(`NEXT`, turn, amount, players);
@@ -49,6 +64,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return player;
     };
 
+    // TODO: THIS SHOULD BE NEW HAND
     const newGame = (dealer: number) => {
         console.log("GAME START", playerIndex);
         let updatedPlayers = players;
@@ -59,6 +75,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         updatedPlayers[nextPlayer(dealer, 1)].balance = 198;
         updatedPlayers[nextPlayer(dealer, 2)].balance = 196;
         updatedPlayers[nextPlayerIndex].status = PlayerStatus.Turn;
+
         setLastPot(4);
         setDealerIndex(dealer);
         setPlayers([...updatedPlayers]);

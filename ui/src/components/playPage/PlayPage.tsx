@@ -20,6 +20,7 @@ import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { HiPlus } from "react-icons/hi2";
 import useUserWallet from "../../hooks/useUserWallet";
+import useGame from "../../hooks/useGame";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -53,6 +54,8 @@ function PlayPage() {
 
     const { account, balance, isLoading} = useUserWallet();
     // const { balance, isLoading, error, refetch } = useBalance(account || "");
+
+    // const { startIndex } = useGame("1");
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -104,16 +107,18 @@ function PlayPage() {
                 if (prevIndex === 2) {
                     // Handle case where prevIndex is 2 (e.g., no change or custom logic)
                     return prevIndex + 2; // For example, keep it the same
-                } else if (prevIndex === 4) {
+                } 
+                if (prevIndex === 4) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex + 2;
-                } else if (prevIndex === 9) {
+                } 
+                if (prevIndex === 9) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex - 8;
-                } else {
-                    // Otherwise, just increment by 1
-                    return prevIndex + 1;
-                }
+                } 
+                
+                // Otherwise, just increment by 1
+                return prevIndex + 1;
             });
         }, 30000);
 

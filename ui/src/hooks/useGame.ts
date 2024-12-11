@@ -1,31 +1,31 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 
-interface UseBalanceResult {
-    balance: string | null;
+interface UseGameStateResult {
+    startIndex: number;
     isLoading: boolean;
     error: Error | null;
     refetch: () => Promise<void>;
 }
 
-const useBalance = (address: string): UseBalanceResult => {
-    const [balance, setBalance] = useState<string | null>(null);
+const useGame = (address: string): UseGameStateResult => {
+    const [startIndex, setStartIndex] = useState<number>(1);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchBalance = async () => {
+    const fetchGameState = async () => {
         if (!address) return;
 
         setIsLoading(true);
         setError(null);
 
         try {
-            const response = await axios.get(`https://proxy.block52.xyz/account/${address}`);
+            const response = await axios.get(`https://proxy.block52.xyz/table/${address}`);
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            setBalance(response.data.balance);
+            setStartIndex(response.data.button);
         } catch (err) {
             setError(err instanceof Error ? err : new Error("An error occurred"));
         } finally {
@@ -34,15 +34,15 @@ const useBalance = (address: string): UseBalanceResult => {
     };
 
     useEffect(() => {
-        fetchBalance();
-    }, [address]);
+        fetchGameState();
+    }, []);
 
     return {
-        balance,
+        startIndex,
         isLoading,
         error,
-        refetch: fetchBalance
+        refetch: fetchGameState
     };
 };
 
-export default useBalance;
+export default useGame;
