@@ -378,6 +378,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     useEffect(() => {
         if (!isInitialized.current) {
+            // TODO: GET ID FROM QUERY PARAMS
+            getTable();
             newGame(0);
             isInitialized.current = true;
         }
