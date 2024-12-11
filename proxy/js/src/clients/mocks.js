@@ -2,11 +2,8 @@ const ethers = require("ethers");
 const crypto = require("crypto");
 
 class Mocks {
-    // todo, pass seed in constructor
-
-    constructor() {
-        this.seed = process.env.SEED;
-
+    constructor(seed) {
+        this.seed = seed;
         if (!this.seed) {
             this.wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
         }
@@ -17,16 +14,23 @@ class Mocks {
         return Math.floor(Date.now());
     }
 
+    getNonce(id) {
+        return 0;
+    }
+
     getAccount(i) {
+        console.log("getAccount", i);
+
         // do a regex check for number
         const isNumber = /^\d+$/.test(i);
         let j = 0;
         if (isNumber) {
+            console.log(i, "is number");
             j = Number(i);
         }
 
-        // const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
-        const child = this.wallet.deriveChild(`${j}`);
+        const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
+        const child = wallet.deriveChild(`${j}`);
 
         return {
             nonce: 0,
