@@ -19,6 +19,7 @@ import { BiBorderAll } from "react-icons/bi";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { HiPlus } from "react-icons/hi2";
+import useUserWallet from "../../hooks/useUserWallet";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -50,7 +51,8 @@ function PlayPage() {
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
 
-    const { balance, isLoading, error, refetch } = useBalance("0x742d35Cc6634C0532925a3b844Bc454e4438f44e");
+    const { account, balance, isLoading} = useUserWallet();
+    // const { balance, isLoading, error, refetch } = useBalance(account || "");
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
