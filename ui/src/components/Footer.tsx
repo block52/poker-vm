@@ -35,7 +35,7 @@ const PokerActionPanel: React.FC = () => {
             <div className="left-0 absolute">
                 <CheckboxList />
             </div>
-            <ChipPurchase />
+            {/* <ChipPurchase /> */}
             <div className="flex flex-col w-[600px] space-y-6 mb-2 flex justify-center rounded-lg">
                 <div className="flex justify-between gap-2">
                     <button disabled={playerIndex !== 0} className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400" onClick={onFold}>
