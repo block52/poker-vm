@@ -76,12 +76,14 @@ app.get("/account/:id", async (req, res) => {
     const client = getClient();
     const account = await client.getAccount(req.params.id);
 
+    const balance = ethers.formatUnits(account.balance.toString());
+
     const response = {
         index: req.params.id,
         address: account.address,
         privateKey: account.privateKey,
         path: account.path,
-        balance: account.balance
+        balance: balance.toString()
     };
 
     res.send(response);

@@ -1,5 +1,4 @@
 import axios from "axios";
-
 import { useState, useEffect } from "react";
 
 interface UseBalanceResult {
@@ -21,7 +20,6 @@ const useBalance = (address: string): UseBalanceResult => {
         setError(null);
 
         try {
-            // const response = await axios.get(`https://proxy.block52.xyz/account/balance?address=${address}`);
             // const response = await axios.get(`https://proxy.block52.xyz/account/${address}`);
             const response = await axios.get(`http://localhost:8080/account/${address}`);
 

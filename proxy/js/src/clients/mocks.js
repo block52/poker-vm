@@ -37,7 +37,7 @@ class Mocks {
             address: child.address,
             privateKey: child.privateKey,
             path: `m/44'/60'/0'/0/${j}`,
-            balance: ethers.parseEther("100.0").toString()
+            balance: ethers.parseEther("100.0")
         };
     }
 
