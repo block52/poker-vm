@@ -9,11 +9,13 @@ import { Wallet } from "ethers";
  * NodeRpcClient class for interacting with a remote node via RPC
  */
 export class NodeRpcClient {
-    private wallet: Wallet;
+    private readonly wallet: Wallet;
     constructor(private url: string, private privateKey: string) {
         if (privateKey.length !== 66) {
-            this.wallet = new Wallet(privateKey);
+            throw new Error("Invalid private key");
         }
+
+        this.wallet = new Wallet(privateKey);
     }
 
     /**
