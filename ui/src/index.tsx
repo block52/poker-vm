@@ -1,10 +1,10 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import * as React from "react";
+import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { PlayerProvider } from "./context/PlayerContext";
 
-const root = ReactDOM.createRoot(document.getElementById("app") as HTMLElement);
+const root = createRoot(document.getElementById("app") as HTMLElement);
 root.render(
     <React.StrictMode>
         <PlayerProvider>

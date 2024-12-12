@@ -1,4 +1,5 @@
-import React, { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "react";
+import { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "react";
+import * as React from "react"; 
 import { Player, PlayerContextType, PlayerStatus } from "./types";
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
