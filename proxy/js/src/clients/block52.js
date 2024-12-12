@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { client} = "@bitcoinbrisbane/block52";
 
 class Block52 {
 

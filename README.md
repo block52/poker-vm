@@ -8,11 +8,33 @@ The proxy API is a simple REST API that allows the poker game to interact with t
 
 ### Get Account
 
-GET `/account/<id>`
+GET `/account/<address>`
+
+Reponse
+```json
+
+```
 
 ### Get Account Balance
 
+GET `/account/<address>`
 
+### Get Account Nonce
+
+GET `/account/<address>`
+
+## Game API
+
+
+# SDK
+
+To publish the SDK.
+
+```bash
+yarn publish
+```
+
+# Node
 ## Creating the transaction
 
 -   Transactions are sent to the node

@@ -1,5 +1,5 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { PlayerAction, TexasHoldemStateDTO } from "./types/game";
+import { PlayerActionType, TexasHoldemStateDTO } from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
@@ -193,7 +193,7 @@ export class NodeRpcClient {
         });
     }
 
-    public async playerAction(gameAddress: string, action: PlayerAction, amount: string): Promise<void> {
+    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string): Promise<void> {
         const gameCommand = {
             method: action,
             params: [amount],
