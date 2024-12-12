@@ -38,10 +38,10 @@ contract Bridge is Ownable {
         return IERC20(underlying).balanceOf(_self);
     }
 
-    constructor(address _underlying, address _vault, address _router) {
-        underlying = _underlying;
-        vault = _vault;
-        router = _router;
+    constructor(address underlying_, address vault_, address router_) {
+        underlying = underlying_;
+        vault = vault_;
+        router = router_;
         _self = address(this);
 
         IERC20(underlying).approve(_self, type(uint256).max);
