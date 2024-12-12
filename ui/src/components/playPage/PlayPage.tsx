@@ -18,12 +18,8 @@ import { BiBorderAll } from "react-icons/bi";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { HiPlus } from "react-icons/hi2";
-<<<<<<< Updated upstream
 import useUserWallet from "../../hooks/useUserWallet";
-
-=======
 import { useNavigate } from "react-router-dom";
->>>>>>> Stashed changes
 //* Define the interface for the position object
 interface PositionArray {
     left?: string;
