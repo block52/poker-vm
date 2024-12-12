@@ -5,7 +5,6 @@ import { RPCResponse } from "./types/rpc";
 import axios from "axios";
 import { Wallet } from "ethers";
 import crypto from "crypto";
-import { get } from "http";
 
 /**
  * NodeRpcClient class for interacting with a remote node via RPC

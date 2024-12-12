@@ -1,11 +1,11 @@
 const axios = require("axios");
-const { client} = "@bitcoinbrisbane/block52";
+const { client } = "@bitcoinbrisbane/block52";
 
 class Block52 {
     constructor(node_url) {
         // set node url
-        this.node_url = node_url;
-        this.client = new NodeRpcClient(node_url);
+        this.node_url = node_url; // remove, just use the client
+        this.client = new client.NodeRpcClient(node_url);
         console.log("Block52 node", this.node_url);
     }
 
@@ -15,7 +15,8 @@ class Block52 {
     }
 
     async getNonce(id) {
-        return 0;
+        const account = await this.client.getAccount(id);
+        return account.nonce;
     }
 
     async getAccount(id) {
