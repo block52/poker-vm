@@ -1,5 +1,5 @@
 import { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "react";
-import * as React from "react"; 
+import * as React from "react";
 import { Player, PlayerContextType, PlayerStatus } from "./types";
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -82,6 +82,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             });
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
+                console.log("Player", player);
                 if (index !== playerIndex) {
                     updatedPlayers[playerIndex].status = PlayerStatus.Idle;
                 }
@@ -108,17 +109,15 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const checkPot = lastPot - updatedPlayers[playerIndex].pot;
         console.log(`POT, LASTPOT`, updatedPlayers[playerIndex].pot, lastPot);
         if (updatedPlayers[playerIndex].pot == lastPot) {
-
             if (showThreeCards) {
                 if (openOneMore) {
-                    setOpenTwoMore(true)
+                    setOpenTwoMore(true);
                 } else {
                     setOpenOneMore(true);
                 }
             } else {
-                setShowThreeCards(true)
+                setShowThreeCards(true);
             }
-
         }
         if (updatedPlayers[playerIndex].balance <= checkPot) {
             updatedPlayers[playerIndex].status = PlayerStatus.AllIn;
@@ -195,6 +194,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             });
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
+                console.log(player);
                 if (index !== playerIndex) {
                     updatedPlayers[playerIndex].status = PlayerStatus.Idle;
                 }
