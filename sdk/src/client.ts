@@ -4,18 +4,18 @@ import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
 import { Wallet } from "ethers";
+import crypto from "crypto";
+import { get } from "http";
 
 /**
  * NodeRpcClient class for interacting with a remote node via RPC
  */
 export class NodeRpcClient {
-    private readonly wallet: Wallet;
+    private readonly wallet: Wallet | undefined;
     constructor(private url: string, private privateKey: string) {
-        if (privateKey.length !== 66) {
-            throw new Error("Invalid private key");
+        if (privateKey.length === 66) {
+            this.wallet = new Wallet(privateKey);
         }
-
-        this.wallet = new Wallet(privateKey);
     }
 
     /**
@@ -23,24 +23,28 @@ export class NodeRpcClient {
      * @returns The request ID
      */
     private getRequestId(): string {
-        return (
-            Math.random().toString(36).substring(2, 15) +
-            Math.random().toString(36).substring(2, 15)
-        );
+        return crypto.randomUUID();
+    }
+
+    private getAddress(): string {
+        if (!this.wallet) {
+            throw new Error("Cannot get address without a private key");
+        }
+        return this.wallet.address;
     }
 
     /**
-     * Create an account
-     * @param privateKey The private key of the account
-     * @returns A Promise that resolves when the request is complete
+     * Get the account balance from the remote node
+     * @param address The address of the account
+     * @returns A Promise resolving to an Account object
      */
-    public async createAccount(privateKey: string): Promise<void> {
-        await axios.post(this.url, {
+    public async getAccount(address: string): Promise<AccountDTO> {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<AccountDTO> }>(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.CREATE_ACCOUNT,
-            params: [privateKey],
-            data: undefined
+            method: RPCMethods.GET_ACCOUNT,
+            params: [address]
         });
+        return body.result.data;
     }
 
     /**
@@ -48,10 +52,7 @@ export class NodeRpcClient {
      * @returns A Promise resolving to an array of Transaction objects
      */
     public async getMempool(): Promise<TransactionDTO[]> {
-        const { data: body } = await axios.post<
-            RPCRequest,
-            { data: RPCResponse<TransactionDTO[]> }
-        >(this.url, {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TransactionDTO[]> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_MEMPOOL,
             params: [],
@@ -66,10 +67,7 @@ export class NodeRpcClient {
      * @returns A Promise resolving to an array of node URLs
      */
     public async getNodes(): Promise<string[]> {
-        const { data: body} = await axios.post<
-            RPCRequest,
-            { data: RPCResponse<string[]> }
-        >(this.url, {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<string[]> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_NODES,
             params: [],
@@ -82,10 +80,10 @@ export class NodeRpcClient {
      * @returns A Promise resolving to a Block object
      */
     public async getLastBlock(): Promise<BlockDTO> {
-        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO>}>(this.url, {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_LAST_BLOCK,
-            params: [],
+            params: []
         });
         // Convert the received BlockDTO to a Block instance
         return body.result.data;
@@ -97,11 +95,10 @@ export class NodeRpcClient {
      * @returns A Promise resolving to an array of Block objects
      */
     public async getBlocks(count?: number): Promise<BlockDTO[]> {
-        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<BlockDTO[]>}>
-        (this.url, {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO[]> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_BLOCKS,
-            params: [count ?? 100],
+            params: [count ?? 100]
         });
         return body.result.data;
     }
@@ -115,7 +112,7 @@ export class NodeRpcClient {
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.MINED_BLOCK_HASH,
-            params: [blockHash],
+            params: [blockHash]
         });
     }
 
@@ -124,26 +121,29 @@ export class NodeRpcClient {
      * @returns A Promise resolving to an array of Transaction objects
      */
     public async getTransactions(): Promise<TransactionDTO[]> {
-       const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<TransactionDTO[]>}>(this.url, {
-        id: this.getRequestId(),
-        method: RPCMethods.GET_TRANSACTIONS,
-        params: [],
-       });
-       return body.result.data;
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TransactionDTO[]> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_TRANSACTIONS,
+            params: []
+        });
+        return body.result.data;
     }
 
     /**
      * Transfer funds from one account to another
-     * @param from The address of the sender
      * @param to The address of the recipient
+     * @param nonce The nonce of the transaction
      * @param amount The amount to transfer
      * @returns A Promise that resolves when the request is complete
      */
-    public async transfer(from: string, to: string, amount: string, data?: string): Promise<void> {
+    public async transfer(to: string, amount: string, nonce?: number, data?: string): Promise<void> {
+        const from = this.getAddress();
+        const signature = await this.getSignature(nonce);
+
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [from, to, amount, data],
+            params: [from, to, amount, nonce, data, signature]
         });
     }
 
@@ -158,50 +158,63 @@ export class NodeRpcClient {
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.MINT,
-            params: [address, amount, transactionId],
+            params: [address, amount, transactionId]
         });
-    }
-
-    public async getAccount(address: string): Promise<AccountDTO> {
-        console.log(`Getting account ${address} from url ${this.url}`);
-        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<AccountDTO>}>(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.GET_ACCOUNT,
-            params: [address],
-        });
-        return body.result.data;
     }
 
     public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
-        const { data: body } = await axios.post<RPCRequest, {data: RPCResponse<TexasHoldemStateDTO>}>
-        (this.url, {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_GAME_STATE,
-            params: [gameAddress],
+            params: [gameAddress]
         });
         return body.result.data;
     }
 
-    public async playerJoin(gameAddress: string, playerAddress: string): Promise<void> {
+    public async playerJoin(gameAddress: string, nonce?: number): Promise<void> {
         const gameCommand = {
             method: "join"
         };
+
+        const address = this.getAddress();
+        const signature = await this.getSignature(nonce);
+
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
+            params: [address, gameAddress, "0", JSON.stringify(gameCommand), signature]
         });
     }
 
-    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string): Promise<void> {
+    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<void> {
         const gameCommand = {
             method: action,
-            params: [amount],
+            params: [amount]
         };
+
+        const signature = await this.getSignature(nonce);
+        const address = this.getAddress();
+
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [ this.wallet.address, gameAddress, "0", JSON.stringify(gameCommand)],
+            params: [address, gameAddress, "0", JSON.stringify(gameCommand), signature]
         });
+    }
+
+    private async getSignature(nonce?: number): Promise<string> {
+        if (!this.wallet) {
+            throw new Error("Cannot transfer funds without a private key");
+        }
+
+        const address = this.wallet.address;
+
+        if (!nonce) {
+            const account = await this.getAccount(address);
+            nonce = account.nonce;
+        }
+
+        const signature = await this.wallet.signMessage(nonce.toString());
+        return signature;
     }
 }

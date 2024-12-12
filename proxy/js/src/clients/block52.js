@@ -2,10 +2,10 @@ const axios = require("axios");
 const { client} = "@bitcoinbrisbane/block52";
 
 class Block52 {
-
     constructor(node_url) {
         // set node url
         this.node_url = node_url;
+        this.client = new NodeRpcClient(node_url);
         console.log("Block52 node", this.node_url);
     }
 
