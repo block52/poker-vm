@@ -7,7 +7,6 @@ const PokerActionPanel: React.FC = () => {
     const [raiseAmount, setRaiseAmount] = useState(0);
     const balance = players[0]?.balance
     const pot = players[0]?.pot
-    
     useEffect(() => {
         setRaiseAmount(lastPot - pot + 1)
     }, [lastPot])

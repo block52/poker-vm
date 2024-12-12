@@ -1,5 +1,3 @@
-// change this to PlayerAction from the SDK
-
 export enum PlayerStatus {
     Idle = 0,
     Turn = 1,

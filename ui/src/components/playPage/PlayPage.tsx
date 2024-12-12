@@ -18,8 +18,12 @@ import { BiBorderAll } from "react-icons/bi";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { HiPlus } from "react-icons/hi2";
+<<<<<<< Updated upstream
 import useUserWallet from "../../hooks/useUserWallet";
 
+=======
+import { useNavigate } from "react-router-dom";
+>>>>>>> Stashed changes
 //* Define the interface for the position object
 interface PositionArray {
     left?: string;
@@ -49,6 +53,7 @@ function PlayPage() {
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+    const navigator = useNavigate();
 
     const { account, balance, isLoading} = useUserWallet();
     console.log(account, balance, isLoading);
@@ -184,8 +189,8 @@ function PlayPage() {
                             <span>{`Balance: $ ${balance} (USD)`}</span>
                         </div>
 
-                        <div className="flex items-center justify-center w-10 h-10">
-                            <RiMoneyDollarCircleLine color="#f0f0f0" size={25} />
+                        <div className="flex items-center justify-center w-10 h-10  cursor-pointer">
+                            <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigator('/deposit')} />
                         </div>
                         <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
                             <CiCalendar color="#f0f0f0" size={25} />
@@ -340,9 +345,8 @@ function PlayPage() {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
-                        openSidebar ? "w-[300px]" : "w-0"
-                    }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
+                        }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}

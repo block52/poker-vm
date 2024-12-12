@@ -1,35 +1,35 @@
 {
   "name": "block52-poker-ui",
-  "private": false,
   "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build"
-  },
+  "private": true,
   "dependencies": {
-    "@bitcoinbrisbane/block52": "^1.0.15",
+    "@reown/appkit": "^1.5.3",
+    "@reown/appkit-adapter-wagmi": "^1.5.0",
+    "@tailwindcss/vite": "^0.0.0-development.1",
+    "@tanstack/react-query": "^5.56.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
-    "@types/node": "^22.8.1",
+    "@types/node": "^16.18.121",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@wagmi/core": "^2.15.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
+    "react-router-dom": "^7.0.2",
     "react-scripts": "5.0.1",
     "tailwind-scrollbar-hide": "^1.1.7",
-    "typescript": "^5.5.3",
-    "vite": "^6.0.3"
+    "typescript": "^4.9.5",
+    "viem": "^2.21.14",
+    "wagmi": "^2.12.14"
   },
-  "devDependencies": {
-    "@svgr/webpack": "^8.1.0",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.15"
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3002",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "eslintConfig": {
     "extends": [
@@ -37,7 +37,33 @@
       "react-app/jest"
     ]
   },
-  "engines": {
-    "node": "20.12.2"
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@svgr/webpack": "^8.1.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "globals": "^15.9.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.0.1",
+    "vite": "^5.4.1"
   }
 }
