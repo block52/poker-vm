@@ -6,7 +6,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { IValidator } from "./Vault.sol";
 import { IUniswapV3, ISwapRouter } from "./uniswap/Interfaces.sol";
 
-contract Bridge {
+contract Bridge is Ownable {
     struct Deposit {
         address account;
         uint256 amount;
@@ -47,21 +47,33 @@ contract Bridge {
         IERC20(underlying).approve(_self, type(uint256).max);
     }
 
-    function deposit(uint256 amount) external returns(uint256) {
-        uint256 index = _deposit(amount, msg.sender);
-        emit Deposited(msg.sender, amount, index);
+    function deposit(uint256 amount, address token) external returns(uint256) {
+        index, recieved = _deposit(amount, msg.sender, token);
+        emit Deposited(msg.sender, recieved, index);
 
         return index;
     }
 
-    function _deposit(uint256 amount, address receiver) private returns (uint256) {
-        IERC20(underlying).transferFrom(receiver, _self, amount);
-        totalDeposits += amount;
+    function depositUnderlying(uint256 amount) external returns(uint256) {
+        index, recieved = _deposit(amount, msg.sender, underlying);
+        emit Deposited(msg.sender, recieved, index);
 
-        deposits[depositIndex] = Deposit(receiver, amount);
+        return index;
+    }
+
+    function _deposit(uint256 amount, address receiver, address token) private returns (uint256 index, uint256 recieved) {
+        IERC20(token).transferFrom(receiver, _self, amount);
+        recieved = amount;
+
+        if (_router != address(0) && token != underlying) {
+            recieved = _swap(token, underlying, _self, amount, 0);
+        }
+
+        totalDeposits += recieved;
+
+        deposits[depositIndex] = Deposit(receiver, recieved);
         depositIndex++;
-
-        return depositIndex;
+        index = depositIndex;
     }
 
     function withdraw(uint256 amount, address receiver, bytes32 nonce, bytes calldata signature) external {
@@ -87,11 +99,41 @@ contract Bridge {
         if (amount == 0) return;
 
         require(amount >= totalDeposits, "emergencyWithdraw: total deposits are less than balance");
-        // require(amount => totalDeposits >= 0, "emergencyWithdraw: no funds to withdraw");
         uint256 delta = amount - totalDeposits;
 
         address owner = 0x9943d42D7a59a0abaE451130CcfC77d758da9cA0;
         IERC20(underlying).transferFrom(_self, owner, delta);
+    }
+
+    function _swap(
+        address tokenIn,
+        address tokenOut,
+        address from,
+        uint256 amountIn,
+        uint256 amountOutMinimum
+    ) internal returns (uint256 amountOut) {
+        ISwapRouter swapRouter = ISwapRouter(router);
+
+        // Transfer the specified amount of TOKEN to this contract.
+        TransferHelper.safeTransferFrom(tokenIn, from, address(this), amountIn);
+
+        // Approve the router to spend TOKEN.
+        TransferHelper.safeApprove(tokenIn, address(swapRouter), amountIn);
+
+        // Naively set amountOutMinimum to 0. In production, use an oracle or other data source to choose a safer value for amountOutMinimum.
+        // We also set the sqrtPriceLimitx96 to be 0 to ensure we swap our exact input amount.
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
+            fee: 1000,
+            recipient: _self,
+            amountIn: amountIn,
+            amountOutMinimum: amountOutMinimum,
+            sqrtPriceLimitX96: 0
+        });
+
+        // The call to `exactInputSingle` executes the swap.
+        amountOut = swapRouter.exactInputSingle(params);
     }
 
     function recoverSignerAddress(bytes32 messageHash, bytes memory signature) private pure returns (address) {
