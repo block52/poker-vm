@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import { usePlayerContext } from "../context/usePlayerContext";
-import ChipPurchase from "./playPage/reusable/ChipPurchase";
 import CheckboxList from "./playPage/reusable/CheckboxList";
 
 const PokerActionPanel: React.FC = () => {
@@ -9,7 +8,6 @@ const PokerActionPanel: React.FC = () => {
     const [raiseAmount, setRaiseAmount] = useState(0);
     const balance = players[0]?.balance
     const pot = players[0]?.pot
-    
     useEffect(() => {
         setRaiseAmount(lastPot - pot + 1)
     }, [lastPot])
@@ -36,7 +34,7 @@ const PokerActionPanel: React.FC = () => {
             <div className="left-0 absolute">
                 <CheckboxList />
             </div>
-            <ChipPurchase />
+            {/* <ChipPurchase /> */}
             <div className="flex flex-col w-[600px] space-y-6 mb-2 flex justify-center rounded-lg">
                 <div className="flex justify-between gap-2">
                     <button disabled={playerIndex !== 0} className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400" onClick={onFold}>

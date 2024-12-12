@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const ethers = require("ethers");
 const crypto = require("crypto");
 const swaggerUi = require("swagger-ui-express");
@@ -6,12 +7,17 @@ const swaggerJSDoc = require("swagger-jsdoc");
 const dotenv = require("dotenv");
 
 // Clients
+// const { Mocks, Block52 } = require("./clients/index");
 const Mocks = require("./clients/mocks");
+const Block52 = require("./clients/block52");
+
 const app = express();
+// use cors
+app.use(cors());
 
 // Load environment variables
 dotenv.config();
-const proxy = process.env.PROXY || "mock";
+const clientType = process.env.CLIENT_TYPE || "mock";
 
 // Add JSON middleware
 app.use(express.json());
@@ -50,29 +56,46 @@ app.get("/", (req, res) => {
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 const getClient = () => {
-    if (proxy === "mock") {
-        return new Mocks();
+    if (clientType === "mock") {
+        console.log("Using mock client");
+        const seed = process.env.SEED;
+        return new Mocks(seed);
     }
 
-    throw new Error("Client not found");
+    if (clientType === "block52") {
+        console.log("Using Block52 client");
+        const node_url = process.env.NODE_URL || "https://node1.block52.xyz/";
+        return new Block52(node_url);
+    }
+
+    throw new Error("Client type not found");
 }
 
 // Routes
 app.get("/account/:id", async (req, res) => {
     const client = getClient();
-    const account = client.getAccount(req.params.id);
+    const account = await client.getAccount(req.params.id);
+
+    const balance = ethers.formatUnits(account.balance.toString());
 
     const response = {
         index: req.params.id,
         address: account.address,
         privateKey: account.privateKey,
         path: account.path,
-        balance: account.balance
+        balance: balance.toString()
     };
 
     res.send(response);
     return;
 });
+
+// app.get("/account/balance", async (req, res) => {
+//     const client = getClient();
+//     const account = client.getAccount(req.query.id);
+//     res.send(account.balance);
+//     return;
+// });
 
 app.get("/time", (req, res) => {
     // Return the current time in UNIX format
@@ -198,7 +221,7 @@ app.post("/transfer", (req, res) => {
     res.send(response);
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });

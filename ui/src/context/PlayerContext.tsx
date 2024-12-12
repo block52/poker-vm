@@ -1,6 +1,7 @@
 import { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "react";
 import * as React from "react"; 
 import { Player, PlayerContextType, PlayerStatus } from "./types";
+
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -30,7 +31,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const nextPlayer = (turn: number, amount: number) => {
         console.log(`NEXT`, turn, amount, players);
         const allIdle = players.every(player => player.status !== PlayerStatus.Idle);
-
         if (allIdle) {
             console.warn("All players are not idle. Resetting players.");
             return -1;
@@ -73,7 +73,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         let updatedPlayers = players;
         const nextPlayerIndex = nextPlayer(playerIndex, 1);
-        updatedPlayers[playerIndex].status = PlayerStatus.Fold; //PlayerActions.Fold; //PlayerStatus.Fold;
+        updatedPlayers[playerIndex].status = PlayerStatus.Fold;
         if (!players[nextPlayerIndex]) {
             console.error(`Player at index ${nextPlayerIndex} does not exist.`);
             let allPot = 0;
@@ -82,9 +82,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             });
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
-                // Hack to fix compiler error
-                console.log(`INDEX`, index, player);
-
                 if (index !== playerIndex) {
                     updatedPlayers[playerIndex].status = PlayerStatus.Idle;
                 }
@@ -110,7 +107,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const nextPlayerIndex = nextPlayer(playerIndex, 1);
         const checkPot = lastPot - updatedPlayers[playerIndex].pot;
         console.log(`POT, LASTPOT`, updatedPlayers[playerIndex].pot, lastPot);
-        if (updatedPlayers[playerIndex].pot === lastPot) {
+        if (updatedPlayers[playerIndex].pot == lastPot) {
 
             if (showThreeCards) {
                 if (openOneMore) {
@@ -141,8 +138,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             });
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
-                // Hack to fix compiler error
-                console.log(`INDEX`, index, player);
                 if (index !== playerIndex) {
                     updatedPlayers[playerIndex].status = PlayerStatus.Idle;
                 }
@@ -175,6 +170,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
 
         const nextPlayerIndex = nextPlayer(playerIndex, 1);
+
         let updatedPlayers = players;
 
         if (updatedPlayers[playerIndex].balance === amount) {
@@ -197,9 +193,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             });
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
-                // Hack to fix compiler error
-                console.log(`INDEX`, index, player);
-
                 if (index !== playerIndex) {
                     updatedPlayers[playerIndex].status = PlayerStatus.Idle;
                 }
