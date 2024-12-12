@@ -82,7 +82,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             });
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
-                console.log("Player", player);
                 if (index !== playerIndex) {
                     updatedPlayers[playerIndex].status = PlayerStatus.Idle;
                 }
@@ -137,8 +136,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             });
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
-                // remove linting error
-                console.log(player);
                 if (index !== playerIndex) {
                     updatedPlayers[playerIndex].status = PlayerStatus.Idle;
                 }
@@ -194,7 +191,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             });
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
-                console.log(player);
                 if (index !== playerIndex) {
                     updatedPlayers[playerIndex].status = PlayerStatus.Idle;
                 }
