@@ -9,6 +9,7 @@ class Mocks {
             this.wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
         }
         this.tables = [];
+        this.nonce = 0;
     }
 
     getUnixTime () {
@@ -16,7 +17,8 @@ class Mocks {
     }
 
     getNonce(id) {
-        return 0;
+        this.nonce++;
+        return this.nonce;
     }
 
     getAccount(i) {
