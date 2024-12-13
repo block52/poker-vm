@@ -1,11 +1,13 @@
 const axios = require("axios");
+// const { NodeRpcClient } = "@bitcoinbrisbane/block52";
 
 class Block52 {
-
     constructor(node_url) {
         // set node url
-        this.node_url = node_url;
+        this.node_url = node_url; // remove, just use the client
+        // this.client = new NodeRpcClient(node_url);
         console.log("Block52 node", this.node_url);
+        this.requestId = 1;
     }
 
     getUnixTime () {
@@ -14,7 +16,8 @@ class Block52 {
     }
 
     async getNonce(id) {
-        return 0;
+        const account = await this.client.getAccount(id);
+        return account.nonce;
     }
 
     async getAccount(id) {
@@ -22,11 +25,13 @@ class Block52 {
             jsonrpc: "2.0",
             method: "get_account",
             params: [id],
-            id: 1
+            id: this.requestId
         };
 
         const { data } = await axios.post(this.node_url, rpc_request);
         console.log("Block52 getAccount", data);
+
+        this.requestId++;
         
         return {
             nonce: 0,
@@ -35,11 +40,6 @@ class Block52 {
             path: "",
             balance: data.result.data.balance
         };
-    }
-
-    async getBalance(id) {
-        const response = await this.getAccount(id);
-        return response.data?.balance;
     }
 
     async getNonce(id) {

@@ -23,6 +23,7 @@ export type BlockDTO = {
 export type AccountDTO = {
     address: string;
     balance: string;
+    nonce: number;
 };
 
 export type BurnResponseDTO = {

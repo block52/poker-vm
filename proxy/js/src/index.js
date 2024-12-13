@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const ethers = require("ethers");
-const crypto = require("crypto");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const dotenv = require("dotenv");

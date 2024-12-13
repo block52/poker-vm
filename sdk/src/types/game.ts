@@ -1,4 +1,4 @@
-export enum PlayerAction {
+export enum PlayerActionType {
     SMALL_BLIND = "post small blind",
     BIG_BLIND = "post big blind",
     FOLD = "fold",
@@ -6,48 +6,70 @@ export enum PlayerAction {
     BET = "bet",
     CALL = "call",
     RAISE = "raise",
-    ALL_IN = "going all-in"
+    ALL_IN = "all-in",
+    MUCK = "muck"
 }
 
-export type MoveDTO = {
-    action: PlayerAction;
-    minAmount: number | undefined;
-    maxAmount: number | undefined;
+export enum PlayerStatus {
+    NOT_ACTED = "not-acted",
+    TURN = "turn",
+    ACTIVE = "active",
+    SITTING_OUT = "sitting-out"
 }
+
+export enum TexasHoldemRound {
+    PREFLOP = "preflop",
+    FLOP = "flop",
+    TURN = "turn",
+    RIVER = "river",
+    SHOWDOWN = "showdown"
+}
+
+/// This is the type of the last action of a player
+export type ActionDTO = {
+    action: PlayerActionType;
+    amount: string;
+};
+
+export type LegalActionDTO = {
+    action: PlayerActionType;
+    min: string | undefined;
+    max: string | undefined;
+};
 
 export type WinnerDTO = {
     address: string;
-    amount: number;    
-}
+    amount: number;
+};
 
 export type PlayerDTO = {
     address: string;
-    chips: number;
+    seat: number;
+    stack: string; // BigNumber
     holeCards: number[] | undefined;
-    lastMove: MoveDTO | undefined;
-    validMoves: MoveDTO[];
-    isActive: boolean;
-    isEliminated: boolean;
-    isSmallBlind: boolean;
-    isBigBlind: boolean;
-}
+    status: PlayerStatus;
+    lastAction: ActionDTO | undefined;
+    actions: LegalActionDTO[];
+    timeout: number;
+    signature: string;
+};
 
 export type TexasHoldemJoinStateDTO = {
-    type: "join",
+    type: "join";
     players: string[];
-}
+};
 
 export type TexasHoldemGameStateDTO = {
-    type: "game",
+    type: "cash";
     address: string;
-    smallBlind: number;
-    bigBlind: number;
+    smallBlind: string;
+    bigBlind: string;
     players: PlayerDTO[];
     communityCards: number[];
-    pot: number;
-    currentBet: number;
+    pot: string;
+    nextToAct: number;
     round: string;
     winners: WinnerDTO[];
-}
+};
 
 export type TexasHoldemStateDTO = TexasHoldemJoinStateDTO | TexasHoldemGameStateDTO;

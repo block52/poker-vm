@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import Badge from "../reusable/Badge";
 import ProgressBar from "../reusable/ProgressBar";
 import { usePlayerContext } from "../../../context/usePlayerContext";

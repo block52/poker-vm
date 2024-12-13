@@ -23,12 +23,11 @@ export interface PlayerContextType {
     // handleStatusChange: (index: number, choice: number, updatedPlayers: Player[]) => void;
     // moveToNextPlayer: (index: number, updatedPlayers: Player[]) => void;
     // changeToThinkingBeforeTimeout: () => void;
-    setPlayerAction: (action: 'fold' | 'check' | 'raise', amount?: number) => void;
+    setPlayerAction: (action: "fold" | "check" | "raise", amount?: number) => void;
     dealerIndex: number;
     lastPot: number;
     playerIndex: number;
     openOneMore: boolean;
     openTwoMore: boolean;
-    showThreeCards: boolean
-
+    showThreeCards: boolean;
 }

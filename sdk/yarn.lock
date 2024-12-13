@@ -52,6 +52,11 @@ axios@^1.7.9:
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
+bigunit@^1.2.5:
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/bigunit/-/bigunit-1.2.5.tgz#86f7937bf38364ad0d8254c72778c5fdc5fe49d9"
+  integrity sha512-2P/rFhWv4MU0HcV1atfTvU0AzBA45yR43hFqaudvSaruRXW1o/TUmiMJzZSwwhez86QkeYkPGhZFLGn8OZbk6g==
+
 combined-stream@^1.0.8:
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/combined-stream/-/combined-stream-1.0.8.tgz#c3d45a8b34fd730631a110a8a2520682b31d5a7f"

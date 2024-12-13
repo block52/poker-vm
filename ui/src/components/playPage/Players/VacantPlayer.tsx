@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { FaRegUserCircle } from "react-icons/fa";
 
 type VacantPlayerProps = {

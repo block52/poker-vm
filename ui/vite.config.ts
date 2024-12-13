@@ -9,8 +9,5 @@ export default defineConfig({
       plugins: [tailwindcss()],
     },
   },
-  plugins: [react()],
-  build: {
-    outDir: "../dist", // Specify output directory (default is dist)
-  },
-})
+  plugins: [react()]
+});
