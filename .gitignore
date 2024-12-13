@@ -410,3 +410,7 @@ proxy/python/.env
 proxy/js/.env
 bot/.env
 bot/venv/*
+
+ui/.env
+ui/node_modules/*
+ui/dist/*

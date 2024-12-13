@@ -39,7 +39,7 @@ createAppKit({
     enableCoinbase: true,
     defaultNetwork: mainnet,
     allWallets: "SHOW"
-});
+})
 
 function App() {
     return (
