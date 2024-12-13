@@ -8,7 +8,7 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
-    "@bitcoinbrisbane/block52": "^1.0.20",
+    "@bitcoinbrisbane/block52": "^1.0.22",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",

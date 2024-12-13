@@ -191,12 +191,13 @@
     "@babel/helper-validator-identifier" "^7.25.7"
     to-fast-properties "^2.0.0"
 
-"@bitcoinbrisbane/block52@1.0.14":
-  version "1.0.14"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.14.tgz#adb6563fce4051319da1b6d0580c4013d4d27ed4"
-  integrity sha512-HDc0aI55y5C0Dwur7o2mZBUs0OnYnpKiVjATs9OTNDr+GL4qgeFO9XuEl3F1g2VjgmxYe97mP4AUZD8/lIyHKA==
+"@bitcoinbrisbane/block52@1.0.22":
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.22.tgz#5423910bb95eec716fab7d6c88e971cc97229889"
+  integrity sha512-DQjWcsslPL38zQDXFAFjrUHp497y1/adKX6dpW7iIzoy3YkTSG7/UvA4WWCvMZPM/70Dj+iyjtqC/0ARRQnmZw==
   dependencies:
-    axios "^1.7.7"
+    axios "^1.7.9"
+    bigunit "^1.2.5"
     ethers "^6.13.4"
 
 "@esbuild/aix-ppc64@0.24.0":
@@ -862,10 +863,10 @@ autoprefixer@^10.4.20:
     picocolors "^1.0.1"
     postcss-value-parser "^4.2.0"
 
-axios@^1.7.7:
-  version "1.7.7"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.7.tgz#2f554296f9892a72ac8d8e4c5b79c14a91d0a47f"
-  integrity sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==
+axios@^1.7.9:
+  version "1.7.9"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.9.tgz#d7d071380c132a24accda1b2cfc1535b79ec650a"
+  integrity sha512-LhLcE7Hbiryz8oMDdDptSrWowmB4Bl6RCt6sIJKpRB4XtVf0iEgewX3au/pJqm+Py1kCASkb/FFKjxQaLtxJvw==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.0"
@@ -875,6 +876,11 @@ balanced-match@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
+
+bigunit@^1.2.5:
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/bigunit/-/bigunit-1.2.5.tgz#86f7937bf38364ad0d8254c72778c5fdc5fe49d9"
+  integrity sha512-2P/rFhWv4MU0HcV1atfTvU0AzBA45yR43hFqaudvSaruRXW1o/TUmiMJzZSwwhez86QkeYkPGhZFLGn8OZbk6g==
 
 binary-extensions@^2.0.0:
   version "2.3.0"
