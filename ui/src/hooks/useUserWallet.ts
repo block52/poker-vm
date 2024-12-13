@@ -26,8 +26,8 @@ const useUserWallet = (): UseUserWalletResult => {
         setError(null);
 
         try {
-            const response = await axios.get(`https://proxy.block52.xyz/account/${account}`);
-            // const response = await axios.get(`http://localhost:8080/account/${account}`);
+            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const response = await axios.get(`${url}/account/${account}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
