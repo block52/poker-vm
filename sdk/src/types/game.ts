@@ -64,12 +64,14 @@ export type TexasHoldemGameStateDTO = {
     address: string;
     smallBlind: string;
     bigBlind: string;
+    dealer: number;
     players: PlayerDTO[];
     communityCards: number[];
-    pot: string;
+    pots: [string];
     nextToAct: number;
-    round: string;
+    round: TexasHoldemRound;
     winners: WinnerDTO[];
+    signature: string;
 };
 
 export type TexasHoldemStateDTO = TexasHoldemJoinStateDTO | TexasHoldemGameStateDTO;
