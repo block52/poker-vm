@@ -16,7 +16,7 @@ const Deposit: React.FC = () => {
                 <button
                     //   onClick={connectWallet}
                     className="w-full p-3 bg-blue-500 text-white rounded-lg mb-4"
-                    onClick={open}
+                    // onClick={open}
                 >
                     Connect
                 </button>
@@ -29,7 +29,7 @@ const Deposit: React.FC = () => {
                         id="amount"
                         type="number"
                         value={amount}
-                        onChange={e => setAmount(e.target.value)}
+                        // onChange={e => setAmount(e.target.value)}
                         className="mt-2 w-full p-3 border border-gray-300 rounded-lg"
                         placeholder="Enter amount"
                     />
