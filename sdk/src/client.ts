@@ -11,6 +11,7 @@ import crypto from "crypto";
  */
 export class NodeRpcClient {
     private readonly wallet: Wallet | undefined;
+    private requestId: number = 0;
     constructor(private url: string, private privateKey: string) {
         if (privateKey.length === 66) {
             this.wallet = new Wallet(privateKey);
@@ -22,8 +23,8 @@ export class NodeRpcClient {
      * @returns The request ID
      */
     private getRequestId(): string {
-        const id = crypto.randomUUID();
-        return id.toString();
+        this.requestId++;
+        return this.requestId.toString();
     }
 
     private getAddress(): string {
