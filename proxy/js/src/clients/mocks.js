@@ -16,20 +16,20 @@ class Mocks {
         return Math.floor(Date.now());
     }
 
-    getNonce(id) {
+    getNonce(account) {
         this.nonce++;
         return this.nonce;
     }
 
-    getAccount(i) {
-        console.log("getAccount", i);
+    getAccount(index) {
+        console.log("getAccount", index);
 
         // do a regex check for number
-        const isNumber = /^\d+$/.test(i);
+        const isNumber = /^\d+$/.test(index);
         let j = 0;
         if (isNumber) {
             console.log(i, "is number");
-            j = Number(i);
+            j = Number(index);
         }
 
         const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
@@ -44,7 +44,7 @@ class Mocks {
         };
     }
 
-    getPlayer(id, i) {
+    getPlayer(index, id) {
         const account = this.getAccount(i);
         const timeout = this.getUnixTime() + 30;
 

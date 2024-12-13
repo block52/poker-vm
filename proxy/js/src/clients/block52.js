@@ -15,8 +15,8 @@ class Block52 {
         return Math.floor(Date.now());
     }
 
-    async getNonce(id) {
-        const account = await this.client.getAccount(id);
+    async getNonce(account) {
+        const account = await this.client.getAccount(account);
         return account.nonce;
     }
 
@@ -42,9 +42,25 @@ class Block52 {
         };
     }
 
-    async getNonce(id) {
+    async getPlayer(index, id) {
         const response = await this.getAccount(id);
         return response.data?.nonce;
+    }
+
+    async getTable(id) {
+        const rpc_request = {
+            jsonrpc: "2.0",
+            method: "get_table",
+            params: [id],
+            id: this.requestId
+        };
+
+        const { data } = await axios.post(this.node_url, rpc_request);
+        console.log("Block52 getTable", data);
+
+        this.requestId++;
+
+        return data.result;
     }
 }
 
