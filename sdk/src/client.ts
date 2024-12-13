@@ -22,7 +22,8 @@ export class NodeRpcClient {
      * @returns The request ID
      */
     private getRequestId(): string {
-        return crypto.randomUUID();
+        const id = crypto.randomUUID();
+        return id.toString();
     }
 
     private getAddress(): string {
