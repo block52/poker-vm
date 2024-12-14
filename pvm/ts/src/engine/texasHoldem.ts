@@ -13,13 +13,14 @@ import PokerSolver from "pokersolver";
 import { IPoker } from "./types";
 
 type Stage = {
+    // round: TexasHoldemRound;
     actions: Move[];
 };
 
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate
     private _players: Player[];
-    private _stages!: Stage[];
+    private _rounds!: Stage[];
     private _deck!: Deck;
     private _communityCards!: Card[];
     private _sidePots!: Map<PlayerId, number>;
@@ -42,7 +43,7 @@ class TexasHoldemGame implements IPoker {
             constructor(public game: TexasHoldemGame) {}
             
             addAction(action: Move): void {
-                // this.game._stages[this.game._currentStage].moves.push(move);
+                // this.game._rounds[this.game._currentStage].moves.push(move);
                 // if (![PlayerAction.SMALL_BLIND, PlayerAction.BIG_BLIND].includes(move.action)) this.game.nextPlayer();
             }
             
@@ -155,6 +156,7 @@ class TexasHoldemGame implements IPoker {
 
     getPlayerStatus(player: Player): PlayerStatus {
         let totalActions: number = 0;
+
         if (this._currentStage != TexasHoldemRound.ANTE) {
             for (let stage = TexasHoldemRound.PREFLOP; stage <= this._currentStage; stage++) {
                 const actions = this.getPlayerActions(player, stage);
@@ -167,13 +169,14 @@ class TexasHoldemGame implements IPoker {
                     return PlayerStatus.ALL_IN;
             }
         }
+        
         return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
     }
 
     getStakes(stage: TexasHoldemRound = this._currentStage): Map<string, number> {
         if (this._currentStage == TexasHoldemRound.ANTE) throw new Error("Cannot retrieve stakes until game started.");
 
-        return this._stages[stage].moves.reduce((acc, v) => {
+        return this._rounds[stage].moves.reduce((acc, v) => {
             acc.set(v.playerId, (acc.get(v.playerId) ?? 0) + (v.amount ?? 0));
             return acc;
         }, new Map<string, number>());
@@ -198,7 +201,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     private start(update: IUpdate) {
-        this._stages = [{ actions: [] }];
+        this._rounds = [{ actions: [] }];
         this._deck = new Deck(DeckType.STANDARD_52);
         this._communityCards = [];
         this._sidePots = new Map<PlayerId, number>();
@@ -222,7 +225,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     private getPlayerActions(player: Player, stage: TexasHoldemRound = this._currentStage) {
-        return this._stages[stage].moves.filter(m => m.playerId === player.id);
+        return this._rounds[stage].moves.filter(m => m.playerId === player.id);
         // TODO: Check if this is correct
         // throw new Error("Method not implemented.");
     }
@@ -238,26 +241,31 @@ class TexasHoldemGame implements IPoker {
         const stakes = this.getStakes();
         const maxStakes = this.getMaxStake(stakes);
         const isPlayerTurnFinished = (p: Player) => this.getPlayerActions(p).filter(m => m.action != PlayerActionType.BIG_BLIND).length &&
-            (this.getPlayerStake(p, stakes) == maxStakes);
+            (this.getPlayerStake(p, stakes) === maxStakes);
+
         const active = this.getActivePlayers();
         const anyAllIn = this._players.some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
-        if (!active.length || (active.length == 1 && !anyAllIn) || active.map(i => this._players[i]).every(isPlayerTurnFinished)) this.nextRound();
+        if (!active.length || (active.length == 1 && !anyAllIn) || active.map(i => this._players[i]).every(isPlayerTurnFinished)) this.nextHand();
         else this._currentPlayer = active[0];
     }
 
-    private nextRound() {
+    private nextHand():void {
         this.calculateSidePots();
-        this._stages.push({ moves: [] });
-        if (this._currentStage < TexasHoldemRound.SHOWDOWN) this._currentStage++;
-        if (this._currentStage != TexasHoldemRound.SHOWDOWN) {
-            if (this._currentStage == TexasHoldemRound.FLOP) this._communityCards.push(...this._deck.deal(3));
-            else if (this._currentStage == TexasHoldemRound.TURN || this._currentStage == TexasHoldemRound.RIVER) this._communityCards.push(...this._deck.deal(1));
+        this._rounds.push({ actions: [] });
+
+        if (this._currentStage < TexasHoldemRound.SHOWDOWN) {
+            this.setNextState();
+        }
+
+        if (this._currentStage !== TexasHoldemRound.SHOWDOWN) {
+            if (this._currentStage === TexasHoldemRound.FLOP) this._communityCards.push(...this._deck.deal(3));
+            else if (this._currentStage === TexasHoldemRound.TURN || this._currentStage == TexasHoldemRound.RIVER) this._communityCards.push(...this._deck.deal(1));
             this._currentPlayer = this._buttonPosition;
             this.nextPlayer();
         } else this.calculateWinner();
     }
 
-    private calculateSidePots() {
+    private calculateSidePots(): void {
         const startingPot = this.getStartingPot();
         const numActive = this._players.filter(p => this.getPlayerStatus(p) == PlayerStatus.ACTIVE).length;
         // TODO: Check this will work in all cases when multiple side pots in same round
@@ -266,11 +274,11 @@ class TexasHoldemGame implements IPoker {
             .forEach(p => this._sidePots.set(p.id, startingPot + this.getPlayerStake(p) * (1 + numActive)));
     }
 
-    private calculateWinner() {
+    private calculateWinner(): void {
         const hands = new Map<PlayerId, any>(
             this._players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
-        const active = this._players.filter(p => this.getPlayerStatus(p) == PlayerStatus.ACTIVE);
+        const active = this._players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE);
         const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
         this._winners = new Map<PlayerId, number>();
 
@@ -298,6 +306,27 @@ class TexasHoldemGame implements IPoker {
         function toPokerSolverMnemonic(card: Card) {
             return card.mnemonic.replace("10", "T");
         }
+    }
+
+    private getNextStage(): TexasHoldemRound {
+        switch (this._currentStage) {
+            case TexasHoldemRound.ANTE:
+                return TexasHoldemRound.PREFLOP;
+            case TexasHoldemRound.PREFLOP:
+                return TexasHoldemRound.FLOP;
+            case TexasHoldemRound.FLOP:
+                return TexasHoldemRound.TURN;
+            case TexasHoldemRound.TURN:
+                return TexasHoldemRound.RIVER;
+            case TexasHoldemRound.RIVER:
+                return TexasHoldemRound.SHOWDOWN;
+            default:
+                return TexasHoldemRound.ANTE;
+        }
+    }
+
+    private setNextState(): void {
+        this._currentStage = this.getNextStage();
     }
 }
 
