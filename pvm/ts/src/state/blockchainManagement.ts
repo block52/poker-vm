@@ -27,7 +27,7 @@ export class BlockchainManagement extends StateManager {
     // Update the account balances
     const accountManagement = new AccountManagement();
     await accountManagement.applyTransactions(block.transactions);
-  
+
     const newBlock = new Blocks(block.toDocument());
     await newBlock.save();
   }
@@ -58,8 +58,8 @@ export class BlockchainManagement extends StateManager {
   public async getBlocks(count?: number): Promise<BlockList> {
     await this.connect();
     const blocks = await Blocks.find({})
-        .sort({ timestamp: -1 })
-        .limit(count ?? 20);
+      .sort({ timestamp: -1 })
+      .limit(count ?? 20);
 
     return new BlockList(blocks.map(block => Block.fromDocument(block)));
   }
@@ -67,13 +67,22 @@ export class BlockchainManagement extends StateManager {
   public async getTransactions(count?: number): Promise<TransactionList> {
     await this.connect();
     const blocks = await Blocks.find({}, { transactions: 1 })
-        .sort({ timestamp: -1 })
-        .limit(count ?? 100);
-        
+      .sort({ timestamp: -1 })
+      .limit(count ?? 100);
+
     const transactions: Transaction[] = blocks
-        .flatMap(block => block.transactions || [])
-        .map(tx => Transaction.fromDocument(tx));
+      .flatMap(block => block.transactions || [])
+      .map(tx => Transaction.fromDocument(tx));
 
     return new TransactionList(transactions);
   }
+}
+
+
+let instance: BlockchainManagement;
+export const getBlockchainInstance = (): BlockchainManagement => {
+  if (!instance) {
+    instance = new BlockchainManagement();
+  }
+  return instance;
 }

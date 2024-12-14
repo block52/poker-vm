@@ -1,8 +1,10 @@
 import { ethers, ZeroHash } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
+import { getBlockchainInstance } from "../state/index";
 import { Transaction } from "../models";
-import { NodeRpcClient, TransactionDTO } from "@bitcoinbrisbane/block52";
+import { Block } from "../models/block";
+import { BlockDTO, NodeRpcClient, TransactionDTO } from "@bitcoinbrisbane/block52";
 import { MineCommand } from "../commands/mineCommand";
 import { getValidatorInstance } from "./validator";
 import { getBootNodes } from "../state/nodeManagement";
@@ -31,7 +33,7 @@ export class Server {
     public me(): Node {
         const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
 
-        return new Node("pvm-typescript", this.publicKey, url, "1.0.0", this.isValidator);
+        return new Node("pvm-typescript", this.publicKey, url, "1.0.1", this.isValidator);
     }
 
     get started(): boolean {
@@ -39,7 +41,7 @@ export class Server {
     }
 
     get syncing(): boolean {
-        return false;
+        return this._syncing;
     }
 
     public async mine() {
@@ -95,7 +97,8 @@ export class Server {
                 return;
             }
             await this.syncMempool();
-            await this.mine();
+            await this.syncBlockchain(10);
+            // await this.mine();
         }, 15000);
 
         this._started = true;
@@ -126,22 +129,55 @@ export class Server {
         );
     }
 
-    private async syncBlockchain() {
+    private async syncBlockchain(rate: number = 10) {
+        this._syncing = true;
         const nodes = await getBootNodes(this.me().url);
+
+        if (nodes.length === 0) {
+            console.log("No nodes to sync with");
+            return;
+        }
+
+        let tip = 0;
+        let highestNode: Node = nodes[0];
+
+        // Get my current tip
+        const blockchain = getBlockchainInstance();
+        const lastBlock = await blockchain.getLastBlock();
 
         for (const node of nodes) {
             try {
                 const client = new NodeRpcClient(node.url, this.privateKey);
-                const blocks = await client.getLastBlocks(10);
-                // Add to own blockchain
-                // await Promise.all(
-                //     blocks.map(async block => {
-                //         await this.addBlock(block);
-                //     })
-                // );
+                const block = await client.getLastBlock();
+                console.log(`Received block ${block.hash} from ${node.url}`);
+
+                if (block.index > tip) {
+                    tip = block.index;
+                    highestNode = node;
+                }
+
             } catch (error) {
                 console.warn(`Missing node ${node.url}`);
             }
+        }
+
+        console.log(`Highest node is ${highestNode.url}`);
+
+        // Sync with the highest node
+        const client = new NodeRpcClient(highestNode.url, this.privateKey);
+        const blockDTOs: BlockDTO[] = await client.getBlocks(rate);
+
+        for (const blockDTO of blockDTOs) {
+            const block = Block.fromJson(blockDTO);
+
+            console.log(`Verifying block ${block.hash} from ${highestNode.url}`);
+            if (!block.verify()) {
+                console.warn(`Block ${block.hash} is invalid`);
+                continue;
+            }
+
+            console.log(`Adding block ${block.hash} from ${highestNode.url}`);
+            await blockchain.addBlock(block);
         }
     }
 }

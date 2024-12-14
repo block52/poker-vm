@@ -1,5 +1,5 @@
 
-import { PlayerAction } from "@bitcoinbrisbane/block52";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
@@ -16,7 +16,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     public async execute(): Promise<ISignedResponse<Transaction>> {
         if (this.data) {
             console.log(`Data: ${this.data}`);
-            const gameCommand = JSON.parse(this.data) as { method: PlayerAction | "join", params: [string] };
+            const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
             if (gameCommand.method != "join") {
                 const game = this.gameManagement.get(this.to);
                 if (!game)

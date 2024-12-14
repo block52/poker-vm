@@ -1,4 +1,4 @@
-\import { ICommand } from "./interfaces";
+import { ICommand } from "./interfaces";
 
 export class ShutdownCommand implements ICommand<boolean> {
     constructor(    

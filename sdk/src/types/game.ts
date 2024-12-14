@@ -7,7 +7,8 @@ export enum PlayerActionType {
     CALL = "call",
     RAISE = "raise",
     ALL_IN = "all-in",
-    MUCK = "muck"
+    MUCK = "muck",
+    JOIN = "join"
 }
 
 export enum PlayerStatus {
@@ -67,7 +68,7 @@ export type TexasHoldemGameStateDTO = {
     dealer: number;
     players: PlayerDTO[];
     communityCards: number[];
-    pots: [string];
+    pots: string[];
     nextToAct: number;
     round: TexasHoldemRound;
     winners: WinnerDTO[];
