@@ -47,15 +47,15 @@ contract Bridge is Ownable {
         IERC20(underlying).approve(_self, type(uint256).max);
     }
 
-    function deposit(uint256 amount, address token) external returns(uint256) {
-        index, received = _deposit(amount, msg.sender, token);
-        emit Deposited(msg.sender, received, index);
+    function deposit(uint256 amount, address receiver, address token) external returns(uint256) {
+        (index, received) = _deposit(amount, receiver, token);
+        emit Deposited(receiver, received, index);
 
         return index;
     }
 
     function depositUnderlying(uint256 amount) external returns(uint256) {
-        index, received = _deposit(amount, msg.sender, underlying);
+        (index, received) = _deposit(amount, msg.sender, underlying);
         emit Deposited(msg.sender, received, index);
 
         return index;
