@@ -132,7 +132,7 @@ export class Server {
         for (const node of nodes) {
             try {
                 const client = new NodeRpcClient(node.url, this.privateKey);
-                const blocks = await client.getBlocks();
+                const blocks = await client.getLastBlocks(10);
                 // Add to own blockchain
                 // await Promise.all(
                 //     blocks.map(async block => {

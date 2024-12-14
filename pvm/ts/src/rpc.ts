@@ -83,7 +83,7 @@ export class RPC {
             result: result
         };
     }
-    
+
     // Return a JSONModel
     static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
@@ -121,6 +121,12 @@ export class RPC {
                     }
                     command = new BlockCommand(BigInt(index), validatorPrivateKey);
                 }
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.GET_BLOCK_HEIGHT: {
+                const command = new BlockCommand(undefined, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
