@@ -1,5 +1,4 @@
-import { signResult } from "./abstractSignedCommand";
-import { ICommand, ISignedCommand, ISignedResponse } from "./interfaces";
+\import { ICommand } from "./interfaces";
 
 export class ShutdownCommand implements ICommand<boolean> {
     constructor(    

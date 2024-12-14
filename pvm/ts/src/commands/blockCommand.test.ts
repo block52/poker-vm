@@ -1,7 +1,6 @@
 import { BlockCommand } from "./blockCommand";
 import { BlockchainManagement } from "../state/blockchainManagement";
 import { Block } from "../models";
-import { ZeroHash } from "ethers/constants";
 
 const privateKey =
 "0x0000000000000000000000000000000000000000000000000000000000000001";

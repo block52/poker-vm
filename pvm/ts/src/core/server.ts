@@ -12,6 +12,7 @@ export class Server {
     public readonly publicKey: string;
     private readonly isValidator: boolean;
     private _started: boolean = false;
+    private _syncing: boolean = false;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
 
     constructor(private readonly privateKey: string) {
@@ -35,6 +36,10 @@ export class Server {
 
     get started(): boolean {
         return this._started;
+    }
+
+    get syncing(): boolean {
+        return false;
     }
 
     public async mine() {
@@ -119,6 +124,25 @@ export class Server {
                 }
             })
         );
+    }
+
+    private async syncBlockchain() {
+        const nodes = await getBootNodes(this.me().url);
+
+        for (const node of nodes) {
+            try {
+                const client = new NodeRpcClient(node.url, this.privateKey);
+                const blocks = await client.getBlocks();
+                // Add to own blockchain
+                // await Promise.all(
+                //     blocks.map(async block => {
+                //         await this.addBlock(block);
+                //     })
+                // );
+            } catch (error) {
+                console.warn(`Missing node ${node.url}`);
+            }
+        }
     }
 }
 

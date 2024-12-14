@@ -13,7 +13,7 @@
         "sign": "npx ts-node scripts/sign.ts"
     },
     "dependencies": {
-        "@bitcoinbrisbane/block52": "1.0.14",
+        "@bitcoinbrisbane/block52": "1.0.24",
         "@types/cors": "^2.8.17",
         "@types/node": "^22.7.6",
         "axios": "^1.7.7",
@@ -22,10 +22,10 @@
         "ethers": "^6.13.4",
         "express": "^4.21.1",
         "jest": "^29.7.0",
-        "mongoose": "^8.7.2",
+        "mongoose": "^8.9.0",
         "pokersolver": "^2.1.4",
         "ts-node": "^10.9.2",
-        "typescript": "^5.6.3",
+        "typescript": "^5.7.2",
         "z-schema": "^6.0.2"
     },
     "jest": {

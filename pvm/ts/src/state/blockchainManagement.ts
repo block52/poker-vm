@@ -13,6 +13,15 @@ export class BlockchainManagement extends StateManager {
     super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
   }
 
+  public async getBlockHeight(): Promise<number> {
+    await this.connect();
+    const lastBlock: IBlockDocument | null = await Blocks.findOne().sort({ index: -1 });
+    if (!lastBlock) {
+      return 0;
+    }
+    return lastBlock.index;
+  }
+
   public async addBlock(block: Block): Promise<void> {
     await this.connect();
     // Update the account balances

@@ -24,6 +24,7 @@ export enum RPCMethods {
     GET_BALANCE = "get_balance",
     GET_BLOCK = "get_block",
     GET_BLOCKS = "get_blocks",
+    GET_BLOCK_HEIGHT = "get_block_height",
     GET_CLIENT = "get_client",
     GET_CONTRACT_SCHEMA = "get_contract_schema",
     GET_LAST_BLOCK = "get_last_block",
@@ -48,6 +49,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_BALANCE]: [string]; // [address]
     [RPCMethods.GET_BLOCK]: [string]; // [index]
     [RPCMethods.GET_BLOCKS]: [string]; // [count]
+    [RPCMethods.GET_BLOCK_HEIGHT]: []; // No parameters
     [RPCMethods.GET_CLIENT]: []; // No parameters
     [RPCMethods.GET_CONTRACT_SCHEMA]: [string]; // [hash]
     [RPCMethods.GET_LAST_BLOCK]: []; // No parameters

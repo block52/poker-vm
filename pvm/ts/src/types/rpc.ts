@@ -4,6 +4,7 @@ export const READ_METHODS = [
     RPCMethods.GET_ACCOUNT,
     RPCMethods.GET_BLOCK,
     RPCMethods.GET_BLOCKS,
+    // RPCMethods.GET_BLOCK_HEIGHT,
     RPCMethods.GET_CLIENT,
     RPCMethods.GET_LAST_BLOCK,
     RPCMethods.GET_MEMPOOL,
