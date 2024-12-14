@@ -15,6 +15,7 @@ export class Server {
     private readonly isValidator: boolean;
     private _started: boolean = false;
     private _syncing: boolean = false;
+    private _synced: boolean = false;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
 
     constructor(private readonly privateKey: string) {
@@ -32,7 +33,6 @@ export class Server {
 
     public me(): Node {
         const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
-
         return new Node("pvm-typescript", this.publicKey, url, "1.0.1", this.isValidator);
     }
 
@@ -42,6 +42,10 @@ export class Server {
 
     get syncing(): boolean {
         return this._syncing;
+    }
+
+    get synced(): boolean {
+        return this._synced;
     }
 
     public async mine() {
@@ -89,6 +93,12 @@ export class Server {
     }
 
     public async bootstrap() {
+
+        console.log("Syncing blocks...");
+        while (!this.synced) {
+            await this.syncBlockchain(10);
+        }
+
         console.log("Polling...");
         const intervalId = setInterval(async () => {
             if (!this._started) {
@@ -97,7 +107,6 @@ export class Server {
                 return;
             }
             await this.syncMempool();
-            await this.syncBlockchain(10);
             // await this.mine();
         }, 15000);
 
@@ -109,6 +118,7 @@ export class Server {
         if (!this.started) {
             return;
         }
+
         const mempool = getMempoolInstance();
         const nodes = await getBootNodes(this.me().url);
         await Promise.all(
@@ -138,12 +148,12 @@ export class Server {
             return;
         }
 
-        let tip = 0;
         let highestNode: Node = nodes[0];
 
         // Get my current tip
         const blockchain = getBlockchainInstance();
         const lastBlock = await blockchain.getLastBlock();
+        let tip = lastBlock.index;
 
         for (const node of nodes) {
             try {
@@ -156,12 +166,21 @@ export class Server {
                     highestNode = node;
                 }
 
+                if (block.index === tip) {
+                    this._synced = true;
+                }
+
             } catch (error) {
                 console.warn(`Missing node ${node.url}`);
             }
         }
 
         console.log(`Highest node is ${highestNode.url}`);
+
+        if (this._synced) {
+            this._syncing = false;
+            return;
+        }
 
         // Sync with the highest node
         const client = new NodeRpcClient(highestNode.url, this.privateKey);
@@ -179,6 +198,8 @@ export class Server {
             console.log(`Adding block ${block.hash} from ${highestNode.url}`);
             await blockchain.addBlock(block);
         }
+
+        this._syncing = false;
     }
 }
 

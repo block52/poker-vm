@@ -30,6 +30,7 @@ class TexasHoldemGame implements IPoker {
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
+    private _minPlayers: number = 2;
 
     constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
         this._players = [];
@@ -88,7 +89,7 @@ class TexasHoldemGame implements IPoker {
         return this._winners;
     }
     get state() {
-        return this.currentStage == TexasHoldemRound.ANTE
+        return this.currentStage === TexasHoldemRound.ANTE
             ? new TexasHoldemJoinState(this._players.map(p => p.id))
             : new TexasHoldemGameState(
                   this._address,
