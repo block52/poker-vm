@@ -4,7 +4,7 @@ import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
 
-describe("Game", function () {
+describe("Game", () => {
     it("should process messages", function () {
         const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30);
 
@@ -162,7 +162,7 @@ describe("Game", function () {
                 action: "all-in"
             }
         ]);
-        
+
         // NOTE: You can always call
         //expect(() => game.performAction("4", PlayerActionType.CALL)).toThrow("Player has insufficient chips to call.");
         game.performAction("4", PlayerActionType.ALL_IN);
