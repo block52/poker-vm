@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 
 describe("Game", function () {
     it("should process messages", function () {
-        const game = new TexasHoldemGame("0x1234", 10, 30);
+        const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30);
 
         game.join(new Player("1", 100));
         game.join(new Player("2", 200));

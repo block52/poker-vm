@@ -38,7 +38,7 @@ export type Move = {
 export type ValidMove = ActionDTO;
 
 export interface IUpdate {
-    addMove(move: Move): void;
+    addAction(action: Move): void;
 }
 
 export class Player {
@@ -67,16 +67,19 @@ export class PlayerState implements IJSONModel {
 
     constructor(
         player: Player,
-        isActive: boolean,
-        isEliminated: boolean,
         isSmallBlind: boolean,
         isBigBlind: boolean,
-        lastMove_: Move | undefined,
-        validMoves: ValidMove[],
+        isDealer: boolean,
+        lastAction: Move | undefined,
+        seat: number,
     ) {
         const holeCards = player.holeCards?.map(p => p.value);
-        const lastMove = lastMove_ ? { action: lastMove_.action, minAmount: lastMove_.amount, maxAmount: undefined } : undefined;
-        this._dto = { address: player.id, stack: player.stack, holeCards, lastMove, validMoves, isActive, isEliminated, isSmallBlind, isBigBlind };
+        // const _lastAction = lastAction ? { action: lastAction.action, minAmount: lastAction.amount, maxAmount: undefined } : undefined;
+
+        const lastActionDTO = (lastAction && lastAction.amount) ? { action: lastAction.action, amount: lastAction.amount.toString() } : undefined;
+        const stack = ethers.parseUnits(player.chips.toString(), 18).toString();
+
+        this._dto = { address: player.id, seat, stack, isSmallBlind, isBigBlind, isDealer, holeCards, lastAction: lastActionDTO, actions: [], status: PlayerStatus.ACTIVE, timeout: 0, signature: ethers.ZeroHash };
     }
 
     public toJson(): PlayerDTO { return this._dto; }
@@ -94,13 +97,13 @@ export class TexasHoldemJoinState implements IJSONModel {
 }
 
 export class TexasHoldemGameState implements IJSONModel {
-    private static RoundMap = new Map<TexasHoldemRound, string>([
-        [TexasHoldemRound.PREFLOP, "preflop"],
-        [TexasHoldemRound.FLOP, "flop"],
-        [TexasHoldemRound.TURN, "turn"],
-        [TexasHoldemRound.RIVER, "river"],
-        [TexasHoldemRound.SHOWDOWN, "showdown"],
-    ]);
+    // private static RoundMap = new Map<TexasHoldemRound, string>([
+    //     [TexasHoldemRound.PREFLOP, "preflop"],
+    //     [TexasHoldemRound.FLOP, "flop"],
+    //     [TexasHoldemRound.TURN, "turn"],
+    //     [TexasHoldemRound.RIVER, "river"],
+    //     [TexasHoldemRound.SHOWDOWN, "showdown"],
+    // ]);
 
     private readonly _dto: TexasHoldemGameStateDTO;
 

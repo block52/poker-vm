@@ -21,6 +21,7 @@ export enum PlayerStatus {
 }
 
 export enum TexasHoldemRound {
+    ANTE = "ante",
     PREFLOP = "preflop",
     FLOP = "flop",
     TURN = "turn",
@@ -49,6 +50,9 @@ export type PlayerDTO = {
     address: string;
     seat: number;
     stack: string; // BigNumber
+    isSmallBlind: boolean,
+    isBigBlind: boolean,
+    isDealer: boolean,
     holeCards: number[] | undefined;
     status: PlayerStatus;
     lastAction: ActionDTO | undefined;
