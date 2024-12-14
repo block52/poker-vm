@@ -1,5 +1,5 @@
-import { PlayerAction } from "@bitcoinbrisbane/block52";
-import { IUpdate, Move, Player, PlayerId, PlayerStatus, StageType, TexasHoldemGameState, TexasHoldemJoinState, ValidMove } from "../models/game";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { IUpdate, Move, Player, PlayerId, TexasHoldemGameState, TexasHoldemJoinState, ValidMove } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -24,7 +24,7 @@ class TexasHoldemGame implements IPoker {
     private _communityCards!: Card[];
     private _sidePots!: Map<PlayerId, number>;
     private _winners?: Map<PlayerId, number>;
-    private _currentStage: StageType;
+    private _currentStage: TexasHoldemRound;
     private _currentPlayer: number;
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
@@ -32,7 +32,7 @@ class TexasHoldemGame implements IPoker {
 
     constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
         this._players = [];
-        this._currentStage = StageType.JOIN;
+        this._currentStage = TexasHoldemRound.JOIN;
         this._currentPlayer = 0;
         this._bigBlindPosition = 0;
         this._smallBlindPosition = 0;
@@ -82,7 +82,7 @@ class TexasHoldemGame implements IPoker {
         return this._winners;
     }
     get state() {
-        return this.currentStage == StageType.JOIN
+        return this.currentStage == TexasHoldemRound.JOIN
             ? new TexasHoldemJoinState(this._players.map(p => p.id))
             : new TexasHoldemGameState(
                   this._address,
@@ -98,8 +98,8 @@ class TexasHoldemGame implements IPoker {
     }
 
     deal() {
-        if (![StageType.JOIN, StageType.SHOWDOWN].includes(this.currentStage))
-            throw new Error("Game currently in progress.");
+        if (![StageType.JOIN, TexasHoldemRound.SHOWDOWN].includes(this.currentStage))
+            throw new Error("Hand currently in progress.");
         this.start(this._update);
     }
 
@@ -134,7 +134,7 @@ class TexasHoldemGame implements IPoker {
         return undefined;
     }
 
-    performAction(playerId: string, action: PlayerAction, amount?: number) {
+    performAction(playerId: string, action: PlayerActionType, amount?: number) {
         if (this.currentStage == StageType.JOIN) throw new Error(`Cannot perform ${action} until game started.`);
         return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
@@ -160,7 +160,7 @@ class TexasHoldemGame implements IPoker {
         return !totalActions && !player.chips ? PlayerStatus.ELIMINATED : PlayerStatus.ACTIVE;
     }
 
-    getStakes(stage: StageType = this._currentStage): Map<string, number> {
+    getStakes(stage: TexasHoldemRound = this._currentStage): Map<string, number> {
         if (this._currentStage == StageType.JOIN) throw new Error("Cannot retrieve stakes until game started.");
 
         return this._stages[stage].moves.reduce((acc, v) => {
@@ -183,7 +183,7 @@ class TexasHoldemGame implements IPoker {
 
     private getStartingPot(): number {
         let pot = 0;
-        for (let stage = StageType.PRE_FLOP; stage < this._currentStage; stage++) pot += this.getTotalStake(this.getStakes(stage));
+        for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentStage; stage++) pot += this.getTotalStake(this.getStakes(stage));
         return pot;
     }
 
@@ -193,7 +193,7 @@ class TexasHoldemGame implements IPoker {
         this._communityCards = [];
         this._sidePots = new Map<PlayerId, number>();
         this._winners = undefined;
-        this._currentStage = StageType.PRE_FLOP;
+        this._currentStage = TexasHoldemRound.PREFLOP;
         this._currentPlayer = this._buttonPosition;
 
         const active = this.getActivePlayers();
@@ -210,8 +210,10 @@ class TexasHoldemGame implements IPoker {
         new SmallBlindAction(this, update).execute(this._players[this._smallBlindPosition]);
     }
 
-    private getPlayerActions(player: Player, stage: StageType = this._currentStage) {
-        return this._stages[stage].moves.filter(m => m.playerId == player.id);
+    private getPlayerActions(player: Player, stage: TexasHoldemRound = this._currentStage) {
+        // return this._stages[stage].moves.filter(m => m.playerId == player.id);
+        // TODO: Check if this is correct
+        throw new Error("Method not implemented.");
     }
 
     private getActivePlayers() {
@@ -224,7 +226,7 @@ class TexasHoldemGame implements IPoker {
     private nextPlayer() {
         const stakes = this.getStakes();
         const maxStakes = this.getMaxStake(stakes);
-        const isPlayerTurnFinished = (p: Player) => this.getPlayerActions(p).filter(m => m.action != PlayerAction.BIG_BLIND).length &&
+        const isPlayerTurnFinished = (p: Player) => this.getPlayerActions(p).filter(m => m.action != PlayerActionType.BIG_BLIND).length &&
             (this.getPlayerStake(p, stakes) == maxStakes);
         const active = this.getActivePlayers();
         const anyAllIn = this._players.some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
@@ -235,10 +237,10 @@ class TexasHoldemGame implements IPoker {
     private nextRound() {
         this.calculateSidePots();
         this._stages.push({ moves: [] });
-        if (this._currentStage < StageType.SHOWDOWN) this._currentStage++;
-        if (this._currentStage != StageType.SHOWDOWN) {
-            if (this._currentStage == StageType.FLOP) this._communityCards.push(...this._deck.deal(3));
-            else if (this._currentStage == StageType.TURN || this._currentStage == StageType.RIVER) this._communityCards.push(...this._deck.deal(1));
+        if (this._currentStage < TexasHoldemRound.SHOWDOWN) this._currentStage++;
+        if (this._currentStage != TexasHoldemRound.SHOWDOWN) {
+            if (this._currentStage == TexasHoldemRound.FLOP) this._communityCards.push(...this._deck.deal(3));
+            else if (this._currentStage == TexasHoldemRound.TURN || this._currentStage == TexasHoldemRound.RIVER) this._communityCards.push(...this._deck.deal(1));
             this._currentPlayer = this._buttonPosition;
             this.nextPlayer();
         } else this.calculateWinner();

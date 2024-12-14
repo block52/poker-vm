@@ -1,9 +1,9 @@
-import { PlayerAction } from "@bitcoinbrisbane/block52";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/game";
 import BaseAction from "./baseAction";
 
 class BigBlindAction extends BaseAction {
-    get type(): PlayerAction { return PlayerAction.BIG_BLIND }
+    get type(): PlayerActionType { return PlayerActionType.BIG_BLIND }
 
     verify(_player: Player) {
         return undefined; 

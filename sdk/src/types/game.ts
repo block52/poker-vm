@@ -15,6 +15,8 @@ export enum PlayerStatus {
     NOT_ACTED = "not-acted",
     TURN = "turn",
     ACTIVE = "active",
+    FOLDED = "folded",
+    ALL_IN = "all-in",
     SITTING_OUT = "sitting-out"
 }
 

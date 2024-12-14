@@ -5,23 +5,24 @@ import { AccountDTO } from "@bitcoinbrisbane/block52";
 export class Account {
     address: string;
     balance: bigint;
-    // private nonce: number;
+    nonce: number;
     // private privateKey: string;
 
-    constructor(address: string, balance: bigint) {
+    constructor(address: string, balance: bigint, nonce: number = 0) {
         this.address = address;
         this.balance = balance;
-        // this.nonce = 0;
+        this.nonce = nonce;
     }
 
     public getNextNonce(): number {
-        return 0;
+        return this.nonce++;
     }
 
     public toJson(): AccountDTO {
         return {
             address: this.address,
             balance: this.balance.toString(),
+            nonce: 0,
         };
     }
     
@@ -31,14 +32,14 @@ export class Account {
     }
 
     public static fromDocument(document: IAccountDocument): Account {
-        return new Account(document.address, BigInt(document.balance));
+        return new Account(document.address, BigInt(document.balance), document.nonce);
     }
 
     public toDocument(): IAccountDocument {
         return {
             address: this.address,
             balance: Number(this.balance),
-            nonce: 0,
+            nonce: this.nonce,
         };
     }
 
