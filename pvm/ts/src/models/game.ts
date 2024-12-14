@@ -43,22 +43,22 @@ export interface IUpdate {
 
 export class Player {
     constructor(
-        private _address: string,
+        private readonly _address: string,
         public chips: number,
         public holeCards?: [Card, Card]
     ) { }
 
     get id(): PlayerId { return this._address; }
 
-    getPlayerState(game: TexasHoldemGame, position: number) {
-        const status = game.getPlayerStatus(this);
-        const isActive = status === PlayerStatus.ACTIVE;
-        const isEliminated = status == PlayerStatus.SITTING_OUT;
+    getPlayerState(game: TexasHoldemGame, position: number): PlayerState {
         const isSmallBlind = game.smallBlindPosition === position;
         const isBigBlind = game.bigBlindPosition === position;
+        const isDealer = game.buttonPosition === position;
+        
         const lastMove = game.getLastAction(this.id);
         const validMoves = game.getValidActions(this.id);
-        return new PlayerState(this, isActive, isEliminated, isSmallBlind, isBigBlind, lastMove, validMoves);
+        //const actions = validMoves.map(m => ({ action: m.action, min: m.minAmount.toString(), max: m.maxAmount.toString() }));
+        return new PlayerState(this, isSmallBlind, isBigBlind, isDealer, lastMove, position, PlayerStatus.ACTIVE, validMoves);
     }
 }
 
@@ -71,15 +71,28 @@ export class PlayerState implements IJSONModel {
         isBigBlind: boolean,
         isDealer: boolean,
         lastAction: Move | undefined,
-        seat: number,
+        position: number,
+        status: PlayerStatus,
+        actions?: ValidMove[]
     ) {
         const holeCards = player.holeCards?.map(p => p.value);
-        // const _lastAction = lastAction ? { action: lastAction.action, minAmount: lastAction.amount, maxAmount: undefined } : undefined;
-
         const lastActionDTO = (lastAction && lastAction.amount) ? { action: lastAction.action, amount: lastAction.amount.toString() } : undefined;
         const stack = ethers.parseUnits(player.chips.toString(), 18).toString();
 
-        this._dto = { address: player.id, seat, stack, isSmallBlind, isBigBlind, isDealer, holeCards, lastAction: lastActionDTO, actions: [], status: PlayerStatus.ACTIVE, timeout: 0, signature: ethers.ZeroHash };
+        this._dto = { 
+            address: player.id, 
+            seat: position, 
+            stack, 
+            isSmallBlind, 
+            isBigBlind, 
+            isDealer, 
+            holeCards, 
+            lastAction: lastActionDTO, 
+            actions: [], 
+            status, 
+            timeout: 0, 
+            signature: ethers.ZeroHash
+        };
     }
 
     public toJson(): PlayerDTO { return this._dto; }

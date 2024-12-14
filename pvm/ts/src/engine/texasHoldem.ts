@@ -71,6 +71,9 @@ class TexasHoldemGame implements IPoker {
     get smallBlindPosition() {
         return this._smallBlindPosition;
     }
+    get buttonPosition() {
+        return this._buttonPosition;
+    }
     get currentPlayerId() {
         return this._players[this._currentPlayer].id;
     }

@@ -48,7 +48,7 @@ export type WinnerDTO = {
 
 export type PlayerDTO = {
     address: string;
-    seat: number;
+    seat: number; // change to position
     stack: string; // BigNumber
     isSmallBlind: boolean,
     isBigBlind: boolean,
