@@ -37,7 +37,7 @@ class TexasHoldemGame implements IPoker {
         this._currentPlayer = 0;
         this._bigBlindPosition = 0;
         this._smallBlindPosition = 0;
-        this._buttonPosition--; // avoid auto-increment on next game for join round
+        // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
             constructor(public game: TexasHoldemGame) {}
@@ -107,7 +107,7 @@ class TexasHoldemGame implements IPoker {
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentStage))
             throw new Error("Hand currently in progress.");
         
-        this.start(this._update);
+        this.init(this._update);
     }
 
     join(player: Player) {
@@ -202,7 +202,7 @@ class TexasHoldemGame implements IPoker {
         return pot;
     }
 
-    private start(update: IUpdate) {
+    private init(update: IUpdate) {
         this._rounds = [{ actions: [] }];
         this._deck = new Deck(DeckType.STANDARD_52);
         this._communityCards = [];

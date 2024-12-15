@@ -26,6 +26,8 @@ describe("Texas Holdem Game", () => {
 
             const players = game.players;
             expect(players).toHaveLength(2);
+
+            game.deal();
         });
     });
 

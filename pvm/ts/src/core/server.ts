@@ -155,7 +155,6 @@ export class Server {
                     tip = block.index;
                     highestNode = node;
                 }
-
             } catch (error) {
                 console.warn(`Missing node ${node.url}`);
             }
@@ -163,13 +162,12 @@ export class Server {
 
         console.log(`Highest node is ${highestNode.url}`);
 
+        // TODO: Sync will random nodes whos tip is higher than mine
         // Sync with the highest node
         const client = new NodeRpcClient(highestNode.url, this.privateKey);
-        const blockDTOs: BlockDTO[] = await client.getBlocks(rate);
 
-        for (const blockDTO of blockDTOs) {
-            const block = Block.fromJson(blockDTO);
-
+        for (let i = lastBlock.index + 1; i <= tip; i++) {
+            const block = await client.getBlock(i);
             console.log(`Verifying block ${block.hash} from ${highestNode.url}`);
             if (!block.verify()) {
                 console.warn(`Block ${block.hash} is invalid`);
@@ -179,6 +177,21 @@ export class Server {
             console.log(`Adding block ${block.hash} from ${highestNode.url}`);
             await blockchain.addBlock(block);
         }
+
+        // const blockDTOs: BlockDTO[] = await client.getBlocks(rate);
+
+        // for (const blockDTO of blockDTOs) {
+        //     const block = Block.fromJson(blockDTO);
+
+        //     console.log(`Verifying block ${block.hash} from ${highestNode.url}`);
+        //     if (!block.verify()) {
+        //         console.warn(`Block ${block.hash} is invalid`);
+        //         continue;
+        //     }
+
+        //     console.log(`Adding block ${block.hash} from ${highestNode.url}`);
+        //     await blockchain.addBlock(block);
+        // }
     }
 }
 

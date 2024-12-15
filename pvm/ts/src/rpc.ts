@@ -3,7 +3,7 @@ import { ZeroHash } from "ethers";
 import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import { AccountCommand } from "./commands/accountCommand";
-import { BlockCommand } from "./commands/blockCommand";
+import { BlockCommand, BlockCommandParams } from "./commands/blockCommand";
 import { BurnCommand } from "./commands/burnCommand";
 import { CreateAccountCommand } from "./commands/createAccountCommand";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
@@ -110,7 +110,13 @@ export class RPC {
             // }
 
             case RPCMethods.GET_BLOCK: {
-                let command = new BlockCommand(undefined, validatorPrivateKey);
+
+                const params: BlockCommandParams = {
+                    index: BigInt(0),
+                    hash: ""
+                }
+
+                let command = new BlockCommand(params, validatorPrivateKey);
 
                 if (request.params) {
                     // Use regex to check if the index is a number
@@ -119,14 +125,31 @@ export class RPC {
                     if (!regex.test(index)) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-                    command = new BlockCommand(BigInt(index), validatorPrivateKey);
+
+                    params.index = BigInt(index);
+                    command = new BlockCommand(params, validatorPrivateKey);
                 }
                 result = await command.execute();
                 break;
             }
 
+            // case RPCMethods.GET_BLOCK_BY_HASH : {
+            //     const params: BlockCommandParams = {
+            //         index: undefined,
+            //         hash: undefined
+            //     }
+            //     const command = new BlockCommand(params, validatorPrivateKey);
+            //     result = await command.execute();
+            //     break;
+            // }
+
             case RPCMethods.GET_BLOCK_HEIGHT: {
-                const command = new BlockCommand(undefined, validatorPrivateKey);
+                const params: BlockCommandParams = {
+                    index: undefined,
+                    hash: undefined
+                }
+
+                const command = new BlockCommand(params, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
@@ -139,7 +162,11 @@ export class RPC {
             }
 
             case RPCMethods.GET_LAST_BLOCK: {
-                const command = new BlockCommand(undefined, validatorPrivateKey);
+                const params: BlockCommandParams = {
+                    index: undefined,
+                    hash: undefined
+                }
+                const command = new BlockCommand(params, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }

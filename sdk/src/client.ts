@@ -106,6 +106,20 @@ export class NodeRpcClient {
     }
 
     /**
+     * Get a block from the remote node
+     * @param index The index of the block to get
+     * @returns A Promise resolving to a of Block object
+     */
+    public async getBlock(index: number): Promise<BlockDTO> {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO[]> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_BLOCK,
+            params: [index]
+        });
+        return body.result.data[0];
+    }
+
+    /**
      * Get the block height from the remote node
      * @returns A Promise resolving to the block height
      */
