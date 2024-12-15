@@ -189,7 +189,7 @@ export class Server {
         // Sync with the highest node
         const client = new NodeRpcClient(highestNode.url, this.privateKey);
 
-        for (let i = tip; i <= tip; i++) {
+        for (let i = tip; i <= highestTip; i++) {
             const blockDTO: BlockDTO = await client.getBlock(i);
             console.log(blockDTO);
 
