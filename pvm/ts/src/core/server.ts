@@ -167,8 +167,11 @@ export class Server {
         const client = new NodeRpcClient(highestNode.url, this.privateKey);
 
         for (let i = lastBlock.index + 1; i <= tip; i++) {
-            const block = await client.getBlock(i);
-            console.log(`Verifying block ${block.hash} from ${highestNode.url}`);
+            const blockDTO = await client.getBlock(i);
+            console.log(`Verifying block ${blockDTO.hash} from ${highestNode.url}`);
+
+            const block = Block.fromJson(blockDTO);
+
             if (!block.verify()) {
                 console.warn(`Block ${block.hash} is invalid`);
                 continue;
@@ -177,21 +180,6 @@ export class Server {
             console.log(`Adding block ${block.hash} from ${highestNode.url}`);
             await blockchain.addBlock(block);
         }
-
-        // const blockDTOs: BlockDTO[] = await client.getBlocks(rate);
-
-        // for (const blockDTO of blockDTOs) {
-        //     const block = Block.fromJson(blockDTO);
-
-        //     console.log(`Verifying block ${block.hash} from ${highestNode.url}`);
-        //     if (!block.verify()) {
-        //         console.warn(`Block ${block.hash} is invalid`);
-        //         continue;
-        //     }
-
-        //     console.log(`Adding block ${block.hash} from ${highestNode.url}`);
-        //     await blockchain.addBlock(block);
-        // }
     }
 }
 
