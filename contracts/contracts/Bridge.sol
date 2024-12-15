@@ -47,31 +47,31 @@ contract Bridge is Ownable {
         IERC20(underlying).approve(_self, type(uint256).max);
     }
 
-    function deposit(uint256 amount, address token) external returns(uint256) {
-        index, recieved = _deposit(amount, msg.sender, token);
-        emit Deposited(msg.sender, recieved, index);
+    function deposit(uint256 amount, address receiver, address token) external returns(uint256) {
+        (index, received) = _deposit(amount, receiver, token);
+        emit Deposited(receiver, received, index);
 
         return index;
     }
 
     function depositUnderlying(uint256 amount) external returns(uint256) {
-        index, recieved = _deposit(amount, msg.sender, underlying);
-        emit Deposited(msg.sender, recieved, index);
+        (index, received) = _deposit(amount, msg.sender, underlying);
+        emit Deposited(msg.sender, received, index);
 
         return index;
     }
 
-    function _deposit(uint256 amount, address receiver, address token) private returns (uint256 index, uint256 recieved) {
+    function _deposit(uint256 amount, address receiver, address token) private returns (uint256 index, uint256 received) {
         IERC20(token).transferFrom(receiver, _self, amount);
-        recieved = amount;
+        received = amount;
 
         if (_router != address(0) && token != underlying) {
-            recieved = _swap(token, underlying, _self, amount, 0);
+            received = _swap(token, underlying, _self, amount, 0);
         }
 
-        totalDeposits += recieved;
+        totalDeposits += received;
 
-        deposits[depositIndex] = Deposit(receiver, recieved);
+        deposits[depositIndex] = Deposit(receiver, received);
         depositIndex++;
         index = depositIndex;
     }

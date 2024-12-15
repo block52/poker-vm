@@ -119,7 +119,7 @@ export class Block implements IJSONModel {
     }
     
     this.calculateHash();
-    return false;
+    return true;
   }
 
   public async sign(privateKey: string): Promise<void> {
