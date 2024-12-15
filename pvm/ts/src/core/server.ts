@@ -191,6 +191,8 @@ export class Server {
 
         for (let i = tip; i <= tip; i++) {
             const blockDTO: BlockDTO = await client.getBlock(i);
+            console.log(blockDTO);
+
             if (!blockDTO) {
                 console.warn(`Block ${i} is missing`);
                 continue;

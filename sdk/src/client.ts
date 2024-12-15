@@ -111,12 +111,12 @@ export class NodeRpcClient {
      * @returns A Promise resolving to a of Block object
      */
     public async getBlock(index: number): Promise<BlockDTO> {
-        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO[]> }>(this.url, {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_BLOCK,
-            params: [index]
+            params: [index.toString()]
         });
-        return body.result.data[0];
+        return body.result.data;
     }
 
     /**
