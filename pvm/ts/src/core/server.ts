@@ -93,11 +93,10 @@ export class Server {
     }
 
     public async bootstrap() {
-
         console.log("Syncing blocks...");
-        while (!this.synced) {
-            await this.syncBlockchain(10);
-        }
+        //while (!this.synced) {
+            await this.syncBlockchain();
+        //}
 
         console.log("Polling...");
         const intervalId = setInterval(async () => {
@@ -139,43 +138,48 @@ export class Server {
         );
     }
 
-    private async syncBlockchain(rate: number = 10) {
+    private async syncBlockchain() {
         this._syncing = true;
         const nodes = await getBootNodes(this.me().url);
 
         if (nodes.length === 0) {
             console.log("No nodes to sync with");
+            this._syncing = false;
+            this._synced = true;
             return;
         }
 
         let highestNode: Node = nodes[0];
+        let highestTip = 0;
+
+        for (const node of nodes) {
+            try {
+                const client = new NodeRpcClient(node.url, this.privateKey);
+                const block = await client.getLastBlock();
+                console.info(`Received block ${block.index} ${block.hash} from ${node.url}`);
+
+                if (block.index > highestTip) {
+                    highestTip = block.index;
+                    highestNode = node;
+                }
+            } catch (error) {
+                console.warn(`Missing node ${node.url}`);
+            }
+        }
+
+        console.log(`Highest node is ${highestNode.url} with tip ${highestTip}`);
 
         // Get my current tip
         const blockchain = getBlockchainInstance();
         const lastBlock = await blockchain.getLastBlock();
         let tip = lastBlock.index;
 
-        for (const node of nodes) {
-            try {
-                const client = new NodeRpcClient(node.url, this.privateKey);
-                const block = await client.getLastBlock();
-                console.log(`Received block ${block.hash} from ${node.url}`);
+        console.log(`My tip is ${tip}`);
 
-                if (block.index > tip) {
-                    tip = block.index;
-                    highestNode = node;
-                }
-
-                if (block.index === tip) {
-                    this._synced = true;
-                }
-
-            } catch (error) {
-                console.warn(`Missing node ${node.url}`);
-            }
+        if (lastBlock.index === highestTip) {
+            console.log("Blockchain is synced");
+            this._synced = true;
         }
-
-        console.log(`Highest node is ${highestNode.url}`);
 
         if (this._synced) {
             this._syncing = false;
@@ -185,10 +189,14 @@ export class Server {
         // Sync with the highest node
         const client = new NodeRpcClient(highestNode.url, this.privateKey);
 
-        for (let i = lastBlock.index + 1; i <= tip; i++) {
-            const blockDTO = await client.getBlock(i);
-            console.log(`Verifying block ${blockDTO.hash} from ${highestNode.url}`);
+        for (let i = tip; i <= tip; i++) {
+            const blockDTO: BlockDTO = await client.getBlock(i);
+            if (!blockDTO) {
+                console.warn(`Block ${i} is missing`);
+                continue;
+            }
 
+            console.log(`Verifying block ${blockDTO.hash} from ${highestNode.url}`);
             const block = Block.fromJson(blockDTO);
 
             if (!block.verify()) {
