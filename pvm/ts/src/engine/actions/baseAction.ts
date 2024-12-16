@@ -1,14 +1,14 @@
-import { PlayerAction } from "@bitcoinbrisbane/block52";
-import { IUpdate, Player, PlayerStatus, Range, StageType } from "../../models/game";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { IUpdate, Player, Range } from "../../models/game";
 import TexasHoldemGame from "../texasHoldem";
 
 abstract class BaseAction {
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
-    abstract get type(): PlayerAction;
+    abstract get type(): PlayerActionType;
 
     verify(player: Player): Range | undefined {
-        if (this.game.currentStage == StageType.SHOWDOWN)
+        if (this.game.currentStage == TexasHoldemRound.SHOWDOWN)
             throw new Error("Game has ended.");
         if (this.game.currentPlayerId != player.id)
             throw new Error("Must be currently active player.")
@@ -37,7 +37,7 @@ abstract class BaseAction {
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
             player.chips -= deductAmount;
         }
-        this.update.addMove({ playerId: player.id, action: !player.chips && deductAmount ? PlayerAction.ALL_IN : this.type, amount: deductAmount });
+        this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
     }
 
     protected getDeductAmount(_player: Player, amount?: number): number | undefined {

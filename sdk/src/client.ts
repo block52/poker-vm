@@ -76,6 +76,7 @@ export class NodeRpcClient {
         });
         return body.result.data;
     }
+
     /**
      * Get the last block from the remote node
      * @returns A Promise resolving to a Block object
@@ -100,6 +101,33 @@ export class NodeRpcClient {
             id: this.getRequestId(),
             method: RPCMethods.GET_BLOCKS,
             params: [count ?? 100]
+        });
+        return body.result.data;
+    }
+
+    /**
+     * Get a block from the remote node
+     * @param index The index of the block to get
+     * @returns A Promise resolving to a of Block object
+     */
+    public async getBlock(index: number): Promise<BlockDTO> {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_BLOCK,
+            params: [index.toString()]
+        });
+        return body.result.data;
+    }
+
+    /**
+     * Get the block height from the remote node
+     * @returns A Promise resolving to the block height
+     */
+    public async getBlockHeight(): Promise<number> {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<number> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_BLOCK_HEIGHT,
+            params: []
         });
         return body.result.data;
     }

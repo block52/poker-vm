@@ -1,8 +1,10 @@
 import { ethers, ZeroHash } from "ethers";
 import { Node } from "./types";
 import { getMempoolInstance } from "./mempool";
+import { getBlockchainInstance } from "../state/index";
 import { Transaction } from "../models";
-import { NodeRpcClient, TransactionDTO } from "@bitcoinbrisbane/block52";
+import { Block } from "../models/block";
+import { BlockDTO, NodeRpcClient, TransactionDTO } from "@bitcoinbrisbane/block52";
 import { MineCommand } from "../commands/mineCommand";
 import { getValidatorInstance } from "./validator";
 import { getBootNodes } from "../state/nodeManagement";
@@ -12,6 +14,8 @@ export class Server {
     public readonly publicKey: string;
     private readonly isValidator: boolean;
     private _started: boolean = false;
+    private _syncing: boolean = false;
+    private _synced: boolean = false;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
 
     constructor(private readonly privateKey: string) {
@@ -29,12 +33,19 @@ export class Server {
 
     public me(): Node {
         const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
-
-        return new Node("pvm-typescript", this.publicKey, url, "1.0.0", this.isValidator);
+        return new Node("pvm-typescript", this.publicKey, url, "1.0.1", this.isValidator);
     }
 
     get started(): boolean {
         return this._started;
+    }
+
+    get syncing(): boolean {
+        return this._syncing;
+    }
+
+    get synced(): boolean {
+        return this._synced;
     }
 
     public async mine() {
@@ -82,6 +93,11 @@ export class Server {
     }
 
     public async bootstrap() {
+        console.log("Syncing blocks...");
+        //while (!this.synced) {
+            await this.syncBlockchain();
+        //}
+
         console.log("Polling...");
         const intervalId = setInterval(async () => {
             if (!this._started) {
@@ -90,7 +106,7 @@ export class Server {
                 return;
             }
             await this.syncMempool();
-            await this.mine();
+            // await this.mine();
         }, 15000);
 
         this._started = true;
@@ -101,6 +117,7 @@ export class Server {
         if (!this.started) {
             return;
         }
+
         const mempool = getMempoolInstance();
         const nodes = await getBootNodes(this.me().url);
         await Promise.all(
@@ -119,6 +136,81 @@ export class Server {
                 }
             })
         );
+    }
+
+    private async syncBlockchain() {
+        this._syncing = true;
+        const nodes = await getBootNodes(this.me().url);
+
+        if (nodes.length === 0) {
+            console.log("No nodes to sync with");
+            this._syncing = false;
+            this._synced = true;
+            return;
+        }
+
+        let highestNode: Node = nodes[0];
+        let highestTip = 0;
+
+        for (const node of nodes) {
+            try {
+                const client = new NodeRpcClient(node.url, this.privateKey);
+                const block = await client.getLastBlock();
+                console.info(`Received block ${block.index} ${block.hash} from ${node.url}`);
+
+                if (block.index > highestTip) {
+                    highestTip = block.index;
+                    highestNode = node;
+                }
+            } catch (error) {
+                console.warn(`Missing node ${node.url}`);
+            }
+        }
+
+        console.log(`Highest node is ${highestNode.url} with tip ${highestTip}`);
+
+        // Get my current tip
+        const blockchain = getBlockchainInstance();
+        const lastBlock = await blockchain.getLastBlock();
+        let tip = lastBlock.index;
+
+        console.log(`My tip is ${tip}`);
+
+        if (lastBlock.index === highestTip) {
+            console.log("Blockchain is synced");
+            this._synced = true;
+        }
+
+        if (this._synced) {
+            this._syncing = false;
+            return;
+        }
+
+        // Sync with the highest node
+        const client = new NodeRpcClient(highestNode.url, this.privateKey);
+
+        for (let i = tip; i <= highestTip; i++) {
+            const blockDTO: BlockDTO = await client.getBlock(i);
+            console.log(blockDTO);
+
+            if (!blockDTO) {
+                console.warn(`Block ${i} is missing`);
+                continue;
+            }
+
+            console.log(`Verifying block ${blockDTO.hash} from ${highestNode.url}`);
+            const block = Block.fromJson(blockDTO);
+
+            if (!block.verify()) {
+                console.warn(`Block ${block.hash} is invalid`);
+                continue;
+            }
+
+            console.log(`Adding block ${block.hash} from ${highestNode.url}`);
+            await blockchain.addBlock(block);
+        }
+
+        this._syncing = false;
     }
 }
 

@@ -26,51 +26,60 @@ export const playerPosition = {
         }
     ],
     nine: [
-        { //* 1 orange
+        {
+            //* 1 orange
             left: "400px",
             top: "380px",
             color: "#4ade80"
         },
-        { //* 2 green
+        {
+            //* 2 green
             left: "150px",
             top: "380px",
             color: "#f97316"
         },
-        { //* 3 red
+        {
+            //* 3 red
             left: "-120px",
             top: "230px",
             color: "#ef4444"
         },
-        { //* 4 blue
+        {
+            //* 4 blue
             left: "-120px",
             top: "30px",
             color: "#3b82f6"
         },
-        { //* 5 violet
+        {
+            //* 5 violet
             left: "200px",
             top: "-110px",
             color: "#8b5cf6"
         },
-        { //* 6 black
+        {
+            //* 6 black
             left: "600px",
             top: "-110px",
             color: "#212529"
         },
-        { //* 7 yellow
+        {
+            //* 7 yellow
             left: "930px",
             top: "30px",
             color: "#FFD700"
         },
-        { //* 8 pink
+        {
+            //* 8 pink
             left: "930px",
             top: "230px",
             color: "#ec4899"
         },
-        { //* 9 gray
+        {
+            //* 9 gray
             left: "650px",
             top: "380px",
             color: "#6b7280"
-        },
+        }
     ]
 };
 

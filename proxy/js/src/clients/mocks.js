@@ -1,6 +1,6 @@
 const ethers = require("ethers");
 const crypto = require("crypto");
-const { ActionDTO, PlayerAction, PlayerStatus } = "@bitcoinbrisbane/block52";
+const { ActionDTO, PlayerAction, PlayerStatus, TexasHoldemRound } = "@bitcoinbrisbane/block52";
 
 class Mocks {
     constructor(seed) {
@@ -12,24 +12,24 @@ class Mocks {
         this.nonce = 0;
     }
 
-    getUnixTime () {
+    getUnixTime() {
         return Math.floor(Date.now());
     }
 
-    getNonce(id) {
+    getNonce(account) {
         this.nonce++;
         return this.nonce;
     }
 
-    getAccount(i) {
-        console.log("getAccount", i);
+    getAccount(index) {
+        console.log("getAccount", index);
 
         // do a regex check for number
-        const isNumber = /^\d+$/.test(i);
+        const isNumber = /^\d+$/.test(index);
         let j = 0;
         if (isNumber) {
             console.log(i, "is number");
-            j = Number(i);
+            j = Number(index);
         }
 
         const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
@@ -44,7 +44,7 @@ class Mocks {
         };
     }
 
-    getPlayer(id, i) {
+    getPlayer(index, id) {
         const account = this.getAccount(i);
         const timeout = this.getUnixTime() + 30;
 
@@ -58,7 +58,7 @@ class Mocks {
                 action: PlayerAction.CHECK,
                 amount: ethers.Zero.toString()
             },
-            actions:[PlayerAction.CHECK, PlayerAction.BET, PlayerAction.FOLD],
+            actions: [PlayerAction.CHECK, PlayerAction.BET, PlayerAction.FOLD],
             action: PlayerAction.CHECK,
             timeout,
             signature: ethers.ZeroHash
@@ -72,7 +72,6 @@ class Mocks {
             return this.tables[id];
         }
 
-        // const wallet = ethers.HDNodeWallet.fromPhrase(this.seed);
         const _id = crypto.createHash("sha256").update(id).digest("hex");
 
         const sb = ethers.parseEther("0.50").toString();
@@ -81,15 +80,18 @@ class Mocks {
         const pot2 = ethers.parseEther("10.0").toString();
 
         const response = {
-            id: _id,
-            button: 1,
-            playerCount: 9,
+            type: "cash",
+            address: ethers.constants.AddressZero,
+            smallBlind: sb,
+            bigBlind: bb,
+            dealer: 1,
             players: [],
+            communityCards: [],
             pots: [pot1, pot2],
-            sb,
-            bb,
-            board: [],
-            signature: ethers.ZeroHash
+            nextToAct: 1,
+            round: TexasHoldemRound.PREFLOP,
+            winners: [],
+            signature: ethers.constants.HashZero
         };
 
         for (let i = 0; i < response.playerCount; i++) {
@@ -100,7 +102,7 @@ class Mocks {
             const child = this.wallet.deriveChild(`${i}`);
 
             response.players.push({
-                id: child.address,
+                address: child.address,
                 seat: i + 1,
                 stack: stack.toString(),
                 bet: ethers.parseEther("1.0").toString(),

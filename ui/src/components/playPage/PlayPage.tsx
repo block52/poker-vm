@@ -45,10 +45,12 @@ function PlayPage() {
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
+
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+    
     const navigator = useNavigate();
 
     const { account, balance, isLoading} = useUserWallet();

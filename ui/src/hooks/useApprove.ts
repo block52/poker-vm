@@ -28,7 +28,7 @@ const useApprove = () => {
       return;
     }
 
-    if (!tokenAddress || !spender || amount <= 0n) {
+    if (!tokenAddress || !spender || amount <= 0) {
       console.error('Invalid parameters for approval');
       return;
     }

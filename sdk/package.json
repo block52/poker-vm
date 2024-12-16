@@ -1,6 +1,9 @@
 {
     "name": "@bitcoinbrisbane/block52",
-    "version": "1.0.23",
+    "version": "1.0.30",
+    "author": "@bitcoinbrisbane",
+    "license": "MIT",
+    "description": "SDK for interacting with the Block52 Node",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
@@ -23,7 +26,7 @@
     "peerDependencies": {
         "axios": "^1.7.7"
     },
-    "author": "",
-    "license": "ISC",
-    "description": ""
+    "engines": {
+        "node": "20.18"
+    }
 }

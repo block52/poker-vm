@@ -35,6 +35,12 @@ export class Transaction implements ICryptoModel, IJSONModel {
         return this.calculateHash();
     }
 
+    public static create(to: string, from: string, value: bigint, privateKey: string): Transaction {
+        const timestamp = BigInt(Date.now());
+        const signature = createHash("sha256").update(`${to}${from}${value}${timestamp}${privateKey}`).digest("hex");
+        return new Transaction(to, from, value, signature, timestamp);
+    }
+
     public toJson(): TransactionDTO {
         return {
             to: this.to,
@@ -45,12 +51,6 @@ export class Transaction implements ICryptoModel, IJSONModel {
             index: this.index?.toString(),
             hash: this.hash
         };
-    }
-
-    public static create(to: string, from: string, value: bigint, privateKey: string): Transaction {
-        const timestamp = BigInt(Date.now());
-        const signature = createHash("sha256").update(`${to}${from}${value}${timestamp}${privateKey}`).digest("hex");
-        return new Transaction(to, from, value, signature, timestamp);
     }
 
     public static fromJson(json: TransactionDTO): Transaction {

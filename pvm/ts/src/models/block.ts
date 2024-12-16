@@ -114,11 +114,12 @@ export class Block implements IJSONModel {
   }
 
   public verify(): boolean {
-    // if (!this.signature) {
-    //   return false;
-    // }
-    // return true;
-    return false;
+    if (!this.signature) {
+      return false;
+    }
+    
+    this.calculateHash();
+    return true;
   }
 
   public async sign(privateKey: string): Promise<void> {
@@ -188,7 +189,7 @@ export class Block implements IJSONModel {
       document.hash,
       document.merkle_root,
       document.signature,
-     transactions,
+      transactions,
     );
   }
 
@@ -205,7 +206,5 @@ export class Block implements IJSONModel {
       transactions: this.transactions,
       tx_count: this.transactions.length,
     };
-
-    
   }
 }

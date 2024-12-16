@@ -3,14 +3,15 @@ import { ZeroHash } from "ethers";
 import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import { AccountCommand } from "./commands/accountCommand";
-import { BlockCommand } from "./commands/blockCommand";
-import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
-import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
+import { BlockCommand, BlockCommandParams } from "./commands/blockCommand";
+import { BurnCommand } from "./commands/burnCommand";
 import { CreateAccountCommand } from "./commands/createAccountCommand";
+import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
+import { GameStateCommand } from "./commands/gameStateCommand";
 import { GetBlocksCommand } from "./commands/getBlocksCommand";
+import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
 import { GetNodesCommand } from "./commands/getNodesCommand";
 import { GetTransactionsCommand } from "./commands/getTransactionsCommand";
-import { ISignedResponse } from "./commands/interfaces";
 import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { MineCommand } from "./commands/mineCommand";
@@ -20,11 +21,11 @@ import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
 import { TransferCommand } from "./commands/transferCommand";
-import { BurnCommand } from "./commands/burnCommand";
+
+import { ISignedResponse } from "./commands/interfaces";
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
-import { BalanceCommand } from "./commands/balanceCommand";
-import { GameStateCommand } from "./commands/gameStateCommand";
+
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -56,7 +57,6 @@ export class RPC {
     }
 
     static async handleControlMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<any>> {
-        const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
         let result: any;
         switch (method) {
             case RPCMethods.START: {
@@ -83,6 +83,7 @@ export class RPC {
             result: result
         };
     }
+
     // Return a JSONModel
     static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
@@ -109,7 +110,13 @@ export class RPC {
             // }
 
             case RPCMethods.GET_BLOCK: {
-                let command = new BlockCommand(undefined, validatorPrivateKey);
+
+                const params: BlockCommandParams = {
+                    index: BigInt(0),
+                    hash: ""
+                }
+
+                let command = new BlockCommand(params, validatorPrivateKey);
 
                 if (request.params) {
                     // Use regex to check if the index is a number
@@ -118,8 +125,31 @@ export class RPC {
                     if (!regex.test(index)) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-                    command = new BlockCommand(BigInt(index), validatorPrivateKey);
+
+                    params.index = BigInt(index);
+                    command = new BlockCommand(params, validatorPrivateKey);
                 }
+                result = await command.execute();
+                break;
+            }
+
+            // case RPCMethods.GET_BLOCK_BY_HASH : {
+            //     const params: BlockCommandParams = {
+            //         index: undefined,
+            //         hash: undefined
+            //     }
+            //     const command = new BlockCommand(params, validatorPrivateKey);
+            //     result = await command.execute();
+            //     break;
+            // }
+
+            case RPCMethods.GET_BLOCK_HEIGHT: {
+                const params: BlockCommandParams = {
+                    index: undefined,
+                    hash: undefined
+                }
+
+                const command = new BlockCommand(params, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
@@ -132,7 +162,11 @@ export class RPC {
             }
 
             case RPCMethods.GET_LAST_BLOCK: {
-                const command = new BlockCommand(undefined, validatorPrivateKey);
+                const params: BlockCommandParams = {
+                    index: undefined,
+                    hash: undefined
+                }
+                const command = new BlockCommand(params, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }

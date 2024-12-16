@@ -7,17 +7,21 @@ export enum PlayerActionType {
     CALL = "call",
     RAISE = "raise",
     ALL_IN = "all-in",
-    MUCK = "muck"
+    MUCK = "muck",
+    JOIN = "join"
 }
 
 export enum PlayerStatus {
     NOT_ACTED = "not-acted",
     TURN = "turn",
     ACTIVE = "active",
+    FOLDED = "folded",
+    ALL_IN = "all-in",
     SITTING_OUT = "sitting-out"
 }
 
 export enum TexasHoldemRound {
+    ANTE = "ante",
     PREFLOP = "preflop",
     FLOP = "flop",
     TURN = "turn",
@@ -44,8 +48,11 @@ export type WinnerDTO = {
 
 export type PlayerDTO = {
     address: string;
-    seat: number;
+    seat: number; // change to position
     stack: string; // BigNumber
+    isSmallBlind: boolean,
+    isBigBlind: boolean,
+    isDealer: boolean,
     holeCards: number[] | undefined;
     status: PlayerStatus;
     lastAction: ActionDTO | undefined;
@@ -64,12 +71,14 @@ export type TexasHoldemGameStateDTO = {
     address: string;
     smallBlind: string;
     bigBlind: string;
+    dealer: number;
     players: PlayerDTO[];
     communityCards: number[];
-    pot: string;
+    pots: string[];
     nextToAct: number;
-    round: string;
+    round: TexasHoldemRound;
     winners: WinnerDTO[];
+    signature: string;
 };
 
 export type TexasHoldemStateDTO = TexasHoldemJoinStateDTO | TexasHoldemGameStateDTO;

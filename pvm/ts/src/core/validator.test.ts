@@ -1,5 +1,4 @@
 import { Validator } from "./validator";
-// import { expect } from "chai";
 
 describe.skip("Should get basse validator", () => {
     it("should get validator from Base", async () => {

@@ -1,7 +1,6 @@
 import { BlockCommand } from "./blockCommand";
 import { BlockchainManagement } from "../state/blockchainManagement";
 import { Block } from "../models";
-import { ZeroHash } from "ethers/constants";
 
 const privateKey =
 "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -18,11 +17,15 @@ describe("BlockCommand", () => {
     (BlockchainManagement as jest.Mock).mockImplementation(() => mockBlockchainManagement);
   });
 
-  it.only("should get specific block when index is provided", async () => {
+  it("should get specific block when index is provided", async () => {
     const specificBlock = new Block(5, "previousHash", Date.now(), "validator");
     mockBlockchainManagement.getBlock.mockResolvedValue(specificBlock);
 
-    const command = new BlockCommand(BigInt(5), privateKey);
+    const params = {
+      index: BigInt(5)
+    }
+
+    const command = new BlockCommand(params, privateKey);
     const {data: result} = await command.execute();
 
     expect(result).toBe(specificBlock);
@@ -33,7 +36,11 @@ describe("BlockCommand", () => {
     const lastBlock = new Block(10, "previousHash", Date.now(), "validator");
     mockBlockchainManagement.getLastBlock.mockResolvedValue(lastBlock);
 
-    const command = new BlockCommand(undefined, privateKey);
+    const params = {
+      index: undefined
+    }
+
+    const command = new BlockCommand(params, privateKey);
     const result = await command.execute();
 
     expect(result).toBe(lastBlock);
