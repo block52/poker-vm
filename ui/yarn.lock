@@ -5879,6 +5879,11 @@ dotenv@^10.0.0:
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-10.0.0.tgz#3d4227b8fb95f81096cdd2b66653fb2c7085ba81"
   integrity sha512-rlBi9d8jpv9Sf1klPjNfFAuWDjKLwTIJJ/VxtoTwIR6hnZxcEOQCZg2oIL3MWBYw5GpUDKOEnND7LXTbIpQ03Q==
 
+dotenv@^16.4.7:
+  version "16.4.7"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.4.7.tgz#0e20c5b82950140aa99be360a8a5f52335f53c26"
+  integrity sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==
+
 dunder-proto@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/dunder-proto/-/dunder-proto-1.0.0.tgz#c2fce098b3c8f8899554905f4377b6d85dabaa80"
@@ -11921,17 +11926,6 @@ tailwind-scrollbar-hide@^1.1.7:
   resolved "https://registry.yarnpkg.com/tailwind-scrollbar-hide/-/tailwind-scrollbar-hide-1.1.7.tgz#90b481fb2e204030e3919427416650c54f56f847"
   integrity sha512-X324n9OtpTmOMqEgDUEA/RgLrNfBF/jwJdctaPZDzB3mppxJk7TLIDmOreEDm1Bq4R9LSPu4Epf8VSdovNU+iA==
 
-<<<<<<< HEAD
-=======
-tailwindcss@0.0.0-development.1:
-  version "0.0.0-development.1"
-  resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-0.0.0-development.1.tgz#ef38a385e3a18ac8b4dff13ac9852491944bee17"
-  integrity sha512-6mOfJb2JWT5z5J8DnLqAaWsAqZrMnUSm5sCqDm7TfAQwRF/OL/Xp0rKUryGRluFFoGNNG7CiNzkgn71Hnl0e7g==
-  dependencies:
-    "@tailwindcss/oxide" "0.0.0-development.1"
-    lightningcss "^1.23.0"
-
->>>>>>> 6ee1fabbd52152d942906dde2f7d8ffdb5676c17
 tailwindcss@^3.0.2, tailwindcss@^3.4.14:
   version "3.4.16"
   resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-3.4.16.tgz#35a7c3030844d6000fc271878db4096b6a8d2ec9"
@@ -12251,11 +12245,7 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
-<<<<<<< HEAD
 typescript-eslint@^8.7.0:
-=======
-typescript-eslint@^8.0.1:
->>>>>>> 6ee1fabbd52152d942906dde2f7d8ffdb5676c17
   version "8.18.0"
   resolved "https://registry.yarnpkg.com/typescript-eslint/-/typescript-eslint-8.18.0.tgz#41026f27a3481185f3239d817ae5b960572145a0"
   integrity sha512-Xq2rRjn6tzVpAyHr3+nmSg1/9k9aIHnJ2iZeOH7cfGOWqTkXTm3kwpQglEuLGdNrYvPF+2gtAs+/KF5rjVo+WQ==

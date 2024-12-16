@@ -242,7 +242,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     useEffect(() => {
         if (!isInitialized.current) {
-            newGame(0);
+            // newGame(0);
             isInitialized.current = true;
         }
     }, []);
