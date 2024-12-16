@@ -106,7 +106,11 @@ export class Server {
                 return;
             }
             await this.syncMempool();
-            // await this.mine();
+            await this.mine();
+
+            if (!this.synced) {
+                await this.syncBlockchain();
+            }
         }, 15000);
 
         this._started = true;
