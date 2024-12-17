@@ -80,8 +80,8 @@ contract Vault is IValidator, IERC1363Receiver {
     }
 
     function withdraw(uint256 amount) external {
-        require(_balances[msg.sender] >= amount, "Vault: insufficient balance");
-        require(block.timestamp >= _lockTimes[msg.sender], "Vault: funds are locked");
+        require(_balances[msg.sender] >= amount, "withdraw: insufficient balance");
+        require(block.timestamp >= _lockTimes[msg.sender], "withdraw: funds are locked");
 
         if (_isValidator(msg.sender) == true && _balances[msg.sender] - amount < _minValidatorStake) {
             _validatorCount--;
