@@ -9,6 +9,7 @@ const useDepositUSDC = () => {
   const {
     data: hash,
     writeContract,
+    isPending,
     error,
   } = useWriteContract();
 
@@ -37,10 +38,11 @@ const useDepositUSDC = () => {
       submit,
       isDepositPending: isConfirming,
       isDepositConfirmed: isConfirmed,
+      isPending,
       hash,
-      error,
+      depositError: error,
     }),
-    [submit, isConfirming, isConfirmed, hash, error]
+    [submit, isConfirming, isPending, isConfirmed, hash, error]
   )
 };
 

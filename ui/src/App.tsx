@@ -9,6 +9,7 @@ import { projectId, metadata, networks, wagmiAdapter } from "./config";
 import { mainnet } from "@reown/appkit/networks";
 import { includeWalletIds } from "./walletIds/includeWalletIds";
 import { featuredWalletIds } from "./walletIds/featuredWalletIds";
+import { ToastContainer } from "react-toastify";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,19 @@ function App() {
                     </div>
                 </Router>
             </QueryClientProvider>
+            <ToastContainer
+                position="top-right"
+                autoClose={false}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss={false}
+                draggable
+                pauseOnHover={false}
+                closeButton={true}
+                theme={"dark"}
+            />
         </WagmiProvider>
     );
 }
