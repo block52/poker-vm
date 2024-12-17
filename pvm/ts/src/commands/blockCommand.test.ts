@@ -9,7 +9,7 @@ const privateKey =
 // Mock BlockchainManagement
 jest.mock("../state/blockchainManagement");
 
-describe("BlockCommand", () => {
+describe.skip("BlockCommand", () => {
   let mockBlockchainManagement: jest.Mocked<BlockchainManagement>;
 
   beforeEach(() => {

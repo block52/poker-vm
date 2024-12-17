@@ -8,8 +8,8 @@ abstract class BaseAction {
     abstract get type(): PlayerActionType;
 
     verify(player: Player): Range | undefined {
-        if (this.game.currentStage == TexasHoldemRound.SHOWDOWN)
-            throw new Error("Game has ended.");
+        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
+            throw new Error("Hand has ended.");
         if (this.game.currentPlayerId != player.id)
             throw new Error("Must be currently active player.")
         if (this.game.getPlayerStatus(player) != PlayerStatus.ACTIVE)
@@ -29,6 +29,7 @@ abstract class BaseAction {
         } else if (amount) {
             throw new Error(`Amount should not be specified for ${this.type}`);
         }
+
         // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
         // the amount only specifies that over the existing maximum which the player may not yet have covered
         const deductAmount = this.getDeductAmount(player, amount);
@@ -37,6 +38,7 @@ abstract class BaseAction {
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
             player.chips -= deductAmount;
         }
+
         this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
     }
 

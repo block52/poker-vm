@@ -10,8 +10,12 @@ contract UniswapOracle {
     // Uniswap V3 Quoter V2 contract on Ethereum mainnet
     address public constant QUOTER_V2 = 0x61fFE014bA17989E743c5F6cB21bF9697530B21e;
     
-    // WETH address on Ethereum mainnet
-    address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    // USDT address on Ethereum mainnet
+    address private constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+
+    function underlying() external view returns (address) {
+        return USDT;
+    }
     
     struct QuoteParams {
         address tokenIn;
@@ -20,7 +24,7 @@ contract UniswapOracle {
         uint160 sqrtPriceLimitX96;
     }
 
-    function getValueInEth(address token) external returns (uint256) {
+    function getValueInUSDT(address token) external returns (uint256) {
         QuoteParams memory params = QuoteParams({
             tokenIn: token,
             fee: 3000,
@@ -28,23 +32,23 @@ contract UniswapOracle {
             sqrtPriceLimitX96: 0
         });
 
-        (uint256 amountOut, , , ) = this.getQuoteTokenToEth(params);
+        (uint256 amountOut, , , ) = this.getQuoteTokenToUnderlying(params);
         return amountOut;
     }
     
-    function getQuoteTokenToEth(QuoteParams memory params) external returns (
+    function getQuoteTokenToUnderlying(QuoteParams memory params) external returns (
         uint256 amountOut,
         uint160 sqrtPriceX96After,
         uint32 initializedTicksCrossed,
         uint256 gasEstimate
     ) {
-        require(params.tokenIn != WETH, "Token cannot be WETH");
+        require(params.tokenIn != USDT, "Token cannot be WETH");
         
         // Create the parameters for the quoter
         IQuoterV2.QuoteExactInputSingleParams memory quoteParams = 
             IQuoterV2.QuoteExactInputSingleParams({
                 tokenIn: params.tokenIn,
-                tokenOut: WETH,
+                tokenOut: USDT,
                 fee: params.fee,
                 amountIn: params.amountIn,
                 sqrtPriceLimitX96: params.sqrtPriceLimitX96
