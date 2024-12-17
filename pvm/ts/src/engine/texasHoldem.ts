@@ -1,5 +1,5 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { IUpdate, Move, Player, PlayerId, TexasHoldemGameState, TexasHoldemJoinState, ValidMove } from "../models/game";
+import { IUpdate, Move, Player, PlayerId, TexasHoldemGameState, TexasHoldemJoinState, LegalAction } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -12,15 +12,15 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IPoker } from "./types";
 
-type Stage = {
-    // round: TexasHoldemRound;
+type Round = {
+    type: TexasHoldemRound;
     actions: Move[];
 };
 
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate
     private _players: Player[];
-    private _rounds!: Stage[];
+    private _rounds!: Round[];
     private _deck!: Deck;
     private _communityCards!: Card[];
     private _sidePots!: Map<PlayerId, number>;
@@ -44,8 +44,8 @@ class TexasHoldemGame implements IPoker {
             constructor(public game: TexasHoldemGame) {}
             
             addAction(action: Move): void {
-                const ante_stage: Stage = {
-                    // round: TexasHoldemRound.ANTE,
+                const ante_stage: Round = {
+                    type: TexasHoldemRound.ANTE,
                     actions: []
                 }
 
@@ -122,9 +122,9 @@ class TexasHoldemGame implements IPoker {
         this._players.push(player);
     }
 
-    getValidActions(playerId: string): ValidMove[] {
+    getValidActions(playerId: string): LegalAction[] {
         const player = this.getPlayer(playerId);
-        return this._actions.map(verifyAction).filter(a => a) as ValidMove[];
+        return this._actions.map(verifyAction).filter(a => a) as LegalAction[];
 
         function verifyAction(action: BaseAction) {
             try {
@@ -220,7 +220,9 @@ class TexasHoldemGame implements IPoker {
     }
 
     private init(update: IUpdate): void {
-        this._rounds = [{ actions: [] }];
+        // this._rounds = [{ actions: [] }];
+        // this._rounds = []; // TODO: add ante stage
+
         this._deck = new Deck(DeckType.STANDARD_52);
         this._communityCards = [];
         this._sidePots = new Map<PlayerId, number>();
@@ -271,9 +273,12 @@ class TexasHoldemGame implements IPoker {
         else this._currentPlayer = active[0];
     }
 
+    // complete round maybe?
     private nextHand():void {
         this.calculateSidePots();
-        this._rounds.push({ actions: [] });
+
+        // TODO?
+        // this._rounds.push({ actions: [] });
 
         if (this._currentRound < TexasHoldemRound.SHOWDOWN) {
             this.setNextRound();
@@ -365,6 +370,8 @@ class TexasHoldemGame implements IPoker {
                 return 4;
             case TexasHoldemRound.SHOWDOWN:
                 return 5;
+            default:
+                throw new Error("Invalid round.");
         }
     }
 }
