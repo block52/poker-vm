@@ -53,10 +53,10 @@ const useApprove = () => {
     () => ({
       approve,
       hash,
-      isPending,
+      isLoading: isPending,
       isApprovePending: isConfirming,
       isApproveConfirmed: isConfirmed,
-      error,
+      approveError: error,
     }),
     [approve, isPending, hash, error, error, isConfirmed, isConfirmed]
   )

@@ -1,9 +1,10 @@
 import { useAppKit, useAppKitAccount, useDisconnect } from "@reown/appkit/react";
+import { useEffect, useMemo, useState } from "react";
 
 interface UseUsreWalletConnectResult {
     open: () => void;
     disconnect: () => void;
-    isConnected: boolean;
+    isConnected: boolean | null;
     address: string | undefined;
 }
 
@@ -11,13 +12,21 @@ const useUserWalletConnect = (): UseUsreWalletConnectResult => {
     const { open } = useAppKit()
     const { disconnect } = useDisconnect()
     const { address, isConnected } = useAppKitAccount()
+    const [connected, setConnected] = useState<boolean | null>(null);
 
-    return {
-        open,
-        disconnect,
-        isConnected,
-        address,
-    };
+    useEffect(() => {
+        setConnected(isConnected)
+    }, [isConnected])
+
+    return useMemo(
+        () => ({
+            open,
+            disconnect,
+            isConnected: connected,
+            address,
+        }),
+        [open, connected, disconnect, address]
+    )
 };
 
 export default useUserWalletConnect;
