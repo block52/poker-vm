@@ -189,10 +189,12 @@ class TexasHoldemGame implements IPoker {
         return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
     }
 
-    getStakes(round: TexasHoldemRound = this._currentRound): Map<string, number> {
+    getBets(round: TexasHoldemRound = this._currentRound): Map<string, number> {
         // if (this._currentRound === TexasHoldemRound.ANTE) throw new Error("Cannot retrieve stakes until game started.");
 
         const i = this.getRoundAsNumber(round);
+
+        const _round = this._rounds.filter(r => r.type === round);
 
         return this._rounds[i].actions.reduce((acc, v) => {
             acc.set(v.playerId, (acc.get(v.playerId) ?? 0) + (v.amount ?? 0));
@@ -200,22 +202,22 @@ class TexasHoldemGame implements IPoker {
         }, new Map<string, number>());
     }
 
-    getPlayerStake(player: Player, stakes = this.getStakes()): number {
+    getPlayerStake(player: Player, stakes = this.getBets()): number {
         return stakes.get(player.id) ?? 0;
     }
 
-    getMaxStake(stakes = this.getStakes()): number {
+    getMaxStake(stakes = this.getBets()): number {
         return stakes.size ? Math.max(...stakes.values()) : 0;
     }
 
-    getPot(stakes = this.getStakes()): number {
+    getPot(stakes = this.getBets()): number {
         return Array.from(stakes.values()).reduce((acc, v) => acc + v, 0);
     }
 
     // Not sure why we need this
     private getStartingPot(): number {
         let pot = 0;
-        for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getStakes(stage));
+        for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getBets(stage));
         return pot;
     }
 
@@ -260,11 +262,11 @@ class TexasHoldemGame implements IPoker {
     }
 
     private nextPlayer():void {
-        const stakes = this.getStakes();
-        const maxStakes = this.getMaxStake(stakes);
+        const bets = this.getBets();
+        const maxStakes = this.getMaxStake(bets);
 
         const isPlayerTurnFinished = (p: Player) => this.getPlayerActions(p).filter(m => m.action != PlayerActionType.BIG_BLIND).length &&
-            (this.getPlayerStake(p, stakes) === maxStakes);
+            (this.getPlayerStake(p, bets) === maxStakes);
 
         const active = this.getActivePlayers();
         const anyAllIn = this._players.some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
