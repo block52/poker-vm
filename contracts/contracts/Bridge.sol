@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IValidator } from "./Vault.sol";
 import { IUniswapV3, ISwapRouter } from "./uniswap/Interfaces.sol";
 
@@ -38,7 +39,7 @@ contract Bridge is Ownable {
         return IERC20(underlying).balanceOf(_self);
     }
 
-    constructor(address underlying_, address vault_, address router_) {
+    constructor(address underlying_, address vault_, address router_) Ownable(msg.sender) {
         underlying = underlying_;
         vault = vault_;
         router = router_;
@@ -48,14 +49,14 @@ contract Bridge is Ownable {
     }
 
     function deposit(uint256 amount, address receiver, address token) external returns(uint256) {
-        (index, received) = _deposit(amount, receiver, token);
+        (uint256 index, uint256 received) = _deposit(amount, receiver, token);
         emit Deposited(receiver, received, index);
 
         return index;
     }
 
     function depositUnderlying(uint256 amount) external returns(uint256) {
-        (index, received) = _deposit(amount, msg.sender, underlying);
+        (uint256 index, uint256 received) = _deposit(amount, msg.sender, underlying);
         emit Deposited(msg.sender, received, index);
 
         return index;
@@ -65,7 +66,7 @@ contract Bridge is Ownable {
         IERC20(token).transferFrom(receiver, _self, amount);
         received = amount;
 
-        if (_router != address(0) && token != underlying) {
+        if (router != address(0) && token != underlying) {
             received = _swap(token, underlying, _self, amount, 0);
         }
 
@@ -88,8 +89,7 @@ contract Bridge is Ownable {
         usedNonces[nonce] = true;
         totalDeposits -= amount;
 
-        IERC20 token = IERC20(underlying);
-        token.transfer(receiver, amount);
+        IERC20(underlying).transfer(receiver, amount);
 
         emit Withdrawn(receiver, amount, nonce);
     }
@@ -97,8 +97,6 @@ contract Bridge is Ownable {
     function emergencyWithdraw() external {
         uint256 amount = IERC20(underlying).balanceOf(_self);
         if (amount == 0) return;
-
-        require(amount >= totalDeposits, "emergencyWithdraw: total deposits are less than balance");
         uint256 delta = amount - totalDeposits;
 
         address owner = 0x9943d42D7a59a0abaE451130CcfC77d758da9cA0;
@@ -115,10 +113,10 @@ contract Bridge is Ownable {
         ISwapRouter swapRouter = ISwapRouter(router);
 
         // Transfer the specified amount of TOKEN to this contract.
-        TransferHelper.safeTransferFrom(tokenIn, from, address(this), amountIn);
+        IERC20(tokenIn).transferFrom(from, _self, amountIn);
 
         // Approve the router to spend TOKEN.
-        TransferHelper.safeApprove(tokenIn, address(swapRouter), amountIn);
+        IERC20(tokenIn).approve(address(swapRouter), amountIn);
 
         // Naively set amountOutMinimum to 0. In production, use an oracle or other data source to choose a safer value for amountOutMinimum.
         // We also set the sqrtPriceLimitx96 to be 0 to ensure we swap our exact input amount.

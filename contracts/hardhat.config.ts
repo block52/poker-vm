@@ -17,6 +17,11 @@ const config: HardhatUserConfig = {
 			chainId: 8453,
 			url: "https://mainnet.base.org",
 		},
+        mainnet: {
+            chainId: 1,
+            url: "https://mainnet.infura.io/v3/your-infura-key",
+            accounts: PK ? [PK] : []
+        },
     },
     solidity: "0.8.24",
     paths: {
@@ -30,7 +35,7 @@ const config: HardhatUserConfig = {
     },
     etherscan: {
         apiKey: {
-            base: process.env.BASESCAN_API_KEY || ""
+            base: process.env.ETHERSCAN_API_KEY || ""
         },
         customChains: [
             {

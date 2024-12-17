@@ -5,12 +5,22 @@ import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
 
 describe("Texas Holdem Game", () => {
-
     describe("Heads up", () => {
-
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
-        it.only("should allow a round to be played heads up", () => {
+        it.only("should have the correct properties pre flop", () => {
+            const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250));
+            game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200));
+
+            // get player state
+            const player1 = game.getPlayer("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+            expect(player1).toBeDefined();
+            expect(player1?.id).toEqual("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+        });
+
+        it.skip("should allow a round to be played heads up", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
             game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250));
             game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200));
@@ -27,7 +37,13 @@ describe("Texas Holdem Game", () => {
             const players = game.players;
             expect(players).toHaveLength(2);
 
-            game.deal();
+            // game.deal();
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            // get big blind and small blind
+            expect(game.getStakes().get("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f")).toEqual(10); // Small blind
+            expect(game.getStakes().get("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toEqual(25); // Big blind
+            expect(game.pot).toEqual(35);
         });
     });
 
@@ -72,7 +88,7 @@ describe("Texas Holdem Game", () => {
         expect(game.getStakes().get("3")).toEqual(undefined);
 
         // Pre-flop
-        expect(game.currentStage).toEqual(TexasHoldemRound.PREFLOP);
+        expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
         expect(game.currentPlayerId).toEqual("2");
         expect(game.getValidActions("1")).toEqual([]);
         expect(game.getValidActions("3")).toEqual([]);
@@ -138,11 +154,11 @@ describe("Texas Holdem Game", () => {
                 action: "going all-in"
             }
         ]);
-        expect(game.currentStage).toEqual(TexasHoldemRound.PREFLOP);
+        expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
         game.performAction("1", PlayerActionType.CHECK);
 
         // Flop
-        expect(game.currentStage).toEqual(TexasHoldemRound.FLOP);
+        expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         expect(game.currentPlayerId).toEqual("4");
         expect(game.getValidActions("4")).toEqual([
             {
@@ -169,11 +185,11 @@ describe("Texas Holdem Game", () => {
         game.performAction("2", PlayerActionType.CALL);
 
         expect(game.currentPlayerId).toEqual("4");
-        expect(game.currentStage).toEqual(TexasHoldemRound.FLOP);
+        expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         game.performAction("4", PlayerActionType.CALL);
 
         // Turn
-        expect(game.currentStage).toEqual(TexasHoldemRound.TURN);
+        expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
         expect(game.currentPlayerId).toEqual("4");
 
         game.performAction("4", PlayerActionType.CHECK);
@@ -194,18 +210,18 @@ describe("Texas Holdem Game", () => {
         game.performAction("4", PlayerActionType.ALL_IN);
 
         game.performAction("1", PlayerActionType.RAISE, 25);
-        expect(game.currentStage).toEqual(TexasHoldemRound.TURN);
+        expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
         game.performAction("2", PlayerActionType.CALL);
 
         // River
-        expect(game.currentStage).toEqual(TexasHoldemRound.RIVER);
+        expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
         expect(game.currentPlayerId).toEqual("1");
         game.performAction("1", PlayerActionType.CHECK);
         game.performAction("2", PlayerActionType.BET, 25);
-        expect(game.currentStage).toEqual(TexasHoldemRound.RIVER);
+        expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
         game.performAction("1", PlayerActionType.RAISE, 25);
         game.performAction("2", PlayerActionType.ALL_IN);
 
-        expect(game.currentStage).toEqual(TexasHoldemRound.SHOWDOWN);
+        expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
     });
 });

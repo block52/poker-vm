@@ -24,6 +24,10 @@ export class BlockCommand implements ISignedCommand<Block> {
       return signResult(block, this.privateKey);
     }
 
+    if (!this.params.index) {
+      return signResult(await this.blockchainManagement.getLastBlock(), this.privateKey);
+    }
+
     if (this.params.index === BigInt(0)) {
       return signResult(await this.blockchainManagement.getGenesisBlock(), this.privateKey);
     }

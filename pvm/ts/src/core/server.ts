@@ -53,7 +53,7 @@ export class Server {
         const validatorAddress = await validatorInstance.getNextValidatorAddress();
 
         if (validatorAddress === this.publicKey) {
-            console.log(`I am the validator. Mining block...`);
+            console.log(`I am a validator. Mining block...`);
             const mineCommand = new MineCommand(this.privateKey);
             const mineCommandResponse = await mineCommand.execute();
             const block = mineCommandResponse.data;
@@ -76,7 +76,7 @@ export class Server {
                 }
             }
         } else {
-            console.log(`I am not the validator. Waiting for next block...`);
+            console.log(`I am not a validator. Waiting for next block...`);
         }
     }
 
@@ -106,7 +106,11 @@ export class Server {
                 return;
             }
             await this.syncMempool();
-            // await this.mine();
+            await this.mine();
+
+            if (!this.synced) {
+                await this.syncBlockchain();
+            }
         }, 15000);
 
         this._started = true;

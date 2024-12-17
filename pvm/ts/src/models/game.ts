@@ -11,31 +11,13 @@ export type Range = {
     maxAmount: number;
 }
 
-// // use sdk
-// export enum StageType {
-//     PRE_FLOP = 0,
-//     FLOP = 1,
-//     TURN = 2,
-//     RIVER = 3,
-//     SHOWDOWN = 4,
-//     JOIN = 5
-// }
-
-// // use sdk
-// export enum PlayerStatus {
-//     ACTIVE,
-//     FOLD,
-//     ALL_IN,
-//     ELIMINATED
-// }
-
 export type Move = {
     playerId: PlayerId;
     action: PlayerActionType;
     amount?: number;
 };
 
-export type ValidMove = ActionDTO;
+export type LegalAction = ActionDTO;
 
 export interface IUpdate {
     addAction(action: Move): void;
@@ -73,7 +55,7 @@ export class PlayerState implements IJSONModel {
         lastAction: Move | undefined,
         position: number,
         status: PlayerStatus,
-        actions?: ValidMove[]
+        actions?: LegalAction[]
     ) {
         const holeCards = player.holeCards?.map(p => p.value);
         const lastActionDTO = (lastAction && lastAction.amount) ? { action: lastAction.action, amount: lastAction.amount.toString() } : undefined;
