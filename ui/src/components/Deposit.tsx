@@ -10,7 +10,6 @@ import spinner from "../../public/spinning-circles.svg"
 import useWalletBalance from "../hooks/useWalletBalance";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { BaseError } from "viem";
 
 const Deposit: React.FC = () => {
   const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS || "";

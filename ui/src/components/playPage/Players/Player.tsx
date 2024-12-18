@@ -2,7 +2,7 @@ import * as React from "react";
 import Badge from "../reusable/Badge";
 import ProgressBar from "../reusable/ProgressBar";
 import { usePlayerContext } from "../../../context/usePlayerContext";
-import { PlayerStatus } from "../../../context/types";
+import { PlayerActionType } from "@bitcoinbrisbane/block52"
 
 type PlayerProps = {
     left?: string; // Front side image source
@@ -10,7 +10,7 @@ type PlayerProps = {
     index: number;
     currentIndex: number;
     color?: string;
-    status?: number;
+    status?: string;
 };
 
 const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
@@ -19,7 +19,7 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
     return (
         <div
             key={index}
-            className={`${players[index].status && players[index].status === PlayerStatus.Fold ? "opacity-60" : ""
+            className={`${players[index].status && players[index].status === PlayerActionType.FOLD ? "opacity-60" : ""
                 } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
             style={{
                 left: left,
@@ -40,10 +40,10 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
                 >
                     {/* <p className="text-white font-bold text-sm mt-auto mb-1.5 self-center">+100</p> */}
                     <ProgressBar index={index} />
-                    {players[index].status && players[index].status === PlayerStatus.Fold && (
+                    {players[index].status && players[index].status === PlayerActionType.FOLD && (
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 flex justify-center">FOLD</span>
                     )}
-                    {players[index].status && players[index].status === PlayerStatus.AllIn && (
+                    {players[index].status && players[index].status === PlayerActionType.ALL_IN && (
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 flex justify-center">All In</span>
                     )}
                 </div>

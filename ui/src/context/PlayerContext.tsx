@@ -1,6 +1,7 @@
 import { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "react";
 import * as React from "react";
-import { Player, PlayerContextType, PlayerStatus } from "./types";
+import { Player, PlayerContextType } from "./types";
+import { PlayerStatus, PlayerActionType } from "@bitcoinbrisbane/block52"
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
@@ -10,7 +11,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         Array.from({ length: 9 }, (_, index) => ({
             index,
             balance: 200,
-            status: PlayerStatus.Idle,
+            status: PlayerStatus.NOT_ACTED,
             pot: 0
         }))
     );
@@ -30,7 +31,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const nextPlayer = (turn: number, amount: number) => {
         console.log(`NEXT`, turn, amount, players);
-        const allIdle = players.every(player => player.status !== PlayerStatus.Idle);
+        const allIdle = players.every(player => player.status !== PlayerStatus.NOT_ACTED);
         if (allIdle) {
             console.warn("All players are not idle. Resetting players.");
             return -1;
@@ -39,7 +40,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         let attempts = 0; // Safeguard against infinite loops
         while (amount && attempts < tableSize) {
             player = (player + 1) % tableSize;
-            if (players[player].status === PlayerStatus.Idle) {
+            if (players[player].status === PlayerStatus.NOT_ACTED) {
                 amount--;
             }
             attempts++;
@@ -57,7 +58,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         updatedPlayers[nextPlayer(dealer, 2)].pot = 4;
         updatedPlayers[nextPlayer(dealer, 1)].balance = 198;
         updatedPlayers[nextPlayer(dealer, 2)].balance = 196;
-        updatedPlayers[nextPlayerIndex].status = PlayerStatus.Turn;
+        updatedPlayers[nextPlayerIndex].status = PlayerStatus.ACTIVE;
         setLastPot(4);
         setDealerIndex(dealer);
         setPlayers([...updatedPlayers]);
@@ -73,7 +74,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         let updatedPlayers = players;
         const nextPlayerIndex = nextPlayer(playerIndex, 1);
-        updatedPlayers[playerIndex].status = PlayerStatus.Fold;
+        updatedPlayers[playerIndex].status = PlayerActionType.FOLD;
         if (!players[nextPlayerIndex]) {
             console.error(`Player at index ${nextPlayerIndex} does not exist.`);
             let allPot = 0;
@@ -83,13 +84,13 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
                 if (index !== playerIndex) {
-                    updatedPlayers[playerIndex].status = PlayerStatus.Idle;
+                    updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
                 }
                 updatedPlayers[playerIndex].pot = 0;
             });
             return true;
         }
-        updatedPlayers[nextPlayerIndex].status = PlayerStatus.Turn;
+        updatedPlayers[nextPlayerIndex].status = PlayerStatus.ACTIVE;
         setPlayers([...updatedPlayers]);
         setPlayerIndex(nextPlayerIndex);
 
@@ -119,11 +120,11 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
         }
         if (updatedPlayers[playerIndex].balance <= checkPot) {
-            updatedPlayers[playerIndex].status = PlayerStatus.AllIn;
+            updatedPlayers[playerIndex].status = PlayerActionType.ALL_IN;
             updatedPlayers[playerIndex].pot += updatedPlayers[playerIndex].balance;
             updatedPlayers[playerIndex].balance = 0;
         } else {
-            updatedPlayers[playerIndex].status = PlayerStatus.Idle;
+            updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
             updatedPlayers[playerIndex].balance -= checkPot;
             updatedPlayers[playerIndex].pot = lastPot;
         }
@@ -137,13 +138,13 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
                 if (index !== playerIndex) {
-                    updatedPlayers[playerIndex].status = PlayerStatus.Idle;
+                    updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
                 }
                 updatedPlayers[playerIndex].pot = 0;
             });
             return true;
         }
-        updatedPlayers[nextPlayerIndex].status = PlayerStatus.Turn;
+        updatedPlayers[nextPlayerIndex].status = PlayerStatus.ACTIVE;
         setPlayers([...updatedPlayers]);
         setPlayerIndex(nextPlayerIndex);
 
@@ -172,11 +173,11 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         let updatedPlayers = players;
 
         if (updatedPlayers[playerIndex].balance === amount) {
-            updatedPlayers[playerIndex].status = PlayerStatus.AllIn;
+            updatedPlayers[playerIndex].status = PlayerActionType.ALL_IN;
             updatedPlayers[playerIndex].pot += updatedPlayers[playerIndex].balance;
             updatedPlayers[playerIndex].balance = 0;
         } else {
-            updatedPlayers[playerIndex].status = PlayerStatus.Idle;
+            updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
             updatedPlayers[playerIndex].balance -= amount;
             updatedPlayers[playerIndex].pot += amount;
         }
@@ -192,13 +193,13 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             updatedPlayers[playerIndex].balance += allPot;
             players.map((player, index) => {
                 if (index !== playerIndex) {
-                    updatedPlayers[playerIndex].status = PlayerStatus.Idle;
+                    updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
                 }
                 updatedPlayers[playerIndex].pot = 0;
             });
             return true;
         }
-        updatedPlayers[nextPlayerIndex].status = PlayerStatus.Turn;
+        updatedPlayers[nextPlayerIndex].status = PlayerStatus.ACTIVE;
         setPlayers([...updatedPlayers]);
         setPlayerIndex(nextPlayerIndex);
         return true;
@@ -242,7 +243,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     useEffect(() => {
         if (!isInitialized.current) {
-            // newGame(0);
+            newGame(0);
             isInitialized.current = true;
         }
     }, []);

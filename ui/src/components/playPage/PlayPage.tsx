@@ -11,7 +11,7 @@ import Player from "./Players/Player";
 import Dealer from "./reusable/Dealer";
 import Chip from "./reusable/Chip";
 import { usePlayerContext } from "../../context/usePlayerContext";
-import { PlayerStatus } from "../../context/types";
+import { PlayerStatus } from "@bitcoinbrisbane/block52"
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { BiBorderAll } from "react-icons/bi";
@@ -288,7 +288,7 @@ function PlayPage() {
                                         const playerData = players[index];
                                         return (
                                             <div key={index} className="z-[10]">
-                                                {playerData.status === PlayerStatus.SeatOff ? (
+                                                {playerData.status === PlayerStatus.SITTING_OUT ? (
                                                     <VacantPlayer index={index} left={position.left} top={position.top} />
                                                 ) : index !== 0 ? (
                                                     <OppositePlayer

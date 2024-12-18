@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import { usePlayerContext } from "../../../context/usePlayerContext";
-import { PlayerStatus } from "../../../context/types";
+import { PlayerStatus } from "@bitcoinbrisbane/block52"
 
 type TurnAnimationProps = {
     top?: string; // CSS top position
@@ -16,7 +16,7 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ left, top, index }) => {
     const currentPlayer = players[index];
 
     useEffect(() => {
-        if (currentPlayer.status === PlayerStatus.Turn) {
+        if (currentPlayer.status === PlayerStatus.ACTIVE) {
             setIsThinking(true);
         } else {
             setIsThinking(false);

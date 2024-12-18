@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import { usePlayerContext } from "../../../context/usePlayerContext";
-import { PlayerStatus } from "../../../context/types";
+import { PlayerStatus } from "@bitcoinbrisbane/block52"
 
 type ProgressBarProps = {
     index: number;
@@ -16,7 +16,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
 
-        if (currentPlayer.status === PlayerStatus.Turn) {
+        if (currentPlayer.status === PlayerStatus.ACTIVE) {
             setProgress(0); // Reset progress when "thinking" starts
 
             interval = setInterval(() => {
@@ -35,7 +35,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
         };
     }, [currentPlayer.status]);
 
-    if (players[index].status === PlayerStatus.Turn) {
+    if (players[index].status === PlayerStatus.ACTIVE) {
         return (
             <div className={"animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2"}>
                 <span className="ml-2 text-white text-sm w-[15px]">{30 - progress}</span>
