@@ -11,7 +11,7 @@ export type Range = {
     maxAmount: number;
 }
 
-export type Move = {
+export type Turn = {
     playerId: PlayerId;
     action: PlayerActionType;
     amount?: number;
@@ -20,7 +20,7 @@ export type Move = {
 export type LegalAction = ActionDTO;
 
 export interface IUpdate {
-    addAction(action: Move): void;
+    addAction(action: Turn): void;
 }
 
 export class Player {
@@ -52,7 +52,7 @@ export class PlayerState implements IJSONModel {
         isSmallBlind: boolean,
         isBigBlind: boolean,
         isDealer: boolean,
-        lastAction: Move | undefined,
+        lastAction: Turn | undefined,
         position: number,
         status: PlayerStatus,
         actions?: LegalAction[]
@@ -122,6 +122,8 @@ export class TexasHoldemGameState implements IJSONModel {
         const bigBlind = ethers.parseUnits(bb.toString(), 18).toString();
         const dealer = 0;
         const pots = [ethers.parseUnits(pot.toString(), 18).toString()];
+
+        console.log("TexasHoldemGameState", { address, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash });
 
         this._dto = { type: "cash", address, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash };
     }

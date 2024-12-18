@@ -1,5 +1,5 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { IUpdate, Move, Player, PlayerId, TexasHoldemGameState, TexasHoldemJoinState, LegalAction } from "../models/game";
+import { IUpdate, Turn, Player, PlayerId, TexasHoldemGameState, TexasHoldemJoinState, LegalAction } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -14,7 +14,7 @@ import { IPoker } from "./types";
 
 type Round = {
     type: TexasHoldemRound;
-    actions: Move[];
+    actions: Turn[];
 };
 
 class TexasHoldemGame implements IPoker {
@@ -34,16 +34,17 @@ class TexasHoldemGame implements IPoker {
 
     constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
         this._players = [];
-        this._currentRound = TexasHoldemRound.PREFLOP;
+        this._currentRound = TexasHoldemRound.ANTE;
         this._currentPlayer = 0;
         this._bigBlindPosition = 0;
         this._smallBlindPosition = 0;
+        this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
             constructor(public game: TexasHoldemGame) {}
             
-            addAction(action: Move): void {
+            addAction(action: Turn): void {
                 const ante_stage: Round = {
                     type: TexasHoldemRound.ANTE,
                     actions: []
@@ -120,6 +121,17 @@ class TexasHoldemGame implements IPoker {
     join(player: Player) {
         // if (this.currentStage != StageType.JOIN) throw new Error("Cannot join once game started.");
         this._players.push(player);
+
+        if (this._players.length === 1 && this.currentRound === TexasHoldemRound.ANTE) {
+            // post small blind
+            new SmallBlindAction(this, this._update).execute(player);
+        }
+
+        // Check if we havent dealt
+        if (this._players.length === this._minPlayers && this.currentRound === TexasHoldemRound.ANTE) {
+            // new BigBlindAction(this, this._update).execute(player);
+            // this.deal();
+        }
     }
 
     getValidActions(playerId: string): LegalAction[] {
@@ -136,7 +148,7 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    getLastAction(playerId: string): Move | undefined {
+    getLastAction(playerId: string): Turn | undefined {
         const player = this.getPlayer(playerId);
         const status = this.getPlayerStatus(player);
 
@@ -189,10 +201,11 @@ class TexasHoldemGame implements IPoker {
         return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
     }
 
-    getStakes(round: TexasHoldemRound = this._currentRound): Map<string, number> {
+    getBets(round: TexasHoldemRound = this._currentRound): Map<string, number> {
         // if (this._currentRound === TexasHoldemRound.ANTE) throw new Error("Cannot retrieve stakes until game started.");
 
         const i = this.getRoundAsNumber(round);
+        const _round = this._rounds.filter(r => r.type === round);
 
         return this._rounds[i].actions.reduce((acc, v) => {
             acc.set(v.playerId, (acc.get(v.playerId) ?? 0) + (v.amount ?? 0));
@@ -200,22 +213,22 @@ class TexasHoldemGame implements IPoker {
         }, new Map<string, number>());
     }
 
-    getPlayerStake(player: Player, stakes = this.getStakes()): number {
+    getPlayerStake(player: Player, stakes = this.getBets()): number {
         return stakes.get(player.id) ?? 0;
     }
 
-    getMaxStake(stakes = this.getStakes()): number {
-        return stakes.size ? Math.max(...stakes.values()) : 0;
+    getMaxStake(bets = this.getBets()): number {
+        return bets.size ? Math.max(...bets.values()) : 0;
     }
 
-    getPot(stakes = this.getStakes()): number {
-        return Array.from(stakes.values()).reduce((acc, v) => acc + v, 0);
+    getPot(bets = this.getBets()): number {
+        return Array.from(bets.values()).reduce((acc, v) => acc + v, 0);
     }
 
     // Not sure why we need this
     private getStartingPot(): number {
         let pot = 0;
-        for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getStakes(stage));
+        for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getBets(stage));
         return pot;
     }
 
@@ -247,7 +260,7 @@ class TexasHoldemGame implements IPoker {
         new SmallBlindAction(this, update).execute(this._players[this._smallBlindPosition]);
     }
 
-    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Move[] {
+    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
         const i = this.getRoundAsNumber(round);
         return this._rounds[i].actions.filter(m => m.playerId === player.id);
     }
@@ -260,11 +273,11 @@ class TexasHoldemGame implements IPoker {
     }
 
     private nextPlayer():void {
-        const stakes = this.getStakes();
-        const maxStakes = this.getMaxStake(stakes);
+        const bets = this.getBets();
+        const maxStakes = this.getMaxStake(bets);
 
         const isPlayerTurnFinished = (p: Player) => this.getPlayerActions(p).filter(m => m.action != PlayerActionType.BIG_BLIND).length &&
-            (this.getPlayerStake(p, stakes) === maxStakes);
+            (this.getPlayerStake(p, bets) === maxStakes);
 
         const active = this.getActivePlayers();
         const anyAllIn = this._players.some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
@@ -280,7 +293,7 @@ class TexasHoldemGame implements IPoker {
         // TODO?
         // this._rounds.push({ actions: [] });
 
-        if (this._currentRound < TexasHoldemRound.SHOWDOWN) {
+        if (this.getRoundAsNumber(this._currentRound) < this.getRoundAsNumber(TexasHoldemRound.SHOWDOWN)) {
             this.setNextRound();
         }
 

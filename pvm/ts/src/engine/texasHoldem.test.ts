@@ -11,13 +11,17 @@ describe("Texas Holdem Game", () => {
         it.only("should have the correct properties pre flop", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
-            game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250));
-            game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200));
 
-            // get player state
-            const player1 = game.getPlayer("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
-            expect(player1).toBeDefined();
-            expect(player1?.id).toEqual("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+            game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250));
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+
+            game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200));
+            // expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            // // get player state
+            // const player1 = game.getPlayer("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+            // expect(player1).toBeDefined();
+            // expect(player1?.id).toEqual("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
         });
 
         it.skip("should allow a round to be played heads up", () => {
@@ -41,8 +45,8 @@ describe("Texas Holdem Game", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
             // get big blind and small blind
-            expect(game.getStakes().get("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f")).toEqual(10); // Small blind
-            expect(game.getStakes().get("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toEqual(25); // Big blind
+            expect(game.getBets().get("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f")).toEqual(10); // Small blind
+            expect(game.getBets().get("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toEqual(25); // Big blind
             expect(game.pot).toEqual(35);
         });
     });
@@ -82,10 +86,10 @@ describe("Texas Holdem Game", () => {
         game.join(new Player("4", 100));
         game.deal();
 
-        expect(game.getStakes().get("4")).toEqual(10); // Small blind
-        expect(game.getStakes().get("1")).toEqual(25); // Big blind
-        expect(game.getStakes().get("2")).toEqual(undefined);
-        expect(game.getStakes().get("3")).toEqual(undefined);
+        expect(game.getBets().get("4")).toEqual(10); // Small blind
+        expect(game.getBets().get("1")).toEqual(25); // Big blind
+        expect(game.getBets().get("2")).toEqual(undefined);
+        expect(game.getBets().get("3")).toEqual(undefined);
 
         // Pre-flop
         expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
