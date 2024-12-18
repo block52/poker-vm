@@ -38,6 +38,7 @@ class TexasHoldemGame implements IPoker {
         this._currentPlayer = 0;
         this._bigBlindPosition = 0;
         this._smallBlindPosition = 0;
+        this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
@@ -120,6 +121,17 @@ class TexasHoldemGame implements IPoker {
     join(player: Player) {
         // if (this.currentStage != StageType.JOIN) throw new Error("Cannot join once game started.");
         this._players.push(player);
+
+        if (this._players.length === 1 && this.currentRound === TexasHoldemRound.ANTE) {
+            // post small blind
+            new SmallBlindAction(this, this._update).execute(player);
+        }
+
+        // Check if we havent dealt
+        if (this._players.length === this._minPlayers && this.currentRound === TexasHoldemRound.ANTE) {
+            // new BigBlindAction(this, this._update).execute(player);
+            // this.deal();
+        }
     }
 
     getValidActions(playerId: string): LegalAction[] {
