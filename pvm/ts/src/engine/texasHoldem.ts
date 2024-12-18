@@ -1,5 +1,5 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { IUpdate, Move, Player, PlayerId, TexasHoldemGameState, TexasHoldemJoinState, LegalAction } from "../models/game";
+import { IUpdate, Turn, Player, PlayerId, TexasHoldemGameState, TexasHoldemJoinState, LegalAction } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -14,7 +14,7 @@ import { IPoker } from "./types";
 
 type Round = {
     type: TexasHoldemRound;
-    actions: Move[];
+    actions: Turn[];
 };
 
 class TexasHoldemGame implements IPoker {
@@ -34,7 +34,7 @@ class TexasHoldemGame implements IPoker {
 
     constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
         this._players = [];
-        this._currentRound = TexasHoldemRound.PREFLOP;
+        this._currentRound = TexasHoldemRound.ANTE;
         this._currentPlayer = 0;
         this._bigBlindPosition = 0;
         this._smallBlindPosition = 0;
@@ -43,7 +43,7 @@ class TexasHoldemGame implements IPoker {
         this._update = new (class implements IUpdate {
             constructor(public game: TexasHoldemGame) {}
             
-            addAction(action: Move): void {
+            addAction(action: Turn): void {
                 const ante_stage: Round = {
                     type: TexasHoldemRound.ANTE,
                     actions: []
@@ -136,7 +136,7 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    getLastAction(playerId: string): Move | undefined {
+    getLastAction(playerId: string): Turn | undefined {
         const player = this.getPlayer(playerId);
         const status = this.getPlayerStatus(player);
 
@@ -193,7 +193,6 @@ class TexasHoldemGame implements IPoker {
         // if (this._currentRound === TexasHoldemRound.ANTE) throw new Error("Cannot retrieve stakes until game started.");
 
         const i = this.getRoundAsNumber(round);
-
         const _round = this._rounds.filter(r => r.type === round);
 
         return this._rounds[i].actions.reduce((acc, v) => {
@@ -206,12 +205,12 @@ class TexasHoldemGame implements IPoker {
         return stakes.get(player.id) ?? 0;
     }
 
-    getMaxStake(stakes = this.getBets()): number {
-        return stakes.size ? Math.max(...stakes.values()) : 0;
+    getMaxStake(bets = this.getBets()): number {
+        return bets.size ? Math.max(...bets.values()) : 0;
     }
 
-    getPot(stakes = this.getBets()): number {
-        return Array.from(stakes.values()).reduce((acc, v) => acc + v, 0);
+    getPot(bets = this.getBets()): number {
+        return Array.from(bets.values()).reduce((acc, v) => acc + v, 0);
     }
 
     // Not sure why we need this
@@ -249,7 +248,7 @@ class TexasHoldemGame implements IPoker {
         new SmallBlindAction(this, update).execute(this._players[this._smallBlindPosition]);
     }
 
-    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Move[] {
+    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
         const i = this.getRoundAsNumber(round);
         return this._rounds[i].actions.filter(m => m.playerId === player.id);
     }
@@ -282,7 +281,7 @@ class TexasHoldemGame implements IPoker {
         // TODO?
         // this._rounds.push({ actions: [] });
 
-        if (this._currentRound < TexasHoldemRound.SHOWDOWN) {
+        if (this.getRoundAsNumber(this._currentRound) < this.getRoundAsNumber(TexasHoldemRound.SHOWDOWN)) {
             this.setNextRound();
         }
 
