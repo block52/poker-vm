@@ -81,7 +81,7 @@ class Mocks {
 
         const response = {
             type: "cash",
-            address: ethers.constants.AddressZero,
+            address: ethers.ZeroAddress,
             smallBlind: sb,
             bigBlind: bb,
             dealer: 1,
@@ -89,9 +89,9 @@ class Mocks {
             communityCards: [],
             pots: [pot1, pot2],
             nextToAct: 1,
-            round: TexasHoldemRound.PREFLOP,
+            round: "PREFLOP", // TexasHoldemRound.PREFLOP,
             winners: [],
-            signature: ethers.constants.HashZero
+            signature: ethers.ZeroHash
         };
 
         for (let i = 0; i < response.playerCount; i++) {
