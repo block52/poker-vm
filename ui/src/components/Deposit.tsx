@@ -10,6 +10,7 @@ import spinner from "../../public/spinning-circles.svg"
 import useWalletBalance from "../hooks/useWalletBalance";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 const Deposit: React.FC = () => {
   const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS || "";
@@ -22,6 +23,7 @@ const Deposit: React.FC = () => {
   const { decimals } = useDecimal(USDC_ADDRESS);
   const { allowance } = useAllowance();
   const { balance } = useWalletBalance();
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     if (isDepositConfirmed) {
@@ -36,13 +38,13 @@ const Deposit: React.FC = () => {
       setAmount(0);
     }
   }, [isApproveConfirmed])
-  
+
   React.useEffect(() => {
     if (depositError) {
       toast.error(`Failed to deposit`, { autoClose: 5000 })
     }
   }, [depositError])
-  
+
   React.useEffect(() => {
     if (approveError) {
       toast.error(`Failed to approve`, { autoClose: 5000 })
@@ -94,12 +96,24 @@ const Deposit: React.FC = () => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate('/')
+  }
+
   if (isConnected === null) {
     return <></>;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 relative">
+      <button
+        type="button"
+        className="absolute top-8 left-8 flex items-center gap-2 py-1 px-2 text-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white rounded-lg"
+        onClick={handleGoBack}
+      >
+        <i className="bi bi-arrow-left"></i>
+        Go Back
+      </button>
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
         <h2 className="text-2xl font-semibold text-center mb-4">Deposit USDC</h2>
         <button
