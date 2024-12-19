@@ -16,7 +16,7 @@ class Mocks {
         return Math.floor(Date.now());
     }
 
-    getNonce(account) {
+    getNonce(id) {
         this.nonce++;
         return this.nonce;
     }
