@@ -166,7 +166,7 @@ function PlayPage() {
                     </div>
 
                     {/* Middle Section */}
-                    <div className="flex">
+                    {/* <div className="flex">
                         <div className="w-[130px] h-[64px] border-l border-white flex items-center justify-center white">
                             <HiPlus color="#f0f0f0" size={25} />
                         </div>
@@ -179,7 +179,7 @@ function PlayPage() {
                         <div className="w-[130px] h-[64px] border-l border-r border-white flex items-center justify-center white">
                             <HiPlus color="#f0f0f0" size={25} />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Right Section */}
                     <div className="flex items-center">
@@ -190,12 +190,12 @@ function PlayPage() {
                         <div className="flex items-center justify-center w-10 h-10  cursor-pointer">
                             <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigator('/deposit')} />
                         </div>
-                        <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
+                        {/* <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
                             <CiCalendar color="#f0f0f0" size={25} />
                         </div>
                         <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
                             <BiBorderAll color="#f0f0f0" size={25} />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -242,24 +242,24 @@ function PlayPage() {
                                                 {showThreeCards && (
                                                     <>
                                                         <div className="card animate-fall delay-200">
-                                                            <OppositePlayerCards frontSrc={`/cards/6D.svg`} backSrc="/cards/back.svg" flipped={flipped1} />
+                                                            <OppositePlayerCards frontSrc={`/cards/6D.svg`} backSrc="/cards/Back.svg" flipped={flipped1} />
                                                         </div>
                                                         <div className="card animate-fall delay-400">
-                                                            <OppositePlayerCards frontSrc={`/cards/JA.svg`} backSrc="/cards/back.svg" flipped={flipped2} />
+                                                            <OppositePlayerCards frontSrc={`/cards/JA.svg`} backSrc="/cards/Back.svg" flipped={flipped2} />
                                                         </div>
                                                         <div className="card animate-fall delay-600">
-                                                            <OppositePlayerCards frontSrc={`/cards/QB.svg`} backSrc="/cards/back.svg" flipped={flipped3} />
+                                                            <OppositePlayerCards frontSrc={`/cards/QB.svg`} backSrc="/cards/Back.svg" flipped={flipped3} />
                                                         </div>
                                                         {openOneMore ? (
                                                             <div className="card animate-fall delay-600">
-                                                                <OppositePlayerCards frontSrc={`/cards/6B.svg`} backSrc="/cards/back.svg" flipped={flipped3} />
+                                                                <OppositePlayerCards frontSrc={`/cards/6B.svg`} backSrc="/cards/Back.svg" flipped={flipped3} />
                                                             </div>
                                                         ) : (
                                                             <div className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"></div>
                                                         )}
                                                         {openTwoMore ? (
                                                             <div className="card animate-fall delay-600">
-                                                                <OppositePlayerCards frontSrc={`/cards/8A.svg`} backSrc="/cards/back.svg" flipped={flipped3} />
+                                                                <OppositePlayerCards frontSrc={`/cards/8A.svg`} backSrc="/cards/Back.svg" flipped={flipped3} />
                                                             </div>
                                                         ) : (
                                                             <div className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"></div>

@@ -3,10 +3,10 @@ import { Link } from "react-router-dom"; // Import Link for navigation
 
 const Dashboard: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black">
       {/* Main Dashboard Container */}
-      <div className="bg-white p-10 rounded-xl shadow-2xl w-full max-w-3xl">
-        <h1 className="text-4xl font-extrabold text-center text-gray-800 mb-8">
+      <div className="bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-3xl">
+        <h1 className="text-4xl font-extrabold text-center text-white mb-8">
           Welcome to the Dashboard
         </h1>
 
@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
           {/* Link to Deposit page */}
           <Link
             to="/deposit"
-            className="block text-center text-white bg-blue-600 hover:bg-blue-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
+            className="block text-center text-white bg-pink-600 hover:bg-pink-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
           >
             Go to Deposit
           </Link>
@@ -26,7 +26,7 @@ const Dashboard: React.FC = () => {
               <Link
                 key={id}
                 to={`/table/${id}`}
-                className="block text-center text-white bg-green-600 hover:bg-green-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
+                className="block text-center text-white bg-gray-600 hover:bg-gray-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
               >
                 Table {id}
               </Link>
