@@ -19,7 +19,7 @@ import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { HiPlus } from "react-icons/hi2";
 import useUserWallet from "../../hooks/useUserWallet";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 //* Define the interface for the position object
 interface PositionArray {
     left?: string;
@@ -45,16 +45,16 @@ function PlayPage() {
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
+    const { id } = useParams();
 
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
-    
+
     const navigator = useNavigate();
 
-    const { account, balance, isLoading} = useUserWallet();
-    console.log(account, balance, isLoading);
+    const { account, balance, isLoading } = useUserWallet();
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -202,7 +202,7 @@ function PlayPage() {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
                     {/* Left Section */}
                     <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">2/4</span>
+                        <span className="px-2 rounded text-[12px]">{id}/4</span>
                         <span className="ml-2 text-[12px]">No Limit Hold'em</span>
                     </div>
 

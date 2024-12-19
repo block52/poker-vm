@@ -10,6 +10,7 @@ import { mainnet } from "@reown/appkit/networks";
 import { includeWalletIds } from "./walletIds/includeWalletIds";
 import { featuredWalletIds } from "./walletIds/featuredWalletIds";
 import { ToastContainer } from "react-toastify";
+import Dashboard from "./components/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -38,8 +39,9 @@ function App() {
                 <Router>
                     <div className="bg-[#2c3245] min-h-screen">
                         <Routes>
-                            <Route path="/" element={<PlayPage />} />
+                            <Route path="/table/:id" element={<PlayPage />} />
                             <Route path="/deposit" element={<Deposit />} />
+                            <Route path="/" element={<Dashboard />} />
                         </Routes>
                     </div>
                 </Router>
