@@ -52,7 +52,7 @@ function PlayPage() {
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
 
-    const navigator = useNavigate();
+    const navigate = useNavigate();
 
     const { account, balance, isLoading } = useUserWallet();
 
@@ -153,6 +153,10 @@ function PlayPage() {
         setOpenSidebar(!openSidebar);
     };
 
+    const onGoToDashboard = () => {
+        navigate('/')
+    };
+
     return (
         <div className="h-screen">
             {/*//! HEADER */}
@@ -188,7 +192,7 @@ function PlayPage() {
                         </div>
 
                         <div className="flex items-center justify-center w-10 h-10  cursor-pointer">
-                            <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigator('/deposit')} />
+                            <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigate('/deposit')} />
                         </div>
                         {/* <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
                             <CiCalendar color="#f0f0f0" size={25} />
@@ -202,7 +206,7 @@ function PlayPage() {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
                     {/* Left Section */}
                     <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">{id}/4</span>
+                        <span className="px-2 rounded text-[12px]">2/4</span>
                         <span className="ml-2 text-[12px]">No Limit Hold'em</span>
                     </div>
 
@@ -211,7 +215,7 @@ function PlayPage() {
                         <span className="text-sm cursor-pointer" onClick={onCloseSideBar}>
                             {openSidebar ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
                         </span>
-                        <button className="ml-2 px-3 rounded">X</button>
+                        <button className="ml-2 px-3 rounded" onClick={onGoToDashboard}>X</button>
                     </div>
                 </div>
             </div>

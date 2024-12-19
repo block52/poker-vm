@@ -57,16 +57,6 @@ const Deposit: React.FC = () => {
     return allowance >= amountInBigInt;
   }, [amount, allowance, decimals, isApproveConfirmed, isDepositConfirmed]);
 
-  console.log(`isDepositPending:  `, isDepositPending)
-  console.log(`isDepositConfirmed:  `, isDepositConfirmed)
-  console.log(`isPending:  `, isPending)
-  console.log(`isConnected:  `, isConnected)
-  console.log(`allowance:  `, allowance)
-  console.log(`isApproveLoading:  `, isLoading)
-  console.log(`isApprovePending:  `, isApprovePending)
-  console.log(`isApproveConfirmed: `, isApproveConfirmed)
-  console.log(`allowed:  `, allowed)
-
   const handleApprove = async () => {
     if (!address || !decimals) {
       console.error("Missing required information");
@@ -105,16 +95,16 @@ const Deposit: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 relative">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative">
       <button
         type="button"
-        className="absolute top-8 left-8 flex items-center gap-2 py-1 px-2 text-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white rounded-lg"
+        className="absolute top-8 left-8 flex items-center gap-2 py-1 px-2 text-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-black rounded-lg"
         onClick={handleGoBack}
       >
         <i className="bi bi-arrow-left"></i>
         Go Back
       </button>
-      <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
+      <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg">
         <h2 className="text-2xl font-semibold text-center mb-4">Deposit USDC</h2>
         <button
           className={`w-full p-3 ${isConnected ? "bg-red-500" : "bg-blue-500"} text-white rounded-lg mb-4`}
@@ -123,14 +113,14 @@ const Deposit: React.FC = () => {
           {isConnected ? "Disconnect" : "Connect"}
         </button>
         {address &&
-          <h4 className="border-b text-blue-500 mb-2 break-words">Address: {address}</h4>
+          <h4 className="border-b border-gray-600 text-blue-400 mb-2 break-words">Address: {address}</h4>
         }
         {balance &&
-          <h4 className="border-b text-blue-500 mb-4">Balance: {Number(balance) / (10 ** decimals)}USDC (BASE USD Coin )</h4>
+          <h4 className="border-b border-gray-600 text-blue-400 mb-4">Balance: {Number(balance) / (10 ** decimals)}USDC (BASE USD Coin )</h4>
         }
 
         <div className="mb-4 relative">
-          <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="amount" className="block text-sm font-medium text-gray-300">
             Amount to Deposit (USDC)
           </label>
           <input
@@ -138,12 +128,12 @@ const Deposit: React.FC = () => {
             type="number"
             value={amount}
             onChange={(e) => setAmount(+e.target.value)}
-            className="mt-2 w-full p-3 border border-gray-300 rounded-lg"
+            className="mt-2 w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg"
             placeholder="Enter amount"
           />
           <span
             onClick={() => setAmount(Number(balance) / (10 ** decimals))}
-            className="cursor-pointer bg-white py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"
+            className="cursor-pointer bg-gray-700 py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"
           >
             max
           </span>
@@ -152,7 +142,7 @@ const Deposit: React.FC = () => {
           {allowed ? (
             <button
               onClick={handleDeposit}
-              className="flex justify-center gap-4 w-full p-3 bg-purple-500 text-white rounded-lg ml-2"
+              className="flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ml-2"
               disabled={amount === 0 || isDepositPending || isPending}
             >
               {(isDepositPending || isPending) ? "Depositing..." : "Deposit"}
@@ -161,7 +151,7 @@ const Deposit: React.FC = () => {
           ) : (
             <button
               onClick={handleApprove}
-              className={`flex justify-center gap-4 w-full p-3 bg-purple-500 text-white rounded-lg ${amount === 0 && "opacity-50"}`}
+              className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${amount === 0 && "opacity-50"}`}
               disabled={amount === 0 || isApprovePending || isLoading}
             >
               {(isLoading || isApprovePending) ? "Approving..." : "Approve"}
