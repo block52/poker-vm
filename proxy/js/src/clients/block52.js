@@ -15,8 +15,8 @@ class Block52 {
         return Math.floor(Date.now());
     }
 
-    async getNonce(account) {
-        const account = await this.client.getAccount(account);
+    async getNonce(id) {
+        const account = await this.client.getAccount(id);
         return account.nonce;
     }
 

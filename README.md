@@ -19,12 +19,23 @@ Reponse
 
 GET `/account/<address>`
 
+```json
+
+```
+
 ### Get Account Nonce
 
 GET `/account/<address>`
 
 ## Game API
 
+### Get Table
+
+GET `/table/<id>`
+
+```json
+
+```
 
 # SDK
 
