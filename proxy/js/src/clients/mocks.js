@@ -96,9 +96,9 @@ class Mocks {
 
         for (let i = 0; i < response.playerCount; i++) {
             // get random stack between 50 and 200
-            const _stake = Math.floor(Math.random() * (200 - 50 + 1)) + 50;
+            const _stack = Math.floor(Math.random() * (200 - 50 + 1)) + 50;
 
-            const stack = ethers.parseEther(_stake.toString());
+            const stack = ethers.parseEther(_stack.toString());
             const child = this.wallet.deriveChild(`${i}`);
 
             response.players.push({
