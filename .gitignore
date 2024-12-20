@@ -408,8 +408,9 @@ pvm/ts/.env
 proxy/python/venv/*
 proxy/python/.env
 proxy/js/.env
-bot/.env
-bot/venv/*
+bot/ts/.env
+bot/python/.env
+bot/python/venv/*
 
 ui/.env
 ui/node_modules/*
