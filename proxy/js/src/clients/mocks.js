@@ -1,6 +1,7 @@
 const ethers = require("ethers");
 const crypto = require("crypto");
 const { ActionDTO, PlayerAction, PlayerStatus, TexasHoldemRound } = "@bitcoinbrisbane/block52";
+const { BigUnit } = require("bigunit");
 
 class Mocks {
     constructor(seed) {
@@ -40,7 +41,7 @@ class Mocks {
             address: child.address,
             privateKey: child.privateKey,
             path: `m/44'/60'/0'/0/${j}`,
-            balance: ethers.parseEther("100.0")
+            balance: BigUnit.from("100", 18)
         };
     }
 
@@ -65,6 +66,48 @@ class Mocks {
         };
 
         return player;
+    }
+
+    async getTables() {
+        const sb = BigUnit.from("0.50", 18);
+        const bb = BigUnit.from("1.00", 18);
+        const pot1 = BigUnit.from("50", 18);
+        const pot2 = BigUnit.from("100", 18);
+
+        const response = {
+            type: "cash",
+            address: ethers.ZeroAddress,
+            smallBlind: sb,
+            bigBlind: bb,
+            dealer: 1,
+            players: [],
+            communityCards: [],
+            pots: [pot1, pot2],
+            nextToAct: 1,
+            round: "PREFLOP", // TexasHoldemRound.PREFLOP,
+            winners: [],
+            signature: ethers.ZeroHash
+        };
+
+        for (let i = 0; i < response.playerCount; i++) {
+            // get random stack between 50 and 200
+            const _stack = Math.floor(Math.random() * (200 - 50 + 1)) + 50;
+
+            const stack = ethers.parseEther(_stack.toString());
+            const child = this.wallet.deriveChild(`${i}`);
+
+            response.players.push({
+                address: child.address,
+                seat: i + 1,
+                stack: stack.toString(),
+                bet: BigUnit.from("1", 18),
+                hand: [],
+                status: "active",
+                action: "check"
+            });
+        }
+
+        return [response];
     }
 
     async getTable(id) {

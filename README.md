@@ -10,31 +10,86 @@ The proxy API is a simple REST API that allows the poker game to interact with t
 
 GET `/account/<address>`
 
-Reponse
 ```json
-
+{
+    "index": "0x0000000000000000000000000000000000000000",
+    "address": "0xa79E6e9eF859956b948d1d310c979f22d6534b29",
+    "privateKey": "0xf6890e9f1cdbf542d68978d5bc69b667a8ce5580c21a11fb24de7a5acb463211",
+    "path": "m/44'/60'/0'/0/0",
+    "balance": "100.0"
+}
 ```
 
 ### Get Account Balance
 
-GET `/account/<address>`
+GET `/account/<address>/balance`
+
+```json
+{
+    "balance": "100.0"
+}
+```
+
+### Get Account Nonce
+
+GET `/account/<address>/nonce`
 
 ```json
 
 ```
 
-### Get Account Nonce
-
-GET `/account/<address>`
-
 ## Game API
+
+The game API is a simple REST API that allows the poker game to interact with the blockchain.
+
+### Get Tables
+
+GET `/tables`
+
+```json
+[
+    {
+        "type": "cash",
+        "address": "0x0000000000000000000000000000000000000000",
+        "smallBlind": "500000000000000000",
+        "bigBlind": "1000000000000000000",
+        "dealer": 1,
+        "players": [],
+        "communityCards": [],
+        "pots": [
+            "50000000000000000000",
+            "10000000000000000000"
+        ],
+        "nextToAct": 1,
+        "round": "PREFLOP",
+        "winners": [],
+        "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    }
+]
+```
 
 ### Get Table
 
-GET `/table/<id>`
+GET `/table/<address>`
 
 ```json
-
+{
+    "type": "cash",
+    "address": "0x0000000000000000000000000000000000000000",
+    "smallBlind": "500000000000000000",
+    "bigBlind": "1000000000000000000",
+    "dealer": 1,
+    "players": [],
+    "communityCards": [],
+    "pots": [
+        "50000000000000000000",
+        "10000000000000000000"
+    ],
+    "nextToAct": 1,
+    "round": "PREFLOP",
+    "winners": [],
+    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+}
 ```
 
 # SDK

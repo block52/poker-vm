@@ -11,6 +11,7 @@
     "@bitcoinbrisbane/block52": "^1.0.31",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
+    "bigunit": "^1.2.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",

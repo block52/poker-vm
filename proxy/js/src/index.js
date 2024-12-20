@@ -75,14 +75,14 @@ app.get("/account/:id", async (req, res) => {
     const client = getClient();
     const account = await client.getAccount(req.params.id);
 
-    const balance = ethers.formatUnits(account.balance.toString());
+    // const balance = ethers.formatUnits(account.balance.toString());
 
     const response = {
         index: req.params.id,
         address: account.address,
         privateKey: account.privateKey,
         path: account.path,
-        balance: balance.toString()
+        balance: account.balance.toString()
     };
 
     res.send(response);
@@ -128,19 +128,24 @@ app.get("/games", (req, res) => {
     res.send(response);
 });
 
-app.get("/tables", (req, res) => {
-    const id1 = ethers.ZeroAddress;
-    const id2 = ethers.ZeroAddress;
+app.get("/tables", async (req, res) => {
+    // const id1 = ethers.ZeroAddress;
+    // const id2 = ethers.ZeroAddress;
 
-    const min = ethers.utils.parseEther("50");
-    const max = ethers.utils.parseEther("200");
+    // const min = ethers.parseEther("50");
+    // const max = ethers.parseEther("200");
 
-    const response = [
-        { id: id1, type: "No Limit Texas Holdem", max_players: 9, min: min.toString(), max: max.toString(), bb: 1, sb: "0.50" },
-        { id: id2, type: "No Limit Texas Holdem", max_players: 6, min: min.toString(), max: max.toString(), bb: 2, sb: "1.00" }
-    ];
+    // const response = [
+    //     { id: id1, type: "No Limit Texas Holdem", max_players: 9, min: min.toString(), max: max.toString(), bb: 1, sb: "0.50" },
+    //     { id: id2, type: "No Limit Texas Holdem", max_players: 6, min: min.toString(), max: max.toString(), bb: 2, sb: "1.00" }
+    // ];
 
-    res.send(response);
+    // res.send(response);
+
+    const client = getClient();
+    const table = await client.getTables();
+
+    res.send(table);
 });
 
 app.get("/table/:id", async (req, res) => {
