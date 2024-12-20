@@ -4,6 +4,7 @@ import requests
 import json
 import random
 import time
+import PokerTable
 from typing import Dict, Any
 from web3 import Web3
 from dotenv import load_dotenv
@@ -40,12 +41,17 @@ class PokerBot:
         self.table_id = table_id
 
 
-    def get_table_state(self) -> Dict[str, Any]:
+    def get_table_state(self) -> PokerTable:
         """Get current table state from the API"""
         try:
             response = requests.get(f"{self.api_url}/table/{self.table_id}")
             response.raise_for_status()
-            return response.json()
+            # return response.json()
+
+            table = PokerTable(response.json())
+            return table
+            
+
         except requests.exceptions.RequestException as e:
             print(f"Error fetching table state: {e}")
             return None
