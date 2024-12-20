@@ -1,0 +1,12 @@
+{
+  "name": "ts-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "cli": "npx ts-node index.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

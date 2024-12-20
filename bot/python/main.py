@@ -126,7 +126,7 @@ class PokerBot:
 
 # Example usage
 if __name__ == "__main__":
-    API_URL = "http://localhost:3001"
+    API_URL = "https://proxy.block52.xyz"
     BOT_WALLET_ID = "0xa79E6e9eF859956b948d1d310c979f22d6534b29"  # Example wallet ID
     TABLE_ID = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
 
