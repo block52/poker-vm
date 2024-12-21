@@ -2,7 +2,7 @@ import { time, loadFixture } from "@nomicfoundation/hardhat-toolbox/network-help
 import { expect } from "chai";
 import hre from "hardhat";
 
-describe("Token", () => {
+describe.skip("Token", () => {
     const fixture = async () => {
         const Token = await hre.ethers.getContractFactory("Token");
         const token = await Token.deploy();

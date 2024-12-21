@@ -21,12 +21,11 @@ contract Vault is IValidator, IERC1363Receiver {
 
     constructor(address underlying_, uint256 lockTime_, uint256 minValidatorStake_) {
         _underlying = underlying_;
-        _lockTime = lockTime_;
-        uint256 decimals = IERC20Metadata(_underlying).decimals();
-        _minValidatorStake = minValidatorStake_ * 10 ** decimals;
+        _lockTime = lockTime_ * 1 days;
+        _minValidatorStake = minValidatorStake_;
     }
 
-    function balances(address account) external view returns (uint256) {
+    function balanceOf(address account) external view returns (uint256) {
         return _balances[account];
     }
 
@@ -94,8 +93,19 @@ contract Vault is IValidator, IERC1363Receiver {
         emit Withdrawn(msg.sender, amount);
     }
 
-    /// @notice Wewe token approveAndCall
-    function receiveApproval(address from, uint256 amount, address token, bytes calldata extraData) external {}
+    function receiveApproval(address from, uint256 amount, address token, bytes calldata extraData) external {
+        require(token == _underlying, "Vault: invalid token");
+
+        IERC20(token).transferFrom(from, address(this), amount);
+
+        _lockTimes[from] = block.timestamp + _lockTime;
+        if (_isValidator(from) == false && _balances[from] + amount >= _minValidatorStake) {
+            _validatorCount++;
+        }
+        _balances[from] += amount;
+
+        emit Staked(from, amount);
+    }
 
     function slash(address account, bytes32 proof) external {
         // address signer = ECDSA.recover(account, proof);

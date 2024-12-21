@@ -409,6 +409,7 @@ proxy/python/venv/*
 proxy/python/.env
 proxy/js/.env
 bot/ts/.env
+bot/venv/*
 bot/python/.env
 bot/python/venv/*
 

@@ -117,10 +117,10 @@ class Mocks {
 
         const _id = crypto.createHash("sha256").update(id).digest("hex");
 
-        const sb = ethers.parseEther("0.50").toString();
-        const bb = ethers.parseEther("1.0").toString();
-        const pot1 = ethers.parseEther("50.0").toString();
-        const pot2 = ethers.parseEther("10.0").toString();
+        const sb = BigUnit.from("0.50", 18);
+        const bb = BigUnit.from("1", 18);
+        const pot1 = BigUnit.from("10", 18);
+        const pot2 = BigUnit.from("5", 18);
 
         const response = {
             type: "cash",
@@ -148,7 +148,7 @@ class Mocks {
                 address: child.address,
                 seat: i + 1,
                 stack: stack.toString(),
-                bet: ethers.parseEther("1.0").toString(),
+                bet:BigUnit.from("1", 18),
                 hand: [],
                 status: "active",
                 action: "check"
