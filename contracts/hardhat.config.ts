@@ -10,7 +10,10 @@ const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
-            chainId: 1337
+            chainId: 1337,
+            forking: {
+                url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`
+            }
         },
         base: {
 			accounts: PK ? [PK] : [],
@@ -19,7 +22,7 @@ const config: HardhatUserConfig = {
 		},
         mainnet: {
             chainId: 1,
-            url: "https://mainnet.infura.io/v3/your-infura-key",
+            url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
             accounts: PK ? [PK] : []
         },
     },

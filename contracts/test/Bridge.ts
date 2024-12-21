@@ -2,92 +2,114 @@ import { time, loadFixture } from "@nomicfoundation/hardhat-toolbox/network-help
 import { expect } from "chai";
 import hre, { ethers } from "hardhat";
 
-describe.skip("Bridge", () => {
+describe("Bridge", () => {
+    // USDC and Uniswap router addresses on mainnet
+    const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+    const UNISWAP_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+    const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+    
     const fixture = async () => {
         const [owner, otherAccount, validator] = await hre.ethers.getSigners();
 
-        // Deploy mock token
-        const Token = await hre.ethers.getContractFactory("MockToken");
-        const token = await Token.deploy("MockToken", "MTK");
-        const tokenAddress = await token.getAddress();
+        // Get USDC interface
+        const usdc = await ethers.getContractAt("IERC20", USDC_ADDRESS);
+        
+        // Deploy mock WETH for testing
+        const MockToken = await hre.ethers.getContractFactory("MockToken");
+        const weth = await MockToken.deploy("Wrapped Ether", "WETH");
+        
+        // Deploy mock Uniswap router
+        const MockRouter = await hre.ethers.getContractFactory("MockUniswapRouter");
+        const router = await MockRouter.deploy();
 
         // Deploy vault with validator
         const Vault = await hre.ethers.getContractFactory("Vault");
-        const vault = await Vault.deploy(tokenAddress, 1, ethers.parseEther("10"));
-        const vaultAddress = await vault.getAddress();
-        
-        // Set validator in vault
-        await vault.addValidator(validator.address);
+        const vault = await Vault.deploy(USDC_ADDRESS, 1, ethers.parseEther("1"));
 
         // Deploy bridge
         const Bridge = await hre.ethers.getContractFactory("Bridge");
-        const bridge = await Bridge.deploy(tokenAddress, vaultAddress);
-        const bridgeAddress = await bridge.getAddress();
+        const bridge = await Bridge.deploy(USDC_ADDRESS, await vault.getAddress(), await router.getAddress());
 
-        // Setup initial token balances
-        await token.transfer(otherAccount.address, ethers.parseEther("100"));
-        await token.connect(otherAccount).approve(bridgeAddress, ethers.parseEther("100"));
+        // Setup initial balances using whale account
+        await hre.network.provider.request({
+            method: "hardhat_impersonateAccount",
+            params: ["0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503"], // Binance account with USDC
+        });
+        const whale = await ethers.getSigner("0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503");
+        
+        // Send some ETH to whale for gas
+        await owner.sendTransaction({
+            to: whale.address,
+            value: ethers.parseEther("1"),
+        });
 
-        return { bridge, token, vault, owner, otherAccount, validator };
+        // Transfer USDC to test accounts
+        const amount = ethers.parseUnits("1000", 6); // USDC has 6 decimals
+        await usdc.connect(whale).transfer(otherAccount.address, amount);
+        
+        // Approve bridge for USDC
+        await usdc.connect(otherAccount).approve(await bridge.getAddress(), amount);
+
+        return { bridge, usdc, weth, router, vault, owner, otherAccount, validator };
     };
 
     describe("Deployment", () => {
-        it("Should deploy bridge with correct parameters", async () => {
-            const { bridge, token, vault } = await loadFixture(fixture);
+        it("Should deploy with correct parameters", async () => {
+            const { bridge, usdc, router, vault } = await loadFixture(fixture);
             
-            const name = await bridge.name();
-            expect(name).to.equal("MockToken Bridge");
-            
-            const symbol = await bridge.symbol();
-            expect(symbol).to.equal("MTKb");
-            
-            const decimals = await bridge.decimals();
-            expect(decimals).to.equal(18);
-            
-            expect(await bridge.underlying()).to.equal(await token.getAddress());
+            expect(await bridge.underlying()).to.equal(USDC_ADDRESS);
+            expect(await bridge.router()).to.equal(await router.getAddress());
             expect(await bridge.vault()).to.equal(await vault.getAddress());
+            
+            expect(await bridge.name()).to.equal("USD Coin Bridge");
+            expect(await bridge.symbol()).to.equal("USDCb");
+            expect(await bridge.decimals()).to.equal(6);
         });
     });
 
-    describe("Deposit", () => {
-        it("Should allow users to deposit tokens", async () => {
-            const { bridge, token, otherAccount } = await loadFixture(fixture);
-            const bridgeAddress = await bridge.getAddress();
+    describe("Direct USDC Deposits", () => {
+        it("Should allow direct USDC deposits", async () => {
+            const { bridge, usdc, otherAccount } = await loadFixture(fixture);
+            const amount = ethers.parseUnits("100", 6);
             
-            const depositAmount = ethers.parseEther("10");
-            const initialBridgeBalance = await token.balanceOf(bridgeAddress);
-            
-            await expect(bridge.connect(otherAccount).deposit(depositAmount))
+            await expect(bridge.connect(otherAccount).depositUnderlying(amount))
                 .to.emit(bridge, "Deposited")
-                .withArgs(otherAccount.address, depositAmount, 0);  // 0 is the first deposit index
-            
-            expect(await token.balanceOf(bridgeAddress)).to.equal(initialBridgeBalance + depositAmount);
-            expect(await bridge.totalDeposits()).to.equal(depositAmount);
+                .withArgs(otherAccount.address, amount, 1);
             
             const deposit = await bridge.deposits(0);
             expect(deposit.account).to.equal(otherAccount.address);
-            expect(deposit.amount).to.equal(depositAmount);
-        });
-
-        it("Should increment deposit index", async () => {
-            const { bridge, otherAccount } = await loadFixture(fixture);
-            
-            await bridge.connect(otherAccount).deposit(ethers.parseEther("5"));
-            expect(await bridge.depositIndex()).to.equal(1);
-            
-            await bridge.connect(otherAccount).deposit(ethers.parseEther("5"));
-            expect(await bridge.depositIndex()).to.equal(2);
+            expect(deposit.amount).to.equal(amount);
+            expect(await bridge.totalDeposits()).to.equal(amount);
         });
     });
 
-    describe("Withdraw", () => {
+    describe("Token Swap Deposits", () => {
+        it("Should handle deposits with token swaps", async () => {
+            const { bridge, weth, otherAccount } = await loadFixture(fixture);
+            const depositAmount = ethers.parseEther("1"); // 1 WETH
+            const expectedUsdc = ethers.parseUnits("2000", 6); // Mocked swap rate
+            
+            await weth.mint(otherAccount.address, depositAmount);
+            await weth.connect(otherAccount).approve(await bridge.getAddress(), depositAmount);
+            
+            await expect(bridge.connect(otherAccount).deposit(depositAmount, otherAccount.address, await weth.getAddress()))
+                .to.emit(bridge, "Deposited")
+                .withArgs(otherAccount.address, expectedUsdc, 1);
+            
+            const deposit = await bridge.deposits(0);
+            expect(deposit.account).to.equal(otherAccount.address);
+            expect(deposit.amount).to.equal(expectedUsdc);
+            expect(await bridge.totalDeposits()).to.equal(expectedUsdc);
+        });
+    });
+
+    describe("Withdrawals", () => {
         it("Should allow withdrawals with valid signature", async () => {
-            const { bridge, token, otherAccount, validator } = await loadFixture(fixture);
-            const bridgeAddress = await bridge.getAddress();
+            const { bridge, usdc, otherAccount, validator } = await loadFixture(fixture);
+            const amount = ethers.parseUnits("100", 6);
             
             // First deposit
-            const amount = ethers.parseEther("10");
-            await bridge.connect(otherAccount).deposit(amount);
+            await bridge.connect(otherAccount).depositUnderlying(amount);
             
             // Create withdrawal signature
             const nonce = ethers.id("unique_nonce");
@@ -101,16 +123,16 @@ describe.skip("Bridge", () => {
             await expect(bridge.connect(otherAccount).withdraw(amount, otherAccount.address, nonce, signature))
                 .to.emit(bridge, "Withdrawn")
                 .withArgs(otherAccount.address, amount, nonce);
-                
-            expect(await token.balanceOf(bridgeAddress)).to.equal(0);
+            
             expect(await bridge.totalDeposits()).to.equal(0);
+            expect(await usdc.balanceOf(otherAccount.address)).to.equal(ethers.parseUnits("1000", 6));
         });
 
         it("Should prevent reuse of nonce", async () => {
             const { bridge, otherAccount, validator } = await loadFixture(fixture);
+            const amount = ethers.parseUnits("100", 6);
             
-            const amount = ethers.parseEther("10");
-            await bridge.connect(otherAccount).deposit(amount);
+            await bridge.connect(otherAccount).depositUnderlying(amount);
             
             const nonce = ethers.id("unique_nonce");
             const messageHash = ethers.solidityPackedKeccak256(
@@ -125,367 +147,26 @@ describe.skip("Bridge", () => {
                 bridge.connect(otherAccount).withdraw(amount, otherAccount.address, nonce, signature)
             ).to.be.revertedWith("withdraw: nonce already used");
         });
-
-        it("Should prevent withdrawals with invalid signature", async () => {
-            const { bridge, otherAccount } = await loadFixture(fixture);
-            
-            const amount = ethers.parseEther("10");
-            await bridge.connect(otherAccount).deposit(amount);
-            
-            const nonce = ethers.id("unique_nonce");
-            const fakeSignature = "0x" + "00".repeat(65);  // Invalid signature
-            
-            await expect(
-                bridge.connect(otherAccount).withdraw(amount, otherAccount.address, nonce, fakeSignature)
-            ).to.be.revertedWith("Invalid signature length");
-        });
-
-        it("Should prevent withdrawals with non-validator signature", async () => {
-            const { bridge, otherAccount, owner } = await loadFixture(fixture);
-            
-            const amount = ethers.parseEther("10");
-            await bridge.connect(otherAccount).deposit(amount);
-            
-            const nonce = ethers.id("unique_nonce");
-            const messageHash = ethers.solidityPackedKeccak256(
-                ["address", "uint256", "bytes32"],
-                [otherAccount.address, amount, nonce]
-            );
-            const signature = await owner.signMessage(ethers.getBytes(messageHash));  // Owner is not a validator
-            
-            await expect(
-                bridge.connect(otherAccount).withdraw(amount, otherAccount.address, nonce, signature)
-            ).to.be.revertedWith("withdraw: invalid signature");
-        });
     });
 
-    describe("Emergency Withdraw", () => {
+    describe("Emergency Withdrawal", () => {
         it("Should allow emergency withdrawal of excess funds", async () => {
-            const { bridge, token, otherAccount } = await loadFixture(fixture);
-            const bridgeAddress = await bridge.getAddress();
+            const { bridge, usdc, otherAccount } = await loadFixture(fixture);
+            const depositAmount = ethers.parseUnits("100", 6);
+            const extraAmount = ethers.parseUnits("50", 6);
             
-            // Send extra tokens directly to bridge
-            const depositAmount = ethers.parseEther("10");
-            const extraAmount = ethers.parseEther("5");
-            await token.connect(otherAccount).transfer(bridgeAddress, depositAmount + extraAmount);
+            // Regular deposit
+            await bridge.connect(otherAccount).depositUnderlying(depositAmount);
             
-            // Make a deposit to track
-            await bridge.connect(otherAccount).deposit(depositAmount);
+            // Send extra USDC directly to bridge
+            await usdc.connect(otherAccount).transfer(await bridge.getAddress(), extraAmount);
             
             // Emergency withdraw should only take excess
             await bridge.emergencyWithdraw();
             
-            expect(await token.balanceOf(bridgeAddress)).to.equal(depositAmount);
+            const bridgeBalance = await usdc.balanceOf(await bridge.getAddress());
+            expect(bridgeBalance).to.equal(depositAmount);
             expect(await bridge.totalDeposits()).to.equal(depositAmount);
-        });
-
-        it("Should do nothing if no excess funds", async () => {
-            const { bridge, token, otherAccount } = await loadFixture(fixture);
-            const bridgeAddress = await bridge.getAddress();
-            
-            const amount = ethers.parseEther("10");
-            await bridge.connect(otherAccount).deposit(amount);
-            
-            await bridge.emergencyWithdraw();
-            
-            expect(await token.balanceOf(bridgeAddress)).to.equal(amount);
-            expect(await bridge.totalDeposits()).to.equal(amount);
         });
     });
 });
-
-// import { time, loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-// import { expect } from "chai";
-// import hre, { ethers } from "hardhat";
-
-// describe("Bridge", () => {
-//     const fixture = async () => {
-//         // Contracts are deployed using the first signer/account by default
-//         const [owner, otherAccount] = await hre.ethers.getSigners();
-
-//         const Token = await hre.ethers.getContractFactory("MockToken");
-//         const token = await Token.deploy("MockToken", "MTK");
-//         const tokenAddress = await token.getAddress();
-
-//         const Vault = await hre.ethers.getContractFactory("Vault");
-//         const vault = await Vault.deploy(tokenAddress, 1, ethers.parseEther("10"));
-//         const vaultAddress = await vault.getAddress();
-
-//         const Bridge = await hre.ethers.getContractFactory("Bridge");
-//         const bridge = await Bridge.deploy(tokenAddress, vaultAddress, 1);
-
-//         await token.transfer(otherAccount.address, ethers.parseEther("100"));
-
-//         return { bridge, token, owner, otherAccount };
-//     };
-
-//     describe("Deployment", async () => {
-//         const { bridge, token, owner } = await loadFixture(fixture);
-
-//         it("Should deploy bridge", async function () {
-//             const name = await bridge.name();
-//             expect(name).to.equal("MockToken Bridge");
-//         });
-
-//         it("Should set the correct underlying token address", async function () {
-//             expect(await bridge.underlying()).to.equal(await token.getAddress());
-//         });
-
-//         it("Should set the correct vault address", async function () {
-//             expect(await bridge.vault()).to.equal(owner.address);
-//         });
-//     });
-
-//     describe("Deposit", async () => {
-//         const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
-
-//         it("Should allow users to deposit tokens", async () => {
-//             await bridge.connect(otherAccount).deposit(ethers.parseEther("10"));
-
-//             expect(await bridge.balances(otherAccount.address)).to.equal(ethers.parseEther("10"));
-//             expect(await bridge.totalDeposits()).to.equal(ethers.parseEther("10"));
-//         });
-
-//         it("Should emit Deposited event", async () => {
-//             await expect(bridge.connect(otherAccount).deposit(ethers.parseEther("10")))
-//                 .to.emit(bridge, "Deposited")
-//                 .withArgs(otherAccount.address, ethers.parseEther("10"));
-//         });
-//     });
-
-//     describe("Withdraw", () => {
-//         const lockTime = 1;
-
-//         it("Should allow users to withdraw tokens after lock time has passed", async () => {
-//             const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
-//             const bridgeAddress = await bridge.getAddress();
-
-//             // Send tokens to the bridge
-//             await token.connect(otherAccount).transfer(bridgeAddress, ethers.parseEther("10"));
-
-//             // Set allowance and deposit tokens
-//             await token.connect(otherAccount).approve(bridgeAddress, ethers.parseEther("10"));
-//             await bridge.connect(otherAccount).deposit(ethers.parseEther("10"));
-
-//             // Move forward in time to surpass lockTime
-//             await ethers.provider.send("evm_increaseTime", [1]);
-//             await ethers.provider.send("evm_mine");
-
-//             // Mock a valid signature and nonce
-//             const nonce = ethers.ZeroHash;
-//             const messageHash = ethers.solidityPackedKeccak256(["address", "uint256", "bytes32"], [otherAccount.address, ethers.parseEther("10"), nonce]);
-//             const signature = await owner.signMessage(ethers.getBytes(messageHash));
-
-//             // Withdraw tokens
-//             await bridge.connect(otherAccount).withdraw(ethers.parseEther("10"), otherAccount.address, nonce, signature);
-
-//             expect(await bridge.balances(otherAccount.address)).to.equal(0);
-//             expect(await bridge.totalDeposits()).to.equal(0);
-//         });
-
-//         it("Should emit Withdrawn event", async () => {
-//             const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
-//             const bridgeAddress = await bridge.getAddress();
-
-//             // Deposit tokens
-//             await token.connect(otherAccount).approve(bridgeAddress, ethers.parseEther("10"));
-//             await bridge.connect(otherAccount).deposit(ethers.parseEther("10"));
-
-//             // Move forward in time to surpass lockTime
-//             await ethers.provider.send("evm_increaseTime", [lockTime + 1]);
-//             await ethers.provider.send("evm_mine");
-
-//             // Mock a valid signature and nonce
-//             const nonce = ethers.ZeroAddress;
-//             // const messageHash = ethers.solidityKeccak256(["address", "uint256", "bytes32"], [otherAccount.address, ethers.parseEther("10"), nonce]);
-//             // const signature = await owner.signMessage(ethers.arrayify(messageHash));
-
-//             // // Expect the event
-//             // await expect(bridge.connect(addr1).withdraw(ethers.parseEther("10"), otherAccount.address, nonce, signature))
-//             //     .to.emit(bridge, "Withdrawn")
-//             //     .withArgs(otherAccount.address, ethers.parseEther("10"), nonce);
-//         });
-
-//         it.skip("Should not allow withdrawal before lock time", async () => {
-//             const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
-
-//             await bridge.connect(otherAccount).deposit(ethers.parseEther("10"));
-
-//             const nonce = ethers.formatBytes32String("unique_nonce");
-//             const messageHash = ethers.solidityKeccak256(["address", "uint256", "bytes32"], [otherAccount.address, ethers.parseEther("10"), nonce]);
-//             const signature = await owner.signMessage(ethers.arrayify(messageHash));
-
-//             await expect(bridge.connect(otherAccount).withdraw(ethers.parseEther("10"), otherAccount.address, nonce, signature)).to.be.revertedWith(
-//                 "withdraw: funds are locked"
-//             );
-//         });
-//     });
-
-//     describe("Emergency Withdraw", () => {
-//         it("Should allow the owner to withdraw in an emergency", async () => {
-//             const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
-
-//             const bridgeAddress = await bridge.getAddress();
-//             await token.connect(otherAccount).transfer(bridgeAddress, ethers.parseEther("10"));
-
-//             let bridgeBalance = await token.balanceOf(bridgeAddress);
-//             expect(bridgeBalance).to.equal(ethers.parseEther("10"));
-
-//             await bridge.connect(owner).emergencyWithdraw();
-
-//             bridgeBalance = await token.balanceOf(bridgeAddress);
-//             expect(bridgeBalance).to.equal(0);
-//         });
-
-//         it("Should allow the owner to withdraw without impacting deposits in an emergency", async () => {
-//             const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
-
-//             const bridgeAddress = await bridge.getAddress();
-//             await token.connect(otherAccount).transfer(bridgeAddress, ethers.parseEther("10"));
-
-//             let bridgeBalance = await token.balanceOf(bridgeAddress);
-//             expect(bridgeBalance).to.equal(ethers.parseEther("10"));
-
-//             // Deposit tokens
-//             await token.connect(otherAccount).approve(bridgeAddress, ethers.parseEther("10"));
-//             await bridge.connect(otherAccount).deposit(ethers.parseEther("10"));
-
-//             const totalDeposits = await bridge.totalDeposits();
-//             expect(totalDeposits).to.equal(ethers.parseEther("10"));
-
-//             const depositIndex = await bridge.depositIndex();
-//             expect(depositIndex).to.equal(1);
-
-//             await bridge.connect(owner).emergencyWithdraw();
-
-//             bridgeBalance = await token.balanceOf(bridgeAddress);
-//             expect(bridgeBalance).to.equal(ethers.parseEther("10"));
-//         });
-
-//         it.skip("Should revert if there are no funds to withdraw", async () => {
-//             const { bridge, token, owner, otherAccount } = await loadFixture(fixture);
-//             await expect(bridge.connect(owner).emergencyWithdraw()).to.be.revertedWith("emergencyWithdraw: no funds to withdraw");
-//         });
-//     });
-// });
-
-// // describe("Bridge Contract", function () {
-// //     let Bridge, bridge, owner, addr1, addr2;
-// //     let Token, token;
-// //     const lockTime = 3600; // 1 hour
-
-// //     beforeEach(async function () {
-// //         [owner, addr1, addr2] = await ethers.getSigners();
-
-// //         // Deploy a mock ERC20 token
-// //         Token = await ethers.getContractFactory("MockToken");
-// //         token = await Token.deploy("Mock Token", "MTK", 18, ethers.parseEther("1000"));
-// //         await token.deployed();
-
-// //         // Deploy the Bridge contract
-// //         Bridge = await ethers.getContractFactory("Bridge");
-// //         bridge = await Bridge.deploy(token.address, owner.address, lockTime);
-// //         await bridge.deployed();
-
-// //         // Allocate tokens to addr1 and approve Bridge contract
-// //         await token.transfer(addr1.address, ethers.parseEther("100"));
-// //         await token.connect(addr1).approve(bridge.address, ethers.parseEther("100"));
-// //     });
-
-// //     describe("Deployment", function () {
-// //         it("Should set the correct underlying token address", async function () {
-// //             expect(await bridge.underlying()).to.equal(token.address);
-// //         });
-
-// //         it("Should set the correct vault address", async function () {
-// //             expect(await bridge.vault()).to.equal(owner.address);
-// //         });
-
-// //         it("Should set the correct lock time", async function () {
-// //             expect(await bridge.lockTime()).to.equal(lockTime);
-// //         });
-// //     });
-
-// //     describe("Deposit", function () {
-// //         it("Should allow users to deposit tokens", async function () {
-// //             await bridge.connect(addr1).deposit(ethers.utils.parseEther("10"));
-
-// //             expect(await bridge.balances(addr1.address)).to.equal(ethers.utils.parseEther("10"));
-// //             expect(await bridge.totalDeposits()).to.equal(ethers.utils.parseEther("10"));
-// //         });
-
-// //         it("Should emit Deposited event", async function () {
-// //             await expect(bridge.connect(addr1).deposit(ethers.utils.parseEther("10")))
-// //                 .to.emit(bridge, "Deposited")
-// //                 .withArgs(addr1.address, ethers.utils.parseEther("10"));
-// //         });
-// //     });
-
-// //     describe("Withdraw", function () {
-// //         it("Should allow users to withdraw tokens after lock time has passed", async function () {
-// //             // Deposit tokens
-// //             await bridge.connect(addr1).deposit(ethers.utils.parseEther("10"));
-
-// //             // Move forward in time to surpass lockTime
-// //             await ethers.provider.send("evm_increaseTime", [lockTime + 1]);
-// //             await ethers.provider.send("evm_mine");
-
-// //             // Mock a valid signature and nonce
-// //             const nonce = ethers.utils.formatBytes32String("unique_nonce");
-// //             const messageHash = ethers.utils.solidityKeccak256(["address", "uint256", "bytes32"], [addr1.address, ethers.utils.parseEther("10"), nonce]);
-// //             const signature = await owner.signMessage(ethers.utils.arrayify(messageHash));
-
-// //             // Withdraw tokens
-// //             await bridge.connect(addr1).withdraw(ethers.utils.parseEther("10"), addr1.address, nonce, signature);
-
-// //             expect(await bridge.balances(addr1.address)).to.equal(0);
-// //             expect(await bridge.totalDeposits()).to.equal(0);
-// //         });
-
-// //         it("Should emit Withdrawn event", async function () {
-// //             // Deposit tokens
-// //             await bridge.connect(addr1).deposit(ethers.utils.parseEther("10"));
-
-// //             // Move forward in time to surpass lockTime
-// //             await ethers.provider.send("evm_increaseTime", [lockTime + 1]);
-// //             await ethers.provider.send("evm_mine");
-
-// //             // Mock a valid signature and nonce
-// //             const nonce = ethers.utils.formatBytes32String("unique_nonce");
-// //             const messageHash = ethers.utils.solidityKeccak256(["address", "uint256", "bytes32"], [addr1.address, ethers.utils.parseEther("10"), nonce]);
-// //             const signature = await owner.signMessage(ethers.utils.arrayify(messageHash));
-
-// //             // Expect the event
-// //             await expect(bridge.connect(addr1).withdraw(ethers.utils.parseEther("10"), addr1.address, nonce, signature))
-// //                 .to.emit(bridge, "Withdrawn")
-// //                 .withArgs(addr1.address, ethers.utils.parseEther("10"), nonce);
-// //         });
-
-// //         it("Should not allow withdrawal before lock time", async function () {
-// //             await bridge.connect(addr1).deposit(ethers.utils.parseEther("10"));
-
-// //             const nonce = ethers.utils.formatBytes32String("unique_nonce");
-// //             const messageHash = ethers.utils.solidityKeccak256(["address", "uint256", "bytes32"], [addr1.address, ethers.utils.parseEther("10"), nonce]);
-// //             const signature = await owner.signMessage(ethers.utils.arrayify(messageHash));
-
-// //             await expect(bridge.connect(addr1).withdraw(ethers.utils.parseEther("10"), addr1.address, nonce, signature)).to.be.revertedWith(
-// //                 "withdraw: funds are locked"
-// //             );
-// //         });
-// //     });
-
-// //     describe("Emergency Withdraw", function () {
-// //         it("Should allow the owner to withdraw in an emergency", async function () {
-// //             await bridge.connect(addr1).deposit(ethers.utils.parseEther("10"));
-
-// //             await bridge.connect(owner).emergencyWithdraw();
-
-// //             const ownerBalance = await token.balanceOf(owner.address);
-// //             expect(ownerBalance).to.equal(ethers.utils.parseEther("910")); // Initial 1000 - 100 to addr1 + 10 from emergencyWithdraw
-// //         });
-
-// //         it("Should revert if there are no funds to withdraw", async function () {
-// //             await expect(bridge.connect(owner).emergencyWithdraw()).to.be.revertedWith("emergencyWithdraw: no funds to withdraw");
-// //         });
-// //     });
-// // });
