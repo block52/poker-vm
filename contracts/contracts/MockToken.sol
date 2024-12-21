@@ -10,6 +10,10 @@ contract MockToken is ERC20, IERC1363 {
         _mint(msg.sender, 100_000_000 * 10 ** decimals());
     }
 
+    function mint(address account, uint256 amount) external {
+        _mint(account, amount);
+    }
+
     function approveAndCall(
         address spender,
         uint256 amount,

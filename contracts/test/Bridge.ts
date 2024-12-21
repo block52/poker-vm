@@ -85,12 +85,18 @@ describe("Bridge", () => {
 
     describe("Token Swap Deposits", () => {
         it("Should handle deposits with token swaps", async () => {
-            const { bridge, weth, otherAccount } = await loadFixture(fixture);
+            const { bridge, weth, router, otherAccount } = await loadFixture(fixture);
+            const bridgeAddress = await bridge.getAddress();
+            const routerAddress = await router.getAddress();
             const depositAmount = ethers.parseEther("1"); // 1 WETH
-            const expectedUsdc = ethers.parseUnits("2000", 6); // Mocked swap rate
+            const expectedUsdc = ethers.parseUnits("2000", 6); // Mocked swap rate: 1 ETH = 2000 USDC
             
+            // Mint WETH to the test account
             await weth.mint(otherAccount.address, depositAmount);
-            await weth.connect(otherAccount).approve(await bridge.getAddress(), depositAmount);
+            
+            // Approve WETH for both Bridge and Router
+            await weth.connect(otherAccount).approve(bridgeAddress, depositAmount);
+            await weth.connect(otherAccount).approve(routerAddress, depositAmount);
             
             await expect(bridge.connect(otherAccount).deposit(depositAmount, otherAccount.address, await weth.getAddress()))
                 .to.emit(bridge, "Deposited")
@@ -101,6 +107,30 @@ describe("Bridge", () => {
             expect(deposit.amount).to.equal(expectedUsdc);
             expect(await bridge.totalDeposits()).to.equal(expectedUsdc);
         });
+
+        // it("Should handle deposits with zero router address", async () => {
+        //     // Deploy bridge with zero router address
+        //     const Bridge = await hre.ethers.getContractFactory("Bridge");
+        //     const newBridge = await Bridge.deploy(
+        //         USDC_ADDRESS, 
+        //         await vault.getAddress(), 
+        //         ethers.ZeroAddress
+        //     );
+            
+        //     const depositAmount = ethers.parseUnits("100", 6); // 100 USDC
+            
+        //     // Approve and deposit USDC directly
+        //     await usdc.connect(otherAccount).approve(await newBridge.getAddress(), depositAmount);
+            
+        //     await expect(newBridge.connect(otherAccount).deposit(depositAmount, otherAccount.address, USDC_ADDRESS))
+        //         .to.emit(newBridge, "Deposited")
+        //         .withArgs(otherAccount.address, depositAmount, 1);
+            
+        //     const deposit = await newBridge.deposits(0);
+        //     expect(deposit.account).to.equal(otherAccount.address);
+        //     expect(deposit.amount).to.equal(depositAmount);
+        //     expect(await newBridge.totalDeposits()).to.equal(depositAmount);
+        // });
     });
 
     describe("Withdrawals", () => {

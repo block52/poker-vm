@@ -46,6 +46,7 @@ contract Bridge is Ownable {
         _self = address(this);
 
         IERC20(underlying).approve(_self, type(uint256).max);
+        IERC20(underlying).approve(router, type(uint256).max);
     }
 
     function deposit(uint256 amount, address receiver, address token) external returns(uint256) {
@@ -67,7 +68,7 @@ contract Bridge is Ownable {
         received = amount;
 
         if (router != address(0) && token != underlying) {
-            received = _swap(token, underlying, _self, amount, 0);
+            received = _swap(token, underlying, amount, 0);
         }
 
         totalDeposits += received;
@@ -106,14 +107,13 @@ contract Bridge is Ownable {
     function _swap(
         address tokenIn,
         address tokenOut,
-        address from,
         uint256 amountIn,
         uint256 amountOutMinimum
     ) internal returns (uint256 amountOut) {
         ISwapRouter swapRouter = ISwapRouter(router);
 
         // Transfer the specified amount of TOKEN to this contract.
-        IERC20(tokenIn).transferFrom(from, _self, amountIn);
+        // IERC20(tokenIn).transferFrom(from, _self, amountIn);
 
         // Approve the router to spend TOKEN.
         IERC20(tokenIn).approve(address(swapRouter), amountIn);
