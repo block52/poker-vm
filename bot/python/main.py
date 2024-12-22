@@ -26,6 +26,7 @@ class PokerBot:
         self.api_url = api_url
         self.bot_wallet_id = bot_wallet_id
         self.table_id = None
+        self.position = None
 
         self.w3 = Web3()
         seed_phrase = os.getenv('WALLET_SEED')
@@ -34,6 +35,13 @@ class PokerBot:
 
         # self.wallet = self.w3.eth.account.from_key(self.w3.eth.account.from_mnemonic(seed_phrase).key)
         # print(f"Bot wallet address: {self.wallet}")
+
+
+    def join() -> int:
+        # Do call to API to join
+
+        # Set position number
+        self.position = 1
 
 
     def set_table(self, table_id: str):
