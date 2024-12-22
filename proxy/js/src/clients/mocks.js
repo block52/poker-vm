@@ -77,12 +77,12 @@ class Mocks {
         const response = {
             type: "cash",
             address: ethers.ZeroAddress,
-            smallBlind: sb,
-            bigBlind: bb,
+            smallBlind: sb.toString(),
+            bigBlind: bb.toString(),
             dealer: 1,
             players: [],
             communityCards: [],
-            pots: [pot1, pot2],
+            pots: [pot1.toString(), pot2.toString()],
             nextToAct: 1,
             round: "PREFLOP", // TexasHoldemRound.PREFLOP,
             winners: [],
@@ -125,12 +125,12 @@ class Mocks {
         const response = {
             type: "cash",
             address: ethers.ZeroAddress,
-            smallBlind: sb,
-            bigBlind: bb,
+            smallBlind: sb.toString(),
+            bigBlind: bb.toString(),
             dealer: 1,
             players: [],
             communityCards: [],
-            pots: [pot1, pot2],
+            pots: [pot1.toString(), pot2.toString()],
             nextToAct: 1,
             round: "PREFLOP", // TexasHoldemRound.PREFLOP,
             winners: [],
@@ -154,10 +154,6 @@ class Mocks {
                 action: "check"
             });
         }
-
-        const _response = JSON.parse(JSON.stringify(response));
-        // const signature = await wallet.signMessage(_response)
-        // response.signature = signature;
 
         this.tables[id] = response;
 
