@@ -4,7 +4,7 @@ import requests
 import json
 import random
 import time
-import PokerTable
+from table import PokerTable
 from typing import Dict, Any
 from web3 import Web3
 from dotenv import load_dotenv

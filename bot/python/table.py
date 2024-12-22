@@ -4,6 +4,7 @@ from typing import List, Optional
 from enum import Enum
 from decimal import Decimal
 from web3 import Web3
+from web3.types import Wei
 
 class Round(Enum):
     PREFLOP = "PREFLOP"
@@ -26,6 +27,7 @@ class Player:
     def stack_ether(self) -> Decimal:
         """Convert stack from Wei to Ether"""
         return Decimal(Web3.from_wei(int(self.stack), 'ether'))
+
 
     @property
     def bet_ether(self) -> Decimal:
@@ -65,17 +67,29 @@ class PokerTable:
     @property
     def small_blind_ether(self) -> Decimal:
         """Convert small blind from Wei to Ether"""
-        return Decimal(Web3.from_wei(int(self.small_blind), 'ether'))
+        # Convert to Wei first then to Ether
+        wei_value = Web3.to_wei(self.small_blind, 'ether')
+        eth_value = Web3.from_wei(wei_value, 'ether')
+        return Decimal(str(eth_value))
 
     @property
     def big_blind_ether(self) -> Decimal:
         """Convert big blind from Wei to Ether"""
-        return Decimal(Web3.from_wei(int(self.big_blind), 'ether'))
+        ## return Decimal(Web3.from_wei(int(self.big_blind), 'ether'))
+        return self.to_decimal(self.big_blind)
 
     @property
     def pots_ether(self) -> List[Decimal]:
         """Convert pots from Wei to Ether"""
-        return [Decimal(Web3.from_wei(int(pot), 'ether')) for pot in self.pots]
+        # return [Decimal(Web3.from_wei(int(pot), 'ether')) for pot in self.pots]
+        return [self.to_decimal(pot) for pot in self.pots]
+
+
+    def to_decimal(self, value: str) -> Decimal:
+        wei_value = Web3.to_wei(value, 'ether')
+        eth_value = Web3.from_wei(wei_value, 'ether')
+        return Decimal(str(eth_value))
+    
 
     def get_player_by_seat(self, seat: int) -> Optional[Player]:
         """Get player by seat number"""
