@@ -8,9 +8,9 @@
         "hh:compile": "hardhat compile",
         "hh:test": "hardhat test",
         "hh:node": "npx hardhat node",
-        "hh:deploy:token": "npx hardhat ignition deploy ./ignition/modules/Token.ts --network base --verify",
-        "hh:deploy:vault": "npx hardhat ignition deploy ./ignition/modules/Vault.ts --network base --verify",
-        "hh:deploy:bridge": "npx hardhat ignition deploy ./ignition/modules/Bridge.ts --network base --verify",
+        "hh:deploy:token": "npx hardhat ignition deploy ./ignition/modules/Token.ts --network mainnet --verify",
+        "hh:deploy:vault": "npx hardhat ignition deploy ./ignition/modules/Vault.ts --network mainnet --verify",
+        "hh:deploy:bridge": "npx hardhat ignition deploy ./ignition/modules/Bridge.ts --network mainnet --verify",
         "hh:wipe:token": "npx hardhat ignition wipe chain-8453 TokenModule#Token",
         "hh:wipe:vault": "npx hardhat ignition wipe chain-8453 VaultModule#Vault",
         "hh:wipe:bridge": "npx hardhat ignition wipe chain-8453 BridgeModule#Bridge"

@@ -12,7 +12,7 @@ const config: HardhatUserConfig = {
         hardhat: {
             chainId: 1337,
             forking: {
-                url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`
+                url: `${process.env.RPC_URL}`
             }
         },
         base: {
@@ -22,7 +22,7 @@ const config: HardhatUserConfig = {
 		},
         mainnet: {
             chainId: 1,
-            url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
+            url: `${process.env.RPC_URL}`,
             accounts: PK ? [PK] : []
         },
     },
