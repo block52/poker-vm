@@ -75,7 +75,7 @@ class Mocks {
         const pot2 = BigUnit.from("100", 18);
 
         const response = {
-            type: "cash",
+            type: "No Limit Texas Holdem",
             address: ethers.ZeroAddress,
             smallBlind: sb.toString(),
             bigBlind: bb.toString(),
@@ -123,7 +123,7 @@ class Mocks {
         const pot2 = BigUnit.from("5", 18);
 
         const response = {
-            type: "cash",
+            type: "No Limit Texas Holdem",
             address: ethers.ZeroAddress,
             smallBlind: sb.toString(),
             bigBlind: bb.toString(),
