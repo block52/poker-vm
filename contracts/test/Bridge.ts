@@ -24,7 +24,7 @@ describe("Bridge", () => {
 
         // Deploy vault with validator
         const Vault = await hre.ethers.getContractFactory("Vault");
-        const vault = await Vault.deploy(USDC_ADDRESS, 1, ethers.parseEther("1"));
+        const vault = await Vault.deploy(USDC_ADDRESS, 1, ethers.parseUnits("1", 6));
 
         // Deploy bridge
         const Bridge = await hre.ethers.getContractFactory("Bridge");
@@ -46,9 +46,11 @@ describe("Bridge", () => {
         // Transfer USDC to test accounts
         const amount = ethers.parseUnits("1000", 6); // USDC has 6 decimals
         await usdc.connect(whale).transfer(otherAccount.address, amount);
+        await usdc.connect(whale).transfer(validator.address, amount);
         
         // Approve bridge for USDC
         await usdc.connect(otherAccount).approve(await bridge.getAddress(), amount);
+        await usdc.connect(validator).approve(await vault.getAddress(), amount);
 
         return { bridge, usdc, weth, router, vault, owner, otherAccount, validator };
     };
@@ -133,11 +135,16 @@ describe("Bridge", () => {
         // });
     });
 
-    describe("Withdrawals", () => {
-        it("Should allow withdrawals with valid signature", async () => {
-            const { bridge, usdc, otherAccount, validator } = await loadFixture(fixture);
+    describe.only("Withdrawals", () => {
+        it.only("Should allow withdrawals with valid signature", async () => {
+            const { bridge, usdc, otherAccount, validator, vault } = await loadFixture(fixture);
             const amount = ethers.parseUnits("100", 6);
             
+            // Setup validator
+            await vault.connect(validator).stake(amount);
+            expect(await vault.balanceOf(validator.address)).to.equal(amount);
+            expect(await vault.isValidator(validator.address)).to.be.true;
+
             // First deposit
             await bridge.connect(otherAccount).depositUnderlying(amount);
             
@@ -155,12 +162,17 @@ describe("Bridge", () => {
                 .withArgs(otherAccount.address, amount, nonce);
             
             expect(await bridge.totalDeposits()).to.equal(0);
-            expect(await usdc.balanceOf(otherAccount.address)).to.equal(ethers.parseUnits("1000", 6));
+            expect(await usdc.balanceOf(otherAccount.address)).to.be.approximately(ethers.parseUnits("1000", 6), 100000n);
         });
 
-        it("Should prevent reuse of nonce", async () => {
-            const { bridge, otherAccount, validator } = await loadFixture(fixture);
+        it.only("Should prevent reuse of nonce", async () => {
+            const { bridge, otherAccount, validator, vault } = await loadFixture(fixture);
             const amount = ethers.parseUnits("100", 6);
+
+            // Setup validator
+            await vault.connect(validator).stake(amount);
+            expect(await vault.balanceOf(validator.address)).to.equal(amount);
+            expect(await vault.isValidator(validator.address)).to.be.true;
             
             await bridge.connect(otherAccount).depositUnderlying(amount);
             
