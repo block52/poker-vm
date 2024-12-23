@@ -20,6 +20,7 @@ import { LuPanelLeftClose } from "react-icons/lu";
 import { HiPlus } from "react-icons/hi2";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
+import useTableType from "../../hooks/useTableType";
 //* Define the interface for the position object
 interface PositionArray {
     left?: string;
@@ -39,13 +40,14 @@ const calculateZoom = () => {
 
 function PlayPage() {
     const [currentIndex, setCurrentIndex] = useState<number>(1);
+    // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
-    const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
 
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
@@ -55,6 +57,7 @@ function PlayPage() {
     const navigate = useNavigate();
 
     const { account, balance, isLoading } = useUserWallet();
+    const { type } = id ? useTableType(id) : { type: undefined };
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -207,7 +210,7 @@ function PlayPage() {
                     {/* Left Section */}
                     <div className="flex items-center">
                         <span className="px-2 rounded text-[12px]">2/4</span>
-                        <span className="ml-2 text-[12px]">No Limit Hold'em</span>
+                        <span className="ml-2 text-[12px]">{type}</span>
                     </div>
 
                     {/* Right Section */}
