@@ -22,7 +22,7 @@ export class Server {
         this.isValidator = false;
         this.publicKey = ethers.ZeroAddress;
 
-        if (privateKey) {
+        if (privateKey && privateKey !== ZeroHash) {
             const wallet = new ethers.Wallet(privateKey);
             this.publicKey = wallet.address;
             this.isValidator = true;
