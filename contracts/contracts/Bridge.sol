@@ -112,9 +112,6 @@ contract Bridge is Ownable {
     ) internal returns (uint256 amountOut) {
         ISwapRouter swapRouter = ISwapRouter(router);
 
-        // Transfer the specified amount of TOKEN to this contract.
-        // IERC20(tokenIn).transferFrom(from, _self, amountIn);
-
         // Approve the router to spend TOKEN.
         IERC20(tokenIn).approve(address(swapRouter), amountIn);
 

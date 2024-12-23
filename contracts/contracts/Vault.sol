@@ -7,6 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC1363Receiver } from "./ERC1363/IERC1363Receiver.sol";
 import { IValidator } from "./IValidator.sol";
+import { IUniswapV3, ISwapRouter } from "./Uniswap/Interfaces.sol";
 
 contract Vault is IValidator, IERC1363Receiver {
     using ECDSA for bytes32;
@@ -18,6 +19,7 @@ contract Vault is IValidator, IERC1363Receiver {
     uint256 private immutable _lockTime;
     uint256 private _minValidatorStake;
     uint256 private _validatorCount;
+    address private router = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
 
     constructor(address underlying_, uint256 lockTime_, uint256 minValidatorStake_) {
         _underlying = underlying_;
@@ -50,7 +52,8 @@ contract Vault is IValidator, IERC1363Receiver {
     }
 
     function name() external view returns (string memory) {
-        return IERC20Metadata(_underlying).name();
+        string memory _name = IERC20Metadata(_underlying).symbol();
+        return string.concat(_name, " Vault");
     }
 
     function isValidator(address account) external view returns (bool) {
@@ -76,6 +79,36 @@ contract Vault is IValidator, IERC1363Receiver {
         _balances[msg.sender] += amount;
 
         emit Staked(msg.sender, amount);
+    }
+
+    function swapAndStake(uint256 amount, address token) external {
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        IERC20(token).approve(router, amount);
+
+        ISwapRouter swapRouter = ISwapRouter(router);
+        
+        // Naively set amountOutMinimum to 0. In production, use an oracle or other data source to choose a safer value for amountOutMinimum.
+        // We also set the sqrtPriceLimitx96 to be 0 to ensure we swap our exact input amount.
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: token,
+            tokenOut: _underlying,
+            fee: 1000,
+            recipient: address(this),
+            amountIn: amount,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+
+        // The call to `exactInputSingle` executes the swap.
+        uint256 amountOut = swapRouter.exactInputSingle(params);
+
+        _lockTimes[msg.sender] = block.timestamp + _lockTime;
+        if (_isValidator(msg.sender) == false && _balances[msg.sender] + amountOut >= _minValidatorStake) {
+            _validatorCount++;
+        }
+
+        _balances[msg.sender] += amountOut;
+        emit Staked(msg.sender, amountOut);
     }
 
     function withdraw(uint256 amount) external {
