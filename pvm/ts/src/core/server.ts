@@ -33,7 +33,7 @@ export class Server {
 
     public me(): Node {
         const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
-        return new Node("pvm-typescript", this.publicKey, url, "1.0.1", this.isValidator);
+        return new Node("pvm-typescript", this.publicKey, url, "1.0.2", this.isValidator);
     }
 
     get started(): boolean {

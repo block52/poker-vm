@@ -44,7 +44,7 @@ export class Validator {
         }
 
         // For now, we will just use the first validator in the list
-        const validatorIndex = 0; // nextBlockIndex % this.validatorCount;
+        const validatorIndex = nextBlockIndex % this.validatorCount;
 
         const { publicKey: validatorAddress } = this.nodes[validatorIndex];
         console.log(`Next validator index: ${validatorIndex}, ${validatorAddress}`);
