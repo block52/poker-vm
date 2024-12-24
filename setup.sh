@@ -112,6 +112,8 @@ while true; do
     fi
 done
 
+mv .env poker-vm/pvm/ts/.env
+
 echo -e "${GREEN}Setup completed successfully!${NC}"
 echo -e "Your configuration has been saved to .env file."
 echo -e "${RED}REMINDER: Keep your private key secure and never share it with anyone!${NC}"
