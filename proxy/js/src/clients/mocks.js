@@ -29,7 +29,7 @@ class Mocks {
         const isNumber = /^\d+$/.test(index);
         let j = 0;
         if (isNumber) {
-            console.log(i, "is number");
+            console.log(j, "is number");
             j = Number(index);
         }
 
@@ -41,26 +41,26 @@ class Mocks {
             address: child.address,
             privateKey: child.privateKey,
             path: `m/44'/60'/0'/0/${j}`,
-            balance: BigUnit.from("100", 18)
+            balance: BigUnit.from("100", 18).toString()
         };
     }
 
-    getPlayer(index, id) {
-        const account = this.getAccount(i);
+    getPlayer(tableId, seat) {
+        const account = this.getAccount(seat);
         const timeout = this.getUnixTime() + 30;
 
         const player = {
             address: account.address,
-            seat: i,
-            stack: ethers.parseEther("100.0").toString(),
+            seat: seat,
+            stack: BigUnit.from("100", 18).toString(),
             holeCards: [],
-            status: PlayerStatus.ACTIVE,
+            status: "active",
             lastAction: {
-                action: PlayerAction.CHECK,
-                amount: ethers.Zero.toString()
+                action: "check",
+                amount: BigUnit.from("0", 18).toString()
             },
-            actions: [PlayerAction.CHECK, PlayerAction.BET, PlayerAction.FOLD],
-            action: PlayerAction.CHECK,
+            actions: ["check", "bet", "fold"],
+            action: "check",
             timeout,
             signature: ethers.ZeroHash
         };
@@ -141,14 +141,14 @@ class Mocks {
             // get random stack between 50 and 200
             const _stack = Math.floor(Math.random() * (200 - 50 + 1)) + 50;
 
-            const stack = ethers.parseEther(_stack.toString());
+            const stack = BigUnit.from(_stack.toString());
             const child = this.wallet.deriveChild(`${i}`);
 
             response.players.push({
                 address: child.address,
                 seat: i + 1,
                 stack: stack.toString(),
-                bet:BigUnit.from("1", 18),
+                bet: BigUnit.from("1", 18).toString(),
                 hand: [],
                 status: "active",
                 action: "check"

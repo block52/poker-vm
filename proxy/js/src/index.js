@@ -1,3 +1,4 @@
+const BigUnit = require("bigunit");
 const express = require("express");
 const cors = require("cors");
 const ethers = require("ethers");
@@ -117,31 +118,18 @@ app.get("/games", (req, res) => {
     const id1 = ethers.ZeroAddress;
     const id2 = ethers.ZeroAddress;
 
-    const min = "50.00"; // ethers.utils.parseEther("50");
-    const max = "200.00"; //ethers.utils.parseEther("200");
+    const min = BigUnit.from("0.01").toString();
+    const max = BigUnit.from("1").toString();
 
     const response = [
-        { id: id1, type: "No Limit Texas Holdem", max_players: 9, min, max },
-        { id: id2, type: "No Limit Texas Holdem", max_players: 6, min, max }
+        { id: id1, type: "No Limit Texas Holdem", variant: "No Limit", max_players: 9, min, max },
+        { id: id2, type: "No Limit Texas Holdem", variant: "No Limit", max_players: 6, min, max }
     ];
 
     res.send(response);
 });
 
 app.get("/tables", async (req, res) => {
-    // const id1 = ethers.ZeroAddress;
-    // const id2 = ethers.ZeroAddress;
-
-    // const min = ethers.parseEther("50");
-    // const max = ethers.parseEther("200");
-
-    // const response = [
-    //     { id: id1, type: "No Limit Texas Holdem", max_players: 9, min: min.toString(), max: max.toString(), bb: 1, sb: "0.50" },
-    //     { id: id2, type: "No Limit Texas Holdem", max_players: 6, min: min.toString(), max: max.toString(), bb: 2, sb: "1.00" }
-    // ];
-
-    // res.send(response);
-
     const client = getClient();
     const table = await client.getTables();
 
@@ -157,13 +145,13 @@ app.get("/table/:id", async (req, res) => {
     res.send(table);
 });
 
-app.get("/table/:id/player/:player", (req, res) => {
+app.get("/table/:id/player/:seat", (req, res) => {
     const client = getClient();
     const id = req.params.id;
-    const playerId = req.params.player;
-    const player = client.getPlayer(id, player);
+    const seat = req.params.seat;
+    const player = client.getPlayer(id, seat);
 
-    res.send(response);
+    res.send(player);
 });
 
 app.post("/table/:id", (req, res) => {
