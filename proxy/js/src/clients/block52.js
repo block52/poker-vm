@@ -44,7 +44,7 @@ class Block52 {
 
     async getPlayer(index, id) {
         const response = await this.getAccount(id);
-        return response.data?.nonce;
+        return response.data;
     }
 
     async getTable(id) {

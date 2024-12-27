@@ -10,11 +10,15 @@ export class Validator {
     private validatorCount: number = 0;
     private nodes: Node[] = [];
     private synced: boolean = false;
+    private count: number;
+    private lastUpdate: Date;
 
     constructor(rpcUrl: string) {
         const vault = process.env.VAULT_CONTRACT_ADDRESS ?? ZeroAddress;
         this.blockManager = new BlockchainManagement();
         this.provider = new ethers.JsonRpcProvider(rpcUrl);
+        this.count = 0;
+        this.lastUpdate = new Date();
         this.stakingContract = new ethers.Contract(vault, ["function isValidator(address) view returns (bool)", "function validatorCount() view returns (uint256)"], this.provider);
     }
 
@@ -23,8 +27,13 @@ export class Validator {
     }
 
     public async getValidatorCount(): Promise<number> {
+        // Only update the validator count every 60 minutes otherwise return the cached value
+        if (this.lastUpdate && new Date().getTime() - this.lastUpdate.getTime() < 60 * 60 * 1000) {
+            return this.count;
+        }
         const count: bigint = await this.stakingContract.validatorCount();
-        return Number(count);
+        this.count = Number(count);
+        return this.count;
     }
 
     public async getNextValidatorAddress(sync: boolean = false): Promise<string> {

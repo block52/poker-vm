@@ -160,6 +160,21 @@ class Mocks {
         return response;
     }
 
+    postAction(id) {
+        const table = this.tables[id];
+        const player = table.players[table.nextToAct - 1];
+
+        const action = new ActionDTO();
+        action.tableId = id;
+        action.player = player.address;
+        action.seat = player.seat;
+        action.action = PlayerAction.BET;
+        action.amount = BigUnit.from("1", 18).toString();
+        action.signature = ethers.ZeroHash;
+
+        return action;
+    }
+
     static getInstance() {
         if (!Mocks.instance) {
             Mocks.instance = new Mocks();

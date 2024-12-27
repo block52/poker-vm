@@ -166,6 +166,8 @@ app.post("/table/:id", (req, res) => {
         res.status(400).send("Nonce required");
         return;
     }
+
+    const client = getClient();
 });
 
 app.post("/join", (req, res) => {
