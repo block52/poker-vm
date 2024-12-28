@@ -8,6 +8,8 @@ import { BlockDTO, NodeRpcClient, TransactionDTO } from "@bitcoinbrisbane/block5
 import { MineCommand } from "../commands/mineCommand";
 import { getValidatorInstance } from "./validator";
 import { getBootNodes } from "../state/nodeManagement";
+import { Bridge } from "./bridge";
+import { createProvider } from "./provider";
 
 export class Server {
     public readonly contractAddress: string;
@@ -16,6 +18,7 @@ export class Server {
     private _started: boolean = false;
     private _syncing: boolean = false;
     private _synced: boolean = false;
+    // private _lastDeposit: number = 0;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
 
     constructor(private readonly privateKey: string) {
@@ -29,6 +32,7 @@ export class Server {
         }
 
         this.contractAddress = ethers.ZeroAddress;
+        // this._lastDeposit = 0;
     }
 
     public me(): Node {
@@ -94,9 +98,7 @@ export class Server {
 
     public async bootstrap() {
         console.log("Syncing blocks...");
-        //while (!this.synced) {
-            await this.syncBlockchain();
-        //}
+        await this.syncBlockchain();
 
         console.log("Polling...");
         const intervalId = setInterval(async () => {
@@ -105,6 +107,8 @@ export class Server {
                 console.log("Polling stopped.");
                 return;
             }
+
+            await this.syncDeposits();
             await this.syncMempool();
             await this.mine();
 
@@ -140,6 +144,13 @@ export class Server {
                 }
             })
         );
+    }
+
+    private async syncDeposits() {
+        const provider = createProvider();
+        const bridge = new Bridge(provider);
+
+        await bridge.resync();
     }
 
     private async syncBlockchain() {

@@ -5,12 +5,14 @@ import { Transaction } from "../models/transaction";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { NativeToken } from "../models/nativeToken";
+import { createProvider } from "../core/provider";
 
 export class MintCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
     private readonly provider: JsonRpcProvider;
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
+    // private readonly depositIndex: BigInt;
 
     constructor(readonly depositIndex: string, private readonly privateKey: string) {
         if (!depositIndex) {
@@ -28,11 +30,12 @@ export class MintCommand implements ISignedCommand<Transaction> {
         const bridgeAbi = ["function deposits(uint256) view returns (tuple(address account, uint256 amount))", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
 
-        const baseRPCUrl = process.env.RPC_URL;
-        this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
-            staticNetwork: true
-        });
-
+        // const baseRPCUrl = process.env.RPC_URL;
+        // this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
+        //     staticNetwork: true
+        // });
+        
+        this.provider = createProvider();
         this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
     }
 
@@ -57,7 +60,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
 
         const amountToMint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
 
-        if (receiver == ethers.ZeroAddress) {
+        if (receiver === ethers.ZeroAddress) {
             throw new Error("Receiver must not be zero address");
         }
 
