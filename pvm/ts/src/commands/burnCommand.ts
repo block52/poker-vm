@@ -6,6 +6,7 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { RandomCommand } from "./randomCommand";
 import { createProvider } from "../core/provider";
+import { CONTRACT_ADDRESSES } from "../core/constants";
 
 export class BurnCommand implements ISignedCommand<BurnResponse> {
     private readonly randomCommand: RandomCommand;
@@ -50,9 +51,9 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         // this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
         //     staticNetwork: true
         // });
-        
+
         this.provider = createProvider(process.env.RPC_URL ?? "http://localhost:8545");
-        this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
+        this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }
 
     public async execute(): Promise<ISignedResponse<BurnResponse>> {

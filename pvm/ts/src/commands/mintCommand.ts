@@ -1,11 +1,11 @@
 import { ethers, JsonRpcProvider, Contract, InterfaceAbi, ZeroAddress } from "ethers";
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models/transaction";
-// import Blocks from "../schema/transactions";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { NativeToken } from "../models/nativeToken";
 import { createProvider } from "../core/provider";
+import { CONTRACT_ADDRESSES } from "../core/constants";
 
 export class MintCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
@@ -37,7 +37,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // });
         
         this.provider = createProvider(process.env.RPC_URL ?? "http://localhost:8545");
-        this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
+        this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -54,10 +54,14 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // }
 
         const [receiver, amount] = await this.bridge.deposits(this.index);
-        const underlyingAssetAddress = await this.bridge.underlying();
-        
-        const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
-        const underlyingAssetDecimals = await underlyingAsset.decimals();
+
+        let underlyingAssetDecimals: bigint = 6n;
+        const doLookup = false;
+        if (doLookup) {
+            const underlyingAssetAddress = await this.bridge.underlying();
+            const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
+            underlyingAssetDecimals = await underlyingAsset.decimals();
+        }
 
         const amountToMint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
 

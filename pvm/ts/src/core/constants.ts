@@ -1,0 +1,4 @@
+export const CONTRACT_ADDRESSES = {
+    bridgeAddress: "0x859329813d8e500F4f6Be0fc934E53AC16670fa0",
+    vaultAddress: "0x893c26846d7cE76445230B2b6285a663BF4C3BF5"
+}

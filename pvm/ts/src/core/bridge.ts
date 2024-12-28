@@ -29,7 +29,7 @@ export class Bridge {
     private bridgeContract: ethers.Contract;
     private readonly provider: ethers.JsonRpcProvider;
     private decimals: string = "6";
-    
+
     constructor(private readonly nodeUrl: string) {
         this.provider = createProvider(this.nodeUrl);
         // this.tokenContract = new ethers.Contract(tokenAddress, abi, provider);
@@ -38,10 +38,6 @@ export class Bridge {
 
     public async listenToBridge(): Promise<void> {
         this.bridgeContract.on("Deposited", (account, amount, index, event) => {
-            // if (to.toLowerCase() === bridgeAddress.toLowerCase()) {
-            //     this.onDeposit(from, to, value, event.transactionHash);
-            // }
-
             this.onDeposit(account, amount, index, event.transactionHash);
         });
     }
@@ -54,9 +50,9 @@ export class Bridge {
         console.log(`  Amount: ${value} tokens`);
         console.log(`  Index: ${index}`);
         console.log(`  Transaction Hash: ${transactionHash}`);
-        
+
         const privateKey = process.env.VALIDATOR_KEY;
-        
+
         if (!privateKey) {
             throw new Error("VALIDATOR_KEY is not set");
         }
@@ -73,7 +69,7 @@ export class Bridge {
         console.log(`  Transaction Hash: ${transactionHash}`);
 
         const privateKey = process.env.VALIDATOR_KEY;
-        
+
         if (!privateKey) {
             throw new Error("VALIDATOR_KEY is not set");
         }
@@ -93,7 +89,9 @@ export class Bridge {
             console.log(event);
             const depositEvent = event as EventLog;
             if (depositEvent.args) {
-                await this.onDeposit(depositEvent.args.account, depositEvent.args.amount, depositEvent.args.index, depositEvent.transactionHash);
+                //TODO: FIX BUG IN CONTRACT, OUT BY 1 ERROR
+                const index: bigint = depositEvent.args.index - 1n;
+                await this.onDeposit(depositEvent.args.account, depositEvent.args.amount, index, depositEvent.transactionHash);
             }
         }
     }
