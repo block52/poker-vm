@@ -69,9 +69,9 @@ describe("Bridge", () => {
         });
     });
 
-    describe("Direct USDC Deposits", () => {
+    describe.only("Direct USDC Deposits", () => {
         it("Should allow direct USDC deposits", async () => {
-            const { bridge, usdc, otherAccount } = await loadFixture(fixture);
+            const { bridge, otherAccount } = await loadFixture(fixture);
             const amount = ethers.parseUnits("100", 6);
             
             await expect(bridge.connect(otherAccount).depositUnderlying(amount))
@@ -135,8 +135,8 @@ describe("Bridge", () => {
         // });
     });
 
-    describe.only("Withdrawals", () => {
-        it.only("Should allow withdrawals with valid signature", async () => {
+    describe("Withdrawals", () => {
+        it("Should allow withdrawals with valid signature", async () => {
             const { bridge, usdc, otherAccount, validator, vault } = await loadFixture(fixture);
             const amount = ethers.parseUnits("100", 6);
             
@@ -165,7 +165,7 @@ describe("Bridge", () => {
             expect(await usdc.balanceOf(otherAccount.address)).to.be.approximately(ethers.parseUnits("1000", 6), 100000n);
         });
 
-        it.only("Should prevent reuse of nonce", async () => {
+        it("Should prevent reuse of nonce", async () => {
             const { bridge, otherAccount, validator, vault } = await loadFixture(fixture);
             const amount = ethers.parseUnits("100", 6);
 
