@@ -53,8 +53,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // }
 
         const [receiver, amount] = await this.bridge.deposits(this.depositIndex);
-
         const underlyingAssetAddress = await this.bridge.underlying();
+        
         const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
         const underlyingAssetDecimals = await underlyingAsset.decimals();
 
