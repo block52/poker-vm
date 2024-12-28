@@ -51,7 +51,7 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         //     staticNetwork: true
         // });
         
-        this.provider = createProvider();
+        this.provider = createProvider(process.env.RPC_URL ?? "http://localhost:8545");
         this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
     }
 

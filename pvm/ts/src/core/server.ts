@@ -128,6 +128,7 @@ export class Server {
 
         const mempool = getMempoolInstance();
         const nodes = await getBootNodes(this.me().url);
+
         await Promise.all(
             nodes.map(async node => {
                 try {
@@ -147,9 +148,7 @@ export class Server {
     }
 
     private async syncDeposits() {
-        const provider = createProvider();
-        const bridge = new Bridge(provider);
-
+        const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/rjpyIU7l5bsXVQ8Ynwi7mdweCEWe3gm");
         await bridge.resync();
     }
 
