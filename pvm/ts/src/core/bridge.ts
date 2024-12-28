@@ -49,7 +49,9 @@ export class Bridge {
     public async onDeposit(from: string, value: bigint, index: bigint, transactionHash: string): Promise<void> {
         console.log(`Deposit detected:`);
         console.log(`  From: ${from}`);
-        console.log(`  Amount: ${ethers.formatUnits(value, this.decimals)} tokens`);
+        // console.log(`  Amount: ${ethers.formatUnits(value, this.decimals)} tokens`);
+        // console.log(`  Amount: ${ethers.formatEther(value)} tokens`);
+        console.log(`  Amount: ${value} tokens`);
         console.log(`  Index: ${index}`);
         console.log(`  Transaction Hash: ${transactionHash}`);
         
