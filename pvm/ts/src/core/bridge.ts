@@ -52,10 +52,10 @@ export class Bridge {
         console.log(`  Index: ${index}`);
         console.log(`  Transaction Hash: ${transactionHash}`);
         
-        const privateKey = process.env.PRIVATE_KEY;
+        const privateKey = process.env.VALIDATOR_KEY;
         
         if (!privateKey) {
-            throw new Error("PRIVATE_KEY is not set");
+            throw new Error("VALIDATOR_KEY is not set");
         }
 
         const mintCommand = new MintCommand(index.toString(), privateKey);
@@ -69,10 +69,10 @@ export class Bridge {
         console.log(`  Amount: ${ethers.formatEther(value)} tokens`);
         console.log(`  Transaction Hash: ${transactionHash}`);
 
-        const privateKey = process.env.PRIVATE_KEY;
+        const privateKey = process.env.VALIDATOR_KEY;
         
         if (!privateKey) {
-            throw new Error("PRIVATE_KEY is not set");
+            throw new Error("VALIDATOR_KEY is not set");
         }
 
         //const publicKey = await (await this.provider.getSigner()).getAddress();
