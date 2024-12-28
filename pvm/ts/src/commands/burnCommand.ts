@@ -5,6 +5,7 @@ import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { RandomCommand } from "./randomCommand";
+import { createProvider } from "../core/provider";
 
 export class BurnCommand implements ISignedCommand<BurnResponse> {
     private readonly randomCommand: RandomCommand;
@@ -45,10 +46,12 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         const bridgeAbi = ["function deposits(uint256) view returns (tuple(address account, uint256 amount))", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
 
-        const baseRPCUrl = process.env.RPC_URL;
-        this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
-            staticNetwork: true
-        });
+        // const baseRPCUrl = process.env.RPC_URL;
+        // this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
+        //     staticNetwork: true
+        // });
+        
+        this.provider = createProvider();
         this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
     }
 

@@ -2,6 +2,7 @@ import { ethers, ZeroAddress } from "ethers";
 import { BlockchainManagement } from "../state/blockchainManagement";
 import { getBootNodes } from "../state/nodeManagement";
 import { Node } from "../core/types";
+import { createProvider } from "./provider";
 
 export class Validator {
     private readonly stakingContract: ethers.Contract;
@@ -16,7 +17,9 @@ export class Validator {
     constructor(rpcUrl: string) {
         const vault = process.env.VAULT_CONTRACT_ADDRESS ?? ZeroAddress;
         this.blockManager = new BlockchainManagement();
-        this.provider = new ethers.JsonRpcProvider(rpcUrl);
+        // this.provider = new ethers.JsonRpcProvider(rpcUrl);
+
+        this.provider = createProvider();
         this.count = 0;
         this.lastUpdate = new Date();
         this.stakingContract = new ethers.Contract(vault, ["function isValidator(address) view returns (bool)", "function validatorCount() view returns (uint256)"], this.provider);
