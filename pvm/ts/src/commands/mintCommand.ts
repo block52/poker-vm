@@ -12,7 +12,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
     private readonly provider: JsonRpcProvider;
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
-    // private readonly depositIndex: BigInt;
+    private readonly index: BigInt;
 
     constructor(readonly depositIndex: string, private readonly privateKey: string) {
         if (!depositIndex) {
@@ -24,10 +24,11 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         this.depositIndex = depositIndex;
+        this.index = BigInt(depositIndex);
         const signer = new ethers.Wallet(privateKey);
         this.publicKey = signer.address;
 
-        const bridgeAbi = ["function deposits(uint256) view returns (tuple(address account, uint256 amount))", "function underlying() view returns (address)"];
+        const bridgeAbi = ["function deposits(uint256) view returns (address account, uint256 amount)", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
 
         // const baseRPCUrl = process.env.RPC_URL;
@@ -52,7 +53,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         //     return signResult(Transaction.fromDocument(existingTx), this.privateKey);
         // }
 
-        const [receiver, amount] = await this.bridge.deposits(this.depositIndex);
+        const [receiver, amount] = await this.bridge.deposits(this.index);
         const underlyingAssetAddress = await this.bridge.underlying();
         
         const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
