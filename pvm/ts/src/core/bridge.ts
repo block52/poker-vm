@@ -28,6 +28,7 @@ export class Bridge {
     // private tokenContract: ethers.Contract;
     private bridgeContract: ethers.Contract;
     private readonly provider: ethers.JsonRpcProvider;
+    private decimals: string = "6";
     
     constructor(private readonly nodeUrl: string) {
         this.provider = createProvider(this.nodeUrl);
@@ -35,7 +36,7 @@ export class Bridge {
         this.bridgeContract = new ethers.Contract(bridgeAddress, bridge_abi, this.provider);
     }
 
-    public async listenToBridge() {
+    public async listenToBridge(): Promise<void> {
         this.bridgeContract.on("Deposited", (account, amount, index, event) => {
             // if (to.toLowerCase() === bridgeAddress.toLowerCase()) {
             //     this.onDeposit(from, to, value, event.transactionHash);
@@ -45,10 +46,10 @@ export class Bridge {
         });
     }
 
-    public async onDeposit(from: string, value: bigint, index: bigint, transactionHash: string) {
+    public async onDeposit(from: string, value: bigint, index: bigint, transactionHash: string): Promise<void> {
         console.log(`Deposit detected:`);
         console.log(`  From: ${from}`);
-        console.log(`  Amount: ${ethers.formatEther(value)} tokens`);
+        console.log(`  Amount: ${ethers.formatUnits(value, this.decimals)} tokens`);
         console.log(`  Index: ${index}`);
         console.log(`  Transaction Hash: ${transactionHash}`);
         
@@ -62,7 +63,7 @@ export class Bridge {
         await mintCommand.execute();
     }
 
-    public async onTransfer(from: string, to: string, value: bigint, transactionHash: string) {
+    public async onTransfer(from: string, to: string, value: bigint, transactionHash: string): Promise<void> {
         console.log(`Deposit detected:`);
         console.log(`  From: ${from}`);
         console.log(`  To: ${to}`);
@@ -81,7 +82,7 @@ export class Bridge {
         await mintCommand.execute();
     }
 
-    public async resync() {
+    public async resync(): Promise<void> {
         // Get all transactions from the bridge contract
         // For each transaction, call onDeposit
         const events = await this.bridgeContract.queryFilter("Deposited", 0, "latest");
