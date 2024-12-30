@@ -12,7 +12,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
     private readonly provider: JsonRpcProvider;
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
-    private readonly index: BigInt;
+    private readonly index: bigint;
 
     constructor(readonly depositIndex: string, private readonly privateKey: string) {
         if (!depositIndex) {
@@ -53,27 +53,33 @@ export class MintCommand implements ISignedCommand<Transaction> {
         //     return signResult(Transaction.fromDocument(existingTx), this.privateKey);
         // }
 
+        // TODO: Get txId from bridge contract event
+        const txId = ethers.ZeroHash;
+        // verify txid is 32 bytes hex
+        if (!/^[0-9A-Fa-f]{64}$/.test(txId)) {
+            throw new Error("Transaction ID must be 32 bytes hex");
+        }
+
         const [receiver, amount] = await this.bridge.deposits(this.index);
+        if (receiver === ethers.ZeroAddress) {
+            throw new Error("Receiver must not be zero address");
+        }
+
+        if (amount <= 0) {
+            throw new Error("Value must be greater than 0");
+        }
 
         let underlyingAssetDecimals: bigint = 6n;
-        const doLookup = false;
-        if (doLookup) {
+
+        const useCached = true;
+        if (!useCached) {
             const underlyingAssetAddress = await this.bridge.underlying();
             const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
             underlyingAssetDecimals = await underlyingAsset.decimals();
         }
 
-        const value = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-
-        if (receiver === ethers.ZeroAddress) {
-            throw new Error("Receiver must not be zero address");
-        }
-
-        if (value <= 0) {
-            throw new Error("Value must be greater than 0");
-        }
-
-        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.privateKey, this.depositIndex);
+        const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
+        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, "");
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();

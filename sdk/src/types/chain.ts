@@ -2,10 +2,12 @@ export type TransactionDTO = {
     to: string;
     from: string;
     value: string;
+    hash: string;
     signature: string;
     timestamp: string;
-    hash: string;
     index?: string;
+    nonce?: string;
+    data? : string;
 };
 
 export type BlockDTO = {

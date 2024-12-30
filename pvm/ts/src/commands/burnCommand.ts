@@ -20,6 +20,7 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         if (!burnFrom) {
             throw new Error("Private key to burn from must be provided");
         }
+
         try {
             this.burnFromWallet = new ethers.Wallet(burnFrom);
         } catch {
@@ -44,7 +45,7 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         this.randomCommand = new RandomCommand(32, "", this.privateKey);
         this.signer = new ethers.Wallet(privateKey);
 
-        const bridgeAbi = ["function deposits(uint256) view returns (tuple(address account, uint256 amount))", "function underlying() view returns (address)"];
+        const bridgeAbi = ["function deposits(uint256) view returns (address account, uint256 amount)", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
 
         // const baseRPCUrl = process.env.RPC_URL;
@@ -84,7 +85,7 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         const signature = await this.signer.signMessage(ethers.getBytes(hash));
         console.log(`Signed hash: ${signature}`);
 
-        const burnTx: Transaction = Transaction.create(ethers.ZeroAddress, this.burnFromWallet.address, this.amount, this.privateKey);
+        const burnTx: Transaction = Transaction.create(ethers.ZeroAddress, this.burnFromWallet.address, this.amount, 0n, this.privateKey, nonce.data.toString("hex"));
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();

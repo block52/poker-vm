@@ -14,6 +14,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
+        
         if (this.data) {
             console.log(`Data: ${this.data}`);
             const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
@@ -26,9 +27,11 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             else
                 this.gameManagement.join(this.to, this.from);
         }
-        const transferTx: Transaction = Transaction.create(this.to, this.from, this.amount, this.privateKey);
+
+        const transferTx: Transaction = Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
         const mempool = getMempoolInstance();
         await mempool.add(transferTx);
+        
         return signResult(transferTx, this.privateKey);
     }
 }
