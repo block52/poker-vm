@@ -55,10 +55,10 @@ export class MintCommand implements ISignedCommand<Transaction> {
 
         // TODO: Get txId from bridge contract event
         const txId = ethers.ZeroHash;
-        // verify txid is 32 bytes hex
-        if (!/^[0-9A-Fa-f]{64}$/.test(txId)) {
-            throw new Error("Transaction ID must be 32 bytes hex");
-        }
+        // // verify txid is 32 bytes hex
+        // if (!/^[0-9A-Fa-f]{64}$/.test(txId)) {
+        //     throw new Error("Transaction ID must be 32 bytes hex");
+        // }
 
         const [receiver, amount] = await this.bridge.deposits(this.index);
         if (receiver === ethers.ZeroAddress) {
@@ -79,7 +79,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, "");
+        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, txId);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();

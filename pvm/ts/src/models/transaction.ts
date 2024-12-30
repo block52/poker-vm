@@ -1,5 +1,6 @@
 import { TransactionDTO } from "@bitcoinbrisbane/block52";
-import { createHash, sign } from "crypto";
+import { createHash } from "crypto";
+import { sign } from "../core/signer";
 import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
 
 export class Transaction implements ICryptoModel, IJSONModel {
@@ -44,7 +45,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
     public static create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Transaction {
         const timestamp = BigInt(Date.now());
         const hash = createHash("sha256").update(`${to}${from}${value}${timestamp}`).digest("hex");
-        const signature = sign("sha256", Buffer.from(hash), privateKey).toString("hex");
+        const signature = sign(hash, privateKey);
         return new Transaction(to, from, value, hash, signature, timestamp, undefined, nonce, data);
     }
 
@@ -57,8 +58,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
             signature: this.signature,
             timestamp: this.timestamp.toString(),
             index: this.index?.toString(),
-            // nonce: this.nonce?.toString(),
-            // data: this.data
+            nonce: this.nonce?.toString(),
+            data: this.data
         };
     }
 
