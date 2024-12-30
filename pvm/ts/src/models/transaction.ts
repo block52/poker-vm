@@ -41,11 +41,11 @@ export class Transaction implements ICryptoModel, IJSONModel {
         return this.calculateHash();
     }
 
-    public static create(to: string, from: string, value: bigint, privateKey: string): Transaction {
+    public static create(to: string, from: string, value: bigint, privateKey: string, data: string): Transaction {
         const timestamp = BigInt(Date.now());
         const hash = createHash("sha256").update(`${to}${from}${value}${timestamp}`).digest("hex");
         const signature = sign("sha256", Buffer.from(hash), privateKey).toString("hex");
-        return new Transaction(to, from, value, hash, signature, timestamp);
+        return new Transaction(to, from, value, hash, signature, timestamp, undefined, undefined, data);
     }
 
     public toJson(): TransactionDTO {
@@ -53,15 +53,17 @@ export class Transaction implements ICryptoModel, IJSONModel {
             to: this.to,
             from: this.from,
             value: this.value.toString(),
+            hash: this.hash,
             signature: this.signature,
             timestamp: this.timestamp.toString(),
             index: this.index?.toString(),
-            hash: this.hash
+            // nonce: this.nonce?.toString(),
+            // data: this.data
         };
     }
 
     public static fromJson(json: TransactionDTO): Transaction {
-        return new Transaction(json.to, json.from, BigInt(json.value), json.signature, BigInt(json.timestamp), json.index ? BigInt(json.index) : undefined);
+        return new Transaction(json.to, json.from, BigInt(json.value), json.hash, json.signature, BigInt(json.timestamp), json.index ? BigInt(json.index) : undefined);
     }
 
     public static fromDocument(document: ITransactionDocument): Transaction {
@@ -69,6 +71,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
             document.to,
             document.from,
             BigInt(document.value),
+            document.hash,
             document.signature,
             BigInt(document.timestamp),
             document.index ? BigInt(document.index) : undefined
@@ -80,10 +83,12 @@ export class Transaction implements ICryptoModel, IJSONModel {
             to: transaction.to,
             from: transaction.from,
             value: transaction.value.toString(),
+            hash: transaction.hash,
             signature: transaction.signature,
             timestamp: transaction.timestamp.toString(),
             index: transaction.index?.toString(),
-            hash: transaction.hash
+            nonce: transaction.nonce?.toString(),
+            data: transaction.data
         };
     }
 }

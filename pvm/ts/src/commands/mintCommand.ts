@@ -63,17 +63,17 @@ export class MintCommand implements ISignedCommand<Transaction> {
             underlyingAssetDecimals = await underlyingAsset.decimals();
         }
 
-        const amountToMint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
+        const value = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
 
         if (receiver === ethers.ZeroAddress) {
             throw new Error("Receiver must not be zero address");
         }
 
-        if (amount <= 0) {
-            throw new Error("Amount must be greater than 0");
+        if (value <= 0) {
+            throw new Error("Value must be greater than 0");
         }
 
-        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, amountToMint, this.privateKey);
+        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.privateKey, this.depositIndex);
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
