@@ -5,6 +5,7 @@
 import { ethers, EventLog } from "ethers";
 import { MintCommand } from "../commands/mintCommand";
 import { createProvider } from "./provider";
+import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
 
 // const tokenAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"; // ERC20 token contract address
 const bridgeAddress = "0x859329813d8e500F4f6Be0fc934E53AC16670fa0"; // Address to monitor for deposits
@@ -29,11 +30,12 @@ export class Bridge {
     private bridgeContract: ethers.Contract;
     private readonly provider: ethers.JsonRpcProvider;
     private decimals: string = "6";
+    private readonly transactionManagement: TransactionManagement;
 
     constructor(private readonly nodeUrl: string) {
         this.provider = createProvider(this.nodeUrl);
-        // this.tokenContract = new ethers.Contract(tokenAddress, abi, provider);
         this.bridgeContract = new ethers.Contract(bridgeAddress, bridge_abi, this.provider);
+        this.transactionManagement = getTransactionInstance();
     }
 
     public async listenToBridge(): Promise<void> {

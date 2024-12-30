@@ -53,10 +53,12 @@ export class Transaction implements ICryptoModel, IJSONModel {
             to: this.to,
             from: this.from,
             value: this.value.toString(),
+            hash: this.hash,
             signature: this.signature,
             timestamp: this.timestamp.toString(),
             index: this.index?.toString(),
-            hash: this.hash
+            // nonce: this.nonce?.toString(),
+            // data: this.data
         };
     }
 

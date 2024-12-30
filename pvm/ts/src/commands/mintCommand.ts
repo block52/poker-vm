@@ -66,7 +66,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         if (amount <= 0) {
-            throw new Error("Amount must be greater than 0");
+            throw new Error("Value must be greater than 0");
         }
 
         let underlyingAssetDecimals: bigint = 6n;
@@ -78,8 +78,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
             underlyingAssetDecimals = await underlyingAsset.decimals();
         }
 
-        const amountToMint: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, amountToMint, this.index, this.privateKey, "");
+        const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
+        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, "");
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();
