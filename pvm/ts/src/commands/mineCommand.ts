@@ -13,6 +13,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
         const mempool = getMempoolInstance();
         const txs = mempool.get();
         const blockchainManagement = getBlockchainInstance();
+        const transactionManagment = getTransactionInstance();
         
         const lastBlock = await blockchainManagement.getLastBlock();
         
