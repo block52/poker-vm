@@ -41,11 +41,11 @@ export class Transaction implements ICryptoModel, IJSONModel {
         return this.calculateHash();
     }
 
-    public static create(to: string, from: string, value: bigint, privateKey: string): Transaction {
+    public static create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Transaction {
         const timestamp = BigInt(Date.now());
         const hash = createHash("sha256").update(`${to}${from}${value}${timestamp}`).digest("hex");
         const signature = sign("sha256", Buffer.from(hash), privateKey).toString("hex");
-        return new Transaction(to, from, value, hash, signature, timestamp);
+        return new Transaction(to, from, value, hash, signature, timestamp, undefined, nonce, data);
     }
 
     public toJson(): TransactionDTO {
@@ -72,7 +72,9 @@ export class Transaction implements ICryptoModel, IJSONModel {
             document.hash,
             document.signature,
             BigInt(document.timestamp),
-            document.index ? BigInt(document.index) : undefined
+            document.index ? BigInt(document.index) : undefined,
+            document.nonce ? BigInt(document.nonce) : undefined,
+            document.data
         );
     }
 
@@ -81,10 +83,12 @@ export class Transaction implements ICryptoModel, IJSONModel {
             to: transaction.to,
             from: transaction.from,
             value: transaction.value.toString(),
+            hash: transaction.hash,
             signature: transaction.signature,
             timestamp: transaction.timestamp.toString(),
             index: transaction.index?.toString(),
-            hash: transaction.hash
+            nonce: transaction.nonce?.toString(),
+            data: transaction.data
         };
     }
 }

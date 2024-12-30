@@ -34,10 +34,12 @@ export interface ITransactionDocument {
     to: string;
     from: string;
     value: string;
+    hash: string;
     signature: string;
     timestamp: string;
     index?: string;
-    hash: string;
+    nonce?: string;
+    data?: string;
 }
 
 export interface IContractSchemaDocument {
