@@ -148,8 +148,10 @@ export class Server {
     }
 
     private async syncDeposits() {
-        const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/rjpyIU7l5bsXVQ8Ynwi7mdweCEWe3gm");
-        await bridge.resync();
+        if (this.isValidator) {
+            const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/rjpyIU7l5bsXVQ8Ynwi7mdweCEWe3gm");
+            await bridge.resync();
+        }
     }
 
     private async syncBlockchain() {
@@ -229,7 +231,7 @@ export class Server {
 }
 
 let instance: Server;
-export const getServerInstance = () => {
+export const getServerInstance = (): Server => {
     if (!instance) {
         instance = new Server(process.env.VALIDATOR_KEY || ZeroHash);
     }

@@ -1,7 +1,6 @@
 import { Block, Transaction } from "../models/index";
 import Blocks from "../schema/blocks";
 import { StateManager } from "./stateManager";
-
 import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
 import { TransactionList } from "../models/transactionList";
@@ -86,7 +85,6 @@ export class BlockchainManagement extends StateManager {
     return new TransactionList(transactions);
   }
 }
-
 
 let instance: BlockchainManagement;
 export const getBlockchainInstance = (): BlockchainManagement => {

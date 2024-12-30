@@ -1,7 +1,7 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block } from "../models";
 
-import { BlockchainManagement } from "../state/blockchainManagement";
+import { getBlockchainInstance } from "../state/blockchainManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
@@ -12,7 +12,8 @@ export class MineCommand implements ISignedCommand<Block | null> {
     public async execute(): Promise<ISignedResponse<Block | null>> {
         const mempool = getMempoolInstance();
         const txs = mempool.get();
-        const blockchainManagement = new BlockchainManagement();
+        const blockchainManagement = getBlockchainInstance();
+        
         const lastBlock = await blockchainManagement.getLastBlock();
         
         const block = Block.create(

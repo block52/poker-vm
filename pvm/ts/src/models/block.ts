@@ -45,6 +45,7 @@ export class Block implements IJSONModel {
     const timestamp = index > 0 ? Date.now() : 0;
     const wallet = new ethers.Wallet(privateKey);
     const validator = wallet.address;
+    
     const block = new Block(
       index,
       previousHash,

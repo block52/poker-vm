@@ -1,4 +1,5 @@
 import { Transaction } from "../models/transaction";
+import Blocks from "../schema/blocks";
 
 export class Mempool {
     private transactions: Transaction[];
@@ -17,6 +18,29 @@ export class Mempool {
         // Check if the mempool is full
         if (this.transactions.length >= this.maxSize) {
             console.log(`Mempool is full: ${this.transactions.length} / ${this.maxSize}`);
+        }
+
+        let currentBlockIndex = 0;
+        const lastBlock = await Blocks.findOne().sort({ index: -1 });
+
+        if (lastBlock) {
+            currentBlockIndex = lastBlock.index;
+        }
+
+        const txid = transaction.getId();
+
+        // Query blocks with index less than current block
+        const existingBlock = await Blocks.findOne({
+            index: { $lt: currentBlockIndex },
+            "transactions.id": txid
+        }).exec();
+
+        if (existingBlock && existingBlock.transactions) {
+            const transaction = existingBlock.transactions.find((tx) => tx.id === txid);
+            if (transaction) {
+                console.log(`Transaction already in blockchain: ${transaction.id}`);
+                return;
+            }
         }
 
         // Check if the transaction is valid
@@ -40,7 +64,7 @@ export class Mempool {
 }
 
 let instance: Mempool;
-export const getMempoolInstance = () => {
+export const getMempoolInstance = (): Mempool => {
     if (!instance) {
         instance = new Mempool();
     }
