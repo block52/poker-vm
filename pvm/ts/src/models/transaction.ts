@@ -19,8 +19,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
 
     public verify(): boolean {
         const signature = createHash("sha256")
-          .update(`${this.to}${this.from}${this.value}${this.timestamp}`)
-          .digest("hex");
+            .update(`${this.to}${this.from}${this.value}${this.timestamp}`)
+            .digest("hex");
 
         const hash = this.calculateHash();
         return hash === this.hash;
@@ -61,7 +61,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
     }
 
     public static fromJson(json: TransactionDTO): Transaction {
-        return new Transaction(json.to, json.from, BigInt(json.value), json.signature, BigInt(json.timestamp), json.index ? BigInt(json.index) : undefined);
+        return new Transaction(json.to, json.from, BigInt(json.value), json.hash, json.signature, BigInt(json.timestamp), json.index ? BigInt(json.index) : undefined);
     }
 
     public static fromDocument(document: ITransactionDocument): Transaction {
@@ -69,6 +69,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
             document.to,
             document.from,
             BigInt(document.value),
+            document.hash,
             document.signature,
             BigInt(document.timestamp),
             document.index ? BigInt(document.index) : undefined

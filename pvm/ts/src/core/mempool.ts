@@ -2,22 +2,33 @@ import { Transaction } from "../models/transaction";
 import Blocks from "../schema/blocks";
 
 export class Mempool {
-    private transactions: Transaction[];
+    // private readonly transactions: Transaction[];
+    private readonly txMap = new Map<string, Transaction>();
 
     constructor(readonly maxSize: number = 100) {
-        this.transactions = [];
+        // this.transactions = [];
     }
 
     public async add(transaction: Transaction): Promise<void> {
-        // Check if the transaction is already in the mempool
-        if (this.transactions.find((tx) => tx.hash === transaction.hash)) {
+
+        if (this.txMap.has(transaction.hash)) {
             console.log(`Transaction already in mempool: ${transaction.hash}`);
             return;
         }
 
-        // Check if the mempool is full
-        if (this.transactions.length >= this.maxSize) {
-            console.log(`Mempool is full: ${this.transactions.length} / ${this.maxSize}`);
+        // // Check if the transaction is already in the mempool
+        // if (this.transactions.find((tx) => tx.hash === transaction.hash)) {
+        //     console.log(`Transaction already in mempool: ${transaction.hash}`);
+        //     return;
+        // }
+
+        // // Check if the mempool is full
+        // if (this.transactions.length >= this.maxSize) {
+        //     console.log(`Mempool is full: ${this.transactions.length} / ${this.maxSize}`);
+        // }
+
+        if (this.txMap.size >= this.maxSize) {
+            console.log(`Mempool is full: ${this.txMap.size} / ${this.maxSize}`);
         }
 
         let currentBlockIndex = 0;
@@ -49,16 +60,19 @@ export class Mempool {
         }
         console.log(`Adding transaction to mempool: ${transaction.hash}`);
 
-        this.transactions.push(transaction);
+        // this.transactions.push(transaction);
+        this.txMap.set(transaction.hash, transaction);
     }
 
     public get(): Transaction[] {
         // Order transactions by timestamp
-        return this.transactions.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+        // return this.transactions.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+        return Array.from(this.txMap.values());
     }
 
     public clear() {
-        this.transactions = [];
+        // this.transactions = [];
+        this.txMap.clear();
     }
 
 }
