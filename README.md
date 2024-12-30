@@ -97,7 +97,9 @@ GET `/table/<address>`
 To publish the SDK.
 
 ```bash
-yarn publish
+cd sdk
+nvm use 20.12
+yarn prepare && yarn publish
 ```
 
 # Node
