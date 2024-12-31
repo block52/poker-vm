@@ -44,7 +44,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
 
     public static create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Transaction {
         const timestamp = BigInt(Date.now());
-        const hash = createHash("sha256").update(`${to}${from}${value}${timestamp}`).digest("hex");
+        const hash = createHash("sha256").update(`${to}${from}${value}${nonce}${timestamp}`).digest("hex");
         const signature = sign(hash, privateKey);
         return new Transaction(to, from, value, hash, signature, timestamp, undefined, nonce, data);
     }

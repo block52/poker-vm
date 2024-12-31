@@ -1,11 +1,12 @@
 import { ethers, JsonRpcProvider, Contract, InterfaceAbi, ZeroAddress } from "ethers";
-import { getMempoolInstance } from "../core/mempool";
+import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models/transaction";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { NativeToken } from "../models/nativeToken";
 import { createProvider } from "../core/provider";
 import { CONTRACT_ADDRESSES } from "../core/constants";
+import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
 
 export class MintCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
@@ -13,8 +14,10 @@ export class MintCommand implements ISignedCommand<Transaction> {
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
     private readonly index: bigint;
+    private readonly blockchainManagement: BlockchainManagement;
+    private readonly mempool: Mempool;
 
-    constructor(readonly depositIndex: string, private readonly privateKey: string) {
+    constructor(readonly depositIndex: string, readonly hash: string, private readonly privateKey: string) {
         if (!depositIndex) {
             throw new Error("Deposit index must be provided");
         }
@@ -36,6 +39,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
         //     staticNetwork: true
         // });
         
+        this.mempool = getMempoolInstance();
+        this.blockchainManagement = getBlockchainInstance();
         this.provider = createProvider(process.env.RPC_URL ?? "http://localhost:8545");
         this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }
@@ -54,11 +59,13 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // }
 
         // TODO: Get txId from bridge contract event
-        const txId = ethers.ZeroHash;
+        const txId = this.hash;
         // // verify txid is 32 bytes hex
         // if (!/^[0-9A-Fa-f]{64}$/.test(txId)) {
         //     throw new Error("Transaction ID must be 32 bytes hex");
         // }
+
+        
 
         const [receiver, amount] = await this.bridge.deposits(this.index);
         if (receiver === ethers.ZeroAddress) {
@@ -82,8 +89,12 @@ export class MintCommand implements ISignedCommand<Transaction> {
         const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, txId);
 
         // Send to mempool
-        const mempoolInstance = getMempoolInstance();
-        await mempoolInstance.add(mintTx);
+        await this.mempool.add(mintTx);
         return signResult(mintTx, this.privateKey);
+    }
+
+    private async exists(hash: string): Promise<boolean> {
+        
+        return false;
     }
 }

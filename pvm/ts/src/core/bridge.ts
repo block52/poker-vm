@@ -6,27 +6,12 @@ import { ethers, EventLog } from "ethers";
 import { MintCommand } from "../commands/mintCommand";
 import { createProvider } from "./provider";
 import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
-
-// const tokenAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"; // ERC20 token contract address
-const bridgeAddress = "0x859329813d8e500F4f6Be0fc934E53AC16670fa0"; // Address to monitor for deposits
-
-// type TransferEvent = {
-//     from: string;
-//     to: string;
-//     value: bigint;
-// };
-
-// type DepositEvent = {
-//     account: string;
-//     amount: bigint;
-//     index: bigint;
-// };
+import { CONTRACT_ADDRESSES } from "./constants";
 
 const abi = ["event Transfer(address indexed from, address indexed to, uint256 value)"];
 const bridge_abi = ["event Deposited(address indexed account, uint256 amount, uint256 index)"];
 
 export class Bridge {
-    // private tokenContract: ethers.Contract;
     private bridgeContract: ethers.Contract;
     private readonly provider: ethers.JsonRpcProvider;
     private decimals: string = "6";
@@ -34,7 +19,7 @@ export class Bridge {
 
     constructor(private readonly nodeUrl: string) {
         this.provider = createProvider(this.nodeUrl);
-        this.bridgeContract = new ethers.Contract(bridgeAddress, bridge_abi, this.provider);
+        this.bridgeContract = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridge_abi, this.provider);
         this.transactionManagement = getTransactionInstance();
     }
 
@@ -59,7 +44,7 @@ export class Bridge {
             throw new Error("VALIDATOR_KEY is not set");
         }
 
-        const mintCommand = new MintCommand(index.toString(), privateKey);
+        const mintCommand = new MintCommand(index.toString(), transactionHash, privateKey);
         await mintCommand.execute();
     }
 
@@ -78,7 +63,7 @@ export class Bridge {
 
         //const publicKey = await (await this.provider.getSigner()).getAddress();
         const depositIndex = "0"; // Temp
-        const mintCommand = new MintCommand(depositIndex, privateKey);
+        const mintCommand = new MintCommand(depositIndex, transactionHash, privateKey);
         await mintCommand.execute();
     }
 

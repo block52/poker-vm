@@ -72,11 +72,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
             validTxs.push(tx);
         }
 
-        // for (const tx of txs) {
-        //     if (this.transactionManagment.exists(tx.hash)) {
-        //         return true;
-        //     }
-        // }
         return validTxs;
     }
 }
