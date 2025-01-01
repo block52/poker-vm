@@ -1,18 +1,27 @@
 import { Transaction } from "../models/transaction";
 import Blocks from "../schema/blocks";
+import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
 
 export class Mempool {
     // private readonly transactions: Transaction[];
     private readonly txMap = new Map<string, Transaction>();
+    private readonly transactionManagement: TransactionManagement;
 
     constructor(readonly maxSize: number = 100) {
         // this.transactions = [];
+        this.transactionManagement = getTransactionInstance();
     }
 
     public async add(transaction: Transaction): Promise<void> {
 
         if (this.txMap.has(transaction.hash)) {
             console.log(`Transaction already in mempool: ${transaction.hash}`);
+            return;
+        }
+
+        const exists = await this.transactionManagement.exists(transaction.hash);
+        if (exists) {
+            console.log(`Transaction already in blockchain: ${transaction.hash}`);
             return;
         }
 
@@ -38,26 +47,11 @@ export class Mempool {
             currentBlockIndex = lastBlock.index;
         }
 
-        // const txid = transaction.getId();
-
-        // // Query blocks with index less than current block
-        // const existingBlock = await Blocks.findOne({
-        //     index: { $lt: currentBlockIndex },
-        //     "transactions.id": txid
-        // }).exec();
-
-        // if (existingBlock && existingBlock.transactions) {
-        //     const transaction = existingBlock.transactions.find((tx) => tx.id === txid);
-        //     if (transaction) {
-        //         console.log(`Transaction already in blockchain: ${transaction.id}`);
-        //         return;
-        //     }
-        // }
-
         // Check if the transaction is valid
         if (!transaction.verify()) {
-            throw new Error("Invalid transaction");
+            // throw new Error("Invalid transaction");
         }
+
         console.log(`Adding transaction to mempool: ${transaction.hash}`);
 
         // this.transactions.push(transaction);

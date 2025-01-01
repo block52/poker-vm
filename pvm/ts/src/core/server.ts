@@ -18,7 +18,7 @@ export class Server {
     private _started: boolean = false;
     private _syncing: boolean = false;
     private _synced: boolean = false;
-    // private _lastDeposit: number = 0;
+    private _lastDepositSync: number = 0;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
 
     constructor(private readonly privateKey: string) {
@@ -32,7 +32,7 @@ export class Server {
         }
 
         this.contractAddress = ethers.ZeroAddress;
-        // this._lastDeposit = 0;
+        this._lastDepositSync = Date.now();
     }
 
     public me(): Node {
@@ -148,6 +148,10 @@ export class Server {
     }
 
     private async syncDeposits() {
+        if (this._lastDepositSync + 60000 > Date.now()) {
+            return;
+        }
+
         if (this.isValidator) {
             const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/rjpyIU7l5bsXVQ8Ynwi7mdweCEWe3gm");
             await bridge.resync();

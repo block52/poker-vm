@@ -6,7 +6,7 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { NativeToken } from "../models/nativeToken";
 import { createProvider } from "../core/provider";
 import { CONTRACT_ADDRESSES } from "../core/constants";
-import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
+import { TransactionManagement, getTransactionInstance } from "../state/transactionManagement";
 
 export class MintCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
@@ -14,7 +14,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
     private readonly index: bigint;
-    // private readonly blockchainManagement: BlockchainManagement;
+    private readonly transactionManagement: TransactionManagement;
     private readonly mempool: Mempool;
 
     constructor(readonly depositIndex: string, readonly hash: string, private readonly privateKey: string) {
@@ -40,7 +40,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // });
         
         this.mempool = getMempoolInstance();
-        // this.blockchainManagement = getBlockchainInstance();
+        this.transactionManagement = getTransactionInstance();
+
         this.provider = createProvider(process.env.RPC_URL ?? "http://localhost:8545");
         this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }
@@ -59,13 +60,12 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // }
 
         // TODO: Get txId from bridge contract event
-        const txId = this.hash;
-        // // verify txid is 32 bytes hex
-        // if (!/^[0-9A-Fa-f]{64}$/.test(txId)) {
-        //     throw new Error("Transaction ID must be 32 bytes hex");
-        // }
-
-        
+        // const data = this.hash;
+        const data = `MINT_${this.depositIndex}`;
+        const exists = await this.transactionManagement.exists(data);
+        if (exists) {
+            throw new Error("Transaction already in blockchain");
+        }
 
         const [receiver, amount] = await this.bridge.deposits(this.index);
         if (receiver === ethers.ZeroAddress) {
@@ -86,15 +86,10 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, txId);
+        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, data);
 
         // Send to mempool
         await this.mempool.add(mintTx);
         return signResult(mintTx, this.privateKey);
-    }
-
-    private async exists(hash: string): Promise<boolean> {
-        
-        return false;
     }
 }

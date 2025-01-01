@@ -85,20 +85,6 @@ export class BlockchainManagement extends StateManager {
 
     return new BlockList(blocks.map(block => Block.fromDocument(block)));
   }
-
-  // public async getTransactions(count?: number): Promise<TransactionList> {
-  //   await this.connect();
-
-  //   const blocks = await Blocks.find({}, { transactions: 1 })
-  //     .sort({ timestamp: -1 })
-  //     .limit(count ?? 100);
-
-  //   const transactions: Transaction[] = blocks
-  //     .flatMap(block => block.transactions || [])
-  //     .map(tx => Transaction.fromDocument(tx));
-
-  //   return new TransactionList(transactions);
-  // }
 }
 
 let instance: BlockchainManagement;

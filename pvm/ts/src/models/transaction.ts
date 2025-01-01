@@ -32,8 +32,6 @@ export class Transaction implements ICryptoModel, IJSONModel {
     }
 
     public verify(): boolean {
-        const signature = createHash("sha256").update(`${this.to}${this.from}${this.value}${this.timestamp}`).digest("hex");
-
         const hash = this.calculateHash();
         return hash === this.hash;
 
