@@ -163,6 +163,7 @@ export class Server {
         if (this.isValidator) {
             const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
             await bridge.resync();
+            this._lastDepositSync = Date.now();
         }
     }
 
