@@ -19,6 +19,7 @@ export class Server {
     private _synced: boolean = false;
     private _lastDepositSync: number = 0;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
+    private nodes: Node[] = [];
 
     constructor(private readonly privateKey: string) {
         this.isValidator = false;
@@ -97,6 +98,7 @@ export class Server {
 
     public async bootstrap() {
         console.log("Syncing blocks...");
+        await this.getNodes();
         await this.syncBlockchain();
 
         console.log("Polling...");
@@ -120,16 +122,21 @@ export class Server {
         console.log("Server started");
     }
 
+    private async getNodes() {
+        if (this.nodes.length === 0) {
+            this.nodes = await getBootNodes(this.me().url);
+        }
+    }
+
     private async syncMempool() {
         if (!this.started) {
             return;
         }
 
         const mempool = getMempoolInstance();
-        const nodes = await getBootNodes(this.me().url);
 
         await Promise.all(
-            nodes.map(async node => {
+            this.nodes.map(async node => {
                 try {
                     const client = new NodeRpcClient(node.url, this.privateKey);
                     const otherMempool: TransactionDTO[] = await client.getMempool();
@@ -161,19 +168,22 @@ export class Server {
 
     private async syncBlockchain() {
         this._syncing = true;
-        const nodes = await getBootNodes(this.me().url);
+        // const nodes = await getBootNodes(this.me().url);
 
-        if (nodes.length === 0) {
+        if (this.nodes.length === 0) {
             console.log("No nodes to sync with");
             this._syncing = false;
             this._synced = true;
             return;
         }
 
-        let highestNode: Node = nodes[0];
+        let highestNode: Node = this.nodes[0];
         let highestTip = 0;
 
-        for (const node of nodes) {
+        // create a map of nodes to their highest tip
+        const nodeHeights = new Map<string, number>();
+
+        for (const node of this.nodes) {
             try {
                 const client = new NodeRpcClient(node.url, this.privateKey);
                 const block = await client.getLastBlock();
@@ -183,6 +193,10 @@ export class Server {
                     highestTip = block.index;
                     highestNode = node;
                 }
+
+                // Update the node height
+                nodeHeights.set(node.url, block.index);
+
             } catch (error) {
                 console.warn(`Missing node ${node.url}`);
             }
@@ -195,7 +209,23 @@ export class Server {
         const lastBlock = await blockchain.getLastBlock();
         let tip = lastBlock.index;
 
-        console.log(`My tip is ${tip}`);
+        console.log(`My tip is ${tip}, syncing with other nodes...`);
+
+        for (const [url, height] of nodeHeights) {
+            console.log(`Node ${url} has tip ${height}`);
+
+            if (height < tip) {
+                // Send blocks to the node
+                // const blocks = await blockchain.getBlocks(tip - height);
+                const client = new NodeRpcClient(url, this.privateKey);
+
+                for (let i = height; i < tip; i++) {
+                    const block = await blockchain.getBlock(i);
+                    // console.log(`Sending block ${block.index} to ${url}`);
+                    // await client.sendBlock(block.toJson());
+                }
+            }
+        }
 
         if (lastBlock.index === highestTip) {
             console.log("Blockchain is synced");

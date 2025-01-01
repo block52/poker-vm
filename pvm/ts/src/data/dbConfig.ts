@@ -17,7 +17,7 @@ class DatabaseConnection implements IDB {
 
     public async connect(uri: string = "mongodb://localhost:27017/pvm"): Promise<void> {
         if (this.isConnected) {
-            console.log("Using existing database connection");
+            // console.log("Using existing database connection");
             return;
         }
 
