@@ -9,7 +9,6 @@ import { MineCommand } from "../commands/mineCommand";
 import { getValidatorInstance } from "./validator";
 import { getBootNodes } from "../state/nodeManagement";
 import { Bridge } from "./bridge";
-import { createProvider } from "./provider";
 
 export class Server {
     public readonly contractAddress: string;
@@ -153,7 +152,7 @@ export class Server {
         }
 
         if (this.isValidator) {
-            const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/rjpyIU7l5bsXVQ8Ynwi7mdweCEWe3gm");
+            const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
             await bridge.resync();
         }
     }

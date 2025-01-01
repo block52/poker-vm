@@ -1,5 +1,5 @@
 import { ethers, ZeroAddress } from "ethers";
-import { BlockchainManagement } from "../state/blockchainManagement";
+import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
 import { getBootNodes } from "../state/nodeManagement";
 import { Node } from "../core/types";
 import { createProvider } from "./provider";
@@ -16,10 +16,10 @@ export class Validator {
     private lastUpdate: Date;
 
     constructor(private readonly rpcUrl: string) {
-        this.blockManager = new BlockchainManagement();        
+        this.blockManager = getBlockchainInstance();        
         const provider = createProvider(rpcUrl);
         this.count = 0;
-        this.lastUpdate = new Date();
+        this.lastUpdate = new Date("2025-01-01");
         this.stakingContract = new ethers.Contract(CONTRACT_ADDRESSES.vaultAddress, ["function isValidator(address) view returns (bool)", "function validatorCount() view returns (uint256)"], provider);
     }
 
@@ -42,9 +42,9 @@ export class Validator {
         const nextBlockIndex = lastBlock.index + 1;
 
         if (sync || !this.synced) {
-            [this.nodes, this.validatorCount] = await Promise.all([getBootNodes(), this.getValidatorCount()]);
-            // this.nodes = await getBootNodes();
-            // this.validatorCount = await this.getValidatorCount();
+            this.nodes = await getBootNodes();
+            this.validatorCount = await this.getValidatorCount();
+            // [this.nodes, this.validatorCount] = await Promise.all([getBootNodes(), this.getValidatorCount()]);
             this.synced = true;
         }
 
@@ -54,11 +54,15 @@ export class Validator {
         }
 
         // For now, we will just use the first validator in the list
-        const validatorIndex = nextBlockIndex % this.validatorCount;
+        // const validatorIndex = nextBlockIndex % this.validatorCount;
+        // const validatorIndex = 0;
 
-        const { publicKey: validatorAddress } = this.nodes[validatorIndex];
-        console.log(`Next validator index: ${validatorIndex}, ${validatorAddress}`);
-        return validatorAddress;
+        // const { publicKey: validatorAddress } = this.nodes[validatorIndex];
+        // console.log(`Next validator index: ${validatorIndex}, ${validatorAddress}`);
+
+        // hack
+        const pub_keys = ["0xeE3A5673dE06Fa3Efd2fA2B6F46B5f75C0AcEb8D", "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846"];
+        return pub_keys[nextBlockIndex % 2];
     }
 }
 
