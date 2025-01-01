@@ -14,7 +14,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
     private readonly index: bigint;
-    private readonly blockchainManagement: BlockchainManagement;
+    // private readonly blockchainManagement: BlockchainManagement;
     private readonly mempool: Mempool;
 
     constructor(readonly depositIndex: string, readonly hash: string, private readonly privateKey: string) {
@@ -40,7 +40,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // });
         
         this.mempool = getMempoolInstance();
-        this.blockchainManagement = getBlockchainInstance();
+        // this.blockchainManagement = getBlockchainInstance();
         this.provider = createProvider(process.env.RPC_URL ?? "http://localhost:8545");
         this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }

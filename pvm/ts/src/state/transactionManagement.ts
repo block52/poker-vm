@@ -1,74 +1,75 @@
-import Blocks from "../schema/blocks";
+import Transactions from "../schema/transactions";
 import { Transaction } from "../models/transaction";
 import { StateManager } from "./stateManager";
+import { TransactionList } from "../models/transactionList";
 
 export class TransactionManagement extends StateManager {
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
 
-    async exists(txid: string): Promise<Boolean> {
+    public async addTransaction(tx: Transaction): Promise<void> {
         await this.connect();
-
-        try {
-            let currentBlockIndex = 0;
-            const lastBlock = await Blocks.findOne().sort({ index: -1 });
-
-            if (lastBlock) {
-                currentBlockIndex = lastBlock.index;
-            }
-
-            // Query blocks with index less than current block
-            const existingBlock = await Blocks.findOne({
-                index: { $lt: currentBlockIndex },
-                "transactions.id": txid
-            }).exec();
-
-            if (existingBlock && existingBlock.transactions) {
-                const transaction = existingBlock.transactions.find((tx) => tx.id === txid);
-                return transaction !== undefined;
-            }
-
-            return false;
-        } catch (error) {
-            console.error("Error checking transaction existence:", error);
-            throw error;
-        }
+        const newTransaction = new Transactions(tx.toDocument());
+        await newTransaction.save();
     }
 
-    async getTransactionByData(txid: string): Promise<Transaction> {
+    public async addTransactions(txs: Transaction[]): Promise<void> {
+        await this.connect();
+        const transactions = txs.map(tx => new Transactions(tx.toDocument()));
+        await Transactions.insertMany(transactions);
+    }
+
+    async exists(txid: string): Promise<Boolean> {
+        await this.connect();
+        const tx = await Transactions.findOne({ hash: txid });
+        return tx !== null;
+    }
+
+    public async getTransactions(blockHash: string, count?: number): Promise<TransactionList> {
         await this.connect();
 
-        try {
-            let currentBlockIndex = 0;
-            const lastBlock = await Blocks.findOne().sort({ index: -1 });
+        const transactions = await Transactions.find({ blockHash })
+            .sort({ timestamp: -1 })
+            .limit(count ?? 100);
 
-            if (lastBlock) {
-                currentBlockIndex = lastBlock.index;
-            }
+        const txs = transactions.map(tx => Transaction.fromDocument(tx));
+        return new TransactionList(txs);
+    }
 
-            // Query blocks with index less than current block
-            const existingBlock = await Blocks.findOne({
-                index: { $lt: currentBlockIndex },
-                "transactions.id": txid
-            }).exec();
-
-            if (existingBlock && existingBlock.transactions) {
-                const transaction = existingBlock.transactions.find((tx) => tx.id === txid);
-                return transaction;
-            }
-        } catch (error) {
-            console.error("Error checking transaction existence:", error);
-            throw error;
+    public async getTransaction(txid: string): Promise<Transaction | null> {
+        await this.connect();
+        const tx = await Transactions.findOne({ hash: txid });
+        if (!tx) {
+            return null;
         }
+        return Transaction.fromDocument(tx);
+    }
+
+    public async getTransactionByIndex(index: string): Promise<Transaction | null> {
+        await this.connect();
+        const tx = await Transactions.findOne({ index });
+        if (!tx) {
+            return null;
+        }
+        return Transaction.fromDocument(tx);
+    }
+
+    public async getTransactionByData(data: string): Promise<Transaction | null> {
+        await this.connect();
+        const tx = await Transactions.findOne({ data });
+        if (!tx) {
+            return null;
+        }
+        return Transaction.fromDocument(tx);
     }
 }
 
 // export default TransactionManagement;
 let instance: TransactionManagement;
 export const getTransactionInstance = (): TransactionManagement => {
-  if (!instance) {
-    instance = new TransactionManagement();
-  }
-  return instance;
-}
+    if (!instance) {
+        instance = new TransactionManagement();
+    }
+    return instance;
+};

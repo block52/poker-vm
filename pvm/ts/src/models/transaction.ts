@@ -18,10 +18,21 @@ export class Transaction implements ICryptoModel, IJSONModel {
         // If the index is not provided, set it to 0 or look for the last index in the blockchain
     }
 
+    // add block hash setter and getter
+    public get blockHash(): string | undefined {
+        return this.blockHash;
+    }
+
+    public set blockHash(hash: string | undefined) {
+        this.blockHash = hash;
+    }
+
+    public getId(): string {
+        return this.calculateHash();
+    }
+
     public verify(): boolean {
-        const signature = createHash("sha256")
-            .update(`${this.to}${this.from}${this.value}${this.timestamp}`)
-            .digest("hex");
+        const signature = createHash("sha256").update(`${this.to}${this.from}${this.value}${this.timestamp}`).digest("hex");
 
         const hash = this.calculateHash();
         return hash === this.hash;
@@ -38,33 +49,38 @@ export class Transaction implements ICryptoModel, IJSONModel {
     //     return this.calculateHash();
     // }
 
-    public getId(): string {
-        return this.calculateHash();
-    }
-
     public static create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Transaction {
         const timestamp = BigInt(Date.now());
         const hash = createHash("sha256").update(`${to}${from}${value}${nonce}${timestamp}`).digest("hex");
         const signature = sign(hash, privateKey);
+
         return new Transaction(to, from, value, hash, signature, timestamp, undefined, nonce, data);
     }
 
     public toJson(): TransactionDTO {
         return {
+            index: this.index?.toString(),
+            nonce: this.nonce?.toString(),
             to: this.to,
             from: this.from,
             value: this.value.toString(),
             hash: this.hash,
             signature: this.signature,
             timestamp: this.timestamp.toString(),
-            index: this.index?.toString(),
-            nonce: this.nonce?.toString(),
             data: this.data
         };
     }
 
     public static fromJson(json: TransactionDTO): Transaction {
-        return new Transaction(json.to, json.from, BigInt(json.value), json.hash, json.signature, BigInt(json.timestamp), json.index ? BigInt(json.index) : undefined);
+        return new Transaction(
+            json.to,
+            json.from,
+            BigInt(json.value),
+            json.hash,
+            json.signature,
+            BigInt(json.timestamp),
+            json.index ? BigInt(json.index) : undefined
+        );
     }
 
     public static fromDocument(document: ITransactionDocument): Transaction {
@@ -81,17 +97,31 @@ export class Transaction implements ICryptoModel, IJSONModel {
         );
     }
 
-    public static toDocument(transaction: Transaction): ITransactionDocument {
+    public toDocument(): ITransactionDocument {
         return {
-            to: transaction.to,
-            from: transaction.from,
-            value: transaction.value.toString(),
-            hash: transaction.hash,
-            signature: transaction.signature,
-            timestamp: transaction.timestamp.toString(),
-            index: transaction.index?.toString(),
-            nonce: transaction.nonce?.toString(),
-            data: transaction.data
+            to: this.to,
+            from: this.from,
+            value: this.value.toString(),
+            hash: this.hash,
+            signature: this.signature,
+            timestamp: this.timestamp.toString(),
+            index: this.index?.toString(),
+            nonce: this.nonce?.toString(),
+            data: this.data,
+            block_hash: this.blockHash
         };
     }
+    // public static toDocument(transaction: Transaction): ITransactionDocument {
+    //     return {
+    //         to: transaction.to,
+    //         from: transaction.from,
+    //         value: transaction.value.toString(),
+    //         hash: transaction.hash,
+    //         signature: transaction.signature,
+    //         timestamp: transaction.timestamp.toString(),
+    //         index: transaction.index?.toString(),
+    //         nonce: transaction.nonce?.toString(),
+    //         data: transaction.data
+    //     };
+    // }
 }

@@ -38,21 +38,21 @@ export class Mempool {
             currentBlockIndex = lastBlock.index;
         }
 
-        const txid = transaction.getId();
+        // const txid = transaction.getId();
 
-        // Query blocks with index less than current block
-        const existingBlock = await Blocks.findOne({
-            index: { $lt: currentBlockIndex },
-            "transactions.id": txid
-        }).exec();
+        // // Query blocks with index less than current block
+        // const existingBlock = await Blocks.findOne({
+        //     index: { $lt: currentBlockIndex },
+        //     "transactions.id": txid
+        // }).exec();
 
-        if (existingBlock && existingBlock.transactions) {
-            const transaction = existingBlock.transactions.find((tx) => tx.id === txid);
-            if (transaction) {
-                console.log(`Transaction already in blockchain: ${transaction.id}`);
-                return;
-            }
-        }
+        // if (existingBlock && existingBlock.transactions) {
+        //     const transaction = existingBlock.transactions.find((tx) => tx.id === txid);
+        //     if (transaction) {
+        //         console.log(`Transaction already in blockchain: ${transaction.id}`);
+        //         return;
+        //     }
+        // }
 
         // Check if the transaction is valid
         if (!transaction.verify()) {

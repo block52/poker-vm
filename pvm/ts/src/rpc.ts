@@ -199,7 +199,8 @@ export class RPC {
 
             case RPCMethods.GET_TRANSACTIONS: {
                 const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
-                const command = new GetTransactionsCommand(Number(count), validatorPrivateKey);
+                const blockHash = "";
+                const command = new GetTransactionsCommand(Number(count), blockHash, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
@@ -250,7 +251,7 @@ export class RPC {
                 }
                 const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
 
-                const command = new MintCommand(depositIndex, validatorPrivateKey);
+                const command = new MintCommand(depositIndex, "", validatorPrivateKey);
                 result = await command.execute();
 
                 break;

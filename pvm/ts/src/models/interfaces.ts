@@ -20,7 +20,7 @@ export interface IBlockDocument {
     timestamp: number;
     validator: string;
     signature: string;
-    transactions?: any[];
+    // transactions?: any[];
     tx_count?: number;
 }
 
@@ -31,6 +31,7 @@ export interface IAccountDocument {
 }
 
 export interface ITransactionDocument {
+    nonce?: string;
     to: string;
     from: string;
     value: string;
@@ -38,8 +39,8 @@ export interface ITransactionDocument {
     signature: string;
     timestamp: string;
     index?: string;
-    nonce?: string;
     data?: string;
+    block_hash?: string;
 }
 
 export interface IContractSchemaDocument {
