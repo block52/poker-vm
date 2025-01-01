@@ -24,8 +24,8 @@ export class MineCommand implements ISignedCommand<Block | null> {
             return signResult(null, this.privateKey);
         }
 
-        const validTxs = this.validate(txs);
-        const uniqueTxs = await this.filter(validTxs);
+        const validTxs: Transaction[] = this.validate(txs);
+        const uniqueTxs: Transaction[] = await this.filter(validTxs);
 
         const lastBlock = await this.blockchainManagement.getLastBlock();
 
@@ -37,8 +37,17 @@ export class MineCommand implements ISignedCommand<Block | null> {
         );
 
         // Write to DB
-        await this.blockchainManagement.addBlock(block);
-        await this.mempool.clear();
+
+        // Do in parallel
+        await Promise.all([
+            this.blockchainManagement.addBlock(block),
+            this.transactionManagement.addTransactions(uniqueTxs),
+            this.mempool.clear()
+        ]);
+
+        // await this.blockchainManagement.addBlock(block);
+        // await this.transactionManagement.addTransactions(uniqueTxs);
+        // await this.mempool.clear();
 
         return signResult(block, this.privateKey);
     }

@@ -11,6 +11,7 @@ export class Block implements IJSONModel {
     public merkleRoot: string;
     public signature: string;
     public validator: string;
+    public transactionCount: number;
 
     constructor(
         readonly index: number,
@@ -30,6 +31,7 @@ export class Block implements IJSONModel {
         this.timestamp = timestamp;
         this.validator = validator || ethers.ZeroAddress;
         this.transactions = transactions || [];
+        this.transactionCount = this.transactions.length;
     }
 
     public static create(index: number, previousHash: string, transactions: Transaction[], privateKey: string): Block {

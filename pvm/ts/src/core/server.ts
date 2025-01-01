@@ -144,6 +144,8 @@ export class Server {
                 }
             })
         );
+
+        await mempool.purge();
     }
 
     private async syncDeposits() {

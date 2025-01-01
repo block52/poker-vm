@@ -13,7 +13,6 @@ export class Mempool {
     }
 
     public async add(transaction: Transaction): Promise<void> {
-
         if (this.txMap.has(transaction.hash)) {
             console.log(`Transaction already in mempool: ${transaction.hash}`);
             return;
@@ -24,17 +23,6 @@ export class Mempool {
             console.log(`Transaction already in blockchain: ${transaction.hash}`);
             return;
         }
-
-        // // Check if the transaction is already in the mempool
-        // if (this.transactions.find((tx) => tx.hash === transaction.hash)) {
-        //     console.log(`Transaction already in mempool: ${transaction.hash}`);
-        //     return;
-        // }
-
-        // // Check if the mempool is full
-        // if (this.transactions.length >= this.maxSize) {
-        //     console.log(`Mempool is full: ${this.transactions.length} / ${this.maxSize}`);
-        // }
 
         if (this.txMap.size >= this.maxSize) {
             console.log(`Mempool is full: ${this.txMap.size} / ${this.maxSize}`);
@@ -64,11 +52,18 @@ export class Mempool {
         return Array.from(this.txMap.values());
     }
 
+    public async purge() {
+        for (const tx of this.txMap.values()) {
+            if (await this.transactionManagement.exists(tx.hash)) {
+                this.txMap.delete(tx.hash);
+            }
+        }
+    }
+
     public clear() {
         // this.transactions = [];
         this.txMap.clear();
     }
-
 }
 
 let instance: Mempool;
