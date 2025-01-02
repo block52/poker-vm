@@ -24,10 +24,10 @@ export class Block implements IJSONModel {
         transactions?: Transaction[]
     ) {
         this.index = index;
-        this.hash = ethers.ZeroHash;
+        this.hash = hash || ethers.ZeroHash;
         this.previousHash = previousHash;
-        this.merkleRoot = ethers.ZeroHash;
-        this.signature = ethers.ZeroHash;
+        this.merkleRoot = merkleRoot || ethers.ZeroHash;
+        this.signature = signature || ethers.ZeroHash;
         this.timestamp = timestamp;
         this.validator = validator || ethers.ZeroAddress;
         this.transactions = transactions || [];

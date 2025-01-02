@@ -153,8 +153,6 @@ export class Server {
                 }
             })
         );
-
-        // await mempool.purge();
     }
 
     private async syncDeposits() {
@@ -171,7 +169,6 @@ export class Server {
 
     private async syncBlockchain() {
         this._syncing = true;
-        // const nodes = await getBootNodes(this.me().url);
 
         if (this.nodes.length === 0) {
             console.log("No nodes to sync with");
