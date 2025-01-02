@@ -1,6 +1,6 @@
 import { TransactionDTO } from "@bitcoinbrisbane/block52";
 import { createHash } from "crypto";
-import { sign } from "../core/signer";
+import { signData } from "../utils/crypto";
 import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
 
 export class Transaction implements ICryptoModel, IJSONModel {
@@ -47,10 +47,13 @@ export class Transaction implements ICryptoModel, IJSONModel {
     //     return this.calculateHash();
     // }
 
-    public static create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Transaction {
+    public static async create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Promise<Transaction> {
         const timestamp = BigInt(Date.now());
-        const hash = createHash("sha256").update(`${to}${from}${value}${nonce}${timestamp}`).digest("hex");
-        const signature = sign(hash, privateKey);
+        const _data = `${to}${from}${value}${nonce}${timestamp}${data}`;
+        const signature = await signData(privateKey, _data);
+
+        const hash = createHash("sha256").update(_data).digest("hex");
+        // const signature = signData(hash, privateKey);
 
         return new Transaction(to, from, value, hash, signature, timestamp, undefined, nonce, data);
     }

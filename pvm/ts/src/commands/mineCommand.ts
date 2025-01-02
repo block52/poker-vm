@@ -19,10 +19,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
     public async execute(): Promise<ISignedResponse<Block | null>> {
         const txs = this.mempool.get();
-        
-        if (txs.length === 0) {
-            return signResult(null, this.privateKey);
-        }
 
         const validTxs: Transaction[] = this.validate(txs);
         const uniqueTxs: Transaction[] = await this.filter(validTxs);
@@ -36,18 +32,13 @@ export class MineCommand implements ISignedCommand<Block | null> {
             this.privateKey
         );
 
-        // Write to DB
-
-        // Do in parallel
+        // Write to DB in parallel
         await Promise.all([
             this.blockchainManagement.addBlock(block),
             this.transactionManagement.addTransactions(uniqueTxs),
-            this.mempool.clear()
         ]);
 
-        // await this.blockchainManagement.addBlock(block);
-        // await this.transactionManagement.addTransactions(uniqueTxs);
-        // await this.mempool.clear();
+        await this.mempool.clear();
 
         return signResult(block, this.privateKey);
     }

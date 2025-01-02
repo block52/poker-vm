@@ -28,7 +28,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 this.gameManagement.join(this.to, this.from);
         }
 
-        const transferTx: Transaction = Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+        const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
         const mempool = getMempoolInstance();
         await mempool.add(transferTx);
         

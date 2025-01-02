@@ -112,6 +112,7 @@ export class Server {
             await this.syncDeposits();
             await this.syncMempool();
             await this.mine();
+            await this.purgeMempool();
 
             if (!this.synced) {
                 await this.syncBlockchain();
@@ -152,7 +153,7 @@ export class Server {
             })
         );
 
-        await mempool.purge();
+        // await mempool.purge();
     }
 
     private async syncDeposits() {
@@ -263,6 +264,11 @@ export class Server {
         }
 
         this._syncing = false;
+    }
+
+    private async purgeMempool() {
+        const mempool = getMempoolInstance();
+        await mempool.purge();
     }
 }
 

@@ -3,12 +3,10 @@ import Blocks from "../schema/blocks";
 import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
 
 export class Mempool {
-    // private readonly transactions: Transaction[];
     private readonly txMap = new Map<string, Transaction>();
     private readonly transactionManagement: TransactionManagement;
 
     constructor(readonly maxSize: number = 100) {
-        // this.transactions = [];
         this.transactionManagement = getTransactionInstance();
     }
 
@@ -49,7 +47,8 @@ export class Mempool {
     public get(): Transaction[] {
         // Order transactions by timestamp
         // return this.transactions.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
-        return Array.from(this.txMap.values());
+        const txs: Transaction[] = Array.from(this.txMap.values());
+        return txs.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
     }
 
     public async purge() {
@@ -72,5 +71,4 @@ export const getMempoolInstance = (): Mempool => {
         instance = new Mempool();
     }
     return instance;
-}
-
+};

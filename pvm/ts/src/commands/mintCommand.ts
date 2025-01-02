@@ -62,7 +62,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // TODO: Get txId from bridge contract event
         // const data = this.hash;
         const data = `MINT_${this.depositIndex}`;
-        const exists = await this.transactionManagement.exists(data);
+        const exists = await this.transactionManagement.getTransactionByData(data);
         
         if (exists) {
             throw new Error("Transaction already in blockchain");
@@ -87,7 +87,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, data);
+        const mintTx: Transaction = await Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, data);
 
         // Send to mempool
         await this.mempool.add(mintTx);
