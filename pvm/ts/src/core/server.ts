@@ -19,7 +19,8 @@ export class Server {
     private _synced: boolean = false;
     private _lastDepositSync: number = 0;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
-    private nodes: Node[] = [];
+    // private nodes: Node[] = [];
+    private readonly nodes: Map<string, Node> = new Map();
 
     constructor(private readonly privateKey: string) {
         this.isValidator = false;
@@ -125,10 +126,21 @@ export class Server {
     }
 
     private async getNodes() {
-        if (this.nodes.length === 0) {
-            this.nodes = await getBootNodes(this.me().url);
+        if (this.nodes.size === 0) {
+            // this.nodes = await getBootNodes(this.me().url);
+            const nodes = await getBootNodes(this.me().url);
+            for (const node of nodes) {
+                this.nodes.set(node.url, node);
+            }
         }
     }
+
+    // private async handShake(url: string) {
+    //     const client = new NodeRpcClient(url, this.privateKey);
+    //     const node = await client.getNode();
+    //     console.log(`Handshake with ${node.name} ${node.url}`);
+    //     this.nodes.set(node.url, node);
+    // }
 
     private async syncMempool() {
         if (!this.started) {
@@ -137,22 +149,60 @@ export class Server {
 
         const mempool = getMempoolInstance();
 
-        await Promise.all(
-            this.nodes.map(async node => {
-                try {
-                    const client = new NodeRpcClient(node.url, this.privateKey);
-                    const otherMempool: TransactionDTO[] = await client.getMempool();
-                    // Add to own mempool
-                    await Promise.all(
-                        otherMempool.map(async transaction => {
-                            await mempool.add(Transaction.fromJson(transaction));
-                        })
-                    );
-                } catch (error) {
-                    console.warn(`Missing node ${node.url}`);
-                }
-            })
-        );
+        for (const [url, node] of this.nodes) {
+            try {
+                const client = new NodeRpcClient(url, this.privateKey);
+                const otherMempool: TransactionDTO[] = await client.getMempool();
+                // Add to own mempool
+                await Promise.all(
+                    otherMempool.map(async transaction => {
+                        await mempool.add(Transaction.fromJson(transaction));
+                    })
+                );
+            } catch (error) {
+                console.warn(`Missing node ${url}, removing...`);
+                this.nodes.delete(url);
+            }
+        }
+
+        // await Promise.all(
+        //     this.nodes.forEach(async node => {
+        //         try {
+        //             const client = new NodeRpcClient(node.url, this.privateKey);
+        //             const otherMempool: TransactionDTO[] = await client.getMempool();
+        //             // Add to own mempool
+        //             await Promise.all(
+        //                 otherMempool.map(async transaction => {
+        //                     await mempool.add(Transaction.fromJson(transaction));
+        //                 })
+        //             );
+        //         } catch (error) {
+        //             console.warn(`Missing node ${node.url}`);
+        //             this.nodes
+        //         }
+        //     })
+
+            // this.nodes.map(async node => {
+            //     try {
+            //         const client = new NodeRpcClient(node.url, this.privateKey);
+            //         const otherMempool: TransactionDTO[] = await client.getMempool();
+            //         // Add to own mempool
+            //         await Promise.all(
+            //             otherMempool.map(async transaction => {
+            //                 await mempool.add(Transaction.fromJson(transaction));
+            //             })
+            //         );
+            //     } catch (error) {
+            //         console.warn(`Missing node ${node.url}`);
+            //         this.nodes
+            //     }
+            // })
+        //);
+    }
+
+    private async purgeMempool() {
+        const mempool = getMempoolInstance();
+        await mempool.purge();
     }
 
     private async syncDeposits() {
@@ -170,20 +220,20 @@ export class Server {
     private async syncBlockchain() {
         this._syncing = true;
 
-        if (this.nodes.length === 0) {
+        if (this.nodes.size === 0) {
             console.log("No nodes to sync with");
             this._syncing = false;
             this._synced = true;
             return;
         }
 
-        let highestNode: Node = this.nodes[0];
+        let highestNode: Node = Array.from(this.nodes.values())[0];
         let highestTip = 0;
 
         // create a map of nodes to their highest tip
         const nodeHeights = new Map<string, number>();
 
-        for (const node of this.nodes) {
+        for (const [url, node] of this.nodes) {
             try {
                 const client = new NodeRpcClient(node.url, this.privateKey);
                 const block = await client.getLastBlock();
@@ -262,11 +312,6 @@ export class Server {
         }
 
         this._syncing = false;
-    }
-
-    private async purgeMempool() {
-        const mempool = getMempoolInstance();
-        await mempool.purge();
     }
 }
 
