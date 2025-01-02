@@ -28,6 +28,7 @@ export class Server {
         if (privateKey && privateKey !== ZeroHash) {
             const wallet = new ethers.Wallet(privateKey);
             this.publicKey = wallet.address;
+            console.log(`Public key: ${this.publicKey}`);
             this.isValidator = true;
         }
 
