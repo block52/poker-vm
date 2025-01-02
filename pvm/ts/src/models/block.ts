@@ -24,8 +24,8 @@ export class Block implements IJSONModel {
         transactions?: Transaction[]
     ) {
         this.index = index;
-        this.hash = hash || ethers.ZeroHash;
         this.previousHash = previousHash;
+        this.hash = hash || ethers.ZeroHash;
         this.merkleRoot = merkleRoot || ethers.ZeroHash;
         this.signature = signature || ethers.ZeroHash;
         this.timestamp = timestamp;

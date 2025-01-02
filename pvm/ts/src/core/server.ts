@@ -102,6 +102,8 @@ export class Server {
         console.log("Syncing blocks...");
         await this.getNodes();
         await this.syncBlockchain();
+        await this.syncDeposits();
+        await this.syncMempool();
 
         console.log("Polling...");
         const intervalId = setInterval(async () => {
@@ -111,8 +113,6 @@ export class Server {
                 return;
             }
 
-            await this.syncDeposits();
-            await this.syncMempool();
             await this.mine();
             await this.purgeMempool();
 
