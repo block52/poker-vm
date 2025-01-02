@@ -63,6 +63,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // const data = this.hash;
         const data = `MINT_${this.depositIndex}`;
         const exists = await this.transactionManagement.exists(data);
+        
         if (exists) {
             throw new Error("Transaction already in blockchain");
         }

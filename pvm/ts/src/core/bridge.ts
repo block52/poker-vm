@@ -82,14 +82,4 @@ export class Bridge {
             }
         }
     }
-
-    // public async replay() {
-    //   // Get all transactions from the bridge contract
-    //   // For each transaction, call onDeposit
-    //   const events = await this.tokenContract.queryFilter("Transfer", 0, "latest");
-    //   for (const event of events) {
-    //     const transferEvent = event as TransferEvent;
-    //     await this.onDeposit(transaction.data., transaction.args.to, transaction.args.value, transaction.transactionHash);
-    //   }
-    // }
 }
