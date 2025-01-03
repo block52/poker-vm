@@ -121,6 +121,7 @@ export class Server {
 
             await this.mine();
             await this.purgeMempool();
+            await this.findHighestTip();
 
             if (!this.synced) {
                 await this.syncBlockchain();
@@ -133,13 +134,17 @@ export class Server {
 
     private async getNodes() {
         console.log("Finding nodes...");
+        let count = 0;
         if (this.nodes.size === 0) {
-            // this.nodes = await getBootNodes(this.me().url);
+
             const nodes = await getBootNodes(this.me().url);
+
             for (const node of nodes) {
                 this.nodes.set(node.url, node);
+                count++;
             }
         }
+        console.log(`Found ${count} nodes`);
     }
 
     // private async handShake(url: string) {
@@ -168,8 +173,9 @@ export class Server {
                     })
                 );
             } catch (error) {
-                console.warn(`Missing node ${url}, removing...`);
-                this.nodes.delete(url);
+                // Dont evict the node
+                console.warn(`Missing node ${url}`);
+                // this.nodes.delete(url);
             }
         }
 
@@ -268,7 +274,9 @@ export class Server {
             }
         }
 
-        console.log(`Highest node is ${highestNode.url} with tip ${highestTip}`);
+        // const highestNode: Node = await this.findHighestTip();
+
+        console.log(`Highest node is ${highestNode.url} with tip ${highestNode.}`);
 
         // Get my current tip
         const blockchain = getBlockchainInstance();
@@ -328,6 +336,36 @@ export class Server {
         }
 
         this._syncing = false;
+    }
+
+    private async findHighestTip(): Promise<Node> {
+        // Get my current tip
+        const blockchain = getBlockchainInstance();
+        const lastBlock = await blockchain.getLastBlock();
+        let tip = lastBlock.index;
+
+        let highestNode: Node = Array.from(this.nodes.values())[0];
+        let highestTip = 0;
+
+        for (const [url, node] of this.nodes) {
+            try {
+                const client = new NodeRpcClient(node.url, this.privateKey);
+                const block = await client.getLastBlock();
+
+                if (block.index > highestTip) {
+                    highestTip = block.index;
+                    highestNode = node;
+                }
+            } catch (error) {
+                console.warn(`Missing node ${node.url}`);
+            }
+        }
+
+        if (highestTip > tip) {
+            this._synced = false;
+        }
+
+        return highestNode;
     }
 }
 
