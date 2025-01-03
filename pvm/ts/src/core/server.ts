@@ -82,14 +82,14 @@ export class Server {
                 }
             }
         } else {
-            console.log(`I am not a validator. Waiting for next block...`);
+            console.log(`I am not a validator ${this.publicKey}. Waiting for next block...`);
         }
     }
 
     public async start() {
         // Start the server
         this._started = true;
-        console.log(`Server starting on port ${this._port} ...`);
+        console.log(`Server starting on port ${this._port}...`);
     }
 
     public async stop() {
@@ -99,8 +99,10 @@ export class Server {
     }
 
     public async bootstrap() {
-        console.log("Syncing blocks...");
+        console.log("Finding nodes...");
         await this.getNodes();
+
+        console.log("Syncing...");
         await this.syncBlockchain();
         await this.syncDeposits();
         await this.syncMempool();
@@ -109,7 +111,7 @@ export class Server {
         const intervalId = setInterval(async () => {
             if (!this._started) {
                 clearInterval(intervalId);
-                console.log("Polling stopped.");
+                console.log("Polling stopped");
                 return;
             }
 
