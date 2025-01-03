@@ -276,7 +276,7 @@ export class Server {
 
         // const highestNode: Node = await this.findHighestTip();
 
-        console.log(`Highest node is ${highestNode.url} with tip ${highestNode.}`);
+        console.log(`Highest node is ${highestNode.url} with tip ${highestTip}`);
 
         // Get my current tip
         const blockchain = getBlockchainInstance();
