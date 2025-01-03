@@ -18,7 +18,8 @@ export class BlockchainManagement extends StateManager {
     // Check to see if the block already exists
     const existingBlock = await Blocks.findOne({ hash: block.hash });
     if (existingBlock) {
-      throw new Error("Block already exists");
+      console.log(`Block already exists: ${block.hash}`);
+      return;
     }
 
     // Update the account balances
