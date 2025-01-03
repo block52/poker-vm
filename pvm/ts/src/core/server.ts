@@ -283,23 +283,23 @@ export class Server {
         const lastBlock = await blockchain.getLastBlock();
         let tip = lastBlock.index;
 
-        console.log(`My tip is ${tip}, syncing with other nodes...`);
+        // console.log(`My tip is ${tip}, syncing with other nodes...`);
 
-        for (const [url, height] of nodeHeights) {
-            console.log(`Node ${url} has tip ${height}`);
+        // for (const [url, height] of nodeHeights) {
+        //     console.log(`Node ${url} has tip ${height}`);
 
-            if (height < tip) {
-                // Send blocks to the node
-                // const blocks = await blockchain.getBlocks(tip - height);
-                const client = new NodeRpcClient(url, this.privateKey);
+        //     if (height < tip) {
+        //         // Send blocks to the node
+        //         // const blocks = await blockchain.getBlocks(tip - height);
+        //         const client = new NodeRpcClient(url, this.privateKey);
 
-                for (let i = height; i < tip; i++) {
-                    const block = await blockchain.getBlock(i);
-                    // console.log(`Sending block ${block.index} to ${url}`);
-                    // await client.sendBlock(block.toJson());
-                }
-            }
-        }
+        //         for (let i = height; i < tip; i++) {
+        //             const block = await blockchain.getBlock(i);
+        //             // console.log(`Sending block ${block.index} to ${url}`);
+        //             // await client.sendBlock(block.toJson());
+        //         }
+        //     }
+        // }
 
         if (lastBlock.index === highestTip) {
             console.log("Blockchain is synced");

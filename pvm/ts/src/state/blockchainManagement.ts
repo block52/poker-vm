@@ -3,7 +3,6 @@ import Blocks from "../schema/blocks";
 import { StateManager } from "./stateManager";
 import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
-import { TransactionList } from "../models/transactionList";
 import { BlockList } from "../models/blockList";
 import AccountManagement from "./accountManagement";
 import { TransactionManagement } from "./transactionManagement";
@@ -15,6 +14,12 @@ export class BlockchainManagement extends StateManager {
 
   public async addBlock(block: Block): Promise<void> {
     await this.connect();
+
+    // Check to see if the block already exists
+    const existingBlock = await Blocks.findOne({ hash: block.hash });
+    if (existingBlock) {
+      throw new Error("Block already exists");
+    }
 
     // Update the account balances
     const accountManagement = new AccountManagement();
