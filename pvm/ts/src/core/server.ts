@@ -97,12 +97,17 @@ export class Server {
         console.log("Server stopping...");
     }
 
-    public async bootstrap() {
-        console.log("Finding nodes...");
+    public async bootstrap(args: string[] = []) {
         await this.getNodes();
 
-        console.log("Syncing...");
-        await this.resyncBlockchain();
+        if (args.includes("--reset")) {
+            await this.resyncBlockchain();
+        }
+
+        if (!args.includes("--reset")) {
+            await this.syncBlockchain();
+        }
+
         await this.syncDeposits();
         await this.syncMempool();
 
@@ -127,6 +132,7 @@ export class Server {
     }
 
     private async getNodes() {
+        console.log("Finding nodes...");
         if (this.nodes.size === 0) {
             // this.nodes = await getBootNodes(this.me().url);
             const nodes = await getBootNodes(this.me().url);
@@ -148,6 +154,7 @@ export class Server {
             return;
         }
 
+        console.log("Syncing mempool...");
         const mempool = getMempoolInstance();
 
         for (const [url, node] of this.nodes) {
@@ -183,25 +190,26 @@ export class Server {
         //         }
         //     })
 
-            // this.nodes.map(async node => {
-            //     try {
-            //         const client = new NodeRpcClient(node.url, this.privateKey);
-            //         const otherMempool: TransactionDTO[] = await client.getMempool();
-            //         // Add to own mempool
-            //         await Promise.all(
-            //             otherMempool.map(async transaction => {
-            //                 await mempool.add(Transaction.fromJson(transaction));
-            //             })
-            //         );
-            //     } catch (error) {
-            //         console.warn(`Missing node ${node.url}`);
-            //         this.nodes
-            //     }
-            // })
+        // this.nodes.map(async node => {
+        //     try {
+        //         const client = new NodeRpcClient(node.url, this.privateKey);
+        //         const otherMempool: TransactionDTO[] = await client.getMempool();
+        //         // Add to own mempool
+        //         await Promise.all(
+        //             otherMempool.map(async transaction => {
+        //                 await mempool.add(Transaction.fromJson(transaction));
+        //             })
+        //         );
+        //     } catch (error) {
+        //         console.warn(`Missing node ${node.url}`);
+        //         this.nodes
+        //     }
+        // })
         //);
     }
 
     private async purgeMempool() {
+        console.log("Purging mempool...");
         const mempool = getMempoolInstance();
         await mempool.purge();
     }
@@ -219,6 +227,7 @@ export class Server {
     }
 
     private async resyncBlockchain() {
+        console.log("Resyncing blockchain...");
         const blockchain = getBlockchainInstance();
         await blockchain.reset();
         await this.syncBlockchain();

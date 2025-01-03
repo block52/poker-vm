@@ -32,5 +32,8 @@ app.post("/", async (req: Request, res: Response) => {
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-  getServerInstance().bootstrap();
+
+  // Get args from command line
+  const args = process.argv.slice(2);
+  getServerInstance().bootstrap(args);
 });
