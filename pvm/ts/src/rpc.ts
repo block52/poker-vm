@@ -26,7 +26,6 @@ import { ISignedResponse } from "./commands/interfaces";
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 
-
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
         console.log(request);
