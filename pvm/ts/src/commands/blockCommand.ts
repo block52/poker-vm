@@ -1,5 +1,5 @@
 import { Block } from "../models";
-import { BlockchainManagement } from "../state/blockchainManagement";
+import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
@@ -13,7 +13,7 @@ export class BlockCommand implements ISignedCommand<Block> {
   private readonly params: BlockCommandParams;
 
   constructor(params: BlockCommandParams, private readonly privateKey: string) {
-    this.blockchainManagement = new BlockchainManagement();
+    this.blockchainManagement = getBlockchainInstance();
     this.params = params;
   }
 

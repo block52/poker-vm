@@ -85,6 +85,11 @@ export class BlockchainManagement extends StateManager {
 
     return new BlockList(blocks.map(block => Block.fromDocument(block)));
   }
+
+  public async reset(): Promise<void> {
+    await this.connect();
+    await Blocks.deleteMany({});
+  }
 }
 
 let instance: BlockchainManagement;

@@ -19,7 +19,6 @@ export class Server {
     private _synced: boolean = false;
     private _lastDepositSync: number = 0;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
-    // private nodes: Node[] = [];
     private readonly nodes: Map<string, Node> = new Map();
 
     constructor(private readonly privateKey: string) {
@@ -103,7 +102,7 @@ export class Server {
         await this.getNodes();
 
         console.log("Syncing...");
-        await this.syncBlockchain();
+        await this.resyncBlockchain();
         await this.syncDeposits();
         await this.syncMempool();
 
@@ -217,6 +216,12 @@ export class Server {
             await bridge.resync();
             this._lastDepositSync = Date.now();
         }
+    }
+
+    private async resyncBlockchain() {
+        const blockchain = getBlockchainInstance();
+        await blockchain.reset();
+        await this.syncBlockchain();
     }
 
     private async syncBlockchain() {
