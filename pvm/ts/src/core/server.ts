@@ -114,7 +114,8 @@ export class Server {
             console.log(`Block mined: ${block.hash}`);
 
             // Broadcast the block hash to the network
-            const nodes = await getBootNodes(this.me().url);
+            const me = await this.me();
+            const nodes = await getBootNodes(me.url);
             for (const node of nodes) {
                 console.log(`Broadcasting block hash to ${node.url}`);
                 try {
