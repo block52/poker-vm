@@ -5,13 +5,11 @@ export const READ_METHODS = [
     RPCMethods.GET_BLOCK,
     RPCMethods.GET_BLOCKS,
     RPCMethods.GET_BLOCK_BY_HASH,
-    // RPCMethods.GET_BLOCK_HEIGHT,
     RPCMethods.GET_CLIENT,
     RPCMethods.GET_LAST_BLOCK,
     RPCMethods.GET_MEMPOOL,
     RPCMethods.GET_TRANSACTIONS,
     RPCMethods.GET_NODES,
-    RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.GET_CONTRACT_SCHEMA,
     RPCMethods.GET_GAME_STATE
 ];
@@ -21,6 +19,7 @@ export const WRITE_METHODS = [
     RPCMethods.CREATE_CONTRACT_SCHEMA,
     RPCMethods.CREATE_ACCOUNT,
     RPCMethods.MINE,
+    RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.MINT,
     RPCMethods.TRANSFER
 ];

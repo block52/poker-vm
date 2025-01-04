@@ -121,7 +121,9 @@ export class Server {
                 console.log(`Broadcasting block hash to ${node.url}`);
                 try {
                     const client = new NodeRpcClient(node.url, this.privateKey);
-                    await client.sendBlockHash(block.hash, me.url);
+                    const blockDTO: BlockDTO = block.toJson();
+                    const blockJSON = JSON.stringify(blockDTO);
+                    await client.sendBlock(block.hash, blockJSON);
                 } catch (error) {
                     console.warn(`Missing node ${node.url}`);
                 }
@@ -270,12 +272,12 @@ export class Server {
                     highestNode = node;
                 }
 
-                // If were higher than the tip, broadcast the block
-                for (let i = block.index; i <= tip; i++) {
-                    console.log(`Sending block hash ${i} to ${node.url}`);
-                    const block = await blockchain.getBlock(i);
-                    await client.sendBlockHash(block.hash, me.url);
-                }
+                // // If were higher than the tip, broadcast the block
+                // for (let i = block.index; i <= tip; i++) {
+                //     console.log(`Sending block hash ${i} to ${node.url}`);
+                //     const block = await blockchain.getBlock(i);
+                //     await client.sendBlockHash(block.hash, me.url);
+                // }
 
                 // Update the node height
                 nodeHeights.set(node.url, block.index);

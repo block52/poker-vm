@@ -4,12 +4,12 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
 import { Block } from "../models";
 
-export class ReceiveMinedBlockHashCommand implements ISignedCommand<string> {
+export class ReceiveMinedBlockCommand implements ISignedCommand<string> {
     private readonly blockchainManagement: BlockchainManagement;
 
     constructor(
         private readonly blockHash: string,
-        private readonly nodeUrl: string,
+        private readonly blockDTO: BlockDTO,
         private readonly privateKey: string
     ) {
         this.blockchainManagement = getBlockchainInstance();
@@ -17,18 +17,13 @@ export class ReceiveMinedBlockHashCommand implements ISignedCommand<string> {
 
     public async execute(): Promise<ISignedResponse<string>> {
         console.log(`Received mined block hash: ${this.blockHash}`);
-        console.log(`Downloading block from URL: ${this.nodeUrl}`);
 
-        // Download the block from the URL
-        const client = new NodeRpcClient(this.nodeUrl, this.privateKey);
-        const blockDTO: BlockDTO = await client.getBlockByHash(this.blockHash);
-
-        if (!blockDTO) {
-            throw new Error(`Block not found: ${this.blockHash}`);
+        if (await this.blockchainManagement.getBlockByHash(this.blockHash)) {
+            console.log(`Block already in blockchain: ${this.blockHash}`);
+            return signResult(this.blockHash, this.privateKey);
         }
 
-        const block: Block = Block.fromJson(blockDTO);
-
+        const block: Block = Block.fromJson(this.blockDTO);
         console.log(`Block: ${JSON.stringify(block)}`);
         await this.blockchainManagement.addBlock(block);
 

@@ -99,15 +99,6 @@ export class RPC {
                 break;
             }
 
-            // case RPCMethods.GET_BALANCE: {
-            //     if (!request.params) {
-            //         return makeErrorRPCResponse(id, "Invalid params");
-            //     }
-            //     let command = new BalanceCommand(request.params[0] as string, validatorPrivateKey);
-            //     result = await command.execute();
-            //     break;
-            // }
-
             case RPCMethods.GET_BLOCK: {
 
                 const params: BlockCommandParams = {
@@ -186,15 +177,6 @@ export class RPC {
 
             case RPCMethods.GET_MEMPOOL: {
                 const command = new MempoolCommand(validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
-
-            // TODO: This should be a write method
-            case RPCMethods.MINED_BLOCK_HASH: {
-                const blockHash = request.params[0] as string;
-                const nodeUrl = request.params[1] as string;
-                const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
@@ -298,6 +280,14 @@ export class RPC {
 
             case RPCMethods.MINE: {
                 const command = new MineCommand(validatorPrivateKey);
+                result = await command.execute();
+                break;
+            }
+
+            case RPCMethods.MINED_BLOCK_HASH: {
+                const blockHash = request.params[0] as string;
+                const nodeUrl = request.params[1] as string;
+                const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
