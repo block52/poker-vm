@@ -129,7 +129,7 @@ export class Server {
                 }
             }
         } else {
-            console.log(`I am not a validator ${this.publicKey}. Waiting for next block...`);
+            console.log(`I ${this.publicKey} am not a validator, looking for ${validatorAddress}. Waiting for next block...`);
         }
     }
 
