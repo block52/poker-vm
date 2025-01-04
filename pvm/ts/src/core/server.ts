@@ -19,7 +19,7 @@ export class Server {
     private _synced: boolean = false;
     private _lastDepositSync: number = 0;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
-    private readonly nodes: Map<string, Node> = new Map();
+    private readonly _nodes: Map<string, Node> = new Map();
 
     constructor(private readonly privateKey: string) {
         this.isValidator = false;
@@ -55,6 +55,9 @@ export class Server {
         return this._synced;
     }
 
+    get nodes(): Map<string, Node> {
+        return this._nodes;
+    }
 
     public async start() {
         // Start the server
@@ -69,7 +72,7 @@ export class Server {
     }
 
     public async bootstrap(args: string[] = []) {
-        await this.getNodes();
+        await this.loadNodes();
 
         args.includes("--reset") ? await this.resyncBlockchain() : await this.syncBlockchain();
 
@@ -133,16 +136,16 @@ export class Server {
         }
     }
 
-    private async getNodes() {
+    private async loadNodes() {
         console.log("Loading boot nodes...");
         let count = 0;
-        if (this.nodes.size === 0) {
+        if (this._nodes.size === 0) {
 
             const me: Node = await this.me();
             const nodes = await getBootNodes(me.url);
 
             for (const node of nodes) {
-                this.nodes.set(node.url, node);
+                this._nodes.set(node.url, node);
                 count++;
             }
         }
@@ -157,7 +160,7 @@ export class Server {
         console.log("Syncing mempool...");
         const mempool = getMempoolInstance();
 
-        for (const [url, node] of this.nodes) {
+        for (const [url, node] of this._nodes) {
             try {
                 const client = new NodeRpcClient(url, this.privateKey);
                 const otherMempool: TransactionDTO[] = await client.getMempool();
@@ -170,12 +173,12 @@ export class Server {
             } catch (error) {
                 // Don't evict the node
                 console.warn(`Missing node ${url}`);
-                // this.nodes.delete(url);
+                // this._nodes.delete(url);
             }
         }
 
         // await Promise.all(
-        //     this.nodes.forEach(async node => {
+        //     this._nodes.forEach(async node => {
         //         try {
         //             const client = new NodeRpcClient(node.url, this.privateKey);
         //             const otherMempool: TransactionDTO[] = await client.getMempool();
@@ -187,11 +190,11 @@ export class Server {
         //             );
         //         } catch (error) {
         //             console.warn(`Missing node ${node.url}`);
-        //             this.nodes
+        //             this._nodes
         //         }
         //     })
 
-        // this.nodes.map(async node => {
+        // this._nodes.map(async node => {
         //     try {
         //         const client = new NodeRpcClient(node.url, this.privateKey);
         //         const otherMempool: TransactionDTO[] = await client.getMempool();
@@ -203,7 +206,7 @@ export class Server {
         //         );
         //     } catch (error) {
         //         console.warn(`Missing node ${node.url}`);
-        //         this.nodes
+        //         this._nodes
         //     }
         // })
         //);
@@ -237,7 +240,7 @@ export class Server {
     private async syncBlockchain() {
         this._syncing = true;
 
-        if (this.nodes.size === 0) {
+        if (this._nodes.size === 0) {
             console.log("No nodes to sync with");
             this._syncing = false;
             this._synced = true;
@@ -253,14 +256,14 @@ export class Server {
         const tip = lastBlock.index;
         console.log(`My tip is ${tip}, syncing with other nodes...`);
 
-        let highestNode: Node = Array.from(this.nodes.values())[0];
+        let highestNode: Node = Array.from(this._nodes.values())[0];
         let highestTip = 0;
 
         // create a map of nodes to their highest tip
         const nodeHeights = new Map<string, number>();
 
         // Find the highest tip
-        for (const [url, node] of this.nodes) {
+        for (const [url, node] of this._nodes) {
             try {
                 const client = new NodeRpcClient(node.url, this.privateKey);
                 const block = await client.getLastBlock();
@@ -332,10 +335,10 @@ export class Server {
         const lastBlock = await blockchain.getLastBlock();
         let tip = lastBlock.index;
 
-        let highestNode: Node = Array.from(this.nodes.values())[0];
+        let highestNode: Node = Array.from(this._nodes.values())[0];
         let highestTip = 0;
 
-        for (const [url, node] of this.nodes) {
+        for (const [url, node] of this._nodes) {
             try {
                 const client = new NodeRpcClient(node.url, this.privateKey);
                 const block = await client.getLastBlock();

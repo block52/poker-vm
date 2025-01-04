@@ -16,6 +16,7 @@ import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { MineCommand } from "./commands/mineCommand";
 import { MintCommand } from "./commands/mintCommand";
+import { ReceiveMinedBlockCommand } from "./commands/receiveMinedBlockCommand";
 import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
@@ -25,7 +26,10 @@ import { TransferCommand } from "./commands/transferCommand";
 import { ISignedResponse } from "./commands/interfaces";
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
-import { ReceiveMinedBlockCommand } from "./commands/receiveMinedBlockCommand";
+import { get } from "axios";
+import { getServerInstance } from "./core/server";
+import { Node } from "./core/types";
+
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -171,7 +175,9 @@ export class RPC {
             }
 
             case RPCMethods.GET_NODES: {
-                const command = new GetNodesCommand(validatorPrivateKey);
+                const server = getServerInstance();
+                const nodes: Map<string, Node> = server.nodes;
+                const command = new GetNodesCommand(nodes, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
