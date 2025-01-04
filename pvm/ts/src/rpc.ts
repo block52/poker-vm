@@ -1,6 +1,6 @@
 import { ZeroHash } from "ethers";
 
-import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+import { BlockDTO, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import { AccountCommand } from "./commands/accountCommand";
 import { BlockCommand, BlockCommandParams } from "./commands/blockCommand";
@@ -25,6 +25,7 @@ import { TransferCommand } from "./commands/transferCommand";
 import { ISignedResponse } from "./commands/interfaces";
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
+import { ReceiveMinedBlockCommand } from "./commands/receiveMinedBlockCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -228,6 +229,16 @@ export class RPC {
         let result: ISignedResponse<any | null>;
         switch (method) {
             // Write methods
+
+            case RPCMethods.GET_BLOCK: {
+                const blockHash = request.params[0] as string;
+                const blockJSON = request.params[1] as string;
+                const blockDTO: BlockDTO = JSON.parse(blockJSON);
+                const command = new ReceiveMinedBlockCommand(blockHash, blockDTO, validatorPrivateKey);
+                result = await command.execute();
+                break;
+            }
+
             case RPCMethods.MINT: {
                 if (request.params?.length !== 1) {
                     return makeErrorRPCResponse(id, "Invalid params");
