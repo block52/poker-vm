@@ -36,9 +36,11 @@ export class Server {
         this._lastDepositSync = Date.now();
     }
 
-    public me(): Node {
+    public async me(): Promise<Node> {
+        const blockchain = getBlockchainInstance();
+        const lastBlock = await blockchain.getLastBlock();
         const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
-        return new Node("pvm-typescript", this.publicKey, url, "1.0.2", this.isValidator);
+        return new Node("pvm-typescript", this.publicKey, url, "1.0.2", this.isValidator, lastBlock.index);
     }
 
     get started(): boolean {
@@ -51,6 +53,48 @@ export class Server {
 
     get synced(): boolean {
         return this._synced;
+    }
+
+
+    public async start() {
+        // Start the server
+        this._started = true;
+        console.log(`Server starting on port ${this._port}...`);
+    }
+
+    public async stop() {
+        // Stop the server
+        this._started = false;
+        console.log("Server stopping...");
+    }
+
+    public async bootstrap(args: string[] = []) {
+        await this.getNodes();
+
+        args.includes("--reset") ? await this.resyncBlockchain() : await this.syncBlockchain();
+
+        await this.syncDeposits();
+        await this.syncMempool();
+
+        console.log("Polling...");
+        const intervalId = setInterval(async () => {
+            if (!this._started) {
+                clearInterval(intervalId);
+                console.log("Polling stopped");
+                return;
+            }
+
+            await this.mine();
+            await this.purgeMempool();
+            await this.findHighestTip();
+
+            if (!this.synced) {
+                await this.syncBlockchain();
+            }
+        }, 15000);
+
+        this._started = true;
+        console.log("Server started");
     }
 
     public async mine() {
@@ -85,59 +129,13 @@ export class Server {
         }
     }
 
-    public async start() {
-        // Start the server
-        this._started = true;
-        console.log(`Server starting on port ${this._port}...`);
-    }
-
-    public async stop() {
-        // Stop the server
-        this._started = false;
-        console.log("Server stopping...");
-    }
-
-    public async bootstrap(args: string[] = []) {
-        await this.getNodes();
-
-        if (args.includes("--reset")) {
-            await this.resyncBlockchain();
-        }
-
-        if (!args.includes("--reset")) {
-            await this.syncBlockchain();
-        }
-
-        await this.syncDeposits();
-        await this.syncMempool();
-
-        console.log("Polling...");
-        const intervalId = setInterval(async () => {
-            if (!this._started) {
-                clearInterval(intervalId);
-                console.log("Polling stopped");
-                return;
-            }
-
-            await this.mine();
-            await this.purgeMempool();
-            await this.findHighestTip();
-
-            if (!this.synced) {
-                await this.syncBlockchain();
-            }
-        }, 15000);
-
-        this._started = true;
-        console.log("Server started");
-    }
-
     private async getNodes() {
-        console.log("Finding nodes...");
+        console.log("Loading boot nodes...");
         let count = 0;
         if (this.nodes.size === 0) {
 
-            const nodes = await getBootNodes(this.me().url);
+            const me: Node = await this.me();
+            const nodes = await getBootNodes(me.url);
 
             for (const node of nodes) {
                 this.nodes.set(node.url, node);
@@ -146,13 +144,6 @@ export class Server {
         }
         console.log(`Found ${count} nodes`);
     }
-
-    // private async handShake(url: string) {
-    //     const client = new NodeRpcClient(url, this.privateKey);
-    //     const node = await client.getNode();
-    //     console.log(`Handshake with ${node.name} ${node.url}`);
-    //     this.nodes.set(node.url, node);
-    // }
 
     private async syncMempool() {
         if (!this.started) {
@@ -173,7 +164,7 @@ export class Server {
                     })
                 );
             } catch (error) {
-                // Dont evict the node
+                // Don't evict the node
                 console.warn(`Missing node ${url}`);
                 // this.nodes.delete(url);
             }
@@ -274,16 +265,14 @@ export class Server {
             }
         }
 
-        // const highestNode: Node = await this.findHighestTip();
-
         console.log(`Highest node is ${highestNode.url} with tip ${highestTip}`);
 
         // Get my current tip
         const blockchain = getBlockchainInstance();
         const lastBlock = await blockchain.getLastBlock();
-        let tip = lastBlock.index;
-
-        // console.log(`My tip is ${tip}, syncing with other nodes...`);
+        
+        const tip = lastBlock.index;
+        console.log(`My tip is ${tip}, syncing with other nodes...`);
 
         // for (const [url, height] of nodeHeights) {
         //     console.log(`Node ${url} has tip ${height}`);
