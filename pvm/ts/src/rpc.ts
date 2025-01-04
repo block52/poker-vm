@@ -128,19 +128,21 @@ export class RPC {
                     params.index = BigInt(index);
                     command = new BlockCommand(params, validatorPrivateKey);
                 }
+
                 result = await command.execute();
                 break;
             }
 
-            // case RPCMethods.GET_BLOCK_BY_HASH : {
-            //     const params: BlockCommandParams = {
-            //         index: undefined,
-            //         hash: undefined
-            //     }
-            //     const command = new BlockCommand(params, validatorPrivateKey);
-            //     result = await command.execute();
-            //     break;
-            // }
+            case RPCMethods.GET_BLOCK_BY_HASH : {
+                const params: BlockCommandParams = {
+                    index: undefined,
+                    hash: request.params[0] as string
+                }
+
+                const command = new BlockCommand(params, validatorPrivateKey);
+                result = await command.execute();
+                break;
+            }
 
             case RPCMethods.GET_BLOCK_HEIGHT: {
                 const params: BlockCommandParams = {
@@ -188,10 +190,11 @@ export class RPC {
                 break;
             }
 
-            //TODO: This should be a write method
+            // TODO: This should be a write method
             case RPCMethods.MINED_BLOCK_HASH: {
                 const blockHash = request.params[0] as string;
-                const command = new ReceiveMinedBlockHashCommand(blockHash, validatorPrivateKey);
+                const nodeUrl = request.params[1] as string;
+                const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
                 result = await command.execute();
                 break;
             }
@@ -232,7 +235,6 @@ export class RPC {
                 ...result,
                 data: result.data?.toJson ? result.data.toJson() : result.data
             }
-            //result.data?.toJson ? result.data.toJson() : result.data
         };
     }
 

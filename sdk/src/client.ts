@@ -27,6 +27,10 @@ export class NodeRpcClient {
         return this.requestId.toString();
     }
 
+    /**
+     * Get the address of the account
+     * @returns The address of the account
+     */
     private getAddress(): string {
         if (!this.wallet) {
             throw new Error("Cannot get address without a private key");
@@ -85,7 +89,8 @@ export class NodeRpcClient {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_LAST_BLOCK,
-            params: []
+            params: [],
+            data: undefined
         });
         // Convert the received BlockDTO to a Block instance
         return body.result.data;
@@ -100,7 +105,8 @@ export class NodeRpcClient {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO[]> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_BLOCKS,
-            params: [count ?? 100]
+            params: [count ?? 100],
+            data: undefined
         });
         return body.result.data;
     }
@@ -120,6 +126,20 @@ export class NodeRpcClient {
     }
 
     /**
+     * Get a block from the remote node
+     * @param index The index of the block to get
+     * @returns A Promise resolving to a of Block object
+     */
+    public async getBlockByHash(hash: string): Promise<BlockDTO> {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_BLOCK,
+            params: [hash]
+        });
+        return body.result.data;
+    }
+
+    /**
      * Get the block height from the remote node
      * @returns A Promise resolving to the block height
      */
@@ -130,6 +150,19 @@ export class NodeRpcClient {
             params: []
         });
         return body.result.data;
+    }
+
+    /**
+     * Send a block to the remote node
+     * @param block The block to send
+     * @returns A Promise that resolves when the request is complete
+     */
+    public async sendBlock(block: string): Promise<void> {
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.MINED_BLOCK_HASH,
+            params: [block]
+        });
     }
 
     /**

@@ -116,6 +116,7 @@ export class Server {
             // Broadcast the block hash to the network
             const me = await this.me();
             const nodes = await getBootNodes(me.url);
+            
             for (const node of nodes) {
                 console.log(`Broadcasting block hash to ${node.url}`);
                 try {
@@ -241,21 +242,34 @@ export class Server {
             return;
         }
 
+        // Get my current tip
+        const blockchain = getBlockchainInstance();
+        const lastBlock = await blockchain.getLastBlock();
+        const tip = lastBlock.index;
+        console.log(`My tip is ${tip}, syncing with other nodes...`);
+
         let highestNode: Node = Array.from(this.nodes.values())[0];
         let highestTip = 0;
 
         // create a map of nodes to their highest tip
         const nodeHeights = new Map<string, number>();
 
+        // Find the highest tip
         for (const [url, node] of this.nodes) {
             try {
                 const client = new NodeRpcClient(node.url, this.privateKey);
                 const block = await client.getLastBlock();
                 console.info(`Received block ${block.index} ${block.hash} from ${node.url}`);
 
+                // Update the highest known tip
                 if (block.index > highestTip) {
                     highestTip = block.index;
                     highestNode = node;
+                }
+
+                // If were higher than the tip, broadcast the block
+                if (block.index <= tip) {
+                    
                 }
 
                 // Update the node height
@@ -268,28 +282,6 @@ export class Server {
 
         console.log(`Highest node is ${highestNode.url} with tip ${highestTip}`);
 
-        // Get my current tip
-        const blockchain = getBlockchainInstance();
-        const lastBlock = await blockchain.getLastBlock();
-        
-        const tip = lastBlock.index;
-        console.log(`My tip is ${tip}, syncing with other nodes...`);
-
-        // for (const [url, height] of nodeHeights) {
-        //     console.log(`Node ${url} has tip ${height}`);
-
-        //     if (height < tip) {
-        //         // Send blocks to the node
-        //         // const blocks = await blockchain.getBlocks(tip - height);
-        //         const client = new NodeRpcClient(url, this.privateKey);
-
-        //         for (let i = height; i < tip; i++) {
-        //             const block = await blockchain.getBlock(i);
-        //             // console.log(`Sending block ${block.index} to ${url}`);
-        //             // await client.sendBlock(block.toJson());
-        //         }
-        //     }
-        // }
 
         if (lastBlock.index === highestTip) {
             console.log("Blockchain is synced");
