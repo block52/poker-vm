@@ -155,26 +155,28 @@ export class NodeRpcClient {
     /**
      * Send a block to the remote node
      * @param block The block to send
+     * @param nodeUrl The URL of the node to send the block from
      * @returns A Promise that resolves when the request is complete
      */
-    public async sendBlock(block: string): Promise<void> {
+    public async sendBlock(block: string, nodeUrl: string): Promise<void> {
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.MINED_BLOCK_HASH,
-            params: [block]
+            params: [block, nodeUrl]
         });
     }
 
     /**
      * Send a block hash to the remote node
      * @param blockHash The hash of the block to send
+     * @param nodeUrl The URL of the node to send the block from
      * @returns A Promise that resolves when the request is complete
      */
-    public async sendBlockHash(blockHash: string): Promise<void> {
+    public async sendBlockHash(blockHash: string, nodeUrl: string): Promise<void> {
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.MINED_BLOCK_HASH,
-            params: [blockHash]
+            params: [blockHash, nodeUrl]
         });
     }
 

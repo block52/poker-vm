@@ -296,10 +296,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitcoinbrisbane/block52@1.0.35":
-  version "1.0.35"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.35.tgz#01fddaad7a0a9b2ff41a5fba96c1cd3928670f17"
-  integrity sha512-veqjQQKLOtBq5qzX3wnIz40P/sMUUzpO183viw2sWFIZ3mzHVytaC5nX3mSOoZfRC0Czdd4fSCBkRxG/9QTpkA==
+"@bitcoinbrisbane/block52@1.0.36":
+  version "1.0.36"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.36.tgz#e463bb0a3ae0a380cf8b1bf70aa94c0103a15aed"
+  integrity sha512-JfUXM8+uo4+D26LDz0eVMwSXaQ4igONf8pODFX83obbQryHmpCkqcAWljp1YIJw9zAnhxIh0cW0dyRl01BJiPg==
   dependencies:
     axios "^1.7.9"
     bigunit "^1.2.5"

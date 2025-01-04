@@ -116,12 +116,12 @@ export class Server {
             // Broadcast the block hash to the network
             const me = await this.me();
             const nodes = await getBootNodes(me.url);
-            
+
             for (const node of nodes) {
                 console.log(`Broadcasting block hash to ${node.url}`);
                 try {
                     const client = new NodeRpcClient(node.url, this.privateKey);
-                    await client.sendBlockHash(block.hash);
+                    await client.sendBlockHash(block.hash, me.url);
                 } catch (error) {
                     console.warn(`Missing node ${node.url}`);
                 }
@@ -242,6 +242,9 @@ export class Server {
             return;
         }
 
+        // Get me
+        const me = await this.me();
+
         // Get my current tip
         const blockchain = getBlockchainInstance();
         const lastBlock = await blockchain.getLastBlock();
@@ -268,8 +271,10 @@ export class Server {
                 }
 
                 // If were higher than the tip, broadcast the block
-                if (block.index <= tip) {
-                    
+                for (let i = block.index; i <= tip; i++) {
+                    console.log(`Sending block hash ${i} to ${node.url}`);
+                    const block = await blockchain.getBlock(i);
+                    await client.sendBlockHash(block.hash, me.url);
                 }
 
                 // Update the node height
@@ -281,7 +286,6 @@ export class Server {
         }
 
         console.log(`Highest node is ${highestNode.url} with tip ${highestTip}`);
-
 
         if (lastBlock.index === highestTip) {
             console.log("Blockchain is synced");
