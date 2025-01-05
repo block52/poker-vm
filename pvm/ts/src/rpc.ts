@@ -26,10 +26,8 @@ import { TransferCommand } from "./commands/transferCommand";
 import { ISignedResponse } from "./commands/interfaces";
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
-import { get } from "axios";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
-
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
