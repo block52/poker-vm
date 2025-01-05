@@ -1,9 +1,20 @@
 // types.ts
 export interface Player {
-    index: number; // Unique identifier for the player
-    balance: number; // Player's current balance
-    status: string; // Player's current choice (e.g., "fold", "call")
-    pot: number; // Player's contribution to the pot
+    index: number;
+    address: string;
+    seat: number;
+    holeCards: string[];
+    status: string;
+    lastAction: LastActionType;
+    actions: string[];
+    action: string;
+    timeout: number;
+    signature: string;
+}
+
+export interface LastActionType {
+    action: string;
+    amount: number;
 }
 
 export interface PlayerContextType {

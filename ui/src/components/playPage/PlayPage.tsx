@@ -21,6 +21,7 @@ import { HiPlus } from "react-icons/hi2";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
+import useUserSeat from "../../hooks/useUserSeat";
 //* Define the interface for the position object
 interface PositionArray {
     left?: string;
@@ -39,6 +40,11 @@ const calculateZoom = () => {
 };
 
 function PlayPage() {
+    const { id } = useParams<{ id: string }>();
+    if (!id) {
+        return <></>;
+    };
+    const { seat } = useUserSeat(id, 1);
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -47,7 +53,6 @@ function PlayPage() {
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
-    const { id } = useParams<{ id: string }>();
 
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
@@ -57,7 +62,7 @@ function PlayPage() {
     const navigate = useNavigate();
 
     const { account, balance, isLoading } = useUserWallet();
-    const { type } = id ? useTableType(id) : { type: undefined };
+    const { type } = useTableType(id);
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -73,6 +78,7 @@ function PlayPage() {
     //         color: colors[index]
     //     }));
     // };
+    useEffect(() => seat ? setStartIndex(seat) : setStartIndex(0), [seat])
 
     useEffect(() => {
         const reorderedPlayerArray = [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)];
@@ -285,7 +291,7 @@ function PlayPage() {
                                                         }}
                                                         className="absolute"
                                                     >
-                                                        <Chip amount={players[index].pot} />
+                                                        <Chip amount={2} />
                                                     </div>
                                                 );
                                             })}
