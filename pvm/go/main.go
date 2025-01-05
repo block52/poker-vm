@@ -46,6 +46,10 @@ func main() {
     // Save blocks to rocks
     store, err := blocks.NewBlockStore("/home/lucascullen/GitHub/block52/poker-vm/pvm/go/data")
 
+    if err != nil {
+        log.Fatalf("failed to create block store: %v", err)
+    }
+
     blocksPtrs := make([]*node.Block, len(_blocks.Blocks))
     for i := range _blocks.Blocks {
         blocksPtrs[i] = &_blocks.Blocks[i]
@@ -54,4 +58,11 @@ func main() {
     if err := store.SaveBlocks(blocksPtrs); err != nil {
         log.Fatalf("failed to save blocks: %v", err)
     }
+
+    block, err := store.GetBlock(1)
+    if err != nil {
+        log.Fatalf("failed to get block: %v", err)
+    }
+
+    fmt.Printf("Block #%d: %s\n", block.Index, block.Hash)
 }
