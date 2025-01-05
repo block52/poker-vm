@@ -1,6 +1,6 @@
 package node
 
-import "encoding/json"
+// import "encoding/json"
 
 // Node represents a poker virtual machine node in the network
 type Node struct {
@@ -26,31 +26,31 @@ type Block struct {
 	Transactions []any  `json:"transactions"`
 }
 
-// RPCRequest represents a JSON-RPC 2.0 request
-type RPCRequest struct {
-	Method  string        `json:"method"`
-	Params  []interface{} `json:"params"`
-	ID      int           `json:"id"`
-	JSONRPC string        `json:"jsonrpc"`
-}
+// // RPCRequest represents a JSON-RPC 2.0 request
+// type RPCRequest struct {
+// 	Method  string        `json:"method"`
+// 	Params  []interface{} `json:"params"`
+// 	ID      int           `json:"id"`
+// 	JSONRPC string        `json:"jsonrpc"`
+// }
 
-// RPCResponse represents a JSON-RPC 2.0 response
-type RPCResponse struct {
-	Result  json.RawMessage `json:"result,omitempty"`
-	Error   *RPCError       `json:"error,omitempty"`
-	ID      int             `json:"id"`
-	JSONRPC string          `json:"jsonrpc"`
-}
+// // RPCResponse represents a JSON-RPC 2.0 response
+// type RPCResponse struct {
+// 	Result  json.RawMessage `json:"result,omitempty"`
+// 	Error   *RPCError       `json:"error,omitempty"`
+// 	ID      int             `json:"id"`
+// 	JSONRPC string          `json:"jsonrpc"`
+// }
 
-// RPCError represents a JSON-RPC 2.0 error
-type RPCError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
+// // RPCError represents a JSON-RPC 2.0 error
+// type RPCError struct {
+// 	Code    int    `json:"code"`
+// 	Message string `json:"message"`
+// }
 
 // BlocksResponse represents the structure of the get_blocks RPC response
 type BlocksResponse struct {
-	ID      string     `json:"id"`
+	ID      int        `json:"id"`
 	Result  BlocksData `json:"result"`
 	JSONRPC string     `json:"jsonrpc"`
 }
@@ -62,7 +62,7 @@ type BlocksData struct {
 
 // NodeBlocks represents the blocks data returned from a node
 type NodeBlocks struct {
-	Node   *Node   `json:"node"`
+	// Node   *Node   `json:"node"`
 	Blocks []Block `json:"blocks"`
 	Error  error   `json:"error,omitempty"`
 }

@@ -1,238 +1,239 @@
 package node
 
 import (
-    "bytes"
-    "encoding/json"
-    "fmt"
-    "io"
-    "net/http"
-    "time"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+    "github.com/bitcoinbrisbane/poker-vm/pkg/rpc"
 )
 
 // NewNode creates a new Node instance with default values
 func NewNode(client, publicKey, url, version, name string, isValidator bool) *Node {
-    return &Node{
-        Client:      client,
-        PublicKey:   publicKey,
-        URL:         url,
-        Version:     version,
-        IsValidator: isValidator,
-        Name:        name,
-        Height:      0,
-    }
+	return &Node{
+		Client:      client,
+		PublicKey:   publicKey,
+		URL:         url,
+		Version:     version,
+		IsValidator: isValidator,
+		Name:        name,
+		Height:      0,
+	}
 }
 
 // ToJSON converts the Node to a map for JSON serialization
 func (n *Node) ToJSON() map[string]interface{} {
-    return map[string]interface{}{
-        "client":      n.Client,
-        "publicKey":   n.PublicKey,
-        "url":        n.URL,
-        "version":    n.Version,
-        "isValidator": n.IsValidator,
-        "name":       n.Name,
-        "height":     n.Height,
-    }
+	return map[string]interface{}{
+		"client":      n.Client,
+		"publicKey":   n.PublicKey,
+		"url":         n.URL,
+		"version":     n.Version,
+		"isValidator": n.IsValidator,
+		"name":        n.Name,
+		"height":      n.Height,
+	}
 }
 
 // FromJSON populates the Node from a JSON map
 func (n *Node) FromJSON(data map[string]interface{}) error {
-    if client, ok := data["client"].(string); ok {
-        n.Client = client
-    }
-    if publicKey, ok := data["publicKey"].(string); ok {
-        n.PublicKey = publicKey
-    }
-    if url, ok := data["url"].(string); ok {
-        n.URL = url
-    }
-    if version, ok := data["version"].(string); ok {
-        n.Version = version
-    }
-    if isValidator, ok := data["isValidator"].(bool); ok {
-        n.IsValidator = isValidator
-    }
-    if name, ok := data["name"].(string); ok {
-        n.Name = name
-    }
-    if height, ok := data["height"].(float64); ok {
-        n.Height = int64(height)
-    }
-    return nil
+	if client, ok := data["client"].(string); ok {
+		n.Client = client
+	}
+	if publicKey, ok := data["publicKey"].(string); ok {
+		n.PublicKey = publicKey
+	}
+	if url, ok := data["url"].(string); ok {
+		n.URL = url
+	}
+	if version, ok := data["version"].(string); ok {
+		n.Version = version
+	}
+	if isValidator, ok := data["isValidator"].(bool); ok {
+		n.IsValidator = isValidator
+	}
+	if name, ok := data["name"].(string); ok {
+		n.Name = name
+	}
+	if height, ok := data["height"].(float64); ok {
+		n.Height = int64(height)
+	}
+	return nil
 }
 
 // GetTime returns the block timestamp as a time.Time
 func (b *Block) GetTime() time.Time {
-    return time.UnixMilli(b.Timestamp)
+	return time.UnixMilli(b.Timestamp)
 }
 
 // FetchBootnodes retrieves and parses the bootnode list from the given URL
 func FetchBootnodes(url string) ([]*Node, error) {
-    resp, err := http.Get(url)
-    if err != nil {
-        return nil, err
-    }
-    defer resp.Body.Close()
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return nil, err
-    }
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
-    var nodesData []map[string]interface{}
-    if err := json.Unmarshal(body, &nodesData); err != nil {
-        return nil, err
-    }
+	var nodesData []map[string]interface{}
+	if err := json.Unmarshal(body, &nodesData); err != nil {
+		return nil, err
+	}
 
-    nodes := make([]*Node, len(nodesData))
-    for i, nodeData := range nodesData {
-        node := &Node{}
-        if err := node.FromJSON(nodeData); err != nil {
-            return nil, err
-        }
-        nodes[i] = node
-    }
+	nodes := make([]*Node, len(nodesData))
+	for i, nodeData := range nodesData {
+		node := &Node{}
+		if err := node.FromJSON(nodeData); err != nil {
+			return nil, err
+		}
+		nodes[i] = node
+	}
 
-    return nodes, nil
+	return nodes, nil
 }
 
 // GetHighestIndexBootNode returns the boot node with the highest index
 func GetHighestIndexBootNode() *Node {
-    nodes, err := FetchBootnodes("https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json")
+	nodes, err := FetchBootnodes("https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json")
 
-    if err != nil {
-        return nil
-    }
+	if err != nil {
+		return nil
+	}
 
-    if len(nodes) == 0 {
-        return nil
-    }
+	if len(nodes) == 0 {
+		return nil
+	}
 
-    highestIndex := 0
-    var highestNode *Node = nodes[0]
+	highestIndex := 0
+	var highestNode *Node = nodes[0]
 
-    for i := range nodes {
-        // Assuming the node ID/name format is something like "node1", "node2", etc.
-        index := 0
-        _, err := fmt.Sscanf(nodes[i].URL, "node%d", &index)
-        if err == nil && index > highestIndex {
-            highestIndex = index
-            highestNode = nodes[i]
-        }
-    }
+	for i := range nodes {
+		// Assuming the node ID/name format is something like "node1", "node2", etc.
+		index := 0
+		_, err := fmt.Sscanf(nodes[i].URL, "node%d", &index)
+		if err == nil && index > highestIndex {
+			highestIndex = index
+			highestNode = nodes[i]
+		}
+	}
 
-    return highestNode
+	return highestNode
 }
 
 // GetBlocksFromNode fetches blocks from a single node
 func GetBlocksFromNode(node *Node) (*NodeBlocks, error) {
-    client := &http.Client{
-        Timeout: 10 * time.Second,
-    }
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 
-    // Prepare RPC request
-    rpcReq := RPCRequest{
-        Method:  "get_blocks",
-        Params:  []interface{}{},
-        ID:      1,
-        JSONRPC: "2.0",
-    }
+	// Prepare RPC request
+	rpcReq := rpc.RPCRequest{
+		Method:  "get_blocks",
+		Params:  []interface{}{},
+		ID:      1,
+		JSONRPC: "2.0",
+	}
 
-    reqBody, err := json.Marshal(rpcReq)
-    if err != nil {
-        return nil, fmt.Errorf("error marshaling request: %v", err)
-    }
+	reqBody, err := json.Marshal(rpcReq)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling request: %v", err)
+	}
 
-    // Create and send request
-    req, err := http.NewRequest("POST", node.URL, bytes.NewBuffer(reqBody))
-    if err != nil {
-        return nil, fmt.Errorf("error creating request: %v", err)
-    }
-    req.Header.Set("Content-Type", "application/json")
+	// Create and send request
+	req, err := http.NewRequest("POST", node.URL, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
 
-    resp, err := client.Do(req)
-    if err != nil {
-        return nil, fmt.Errorf("error making request: %v", err)
-    }
-    defer resp.Body.Close()
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making request: %v", err)
+	}
+	defer resp.Body.Close()
 
-    // Decode response
-    var blocksResp BlocksResponse
-    if err := json.NewDecoder(resp.Body).Decode(&blocksResp); err != nil {
-        return nil, fmt.Errorf("error decoding response: %v", err)
-    }
+	// Decode response
+	var blocksResp BlocksResponse
+	if err := json.NewDecoder(resp.Body).Decode(&blocksResp); err != nil {
+		return nil, fmt.Errorf("error decoding response: %v", err)
+	}
 
-    result := &NodeBlocks{
-        Node:   node,
-        Blocks: blocksResp.Result.Data,
-    }
+	result := &NodeBlocks{
+		// Node:   node,
+		Blocks: blocksResp.Result.Data,
+	}
 
-    return result, nil
+	return result, nil
 }
 
-// GetBlocks fetches blocks from all nodes concurrently
-func GetBlocks(nodes []*Node) []NodeBlocks {
-    results := make([]NodeBlocks, len(nodes))
-    done := make(chan int)
+// // GetBlocks fetches blocks from all nodes concurrently
+// func GetBlocks(nodes []*Node) []NodeBlocks {
+//     results := make([]NodeBlocks, len(nodes))
+//     done := make(chan int)
 
-    client := &http.Client{
-        Timeout: 10 * time.Second,
-    }
+//     client := &http.Client{
+//         Timeout: 10 * time.Second,
+//     }
 
-    for i, node := range nodes {
-        go func(index int, node *Node) {
-            result := NodeBlocks{Node: node}
+//     for i, node := range nodes {
+//         go func(index int, node *Node) {
+//             result := NodeBlocks{Node: node}
 
-            rpcReq := RPCRequest{
-                Method:  "get_blocks",
-                Params:  []interface{}{},
-                ID:      1,
-                JSONRPC: "2.0",
-            }
+//             rpcReq := RPCRequest{
+//                 Method:  "get_blocks",
+//                 Params:  []interface{}{},
+//                 ID:      1,
+//                 JSONRPC: "2.0",
+//             }
 
-            reqBody, err := json.Marshal(rpcReq)
-            if err != nil {
-                result.Error = fmt.Errorf("error marshaling request: %v", err)
-                results[index] = result
-                done <- index
-                return
-            }
+//             reqBody, err := json.Marshal(rpcReq)
+//             if err != nil {
+//                 result.Error = fmt.Errorf("error marshaling request: %v", err)
+//                 results[index] = result
+//                 done <- index
+//                 return
+//             }
 
-            req, err := http.NewRequest("POST", node.URL, bytes.NewBuffer(reqBody))
-            if err != nil {
-                result.Error = fmt.Errorf("error creating request: %v", err)
-                results[index] = result
-                done <- index
-                return
-            }
-            req.Header.Set("Content-Type", "application/json")
+//             req, err := http.NewRequest("POST", node.URL, bytes.NewBuffer(reqBody))
+//             if err != nil {
+//                 result.Error = fmt.Errorf("error creating request: %v", err)
+//                 results[index] = result
+//                 done <- index
+//                 return
+//             }
+//             req.Header.Set("Content-Type", "application/json")
 
-            resp, err := client.Do(req)
-            if err != nil {
-                result.Error = fmt.Errorf("error making request: %v", err)
-                results[index] = result
-                done <- index
-                return
-            }
-            defer resp.Body.Close()
+//             resp, err := client.Do(req)
+//             if err != nil {
+//                 result.Error = fmt.Errorf("error making request: %v", err)
+//                 results[index] = result
+//                 done <- index
+//                 return
+//             }
+//             defer resp.Body.Close()
 
-            var blocksResp BlocksResponse
-            if err := json.NewDecoder(resp.Body).Decode(&blocksResp); err != nil {
-                result.Error = fmt.Errorf("error decoding response: %v", err)
-                results[index] = result
-                done <- index
-                return
-            }
+//             var blocksResp BlocksResponse
+//             if err := json.NewDecoder(resp.Body).Decode(&blocksResp); err != nil {
+//                 result.Error = fmt.Errorf("error decoding response: %v", err)
+//                 results[index] = result
+//                 done <- index
+//                 return
+//             }
 
-            result.Blocks = blocksResp.Result.Data
-            results[index] = result
-            done <- index
-        }(i, node)
-    }
+//             result.Blocks = blocksResp.Result.Data
+//             results[index] = result
+//             done <- index
+//         }(i, node)
+//     }
 
-    for i := 0; i < len(nodes); i++ {
-        <-done
-    }
+//     for i := 0; i < len(nodes); i++ {
+//         <-done
+//     }
 
-    return results
-}
+//     return results
+// }

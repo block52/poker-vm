@@ -4,6 +4,7 @@ import (
     "fmt"
     "log"
     "github.com/bitcoinbrisbane/poker-vm/pkg/node"
+    "github.com/bitcoinbrisbane/poker-vm/pkg/blocks"
 )
 
 func main() {
@@ -35,10 +36,22 @@ func main() {
 
     fmt.Printf("Highest node: %s\n", highestNode.URL)
 
-    blocks, err := node.GetBlocksFromNode(highestNode)
+    _blocks, err := node.GetBlocksFromNode(highestNode)
     if err != nil {
         log.Fatalf("failed to get blocks: %v", err)
     }
 
-    fmt.Printf("Node %s returned %d blocks\n", blocks.Node.Name, len(blocks.Blocks))
+    fmt.Printf("Node returned %d blocks\n", len(_blocks.Blocks))
+
+    // Save blocks to rocks
+    store, err := blocks.NewBlockStore("/home/lucascullen/GitHub/block52/poker-vm/pvm/go/data")
+
+    blocksPtrs := make([]*node.Block, len(_blocks.Blocks))
+    for i := range _blocks.Blocks {
+        blocksPtrs[i] = &_blocks.Blocks[i]
+    }
+
+    if err := store.SaveBlocks(blocksPtrs); err != nil {
+        log.Fatalf("failed to save blocks: %v", err)
+    }
 }
