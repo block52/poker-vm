@@ -96,6 +96,80 @@ func FetchBootnodes(url string) ([]*Node, error) {
     return nodes, nil
 }
 
+// GetHighestIndexBootNode returns the boot node with the highest index
+func GetHighestIndexBootNode() *Node {
+    nodes, err := FetchBootnodes("https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json")
+
+    if err != nil {
+        return nil
+    }
+
+    if len(nodes) == 0 {
+        return nil
+    }
+
+    highestIndex := 0
+    var highestNode *Node = nodes[0]
+
+    for i := range nodes {
+        // Assuming the node ID/name format is something like "node1", "node2", etc.
+        index := 0
+        _, err := fmt.Sscanf(nodes[i].URL, "node%d", &index)
+        if err == nil && index > highestIndex {
+            highestIndex = index
+            highestNode = nodes[i]
+        }
+    }
+
+    return highestNode
+}
+
+// GetBlocksFromNode fetches blocks from a single node
+func GetBlocksFromNode(node *Node) (*NodeBlocks, error) {
+    client := &http.Client{
+        Timeout: 10 * time.Second,
+    }
+
+    // Prepare RPC request
+    rpcReq := RPCRequest{
+        Method:  "get_blocks",
+        Params:  []interface{}{},
+        ID:      1,
+        JSONRPC: "2.0",
+    }
+
+    reqBody, err := json.Marshal(rpcReq)
+    if err != nil {
+        return nil, fmt.Errorf("error marshaling request: %v", err)
+    }
+
+    // Create and send request
+    req, err := http.NewRequest("POST", node.URL, bytes.NewBuffer(reqBody))
+    if err != nil {
+        return nil, fmt.Errorf("error creating request: %v", err)
+    }
+    req.Header.Set("Content-Type", "application/json")
+
+    resp, err := client.Do(req)
+    if err != nil {
+        return nil, fmt.Errorf("error making request: %v", err)
+    }
+    defer resp.Body.Close()
+
+    // Decode response
+    var blocksResp BlocksResponse
+    if err := json.NewDecoder(resp.Body).Decode(&blocksResp); err != nil {
+        return nil, fmt.Errorf("error decoding response: %v", err)
+    }
+
+    result := &NodeBlocks{
+        Node:   node,
+        Blocks: blocksResp.Result.Data,
+    }
+
+    return result, nil
+}
+
 // GetBlocks fetches blocks from all nodes concurrently
 func GetBlocks(nodes []*Node) []NodeBlocks {
     results := make([]NodeBlocks, len(nodes))
