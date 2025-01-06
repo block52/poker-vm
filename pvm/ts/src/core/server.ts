@@ -17,7 +17,7 @@ export class Server {
     private _started: boolean = false;
     private _syncing: boolean = false;
     private _synced: boolean = false;
-    private _lastDepositSync: number = 0;
+    private _lastDepositSync: Date;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
     private readonly _nodes: Map<string, Node> = new Map();
 
@@ -33,7 +33,7 @@ export class Server {
         }
 
         this.contractAddress = ethers.ZeroAddress;
-        this._lastDepositSync = Date.now();
+        this._lastDepositSync = new Date("2025-01-01");
     }
 
     public async me(): Promise<Node> {
@@ -219,14 +219,18 @@ export class Server {
     }
 
     private async syncDeposits() {
-        if (this._lastDepositSync + 60000 > Date.now()) {
+        // Check if the last deposit sync was more than 1 hour ago
+        const now = new Date();
+        const diff = now.getTime() - this._lastDepositSync.getTime();
+
+        if (diff < 3600000) {
             return;
         }
 
         if (this.isValidator) {
             const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
             await bridge.resync();
-            this._lastDepositSync = Date.now();
+            this._lastDepositSync = new Date();
         }
     }
 
