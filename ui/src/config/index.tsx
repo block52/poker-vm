@@ -28,6 +28,6 @@ export const config = createConfig({
   chains: [etherlink],
   connectors: [metaMask()],
   transports: {
-    [etherlink.id]: http(),
+    [etherlink.id]: http()
   },
 });
