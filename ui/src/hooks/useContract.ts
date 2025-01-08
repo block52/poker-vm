@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
+import { STORAGE_PRIVATE_KEY } from "./useUserWallet";
 
 interface UseContractOptions {
     rpcUrl: string;
@@ -15,7 +16,7 @@ export const useContract = ({ rpcUrl, contractAddress, abi }: UseContractOptions
         const initializeContract = async () => {
             try {
                 // Retrieve private key from localStorage
-                const privateKey = localStorage.getItem("privateKey");
+                const privateKey = localStorage.getItem(STORAGE_PRIVATE_KEY);
                 if (!privateKey) {
                     throw new Error("Private key not found in localStorage");
                 }
