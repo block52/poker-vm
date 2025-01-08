@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { Wallet } from "ethers";
+import { Wallet, ethers } from "ethers";
 import axios from "axios";
+import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 
 interface UseUserWalletResult {
+    b52: NodeRpcClient | null;
     account: string | null;
     balance: string | null;
     privateKey: string | null;
-    publicKey: string | null; // Added public key to the result
     isLoading: boolean;
     error: Error | null;
 }
@@ -15,13 +16,12 @@ export const STORAGE_PRIVATE_KEY = "user_eth_private_key";
 export const STORAGE_PUBLIC_KEY = "user_eth_public_key";
 
 const useUserWallet = (): UseUserWalletResult => {
-    console.log("run useUserWallet");
     const [account, setAccount] = useState<string | null>(null);
     const [balance, setBalance] = useState<string | null>(null);
     const [privateKey, setPrivateKey] = useState<string | null>(null);
-    const [publicKey, setPublicKey] = useState<string | null>(null); // State for the public key
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const [client, setClient] = useState<NodeRpcClient | null>(null);
 
     const fetchBalance = async () => {
         if (!account) return;
@@ -67,14 +67,12 @@ const useUserWallet = (): UseUserWalletResult => {
                 const wallet = new Wallet(key);
 
                 setPrivateKey(key);
-                setPublicKey(pubKey || wallet.address); // Compute the public key if not stored
                 setAccount(wallet.address);
                 setError(null);
             } catch (err) {
                 setError(err instanceof Error ? err : new Error("Failed to initialize wallet"));
                 setAccount(null);
                 setPrivateKey(null);
-                setPublicKey(null);
             } finally {
                 setIsLoading(false);
             }
@@ -84,13 +82,21 @@ const useUserWallet = (): UseUserWalletResult => {
         fetchBalance();
     }, [account]);
 
+    useEffect(() => {
+        if (privateKey) {
+            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const client = new NodeRpcClient(url, privateKey);
+            setClient(client);
+        }
+    }, [privateKey]);
+
     return {
         account,
         balance,
         privateKey,
-        publicKey, // Return the public key
         isLoading,
-        error
+        error,
+        b52: client
     };
 };
 

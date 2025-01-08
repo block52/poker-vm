@@ -1,14 +1,18 @@
 import { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "react";
 import * as React from "react";
 import { Player, PlayerContextType } from "./types";
-import { PlayerStatus, PlayerActionType } from "@bitcoinbrisbane/block52"
+import { PlayerStatus, PlayerActionType, NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { useParams } from "react-router-dom";
 import userUserLastAction from "../hooks/useUserLastAction";
 import axios from "axios";
+import useUserWallet from "../hooks/useUserWallet";
+import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [publicKey, setPublicKey] = React.useState<string>();
+    const { b52 } = useUserWallet();
     const isInitialized = useRef(false);
     const [players, setPlayers] = useState<Player[]>(
         Array.from({ length: 9 }, (_, index) => ({
@@ -21,11 +25,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 action: PlayerStatus.NOT_ACTED,
                 amount: 0
             },
-            actions: [
-                PlayerActionType.CHECK,
-                PlayerActionType.BET,
-                PlayerActionType.FOLD
-            ],
+            actions: [PlayerActionType.CHECK, PlayerActionType.BET, PlayerActionType.FOLD],
             action: PlayerStatus.NOT_ACTED,
             timeout: 30,
             signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -38,10 +38,44 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [tableSize] = useState<number>(9);
     const [playerIndex, setPlayerIndex] = useState<number>(-1);
     const [dealerIndex, setDealerIndex] = useState<number>(0);
+    const [nonce, setNonce] = useState<number>(0);
     const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
     const [seat, setSeat] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
+
+    React.useEffect(() => {
+        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
+        if (!localKey) return setPublicKey(undefined);
+
+        setPublicKey(localKey);
+    }, []);
+
+    const fetchNonce = async () => {
+        if (!publicKey) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const response = await axios.get(`${url}/account/${publicKey}`);
+
+            if (response.status !== 200) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            setNonce(response.data.nonce);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error("An error occurred"));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchNonce();
+    }, [publicKey]);
 
     const fetchType = async (player: number, address: string) => {
         if (!address) return;
@@ -112,37 +146,26 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     //     setPlayerIndex(nextPlayerIndex);
     // };
 
-    // const fold = () => {
-    //     console.log("fold", playerIndex, players);
-    //     if (timer) {
-    //         clearTimeout(timer);
-    //         setTimer(null);
-    //     }
+    const amount = 10;
 
-    //     let updatedPlayers = players;
-    //     const nextPlayerIndex = nextPlayer(playerIndex, 1);
-    //     updatedPlayers[playerIndex].status = PlayerActionType.FOLD;
-    //     if (!players[nextPlayerIndex]) {
-    //         console.error(`Player at index ${nextPlayerIndex} does not exist.`);
-    //         let allPot = 0;
-    //         players.map(player => {
-    //             allPot += player.pot;
-    //         });
-    //         updatedPlayers[playerIndex].balance += allPot;
-    //         players.map((player, index) => {
-    //             if (index !== playerIndex) {
-    //                 updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
-    //             }
-    //             updatedPlayers[playerIndex].pot = 0;
-    //         });
-    //         return true;
-    //     }
-    //     updatedPlayers[nextPlayerIndex].status = PlayerStatus.ACTIVE;
-    //     setPlayers([...updatedPlayers]);
-    //     setPlayerIndex(nextPlayerIndex);
+    const performAction = React.useCallback(
+        function (gameAddress: string, action: PlayerActionType, amount?: number, nonce?: number) {
+            b52?.playerAction(gameAddress, action, amount?.toString() ?? "", nonce);
+        },
+        [b52]
+    );
 
-    //     return true;
-    // };
+    const fold = () => {
+        if (publicKey) {
+            performAction(publicKey, PlayerActionType.FOLD, amount, nonce);
+        }
+    };
+
+    const check = () => {
+        if (publicKey) {
+            performAction(publicKey, PlayerActionType.CHECK, amount, nonce)
+        }
+    }
 
     // const check = () => {
     //     console.log("check", playerIndex, players, lastPot);
