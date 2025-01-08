@@ -139,10 +139,10 @@ Bob `0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8`
 | Contract | Description                            | Address                                      | Network |
 | -------- | -------------------------------------- | -------------------------------------------- | ------- |
 | `Token`  | The token used for the poker game      | ``                                           | ``      |
-| `Bridge` | The bridge contract for the poker game | `0x0B6052D3951b001E4884eD93a6030f92B1d76cf0` | `base`  |
+| `Bridge` | The bridge contract for the poker VM | `0x0B6052D3951b001E4884eD93a6030f92B1d76cf0` | `base`  |
 | `Vault`  | The vault contract for the poker game  | `0x859329813d8e500F4f6Be0fc934E53AC16670fa0` | `base`  |
 | `Token`  | The token used for the poker game      | ``                                           | ``      |
-| `Bridge` | The bridge contract to deposit stables | `0x859329813d8e500F4f6Be0fc934E53AC16670fa0` | `mainnet`  |
+| `Bridge` | The bridge contract to deposit stables to the poker VM | `0x859329813d8e500F4f6Be0fc934E53AC16670fa0` | `mainnet`  |
 | `Vault`  | The vault contract for validators to stake | `0x893c26846d7cE76445230B2b6285a663BF4C3BF5` | `mainnet`  |
 
 ## Genesis block

@@ -36,15 +36,15 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
             <div className="relative flex flex-col justify-end mt-[-6px] mx-1s">
                 <div
                     style={{ backgroundColor: color }}
-                    className={`b-[0%] mt-[auto] w-full h-[55px]  shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md shadow-md flex flex-col`}
+                    className={`b-[0%] mt-[auto] w-full h-[55px]  shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col`}
                 >
                     {/* <p className="text-white font-bold text-sm mt-auto mb-1.5 self-center">+100</p> */}
                     <ProgressBar index={index} />
                     {players[index].status && players[index].status === PlayerActionType.FOLD && (
-                        <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 flex justify-center">FOLD</span>
+                        <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">FOLD</span>
                     )}
                     {players[index].status && players[index].status === PlayerActionType.ALL_IN && (
-                        <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 flex justify-center">All In</span>
+                        <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">All In</span>
                     )}
                 </div>
                 <div className="absolute top-[0%] w-full">

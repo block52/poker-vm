@@ -11,6 +11,7 @@ import { includeWalletIds } from "./walletIds/includeWalletIds";
 import { featuredWalletIds } from "./walletIds/featuredWalletIds";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
+import useUserWallet from "./hooks/useUserWallet";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,8 @@ createAppKit({
 })
 
 function App() {
+    const { account, balance, isLoading } = useUserWallet();
+    
     return (
         <WagmiProvider config={wagmiAdapter.wagmiConfig}>
             <QueryClientProvider client={queryClient}>

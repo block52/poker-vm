@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { playerPosition, chipPosition, dealerPosition } from "../../utils/PositionArray";
+import { playerPosition, chipPosition, dealerPosition } from "../../utills/PositionArray";
 import { IoMenuSharp } from "react-icons/io5";
 import { CiCalendar } from "react-icons/ci";
 import PokerActionPanel from "../Footer";
