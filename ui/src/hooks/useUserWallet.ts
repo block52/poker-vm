@@ -54,24 +54,20 @@ const useUserWallet = (): UseUserWalletResult => {
 
                 // If no existing private key, generate a new one
                 if (!key) {
-                    console.log("nope");
                     const wallet = Wallet.createRandom();
                     key = wallet.privateKey;
-                    console.log(key);
-                    pubKey = wallet.signingKey.publicKey;
-                    console.log(pubKey);
+                    pubKey = wallet.address;
 
                     // Save keys in localStorage
                     localStorage.setItem(STORAGE_PRIVATE_KEY, key);
                     localStorage.setItem(STORAGE_PUBLIC_KEY, pubKey);
                 }
 
-                console.log("yes");
                 // Create wallet instance from private key
                 const wallet = new Wallet(key);
 
                 setPrivateKey(key);
-                setPublicKey(pubKey || wallet.signingKey.publicKey); // Compute the public key if not stored
+                setPublicKey(pubKey || wallet.address); // Compute the public key if not stored
                 setAccount(wallet.address);
                 setError(null);
             } catch (err) {
