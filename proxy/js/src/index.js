@@ -79,10 +79,8 @@ app.get("/account/:id", async (req, res) => {
     // const balance = ethers.formatUnits(account.balance.toString());
 
     const response = {
-        index: req.params.id,
+        nonce: 0,
         address: account.address,
-        privateKey: account.privateKey,
-        path: account.path,
         balance: account.balance.toString()
     };
 

@@ -130,6 +130,10 @@ yarn prepare && yarn publish
 
 ### Test accounts
 
+Alice `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
+Bob `0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8`
+
+
 ### Tokens and contracts
 
 | Contract | Description                            | Address                                      | Network |
