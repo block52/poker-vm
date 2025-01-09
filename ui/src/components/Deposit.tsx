@@ -124,7 +124,7 @@ const Deposit: React.FC = () => {
                     {isConnected ? "Disconnect" : "Connect"}
                 </button>
                 {address && <h4 className="border-b border-gray-600 text-blue-400 mb-2 break-words">Address: {address}</h4>}
-                {balance && <h4 className="border-b border-gray-600 text-blue-400 mb-4">Balance: {Number(balance) / 10 ** decimals}USDC (BASE USD Coin )</h4>}
+                {balance && <h4 className="border-b border-gray-600 text-blue-400 mb-4">Balance: {Number(balance) / 10 ** decimals}USDC</h4>}
 
                 <div className="mb-4 relative">
                     <label htmlFor="amount" className="block text-sm font-medium text-gray-300">
