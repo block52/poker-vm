@@ -18,7 +18,7 @@ const useDepositUSDC = () => {
       hash,
     })
 
-  async function submit(amount: bigint) {
+  async function submit(amount: bigint, receiver: string, token: string) {
 
     console.log('Transaction starting...');
     try {
@@ -26,7 +26,7 @@ const useDepositUSDC = () => {
         address: BRIDGE_ADDRESS as `0x${string}`,
         abi,
         functionName: FunctionName.Deposit,
-        args: [amount],
+        args: [amount, receiver, token],
       });
       console.log('Transaction successful! Hash:', tx);
     } catch (err) {

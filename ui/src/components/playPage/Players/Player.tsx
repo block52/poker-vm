@@ -2,7 +2,8 @@ import * as React from "react";
 import Badge from "../reusable/Badge";
 import ProgressBar from "../reusable/ProgressBar";
 import { usePlayerContext } from "../../../context/usePlayerContext";
-import { PlayerActionType } from "@bitcoinbrisbane/block52"
+import { PlayerStatus } from "@bitcoinbrisbane/block52"
+import { BigUnit } from "bigunit";
 
 type PlayerProps = {
     left?: string; // Front side image source
@@ -19,7 +20,7 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
     return (
         <div
             key={index}
-            className={`${players[index].status && players[index].status === PlayerActionType.FOLD ? "opacity-60" : ""
+            className={`${players[index].status && players[index].status === PlayerStatus.FOLDED ? "opacity-60" : ""
                 } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
             style={{
                 left: left,
@@ -40,15 +41,15 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
                 >
                     {/* <p className="text-white font-bold text-sm mt-auto mb-1.5 self-center">+100</p> */}
                     <ProgressBar index={index} />
-                    {players[index].status && players[index].status === PlayerActionType.FOLD && (
+                    {players[index].status && players[index].status === PlayerStatus.FOLDED && (
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">FOLD</span>
                     )}
-                    {players[index].status && players[index].status === PlayerActionType.ALL_IN && (
+                    {players[index].status && players[index].status === PlayerStatus.ALL_IN && (
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">All In</span>
                     )}
                 </div>
                 <div className="absolute top-[0%] w-full">
-                    <Badge count={index + 1} value={players[index].balance} color={color} />
+                    <Badge count={index + 1} value={BigUnit.from(players[index]?.stack, 18).toNumber()} color={color} />
                 </div>
             </div>
         </div>

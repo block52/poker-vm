@@ -1,24 +1,14 @@
-// types.ts
-export interface Player {
-    index: number;
-    address: string;
-    seat: number;
-    holeCards: string[];
-    status: string;
-    lastAction: LastActionType;
-    actions: string[];
-    action: string;
-    timeout: number;
-    signature: string;
-}
+import { PlayerDTO } from "@bitcoinbrisbane/block52";
 
+// types.ts
 export interface LastActionType {
     action: string;
     amount: number;
 }
 
 export interface PlayerContextType {
-    players: Player[];
+    players: PlayerDTO[];
+    pots: string[];
     tableSize: number;
     // updatePlayer: (index: number, updatedPlayer: Player) => void;
     // setPlayerBalance: (index: number, balance: number) => void;

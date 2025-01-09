@@ -1,7 +1,7 @@
 import { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "react";
 import * as React from "react";
-import { Player, PlayerContextType } from "./types";
-import { PlayerStatus, PlayerActionType, NodeRpcClient } from "@bitcoinbrisbane/block52";
+import { PlayerContextType } from "./types";
+import { PlayerStatus, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 import { useParams } from "react-router-dom";
 import userUserLastAction from "../hooks/useUserLastAction";
 import axios from "axios";
@@ -14,19 +14,18 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [publicKey, setPublicKey] = React.useState<string>();
     const { b52 } = useUserWallet();
     const isInitialized = useRef(false);
-    const [players, setPlayers] = useState<Player[]>(
+    const [players, setPlayers] = useState<PlayerDTO[]>(
         Array.from({ length: 9 }, (_, index) => ({
-            index,
             address: "0xa2F508c94a22D067Cbc001f493bfAD39555eA188",
-            status: PlayerStatus.NOT_ACTED,
             seat: index,
-            holeCards: ["3A", "5B"],
-            lastAction: {
-                action: PlayerStatus.NOT_ACTED,
-                amount: 0
-            },
-            actions: [PlayerActionType.CHECK, PlayerActionType.BET, PlayerActionType.FOLD],
-            action: PlayerStatus.NOT_ACTED,
+            stack: "",
+            isSmallBlind: false,
+            isBigBlind: false,
+            isDealer: false,
+            holeCards: undefined,
+            status: PlayerStatus.NOT_ACTED,
+            lastAction: undefined,
+            actions: [],
             timeout: 30,
             signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
         }))
@@ -41,8 +40,35 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [nonce, setNonce] = useState<number>(0);
     const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
     const [seat, setSeat] = useState<number | null>(null);
+    const [pots, setPots] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
+
+    const fetchPots = async () => {
+        if (!publicKey) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const response = await axios.get(`${url}/table/${publicKey}`);
+
+            if (response.status !== 200) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            setPots(response.data.pots);
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error("An error occurred"));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPots();
+    }, [publicKey]);
 
     React.useEffect(() => {
         const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
@@ -163,9 +189,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const check = () => {
         if (publicKey) {
-            performAction(publicKey, PlayerActionType.CHECK, amount, nonce)
+            performAction(publicKey, PlayerActionType.CHECK, amount, nonce);
         }
-    }
+    };
 
     // const check = () => {
     //     console.log("check", playerIndex, players, lastPot);
@@ -331,6 +357,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const contextValue = useMemo(
         () => ({
             players,
+            pots,
             lastPot,
             tableSize,
             playerIndex,
@@ -341,7 +368,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setPlayerAction: () => {}
         }),
         // [players, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, fold, raise, check, setPlayerAction]
-        [players, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot]
+        [players, pots, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot]
     );
 
     return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>;
