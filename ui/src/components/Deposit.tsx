@@ -67,6 +67,10 @@ const Deposit: React.FC = () => {
     }, [amount, allowance, decimals, isApproveConfirmed, isDepositConfirmed]);
 
     const handleApprove = async () => {
+        if (!balance) {
+            toast.error(`You have no enough balance`, { autoClose: 5000 });
+        }
+
         if (!address || !decimals) {
             console.error("Missing required information");
             return;
