@@ -11,7 +11,7 @@ const useAllowance = () => {
   const wagmiContractConfig = {
     address: USDC_ADDRESS as `0x${string}`,
     abi: erc20abi,
-    chainId: 8453,
+    chainId: 1,
   };
 
   const {
