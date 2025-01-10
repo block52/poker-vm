@@ -21,7 +21,7 @@ const Deposit: React.FC = () => {
     const { submit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();
     const { isApprovePending, isApproveConfirmed, isLoading, approve, approveError } = useApprove();
     const [publicKey, setPublicKey] = React.useState<string>();
-    const [amount, setAmount] = useState<number>(0);
+    const [amount, setAmount] = useState<string>("0");
     const { decimals } = useDecimal(USDC_ADDRESS);
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
@@ -37,14 +37,14 @@ const Deposit: React.FC = () => {
     React.useEffect(() => {
         if (isDepositConfirmed) {
             toast.success(`You have deposited ${amount}USDC to address(${BRIDGE_ADDRESS}) successfully`, { autoClose: 5000 });
-            setAmount(0);
+            setAmount("0");
         }
     }, [isDepositConfirmed]);
 
     React.useEffect(() => {
         if (isApproveConfirmed) {
             toast.success(`You have approved ${amount}USDC successfully`, { autoClose: 5000 });
-            setAmount(0);
+            setAmount("0");
         }
     }, [isApproveConfirmed]);
 
@@ -61,8 +61,9 @@ const Deposit: React.FC = () => {
     }, [approveError]);
 
     const allowed = React.useMemo(() => {
-        if (!allowance || !decimals || !amount) return false;
-        const amountInBigInt = BigUnit.from(amount, decimals).toBigInt();
+        console.log(allowance)
+        if (!allowance || !decimals || !+amount) return false;
+        const amountInBigInt = BigUnit.from(+amount, decimals).toBigInt();
         return allowance >= amountInBigInt;
     }, [amount, allowance, decimals, isApproveConfirmed, isDepositConfirmed]);
 
@@ -73,7 +74,7 @@ const Deposit: React.FC = () => {
         }
 
         try {
-            const amountInInteger = BigUnit.from(amount, decimals);
+            const amountInInteger = BigUnit.from(+amount, decimals);
             const tx = await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInInteger.toBigInt());
         } catch (err) {
             console.error("Approval failed:", err);
@@ -85,7 +86,7 @@ const Deposit: React.FC = () => {
             try {
                 console.log("Initiating deposit...");
                 if (publicKey) {
-                    await submit(BigUnit.from(amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
+                    await submit(BigUnit.from(+amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
                 }
                 console.log(`isPending:  `, isDepositPending);
                 console.log("Deposit successful");
@@ -124,7 +125,7 @@ const Deposit: React.FC = () => {
                     {isConnected ? "Disconnect" : "Connect"}
                 </button>
                 {address && <h4 className="border-b border-gray-600 text-blue-400 mb-2 break-words">Address: {address}</h4>}
-                {balance && <h4 className="border-b border-gray-600 text-blue-400 mb-4">Balance: {Number(balance) / 10 ** decimals}USDC</h4>}
+                {balance && <h4 className="border-b border-gray-600 text-blue-400 mb-4">Balance: {BigUnit.from(BigInt(balance), decimals).toString()}USDC</h4>}
 
                 <div className="mb-4 relative">
                     <label htmlFor="amount" className="block text-sm font-medium text-gray-300">
@@ -134,25 +135,27 @@ const Deposit: React.FC = () => {
                         id="amount"
                         type="number"
                         value={amount}
-                        onChange={e => setAmount(+e.target.value)}
+                        onChange={e => setAmount(e.target.value)}
                         className="mt-2 w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg"
                         placeholder="Enter amount"
                     />
-                    <span
-                        onClick={() => setAmount(Number(balance) / 10 ** decimals)}
-                        className="cursor-pointer bg-gray-700 py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"
-                    >
-                        max
-                    </span>
+                    {balance && (
+                        <span
+                            onClick={() => setAmount(BigUnit.from(BigInt(balance), decimals).toString())}
+                            className="cursor-pointer bg-gray-700 py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"
+                        >
+                            max
+                        </span>
+                    )}
                 </div>
                 <div className="flex justify-between mb-4">
                     {allowed ? (
                         <button
                             onClick={handleDeposit}
                             className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${
-                                amount === 0 && "opacity-50"
+                                +amount === 0 && "opacity-50"
                             }`}
-                            disabled={amount === 0 || isDepositPending || isPending}
+                            disabled={+amount === 0 || isDepositPending || isPending}
                         >
                             {isDepositPending || isPending ? "Depositing..." : "Deposit"}
                             {(isDepositPending || isPending) && <img src={spinner} />}
@@ -161,9 +164,9 @@ const Deposit: React.FC = () => {
                         <button
                             onClick={handleApprove}
                             className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${
-                                amount === 0 && "opacity-50"
+                                +amount === 0 && "opacity-50"
                             }`}
-                            disabled={amount === 0 || isApprovePending || isLoading}
+                            disabled={+amount === 0 || isApprovePending || isLoading}
                         >
                             {isLoading || isApprovePending ? "Approving..." : "Approve"}
                             {(isLoading || isApprovePending) && <img src={spinner} />}
