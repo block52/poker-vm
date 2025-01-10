@@ -61,7 +61,7 @@ const Deposit: React.FC = () => {
     }, [approveError]);
 
     const allowed = React.useMemo(() => {
-        console.log(allowance)
+        console.log(allowance);
         if (!allowance || !decimals || !+amount) return false;
         const amountInBigInt = BigUnit.from(+amount, decimals).toBigInt();
         return allowance >= amountInBigInt;
@@ -139,14 +139,15 @@ const Deposit: React.FC = () => {
                         className="mt-2 w-full p-3 border border-gray-600 bg-gray-700 text-white rounded-lg"
                         placeholder="Enter amount"
                     />
-                    {balance && (
-                        <span
-                            onClick={() => setAmount(BigUnit.from(BigInt(balance), decimals).toString())}
-                            className="cursor-pointer bg-gray-700 py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"
-                        >
-                            max
-                        </span>
-                    )}
+
+                    <span
+                        onClick={() => {
+                            balance && setAmount(BigUnit.from(BigInt(balance), decimals).toString());
+                        }}
+                        className="cursor-pointer bg-gray-700 py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"
+                    >
+                        max
+                    </span>
                 </div>
                 <div className="flex justify-between mb-4">
                     {allowed ? (
