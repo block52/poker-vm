@@ -4,6 +4,9 @@ import { signData } from "../utils/crypto";
 import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
 
 export class Transaction implements ICryptoModel, IJSONModel {
+
+    private _blockHash: string | undefined;
+
     constructor(
         readonly to: string,
         readonly from: string,
@@ -20,11 +23,11 @@ export class Transaction implements ICryptoModel, IJSONModel {
 
     // add block hash setter and getter
     public get blockHash(): string | undefined {
-        return this.blockHash;
+        return this._blockHash;
     }
 
     public set blockHash(hash: string | undefined) {
-        this.blockHash = hash;
+        this._blockHash = hash;
     }
 
     public getId(): string {
