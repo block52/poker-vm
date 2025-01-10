@@ -88,7 +88,6 @@ export class Server {
             }
 
             await this.mine();
-            await this.purgeMempool();
             await this.findHighestTip();
 
             if (!this.synced) {

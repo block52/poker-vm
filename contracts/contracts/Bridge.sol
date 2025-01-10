@@ -56,8 +56,8 @@ contract Bridge is Ownable {
         return index;
     }
 
-    function depositUnderlying(uint256 amount) external returns(uint256) {
-        (uint256 index, uint256 received) = _deposit(amount, msg.sender, underlying);
+    function depositUnderlying(uint256 amount, address receiver) external returns(uint256) {
+        (uint256 index, uint256 received) = _deposit(amount, receiver, underlying);
         emit Deposited(msg.sender, received, index);
 
         return index;

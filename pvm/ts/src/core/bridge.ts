@@ -5,7 +5,7 @@
 import { ethers, EventLog } from "ethers";
 import { MintCommand } from "../commands/mintCommand";
 import { createProvider } from "./provider";
-import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/transactionManagement";
 import { CONTRACT_ADDRESSES } from "./constants";
 
 const abi = ["event Transfer(address indexed from, address indexed to, uint256 value)"];
@@ -15,12 +15,10 @@ export class Bridge {
     private bridgeContract: ethers.Contract;
     private readonly provider: ethers.JsonRpcProvider;
     private decimals: string = "6";
-    private readonly transactionManagement: TransactionManagement;
 
     constructor(private readonly nodeUrl: string) {
         this.provider = createProvider(this.nodeUrl);
         this.bridgeContract = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridge_abi, this.provider);
-        this.transactionManagement = getTransactionInstance();
     }
 
     public async listenToBridge(): Promise<void> {

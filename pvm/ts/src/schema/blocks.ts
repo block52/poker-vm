@@ -34,10 +34,6 @@ const blocksSchema = new Schema<IBlockDocument>({
     required: true,
     type: String,
   },
-  // transactions: {
-  //   required: false,
-  //   type: Array,
-  // },
   tx_count: {
     required: false,
     type: Number,

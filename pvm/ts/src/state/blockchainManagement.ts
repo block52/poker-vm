@@ -22,24 +22,38 @@ export class BlockchainManagement extends StateManager {
       return;
     }
 
-    // Update the account balances
-    const accountManagement = new AccountManagement();
-    await accountManagement.applyTransactions(block.transactions);
+    // todo add block hash to each transaction
+    // // Validate transactions
+    const transactionManagement = new TransactionManagement();
+    await transactionManagement.addTransactions(block.transactions);
 
+    // // Write to DB in parallel
+    // await Promise.all([
+    //     this.blockchainManagement.addBlock(block),
+    //     this.transactionManagement.addTransactions(uniqueTxs),
+    // ]);
+
+    // Update the account balances
+    if (block.transactions) {
+      const accountManagement = new AccountManagement();
+      await accountManagement.applyTransactions(block.transactions);
+    }
+
+    // Save the block document to the database
     const newBlock = new Blocks(block.toDocument());
     await newBlock.save();
 
-    if (block.transactions) {
+    // if (block.transactions) {
 
-      // add block hash to each transaction
-      block.transactions.forEach(tx => {
-        tx.blockHash = block.hash;
-      });
+    //   // // add block hash to each transaction
+    //   // block.transactions.forEach(tx => {
+    //   //   tx.blockHash = block.hash;
+    //   // });
 
-      // Save transactions
-      const transactionManagement = new TransactionManagement();
-      await transactionManagement.addTransactions(block.transactions);
-    }
+    //   // Save transactions
+    //   const transactionManagement = new TransactionManagement();
+    //   await transactionManagement.addTransactions(block.transactions);
+    // }
   }
 
   public getGenesisBlock(): Block {

@@ -159,6 +159,7 @@ export class Block implements IJSONModel {
     }
 
     public static fromDocument(document: IBlockDocument): Block {
+        // Roll back to this
         // const transactions = document.transactions?.map((tx) => Transaction.fromDocument(tx));
         return new Block(
             document.index,
@@ -182,7 +183,6 @@ export class Block implements IJSONModel {
             timestamp: this.timestamp,
             validator: this.validator,
             signature: this.signature,
-            // transactions: this.transactions,
             tx_count: this.transactions.length
         };
     }

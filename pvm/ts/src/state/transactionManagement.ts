@@ -17,7 +17,10 @@ export class TransactionManagement extends StateManager {
     public async addTransactions(txs: Transaction[]): Promise<void> {
         await this.connect();
         const transactions = txs.map(tx => new Transactions(tx.toDocument()));
-        await Transactions.insertMany(transactions);
+
+        if (transactions.length > 0) {
+            await Transactions.insertMany(transactions);
+        }
     }
 
     async exists(txid: string): Promise<Boolean> {

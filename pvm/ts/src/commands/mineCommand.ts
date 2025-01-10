@@ -32,12 +32,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
             this.privateKey
         );
 
-        // Write to DB in parallel
-        await Promise.all([
-            this.blockchainManagement.addBlock(block),
-            this.transactionManagement.addTransactions(uniqueTxs),
-        ]);
-
+        await this.blockchainManagement.addBlock(block);
         await this.mempool.clear();
 
         return signResult(block, this.privateKey);

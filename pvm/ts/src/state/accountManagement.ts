@@ -2,6 +2,7 @@ import { Account } from "../models/account";
 import Accounts from "../schema/accounts";
 import { IAccountDocument } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
+import { CONTRACT_ADDRESSES } from "../core/constants";
 
 export class AccountManagement {
     constructor() {}
@@ -40,10 +41,24 @@ export class AccountManagement {
     }
 
     async incrementBalance(address: string, balance: bigint): Promise<void> {
-        await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+        if (balance < 0n) {
+            throw new Error("Balance must be positive");
+        }
+
+        if (address != CONTRACT_ADDRESSES.bridgeAddress) {
+            await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+        }
     }
 
     async decrementBalance(address: string, balance: bigint): Promise<void> {
+        if (balance < 0n) {
+            throw new Error("Balance must be positive");
+        }
+
+        if (address != CONTRACT_ADDRESSES.bridgeAddress) {
+            await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+        }
+        
         await Accounts.updateOne({ address }, { $inc: { balance: (-balance).toString() } });
     }
 
