@@ -1,5 +1,5 @@
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { etherlink } from '@reown/appkit/networks';
+import { mainnet } from '@reown/appkit/networks';
 import type { AppKitNetwork } from '@reown/appkit/networks';
 import { createConfig, http } from 'wagmi';
 import { metaMask } from 'wagmi/connectors';
@@ -16,7 +16,7 @@ export const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 };
 
-export const networks = [etherlink] as [AppKitNetwork, ...AppKitNetwork[]];
+export const networks = [mainnet] as [AppKitNetwork, ...AppKitNetwork[]];
 
 export const wagmiAdapter = new WagmiAdapter({
   projectId: projectId,
@@ -25,9 +25,9 @@ export const wagmiAdapter = new WagmiAdapter({
 });
 
 export const config = createConfig({
-  chains: [etherlink],
+  chains: [mainnet],
   connectors: [metaMask()],
   transports: {
-    [etherlink.id]: http()
+    [mainnet.id]: http()
   },
 });

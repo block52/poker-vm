@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import * as React from "react";
 import { usePlayerContext } from "../context/usePlayerContext";
 import CheckboxList from "./playPage/reusable/CheckboxList";
+import { BigUnit } from "bigunit";
 
 const PokerActionPanel: React.FC = () => {
-    const { setPlayerAction, playerIndex, players, lastPot } = usePlayerContext();
+    const { setPlayerAction, playerIndex, players, lastPot, pots } = usePlayerContext();
     const [raiseAmount, setRaiseAmount] = useState(0);
-    const balance = players[0]?.balance;
-    const pot = players[0]?.pot;
+    const balance = BigUnit.from(players[0]?.stack, 18).toNumber()
+    const pot = BigUnit.from(pots[0], 18).toNumber();
     useEffect(() => {
         setRaiseAmount(lastPot - pot + 1);
     }, [lastPot]);
@@ -35,7 +36,7 @@ const PokerActionPanel: React.FC = () => {
                 <CheckboxList />
             </div>
             {/* <ChipPurchase /> */}
-            <div className="flex flex-col w-[600px] space-y-6 mb-2 flex justify-center rounded-lg">
+            <div className="flex flex-col w-[600px] space-y-6 mb-2 justify-center rounded-lg">
                 <div className="flex justify-between gap-2">
                     <button
                         disabled={playerIndex !== 0}
