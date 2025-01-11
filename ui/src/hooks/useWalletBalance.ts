@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 const useWalletBalance = () => {
   const { address } = useUserWalletConnect();
-  const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS || ""; 
+  const USDC_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"; 
 
   const wagmiContractConfig = {
     address: USDC_ADDRESS as `0x${string}`,

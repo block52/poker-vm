@@ -14,8 +14,8 @@ import { useNavigate } from "react-router-dom";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 
 const Deposit: React.FC = () => {
-    const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS || "";
-    const BRIDGE_ADDRESS = import.meta.env.VITE_BRIDGE_ADDRESS || "";
+    const USDC_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+    const BRIDGE_ADDRESS = "0xBf1e380f3D1AE31854764081C488EaDA9F4CB195";
 
     const { open, disconnect, isConnected, address } = useUserWalletConnect();
     const { submit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();
@@ -153,9 +153,8 @@ const Deposit: React.FC = () => {
                     {allowed ? (
                         <button
                             onClick={handleDeposit}
-                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${
-                                +amount === 0 && "opacity-50"
-                            }`}
+                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${+amount === 0 && "opacity-50"
+                                }`}
                             disabled={+amount === 0 || isDepositPending || isPending}
                         >
                             {isDepositPending || isPending ? "Depositing..." : "Deposit"}
@@ -164,9 +163,8 @@ const Deposit: React.FC = () => {
                     ) : (
                         <button
                             onClick={handleApprove}
-                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${
-                                +amount === 0 && "opacity-50"
-                            }`}
+                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${+amount === 0 && "opacity-50"
+                                }`}
                             disabled={+amount === 0 || isApprovePending || isLoading}
                         >
                             {isLoading || isApprovePending ? "Approving..." : "Approve"}
