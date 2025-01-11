@@ -44,28 +44,40 @@ export class AccountManagement extends StateManager {
         return account.balance;
     }
 
-    async incrementBalance(address: string, balance: bigint): Promise<void> {
-        if (balance < 0n) {
+    async incrementBalance(address: string, amount: bigint): Promise<void> {
+        if (amount < 0n) {
             throw new Error("Balance must be positive");
         }
 
-        if (address != CONTRACT_ADDRESSES.bridgeAddress) {
+        if (address !== CONTRACT_ADDRESSES.bridgeAddress) {
             await this.connect();
-            await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+
+            const account = await Accounts.findOne({ address });
+            if (!account) {
+                await Accounts.create({ address, balance: amount.toString() });
+            } else {
+                let balance = BigInt(account.balance);
+                if (balance + amount < 0n) {
+                    throw new Error("Insufficient funds");
+                }
+
+                balance += amount;
+                await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+            }
         }
     }
 
-    async decrementBalance(address: string, balance: bigint): Promise<void> {
-        if (balance < 0n) {
+    async decrementBalance(address: string, amount: bigint): Promise<void> {
+        if (amount < 0n) {
             throw new Error("Balance must be positive");
         }
 
-        if (address != CONTRACT_ADDRESSES.bridgeAddress) {
+        if (address !== CONTRACT_ADDRESSES.bridgeAddress) {
             await this.connect();
-            await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+            await Accounts.updateOne({ address }, { $inc: { balance: (-amount).toString() } });
         }
 
-        await Accounts.updateOne({ address }, { $inc: { balance: (-balance).toString() } });
+        await Accounts.updateOne({ address }, { $inc: { balance: (-amount).toString() } });
     }
 
     async applyTransaction(tx: Transaction) {
