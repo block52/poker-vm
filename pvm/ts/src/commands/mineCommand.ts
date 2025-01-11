@@ -25,12 +25,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         const lastBlock = await this.blockchainManagement.getLastBlock();
 
-        const block = Block.create(
-            lastBlock.index + 1,
-            lastBlock.hash,
-            uniqueTxs,
-            this.privateKey
-        );
+        const block = Block.create(lastBlock.index + 1, lastBlock.hash, uniqueTxs, this.privateKey);
 
         await this.blockchainManagement.addBlock(block);
         await this.mempool.clear();

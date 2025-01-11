@@ -24,6 +24,7 @@ export class Mempool {
 
         if (this.txMap.size >= this.maxSize) {
             console.log(`Mempool is full: ${this.txMap.size} / ${this.maxSize}`);
+            return;
         }
 
         let currentBlockIndex = 0;

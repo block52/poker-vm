@@ -4,7 +4,6 @@ import { signData } from "../utils/crypto";
 import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
 
 export class Transaction implements ICryptoModel, IJSONModel {
-
     private _blockHash: string | undefined;
 
     constructor(
