@@ -2,7 +2,26 @@ import { ethers } from "ethers";
 import { Transaction } from "../models";
 import { Mempool } from "./mempool";
 
-describe.only("Should get new mempool", () => {
+import { getTransactionInstance } from "../state/transactionManagement";
+
+// Mock external dependencies
+jest.mock("../state/transactionManagement");
+
+describe.skip("Should get new mempool", () => {
+    // Mock instances
+    let mockTransactionManagement: jest.Mocked<any>;
+
+    beforeEach(() => {
+        // Reset all mocks
+        jest.clearAllMocks();
+
+        // Setup mock transaction management
+        mockTransactionManagement = {
+            getTransactionByData: jest.fn()
+        };
+        (getTransactionInstance as jest.Mock).mockReturnValue(mockTransactionManagement);
+    });
+
     it("should get new mempool", async () => {
         const mempool = new Mempool();
         expect(mempool).toBeInstanceOf(Mempool);

@@ -69,7 +69,7 @@ describe("Bridge", () => {
         });
     });
 
-    describe.only("Direct USDC Deposits", () => {
+    describe("Direct USDC Deposits", () => {
         it("Should allow direct USDC deposits", async () => {
             const { bridge, otherAccount } = await loadFixture(fixture);
             const amount = ethers.parseUnits("100", 6);

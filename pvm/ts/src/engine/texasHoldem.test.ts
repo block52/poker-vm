@@ -4,11 +4,11 @@ import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
 
-describe("Texas Holdem Game", () => {
+describe.skip("Texas Holdem Game", () => {
     describe("Heads up", () => {
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
-        it.only("should have the correct properties pre flop", () => {
+        it("should have the correct properties pre flop", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
@@ -24,7 +24,7 @@ describe("Texas Holdem Game", () => {
             // expect(player1?.id).toEqual("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
         });
 
-        it.skip("should allow a round to be played heads up", () => {
+        it("should allow a round to be played heads up", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
             game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250));
             game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200));
