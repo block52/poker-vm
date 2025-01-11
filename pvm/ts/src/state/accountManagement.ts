@@ -3,9 +3,12 @@ import Accounts from "../schema/accounts";
 import { IAccountDocument } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
 import { CONTRACT_ADDRESSES } from "../core/constants";
+import { StateManager } from "./stateManager";
 
-export class AccountManagement {
-    constructor() {}
+export class AccountManagement extends StateManager {
+    constructor() {
+        super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
+    }
 
     async createAccount(privateKey: string): Promise<Account> {
         const account = Account.create(privateKey);
@@ -30,6 +33,7 @@ export class AccountManagement {
     }
 
     async _getAccount(address: string): Promise<IAccountDocument | null> {
+        await this.connect();
         return Accounts.findOne({ address });
     }
 
@@ -46,6 +50,7 @@ export class AccountManagement {
         }
 
         if (address != CONTRACT_ADDRESSES.bridgeAddress) {
+            await this.connect();
             await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
         }
     }
@@ -56,9 +61,10 @@ export class AccountManagement {
         }
 
         if (address != CONTRACT_ADDRESSES.bridgeAddress) {
+            await this.connect();
             await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
         }
-        
+
         await Accounts.updateOne({ address }, { $inc: { balance: (-balance).toString() } });
     }
 
@@ -81,4 +87,11 @@ export class AccountManagement {
     }
 }
 
-export default AccountManagement;
+// export default AccountManagement;
+let instance: AccountManagement;
+export const getAccountManagementInstance = (): AccountManagement => {
+  if (!instance) {
+    instance = new AccountManagement();
+  }
+  return instance;
+}
