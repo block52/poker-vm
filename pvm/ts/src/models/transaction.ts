@@ -13,8 +13,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
         readonly value: bigint,
         readonly hash: string,
         readonly signature: string,
-        readonly timestamp: bigint,
-        readonly index?: bigint,
+        readonly timestamp: number,
+        readonly index?: number,
         readonly nonce?: bigint,
         readonly data?: string
     ) {
@@ -53,7 +53,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
     // }
 
     public static async create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Promise<Transaction> {
-        const timestamp = BigInt(Date.now());
+        const timestamp = Date.now();
         const _data = `${to}${from}${value}${nonce}${timestamp}${data}`;
         const signature = await signData(privateKey, _data);
 
@@ -84,8 +84,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
             BigInt(json.value),
             json.hash,
             json.signature,
-            BigInt(json.timestamp),
-            json.index ? BigInt(json.index) : undefined
+            Number(json.timestamp),
+            json.index ? Number(json.index) : undefined
         );
     }
 
@@ -96,8 +96,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
             BigInt(document.value),
             document.hash,
             document.signature,
-            BigInt(document.timestamp),
-            document.index ? BigInt(document.index) : undefined,
+            document.timestamp ? Number(document.timestamp) : 0,
+            document.index ? Number(document.index) : undefined,
             document.nonce ? BigInt(document.nonce) : undefined,
             document.data
         );
@@ -117,17 +117,4 @@ export class Transaction implements ICryptoModel, IJSONModel {
             block_hash: this.blockHash
         };
     }
-    // public static toDocument(transaction: Transaction): ITransactionDocument {
-    //     return {
-    //         to: transaction.to,
-    //         from: transaction.from,
-    //         value: transaction.value.toString(),
-    //         hash: transaction.hash,
-    //         signature: transaction.signature,
-    //         timestamp: transaction.timestamp.toString(),
-    //         index: transaction.index?.toString(),
-    //         nonce: transaction.nonce?.toString(),
-    //         data: transaction.data
-    //     };
-    // }
 }

@@ -46,7 +46,6 @@ export class Mempool {
 
     public get(): Transaction[] {
         // Order transactions by timestamp
-        // return this.transactions.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
         const txs: Transaction[] = Array.from(this.txMap.values());
         return txs.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
     }
@@ -60,7 +59,6 @@ export class Mempool {
     }
 
     public clear() {
-        // this.transactions = [];
         this.txMap.clear();
     }
 }

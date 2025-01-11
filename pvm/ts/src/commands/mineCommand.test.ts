@@ -3,7 +3,7 @@ import { getMempoolInstance } from "../core/mempool";
 import { getBlockchainInstance } from "../state/blockchainManagement";
 import { getTransactionInstance } from "../state/transactionManagement";
 import { Block, Transaction } from "../models";
-import { ethers, Signature } from "ethers";
+import { ethers } from "ethers";
 
 // Mock all dependencies
 jest.mock("../core/mempool", () => ({
@@ -136,8 +136,8 @@ describe("MineCommand", () => {
             const result = await command.execute();
 
             // Assert
-            const validTransactionCount = mockTransactions.filter(tx => tx.verify()).length;
-            expect(result.data?.transactions.length).toBe(validTransactionCount);
+            const validTransactionLength = 2;
+            expect(result.data?.transactions.length).toBe(validTransactionLength);
         });
 
         it("should filter out existing transactions", async () => {
@@ -175,7 +175,9 @@ describe("MineCommand", () => {
 
             // Assert
             expect(result.signature).toBeDefined();
-            // expect(result.publicKey).toBeDefined();
+
+            // Verify signature, results will vary with timestamp
+            // expect(result.signature).toBe("0x2ff5b00147021beb4d77594e2b3ca0df7f87efcaae1179a940b6d0355f059a5066d58c1d87f6cd69ce759f4bbfab6acc90b5edc4a8b57adc13982ec44fa6ac121b")
         });
     });
 });

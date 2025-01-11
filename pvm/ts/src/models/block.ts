@@ -59,7 +59,7 @@ export class Block implements IJSONModel {
             previousHash: this.previousHash,
             timestamp: this.timestamp,
             validator: this.validator,
-            transactions: this.transactions.map(tx => tx.toJson()),
+            transactions: [], // this.transactions.map(tx => tx.toJson()),
             merkleRoot: this.merkleRoot
         };
 
@@ -135,6 +135,9 @@ export class Block implements IJSONModel {
     }
 
     public toJson(): BlockDTO {
+
+        const transactions = this.transactions.map(tx => tx.toJson());
+
         return {
             index: this.index,
             hash: this.hash,
@@ -144,7 +147,7 @@ export class Block implements IJSONModel {
             timestamp: this.timestamp,
             validator: this.validator,
             version: this.version.toString(),
-            transactions: this.transactions?.map(tx => tx.toJson())
+            transactions: []
         };
     }
 
