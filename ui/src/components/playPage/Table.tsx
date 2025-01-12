@@ -19,6 +19,7 @@ import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
 import useUserSeat from "../../hooks/useUserSeat";
+import { toDollarFromString } from "../../utils/numberUtils";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -66,6 +67,8 @@ const Table = () => {
 
     const { account, balance, isLoading } = useUserWallet();
     const { type } = useTableType(id);
+
+    const [handResult, setHandResult] = useState<string>("");
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -179,7 +182,7 @@ const Table = () => {
                         <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
                             <IoMenuSharp size={20} />
                         </div>
-                        <span className="text-white text-sm font-medium text-[20px]">LOBBY</span>
+                        <span className="text-white text-sm font-medium text-[20px]">Lobby</span>
                     </div>
 
                     {/* Middle Section */}
@@ -201,7 +204,7 @@ const Table = () => {
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
-                            <span>{`Balance: $ ${balance} (USD)`}</span>
+                            <span>{`Balance: $${toDollarFromString(balance)} (USD)`}</span>
                         </div>
 
                         <div className="flex items-center justify-center w-10 h-10  cursor-pointer">
@@ -352,7 +355,7 @@ const Table = () => {
                             </div>
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
-                            <span className="text-white bg-[#0c0c0c80] rounded-full px-2">High Card, Jack</span>
+                            <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{ handResult }</span>
                         </div>
                     </div>
                     {/*//! FOOTER */}
