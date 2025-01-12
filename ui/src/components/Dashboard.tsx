@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"; // Import React and useEffect
-import { Link } from "react-router-dom"; // Import Link for navigation
+import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import "./Dashboard.css";
 
@@ -17,6 +17,7 @@ enum Variant {
 const Dashboard: React.FC = () => {
     const seats = [6, 9];
 
+    const navigate = useNavigate();
     const [publicKey, setPublicKey] = useState<string>();
     const [typeSelected, setTypeSelected] = useState<string>("cash");
     const [variantSelected, setVariantSelected] = useState<string>("texas-holdem");
@@ -53,9 +54,16 @@ const Dashboard: React.FC = () => {
         setSeatSelected(seat);
     };
 
+    const buildUrl = () => {
+        return `/table/${typeSelected}?variant=${variantSelected}&seats=${seatSelected}`;
+    }
+
     const handleNext = () => {
-        const url = `/sit/${typeSelected}/${variantSelected}/${seatSelected}`;
+        const url = buildUrl();
         console.log("Next button clicked");
+
+        // Redirect to the sit page
+        navigate(url);
     };
 
     // const [loading, setLoading] = useState(true);
@@ -145,7 +153,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     <Link
-                        to="/sit"
+                        to={buildUrl()}
                         className="block text-center text-white bg-pink-600 hover:bg-pink-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
                     >
                         Next
