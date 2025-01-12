@@ -42,7 +42,6 @@ const useApprove = () => {
         functionName: FunctionName.Approve,
         args: [spender as `0x${string}`, amount],
       });
-      console.log(tx)
       return (tx);
     } catch (err) {
       console.error('Approval failed:', err);

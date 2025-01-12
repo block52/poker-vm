@@ -24,9 +24,18 @@ const Deposit: React.FC = () => {
     const [publicKey, setPublicKey] = useState<string>();
     const [amount, setAmount] = useState<string>("0");
     const { decimals } = useDecimal(USDC_ADDRESS);
+    const [walletAllowance, setWalletAllowance] = useState<bigint>(BigInt(0));
+    const [tmpWalletAllowance, setTmpWalletAllowance] = useState<bigint>(BigInt(0));
+    const [tmpDepositAmount, setTmpDepositAmount] = useState<bigint>(BigInt(0));
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (allowance) {
+            setWalletAllowance(allowance);
+        }
+    }, [allowance]);
 
     useEffect(() => {
         const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
@@ -39,6 +48,7 @@ const Deposit: React.FC = () => {
         if (isDepositConfirmed) {
             toast.success(`You have deposited ${amount}USDC to address(${BRIDGE_ADDRESS}) successfully`, { autoClose: 5000 });
             setAmount("0");
+            setWalletAllowance(walletAllowance - tmpDepositAmount)
         }
     }, [isDepositConfirmed]);
 
@@ -46,6 +56,7 @@ const Deposit: React.FC = () => {
         if (isApproveConfirmed) {
             toast.success(`You have approved ${amount}USDC successfully`, { autoClose: 5000 });
             setAmount("0");
+            setWalletAllowance(tmpWalletAllowance)
         }
     }, [isApproveConfirmed]);
 
@@ -62,32 +73,33 @@ const Deposit: React.FC = () => {
     }, [approveError]);
 
     const allowed = React.useMemo(() => {
-        console.log(allowance);
-        if (!allowance || !decimals || !+amount) return false;
+        if (!walletAllowance || !decimals || !+amount) return false;
         const amountInBigInt = BigUnit.from(+amount, decimals).toBigInt();
-        return allowance >= amountInBigInt;
-    }, [amount, allowance, decimals, isApproveConfirmed, isDepositConfirmed]);
+        return walletAllowance >= amountInBigInt;
+    }, [amount, walletAllowance, decimals, isApproveConfirmed, isDepositConfirmed]);
 
     const handleApprove = async () => {
         if (!address || !decimals) {
             console.error("Missing required information");
             return;
         }
-
+    
         try {
             const amountInInteger = BigUnit.from(+amount, decimals);
             const tx = await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInInteger.toBigInt());
+            setTmpWalletAllowance(amountInInteger.toBigInt()); // Fixed incorrect function call
         } catch (err) {
             console.error("Approval failed:", err);
         }
     };
-
+    
     const handleDeposit = async () => {
         if (allowed) {
             try {
                 console.log("Initiating deposit...");
                 if (publicKey) {
                     await submit(BigUnit.from(+amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
+                    setTmpDepositAmount(BigUnit.from(+amount, decimals).toBigInt()); // Fixed incorrect function call
                 }
                 console.log(`isPending:  `, isDepositPending);
                 console.log("Deposit successful");
@@ -98,6 +110,7 @@ const Deposit: React.FC = () => {
             console.error("Insufficient allowance. Please approve more USDC.");
         }
     };
+    
 
     const handleGoBack = () => {
         navigate("/");
@@ -154,8 +167,9 @@ const Deposit: React.FC = () => {
                     {allowed ? (
                         <button
                             onClick={handleDeposit}
-                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${+amount === 0 && "opacity-50"
-                                }`}
+                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${
+                                +amount === 0 && "opacity-50"
+                            }`}
                             disabled={+amount === 0 || isDepositPending || isPending}
                         >
                             {isDepositPending || isPending ? "Depositing..." : "Deposit"}
@@ -164,8 +178,9 @@ const Deposit: React.FC = () => {
                     ) : (
                         <button
                             onClick={handleApprove}
-                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${+amount === 0 && "opacity-50"
-                                }`}
+                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${
+                                +amount === 0 && "opacity-50"
+                            }`}
                             disabled={+amount === 0 || isApprovePending || isLoading}
                         >
                             {isLoading || isApprovePending ? "Approving..." : "Approve"}
