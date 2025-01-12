@@ -29,20 +29,20 @@ const Dashboard: React.FC = () => {
                         Connect Wallet
                     </Link>
 
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="flex justify-between gap-6">
                         <Link
                             key="1"
                             to={`/table/${publicKey}`}
-                            className="flex justify-center gap-3 text-center text-white bg-gray-600 hover:bg-gray-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
+                            className="text-white bg-gray-600 hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
                         >
-                            <span>Cash</span>
+                            Cash
                         </Link>
 
                         <Link
                             to={`/tournament/${publicKey}`}
-                            className="flex justify-center items-center gap-3 text-center text-white bg-gray-600 hover:bg-gray-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
+                            className="text-white bg-gray-600 hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
                         >
-                            <span>Tournament</span>
+                            Tournament
                         </Link>
                     </div>
                 </div>
