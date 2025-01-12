@@ -42,7 +42,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         this.mempool = getMempoolInstance();
         this.transactionManagement = getTransactionInstance();
 
-        this.provider = createProvider(process.env.RPC_URL ?? "http://localhost:8545");
+        this.provider = createProvider(process.env.RPC_URL ?? "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
         this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }
 
@@ -87,7 +87,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-        const mintTx: Transaction = await Transaction.create(receiver, this.publicKey, value, this.index, this.privateKey, data);
+        const mintTx: Transaction = await Transaction.create(receiver, CONTRACT_ADDRESSES.bridgeAddress, value, this.index, this.privateKey, data);
 
         // Send to mempool
         await this.mempool.add(mintTx);

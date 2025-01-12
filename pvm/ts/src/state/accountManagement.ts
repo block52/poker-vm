@@ -46,15 +46,17 @@ export class AccountManagement extends StateManager {
 
     async incrementBalance(address: string, amount: bigint): Promise<void> {
         if (amount < 0n) {
-            throw new Error("Balance must be positive");
+            // throw new Error("Balance must be positive");
+            return;
         }
 
+        // Not sure why this is necessary?  Maybe burn?
         if (address !== CONTRACT_ADDRESSES.bridgeAddress) {
             await this.connect();
 
             const account = await Accounts.findOne({ address });
             if (!account) {
-                await Accounts.create({ address, balance: amount.toString() });
+                await Accounts.create({ address, balance: amount.toString(), nonce: 0 });
             } else {
                 let balance = BigInt(account.balance);
                 if (balance + amount < 0n) {
@@ -69,15 +71,14 @@ export class AccountManagement extends StateManager {
 
     async decrementBalance(address: string, amount: bigint): Promise<void> {
         if (amount < 0n) {
-            throw new Error("Balance must be positive");
+            // throw new Error("Balance must be positive");
+            return;
         }
 
         if (address !== CONTRACT_ADDRESSES.bridgeAddress) {
             await this.connect();
             await Accounts.updateOne({ address }, { $inc: { balance: (-amount).toString() } });
         }
-
-        await Accounts.updateOne({ address }, { $inc: { balance: (-amount).toString() } });
     }
 
     async applyTransaction(tx: Transaction) {
