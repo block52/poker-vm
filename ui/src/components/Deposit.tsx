@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as React from "react";
 import useUserWalletConnect from "../hooks/useUserWalletConnect";
 import useDepositUSDC from "../hooks/useDepositUSDC";
@@ -21,41 +21,41 @@ const Deposit: React.FC = () => {
     const { open, disconnect, isConnected, address } = useUserWalletConnect();
     const { submit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();
     const { isApprovePending, isApproveConfirmed, isLoading, approve, approveError } = useApprove();
-    const [publicKey, setPublicKey] = React.useState<string>();
+    const [publicKey, setPublicKey] = useState<string>();
     const [amount, setAmount] = useState<string>("0");
     const { decimals } = useDecimal(USDC_ADDRESS);
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
     const navigate = useNavigate();
 
-    React.useEffect(() => {
+    useEffect(() => {
         const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
         if (!localKey) return setPublicKey(undefined);
 
         setPublicKey(localKey);
     }, []);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (isDepositConfirmed) {
             toast.success(`You have deposited ${amount}USDC to address(${BRIDGE_ADDRESS}) successfully`, { autoClose: 5000 });
             setAmount("0");
         }
     }, [isDepositConfirmed]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (isApproveConfirmed) {
             toast.success(`You have approved ${amount}USDC successfully`, { autoClose: 5000 });
             setAmount("0");
         }
     }, [isApproveConfirmed]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (depositError) {
             toast.error(`Failed to deposit`, { autoClose: 5000 });
         }
     }, [depositError]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (approveError) {
             toast.error(`Failed to approve`, { autoClose: 5000 });
         }

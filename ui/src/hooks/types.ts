@@ -8,5 +8,11 @@ export enum FunctionName {
 
 export interface GameType {
     type: string;
-    variant: string;
+    variant: GameVariant;
+}
+
+// Create an enum of game types
+enum GameVariant {
+    CASH = "cash",
+    TOURNAMENT = "tournament"
 }
