@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
                     {/* Link to Deposit page */}
                     <Link
                         to="/deposit"
-                        className="block text-center text-white bg-pink-600 hover:bg-pink-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
+                        className="block text-center text-white bg-blue-500 hover:bg-blue-600 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
                     >
                         Connect Wallet
                     </Link>
