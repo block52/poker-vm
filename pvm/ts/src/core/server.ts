@@ -250,9 +250,6 @@ export class Server {
             return;
         }
 
-        // Get me
-        const me = await this.me();
-
         // Get my current tip
         const blockchain = getBlockchainInstance();
         const lastBlock = await blockchain.getLastBlock();
