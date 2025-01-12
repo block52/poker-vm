@@ -13,6 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { CONTRACT_ADDRESSES } from "../constants";
+import { toDollar, toDollarFromString } from "../utils/numberUtils";
 
 const Deposit: React.FC = () => {
     const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
@@ -139,7 +140,7 @@ const Deposit: React.FC = () => {
                     {isConnected ? "Disconnect" : "Connect"}
                 </button>
                 {address && <h4 className="border-b border-gray-600 text-blue-400 mb-2 break-words">Address: {address}</h4>}
-                {balance && <h4 className="border-b border-gray-600 text-blue-400 mb-4">Balance: {BigUnit.from(BigInt(balance), decimals).toString()}USDC</h4>}
+                {balance && <h4 className="border-b border-gray-600 text-blue-400 mb-4">Balance: {toDollarFromString(amount)}USDC</h4>}
 
                 <div className="mb-4 relative">
                     <label htmlFor="amount" className="block text-sm font-medium text-gray-300">
