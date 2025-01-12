@@ -43,6 +43,7 @@ function App() {
                     <div className="bg-[#2c3245] min-h-screen">
                         <Routes>
                             <Route path="/table/:id" element={<PlayPage />} />
+                            <Route path="/tournament/:id" element={<PlayPage />} />
                             <Route path="/deposit" element={<Deposit />} />
                             <Route path="/" element={<Dashboard />} />
                         </Routes>
