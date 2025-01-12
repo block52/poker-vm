@@ -1,4 +1,4 @@
-const BigUnit = require("bigunit");
+const { BigUnit } = require("bigunit");
 const express = require("express");
 const cors = require("cors");
 const ethers = require("ethers");
@@ -116,12 +116,12 @@ app.get("/games", (req, res) => {
     const id1 = ethers.ZeroAddress;
     const id2 = ethers.ZeroAddress;
 
-    const min = BigUnit.from("0.01").toString();
-    const max = BigUnit.from("1").toString();
+    const min = BigUnit.from("0.01", 18).toString();
+    const max = BigUnit.from("1", 18).toString();
 
     const response = [
-        { id: id1, type: "No Limit Texas Holdem", variant: "No Limit", max_players: 9, min, max },
-        { id: id2, type: "No Limit Texas Holdem", variant: "No Limit", max_players: 6, min, max }
+        { id: id1, variant: "Texas Holdem", type: "Cash", limit: "No Limit", max_players: 9, min, max },
+        { id: id2, variant: "Texas Holdem", type: "Cash", limit: "No Limit", max_players: 6, min, max }
     ];
 
     res.send(response);
