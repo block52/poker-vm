@@ -7,8 +7,13 @@ import { BigUnit } from "bigunit";
 const PokerActionPanel: React.FC = () => {
     const { setPlayerAction, playerIndex, players, lastPot, pots } = usePlayerContext();
     const [raiseAmount, setRaiseAmount] = useState(0);
-    const balance = BigUnit.from(players[0]?.stack, 18).toNumber();
-    const pot = BigUnit.from(pots[0], 18).toNumber();
+
+    // const balance = BigUnit.from(players[0]?.stack, 18).toNumber();
+    // const pot = BigUnit.from(pots[0], 18).toNumber();
+
+    const balance = 1000;
+    const pot = 1000;
+    
     useEffect(() => {
         setRaiseAmount(lastPot - pot + 1);
     }, [lastPot]);

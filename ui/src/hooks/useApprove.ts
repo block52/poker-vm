@@ -1,7 +1,7 @@
 import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { erc20abi } from '../abis/erc20ABI';
 import useUserWalletConnect from './useUserWalletConnect';
-import { FunctionName } from './types';
+import { FunctionName } from '../types';
 import { useMemo } from 'react';
 
 const useApprove = () => {

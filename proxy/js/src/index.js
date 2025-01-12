@@ -176,34 +176,34 @@ app.post("/join", (req, res) => {
     res.send(response);
 });
 
-// Deposit to the layer 2
-app.post("/deposit", (req, res) => {
-    const signature = req.body?.signature;
-    if (!signature) {
-        res.status(400).send("Signature required");
-        return;
-    }
+// // Deposit to the layer 2
+// app.post("/deposit", (req, res) => {
+//     const signature = req.body?.signature;
+//     if (!signature) {
+//         res.status(400).send("Signature required");
+//         return;
+//     }
 
-    const nonce = req.body?.nonce;
-    if (!nonce) {
-        res.status(400).send("Nonce required");
-        return;
-    }
+//     const nonce = req.body?.nonce;
+//     if (!nonce) {
+//         res.status(400).send("Nonce required");
+//         return;
+//     }
 
-    const txId = req.body?.txId;
-    if (!txId) {
-        res.status(400).send("Transaction ID required");
-        return;
-    }
+//     const txId = req.body?.txId;
+//     if (!txId) {
+//         res.status(400).send("Transaction ID required");
+//         return;
+//     }
 
-    const response = {
-        id: 1,
-        balance: ethers.utils.formatEther(req.body.balance),
-        tx: ethers.ZeroHash
-    };
+//     const response = {
+//         id: 1,
+//         balance: ethers.utils.formatEther(req.body.balance),
+//         tx: ethers.ZeroHash
+//     };
 
-    res.send(response);
-});
+//     res.send(response);
+// });
 
 app.post("/transfer", (req, res) => {
     const response = {

@@ -1,6 +1,6 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { abi } from "../abis/contractABI";
-import { FunctionName } from "./types";
+import { FunctionName } from "../types";
 import { useMemo } from "react";
 
 const useDepositUSDC = () => {
