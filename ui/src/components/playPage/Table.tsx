@@ -1,27 +1,25 @@
 import { useEffect, useState } from "react";
-import { playerPosition, chipPosition, dealerPosition } from "../../utills/PositionArray";
+import { playerPosition, chipPosition, dealerPosition } from "../../utils/PositionArray";
 import { IoMenuSharp } from "react-icons/io5";
-import { CiCalendar } from "react-icons/ci";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
-import Dealer from "./reusable/Dealer";
-import Chip from "./reusable/Chip";
+import Dealer from "./common/Dealer";
+import Chip from "./common/Chip";
 import { usePlayerContext } from "../../context/usePlayerContext";
-import { PlayerStatus } from "@bitcoinbrisbane/block52"
+import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
-import { BiBorderAll } from "react-icons/bi";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
-import { HiPlus } from "react-icons/hi2";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
 import useUserSeat from "../../hooks/useUserSeat";
+
 //* Define the interface for the position object
 interface PositionArray {
     left?: string;
@@ -39,11 +37,16 @@ const calculateZoom = () => {
     return Math.min(scaleWidth, scaleHeight);
 };
 
-function PlayPage() {
+const Table = () => {
     const { id } = useParams<{ id: string }>();
+    
     if (!id) {
+        console.error("Table ID is missing");
+        // Return some markup saying that the table ID is missing
+        // return <div>Table ID is missing</div>;
         return <></>;
-    };
+    }
+
     const { seat } = useUserSeat(id, 1);
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
@@ -78,7 +81,8 @@ function PlayPage() {
     //         color: colors[index]
     //     }));
     // };
-    useEffect(() => seat ? setStartIndex(seat) : setStartIndex(0), [seat])
+
+    useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
     useEffect(() => {
         const reorderedPlayerArray = [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)];
@@ -163,7 +167,7 @@ function PlayPage() {
     };
 
     const onGoToDashboard = () => {
-        navigate('/')
+        navigate("/");
     };
 
     return (
@@ -201,7 +205,7 @@ function PlayPage() {
                         </div>
 
                         <div className="flex items-center justify-center w-10 h-10  cursor-pointer">
-                            <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigate('/deposit')} />
+                            <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigate("/deposit")} />
                         </div>
                         {/* <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
                             <CiCalendar color="#f0f0f0" size={25} />
@@ -224,7 +228,9 @@ function PlayPage() {
                         <span className="text-sm cursor-pointer" onClick={onCloseSideBar}>
                             {openSidebar ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
                         </span>
-                        <button className="ml-2 px-3 rounded" onClick={onGoToDashboard}>X</button>
+                        <button className="ml-2 px-3 rounded" onClick={onGoToDashboard}>
+                            X
+                        </button>
                     </div>
                 </div>
             </div>
@@ -356,8 +362,9 @@ function PlayPage() {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
-                        }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
+                        openSidebar ? "w-[300px]" : "w-0"
+                    }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
@@ -378,6 +385,6 @@ function PlayPage() {
             </div>
         </div>
     );
-}
+};
 
-export default PlayPage;
+export default Table;

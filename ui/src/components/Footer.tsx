@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import { usePlayerContext } from "../context/usePlayerContext";
-import CheckboxList from "./playPage/reusable/CheckboxList";
+import CheckboxList from "./playPage/common/CheckboxList";
 import { BigUnit } from "bigunit";
 
 const PokerActionPanel: React.FC = () => {
     const { setPlayerAction, playerIndex, players, lastPot, pots } = usePlayerContext();
     const [raiseAmount, setRaiseAmount] = useState(0);
-    const balance = BigUnit.from(players[0]?.stack, 18).toNumber()
+    const balance = BigUnit.from(players[0]?.stack, 18).toNumber();
     const pot = BigUnit.from(pots[0], 18).toNumber();
     useEffect(() => {
         setRaiseAmount(lastPot - pot + 1);

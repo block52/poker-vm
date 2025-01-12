@@ -1,8 +1,8 @@
 import * as React from "react";
-import Badge from "../reusable/Badge";
-import ProgressBar from "../reusable/ProgressBar";
+import Badge from "../common/Badge";
+import ProgressBar from "../common/ProgressBar";
 import { usePlayerContext } from "../../../context/usePlayerContext";
-import { PlayerStatus } from "@bitcoinbrisbane/block52"
+import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { BigUnit } from "bigunit";
 
 type PlayerProps = {
@@ -20,8 +20,9 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
     return (
         <div
             key={index}
-            className={`${players[index].status && players[index].status === PlayerStatus.FOLDED ? "opacity-60" : ""
-                } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
+            className={`${
+                players[index].status && players[index].status === PlayerStatus.FOLDED ? "opacity-60" : ""
+            } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
             style={{
                 left: left,
                 top: top,
