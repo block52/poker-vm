@@ -1,17 +1,21 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react"; // Import React and useEffect
 import { Link } from "react-router-dom"; // Import Link for navigation
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import "./Dashboard.css";
 
 const Dashboard: React.FC = () => {
-    const [publicKey, setPublicKey] = React.useState<string>();
+    const [publicKey, setPublicKey] = useState<string>();
 
-    React.useEffect(() => {
+    useEffect(() => {
         const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
         if (!localKey) return setPublicKey(undefined);
 
         setPublicKey(localKey);
     }, []);
+
+    // const [loading, setLoading] = useState(true);
+    // const [gameType, setGameType] = useState<string | null>(null);
+    
 
     return (
         <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black">

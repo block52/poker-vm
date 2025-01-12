@@ -6,16 +6,17 @@ import useAllowance from "../hooks/useAllowance";
 import useDecimal from "../hooks/useDecimals";
 import useApprove from "../hooks/useApprove";
 import { BigUnit } from "bigunit";
-import spinner from "../../public/spinning-circles.svg";
+import spinner from "../assets/spinning-circles.svg";
 import useWalletBalance from "../hooks/useWalletBalance";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
+import { CONTRACT_ADDRESSES } from "../constants";
 
 const Deposit: React.FC = () => {
-    const USDC_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
-    const BRIDGE_ADDRESS = "0xBf1e380f3D1AE31854764081C488EaDA9F4CB195";
+    const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
+    const BRIDGE_ADDRESS = CONTRACT_ADDRESSES.bridgeAddress;
 
     const { open, disconnect, isConnected, address } = useUserWalletConnect();
     const { submit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();

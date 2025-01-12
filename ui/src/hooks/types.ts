@@ -5,3 +5,8 @@ export enum FunctionName {
     Decimals = "decimals",
     Balance = "balanceOf"
 }
+
+export interface GameType {
+    type: string;
+    variant: string;
+}
