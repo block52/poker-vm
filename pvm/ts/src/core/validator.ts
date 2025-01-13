@@ -54,10 +54,9 @@ export class Validator {
         }
 
         // For now, we will just use the first validator in the list
-        // const validatorIndex = nextBlockIndex % this.validatorCount;
-        // const validatorIndex = 0;
+        const validatorIndex = nextBlockIndex % this.validatorCount;
 
-        // const { publicKey: validatorAddress } = this.nodes[validatorIndex];
+        const { publicKey: validatorAddress } = this.nodes[validatorIndex];
         // console.log(`Next validator index: ${validatorIndex}, ${validatorAddress}`);
 
         // dog node metamask 0xA5A3443679d1154264d419F8C716435AA4972D9d
@@ -66,7 +65,8 @@ export class Validator {
         // const pub_keys = ["0xeE3A5673dE06Fa3Efd2fA2B6F46B5f75C0AcEb8D", "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846"];
         // return pub_keys[nextBlockIndex % 2];
         
-        return "0xA5A3443679d1154264d419F8C716435AA4972D9d"; // dog node
+        // return "0xA5A3443679d1154264d419F8C716435AA4972D9d"; // dog node
+        return validatorAddress;
     }
 }
 
