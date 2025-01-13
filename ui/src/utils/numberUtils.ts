@@ -1,3 +1,6 @@
+import { BigUnit } from "bigunit";
+import { ethers } from "ethers";
+
 export const toDollar = (amount: BigInt): string => {
     const dollar = amount.toString();
 
@@ -21,4 +24,13 @@ export const toDollarFromString = (amount: string | null): string => {
     }
 
     return toDollar(BigInt(amount));
+}
+
+export const toDollarFromBigUnit = (amount: BigUnit): string => {
+    return toDollar(amount.toBigInt());
+}
+
+export const formatUSDC = (amount: string): string => {
+    const usdc = ethers.parseUnits(amount, 6);
+    return toDollar(usdc);
 }
