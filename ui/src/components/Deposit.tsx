@@ -14,13 +14,12 @@ import { useNavigate } from "react-router-dom";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { CONTRACT_ADDRESSES } from "../constants";
 
-
 const Deposit: React.FC = () => {
     const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
     const BRIDGE_ADDRESS = CONTRACT_ADDRESSES.bridgeAddress;
 
     const { open, disconnect, isConnected, address } = useUserWalletConnect();
-    const { submit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();
+    const { deposit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();
     const { isApprovePending, isApproveConfirmed, isLoading, approve, approveError } = useApprove();
     const [publicKey, setPublicKey] = useState<string>();
     const [amount, setAmount] = useState<string>("0");
@@ -53,7 +52,7 @@ const Deposit: React.FC = () => {
         if (isDepositConfirmed) {
             toast.success(`You have deposited ${amount}USDC to address(${BRIDGE_ADDRESS}) successfully`, { autoClose: 5000 });
             setAmount("0");
-            setWalletAllowance(walletAllowance - tmpDepositAmount)
+            setWalletAllowance(walletAllowance - tmpDepositAmount);
         }
     }, [isDepositConfirmed]);
 
@@ -61,7 +60,7 @@ const Deposit: React.FC = () => {
         if (isApproveConfirmed) {
             toast.success(`You have approved ${amount}USDC successfully`, { autoClose: 5000 });
             setAmount("0");
-            setWalletAllowance(tmpWalletAllowance)
+            setWalletAllowance(tmpWalletAllowance);
         }
     }, [isApproveConfirmed]);
 
@@ -88,7 +87,7 @@ const Deposit: React.FC = () => {
             console.error("Missing required information");
             return;
         }
-    
+
         try {
             const amountInInteger = BigUnit.from(+amount, decimals);
             const tx = await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInInteger.toBigInt());
@@ -97,17 +96,17 @@ const Deposit: React.FC = () => {
             console.error("Approval failed:", err);
         }
     };
-    
+
     const handleDeposit = async () => {
         if (allowed) {
             try {
                 console.log("Initiating deposit...");
                 if (publicKey) {
-                    await submit(BigUnit.from(+amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
+                    console.log(`isPending:  `, isDepositPending);
+                    await deposit(BigUnit.from(+amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
                     setTmpDepositAmount(BigUnit.from(+amount, decimals).toBigInt()); // Fixed incorrect function call
+                    console.log("Deposit successful");
                 }
-                console.log(`isPending:  `, isDepositPending);
-                console.log("Deposit successful");
             } catch (err) {
                 console.error("Deposit failed:", err);
             }
@@ -115,7 +114,6 @@ const Deposit: React.FC = () => {
             console.error("Insufficient allowance. Please approve more USDC.");
         }
     };
-    
 
     const handleGoBack = () => {
         navigate("/");
