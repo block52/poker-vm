@@ -53,7 +53,7 @@ const useUserWallet = (): UserWalletResult => {
                 let pubKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
 
                 // If no existing private key, generate a new one
-                if (!key) {
+                if (!key || !pubKey) {
                     const wallet = Wallet.createRandom();
                     key = wallet.privateKey;
                     pubKey = wallet.address;
