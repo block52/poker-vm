@@ -47,6 +47,7 @@ export class AccountManagement extends StateManager {
     async incrementBalance(address: string, amount: bigint): Promise<void> {
         if (amount < 0n) {
             // throw new Error("Balance must be positive");
+            console.log("Balance must be positive");
             return;
         }
 
@@ -60,7 +61,9 @@ export class AccountManagement extends StateManager {
             } else {
                 let balance = BigInt(account.balance);
                 if (balance + amount < 0n) {
-                    throw new Error("Insufficient funds");
+                    // throw new Error("Insufficient funds");
+                    console.log("Insufficient funds");
+                    return;
                 }
 
                 balance += amount;
@@ -72,11 +75,26 @@ export class AccountManagement extends StateManager {
     async decrementBalance(address: string, amount: bigint): Promise<void> {
         if (amount < 0n) {
             // throw new Error("Balance must be positive");
+            console.log("Balance must be positive");
             return;
         }
 
         if (address !== CONTRACT_ADDRESSES.bridgeAddress) {
             await this.connect();
+            const account = await Accounts.findOne({ address });
+            if (!account) {
+                // throw new Error("Account not found");
+                console.log("Account not found");
+                return;
+            }
+
+            const balance = BigInt(account.balance);
+            if (balance - amount < 0n) {
+                // throw new Error("Insufficient funds");
+                console.log("Insufficient funds");
+                return;
+            }
+
             await Accounts.updateOne({ address }, { $inc: { balance: (-amount).toString() } });
         }
     }
