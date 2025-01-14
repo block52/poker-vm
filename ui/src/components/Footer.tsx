@@ -37,9 +37,9 @@ const PokerActionPanel: React.FC = () => {
     return (
         <div className="flex justify-center rounded-lg h-full text-white z-[0]">
             {/* Action Buttons */}
-            <div className="left-0 absolute">
+            {/* <div className="left-0 absolute">
                 <CheckboxList />
-            </div>
+            </div> */}
             {/* <ChipPurchase /> */}
             <div className="flex flex-col w-[600px] space-y-6 mb-2 justify-center rounded-lg">
                 <div className="flex justify-between gap-2">
