@@ -42,7 +42,7 @@ function App() {
                 <Router>
                     <div className="bg-[#2c3245] min-h-screen">
                         <Routes>
-                            <Route path="/table/:id" element={<Table />} />
+                            <Route path="/table/:type" element={<Table />} />
                             <Route path="/deposit" element={<Deposit />} />
                             <Route path="/" element={<Dashboard />} />
                         </Routes>

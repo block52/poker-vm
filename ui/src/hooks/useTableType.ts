@@ -2,14 +2,14 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 
 interface UseTableTypeResult {
-    type: string | null;
+    tableType: string | null;
     isLoading: boolean;
     error: Error | null;
     refetch: () => Promise<void>;
 }
 
 const useTableType = (address: string): UseTableTypeResult => {
-    const [type, setType] = useState<string | null>(null);
+    const [tableType, setTableType] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
@@ -26,8 +26,7 @@ const useTableType = (address: string): UseTableTypeResult => {
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            setType(response.data.type);
+            setTableType(response.data.type);
         } catch (err) {
             setError(err instanceof Error ? err : new Error("An error occurred"));
         } finally {
@@ -40,7 +39,7 @@ const useTableType = (address: string): UseTableTypeResult => {
     }, [address]);
 
     return {
-        type,
+        tableType: tableType,
         isLoading,
         error,
         refetch: fetchType

@@ -55,7 +55,7 @@ const Dashboard: React.FC = () => {
     };
 
     const buildUrl = () => {
-        return `/table/${typeSelected}?variant=${variantSelected}&seats=${seatSelected}`;
+        return `/table/${typeSelected}?variant=${variantSelected}&seats=${seatSelected}&pubkey=${publicKey}`;
     }
 
     const handleNext = () => {
@@ -143,7 +143,7 @@ const Dashboard: React.FC = () => {
 
                         {/* Set seats */}
                         <button
-                            onClick={() => handleSeat(9)}
+                            onClick={() => handleSeat(8)}
                             className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
                                 seatSelected === 8 ? "bg-pink-600" : "bg-gray-600"
                             }`}
