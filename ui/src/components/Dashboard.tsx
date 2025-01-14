@@ -15,7 +15,7 @@ enum Variant {
 }
 
 const Dashboard: React.FC = () => {
-    const seats = [6, 9];
+    const seats = [6, 8];
 
     const navigate = useNavigate();
     const [publicKey, setPublicKey] = useState<string>();
@@ -145,10 +145,10 @@ const Dashboard: React.FC = () => {
                         <button
                             onClick={() => handleSeat(9)}
                             className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                seatSelected === 9 ? "bg-pink-600" : "bg-gray-600"
+                                seatSelected === 8 ? "bg-pink-600" : "bg-gray-600"
                             }`}
                         >
-                            9 Seats
+                            8 Seats
                         </button>
                     </div>
 
