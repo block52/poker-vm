@@ -16,7 +16,7 @@ import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet";
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
 import useUserSeat from "../../hooks/useUserSeat";
 import { toDollarFromString } from "../../utils/numberUtils";
@@ -39,21 +39,16 @@ const calculateZoom = () => {
 };
 
 const Table = () => {
-    const { type } = useParams<{type: string}>(); 
-    const [searchParams] = useSearchParams(type);
-
-    const publicKey = searchParams.get("pubkey");
-    const variant = searchParams.get("variant");
-    const seats = searchParams.get("seats");
-
-    if (!publicKey) {
+    const { id } = useParams<{ id: string }>();
+    
+    if (!id) {
         console.error("Table ID is missing");
         // Return some markup saying that the table ID is missing
         // return <div>Table ID is missing</div>;
         return <></>;
     }
 
-    const { seat } = useUserSeat(publicKey, 1);
+    const { seat } = useUserSeat(id, 1);
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -71,8 +66,7 @@ const Table = () => {
     const navigate = useNavigate();
 
     const { account, balance, isLoading } = useUserWallet();
-    const { tableType } = useTableType(publicKey);
-    console.log(tableType)
+    const { type } = useTableType(id);
 
     const [handResult, setHandResult] = useState<string>("");
 
@@ -229,7 +223,7 @@ const Table = () => {
                     {/* Left Section */}
                     <div className="flex items-center">
                         <span className="px-2 rounded text-[12px]">2/4</span>
-                        <span className="ml-2 text-[12px]">{tableType}</span>
+                        <span className="ml-2 text-[12px]">{type}</span>
                     </div>
 
                     {/* Right Section */}
@@ -361,7 +355,7 @@ const Table = () => {
                             </div>
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
-                            <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{handResult}</span>
+                            <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{ handResult }</span>
                         </div>
                     </div>
                     {/*//! FOOTER */}
@@ -371,7 +365,7 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
                         openSidebar ? "w-[300px]" : "w-0"
                     }`}
                     style={{
