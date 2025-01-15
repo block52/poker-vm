@@ -61,6 +61,7 @@ class Mocks {
             },
             actions: ["check", "bet", "fold"],
             action: "check",
+            hand_strength: "Ace High",
             timeout,
             signature: ethers.ZeroHash
         };
@@ -115,8 +116,6 @@ class Mocks {
             return this.tables[id];
         }
 
-        const _id = crypto.createHash("sha256").update(id).digest("hex");
-
         const sb = BigUnit.from("0.50", 18);
         const bb = BigUnit.from("1", 18);
         const pot1 = BigUnit.from("10", 18);
@@ -165,6 +164,7 @@ class Mocks {
         const player = table.players[table.nextToAct - 1];
 
         const action = new ActionDTO();
+
         action.tableId = id;
         action.player = player.address;
         action.seat = player.seat;
