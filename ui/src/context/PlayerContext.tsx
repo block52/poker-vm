@@ -200,9 +200,21 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
+    const call = () => {
+        if (publicKey) {
+            performAction(publicKey, PlayerActionType.CALL, nonce);
+        }
+    };
+
     const raise = (amount: number) => {
         if (publicKey) {
             performAction(publicKey, PlayerActionType.RAISE, amount, nonce);
+        }
+    };
+
+    const bet = (amount: number) => {
+        if (publicKey) {
+            performAction(publicKey, PlayerActionType.BET, amount, nonce);
         }
     };
 
@@ -213,6 +225,10 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             check();
         } else if (action === PlayerActionType.RAISE && amount !== undefined) {
             raise(amount);
+        } else if (action === PlayerActionType.BET && amount !== undefined) {
+            bet(amount);
+        } else if (action === PlayerActionType.CALL) {
+            call();
         }
     };
 
