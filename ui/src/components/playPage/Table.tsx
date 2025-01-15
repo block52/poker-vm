@@ -80,6 +80,7 @@ const Table = () => {
     const [smallBlind, setSmallBlind] = useState<string>("0");
     const [bigBlind, setBigBlind] = useState<string>("0");
     const [tableType, setTableType] = useState<string>("");
+    const [roundType, setRoundType] = useState<string>("");
 
     // Fetch table data
     useEffect(() => {
@@ -93,6 +94,7 @@ const Table = () => {
                 setSmallBlind(toDollarFromString(response.data.smallBlind));
                 setBigBlind(toDollarFromString(response.data.bigBlind));
                 setTableType(response.data.type);
+                setRoundType(response.data.round);
             } catch (error) {
                 console.error("Error fetching table data:", error);
             }
@@ -295,6 +297,9 @@ const Table = () => {
                                             {/* //! Table */}
                                             <div className="w-[140px] h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
                                                 <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
+                                            </div>
+                                            <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
+                                                <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">Round: <span className="font-semibold text-yellow-400 ml-1">{roundType}</span></span>
                                             </div>
                                             <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">Main Pot: 50</span>
