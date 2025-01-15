@@ -209,10 +209,15 @@ const Table = () => {
             <div>
                 <div className="w-[100vw] h-[65px] bottom-0 bg-[#404040] top-5 text-center flex items-center justify-between border-gray-400 px-4 z-0">
                     <div className="flex items-center space-x-2">
-                        <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
+                        {/* <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
                             <IoMenuSharp size={20} />
-                        </div>
-                        <span className="text-white text-sm font-medium text-[20px]">Lobby</span>
+                        </div> */}
+                        <span 
+                            className="text-white text-sm font-medium text-[20px] cursor-pointer" 
+                            onClick={() => navigate('/')}
+                        >
+                            Lobby
+                        </span>
                     </div>
 
                     {/* Middle Section */}
