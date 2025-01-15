@@ -30,6 +30,8 @@ interface PositionArray {
     color?: string;
 }
 
+const MOCK_API_URL = "https://orca-app-k9l4d.ondigitalocean.app";
+
 const calculateZoom = () => {
     const baseWidth = 1800;
     const baseHeight = 950;
@@ -71,6 +73,7 @@ const Table = () => {
 
     const { balance } = useUserWallet();
     const { type } = useTableType(id);
+    
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -183,10 +186,15 @@ const Table = () => {
             <div>
                 <div className="w-[100vw] h-[65px] bottom-0 bg-[#404040] top-5 text-center flex items-center justify-between border-gray-400 px-4 z-0">
                     <div className="flex items-center space-x-2">
-                        <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
+                        {/* <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
                             <IoMenuSharp size={20} />
-                        </div>
-                        <span className="text-white text-sm font-medium text-[20px]">Lobby</span>
+                        </div> */}
+                        <span 
+                            className="text-white text-sm font-medium text-[20px] cursor-pointer" 
+                            onClick={() => navigate('/')}
+                        >
+                            Lobby
+                        </span>
                     </div>
 
                     {/* Middle Section */}
@@ -226,8 +234,8 @@ const Table = () => {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
                     {/* Left Section */}
                     <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">2/4</span>
-                        <span className="ml-2 text-[12px]">{type}</span>
+                        <span className="px-2 rounded text-[12px]">${`${smallBlind}/$${bigBlind}`}</span>
+                        <span className="ml-2 text-[12px]">Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableType}</span></span>
                     </div>
 
                     {/* Right Section */}
@@ -256,7 +264,7 @@ const Table = () => {
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative z-0">
                                 <div className="w-[800px] h-[400px] relative text-center block z-[-2] transform translate-y-[30px]">
                                     <div className="h-full flex align-center justify-center">
-                                        <div className="z-[20] relative flex flex-col absolute w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center z-0 border-[2px] border-[#c9c9c985] rounded-full flex items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
+                                        <div className="z-[20] relative flex flex-col w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
                                             <div className="w-[140px] h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
                                                 <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
@@ -369,9 +377,8 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
-                        openSidebar ? "w-[300px]" : "w-0"
-                    }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
+                        }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
