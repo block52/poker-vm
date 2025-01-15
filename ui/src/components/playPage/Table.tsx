@@ -52,6 +52,7 @@ const Table = () => {
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
+    const { totalPot } = usePlayerContext();
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
@@ -255,7 +256,7 @@ const Table = () => {
                                         <div className="z-[20] relative flex flex-col absolute w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center z-0 border-[2px] border-[#c9c9c985] rounded-full flex items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
                                             <div className="w-[140px] h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
-                                                <span className="text-[#dbd3d3] mr-2">Total Pot: 50</span>
+                                                <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
                                             </div>
                                             <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">Main Pot: 50</span>

@@ -10,6 +10,8 @@ export interface PlayerContextType {
     players: PlayerDTO[];
     pots: string[];
     tableSize: number;
+    seat: number;
+    totalPot: number;
     // updatePlayer: (index: number, updatedPlayer: Player) => void;
     // setPlayerBalance: (index: number, balance: number) => void;
     // setPlayerPot: (index: number, balance: number) => void;
