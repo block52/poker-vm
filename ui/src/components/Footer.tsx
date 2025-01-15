@@ -5,8 +5,7 @@ import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import CheckboxList from "./playPage/common/CheckboxList";
 import axios from "axios";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
-
-const MOCK_API_URL = "https://orca-app-k9l4d.ondigitalocean.app";
+import useUserBySeat from "../hooks/useUserBySeat";
 
 const PokerActionPanel: React.FC = () => {
     const { setPlayerAction, playerIndex, pots, seat, totalPot } = usePlayerContext();
@@ -14,9 +13,13 @@ const PokerActionPanel: React.FC = () => {
     const [publicKey, setPublicKey] = useState<string>();
     const [raiseAmount, setRaiseAmount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
-    const [balance, setBalance] = useState("");
-
-    console.log(totalPot, pots)
+    const [balance, setBalance] = useState(0);
+    const { data } = useUserBySeat(publicKey || "", seat);
+    useEffect(() => {
+        if (data) {
+            setBalance(data.stack);
+        }
+    }, [publicKey, seat]);
 
     useEffect(() => {
         const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
@@ -24,34 +27,6 @@ const PokerActionPanel: React.FC = () => {
 
         setPublicKey(localKey);
     }, []);
-
-    const fetchBalance = async (seat: number, address: string) => {
-        if (!address) return;
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${MOCK_API_URL}/table/${address}/player/${seat}`);
-            console.log(response)
-            if (response.status !== 200) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            setBalance(response.data.stack);
-        } catch (err) {
-            setError(err instanceof Error ? err : new Error("An error occurred"));
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (publicKey) {
-            fetchBalance(seat, publicKey);
-        }
-    }, [publicKey]);
 
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
@@ -68,8 +43,6 @@ const PokerActionPanel: React.FC = () => {
     const onRaise = () => {
         setPlayerAction(PlayerActionType.RAISE, raiseAmount);
     };
-
-    console.log(raiseAmount)
 
     return (
         <div className="flex justify-center rounded-lg h-full text-white z-[0]">

@@ -9,9 +9,6 @@ import { toDollarFromString } from "../utils/numberUtils";
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
-
-const MOCK_API_URL = "https://orca-app-k9l4d.ondigitalocean.app";
-
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [publicKey, setPublicKey] = React.useState<string>();
     const { b52 } = useUserWallet();
@@ -40,7 +37,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [tableSize] = useState<number>(9);
     const [playerIndex, setPlayerIndex] = useState<number>(-1);
     const [dealerIndex, setDealerIndex] = useState<number>(0);
-    const [nonce, setNonce] = useState<number>(0);
+    const [nonce, setNonce] = useState<number>(1);
     const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
     const [pots, setPots] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +52,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         try {
             const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${MOCK_API_URL}/table/${publicKey}`);
+            const response = await axios.get(`${url}/table/${publicKey}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);

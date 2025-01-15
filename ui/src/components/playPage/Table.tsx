@@ -18,8 +18,8 @@ import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
-import useUserSeat from "../../hooks/useUserSeat";
 import { toDollarFromString } from "../../utils/numberUtils";
+import useUserBySeat from "../../hooks/useUserBySeat";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -40,7 +40,7 @@ const calculateZoom = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    
+
     if (!id) {
         console.error("Table ID is missing");
         // Return some markup saying that the table ID is missing
@@ -48,28 +48,29 @@ const Table = () => {
         return <></>;
     }
 
-    const { seat } = useUserSeat(id, 1);
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
-    const { totalPot } = usePlayerContext();
+    const { totalPot, seat } = usePlayerContext();
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+    const [publicKey, setPublicKey] = useState<string>();
     const [openSidebar, setOpenSidebar] = useState(false);
 
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+    const { data } = useUserBySeat(id, seat);
 
     const navigate = useNavigate();
 
-    const { account, balance, isLoading } = useUserWallet();
+    const { balance } = useUserWallet();
     const { type } = useTableType(id);
-
-    const [handResult, setHandResult] = useState<string>("");
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -173,6 +174,8 @@ const Table = () => {
     const onGoToDashboard = () => {
         navigate("/");
     };
+
+    console.log()
 
     return (
         <div className="h-screen">
@@ -356,7 +359,7 @@ const Table = () => {
                             </div>
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
-                            <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{ handResult }</span>
+                            {data && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{data.hand_strength}</span>}
                         </div>
                     </div>
                     {/*//! FOOTER */}
