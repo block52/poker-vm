@@ -20,6 +20,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
 import { toDollarFromString } from "../../utils/numberUtils";
 import useUserBySeat from "../../hooks/useUserBySeat";
+import axios from "axios";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -73,7 +74,33 @@ const Table = () => {
 
     const { balance } = useUserWallet();
     const { type } = useTableType(id);
-    
+
+
+    // Add new state for blinds
+    const [smallBlind, setSmallBlind] = useState<string>("0");
+    const [bigBlind, setBigBlind] = useState<string>("0");
+    const [tableType, setTableType] = useState<string>("");
+
+    // Fetch table data
+    useEffect(() => {
+        const fetchTableData = async () => {
+            if (!id) return;
+
+            try {
+                const response = await axios.get(`${MOCK_API_URL}/table/${id}`);
+                console.log(response.data);
+                // Convert from wei format to regular numbers
+                setSmallBlind(toDollarFromString(response.data.smallBlind));
+                setBigBlind(toDollarFromString(response.data.bigBlind));
+                setTableType(response.data.type);
+            } catch (error) {
+                console.error("Error fetching table data:", error);
+            }
+        };
+
+        fetchTableData();
+    }, [id]);
+
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -189,8 +216,8 @@ const Table = () => {
                         {/* <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
                             <IoMenuSharp size={20} />
                         </div> */}
-                        <span 
-                            className="text-white text-sm font-medium text-[20px] cursor-pointer" 
+                        <span
+                            className="text-white text-sm font-medium text-[20px] cursor-pointer"
                             onClick={() => navigate('/')}
                         >
                             Lobby
