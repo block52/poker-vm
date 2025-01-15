@@ -70,6 +70,7 @@ const Table = () => {
 
     const { account, balance, isLoading } = useUserWallet();
     const { type } = useTableType(id);
+    
 
     const [handResult, setHandResult] = useState<string>("");
 
@@ -77,6 +78,7 @@ const Table = () => {
     // Add new state for blinds
     const [smallBlind, setSmallBlind] = useState<string>("0");
     const [bigBlind, setBigBlind] = useState<string>("0");
+    const [tableType, setTableType] = useState<string>("");
 
     // Fetch table data
     useEffect(() => {
@@ -89,6 +91,7 @@ const Table = () => {
                 // Convert from wei format to regular numbers
                 setSmallBlind(toDollarFromString(response.data.smallBlind));
                 setBigBlind(toDollarFromString(response.data.bigBlind));
+                setTableType(response.data.type);
             } catch (error) {
                 console.error("Error fetching table data:", error);
             }
@@ -250,7 +253,7 @@ const Table = () => {
                     {/* Left Section */}
                     <div className="flex items-center">
                         <span className="px-2 rounded text-[12px]">${`${smallBlind}/$${bigBlind}`}</span>
-                        <span className="ml-2 text-[12px]">{type}</span>
+                        <span className="ml-2 text-[12px]">Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableType}</span></span>
                     </div>
 
                     {/* Right Section */}
