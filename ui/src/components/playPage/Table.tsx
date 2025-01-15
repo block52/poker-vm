@@ -20,6 +20,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
 import useUserSeat from "../../hooks/useUserSeat";
 import { toDollarFromString } from "../../utils/numberUtils";
+import axios from "axios";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -29,6 +30,8 @@ interface PositionArray {
     right?: string;
     color?: string;
 }
+
+const MOCK_API_URL = "https://orca-app-k9l4d.ondigitalocean.app";
 
 const calculateZoom = () => {
     const baseWidth = 1800;
@@ -81,12 +84,11 @@ const Table = () => {
             if (!id) return;
 
             try {
-                const response = await fetch(`https://orca-app-k9l4d.ondigitalocean.app/table/${id}`);
-                const data = await response.json();
-                console.log(data);
+                const response = await axios.get(`${MOCK_API_URL}/table/${id}`);
+                console.log(response.data);
                 // Convert from wei format to regular numbers
-                setSmallBlind(toDollarFromString(data.smallBlind));
-                setBigBlind(toDollarFromString(data.bigBlind));
+                setSmallBlind(toDollarFromString(response.data.smallBlind));
+                setBigBlind(toDollarFromString(response.data.bigBlind));
             } catch (error) {
                 console.error("Error fetching table data:", error);
             }
