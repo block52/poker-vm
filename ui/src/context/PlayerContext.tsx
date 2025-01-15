@@ -2,11 +2,10 @@ import { createContext, useState, ReactNode, useEffect, useMemo, useRef } from "
 import * as React from "react";
 import { PlayerContextType } from "./types";
 import { PlayerStatus, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
-import { useParams } from "react-router-dom";
-import userUserLastAction from "../hooks/useUserLastAction";
 import axios from "axios";
 import useUserWallet from "../hooks/useUserWallet";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
+import { toDollarFromString } from "../utils/numberUtils";
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
@@ -31,18 +30,19 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }))
     );
     const [lastPot, setLastPot] = useState<number>(0);
+    const [seat, seSeat] = useState<number>(0);
     const [openOneMore, setOpenOneMore] = useState<boolean>(false);
     const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
     const [showThreeCards, setShowThreeCards] = useState<boolean>(false);
     const [tableSize] = useState<number>(9);
     const [playerIndex, setPlayerIndex] = useState<number>(-1);
     const [dealerIndex, setDealerIndex] = useState<number>(0);
-    const [nonce, setNonce] = useState<number>(0);
+    const [nonce, setNonce] = useState<number>(1);
     const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
-    const [seat, setSeat] = useState<number | null>(null);
     const [pots, setPots] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
+    const [totalPot, setTotalPot] = useState<number>(0);
 
     const fetchPots = async () => {
         if (!publicKey) return;
@@ -59,6 +59,15 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
 
             setPots(response.data.pots);
+            let tmpTotalPot = 0; // Initialize tmpTotalPot with a value
+
+            if (response.data.pots.length > 0) {
+                response.data.pots.forEach((pot: any) => {
+                    tmpTotalPot += +toDollarFromString(pot); // Accumulate the total
+                });
+            }
+
+            setTotalPot(tmpTotalPot);
         } catch (err) {
             setError(err instanceof Error ? err : new Error("An error occurred"));
         } finally {
@@ -172,8 +181,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     //     setPlayerIndex(nextPlayerIndex);
     // };
 
-    const amount = 10;
-
     const performAction = React.useCallback(
         function (gameAddress: string, action: PlayerActionType, amount?: number, nonce?: number) {
             b52?.playerAction(gameAddress, action, amount?.toString() ?? "", nonce);
@@ -183,182 +190,39 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const fold = () => {
         if (publicKey) {
-            performAction(publicKey, PlayerActionType.FOLD, amount, nonce);
+            performAction(publicKey, PlayerActionType.FOLD, nonce);
         }
     };
 
     const check = () => {
         if (publicKey) {
-            performAction(publicKey, PlayerActionType.CHECK, amount, nonce);
+            performAction(publicKey, PlayerActionType.CHECK, nonce);
         }
     };
 
-    // const check = () => {
-    //     console.log("check", playerIndex, players, lastPot);
-    //     if (timer) {
-    //         clearTimeout(timer);
-    //         setTimer(null);
-    //     }
+    const raise = (amount: number) => {
+        if (publicKey) {
+            performAction(publicKey, PlayerActionType.RAISE, amount, nonce);
+        }
+    };
 
-    //     let updatedPlayers = players;
-    //     const nextPlayerIndex = nextPlayer(playerIndex, 1);
-    //     const checkPot = lastPot - updatedPlayers[playerIndex].pot;
-    //     console.log(`POT, LASTPOT`, updatedPlayers[playerIndex].pot, lastPot);
-    //     if (updatedPlayers[playerIndex].pot == lastPot) {
-    //         if (showThreeCards) {
-    //             if (openOneMore) {
-    //                 setOpenTwoMore(true);
-    //             } else {
-    //                 setOpenOneMore(true);
-    //             }
-    //         } else {
-    //             setShowThreeCards(true);
-    //         }
-    //     }
-    //     if (updatedPlayers[playerIndex].balance <= checkPot) {
-    //         updatedPlayers[playerIndex].status = PlayerActionType.ALL_IN;
-    //         updatedPlayers[playerIndex].pot += updatedPlayers[playerIndex].balance;
-    //         updatedPlayers[playerIndex].balance = 0;
-    //     } else {
-    //         updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
-    //         updatedPlayers[playerIndex].balance -= checkPot;
-    //         updatedPlayers[playerIndex].pot = lastPot;
-    //     }
-
-    //     if (!players[nextPlayerIndex]) {
-    //         console.error(`Player at index ${nextPlayerIndex} does not exist.`);
-    //         let allPot = 0;
-    //         players.map(player => {
-    //             allPot += player.pot;
-    //         });
-    //         updatedPlayers[playerIndex].balance += allPot;
-    //         players.map((player, index) => {
-    //             if (index !== playerIndex) {
-    //                 updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
-    //             }
-    //             updatedPlayers[playerIndex].pot = 0;
-    //         });
-    //         return true;
-    //     }
-    //     updatedPlayers[nextPlayerIndex].status = PlayerStatus.ACTIVE;
-    //     setPlayers([...updatedPlayers]);
-    //     setPlayerIndex(nextPlayerIndex);
-
-    //     return true;
-    // };
-
-    // const raise = (amount: number) => {
-    //     if (playerIndex < 0 || playerIndex >= players.length || !players[playerIndex]) {
-    //         console.error("Invalid playerIndex:", playerIndex);
-    //         return false;
-    //     }
-
-    //     if (lastPot >= players[playerIndex].pot + amount || players[playerIndex].balance < amount) {
-    //         console.error("Invalid amount to raise.");
-    //         return false;
-    //     }
-
-    //     if (timer) {
-    //         console.log("Clearing timer...");
-    //         clearTimeout(timer);
-    //         setTimer(null);
-    //     }
-
-    //     const nextPlayerIndex = nextPlayer(playerIndex, 1);
-
-    //     let updatedPlayers = players;
-
-    //     if (updatedPlayers[playerIndex].balance === amount) {
-    //         updatedPlayers[playerIndex].status = PlayerActionType.ALL_IN;
-    //         updatedPlayers[playerIndex].pot += updatedPlayers[playerIndex].balance;
-    //         updatedPlayers[playerIndex].balance = 0;
-    //     } else {
-    //         updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
-    //         updatedPlayers[playerIndex].balance -= amount;
-    //         updatedPlayers[playerIndex].pot += amount;
-    //     }
-
-    //     setLastPot(updatedPlayers[playerIndex].pot);
-
-    //     if (!players[nextPlayerIndex]) {
-    //         console.error(`Player at index ${nextPlayerIndex} does not exist.`);
-    //         let allPot = 0;
-    //         players.map(player => {
-    //             allPot += player.pot;
-    //         });
-    //         updatedPlayers[playerIndex].balance += allPot;
-    //         players.map((player, index) => {
-    //             if (index !== playerIndex) {
-    //                 updatedPlayers[playerIndex].status = PlayerStatus.NOT_ACTED;
-    //             }
-    //             updatedPlayers[playerIndex].pot = 0;
-    //         });
-    //         return true;
-    //     }
-    //     updatedPlayers[nextPlayerIndex].status = PlayerStatus.ACTIVE;
-    //     setPlayers([...updatedPlayers]);
-    //     setPlayerIndex(nextPlayerIndex);
-    //     return true;
-    // };
-
-    // useEffect(() => {
-    //     if (playerIndex < 0) return;
-    //     console.log("useEffect", playerIndex);
-    //     if (playerIndex === 0) {
-    //         console.log("It's your turn.");
-
-    //         // Clear any existing timer to avoid overlap
-
-    //         if (timer) {
-    //             clearTimeout(timer);
-    //             setTimer(null);
-    //         }
-
-    //         // Start a 30-second timer for the current player
-    //         const newTimer = setTimeout(() => {
-    //             fold();
-    //         }, 30000); // 30 seconds
-    //         setTimer(newTimer);
-    //         return;
-    //     }
-
-    //     setTimeout(() => {
-    //         let isSuccess = false;
-    //         do {
-    //             const randValue = Math.floor(Math.random() * 3);
-    //             if (randValue === 0) {
-    //                 isSuccess = fold();
-    //             } else if (randValue === 1) {
-    //                 isSuccess = check();
-    //             } else {
-    //                 isSuccess = raise(Math.floor(Math.random() * 50 + 1));
-    //             }
-    //         } while (!isSuccess);
-    //     }, Math.floor(Math.random() * 5 + 4) * 1000);
-    // }, [playerIndex]);
-
-    // useEffect(() => {
-    //     if (!isInitialized.current) {
-    //         newGame(0);
-    //         isInitialized.current = true;
-    //     }
-    // }, []);
-
-    // const setPlayerAction = (action: "fold" | "check" | "raise", amount?: number) => {
-    //     if (action === "fold") {
-    //         fold();
-    //     } else if (action === "check") {
-    //         check();
-    //     } else if (action === "raise" && amount !== undefined) {
-    //         raise(amount);
-    //     }
-    // };
+    const setPlayerAction = (action: PlayerActionType, amount?: number) => {
+        if (action === PlayerActionType.FOLD) {
+            fold();
+        } else if (action === PlayerActionType.CHECK) {
+            check();
+        } else if (action === PlayerActionType.RAISE && amount !== undefined) {
+            raise(amount);
+        }
+    };
 
     const contextValue = useMemo(
         () => ({
             players,
             pots,
+            seat,
             lastPot,
+            totalPot,
             tableSize,
             playerIndex,
             dealerIndex,
@@ -368,7 +232,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setPlayerAction: () => {}
         }),
         // [players, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, fold, raise, check, setPlayerAction]
-        [players, pots, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot]
+        [players, pots, seat, totalPot, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, setPlayerAction]
     );
 
     return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>;

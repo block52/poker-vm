@@ -18,9 +18,8 @@ import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
-import useUserSeat from "../../hooks/useUserSeat";
 import { toDollarFromString } from "../../utils/numberUtils";
-import axios from "axios";
+import useUserBySeat from "../../hooks/useUserBySeat";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -51,54 +50,30 @@ const Table = () => {
         return <></>;
     }
 
-    const { seat } = useUserSeat(id, 1);
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
+    const { totalPot, seat } = usePlayerContext();
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+    const [publicKey, setPublicKey] = useState<string>();
     const [openSidebar, setOpenSidebar] = useState(false);
 
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+    const { data } = useUserBySeat(id, seat);
 
     const navigate = useNavigate();
 
-    const { account, balance, isLoading } = useUserWallet();
+    const { balance } = useUserWallet();
     const { type } = useTableType(id);
     
-
-    const [handResult, setHandResult] = useState<string>("");
-
-
-    // Add new state for blinds
-    const [smallBlind, setSmallBlind] = useState<string>("0");
-    const [bigBlind, setBigBlind] = useState<string>("0");
-    const [tableType, setTableType] = useState<string>("");
-
-    // Fetch table data
-    useEffect(() => {
-        const fetchTableData = async () => {
-            if (!id) return;
-
-            try {
-                const response = await axios.get(`${MOCK_API_URL}/table/${id}`);
-                console.log(response.data);
-                // Convert from wei format to regular numbers
-                setSmallBlind(toDollarFromString(response.data.smallBlind));
-                setBigBlind(toDollarFromString(response.data.bigBlind));
-                setTableType(response.data.type);
-            } catch (error) {
-                console.error("Error fetching table data:", error);
-            }
-        };
-
-        fetchTableData();
-    }, [id]);
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -203,6 +178,8 @@ const Table = () => {
         navigate("/");
     };
 
+    console.log()
+
     return (
         <div className="h-screen">
             {/*//! HEADER */}
@@ -290,7 +267,7 @@ const Table = () => {
                                         <div className="z-[20] relative flex flex-col w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
                                             <div className="w-[140px] h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
-                                                <span className="text-[#dbd3d3] mr-2">Total Pot: 50</span>
+                                                <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
                                             </div>
                                             <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">Main Pot: 50</span>
@@ -390,7 +367,7 @@ const Table = () => {
                             </div>
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
-                            <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{handResult}</span>
+                            {data && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{data.hand_strength}</span>}
                         </div>
                     </div>
                     {/*//! FOOTER */}
