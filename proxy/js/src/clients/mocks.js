@@ -52,7 +52,7 @@ class Mocks {
         const lastAction = {
             action: "check",
             amount: BigUnit.from("0", 18).toString()
-        }
+        };
 
         const check_action = {
             action: "check",
@@ -138,13 +138,26 @@ class Mocks {
         const pot1 = BigUnit.from("10", 18);
         const pot2 = BigUnit.from("5", 18);
 
+        const players = [
+            {
+                seat: 1,
+                address: "0x1234567890123456789012345678901234567890",
+                stack: BigUnit.from("100", 18).toString()
+            },
+            {
+                seat: 3,
+                address: "0x1234567890123456789012345678901234567890",
+                stack: BigUnit.from("200", 18).toString()
+            }
+        ];
+
         const response = {
             type: "No Limit Texas Holdem",
             address: ethers.ZeroAddress,
             smallBlind: sb.toString(),
             bigBlind: bb.toString(),
             dealer: 1,
-            players: [],
+            players: players,
             communityCards: [],
             pots: [pot1.toString(), pot2.toString()],
             nextToAct: 1,
