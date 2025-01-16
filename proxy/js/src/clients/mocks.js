@@ -143,7 +143,7 @@ class Mocks {
         return [response];
     }
 
-    async getTable(id) {
+    async getTableOld(id) {
         if (this.tables[id]) {
             return this.tables[id];
         }
@@ -200,6 +200,87 @@ class Mocks {
         }
 
         this.tables[id] = response;
+
+        return response;
+    }
+
+    getTable(id) {
+        const response = {
+            type: "cash",
+            address: "0x1234567890123456789012345678901234567890",
+            smallBlind: "500000000000000000",
+            bigBlind: "1000000000000000000",
+            dealer: 0,
+            players: [
+                {
+                    address: "0x1111111111111111111111111111111111111111",
+                    seat: 0,
+                    stack: "100000000000000000000",
+                    isSmallBlind: true,
+                    isBigBlind: false,
+                    isDealer: true,
+                    holeCards: [0, 13],
+                    status: "active",
+                    lastAction: {
+                        action: "post small blind",
+                        amount: "500000000000000000"
+                    },
+                    actions: [
+                        {
+                            action: "fold",
+                            min: null,
+                            max: null
+                        },
+                        {
+                            action: "call",
+                            min: "500000000000000000",
+                            max: "500000000000000000"
+                        },
+                        {
+                            action: "raise",
+                            min: "2000000000000000000",
+                            max: "100000000000000000000"
+                        }
+                    ],
+                    timeout: 1234567890,
+                    signature: "0x0000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x2222222222222222222222222222222222222222",
+                    seat: 1,
+                    stack: "50000000000000000000",
+                    isSmallBlind: false,
+                    isBigBlind: true,
+                    isDealer: false,
+                    holeCards: [26, 39],
+                    status: "active",
+                    lastAction: {
+                        action: "post big blind",
+                        amount: "1000000000000000000"
+                    },
+                    actions: [
+                        {
+                            action: "check",
+                            min: null,
+                            max: null
+                        },
+                        {
+                            action: "bet",
+                            min: "1000000000000000000",
+                            max: "50000000000000000000"
+                        }
+                    ],
+                    timeout: 1234567890,
+                    signature: "0x0000000000000000000000000000000000000000"
+                }
+            ],
+            communityCards: [51, 50, 49],
+            pots: ["3000000000000000000"],
+            nextToAct: 0,
+            round: "flop",
+            winners: [],
+            signature: "0x0000000000000000000000000000000000000000"
+        };
 
         return response;
     }
