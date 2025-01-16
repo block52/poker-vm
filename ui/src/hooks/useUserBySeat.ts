@@ -2,14 +2,14 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 
 interface UseUserSeatResult {
-    seat: number | null;
+    data: any;
     isLoading: boolean;
     error: Error | null;
     refetch: () => Promise<void>;
 }
 
-const useUserSeat = (address: string, player: number): UseUserSeatResult => {
-    const [seat, setSeat] = useState<number | null>(null);
+const useUserBySeat = (address: string, seat: number): UseUserSeatResult => {
+    const [userData, setUserData] = useState<any>();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
@@ -21,13 +21,13 @@ const useUserSeat = (address: string, player: number): UseUserSeatResult => {
 
         try {
             const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${url}/table/${address}/player/${player}`);
+            const response = await axios.get(`${url}/table/${address}/player/${seat}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            setSeat(response.data.seat);
+            setUserData(response.data);
         } catch (err) {
             setError(err instanceof Error ? err : new Error("An error occurred"));
         } finally {
@@ -37,14 +37,14 @@ const useUserSeat = (address: string, player: number): UseUserSeatResult => {
 
     useEffect(() => {
         fetchType();
-    }, [address]);
+    }, [address, seat]);
 
     return {
-        seat,
+        data: userData,
         isLoading,
         error,
-        refetch: fetchType
+        refetch: fetchType, // Correctly assign the fetch function
     };
 };
 
-export default useUserSeat;
+export default useUserBySeat;
