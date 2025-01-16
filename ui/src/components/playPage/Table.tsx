@@ -41,6 +41,88 @@ const calculateZoom = () => {
     return Math.min(scaleWidth, scaleHeight);
 };
 
+const twoPlayerGameMock = {
+    type: "cash",
+    address: "0x1234567890123456789012345678901234567890",
+    smallBlind: "500000000000000000", // 0.5 ETH
+    bigBlind: "1000000000000000000", // 1.0 ETH
+    dealer: 0, // Player 0 is dealer (BTN)
+
+    players: [
+        // Player 1 (Dealer/BTN/SB)
+        {
+            address: "0x1111111111111111111111111111111111111111",
+            seat: 0,
+            stack: "100000000000000000000", // 100 ETH
+            isSmallBlind: true,
+            isBigBlind: false,
+            isDealer: true,
+            holeCards: [0, 13], // 2♥, 2♦ (pocket deuces)
+            status: "active", // PlayerStatus.ACTIVE
+            lastAction: {
+                action: "post small blind", // PlayerActionType.SMALL_BLIND
+                amount: "500000000000000000" // 0.5 ETH
+            },
+            actions: [
+                {
+                    action: "fold",
+                    min: undefined,
+                    max: undefined
+                },
+                {
+                    action: "call",
+                    min: "500000000000000000", // 0.5 ETH to call
+                    max: "500000000000000000"
+                },
+                {
+                    action: "raise",
+                    min: "2000000000000000000", // 2 ETH min raise
+                    max: "100000000000000000000" // 100 ETH (full stack)
+                }
+            ],
+            timeout: 1234567890,
+            signature: "0x0000000000000000000000000000000000000000"
+        },
+
+        // Player 2 (BB)
+        {
+            address: "0x2222222222222222222222222222222222222222",
+            seat: 1,
+            stack: "50000000000000000000", // 50 ETH
+            isSmallBlind: false,
+            isBigBlind: true,
+            isDealer: false,
+            holeCards: [26, 39], // 2♣, 2♠ (also pocket deuces!)
+            status: "active", // PlayerStatus.ACTIVE
+            lastAction: {
+                action: "post big blind", // PlayerActionType.BIG_BLIND
+                amount: "1000000000000000000" // 1.0 ETH
+            },
+            actions: [
+                {
+                    action: "check",
+                    min: undefined,
+                    max: undefined
+                },
+                {
+                    action: "bet",
+                    min: "1000000000000000000", // 1 ETH min bet
+                    max: "50000000000000000000" // 50 ETH (full stack)
+                }
+            ],
+            timeout: 1234567890,
+            signature: "0x0000000000000000000000000000000000000000"
+        }
+    ],
+
+    communityCards: [51, 50, 49], // A♠, K♠, Q♠ (flop)
+    pots: ["3000000000000000000"], // 3 ETH in pot
+    nextToAct: 0, // Player 0's turn
+    round: "flop", // TexasHoldemRound.FLOP
+    winners: [], // No winners yet
+    signature: "0x0000000000000000000000000000000000000000"
+};
+
 const Table = () => {
     const { id } = useParams<{ id: string }>();
 
@@ -75,12 +157,16 @@ const Table = () => {
     const { balance } = useUserWallet();
     const { type } = useTableType(id);
 
-
     // Add new state for blinds
     const [smallBlind, setSmallBlind] = useState<string>("0");
     const [bigBlind, setBigBlind] = useState<string>("0");
     const [tableType, setTableType] = useState<string>("");
     const [roundType, setRoundType] = useState<string>("");
+
+    function getPlayerSeats(game: any) {
+        return game.players.map((player: { seat: number }) => player.seat);
+    }
+    const playerSeats = getPlayerSeats(twoPlayerGameMock);
 
     // Fetch table data
     useEffect(() => {
@@ -102,7 +188,6 @@ const Table = () => {
 
         fetchTableData();
     }, [id]);
-
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -207,7 +292,7 @@ const Table = () => {
         navigate("/");
     };
 
-    console.log()
+    console.log();
 
     return (
         <div className="h-screen">
@@ -218,10 +303,7 @@ const Table = () => {
                         {/* <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
                             <IoMenuSharp size={20} />
                         </div> */}
-                        <span
-                            className="text-white text-sm font-medium text-[20px] cursor-pointer"
-                            onClick={() => navigate('/')}
-                        >
+                        <span className="text-white text-sm font-medium text-[20px] cursor-pointer" onClick={() => navigate("/")}>
                             Lobby
                         </span>
                     </div>
@@ -264,7 +346,9 @@ const Table = () => {
                     {/* Left Section */}
                     <div className="flex items-center">
                         <span className="px-2 rounded text-[12px]">${`${smallBlind}/$${bigBlind}`}</span>
-                        <span className="ml-2 text-[12px]">Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableType}</span></span>
+                        <span className="ml-2 text-[12px]">
+                            Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableType}</span>
+                        </span>
                     </div>
 
                     {/* Right Section */}
@@ -299,7 +383,9 @@ const Table = () => {
                                                 <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
                                             </div>
                                             <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
-                                                <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">Round: <span className="font-semibold text-yellow-400 ml-1">{roundType}</span></span>
+                                                <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">
+                                                    Round: <span className="font-semibold text-yellow-400 ml-1">{roundType}</span>
+                                                </span>
                                             </div>
                                             <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">Main Pot: 50</span>
@@ -351,10 +437,9 @@ const Table = () => {
                                         </div>
                                     </div>
                                     {playerPositionArray.map((position, index) => {
-                                        const playerData = players[index];
                                         return (
                                             <div key={index} className="z-[10]">
-                                                {playerData.status === PlayerStatus.SITTING_OUT ? (
+                                                {!playerSeats.includes(index) ? (
                                                     <VacantPlayer index={index} left={position.left} top={position.top} />
                                                 ) : index !== 0 ? (
                                                     <OppositePlayer
@@ -409,8 +494,9 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
-                        }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
+                        openSidebar ? "w-[300px]" : "w-0"
+                    }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
