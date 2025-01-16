@@ -30,7 +30,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }))
     );
     const [lastPot, setLastPot] = useState<number>(0);
-    const [seat, seSeat] = useState<number>(0);
+    const [seat, seSeat] = useState<number>(0); // PlayerMockSeat
     const [openOneMore, setOpenOneMore] = useState<boolean>(false);
     const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
     const [showThreeCards, setShowThreeCards] = useState<boolean>(false);
@@ -40,25 +40,45 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [nonce, setNonce] = useState<number>(1);
     const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
     const [pots, setPots] = useState<string[]>([]);
+    const [nextToAct, setNextToAct] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
     const [totalPot, setTotalPot] = useState<number>(0);
+    const [gamePlayers, setGamePlayers] = useState<any>();
+    const [smallBlind, setSmallBlind] = useState<string>("0");
+    const [bigBlind, setBigBlind] = useState<string>("0");
+    const [tableType, setTableType] = useState<string>("");
+    const [roundType, setRoundType] = useState<string>("");
+    const [playerSeats, setPlayerSeats] = useState<number[]>([]);
 
-    const fetchPots = async () => {
+    
+    const getPlayerSeats = (players: any) => {
+        return players.map((player: { seat: number }) => player.seat);
+    };
+
+    const fetchData = async () => {
         if (!publicKey) return;
 
         setIsLoading(true);
         setError(null);
 
         try {
+            const mock_url = "https://orca-app-k9l4d.ondigitalocean.app"
             const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${url}/table/${publicKey}`);
+            const response = await axios.get(`${mock_url}/table/${publicKey}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+            console.log(response)
             setPots(response.data.pots);
+            setGamePlayers(response.data.players)
+            setNextToAct(response.data.nextToAct);
+            setSmallBlind(toDollarFromString(response.data.smallBlind));
+            setBigBlind(toDollarFromString(response.data.bigBlind));
+            setTableType(response.data.type);
+            setRoundType(response.data.round);
+            setPlayerSeats(getPlayerSeats(response.data.players));
             let tmpTotalPot = 0; // Initialize tmpTotalPot with a value
 
             if (response.data.pots.length > 0) {
@@ -76,7 +96,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     useEffect(() => {
-        fetchPots();
+        fetchData();
     }, [publicKey]);
 
     React.useEffect(() => {
@@ -240,6 +260,13 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             lastPot,
             totalPot,
             tableSize,
+            nextToAct,
+            playerSeats,
+            smallBlind,
+            tableType,
+            roundType,
+            bigBlind,
+            gamePlayers,
             playerIndex,
             dealerIndex,
             openOneMore,
@@ -248,7 +275,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setPlayerAction: () => {}
         }),
         // [players, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, fold, raise, check, setPlayerAction]
-        [players, pots, seat, totalPot, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, setPlayerAction]
+        [players, pots, seat, playerSeats, tableType, roundType, smallBlind, bigBlind, totalPot, nextToAct, tableSize, playerIndex, gamePlayers, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, setPlayerAction]
     );
 
     return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>;

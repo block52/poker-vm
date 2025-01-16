@@ -12,6 +12,13 @@ export interface PlayerContextType {
     tableSize: number;
     seat: number;
     totalPot: number;
+    bigBlind: string;
+    smallBlind: string;
+    roundType: string;
+    tableType: string;
+    gamePlayers: PlayerDTO[];
+    nextToAct: number;
+    playerSeats: number[];
     // updatePlayer: (index: number, updatedPlayer: Player) => void;
     // setPlayerBalance: (index: number, balance: number) => void;
     // setPlayerPot: (index: number, balance: number) => void;

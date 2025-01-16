@@ -4,9 +4,10 @@ import { usePlayerContext } from "../context/usePlayerContext";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import useUserBySeat from "../hooks/useUserBySeat";
+import axios from "axios";
 
 const PokerActionPanel: React.FC = () => {
-    const { setPlayerAction, playerIndex, pots, seat, totalPot } = usePlayerContext();
+    const { setPlayerAction, playerIndex, pots, seat, totalPot, nextToAct } = usePlayerContext();
     const [error, setError] = useState<Error | null>(null);
     const [publicKey, setPublicKey] = useState<string>();
     const [raiseAmount, setRaiseAmount] = useState(0);
@@ -17,6 +18,7 @@ const PokerActionPanel: React.FC = () => {
     const [isRaiseAction, setIsRaiseAction] = useState(false);
     const [balance, setBalance] = useState(0);
     const { data } = useUserBySeat(publicKey || "", seat);
+
     useEffect(() => {
         if (data) {
             setBalance(data.stack);
@@ -79,7 +81,7 @@ const PokerActionPanel: React.FC = () => {
             <div className="flex flex-col w-[600px] space-y-6 mb-2 justify-center rounded-lg">
                 <div className="flex justify-between gap-2">
                     <button
-                        disabled={playerIndex !== 0}
+                        disabled={seat != nextToAct}
                         className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                         onClick={onFold}
                     >
@@ -87,7 +89,7 @@ const PokerActionPanel: React.FC = () => {
                     </button>
                     {isCheckAction && (
                         <button
-                            disabled={playerIndex !== 0}
+                            disabled={seat != nextToAct}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={onCheck}
                         >
@@ -96,7 +98,7 @@ const PokerActionPanel: React.FC = () => {
                     )}
                     {isCallAction && (
                         <button
-                            disabled={playerIndex !== 0}
+                            disabled={seat != nextToAct}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={onCall}
                         >
@@ -105,7 +107,7 @@ const PokerActionPanel: React.FC = () => {
                     )}
                     {isRaiseAction && (
                         <button
-                            disabled={playerIndex !== 0}
+                            disabled={seat != nextToAct}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={onRaise}
                         >
@@ -114,7 +116,7 @@ const PokerActionPanel: React.FC = () => {
                     )}
                     {isBetAction && (
                         <button
-                            disabled={playerIndex !== 0}
+                            disabled={seat != nextToAct}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={onBet}
                         >
@@ -128,6 +130,7 @@ const PokerActionPanel: React.FC = () => {
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg  border-[1px] border-gray-400"
                         onClick={() => handleRaiseChange(Math.max(raiseAmount - 1, 0))}
+                        disabled={seat != nextToAct}
                     >
                         -
                     </button>
@@ -138,10 +141,12 @@ const PokerActionPanel: React.FC = () => {
                         value={raiseAmount}
                         onChange={e => handleRaiseChange(Number(e.target.value))}
                         className="flex-1"
+                        disabled={seat != nextToAct}
                     />
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg  border-[1px] border-gray-400"
                         onClick={() => handleRaiseChange(raiseAmount + 1)}
+                        disabled={seat != nextToAct}
                     >
                         +
                     </button>
@@ -152,30 +157,35 @@ const PokerActionPanel: React.FC = () => {
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
                         onClick={() => setRaiseAmount(totalPot / 4)}
+                        disabled={seat != nextToAct}
                     >
                         1 / 4 Pot
                     </button>
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
                         onClick={() => setRaiseAmount(totalPot / 2)}
+                        disabled={seat != nextToAct}
                     >
                         1 / 2 Pot
                     </button>
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
                         onClick={() => setRaiseAmount((totalPot / 4) * 3)}
+                        disabled={seat != nextToAct}
                     >
                         3 / 4 Pot
                     </button>
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
                         onClick={() => setRaiseAmount(totalPot)}
+                        disabled={seat != nextToAct}
                     >
                         Pot
                     </button>
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
                         onClick={() => setRaiseAmount(+balance)}
+                        disabled={seat != nextToAct}
                     >
                         ALL-IN
                     </button>
