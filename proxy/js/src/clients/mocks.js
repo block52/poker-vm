@@ -208,14 +208,14 @@ class Mocks {
         const response = {
             type: "cash",
             address: "0x1234567890123456789012345678901234567890",
-            smallBlind: "500000000000000000",
-            bigBlind: "1000000000000000000",
+            smallBlind: "500",
+            bigBlind: "100",
             dealer: 0,
             players: [
                 {
                     address: "0x1111111111111111111111111111111111111111",
                     seat: 0,
-                    stack: "100000000000000000000",
+                    stack: "100",
                     isSmallBlind: true,
                     isBigBlind: false,
                     isDealer: true,
@@ -223,7 +223,7 @@ class Mocks {
                     status: "active",
                     lastAction: {
                         action: "post small blind",
-                        amount: "500000000000000000"
+                        amount: "500"
                     },
                     actions: [
                         {
@@ -233,13 +233,13 @@ class Mocks {
                         },
                         {
                             action: "call",
-                            min: "500000000000000000",
-                            max: "500000000000000000"
+                            min: "500",
+                            max: "500"
                         },
                         {
                             action: "raise",
-                            min: "2000000000000000000",
-                            max: "100000000000000000000"
+                            min: "200",
+                            max: "100"
                         }
                     ],
                     timeout: 1234567890,
@@ -248,7 +248,7 @@ class Mocks {
                 {
                     address: "0x2222222222222222222222222222222222222222",
                     seat: 1,
-                    stack: "50000000000000000000",
+                    stack: "500",
                     isSmallBlind: false,
                     isBigBlind: true,
                     isDealer: false,
@@ -266,8 +266,8 @@ class Mocks {
                         },
                         {
                             action: "bet",
-                            min: "1000000000000000000",
-                            max: "50000000000000000000"
+                            min: "100",
+                            max: "500"
                         }
                     ],
                     timeout: 1234567890,
@@ -275,11 +275,11 @@ class Mocks {
                 }
             ],
             communityCards: [51, 50, 49],
-            pots: ["3000000000000000000"],
+            pots: ["300"],
             nextToAct: 0,
             round: "flop",
             winners: [],
-            signature: "0x0000000000000000000000000000000000000000"
+            signature: "0x000000000000000000000000000000000000000"
         };
 
         return response;
