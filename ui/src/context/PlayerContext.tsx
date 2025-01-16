@@ -9,6 +9,88 @@ import { toDollarFromString } from "../utils/numberUtils";
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
+export const twoPlayerGameMock = {
+    type: "cash",
+    address: "0x1234567890123456789012345678901234567890",
+    smallBlind: "500000000000000000", // 0.5 ETH
+    bigBlind: "1000000000000000000", // 1.0 ETH
+    dealer: 0, // Player 0 is dealer (BTN)
+
+    players: [
+        // Player 1 (Dealer/BTN/SB)
+        {
+            address: "0x1111111111111111111111111111111111111111",
+            seat: 0,
+            stack: "100000000000000000000", // 100 ETH
+            isSmallBlind: true,
+            isBigBlind: false,
+            isDealer: true,
+            holeCards: [0, 13], // 2♥, 2♦ (pocket deuces)
+            status: "active", // PlayerStatus.ACTIVE
+            lastAction: {
+                action: "post small blind", // PlayerActionType.SMALL_BLIND
+                amount: "500000000000000000" // 0.5 ETH
+            },
+            actions: [
+                {
+                    action: "fold",
+                    min: undefined,
+                    max: undefined
+                },
+                {
+                    action: "call",
+                    min: "500000000000000000", // 0.5 ETH to call
+                    max: "500000000000000000"
+                },
+                {
+                    action: "raise",
+                    min: "2000000000000000000", // 2 ETH min raise
+                    max: "100000000000000000000" // 100 ETH (full stack)
+                }
+            ],
+            timeout: 1234567890,
+            signature: "0x0000000000000000000000000000000000000000"
+        },
+
+        // Player 2 (BB)
+        {
+            address: "0x2222222222222222222222222222222222222222",
+            seat: 1,
+            stack: "50000000000000000000", // 50 ETH
+            isSmallBlind: false,
+            isBigBlind: true,
+            isDealer: false,
+            holeCards: [26, 39], // 2♣, 2♠ (also pocket deuces!)
+            status: "active", // PlayerStatus.ACTIVE
+            lastAction: {
+                action: "post big blind", // PlayerActionType.BIG_BLIND
+                amount: "1000000000000000000" // 1.0 ETH
+            },
+            actions: [
+                {
+                    action: "check",
+                    min: undefined,
+                    max: undefined
+                },
+                {
+                    action: "bet",
+                    min: "1000000000000000000", // 1 ETH min bet
+                    max: "50000000000000000000" // 50 ETH (full stack)
+                }
+            ],
+            timeout: 1234567890,
+            signature: "0x0000000000000000000000000000000000000000"
+        }
+    ],
+
+    communityCards: [51, 50, 49], // A♠, K♠, Q♠ (flop)
+    pots: ["3000000000000000000"], // 3 ETH in pot
+    nextToAct: 0, // Player 0's turn
+    round: "flop", // TexasHoldemRound.FLOP
+    winners: [], // No winners yet
+    signature: "0x0000000000000000000000000000000000000000"
+};
+
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [publicKey, setPublicKey] = React.useState<string>();
     const { b52 } = useUserWallet();
@@ -30,7 +112,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }))
     );
     const [lastPot, setLastPot] = useState<number>(0);
-    const [seat, seSeat] = useState<number>(0);
+    const [seat, seSeat] = useState<number>(0); // PlayerMockSeat
     const [openOneMore, setOpenOneMore] = useState<boolean>(false);
     const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
     const [showThreeCards, setShowThreeCards] = useState<boolean>(false);
