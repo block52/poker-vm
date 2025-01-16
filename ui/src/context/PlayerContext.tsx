@@ -9,88 +9,6 @@ import { toDollarFromString } from "../utils/numberUtils";
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
-export const twoPlayerGameMock = {
-    type: "cash",
-    address: "0x1234567890123456789012345678901234567890",
-    smallBlind: "500000000000000000", // 0.5 ETH
-    bigBlind: "1000000000000000000", // 1.0 ETH
-    dealer: 0, // Player 0 is dealer (BTN)
-
-    players: [
-        // Player 1 (Dealer/BTN/SB)
-        {
-            address: "0x1111111111111111111111111111111111111111",
-            seat: 0,
-            stack: "100000000000000000000", // 100 ETH
-            isSmallBlind: true,
-            isBigBlind: false,
-            isDealer: true,
-            holeCards: [0, 13], // 2♥, 2♦ (pocket deuces)
-            status: "active", // PlayerStatus.ACTIVE
-            lastAction: {
-                action: "post small blind", // PlayerActionType.SMALL_BLIND
-                amount: "500000000000000000" // 0.5 ETH
-            },
-            actions: [
-                {
-                    action: "fold",
-                    min: undefined,
-                    max: undefined
-                },
-                {
-                    action: "call",
-                    min: "500000000000000000", // 0.5 ETH to call
-                    max: "500000000000000000"
-                },
-                {
-                    action: "raise",
-                    min: "2000000000000000000", // 2 ETH min raise
-                    max: "100000000000000000000" // 100 ETH (full stack)
-                }
-            ],
-            timeout: 1234567890,
-            signature: "0x0000000000000000000000000000000000000000"
-        },
-
-        // Player 2 (BB)
-        {
-            address: "0x2222222222222222222222222222222222222222",
-            seat: 1,
-            stack: "50000000000000000000", // 50 ETH
-            isSmallBlind: false,
-            isBigBlind: true,
-            isDealer: false,
-            holeCards: [26, 39], // 2♣, 2♠ (also pocket deuces!)
-            status: "active", // PlayerStatus.ACTIVE
-            lastAction: {
-                action: "post big blind", // PlayerActionType.BIG_BLIND
-                amount: "1000000000000000000" // 1.0 ETH
-            },
-            actions: [
-                {
-                    action: "check",
-                    min: undefined,
-                    max: undefined
-                },
-                {
-                    action: "bet",
-                    min: "1000000000000000000", // 1 ETH min bet
-                    max: "50000000000000000000" // 50 ETH (full stack)
-                }
-            ],
-            timeout: 1234567890,
-            signature: "0x0000000000000000000000000000000000000000"
-        }
-    ],
-
-    communityCards: [51, 50, 49], // A♠, K♠, Q♠ (flop)
-    pots: ["3000000000000000000"], // 3 ETH in pot
-    nextToAct: 0, // Player 0's turn
-    round: "flop", // TexasHoldemRound.FLOP
-    winners: [], // No winners yet
-    signature: "0x0000000000000000000000000000000000000000"
-};
-
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [publicKey, setPublicKey] = React.useState<string>();
     const { b52 } = useUserWallet();
@@ -122,25 +40,45 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [nonce, setNonce] = useState<number>(1);
     const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
     const [pots, setPots] = useState<string[]>([]);
+    const [nextToAct, setNextToAct] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
     const [totalPot, setTotalPot] = useState<number>(0);
+    const [gamePlayers, setGamePlayers] = useState<any>();
+    const [smallBlind, setSmallBlind] = useState<string>("0");
+    const [bigBlind, setBigBlind] = useState<string>("0");
+    const [tableType, setTableType] = useState<string>("");
+    const [roundType, setRoundType] = useState<string>("");
+    const [playerSeats, setPlayerSeats] = useState<number[]>([]);
 
-    const fetchPots = async () => {
+    
+    const getPlayerSeats = (players: any) => {
+        return players.map((player: { seat: number }) => player.seat);
+    };
+
+    const fetchData = async () => {
         if (!publicKey) return;
 
         setIsLoading(true);
         setError(null);
 
         try {
+            const mock_url = "https://orca-app-k9l4d.ondigitalocean.app"
             const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${url}/table/${publicKey}`);
+            const response = await axios.get(`${mock_url}/table/${publicKey}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+            console.log(response)
             setPots(response.data.pots);
+            setGamePlayers(response.data.players)
+            setNextToAct(response.data.nextToAct);
+            setSmallBlind(toDollarFromString(response.data.smallBlind));
+            setBigBlind(toDollarFromString(response.data.bigBlind));
+            setTableType(response.data.type);
+            setRoundType(response.data.round);
+            setPlayerSeats(getPlayerSeats(response.data.players));
             let tmpTotalPot = 0; // Initialize tmpTotalPot with a value
 
             if (response.data.pots.length > 0) {
@@ -158,7 +96,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     useEffect(() => {
-        fetchPots();
+        fetchData();
     }, [publicKey]);
 
     React.useEffect(() => {
@@ -322,6 +260,13 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             lastPot,
             totalPot,
             tableSize,
+            nextToAct,
+            playerSeats,
+            smallBlind,
+            tableType,
+            roundType,
+            bigBlind,
+            gamePlayers,
             playerIndex,
             dealerIndex,
             openOneMore,
@@ -330,7 +275,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setPlayerAction: () => {}
         }),
         // [players, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, fold, raise, check, setPlayerAction]
-        [players, pots, seat, totalPot, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, setPlayerAction]
+        [players, pots, seat, playerSeats, tableType, roundType, smallBlind, bigBlind, totalPot, nextToAct, tableSize, playerIndex, gamePlayers, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, setPlayerAction]
     );
 
     return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>;

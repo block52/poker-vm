@@ -4,10 +4,10 @@ import { usePlayerContext } from "../context/usePlayerContext";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import useUserBySeat from "../hooks/useUserBySeat";
-import { twoPlayerGameMock } from "../context/PlayerContext";
+import axios from "axios";
 
 const PokerActionPanel: React.FC = () => {
-    const { setPlayerAction, playerIndex, pots, seat, totalPot } = usePlayerContext();
+    const { setPlayerAction, playerIndex, pots, seat, totalPot, nextToAct } = usePlayerContext();
     const [error, setError] = useState<Error | null>(null);
     const [publicKey, setPublicKey] = useState<string>();
     const [raiseAmount, setRaiseAmount] = useState(0);
@@ -18,7 +18,6 @@ const PokerActionPanel: React.FC = () => {
     const [isRaiseAction, setIsRaiseAction] = useState(false);
     const [balance, setBalance] = useState(0);
     const { data } = useUserBySeat(publicKey || "", seat);
-    const { nextToAct } = twoPlayerGameMock;
 
     useEffect(() => {
         if (data) {

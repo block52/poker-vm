@@ -41,88 +41,6 @@ const calculateZoom = () => {
     return Math.min(scaleWidth, scaleHeight);
 };
 
-const twoPlayerGameMock = {
-    type: "cash",
-    address: "0x1234567890123456789012345678901234567890",
-    smallBlind: "500000000000000000", // 0.5 ETH
-    bigBlind: "1000000000000000000", // 1.0 ETH
-    dealer: 0, // Player 0 is dealer (BTN)
-
-    players: [
-        // Player 1 (Dealer/BTN/SB)
-        {
-            address: "0x1111111111111111111111111111111111111111",
-            seat: 0,
-            stack: "100000000000000000000", // 100 ETH
-            isSmallBlind: true,
-            isBigBlind: false,
-            isDealer: true,
-            holeCards: [0, 13], // 2♥, 2♦ (pocket deuces)
-            status: "active", // PlayerStatus.ACTIVE
-            lastAction: {
-                action: "post small blind", // PlayerActionType.SMALL_BLIND
-                amount: "500000000000000000" // 0.5 ETH
-            },
-            actions: [
-                {
-                    action: "fold",
-                    min: undefined,
-                    max: undefined
-                },
-                {
-                    action: "call",
-                    min: "500000000000000000", // 0.5 ETH to call
-                    max: "500000000000000000"
-                },
-                {
-                    action: "raise",
-                    min: "2000000000000000000", // 2 ETH min raise
-                    max: "100000000000000000000" // 100 ETH (full stack)
-                }
-            ],
-            timeout: 1234567890,
-            signature: "0x0000000000000000000000000000000000000000"
-        },
-
-        // Player 2 (BB)
-        {
-            address: "0x2222222222222222222222222222222222222222",
-            seat: 1,
-            stack: "50000000000000000000", // 50 ETH
-            isSmallBlind: false,
-            isBigBlind: true,
-            isDealer: false,
-            holeCards: [26, 39], // 2♣, 2♠ (also pocket deuces!)
-            status: "active", // PlayerStatus.ACTIVE
-            lastAction: {
-                action: "post big blind", // PlayerActionType.BIG_BLIND
-                amount: "1000000000000000000" // 1.0 ETH
-            },
-            actions: [
-                {
-                    action: "check",
-                    min: undefined,
-                    max: undefined
-                },
-                {
-                    action: "bet",
-                    min: "1000000000000000000", // 1 ETH min bet
-                    max: "50000000000000000000" // 50 ETH (full stack)
-                }
-            ],
-            timeout: 1234567890,
-            signature: "0x0000000000000000000000000000000000000000"
-        }
-    ],
-
-    communityCards: [51, 50, 49], // A♠, K♠, Q♠ (flop)
-    pots: ["3000000000000000000"], // 3 ETH in pot
-    nextToAct: 0, // Player 0's turn
-    round: "flop", // TexasHoldemRound.FLOP
-    winners: [], // No winners yet
-    signature: "0x0000000000000000000000000000000000000000"
-};
-
 const Table = () => {
     const { id } = useParams<{ id: string }>();
 
@@ -136,7 +54,7 @@ const Table = () => {
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
-    const { totalPot, seat } = usePlayerContext();
+    const { totalPot, seat, smallBlind, bigBlind, tableType, roundType, playerSeats } = usePlayerContext();
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
@@ -158,15 +76,7 @@ const Table = () => {
     const { type } = useTableType(id);
 
     // Add new state for blinds
-    const [smallBlind, setSmallBlind] = useState<string>("0");
-    const [bigBlind, setBigBlind] = useState<string>("0");
-    const [tableType, setTableType] = useState<string>("");
-    const [roundType, setRoundType] = useState<string>("");
 
-    function getPlayerSeats(game: any) {
-        return game.players.map((player: { seat: number }) => player.seat);
-    }
-    const playerSeats = getPlayerSeats(twoPlayerGameMock);
 
     // Fetch table data
     useEffect(() => {
@@ -175,12 +85,7 @@ const Table = () => {
 
             try {
                 const response = await axios.get(`${MOCK_API_URL}/table/${id}`);
-                console.log(response.data);
                 // Convert from wei format to regular numbers
-                setSmallBlind(toDollarFromString(response.data.smallBlind));
-                setBigBlind(toDollarFromString(response.data.bigBlind));
-                setTableType(response.data.type);
-                setRoundType(response.data.round);
             } catch (error) {
                 console.error("Error fetching table data:", error);
             }
@@ -292,8 +197,6 @@ const Table = () => {
         navigate("/");
     };
 
-    console.log();
-
     return (
         <div className="h-screen">
             {/*//! HEADER */}
@@ -379,15 +282,15 @@ const Table = () => {
                                     <div className="h-full flex align-center justify-center">
                                         <div className="z-[20] relative flex flex-col w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
-                                            <div className="w-[140px] h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
+                                            <div className="px-4 h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
                                                 <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
                                             </div>
-                                            <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
+                                            <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">
                                                     Round: <span className="font-semibold text-yellow-400 ml-1">{roundType}</span>
                                                 </span>
                                             </div>
-                                            <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
+                                            <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">Main Pot: 50</span>
                                             </div>
                                             <div className="flex gap-2 mt-8">
