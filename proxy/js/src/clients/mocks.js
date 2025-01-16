@@ -158,7 +158,7 @@ class Mocks {
             bigBlind: bb.toString(),
             dealer: 1,
             players: players,
-            communityCards: [],
+            communityCards: ["AS", "KS", "QS", "JS", "TS"],
             pots: [pot1.toString(), pot2.toString()],
             nextToAct: 1,
             round: "PREFLOP", // TexasHoldemRound.PREFLOP,
