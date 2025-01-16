@@ -18,8 +18,9 @@ import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
 import useTableType from "../../hooks/useTableType";
-import useUserSeat from "../../hooks/useUserSeat";
 import { toDollarFromString } from "../../utils/numberUtils";
+import useUserBySeat from "../../hooks/useUserBySeat";
+import axios from "axios";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -29,6 +30,8 @@ interface PositionArray {
     right?: string;
     color?: string;
 }
+
+const MOCK_API_URL = "https://orca-app-k9l4d.ondigitalocean.app";
 
 const calculateZoom = () => {
     const baseWidth = 1800;
@@ -40,7 +43,7 @@ const calculateZoom = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    
+
     if (!id) {
         console.error("Table ID is missing");
         // Return some markup saying that the table ID is missing
@@ -48,27 +51,58 @@ const Table = () => {
         return <></>;
     }
 
-    const { seat } = useUserSeat(id, 1);
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
+    const { totalPot, seat } = usePlayerContext();
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+    const [publicKey, setPublicKey] = useState<string>();
     const [openSidebar, setOpenSidebar] = useState(false);
 
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+    const { data } = useUserBySeat(id, seat);
 
     const navigate = useNavigate();
 
-    const { account, balance, isLoading } = useUserWallet();
+    const { balance } = useUserWallet();
     const { type } = useTableType(id);
 
-    const [handResult, setHandResult] = useState<string>("");
+
+    // Add new state for blinds
+    const [smallBlind, setSmallBlind] = useState<string>("0");
+    const [bigBlind, setBigBlind] = useState<string>("0");
+    const [tableType, setTableType] = useState<string>("");
+    const [roundType, setRoundType] = useState<string>("");
+
+    // Fetch table data
+    useEffect(() => {
+        const fetchTableData = async () => {
+            if (!id) return;
+
+            try {
+                const response = await axios.get(`${MOCK_API_URL}/table/${id}`);
+                console.log(response.data);
+                // Convert from wei format to regular numbers
+                setSmallBlind(toDollarFromString(response.data.smallBlind));
+                setBigBlind(toDollarFromString(response.data.bigBlind));
+                setTableType(response.data.type);
+                setRoundType(response.data.round);
+            } catch (error) {
+                console.error("Error fetching table data:", error);
+            }
+        };
+
+        fetchTableData();
+    }, [id]);
+
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -173,16 +207,23 @@ const Table = () => {
         navigate("/");
     };
 
+    console.log()
+
     return (
         <div className="h-screen">
             {/*//! HEADER */}
             <div>
                 <div className="w-[100vw] h-[65px] bottom-0 bg-[#404040] top-5 text-center flex items-center justify-between border-gray-400 px-4 z-0">
                     <div className="flex items-center space-x-2">
-                        <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
+                        {/* <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
                             <IoMenuSharp size={20} />
-                        </div>
-                        <span className="text-white text-sm font-medium text-[20px]">Lobby</span>
+                        </div> */}
+                        <span
+                            className="text-white text-sm font-medium text-[20px] cursor-pointer"
+                            onClick={() => navigate('/')}
+                        >
+                            Lobby
+                        </span>
                     </div>
 
                     {/* Middle Section */}
@@ -222,8 +263,8 @@ const Table = () => {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
                     {/* Left Section */}
                     <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">2/4</span>
-                        <span className="ml-2 text-[12px]">{type}</span>
+                        <span className="px-2 rounded text-[12px]">${`${smallBlind}/$${bigBlind}`}</span>
+                        <span className="ml-2 text-[12px]">Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableType}</span></span>
                     </div>
 
                     {/* Right Section */}
@@ -255,7 +296,10 @@ const Table = () => {
                                         <div className="z-[20] relative flex flex-col w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
                                             <div className="w-[140px] h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
-                                                <span className="text-[#dbd3d3] mr-2">Total Pot: 50</span>
+                                                <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
+                                            </div>
+                                            <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
+                                                <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">Round: <span className="font-semibold text-yellow-400 ml-1">{roundType}</span></span>
                                             </div>
                                             <div className="w-[130px] h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">Main Pot: 50</span>
@@ -355,7 +399,7 @@ const Table = () => {
                             </div>
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
-                            <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{ handResult }</span>
+                            {data && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{data.hand_strength}</span>}
                         </div>
                     </div>
                     {/*//! FOOTER */}
@@ -365,9 +409,8 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
-                        openSidebar ? "w-[300px]" : "w-0"
-                    }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
+                        }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}

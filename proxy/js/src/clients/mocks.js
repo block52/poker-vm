@@ -49,18 +49,36 @@ class Mocks {
         const account = this.getAccount(seat);
         const timeout = this.getUnixTime() + 30;
 
+        const lastAction = {
+            action: "check",
+            amount: BigUnit.from("0", 18).toString()
+        };
+
+        const check_action = {
+            action: "check",
+            amount: BigUnit.from("0", 18).toString()
+        };
+
+        const fold_action = {
+            action: "fold",
+            amount: BigUnit.from("0", 18).toString()
+        };
+
+        const bet_action = {
+            action: "bet",
+            min_amount: BigUnit.from("1", 18).toString(),
+            max_amount: BigUnit.from("100", 18).toString()
+        };
+
         const player = {
             address: account.address,
             seat: seat,
             stack: BigUnit.from("100", 18).toString(),
             holeCards: [],
             status: "active",
-            lastAction: {
-                action: "check",
-                amount: BigUnit.from("0", 18).toString()
-            },
-            actions: ["check", "bet", "fold"],
-            action: "check",
+            lastAction,
+            actions: [check_action, fold_action, bet_action],
+            hand_strength: "Ace High",
             timeout,
             signature: ethers.ZeroHash
         };
@@ -130,12 +148,23 @@ class Mocks {
             return this.tables[id];
         }
 
-        const _id = crypto.createHash("sha256").update(id).digest("hex");
-
         const sb = BigUnit.from("0.50", 18);
         const bb = BigUnit.from("1", 18);
         const pot1 = BigUnit.from("10", 18);
         const pot2 = BigUnit.from("5", 18);
+
+        const players = [
+            {
+                seat: 1,
+                address: "0x1234567890123456789012345678901234567890",
+                stack: BigUnit.from("100", 18).toString()
+            },
+            {
+                seat: 3,
+                address: "0x1234567890123456789012345678901234567890",
+                stack: BigUnit.from("200", 18).toString()
+            }
+        ];
 
         const response = {
             type: "No Limit Texas Holdem",
@@ -143,8 +172,8 @@ class Mocks {
             smallBlind: sb.toString(),
             bigBlind: bb.toString(),
             dealer: 1,
-            players: [],
-            communityCards: [],
+            players: players,
+            communityCards: ["AS", "KS", "QS", "JS", "TS"],
             pots: [pot1.toString(), pot2.toString()],
             nextToAct: 1,
             round: "PREFLOP", // TexasHoldemRound.PREFLOP,
@@ -180,6 +209,7 @@ class Mocks {
         const player = table.players[table.nextToAct - 1];
 
         const action = new ActionDTO();
+
         action.tableId = id;
         action.player = player.address;
         action.seat = player.seat;
