@@ -42,8 +42,12 @@ export class Bridge {
             throw new Error("VALIDATOR_KEY is not set");
         }
 
-        const mintCommand = new MintCommand(index.toString(), transactionHash, privateKey);
-        await mintCommand.execute();
+        try {
+            const mintCommand = new MintCommand(index.toString(), transactionHash, privateKey);
+            await mintCommand.execute();
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     public async onTransfer(from: string, to: string, value: bigint, transactionHash: string): Promise<void> {
@@ -59,10 +63,14 @@ export class Bridge {
             throw new Error("VALIDATOR_KEY is not set");
         }
 
-        //const publicKey = await (await this.provider.getSigner()).getAddress();
-        const depositIndex = "0"; // Temp
-        const mintCommand = new MintCommand(depositIndex, transactionHash, privateKey);
-        await mintCommand.execute();
+        try {
+            //const publicKey = await (await this.provider.getSigner()).getAddress();
+            const depositIndex = "0"; // Temp
+            const mintCommand = new MintCommand(depositIndex, transactionHash, privateKey);
+            await mintCommand.execute();
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     public async resync(): Promise<void> {
