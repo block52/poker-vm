@@ -176,6 +176,29 @@ app.post("/join", (req, res) => {
     res.send(response);
 });
 
+app.post("/deposit", (req, res) => {
+    const index = 1;
+    const wallet = ethers.Wallet.fromPhrase(process.env.SEED, `m/44'/60'/0'/0/${index}`);
+    const address = wallet.address;
+
+    const response = {
+        index,
+        address,
+    };
+    res.send(response);
+});
+
+app.put("/deposit/:id", (req, res) => {
+    // get erc20 balance abi
+    const erc20Abi = [
+        "function balanceOf(address owner) view returns (uint256)",
+    ];
+
+    const usdcAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+    const provider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL);
+    const contract = new ethers.Contract(usdcAddress, erc20Abi, provider);
+});
+
 // // Deposit to the layer 2
 // app.post("/deposit", (req, res) => {
 //     const signature = req.body?.signature;

@@ -68,6 +68,21 @@ class Mocks {
         return player;
     }
 
+    getGames() {
+        const id1 = ethers.ZeroAddress;
+        const id2 = ethers.ZeroAddress;
+
+        const min = BigUnit.from("0.01", 18).toString();
+        const max = BigUnit.from("1", 18).toString();
+
+        const response = [
+            { id: id1, variant: "Texas Holdem", type: "Cash", limit: "No Limit", max_players: 9, min, max },
+            { id: id2, variant: "Texas Holdem", type: "Cash", limit: "No Limit", max_players: 6, min, max }
+        ];
+
+        return response;
+    }
+
     async getTables() {
         const sb = BigUnit.from("0.50", 18);
         const bb = BigUnit.from("1.00", 18);
