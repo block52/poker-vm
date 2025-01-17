@@ -20,13 +20,14 @@ const useUserBySeat = (address: string, seat: number): UseUserSeatResult => {
         setError(null);
 
         try {
+            const mock_url = "https://orca-app-k9l4d.ondigitalocean.app";
             const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${url}/table/${address}/player/${seat}`);
+            const response = await axios.get(`${mock_url}/table/${address}/player/${seat}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+            console.log(response.data)
             setUserData(response.data);
         } catch (err) {
             setError(err instanceof Error ? err : new Error("An error occurred"));
@@ -43,7 +44,7 @@ const useUserBySeat = (address: string, seat: number): UseUserSeatResult => {
         data: userData,
         isLoading,
         error,
-        refetch: fetchType, // Correctly assign the fetch function
+        refetch: fetchType // Correctly assign the fetch function
     };
 };
 
