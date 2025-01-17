@@ -219,7 +219,7 @@ class Mocks {
                     isSmallBlind: true,
                     isBigBlind: false,
                     isDealer: true,
-                    holeCards: [0, 13],
+                    holeCards: ["AS", "AD"],
                     status: "active",
                     lastAction: {
                         action: "post small blind",
