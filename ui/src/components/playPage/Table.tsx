@@ -311,7 +311,7 @@ const Table = () => {
                                                         }}
                                                         className="absolute"
                                                     >
-                                                        <Chip amount={2} />
+                                                        <Chip amount={Number(pots[index])} />
                                                     </div>
                                                 );
                                             })}
