@@ -74,7 +74,7 @@ class Mocks {
             address: account.address,
             seat: seat,
             stack: BigUnit.from("100", 18).toString(),
-            holeCards: [],
+            holeCards: ["AC", "AD"],
             status: "active",
             lastAction,
             actions: [check_action, fold_action, bet_action],
@@ -219,7 +219,7 @@ class Mocks {
                     isSmallBlind: true,
                     isBigBlind: false,
                     isDealer: true,
-                    holeCards: [0, 13],
+                    holeCards: ["AS", "AD"],
                     status: "active",
                     lastAction: {
                         action: "post small blind",

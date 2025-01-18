@@ -282,11 +282,14 @@ export class RPC {
                 // }
                 const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
 
+                // Todo: get from out of the signed request
+
                 const command = new TransferCommand(from, to, BigInt(amount), data, validatorPrivateKey);
                 result = await command.execute();
 
                 break;
             }
+
             case RPCMethods.CREATE_CONTRACT_SCHEMA: {
                 const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
                 const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);

@@ -6,10 +6,12 @@ export class GameManagement {
 
     join(gameAddress: string, playerAddress: string) {
         let game = GameManagement._game.get(gameAddress);
+        
         if (!game) {
             game = new TexasHoldemGame(gameAddress, 10, 30);
             GameManagement._game.set(gameAddress, game);
         }
+        
         game.join(new Player(playerAddress, 100));
         console.log(`Player ${playerAddress} joining ${gameAddress}`);
         if (game.deal.length === 3)
