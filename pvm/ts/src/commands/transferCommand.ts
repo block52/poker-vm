@@ -14,18 +14,36 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
-        
         if (this.data) {
             console.log(`Data: ${this.data}`);
-            const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
-            if (gameCommand.method != "join") {
+            // const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
+            
+            // const playerAction = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
+            // console.log(`Player Action: ${playerAction.method}`);
+
+            if (this.data === "join") {
+                console.log(`Joining game...`);
+                // await this.gameManagement.join(this.to, this.from);
+
+                // rehydrate the game 
                 const game = this.gameManagement.get(this.to);
-                if (!game)
+
+                if (!game) {
                     throw new Error("Game not found");
-                game.performAction(this.from, gameCommand.method, gameCommand.params[0] ? parseInt(gameCommand.params[0]) : undefined);
+                }
             }
-            else
-                this.gameManagement.join(this.to, this.from);
+
+            // Cast string to PlayerActionType
+            const playerAction: PlayerActionType = this.data as PlayerActionType;
+            
+            // if (gameCommand.method !== "join") {
+            //     const game = this.gameManagement.get(this.to);
+            //     if (!game)
+            //         throw new Error("Game not found");
+            //     game.performAction(this.from, gameCommand.method, gameCommand.params[0] ? parseInt(gameCommand.params[0]) : undefined);
+            // }
+            // else
+            //     this.gameManagement.join(this.to, this.from);
         }
 
         const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
