@@ -21,6 +21,14 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
 
         const fromAccount = await this.accountManagement.getAccount(this.from);
 
+        if (fromAccount.balance < this.amount) {
+            throw new Error("Insufficient balance");
+        }
+
+        // todo: check nonce
+
+        // Check if from is a game account
+
         // if (!fromAccount)
         //     throw new Error("Account not found");
         // }

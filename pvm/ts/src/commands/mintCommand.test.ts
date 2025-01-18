@@ -15,10 +15,10 @@ jest.mock("../core/provider");
 describe("MintCommand", () => {
     // Test constants
     const VALID_DEPOSIT_INDEX = "1";
-    const VALID_HASH = "0x123...";
-    const VALID_PRIVATE_KEY = "0xabc...";
-    const MOCK_PUBLIC_KEY = "0xdef...";
-    const MOCK_RECEIVER = "0x789...";
+    const VALID_HASH = ethers.keccak256("test");
+    const VALID_PRIVATE_KEY = "0x8bf5d2b410baf602fbb1ca59ab16b1772ca0f143950e12a2d4a2ead44ab845fb";
+    const MOCK_PUBLIC_KEY = "0x89C76b091c8EAb1dFAe8a3fdBffb587A21464Bc2";
+    const MOCK_RECEIVER = "0x97f7f0D8792a4BedD830F65B533846437F5f3c32";
     const MOCK_AMOUNT = 1000n;
     const MOCK_DATA = `MINT_${VALID_DEPOSIT_INDEX}`;
 
@@ -64,7 +64,7 @@ describe("MintCommand", () => {
         (getTransactionInstance as jest.Mock).mockReturnValue(mockTransactionManagement);
     });
 
-    describe.only("constructor", () => {
+    describe("constructor", () => {
         it("should throw error when deposit index is not provided", () => {
             expect(() => new MintCommand("", VALID_HASH, VALID_PRIVATE_KEY)).toThrow("Deposit index must be provided");
         });
@@ -106,7 +106,7 @@ describe("MintCommand", () => {
             await expect(command.execute()).rejects.toThrow("Value must be greater than 0");
         });
 
-        it.only("should successfully create and add transaction to mempool", async () => {
+        it.("should successfully create and add transaction to mempool", async () => {
             // Mock successful scenario
             mockTransactionManagement.getTransactionByData.mockResolvedValue(null);
             mockBridge.deposits.mockResolvedValue([MOCK_RECEIVER, MOCK_AMOUNT]);
