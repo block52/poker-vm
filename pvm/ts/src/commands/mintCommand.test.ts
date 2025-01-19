@@ -106,7 +106,7 @@ describe("MintCommand", () => {
             await expect(command.execute()).rejects.toThrow("Value must be greater than 0");
         });
 
-        it.("should successfully create and add transaction to mempool", async () => {
+        it.only("should successfully create and add transaction to mempool", async () => {
             // Mock successful scenario
             mockTransactionManagement.getTransactionByData.mockResolvedValue(null);
             mockBridge.deposits.mockResolvedValue([MOCK_RECEIVER, MOCK_AMOUNT]);

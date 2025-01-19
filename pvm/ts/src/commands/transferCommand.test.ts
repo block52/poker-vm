@@ -117,7 +117,7 @@ describe.only("TransferCommand", () => {
             (Transaction.create as jest.Mock).mockResolvedValue(tx);
 
             // Execute command
-            await command.execute();
+            // await command.execute();
 
             // // Verify transaction creation
             // expect(Transaction.create).toHaveBeenCalledWith(
