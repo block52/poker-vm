@@ -129,6 +129,10 @@ export class TexasHoldemGameState implements IJSONModel {
     }
 
     public toJson(): TexasHoldemGameStateDTO { return this._dto; }
+
+    public fromJson(json: TexasHoldemGameStateDTO): TexasHoldemGameState {
+        return new TexasHoldemGameState(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, [], [], 0, 0, TexasHoldemRound.PREFLOP);
+    }
 }
 
 export class TexasHoldemState implements IJSONModel {

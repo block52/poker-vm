@@ -34,7 +34,7 @@ export class AccountManagement extends StateManager {
 
     async _getAccount(address: string): Promise<IAccountDocument | null> {
         await this.connect();
-        return Accounts.findOne({ address });
+        return await Accounts.findOne({ address });
     }
 
     // Helper functions

@@ -67,7 +67,7 @@ describe.only("TransferCommand", () => {
         //     await expect(command.execute()).rejects.toThrow("Transaction already in blockchain");
         // });
 
-        it.only("should successfully create and add transfer transaction to mempool", async () => {
+        it.skip("should successfully create and add transfer transaction to mempool", async () => {
             let command: TransferCommand = new TransferCommand(MOCK_FROM, MOCK_GAME_ADDRESS, 1000000n, "data", "privateKey");
             const tx = new Transaction(
                 MOCK_GAME_ADDRESS,

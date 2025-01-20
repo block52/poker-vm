@@ -1,23 +1,17 @@
-import { model, Schema } from "mongoose";
-import { IContractSchemaDocument } from "../models/interfaces";
+import { Document, model, Schema } from "mongoose";
+import { IGameStateDocument } from "../models/interfaces";
 
-const gameStateSchema = new Schema<IContractSchemaDocument>({
-    category: {
-        required: true,
+const gameStateSchema = new Schema<IGameStateDocument>({
+    address: {
         type: String,
+        required: true
     },
-    name: {
-        required: true,
-        type: String,
-    },
-    schema: {
-        required: true,
-        type: Object,
-    },
-    hash: {
-        required: true,
-        type: String,
-    },
+    state: {
+        type: Document,
+        required: true
+    }
+}, {
+    timestamps: true
 });
 
-export default model("ContractSchemas", contractSchemasSchema);
+export default model("GameState", gameStateSchema);
