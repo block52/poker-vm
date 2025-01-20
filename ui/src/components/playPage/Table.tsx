@@ -72,6 +72,9 @@ const Table = () => {
     const { balance } = useUserWallet();
     const { type } = useTableType(id);
 
+    const context = usePlayerContext();
+
+
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
     //     const colors = playerPositionArray.map(item => item.color);
@@ -174,6 +177,88 @@ const Table = () => {
     const onGoToDashboard = () => {
         navigate("/");
     };
+
+
+
+
+
+
+
+    // Detailed logging of all context values
+    // console.log('Player Context:', {
+    //     players: context.players,
+    //     pots: context.pots,
+    //     tableSize: context.tableSize,
+    //     seat: context.seat,
+    //     totalPot: context.totalPot,
+    //     bigBlind: context.bigBlind,
+    //     smallBlind: context.smallBlind,
+    //     roundType: context.roundType,
+    //     tableType: context.tableType,
+    //     gamePlayers: context.gamePlayers,
+    //     nextToAct: context.nextToAct,
+    //     playerSeats: context.playerSeats,
+    //     dealerIndex: context.dealerIndex,
+    //     lastPot: context.lastPot,
+    //     playerIndex: context.playerIndex,
+    //     openOneMore: context.openOneMore,
+    //     openTwoMore: context.openTwoMore,
+    //     showThreeCards: context.showThreeCards
+    // });
+
+
+    // Detailed game state logging
+    console.log('Current Game State:', {
+        // Round info
+        round: context.roundType,
+        totalPot: context.totalPot,
+        blinds: `${context.smallBlind}/${context.bigBlind}`,
+
+        // Active players
+        activeSeats: context.playerSeats,
+        nextToAct: context.nextToAct,
+
+        // Current player's possible actions
+        currentPlayer: context.gamePlayers?.find(p => p.seat === context.nextToAct),
+        possibleActions: context.gamePlayers
+            ?.find(p => p.seat === context.nextToAct)
+            ?.actions?.map(a => ({
+                action: a.action,
+                min: a.min,
+                max: a.max
+            })),
+
+        // Dealer position
+        dealer: context.dealerIndex,
+
+        // Player states
+        smallBlindPlayer: context.gamePlayers?.find(p => p.isSmallBlind),
+        bigBlindPlayer: context.gamePlayers?.find(p => p.isBigBlind),
+
+        // Last actions
+        lastActions: context.gamePlayers?.map(p => ({
+            seat: p.seat,
+            lastAction: p.lastAction
+        }))
+    });
+
+
+
+    // Add null check before logging
+    if (!context || !context.gamePlayers) {
+        console.log('Context or gamePlayers not ready yet');
+        return null; // or return a loading state
+    }
+
+
+
+
+
+
+
+
+
+
 
     return (
         <div className="h-screen">
@@ -311,7 +396,7 @@ const Table = () => {
                                                         }}
                                                         className="absolute"
                                                     >
-                                                        <Chip amount={2} />
+                                                        <Chip amount={Number(pots[index])} />
                                                     </div>
                                                 );
                                             })}
@@ -375,9 +460,8 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
-                        openSidebar ? "w-[300px]" : "w-0"
-                    }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
+                        }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
