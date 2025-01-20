@@ -64,29 +64,60 @@ const PokerActionPanel: React.FC = () => {
         setRaiseAmount(newAmount);  
     };
 
-    // Action handlers with console logs
+    // Action handlers with TODOs for API integration
     const handleFold = () => {
         console.log("Player folded");
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.FOLD,
+        //    seat: seat,
+        //    amount: null
+        // }
         setPlayerAction(PlayerActionType.FOLD);
     };
 
     const handleCall = () => {
-        console.log("Player called", currentPlayerActions.find(a => a.action === "call")?.min);
+        const callAmount = currentPlayerActions.find(a => a.action === "call")?.min;
+        console.log("Player called", callAmount);
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.CALL,
+        //    seat: seat,
+        //    amount: callAmount
+        // }
         setPlayerAction(PlayerActionType.CALL);
     };
 
     const handleRaise = () => {
         console.log("Player raised to", raiseAmount);
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.RAISE,
+        //    seat: seat,
+        //    amount: raiseAmount
+        // }
         setPlayerAction(PlayerActionType.RAISE, raiseAmount);
     };
 
     const handleCheck = () => {
         console.log("Player checked");
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.CHECK,
+        //    seat: seat,
+        //    amount: null
+        // }
         setPlayerAction(PlayerActionType.CHECK);
     };
 
     const handleBet = () => {
         console.log("Player bet");
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.BET,
+        //    seat: seat,
+        //    amount: raiseAmount
+        // }
         setPlayerAction(PlayerActionType.BET);
     };
 
