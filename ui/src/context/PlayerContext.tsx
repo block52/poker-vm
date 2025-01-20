@@ -56,6 +56,13 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return players.map((player: { seat: number }) => player.seat);
     };
 
+    React.useEffect(() => {
+        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
+        if (!localKey) return setPublicKey(undefined);
+
+        setPublicKey(localKey);
+    }, []);
+
     const fetchData = async () => {
         if (!publicKey) return;
 
@@ -70,7 +77,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            console.log(response)
             setPots(response.data.pots);
             setGamePlayers(response.data.players)
             setNextToAct(response.data.nextToAct);
@@ -95,17 +101,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, [publicKey]);
-
-    React.useEffect(() => {
-        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
-        if (!localKey) return setPublicKey(undefined);
-
-        setPublicKey(localKey);
-    }, []);
-
     const fetchNonce = async () => {
         if (!publicKey) return;
 
@@ -129,6 +124,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     useEffect(() => {
+        fetchData();
         fetchNonce();
     }, [publicKey]);
 

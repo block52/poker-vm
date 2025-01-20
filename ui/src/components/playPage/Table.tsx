@@ -54,14 +54,11 @@ const Table = () => {
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
-    const { totalPot, seat, smallBlind, bigBlind, tableType, roundType, playerSeats } = usePlayerContext();
+    const { totalPot, seat, smallBlind, bigBlind, tableType, roundType, playerSeats, pots } = usePlayerContext();
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
-    const [publicKey, setPublicKey] = useState<string>();
     const [openSidebar, setOpenSidebar] = useState(false);
 
     const [flipped1, setFlipped1] = useState(false);
@@ -74,25 +71,6 @@ const Table = () => {
 
     const { balance } = useUserWallet();
     const { type } = useTableType(id);
-
-    // Add new state for blinds
-
-
-    // Fetch table data
-    useEffect(() => {
-        const fetchTableData = async () => {
-            if (!id) return;
-
-            try {
-                const response = await axios.get(`${MOCK_API_URL}/table/${id}`);
-                // Convert from wei format to regular numbers
-            } catch (error) {
-                console.error("Error fetching table data:", error);
-            }
-        };
-
-        fetchTableData();
-    }, [id]);
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -344,7 +322,7 @@ const Table = () => {
                                             <div key={index} className="z-[10]">
                                                 {!playerSeats.includes(index) ? (
                                                     <VacantPlayer index={index} left={position.left} top={position.top} />
-                                                ) : index !== 0 ? (
+                                                ) : index !== seat ? (
                                                     <OppositePlayer
                                                         index={index}
                                                         currentIndex={currentIndex}
