@@ -72,6 +72,30 @@ const Table = () => {
     const { balance } = useUserWallet();
     const { type } = useTableType(id);
 
+    const context = usePlayerContext();
+    
+    // Detailed logging of all context values
+    console.log('Player Context:', {
+        players: context.players,
+        pots: context.pots,
+        tableSize: context.tableSize,
+        seat: context.seat,
+        totalPot: context.totalPot,
+        bigBlind: context.bigBlind,
+        smallBlind: context.smallBlind,
+        roundType: context.roundType,
+        tableType: context.tableType,
+        gamePlayers: context.gamePlayers,
+        nextToAct: context.nextToAct,
+        playerSeats: context.playerSeats,
+        dealerIndex: context.dealerIndex,
+        lastPot: context.lastPot,
+        playerIndex: context.playerIndex,
+        openOneMore: context.openOneMore,
+        openTwoMore: context.openTwoMore,
+        showThreeCards: context.showThreeCards
+    });
+
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
     //     const colors = playerPositionArray.map(item => item.color);
