@@ -21,6 +21,7 @@ import useTableType from "../../hooks/useTableType";
 import { toDollarFromString } from "../../utils/numberUtils";
 import useUserBySeat from "../../hooks/useUserBySeat";
 import axios from "axios";
+import { ethers } from "ethers";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -69,11 +70,12 @@ const Table = () => {
 
     const navigate = useNavigate();
 
-    const { balance } = useUserWallet();
+    const { account, balance, isLoading } = useUserWallet();
     const { type } = useTableType(id);
 
     const context = usePlayerContext();
-
+    const [wagmiStore, setWagmiStore] = useState<any>(null);
+    const [block52Balance, setBlock52Balance] = useState<string>('');
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -178,11 +180,25 @@ const Table = () => {
         navigate("/");
     };
 
+    useEffect(() => {
+        // Get wagmi store data
+        const wagmiData = localStorage.getItem('wagmi.store');
+        if (wagmiData) {
+            const parsedData = JSON.parse(wagmiData);
+            setWagmiStore(parsedData);
 
-
-
-
-
+            // Get MetaMask account address from wagmiStore
+            const metamaskAddress = parsedData.state.connections.value[0][1].accounts[0];
+            
+            // Use MetaMask address for Block52 balance query
+            axios.get(`https://proxy.block52.xyz/account/${metamaskAddress}`)
+                .then(response => {
+                    setBlock52Balance(response.data.balance);
+                    console.log('Block52 Account Data:', response.data);
+                })
+                .catch(error => console.error('Error fetching Block52 balance:', error));
+        }
+    }, []);
 
     // Detailed logging of all context values
     // console.log('Player Context:', {
@@ -205,7 +221,6 @@ const Table = () => {
     //     openTwoMore: context.openTwoMore,
     //     showThreeCards: context.showThreeCards
     // });
-
 
     // Detailed game state logging
     console.log('Current Game State:', {
@@ -242,23 +257,20 @@ const Table = () => {
         }))
     });
 
-
-
     // Add null check before logging
     if (!context || !context.gamePlayers) {
         console.log('Context or gamePlayers not ready yet');
         return null; // or return a loading state
     }
 
-
-
-
-
-
-
-
-
-
+    // Add useEffect to log wallet info whenever it changes
+    useEffect(() => {
+        console.log('Connected Wallet Info:', {
+            address: account,
+            balance: balance,
+            isLoading: isLoading
+        });
+    }, [account, balance, isLoading]);
 
     return (
         <div className="h-screen">
@@ -274,29 +286,32 @@ const Table = () => {
                         </span>
                     </div>
 
-                    {/* Middle Section */}
-                    {/* <div className="flex">
-                        <div className="w-[130px] h-[64px] border-l border-white flex items-center justify-center white">
-                            <HiPlus color="#f0f0f0" size={25} />
-                        </div>
-                        <div className="w-[130px] h-[64px] border-l border-white flex items-center justify-center">
-                            <HiPlus color="#f0f0f0" size={25} />
-                        </div>
-                        <div className="w-[130px] h-[64px] border-l border-white flex items-center justify-center">
-                            <HiPlus color="#f0f0f0" size={25} />
-                        </div>
-                        <div className="w-[130px] h-[64px] border-l border-r border-white flex items-center justify-center white">
-                            <HiPlus color="#f0f0f0" size={25} />
-                        </div>
-                    </div> */}
+                    {/* Middle Section - Add Wallet Info */}
+                    <div className="flex flex-col items-center text-white text-sm">
+                        <div>Table Wallet: {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not Connected'}</div>
+                
+                        {wagmiStore && (
+                            <div className="text-xs">
+                                Connected: {wagmiStore.state.connections.value[0][1].connector.name} 
+                                ({wagmiStore.state.connections.value[0][1].accounts[0].slice(0, 6)}...
+                                {wagmiStore.state.connections.value[0][1].accounts[0].slice(-4)})
+                            </div>
+                        )}
+                        {block52Balance && (
+                            <div className="text-xs">
+                                Block52 Balance: ${Number(ethers.formatEther(block52Balance)).toFixed(2)}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
                             <span>{`Balance: $${toDollarFromString(balance)} (USD)`}</span>
+                            <span>{isLoading ? 'Loading...' : ''}</span>
                         </div>
 
-                        <div className="flex items-center justify-center w-10 h-10  cursor-pointer">
+                        <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
                             <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigate("/deposit")} />
                         </div>
                         {/* <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
