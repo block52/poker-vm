@@ -290,25 +290,26 @@ const Table = () => {
                     <div className="flex flex-col items-center text-white text-sm">
                         <div>Table Wallet: {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not Connected'}</div>
                 
-                        {wagmiStore && (
-                            <div className="text-xs">
-                                Connected: {wagmiStore.state.connections.value[0][1].connector.name} 
-                                ({wagmiStore.state.connections.value[0][1].accounts[0].slice(0, 6)}...
-                                {wagmiStore.state.connections.value[0][1].accounts[0].slice(-4)})
-                            </div>
-                        )}
-                        {block52Balance && (
-                            <div className="text-xs">
-                                Block52 Balance: ${Number(ethers.formatEther(block52Balance)).toFixed(2)}
-                            </div>
-                        )}
+                       
                     </div>
 
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
-                            <span>{`Balance: $${toDollarFromString(balance)} (USD)`}</span>
+                       
                             <span>{isLoading ? 'Loading...' : ''}</span>
+                            {wagmiStore && (
+                                <div className="text-xs">
+                                    Connected: {wagmiStore.state.connections.value[0][1].connector.name} 
+                                    ({wagmiStore.state.connections.value[0][1].accounts[0].slice(0, 6)}...
+                                    {wagmiStore.state.connections.value[0][1].accounts[0].slice(-4)})
+                                </div>
+                            )}
+                            {block52Balance && (
+                                <div className="text-xs">
+                                    Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
