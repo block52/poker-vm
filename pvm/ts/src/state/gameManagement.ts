@@ -35,8 +35,8 @@ export class GameManagement extends StateManager {
             throw new Error("Game not found");
         }
 
+        // Store the game state in the database as a JSON object
         const json = gameState.state.toJSON();
-
         const texasHoldemGameState = TexasHoldemGameState.fromJson(json);
         return texasHoldemGameState;
     }
@@ -46,16 +46,5 @@ export class GameManagement extends StateManager {
         await game.save();
     }
 }
-
-//     async getGameState(address: string): Promise<GameState> {
-//         const account = await this._getAccount(address);
-
-//         if (!account) {
-//             return new Account(address, 0n);
-//         }
-
-//         return Account.fromDocument(account);
-//     }
-// }
 
 export default GameManagement;
