@@ -7,7 +7,7 @@ import useUserBySeat from "../hooks/useUserBySeat";
 import axios from "axios";
 
 const PokerActionPanel: React.FC = () => {
-    const { setPlayerAction, seat, totalPot, nextToAct } = usePlayerContext();
+    const { setPlayerAction, seat, totalPot, nextToAct, gamePlayers } = usePlayerContext();
     const [publicKey, setPublicKey] = useState<string>();
     const [raiseAmount, setRaiseAmount] = useState(0);
     const [isBetAction, setIsBetAction] = useState(false);
@@ -16,6 +16,21 @@ const PokerActionPanel: React.FC = () => {
     const [isRaiseAction, setIsRaiseAction] = useState(false);
     const [balance, setBalance] = useState(0);
     const { data } = useUserBySeat(publicKey || "", seat);
+
+    // Get current player's possible actions
+    const currentPlayerActions = gamePlayers?.find(p => p.seat === nextToAct)?.actions || [];
+
+    // Check if each action is available
+    const canFold = currentPlayerActions.some(a => a.action === "fold");
+    const canCall = currentPlayerActions.some(a => a.action === "call");
+    const canRaise = currentPlayerActions.some(a => a.action === "raise");
+    const canCheck = currentPlayerActions.some(a => a.action === "check");
+    const canBet = currentPlayerActions.some(a => a.action === "bet");
+
+    // Get min/max for raise if available
+    const raiseAction = currentPlayerActions.find(a => a.action === "raise");
+    const minRaise = raiseAction?.min;
+    const maxRaise = raiseAction?.max;
 
     useEffect(() => {
         if (data) {
@@ -46,26 +61,32 @@ const PokerActionPanel: React.FC = () => {
     }, [publicKey]);
 
     const handleRaiseChange = (newAmount: number) => {
-        setRaiseAmount(newAmount);
+        setRaiseAmount(newAmount);  
     };
 
-    const onFold = () => {
+    // Action handlers with console logs
+    const handleFold = () => {
+        console.log("Player folded");
         setPlayerAction(PlayerActionType.FOLD);
     };
 
-    const onCheck = () => {
-        setPlayerAction(PlayerActionType.CHECK);
-    };
-
-    const onCall = () => {
+    const handleCall = () => {
+        console.log("Player called", currentPlayerActions.find(a => a.action === "call")?.min);
         setPlayerAction(PlayerActionType.CALL);
     };
 
-    const onRaise = () => {
+    const handleRaise = () => {
+        console.log("Player raised to", raiseAmount);
         setPlayerAction(PlayerActionType.RAISE, raiseAmount);
     };
 
-    const onBet = () => {
+    const handleCheck = () => {
+        console.log("Player checked");
+        setPlayerAction(PlayerActionType.CHECK);
+    };
+
+    const handleBet = () => {
+        console.log("Player bet");
         setPlayerAction(PlayerActionType.BET);
     };
 
@@ -82,45 +103,47 @@ const PokerActionPanel: React.FC = () => {
             {/* <ChipPurchase /> */}
             <div className="flex flex-col w-[600px] space-y-6 mb-2 justify-center rounded-lg">
                 <div className="flex justify-between gap-2">
-                    <button
-                        disabled={seat != nextToAct}
-                        className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={onFold}
-                    >
-                        FOLD
-                    </button>
-                    {isCheckAction && (
+                    {canFold && (
                         <button
                             disabled={seat != nextToAct}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                            onClick={onCheck}
+                            onClick={handleFold}
+                        >
+                            FOLD
+                        </button>
+                    )}
+                    {canCheck && (
+                        <button
+                            disabled={seat != nextToAct}
+                            className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                            onClick={handleCheck}
                         >
                             CHECK
                         </button>
                     )}
-                    {isCallAction && (
+                    {canCall && (
                         <button
                             disabled={seat != nextToAct}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                            onClick={onCall}
+                            onClick={handleCall}
                         >
-                            CALL
+                            CALL {currentPlayerActions.find(a => a.action === "call")?.min}
                         </button>
                     )}
-                    {isRaiseAction && (
+                    {canRaise && (
                         <button
                             disabled={seat != nextToAct}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                            onClick={onRaise}
+                            onClick={handleRaise}
                         >
-                            {raiseAmount === +balance ? "All-IN" : `RAISE ${raiseAmount}`}
+                            RAISE {raiseAmount}
                         </button>
                     )}
-                    {isBetAction && (
+                    {canBet && (
                         <button
                             disabled={seat != nextToAct}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                            onClick={onBet}
+                            onClick={handleBet}
                         >
                             BET
                         </button>
