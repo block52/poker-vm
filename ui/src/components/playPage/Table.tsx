@@ -44,18 +44,30 @@ const calculateZoom = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
+    const context = usePlayerContext();
 
-    if (!id) {
-        console.error("Table ID is missing");
-        // Return some markup saying that the table ID is missing
-        // return <div>Table ID is missing</div>;
-        return <></>;
+    // Early return if no id or context
+    if (!id || !context) {
+        return <div className="h-screen flex items-center justify-center text-white">Loading...</div>;
     }
+
+      // Destructure context after we know it exists
+      const { 
+        totalPot, 
+        seat, 
+        smallBlind, 
+        bigBlind, 
+        tableType, 
+        roundType, 
+        playerSeats, 
+        pots,
+      
+    } = context;
 
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
-    const { totalPot, seat, smallBlind, bigBlind, tableType, roundType, playerSeats, pots } = usePlayerContext();
+
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
@@ -73,7 +85,7 @@ const Table = () => {
     const { account, balance, isLoading } = useUserWallet();
     const { type } = useTableType(id);
 
-    const context = usePlayerContext();
+
     const [wagmiStore, setWagmiStore] = useState<any>(null);
     const [block52Balance, setBlock52Balance] = useState<string>('');
 
@@ -184,19 +196,26 @@ const Table = () => {
         // Get wagmi store data
         const wagmiData = localStorage.getItem('wagmi.store');
         if (wagmiData) {
-            const parsedData = JSON.parse(wagmiData);
-            setWagmiStore(parsedData);
+            try {
+                const parsedData = JSON.parse(wagmiData);
+                setWagmiStore(parsedData);
 
-            // Get MetaMask account address from wagmiStore
-            const metamaskAddress = parsedData.state.connections.value[0][1].accounts[0];
-            
-            // Use MetaMask address for Block52 balance query
-            axios.get(`https://proxy.block52.xyz/account/${metamaskAddress}`)
-                .then(response => {
-                    setBlock52Balance(response.data.balance);
-                    console.log('Block52 Account Data:', response.data);
-                })
-                .catch(error => console.error('Error fetching Block52 balance:', error));
+                // Add null checks for the nested properties
+                const connections = parsedData?.state?.connections?.value;
+                const metamaskAddress = connections?.[0]?.[1]?.accounts?.[0];
+                
+                // Only proceed if we have a valid address
+                if (metamaskAddress) {
+                    axios.get(`https://proxy.block52.xyz/account/${metamaskAddress}`)
+                        .then(response => {
+                            setBlock52Balance(response.data.balance);
+                            console.log('Block52 Account Data:', response.data);
+                        })
+                        .catch(error => console.error('Error fetching Block52 balance:', error));
+                }
+            } catch (error) {
+                console.error('Error parsing wagmi store data:', error);
+            }
         }
     }, []);
 
@@ -263,14 +282,6 @@ const Table = () => {
         return null; // or return a loading state
     }
 
-    // Add useEffect to log wallet info whenever it changes
-    useEffect(() => {
-        console.log('Connected Wallet Info:', {
-            address: account,
-            balance: balance,
-            isLoading: isLoading
-        });
-    }, [account, balance, isLoading]);
 
     return (
         <div className="h-screen">
@@ -298,13 +309,18 @@ const Table = () => {
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
                        
                             <span>{isLoading ? 'Loading...' : ''}</span>
-                            {wagmiStore && (
-                                <div className="text-xs">
-                                    Connected: {wagmiStore.state.connections.value[0][1].connector.name} 
-                                    ({wagmiStore.state.connections.value[0][1].accounts[0].slice(0, 6)}...
-                                    {wagmiStore.state.connections.value[0][1].accounts[0].slice(-4)})
-                                </div>
-                            )}
+                            {wagmiStore && (() => {
+                                const connection = wagmiStore.state?.connections?.value?.[0]?.[1];
+                                const account = connection?.accounts?.[0];
+                                const connectorName = connection?.connector?.name;
+                                
+                                return connection && account ? (
+                                    <div className="text-xs">
+                                        Connected: {connectorName || 'Unknown'} 
+                                        ({account.slice(0, 6)}...{account.slice(-4)})
+                                    </div>
+                                ) : null;
+                            })()}
                             {block52Balance && (
                                 <div className="text-xs">
                                     Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}
