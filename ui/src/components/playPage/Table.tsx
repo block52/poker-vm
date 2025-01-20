@@ -284,20 +284,18 @@ const Table = () => {
 
                     {/* Middle Section - Add Wallet Info */}
                     <div className="flex flex-col items-center text-white text-sm">
-                        <div>Table Wallet: {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not Connected'}</div>
-                
-                       
+                        <div>
+                            Table Wallet: {address || 'Not Connected'}
+                        </div>
                     </div>
 
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
-                       
                             <span>{isLoading ? 'Loading...' : ''}</span>
                             {address && connector && (
                                 <div className="text-xs">
-                                    Connected: {connector.name || 'Unknown'} 
-                                    ({address.slice(0, 6)}...{address.slice(-4)})
+                                    Connected: {connector.name || 'Unknown'} ({address})
                                 </div>
                             )}
                             {block52Balance && (
@@ -306,16 +304,10 @@ const Table = () => {
                                 </div>
                             )}
                         </div>
-
+                        
                         <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
                             <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigate("/deposit")} />
                         </div>
-                        {/* <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
-                            <CiCalendar color="#f0f0f0" size={25} />
-                        </div>
-                        <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
-                            <BiBorderAll color="#f0f0f0" size={25} />
-                        </div> */}
                     </div>
                 </div>
 
