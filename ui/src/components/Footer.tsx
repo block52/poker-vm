@@ -7,11 +7,9 @@ import useUserBySeat from "../hooks/useUserBySeat";
 import axios from "axios";
 
 const PokerActionPanel: React.FC = () => {
-    const { setPlayerAction, playerIndex, pots, seat, totalPot, nextToAct } = usePlayerContext();
-    const [error, setError] = useState<Error | null>(null);
+    const { setPlayerAction, seat, totalPot, nextToAct } = usePlayerContext();
     const [publicKey, setPublicKey] = useState<string>();
     const [raiseAmount, setRaiseAmount] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
     const [isBetAction, setIsBetAction] = useState(false);
     const [isCallAction, setIsCallAction] = useState(false);
     const [isCheckAction, setIsCheckAction] = useState(false);
@@ -45,7 +43,7 @@ const PokerActionPanel: React.FC = () => {
         if (!localKey) return setPublicKey(undefined);
 
         setPublicKey(localKey);
-    }, []);
+    }, [publicKey]);
 
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
@@ -70,6 +68,10 @@ const PokerActionPanel: React.FC = () => {
     const onBet = () => {
         setPlayerAction(PlayerActionType.BET);
     };
+
+    if(!data) {
+        return <></>
+    }
 
     return (
         <div className="flex justify-center rounded-lg h-full text-white z-[0]">
