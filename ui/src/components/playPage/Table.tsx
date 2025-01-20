@@ -22,6 +22,7 @@ import { toDollarFromString } from "../../utils/numberUtils";
 import useUserBySeat from "../../hooks/useUserBySeat";
 import axios from "axios";
 import { ethers } from "ethers";
+import { useAccount } from 'wagmi';
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -85,8 +86,8 @@ const Table = () => {
     const { account, balance, isLoading } = useUserWallet();
     const { type } = useTableType(id);
 
-
-    const [wagmiStore, setWagmiStore] = useState<any>(null);
+    // Replace the wagmiStore state with direct wagmi hooks
+    const { address, connector } = useAccount();
     const [block52Balance, setBlock52Balance] = useState<string>('');
 
     // const reorderPlayerPositions = (startIndex: number) => {
@@ -193,31 +194,15 @@ const Table = () => {
     };
 
     useEffect(() => {
-        // Get wagmi store data
-        const wagmiData = localStorage.getItem('wagmi.store');
-        if (wagmiData) {
-            try {
-                const parsedData = JSON.parse(wagmiData);
-                setWagmiStore(parsedData);
-
-                // Add null checks for the nested properties
-                const connections = parsedData?.state?.connections?.value;
-                const metamaskAddress = connections?.[0]?.[1]?.accounts?.[0];
-                
-                // Only proceed if we have a valid address
-                if (metamaskAddress) {
-                    axios.get(`https://proxy.block52.xyz/account/${metamaskAddress}`)
-                        .then(response => {
-                            setBlock52Balance(response.data.balance);
-                            console.log('Block52 Account Data:', response.data);
-                        })
-                        .catch(error => console.error('Error fetching Block52 balance:', error));
-                }
-            } catch (error) {
-                console.error('Error parsing wagmi store data:', error);
-            }
+        if (address) {
+            axios.get(`https://proxy.block52.xyz/account/${address}`)
+                .then(response => {
+                    setBlock52Balance(response.data.balance);
+                    console.log('Block52 Account Data:', response.data);
+                })
+                .catch(error => console.error('Error fetching Block52 balance:', error));
         }
-    }, []);
+    }, [address]);
 
     // Detailed logging of all context values
     // console.log('Player Context:', {
@@ -309,18 +294,12 @@ const Table = () => {
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
                        
                             <span>{isLoading ? 'Loading...' : ''}</span>
-                            {wagmiStore && (() => {
-                                const connection = wagmiStore.state?.connections?.value?.[0]?.[1];
-                                const account = connection?.accounts?.[0];
-                                const connectorName = connection?.connector?.name;
-                                
-                                return connection && account ? (
-                                    <div className="text-xs">
-                                        Connected: {connectorName || 'Unknown'} 
-                                        ({account.slice(0, 6)}...{account.slice(-4)})
-                                    </div>
-                                ) : null;
-                            })()}
+                            {address && connector && (
+                                <div className="text-xs">
+                                    Connected: {connector.name || 'Unknown'} 
+                                    ({address.slice(0, 6)}...{address.slice(-4)})
+                                </div>
+                            )}
                             {block52Balance && (
                                 <div className="text-xs">
                                     Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}
