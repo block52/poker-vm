@@ -107,7 +107,7 @@ class TexasHoldemGame implements IPoker {
                   this._address,
                   this._smallBlind,
                   this._bigBlind,
-                  this._buttonPosition,
+                  this._dealer,
                   players,
                   this._communityCards,
                   this.pot,
@@ -241,12 +241,12 @@ class TexasHoldemGame implements IPoker {
         this._sidePots = new Map<PlayerId, number>();
         this._winners = undefined;
         this._currentRound = TexasHoldemRound.PREFLOP;
-        this._currentPlayer = this._buttonPosition;
+        this._currentPlayer = this._dealer;
 
         const active = this.getActivePlayers();
         if (active.length <= 1) throw new Error("Not enough active players to start next hand.");
 
-        this._buttonPosition = active[0]; // find the next free player from the previous button position and allocate the button to them
+        this._dealer = active[0]; // find the next free player from the previous button position and allocate the button to them
         this._smallBlindPosition = active[1];
         this._bigBlindPosition = active[2 % active.length];
         this._currentPlayer = active[3 % active.length];
@@ -301,7 +301,7 @@ class TexasHoldemGame implements IPoker {
             if (this._currentRound === TexasHoldemRound.FLOP) this._communityCards.push(...this._deck.deal(3));
             else if (this._currentRound === TexasHoldemRound.TURN || this._currentRound == TexasHoldemRound.RIVER)
                 this._communityCards.push(...this._deck.deal(1));
-            this._currentPlayer = this._buttonPosition;
+            this._currentPlayer = this._dealer;
             this.nextPlayer();
         } else this.calculateWinner();
     }

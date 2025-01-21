@@ -35,7 +35,7 @@ export class Player {
     getPlayerState(game: TexasHoldemGame, position: number): PlayerState {
         const isSmallBlind = game.smallBlindPosition === position;
         const isBigBlind = game.bigBlindPosition === position;
-        const isDealer = game.buttonPosition === position;
+        const isDealer = game.dealerPosition === position;
         
         const lastMove = game.getLastAction(this.id);
         const validMoves = game.getValidActions(this.id);
