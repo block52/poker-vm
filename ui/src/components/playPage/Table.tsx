@@ -62,6 +62,7 @@ const Table = () => {
         roundType, 
         playerSeats, 
         pots,
+        communityCards
       
     } = context;
 
@@ -69,7 +70,7 @@ const Table = () => {
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
 
-    const { totalPot, seat, smallBlind, bigBlind, tableType, roundType, playerSeats, pots, communityCards } = usePlayerContext();
+
 
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
@@ -95,7 +96,6 @@ const Table = () => {
 
     // Replace the wagmiStore state with direct wagmi hooks
     const { address, connector } = useAccount();
-    const [block52Balance, setBlock52Balance] = useState<string>('');
 
 
     // const reorderPlayerPositions = (startIndex: number) => {
@@ -202,7 +202,6 @@ const Table = () => {
     };
 
     useEffect(() => {
-
         // Get wagmi store data
         const wagmiData = localStorage.getItem("wagmi.store");
         if (wagmiData) {
@@ -211,12 +210,10 @@ const Table = () => {
 
             // Get MetaMask account address from wagmiStore
             const metamaskAddress = parsedData.state.connections.value[0][1].accounts[0];
-
-
+        }
 
         if (address) {
             axios.get(`https://proxy.block52.xyz/account/${address}`)
-
                 .then(response => {
                     setBlock52Balance(response.data.balance);
                     console.log("Block52 Account Data:", response.data);
@@ -253,6 +250,9 @@ const Table = () => {
         round: context.roundType,
         totalPot: context.totalPot,
         blinds: `${context.smallBlind}/${context.bigBlind}`,
+
+        // Community cards
+        communityCards: context.communityCards,
 
         // Active players
         activeSeats: context.playerSeats,
@@ -305,33 +305,28 @@ const Table = () => {
 
                     {/* Middle Section - Add Wallet Info */}
                     <div className="flex flex-col items-center text-white text-sm">
-
                         <div>Table Wallet: {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Not Connected"}</div>
                         <div>
                             Table Wallet: {address || 'Not Connected'}
                         </div>
-
                     </div>
 
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
-
                             <span>{isLoading ? "Loading..." : ""}</span>
-                            {wagmiStore && (
-                                <div className="text-xs">
-                                    Connected: {wagmiStore.state.connections.value[0][1].connector.name}(
-                                    {wagmiStore.state.connections.value[0][1].accounts[0].slice(0, 6)}...
-                                    {wagmiStore.state.connections.value[0][1].accounts[0].slice(-4)})
-
-                            <span>{isLoading ? 'Loading...' : ''}</span>
+                            
                             {address && connector && (
                                 <div className="text-xs">
                                     Connected: {connector.name || 'Unknown'} ({address})
-
                                 </div>
                             )}
-                            {block52Balance && <div className="text-xs">Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}</div>}
+
+                            {block52Balance && (
+                                <div className="text-xs">
+                                    Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}
+                                </div>
+                            )}
                         </div>
                         
                         <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
@@ -360,6 +355,7 @@ const Table = () => {
                     </div>
                 </div>
             </div>
+
             {/*//! BODY */}
             <div className="flex w-full h-[calc(100%-90px)]">
                 {/*//! TABLE + FOOTER */}
@@ -434,55 +430,51 @@ const Table = () => {
                                                 )}
                                             </div>
                                             {/*//! CHIP */}
-                                            {chipPositionArray.map((position, index) => {
-                                                return (
-                                                    <div
-                                                        key={`key-${index}`} // Make sure to add a unique key
-                                                        style={{
-                                                            left: position.left,
-                                                            bottom: position.bottom
-                                                        }}
-                                                        className="absolute"
-                                                    >
-                                                        <Chip amount={Number(pots[index])} />
-                                                    </div>
-                                                );
-                                            })}
+                                            {chipPositionArray.map((position, index) => (
+                                                <div
+                                                    key={`key-${index}`}
+                                                    style={{
+                                                        left: position.left,
+                                                        bottom: position.bottom
+                                                    }}
+                                                    className="absolute"
+                                                >
+                                                    <Chip amount={Number(pots[index])} />
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                    {playerPositionArray.map((position, index) => {
-                                        return (
-                                            <div key={index} className="z-[10]">
-                                                {!playerSeats.includes(index) ? (
-                                                    <VacantPlayer index={index} left={position.left} top={position.top} />
-                                                ) : index !== seat ? (
-                                                    <OppositePlayer
-                                                        index={index}
-                                                        currentIndex={currentIndex}
-                                                        setStartIndex={(index: number) => setStartIndex(index)}
-                                                        left={position.left}
-                                                        top={position.top}
-                                                        color={position.color}
-                                                        status={players[index]?.status}
-                                                        isCardVisible={isCardVisible}
-                                                        setCardVisible={setCardVisible}
-                                                    />
-                                                ) : (
-                                                    <Player
-                                                        index={index}
-                                                        currentIndex={currentIndex}
-                                                        left={position.left}
-                                                        top={position.top}
-                                                        color={position.color}
-                                                        status={players[index]?.status}
-                                                    />
-                                                )}
-                                                <div>
-                                                    <TurnAnimation left={position.left} top={position.top} index={index} />
-                                                </div>
+                                    {playerPositionArray.map((position, index) => (
+                                        <div key={index} className="z-[10]">
+                                            {!playerSeats.includes(index) ? (
+                                                <VacantPlayer index={index} left={position.left} top={position.top} />
+                                            ) : index !== seat ? (
+                                                <OppositePlayer
+                                                    index={index}
+                                                    currentIndex={currentIndex}
+                                                    setStartIndex={(index: number) => setStartIndex(index)}
+                                                    left={position.left}
+                                                    top={position.top}
+                                                    color={position.color}
+                                                    status={players[index]?.status}
+                                                    isCardVisible={isCardVisible}
+                                                    setCardVisible={setCardVisible}
+                                                />
+                                            ) : (
+                                                <Player
+                                                    index={index}
+                                                    currentIndex={currentIndex}
+                                                    left={position.left}
+                                                    top={position.top}
+                                                    color={position.color}
+                                                    status={players[index]?.status}
+                                                />
+                                            )}
+                                            <div>
+                                                <TurnAnimation left={position.left} top={position.top} index={index} />
                                             </div>
-                                        );
-                                    })}
+                                        </div>
+                                    ))}
                                     {/*//! Dealer */}
                                     <div
                                         style={{
@@ -519,15 +511,6 @@ const Table = () => {
                         <PokerLog />
                     </div>
                 </div>
-                {/* <div
-                    className={`transition-all duration-300 ease-in-out bg-custom-header flex flex-col items-center justify-center p-4 ${openSidebar ? "w-[250px] opacity-100" : "w-0 opacity-0"
-                        }`}
-                    style={{
-                        overflow: openSidebar ? "visible" : "hidden", // Prevents content from spilling when hidden
-                    }}
-                >
-                    <PokerLog />
-                </div> */}
             </div>
         </div>
     );
