@@ -46,6 +46,8 @@ export class GameManagement extends StateManager {
                 TexasHoldemRound.ANTE,
                 undefined
             );
+
+            return texasHoldemGameState;
         }
 
         const gameState = await GameState.findOne({

@@ -76,12 +76,12 @@ export class Server {
 
         args.includes("--reset") ? await this.resyncBlockchain() : await this.syncBlockchain();
 
-        await this.syncDeposits();
         await this.syncMempool();
 
         const validatorInstance = getValidatorInstance();
         this.isValidator = await validatorInstance.isValidator(this.publicKey);
 
+        await this.syncDeposits();
         // if (args.includes("--mine")) {
         //     mine = true;
         // }
@@ -103,7 +103,7 @@ export class Server {
         }, 15000);
 
         this._started = true;
-        console.log("Server started");
+        console.log(`Server started on port ${this._port}`);
     }
 
     public async mine() {
@@ -230,6 +230,10 @@ export class Server {
 
     private async syncDeposits() {
         // Check if the last deposit sync was more than 1 hour ago
+        if (!this.isValidator) {
+            return;
+        }
+
         const now = new Date();
         const diff = now.getTime() - this._lastDepositSync.getTime();
 
