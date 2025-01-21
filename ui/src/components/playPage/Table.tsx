@@ -22,6 +22,7 @@ import { toDollarFromString } from "../../utils/numberUtils";
 import useUserBySeat from "../../hooks/useUserBySeat";
 import axios from "axios";
 import { ethers } from "ethers";
+import { useAccount } from 'wagmi';
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -44,18 +45,32 @@ const calculateZoom = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
+    const context = usePlayerContext();
 
-    if (!id) {
-        console.error("Table ID is missing");
-        // Return some markup saying that the table ID is missing
-        // return <div>Table ID is missing</div>;
-        return <></>;
+    // Early return if no id or context
+    if (!id || !context) {
+        return <div className="h-screen flex items-center justify-center text-white">Loading...</div>;
     }
+
+      // Destructure context after we know it exists
+      const { 
+        totalPot, 
+        seat, 
+        smallBlind, 
+        bigBlind, 
+        tableType, 
+        roundType, 
+        playerSeats, 
+        pots,
+      
+    } = context;
 
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
+
     const { totalPot, seat, smallBlind, bigBlind, tableType, roundType, playerSeats, pots, communityCards } = usePlayerContext();
+
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
@@ -73,9 +88,15 @@ const Table = () => {
     const { account, balance, isLoading } = useUserWallet();
     const { type } = useTableType(id);
 
-    const context = usePlayerContext();
+
+
     const [wagmiStore, setWagmiStore] = useState<any>(null);
     const [block52Balance, setBlock52Balance] = useState<string>("");
+
+    // Replace the wagmiStore state with direct wagmi hooks
+    const { address, connector } = useAccount();
+    const [block52Balance, setBlock52Balance] = useState<string>('');
+
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -181,6 +202,7 @@ const Table = () => {
     };
 
     useEffect(() => {
+
         // Get wagmi store data
         const wagmiData = localStorage.getItem("wagmi.store");
         if (wagmiData) {
@@ -190,16 +212,18 @@ const Table = () => {
             // Get MetaMask account address from wagmiStore
             const metamaskAddress = parsedData.state.connections.value[0][1].accounts[0];
 
-            // Use MetaMask address for Block52 balance query
-            axios
-                .get(`https://proxy.block52.xyz/account/${metamaskAddress}`)
+
+
+        if (address) {
+            axios.get(`https://proxy.block52.xyz/account/${address}`)
+
                 .then(response => {
                     setBlock52Balance(response.data.balance);
                     console.log("Block52 Account Data:", response.data);
                 })
                 .catch(error => console.error("Error fetching Block52 balance:", error));
         }
-    }, []);
+    }, [address]);
 
     // Detailed logging of all context values
     // console.log('Player Context:', {
@@ -264,14 +288,6 @@ const Table = () => {
         return null; // or return a loading state
     }
 
-    // Add useEffect to log wallet info whenever it changes
-    useEffect(() => {
-        console.log("Connected Wallet Info:", {
-            address: account,
-            balance: balance,
-            isLoading: isLoading
-        });
-    }, [account, balance, isLoading]);
 
     return (
         <div className="h-screen">
@@ -289,32 +305,38 @@ const Table = () => {
 
                     {/* Middle Section - Add Wallet Info */}
                     <div className="flex flex-col items-center text-white text-sm">
+
                         <div>Table Wallet: {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Not Connected"}</div>
+                        <div>
+                            Table Wallet: {address || 'Not Connected'}
+                        </div>
+
                     </div>
 
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
+
                             <span>{isLoading ? "Loading..." : ""}</span>
                             {wagmiStore && (
                                 <div className="text-xs">
                                     Connected: {wagmiStore.state.connections.value[0][1].connector.name}(
                                     {wagmiStore.state.connections.value[0][1].accounts[0].slice(0, 6)}...
                                     {wagmiStore.state.connections.value[0][1].accounts[0].slice(-4)})
+
+                            <span>{isLoading ? 'Loading...' : ''}</span>
+                            {address && connector && (
+                                <div className="text-xs">
+                                    Connected: {connector.name || 'Unknown'} ({address})
+
                                 </div>
                             )}
                             {block52Balance && <div className="text-xs">Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}</div>}
                         </div>
-
+                        
                         <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
                             <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigate("/deposit")} />
                         </div>
-                        {/* <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
-                            <CiCalendar color="#f0f0f0" size={25} />
-                        </div>
-                        <div className="ml-2 flex items-center justify-center w-10 h-10 bg-gray-500 rounded-full">
-                            <BiBorderAll color="#f0f0f0" size={25} />
-                        </div> */}
                     </div>
                 </div>
 
