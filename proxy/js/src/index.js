@@ -5,9 +5,10 @@ const ethers = require("ethers");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const dotenv = require("dotenv");
+const connectDB = require("./db");
+const Transaction = require("./models/transaction");
 
 // Clients
-// const { Mocks, Block52 } = require("./clients/index");
 const Mocks = require("./clients/mocks");
 const Block52 = require("./clients/block52");
 
@@ -47,7 +48,7 @@ const swaggerDocs = swaggerJSDoc(swaggerOptions);
 
 const getUnixTime = () => {
     return Math.floor(Date.now() / 1000);
-}
+};
 
 app.get("/", (req, res) => {
     res.send("Hello World!");
@@ -69,7 +70,7 @@ const getClient = () => {
     }
 
     throw new Error("Client type not found");
-}
+};
 
 // Routes
 app.get("/account/:id", async (req, res) => {
@@ -176,27 +177,45 @@ app.post("/join", (req, res) => {
     res.send(response);
 });
 
-app.post("/deposit", (req, res) => {
-    const index = 1;
-    const wallet = ethers.Wallet.fromPhrase(process.env.SEED, `m/44'/60'/0'/0/${index}`);
-    const address = wallet.address;
+app.post("/deposit", async (req, res) => {
+    const recipient = req.body.recipient;
+    connectDB();
+
+    // Create a new transaction
+    const newTransaction = new Transaction({
+        address: "0x123...",
+        amount: 1.5
+        // timestamp will be set automatically
+    });
+
+    // Save to database
+    await newTransaction.save();
 
     const response = {
         index,
-        address,
+        address
     };
+
     res.send(response);
 });
 
-app.put("/deposit/:id", (req, res) => {
+app.put("/deposit/:id", async (req, res) => {
     // get erc20 balance abi
-    const erc20Abi = [
-        "function balanceOf(address owner) view returns (uint256)",
-    ];
+    const erc20Abi = ["function balanceOf(address owner) view returns (uint256)"];
 
     const usdcAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
     const provider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL);
     const contract = new ethers.Contract(usdcAddress, erc20Abi, provider);
+
+    const balance = await contract.balanceOf(req.params.id);
+    const response = {
+        id: 1,
+        balance: ethers.utils.formatUnits(balance.toString(), 6)
+    };
+
+    const transaction = await Transaction.findById(req.params.id);
+
+    res.send(response);
 });
 
 // // Deposit to the layer 2
