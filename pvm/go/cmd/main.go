@@ -1,46 +1,30 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gofiber/fiber/v2"
+    "fmt"
+    "log"
+    "github.com/bitcoinbrisbane/poker-vm/pkg/node"
 )
 
-type RPCRequest struct {
-	ID     string        `json:"id"`
-	Method string        `json:"method"`
-	Params []interface{} `json:"params"`
-}
-
-type RPCResponse struct {
-	ID     string      `json:"id"`
-	Result interface{} `json:"result"`
-	Error  interface{} `json:"error"`
-}
-
 func main() {
-	fmt.Println("Hello, World!")
+    // Example URL - replace with your actual URL
+    const bootnodesURL = "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json"
+    
+    nodes, err := node.FetchBootnodes(bootnodesURL)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	app := fiber.New()
+    results := node.GetBlocks(nodes)
+    for _, result := range results {
+        if result.Error != nil {
+            fmt.Printf("Error from node %s: %v\n", result.Node.Name, result.Error)
+            continue
+        }
 
-	app.Get("/", func(c *fiber.Ctx) error {
-
-		response := RPCResponse{
-			ID:     "1",
-			Result: "Hello, World!",
-			Error:  nil,
-		}
-
-		return c.Status(200).JSON(response)
-	})
-
-	// app.Post("/rpc", func(c *fiber.Ctx) error {
-	// 	var req RPCRequest
-	// 	if err := c.BodyParser(&req); err != nil {
-	// 		return err
-	// 	}
-
-	// 	fmt.Println(req)
-	// })
-
-	app.Listen(":3000")
+        fmt.Printf("Node %s returned %d blocks\n", result.Node.Name, len(result.Blocks))
+        for _, block := range result.Blocks {
+            fmt.Printf("Block #%d: %s\n", block.Index, block.Hash)
+        }
+    }
 }

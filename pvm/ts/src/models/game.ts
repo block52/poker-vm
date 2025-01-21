@@ -106,6 +106,7 @@ export class TexasHoldemGameState implements IJSONModel {
         address: string,
         sb: number,
         bb: number,
+        dealer: number,
         players_: PlayerState[],
         communityCards_: Card[],
         pot: number,
@@ -120,7 +121,6 @@ export class TexasHoldemGameState implements IJSONModel {
 
         const smallBlind = ethers.parseUnits(sb.toString(), 18).toString();
         const bigBlind = ethers.parseUnits(bb.toString(), 18).toString();
-        const dealer = 0;
         const pots = [ethers.parseUnits(pot.toString(), 18).toString()];
 
         console.log("TexasHoldemGameState", { address, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash });
@@ -129,6 +129,10 @@ export class TexasHoldemGameState implements IJSONModel {
     }
 
     public toJson(): TexasHoldemGameStateDTO { return this._dto; }
+
+    public static fromJson(json: any): TexasHoldemGameState {
+        return new TexasHoldemGameState(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, [], [], 0, 0, TexasHoldemRound.PREFLOP);
+    }
 }
 
 export class TexasHoldemState implements IJSONModel {

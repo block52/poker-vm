@@ -12,6 +12,7 @@ import { IUniswapV3, ISwapRouter } from "./Uniswap/Interfaces.sol";
 contract Vault is IValidator, IERC1363Receiver {
     using ECDSA for bytes32;
 
+    mapping(uint256 => address) private _validators;
     mapping(address => uint256) private _balances;
     mapping(address => uint256) private _lockTimes;
 
@@ -51,6 +52,10 @@ contract Vault is IValidator, IERC1363Receiver {
         return _validatorCount;
     }
 
+    function getValidatorAddress(uint256 index) external view returns (address) {
+
+    }
+
     function name() external view returns (string memory) {
         string memory _name = IERC20Metadata(_underlying).symbol();
         return string.concat(_name, " Vault");
@@ -73,9 +78,12 @@ contract Vault is IValidator, IERC1363Receiver {
         token.transferFrom(msg.sender, address(this), amount);
 
         _lockTimes[msg.sender] = block.timestamp + _lockTime;
+        
         if (_isValidator(msg.sender) == false && _balances[msg.sender] + amount >= _minValidatorStake) {
+            _validators[_validatorCount] = msg.sender;
             _validatorCount++;
         }
+
         _balances[msg.sender] += amount;
 
         emit Staked(msg.sender, amount);

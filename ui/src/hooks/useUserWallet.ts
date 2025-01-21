@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Wallet } from "ethers";
+import { Wallet, ethers } from "ethers";
 import axios from "axios";
+import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 
-interface UseUserWalletResult {
+interface UserWalletResult {
+    b52: NodeRpcClient | null;
     account: string | null;
     balance: string | null;
     privateKey: string | null;
@@ -10,14 +12,16 @@ interface UseUserWalletResult {
     error: Error | null;
 }
 
-const STORAGE_KEY = "user_eth_private_key";
+export const STORAGE_PRIVATE_KEY = "user_eth_private_key";
+export const STORAGE_PUBLIC_KEY = "user_eth_public_key";
 
-const useUserWallet = (): UseUserWalletResult => {
+const useUserWallet = (): UserWalletResult => {
     const [account, setAccount] = useState<string | null>(null);
     const [balance, setBalance] = useState<string | null>(null);
     const [privateKey, setPrivateKey] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const [client, setClient] = useState<NodeRpcClient | null>(null);
 
     const fetchBalance = async () => {
         if (!account) return;
@@ -44,14 +48,19 @@ const useUserWallet = (): UseUserWalletResult => {
     useEffect(() => {
         const initializeWallet = async () => {
             try {
-                // Try to get existing private key from storage
-                let key = localStorage.getItem(STORAGE_KEY);
+                // Try to get existing private key and public key from storage
+                let key = localStorage.getItem(STORAGE_PRIVATE_KEY);
+                let pubKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
 
-                // If no existing key, generate a new one
-                if (!key) {
+                // If no existing private key, generate a new one
+                if (!key || !pubKey) {
                     const wallet = Wallet.createRandom();
                     key = wallet.privateKey;
-                    localStorage.setItem(STORAGE_KEY, key);
+                    pubKey = wallet.address;
+
+                    // Save keys in localStorage
+                    localStorage.setItem(STORAGE_PRIVATE_KEY, key);
+                    localStorage.setItem(STORAGE_PUBLIC_KEY, pubKey);
                 }
 
                 // Create wallet instance from private key
@@ -71,15 +80,23 @@ const useUserWallet = (): UseUserWalletResult => {
 
         initializeWallet();
         fetchBalance();
-
     }, [account]);
+
+    useEffect(() => {
+        if (privateKey) {
+            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const client = new NodeRpcClient(url, privateKey);
+            setClient(client);
+        }
+    }, [privateKey]);
 
     return {
         account,
         balance,
         privateKey,
         isLoading,
-        error
+        error,
+        b52: client
     };
 };
 

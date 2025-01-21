@@ -17,6 +17,7 @@ export type RPCResponse<T> = {
 };
 
 export enum RPCMethods {
+    BLOCK = "block",
     BURN = "burn",
     CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
@@ -24,6 +25,7 @@ export enum RPCMethods {
     GET_BALANCE = "get_balance",
     GET_BLOCK = "get_block",
     GET_BLOCKS = "get_blocks",
+    GET_BLOCK_BY_HASH = "get_block_by_hash",
     GET_BLOCK_HEIGHT = "get_block_height",
     GET_CLIENT = "get_client",
     GET_CONTRACT_SCHEMA = "get_contract_schema",
@@ -42,6 +44,7 @@ export enum RPCMethods {
 }
 
 export type RPCRequestParams = {
+    [RPCMethods.BLOCK]: [string, string]; // [hash, block]
     [RPCMethods.BURN]: [string, string, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
@@ -49,6 +52,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_BALANCE]: [string]; // [address]
     [RPCMethods.GET_BLOCK]: [string]; // [index]
     [RPCMethods.GET_BLOCKS]: [string]; // [count]
+    [RPCMethods.GET_BLOCK_BY_HASH]: [string]; // [hash]
     [RPCMethods.GET_BLOCK_HEIGHT]: []; // No parameters
     [RPCMethods.GET_CLIENT]: []; // No parameters
     [RPCMethods.GET_CONTRACT_SCHEMA]: [string]; // [hash]
@@ -59,10 +63,9 @@ export type RPCRequestParams = {
     [RPCMethods.GET_GAME_STATE]: [string]; // [address]
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINT]: [string]; // [depositIndex]
-    [RPCMethods.MINED_BLOCK_HASH]: [string]; // [blockHash]
+    [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
     [RPCMethods.TRANSFER]: [string, string, string, string | null]; // [from, to, amount, data]
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
-    [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
 };

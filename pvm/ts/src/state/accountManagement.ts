@@ -2,9 +2,13 @@ import { Account } from "../models/account";
 import Accounts from "../schema/accounts";
 import { IAccountDocument } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
+import { CONTRACT_ADDRESSES } from "../core/constants";
+import { StateManager } from "./stateManager";
 
-export class AccountManagement {
-    constructor() {}
+export class AccountManagement extends StateManager {
+    constructor() {
+        super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
+    }
 
     async createAccount(privateKey: string): Promise<Account> {
         const account = Account.create(privateKey);
@@ -29,7 +33,8 @@ export class AccountManagement {
     }
 
     async _getAccount(address: string): Promise<IAccountDocument | null> {
-        return Accounts.findOne({ address });
+        await this.connect();
+        return await Accounts.findOne({ address });
     }
 
     // Helper functions
@@ -39,12 +44,59 @@ export class AccountManagement {
         return account.balance;
     }
 
-    async incrementBalance(address: string, balance: bigint): Promise<void> {
-        await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+    async incrementBalance(address: string, amount: bigint): Promise<void> {
+        if (amount < 0n) {
+            // throw new Error("Balance must be positive");
+            console.log("Balance must be positive");
+            return;
+        }
+
+        // Not sure why this is necessary?  Maybe burn?
+        if (address !== CONTRACT_ADDRESSES.bridgeAddress) {
+            await this.connect();
+
+            const account = await Accounts.findOne({ address });
+            if (!account) {
+                await Accounts.create({ address, balance: amount.toString(), nonce: 0 });
+            } else {
+                let balance = BigInt(account.balance);
+                if (balance + amount < 0n) {
+                    // throw new Error("Insufficient funds");
+                    console.log("Insufficient funds");
+                    return;
+                }
+
+                balance += amount;
+                await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+            }
+        }
     }
 
-    async decrementBalance(address: string, balance: bigint): Promise<void> {
-        await Accounts.updateOne({ address }, { $inc: { balance: (-balance).toString() } });
+    async decrementBalance(address: string, amount: bigint): Promise<void> {
+        if (amount < 0n) {
+            // throw new Error("Balance must be positive");
+            console.log("Balance must be positive");
+            return;
+        }
+
+        if (address !== CONTRACT_ADDRESSES.bridgeAddress) {
+            await this.connect();
+            const account = await Accounts.findOne({ address });
+            if (!account) {
+                // throw new Error("Account not found");
+                console.log("Account not found");
+                return;
+            }
+
+            const balance = BigInt(account.balance);
+            if (balance - amount < 0n) {
+                // throw new Error("Insufficient funds");
+                console.log("Insufficient funds");
+                return;
+            }
+
+            await Accounts.updateOne({ address }, { $inc: { balance: (-amount).toString() } });
+        }
     }
 
     async applyTransaction(tx: Transaction) {
@@ -66,4 +118,11 @@ export class AccountManagement {
     }
 }
 
-export default AccountManagement;
+// export default AccountManagement;
+let instance: AccountManagement;
+export const getAccountManagementInstance = (): AccountManagement => {
+  if (!instance) {
+    instance = new AccountManagement();
+  }
+  return instance;
+}

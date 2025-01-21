@@ -1,97 +1,121 @@
 import { Block, Transaction } from "../models/index";
 import Blocks from "../schema/blocks";
 import { StateManager } from "./stateManager";
-
 import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
-import { TransactionList } from "../models/transactionList";
 import { BlockList } from "../models/blockList";
-import AccountManagement from "./accountManagement";
+import { AccountManagement } from "./accountManagement";
+import { TransactionManagement } from "./transactionManagement";
 
 export class BlockchainManagement extends StateManager {
-  constructor() {
-    super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
-  }
-
-  public async addBlock(block: Block): Promise<void> {
-    await this.connect();
-    // Update the account balances
-    const accountManagement = new AccountManagement();
-    await accountManagement.applyTransactions(block.transactions);
-
-    const newBlock = new Blocks(block.toDocument());
-    await newBlock.save();
-  }
-
-  public getGenesisBlock(): Block {
-    return Block.fromJson(GenesisBlock);
-  }
-
-  public async getBlockHeight(): Promise<number> {
-    await this.connect();
-    const lastBlock: IBlockDocument | null = await Blocks.findOne().sort({ index: -1 });
-    if (!lastBlock) {
-      return 0;
+    constructor() {
+        super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
-    return lastBlock.index;
-  }
 
-  public async getLastBlock(): Promise<Block> {
-    await this.connect();
+    public async addBlock(block: Block): Promise<void> {
+        await this.connect();
 
-    const lastBlock: IBlockDocument | null = await Blocks.findOne().sort({ index: -1 });
-    if (!lastBlock) {
-      return this.getGenesisBlock();
+        // Check to see if the block already exists
+        const existingBlock = await Blocks.findOne({ hash: block.hash });
+        if (existingBlock) {
+            console.log(`Block already exists: ${block.hash}`);
+            return;
+        }
+
+        // todo add block hash to each transaction
+        // // Validate transactions
+        const transactionManagement = new TransactionManagement();
+        await transactionManagement.addTransactions(block.transactions);
+
+        // // Write to DB in parallel
+        // await Promise.all([
+        //     this.blockchainManagement.addBlock(block),
+        //     this.transactionManagement.addTransactions(uniqueTxs),
+        // ]);
+
+        // Update the account balances
+        if (block.transactions) {
+            const accountManagement = new AccountManagement();
+            await accountManagement.applyTransactions(block.transactions);
+        }
+
+        // Save the block document to the database
+        const newBlock = new Blocks(block.toDocument());
+        await newBlock.save();
+
+        // if (block.transactions) {
+
+        //   // // add block hash to each transaction
+        //   // block.transactions.forEach(tx => {
+        //   //   tx.blockHash = block.hash;
+        //   // });
+
+        //   // Save transactions
+        //   const transactionManagement = new TransactionManagement();
+        //   await transactionManagement.addTransactions(block.transactions);
+        // }
     }
-    return Block.fromDocument(lastBlock);
-  }
 
-  public async getBlockByHash(hash: string): Promise<Block> {
-    await this.connect();
-    const block = await Blocks.findOne({ hash });
-    if (!block) {
-      throw new Error("Block not found");
+    public getGenesisBlock(): Block {
+        return Block.fromJson(GenesisBlock);
     }
-    return Block.fromDocument(block);
-  }
 
-  public async getBlock(index: number): Promise<Block> {
-    await this.connect();
-    const block = await Blocks.findOne({ index });
-    if (!block) {
-      throw new Error("Block not found");
+    public async getBlockHeight(): Promise<number> {
+        await this.connect();
+        const lastBlock: IBlockDocument | null = await Blocks.findOne().sort({ index: -1 });
+        if (!lastBlock) {
+            return 0;
+        }
+        return lastBlock.index;
     }
-    return Block.fromDocument(block);
-  }
 
-  public async getBlocks(count?: number): Promise<BlockList> {
-    await this.connect();
-    const blocks = await Blocks.find({})
-      .sort({ timestamp: -1 })
-      .limit(count ?? 20);
+    public async getLastBlock(): Promise<Block> {
+        await this.connect();
 
-    return new BlockList(blocks.map(block => Block.fromDocument(block)));
-  }
+        const lastBlock: IBlockDocument | null = await Blocks.findOne().sort({ index: -1 });
+        if (!lastBlock) {
+            return this.getGenesisBlock();
+        }
+        return Block.fromDocument(lastBlock);
+    }
 
-  public async getTransactions(count?: number): Promise<TransactionList> {
-    await this.connect();
-    const blocks = await Blocks.find({}, { transactions: 1 })
-      .sort({ timestamp: -1 })
-      .limit(count ?? 100);
+    public async getBlockByHash(hash: string): Promise<Block> {
+        await this.connect();
+        const block = await Blocks.findOne({ hash });
+        if (!block) {
+            throw new Error("Block not found");
+        }
+        return Block.fromDocument(block);
+    }
 
-    const transactions: Transaction[] = blocks
-      .flatMap(block => block.transactions || [])
-      .map(tx => Transaction.fromDocument(tx));
+    public async getBlock(index: number): Promise<Block> {
+        await this.connect();
+        const block = await Blocks.findOne({ index });
+        if (!block) {
+            throw new Error("Block not found");
+        }
+        return Block.fromDocument(block);
+    }
 
-    return new TransactionList(transactions);
-  }
+    public async getBlocks(count?: number): Promise<BlockList> {
+        await this.connect();
+        const blocks = await Blocks.find({})
+            .sort({ timestamp: -1 })
+            .limit(count ?? 20);
+
+        return new BlockList(blocks.map(block => Block.fromDocument(block)));
+    }
+
+    public async reset(): Promise<void> {
+        await this.connect();
+        await Blocks.deleteMany({});
+    }
 }
-
 
 let instance: BlockchainManagement;
 export const getBlockchainInstance = (): BlockchainManagement => {
-  if (!instance) {
-    instance = new BlockchainManagement();
-  }
-  return instance;
-}
+    if (!instance) {
+        instance = new BlockchainManagement();
+    }
+    return instance;
+};

@@ -5,6 +5,8 @@ import accounts from "../schema/accounts";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { RandomCommand } from "./randomCommand";
+import { createProvider } from "../core/provider";
+import { CONTRACT_ADDRESSES } from "../core/constants";
 
 export class BurnCommand implements ISignedCommand<BurnResponse> {
     private readonly randomCommand: RandomCommand;
@@ -18,6 +20,7 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         if (!burnFrom) {
             throw new Error("Private key to burn from must be provided");
         }
+
         try {
             this.burnFromWallet = new ethers.Wallet(burnFrom);
         } catch {
@@ -42,14 +45,16 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         this.randomCommand = new RandomCommand(32, "", this.privateKey);
         this.signer = new ethers.Wallet(privateKey);
 
-        const bridgeAbi = ["function deposits(uint256) view returns (tuple(address account, uint256 amount))", "function underlying() view returns (address)"];
+        const bridgeAbi = ["function deposits(uint256) view returns (address account, uint256 amount)", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
 
-        const baseRPCUrl = process.env.RPC_URL;
-        this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
-            staticNetwork: true
-        });
-        this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
+        // const baseRPCUrl = process.env.RPC_URL;
+        // this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
+        //     staticNetwork: true
+        // });
+
+        this.provider = createProvider(process.env.RPC_URL ?? "http://localhost:8545");
+        this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }
 
     public async execute(): Promise<ISignedResponse<BurnResponse>> {
@@ -80,7 +85,7 @@ export class BurnCommand implements ISignedCommand<BurnResponse> {
         const signature = await this.signer.signMessage(ethers.getBytes(hash));
         console.log(`Signed hash: ${signature}`);
 
-        const burnTx: Transaction = Transaction.create(ethers.ZeroAddress, this.burnFromWallet.address, this.amount, this.privateKey);
+        const burnTx: Transaction = await Transaction.create(ethers.ZeroAddress, this.burnFromWallet.address, this.amount, 0n, this.privateKey, nonce.data.toString("hex"));
 
         // Send to mempool
         const mempoolInstance = getMempoolInstance();

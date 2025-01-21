@@ -1,5 +1,4 @@
 import { IJSONModel } from "../models/interfaces";
-import { TransactionDTO } from "@bitcoinbrisbane/block52";
 
 // Temporary types to be replaced with the actual types from the PVM
 export type NodeResponse = {
@@ -8,19 +7,21 @@ export type NodeResponse = {
 };
 
 export class Node implements IJSONModel {
-    client: string;
-    publicKey: string;
-    url: string;
-    version: string;
-    isValidator: boolean;
-    name: string;
+    public client: string;
+    public publicKey: string;
+    public url: string;
+    public version: string;
+    public isValidator: boolean;
+    public readonly name: string;
+    public height: number = 0;
 
-    constructor(client: string, publicKey: string, url: string, version: string, isValidator: boolean, name?: string) {
+    constructor(client: string, publicKey: string, url: string, version: string, isValidator: boolean, height: number, name?: string) {
         this.client = client;
         this.publicKey = publicKey;
         this.url = url;
         this.version = version;
         this.isValidator = isValidator;
+        this.height = height;
         this.name = name || url;
     }
 
@@ -31,7 +32,8 @@ export class Node implements IJSONModel {
             url: this.url,
             version: this.version,
             isValidator: this.isValidator,
-            name: this.name
+            name: this.name,
+            height: this.height,
         };
     }
 };
@@ -43,17 +45,5 @@ export type NodeDTO = {
     version: string;
     isValidator: boolean;
     name: string;
+    height: number;
 };
-
-// export type BlockDTO = {
-//     index: number;
-//     version: string;
-//     hash: string;
-//     merkleRoot: string;
-//     previousHash: string;
-//     timestamp: number;
-//     validator: string;
-//     signature: string;
-//     transactions: TransactionDTO[];
-// };
-

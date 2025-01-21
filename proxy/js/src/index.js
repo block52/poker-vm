@@ -1,3 +1,4 @@
+const { BigUnit } = require("bigunit");
 const express = require("express");
 const cors = require("cors");
 const ethers = require("ethers");
@@ -78,10 +79,8 @@ app.get("/account/:id", async (req, res) => {
     // const balance = ethers.formatUnits(account.balance.toString());
 
     const response = {
-        index: req.params.id,
+        nonce: 0,
         address: account.address,
-        privateKey: account.privateKey,
-        path: account.path,
         balance: account.balance.toString()
     };
 
@@ -117,31 +116,18 @@ app.get("/games", (req, res) => {
     const id1 = ethers.ZeroAddress;
     const id2 = ethers.ZeroAddress;
 
-    const min = "50.00"; // ethers.utils.parseEther("50");
-    const max = "200.00"; //ethers.utils.parseEther("200");
+    const min = BigUnit.from("0.01", 18).toString();
+    const max = BigUnit.from("1", 18).toString();
 
     const response = [
-        { id: id1, type: "No Limit Texas Holdem", max_players: 9, min, max },
-        { id: id2, type: "No Limit Texas Holdem", max_players: 6, min, max }
+        { id: id1, variant: "Texas Holdem", type: "Cash", limit: "No Limit", max_players: 9, min, max },
+        { id: id2, variant: "Texas Holdem", type: "Cash", limit: "No Limit", max_players: 6, min, max }
     ];
 
     res.send(response);
 });
 
 app.get("/tables", async (req, res) => {
-    // const id1 = ethers.ZeroAddress;
-    // const id2 = ethers.ZeroAddress;
-
-    // const min = ethers.parseEther("50");
-    // const max = ethers.parseEther("200");
-
-    // const response = [
-    //     { id: id1, type: "No Limit Texas Holdem", max_players: 9, min: min.toString(), max: max.toString(), bb: 1, sb: "0.50" },
-    //     { id: id2, type: "No Limit Texas Holdem", max_players: 6, min: min.toString(), max: max.toString(), bb: 2, sb: "1.00" }
-    // ];
-
-    // res.send(response);
-
     const client = getClient();
     const table = await client.getTables();
 
@@ -157,13 +143,13 @@ app.get("/table/:id", async (req, res) => {
     res.send(table);
 });
 
-app.get("/table/:id/player/:player", (req, res) => {
+app.get("/table/:id/player/:seat", (req, res) => {
     const client = getClient();
     const id = req.params.id;
-    const playerId = req.params.player;
-    const player = client.getPlayer(id, player);
+    const seat = req.params.seat;
+    const player = client.getPlayer(id, seat);
 
-    res.send(response);
+    res.send(player);
 });
 
 app.post("/table/:id", (req, res) => {
@@ -178,6 +164,8 @@ app.post("/table/:id", (req, res) => {
         res.status(400).send("Nonce required");
         return;
     }
+
+    const client = getClient();
 });
 
 app.post("/join", (req, res) => {
@@ -188,34 +176,57 @@ app.post("/join", (req, res) => {
     res.send(response);
 });
 
-// Deposit to the layer 2
 app.post("/deposit", (req, res) => {
-    const signature = req.body?.signature;
-    if (!signature) {
-        res.status(400).send("Signature required");
-        return;
-    }
-
-    const nonce = req.body?.nonce;
-    if (!nonce) {
-        res.status(400).send("Nonce required");
-        return;
-    }
-
-    const txId = req.body?.txId;
-    if (!txId) {
-        res.status(400).send("Transaction ID required");
-        return;
-    }
+    const index = 1;
+    const wallet = ethers.Wallet.fromPhrase(process.env.SEED, `m/44'/60'/0'/0/${index}`);
+    const address = wallet.address;
 
     const response = {
-        id: 1,
-        balance: ethers.utils.formatEther(req.body.balance),
-        tx: ethers.ZeroHash
+        index,
+        address,
     };
-
     res.send(response);
 });
+
+app.put("/deposit/:id", (req, res) => {
+    // get erc20 balance abi
+    const erc20Abi = [
+        "function balanceOf(address owner) view returns (uint256)",
+    ];
+
+    const usdcAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+    const provider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL);
+    const contract = new ethers.Contract(usdcAddress, erc20Abi, provider);
+});
+
+// // Deposit to the layer 2
+// app.post("/deposit", (req, res) => {
+//     const signature = req.body?.signature;
+//     if (!signature) {
+//         res.status(400).send("Signature required");
+//         return;
+//     }
+
+//     const nonce = req.body?.nonce;
+//     if (!nonce) {
+//         res.status(400).send("Nonce required");
+//         return;
+//     }
+
+//     const txId = req.body?.txId;
+//     if (!txId) {
+//         res.status(400).send("Transaction ID required");
+//         return;
+//     }
+
+//     const response = {
+//         id: 1,
+//         balance: ethers.utils.formatEther(req.body.balance),
+//         tx: ethers.ZeroHash
+//     };
+
+//     res.send(response);
+// });
 
 app.post("/transfer", (req, res) => {
     const response = {

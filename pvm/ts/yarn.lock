@@ -296,10 +296,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitcoinbrisbane/block52@1.0.30":
-  version "1.0.30"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.30.tgz#4c1e847e92da1339ee3ba36567636d35871536b6"
-  integrity sha512-jIZRJrt1VXZ5fHkxven8dc4o9uVIpml0a45o+tdD8rAF/yZjyRFs4fmfkKGSRygCELVJjwLtQHVosLFakNbS5w==
+"@bitcoinbrisbane/block52@1.0.38":
+  version "1.0.38"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.38.tgz#426fc5657857b50aa6bc6feca2e9b87dbbf059fe"
+  integrity sha512-Y1IDXfe9DexTI5gib7snb9BccEQ22zCfnZaRt6ROJ2aZ+HlfHYiMaai05lxRSQzQZXtgyIaeXhwhjiy3QYL/mQ==
   dependencies:
     axios "^1.7.9"
     bigunit "^1.2.5"
@@ -2358,10 +2358,10 @@ mongodb@~6.12.0:
     bson "^6.10.1"
     mongodb-connection-string-url "^3.0.0"
 
-mongoose@^8.9.0:
-  version "8.9.0"
-  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-8.9.0.tgz#d98c7d7e899dd5d3a1db020d340306b02db44049"
-  integrity sha512-b58zY3PLNBcoz6ZXFckr0leJcVVBMAOBvD+7Bj2ZjghAwntXmNnqwlDixTKQU3UYoQIGTv+AQx/0ThsvaeVrCA==
+mongoose@^8.9.5:
+  version "8.9.5"
+  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-8.9.5.tgz#90a2d70b48a66022a61d7a170ab4fad106b83cba"
+  integrity sha512-SPhOrgBm0nKV3b+IIHGqpUTOmgVL5Z3OO9AwkFEmvOZznXTvplbomstCnPOGAyungtRXE5pJTgKpKcZTdjeESg==
   dependencies:
     bson "^6.10.1"
     kareem "2.6.3"

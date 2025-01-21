@@ -3,10 +3,10 @@ import { ContractSchema } from "../../models/contractSchema";
 import contractSchemas from "../../schema/contractSchemas";
 import { signResult } from "../abstractSignedCommand";
 
-export class GetContractSchemaCommand implements ISignedCommand<ContractSchema | null> {
+export class GetContractSchemaCommand implements ISignedCommand<ContractSchema> {
     constructor(private readonly hash: string, private readonly privateKey: string) { }
 
-    public async execute(): Promise<ISignedResponse<ContractSchema | null>> {
+    public async execute(): Promise<ISignedResponse<ContractSchema>> {
         const existingContractSchema = await contractSchemas.findOne({ hash: this.hash });
 
         if (!existingContractSchema) {

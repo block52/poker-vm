@@ -1,11 +1,7 @@
-export type TransactionDTO = {
-    to: string;
-    from: string;
-    value: string;
-    signature: string;
-    timestamp: string;
-    hash: string;
-    index?: string;
+export type AccountDTO = {
+    address: string;
+    balance: string;
+    nonce: number;
 };
 
 export type BlockDTO = {
@@ -20,10 +16,16 @@ export type BlockDTO = {
     transactions: TransactionDTO[];
 };
 
-export type AccountDTO = {
-    address: string;
-    balance: string;
-    nonce: number;
+export type TransactionDTO = {
+    to: string;
+    from: string;
+    value: string;
+    hash: string;
+    signature: string;
+    timestamp: string;
+    index?: string;
+    nonce?: string;
+    data? : string;
 };
 
 export type BurnResponseDTO = {

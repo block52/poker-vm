@@ -4,7 +4,6 @@ import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
 import { Wallet } from "ethers";
-import crypto from "crypto";
 
 /**
  * NodeRpcClient class for interacting with a remote node via RPC
@@ -27,6 +26,10 @@ export class NodeRpcClient {
         return this.requestId.toString();
     }
 
+    /**
+     * Get the address of the account
+     * @returns The address of the account
+     */
     private getAddress(): string {
         if (!this.wallet) {
             throw new Error("Cannot get address without a private key");
@@ -85,7 +88,8 @@ export class NodeRpcClient {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_LAST_BLOCK,
-            params: []
+            params: [],
+            data: undefined
         });
         // Convert the received BlockDTO to a Block instance
         return body.result.data;
@@ -100,7 +104,8 @@ export class NodeRpcClient {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO[]> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_BLOCKS,
-            params: [count ?? 100]
+            params: [count ?? 100],
+            data: undefined
         });
         return body.result.data;
     }
@@ -120,6 +125,20 @@ export class NodeRpcClient {
     }
 
     /**
+     * Get a block from the remote node
+     * @param index The index of the block to get
+     * @returns A Promise resolving to a of Block object
+     */
+    public async getBlockByHash(hash: string): Promise<BlockDTO> {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<BlockDTO> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.GET_BLOCK,
+            params: [hash]
+        });
+        return body.result.data;
+    }
+
+    /**
      * Get the block height from the remote node
      * @returns A Promise resolving to the block height
      */
@@ -133,15 +152,30 @@ export class NodeRpcClient {
     }
 
     /**
-     * Send a block hash to the remote node
+     * Send a block to the remote node
      * @param blockHash The hash of the block to send
+     * @param block The block to send
      * @returns A Promise that resolves when the request is complete
      */
-    public async sendBlockHash(blockHash: string): Promise<void> {
+    public async sendBlock(blockHash: string, block: string): Promise<void> {
+        await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.BLOCK,
+            params: [blockHash, block]
+        });
+    }
+
+    /**
+     * Send a block hash to the remote node
+     * @param blockHash The hash of the block to send
+     * @param nodeUrl The URL of the node to send the block from
+     * @returns A Promise that resolves when the request is complete
+     */
+    public async sendBlockHash(blockHash: string, nodeUrl: string): Promise<void> {
         await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.MINED_BLOCK_HASH,
-            params: [blockHash]
+            params: [blockHash, nodeUrl]
         });
     }
 
@@ -191,6 +225,11 @@ export class NodeRpcClient {
         });
     }
 
+    /**
+     * Get the state of a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @returns A Promise that resolves to a TexasHoldemState object
+        */
     public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),

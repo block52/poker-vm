@@ -7,7 +7,7 @@
     "cli": "npx ts-node index.ts"
   },
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.1",
-    "inquirer": "^12.1.0"
+    "@bitcoinbrisbane/block52": "1.0.30",
+    "inquirer": "^12.3.0"
   }
 }

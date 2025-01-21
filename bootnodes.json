@@ -2,5 +2,9 @@
     {
         "url": "https://node1.block52.xyz",
         "publicKey": "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846"
+    },
+    {
+        "url": "http://3.145.79.225:3000",
+        "publicKey": "0xeE3A5673dE06Fa3Efd2fA2B6F46B5f75C0AcEb8D"
     }
 ]

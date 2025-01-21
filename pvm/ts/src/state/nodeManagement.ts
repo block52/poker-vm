@@ -6,7 +6,7 @@ export async function getBootNodes(ownNodeUrl?: string, dev: boolean = false): P
     let url = "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes.json";
 
     if (dev) {
-        url = "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/dev/bootnodes-dev.json";
+        url = "https://raw.githubusercontent.com/block52/poker-vm/refs/heads/main/bootnodes-dev.json";
     }
 
     const response = await axios.get(url);

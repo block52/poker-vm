@@ -11,7 +11,7 @@ export class MeCommand implements ISignedCommand<Node> {
     }
 
     public async execute(): Promise<ISignedResponse<Node>> {
-        const node = this.server.me();
+        const node = await this.server.me();
         return signResult(node, this.privateKey);
     }
 }

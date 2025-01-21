@@ -1,18 +1,23 @@
 import { ethers, JsonRpcProvider, Contract, InterfaceAbi, ZeroAddress } from "ethers";
-import { getMempoolInstance } from "../core/mempool";
+import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models/transaction";
-// import Blocks from "../schema/transactions";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { NativeToken } from "../models/nativeToken";
+import { createProvider } from "../core/provider";
+import { CONTRACT_ADDRESSES } from "../core/constants";
+import { TransactionManagement, getTransactionInstance } from "../state/transactionManagement";
 
 export class MintCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
     private readonly provider: JsonRpcProvider;
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
+    private readonly index: bigint;
+    private readonly transactionManagement: TransactionManagement;
+    private readonly mempool: Mempool;
 
-    constructor(readonly depositIndex: string, private readonly privateKey: string) {
+    constructor(readonly depositIndex: string, readonly hash: string, private readonly privateKey: string) {
         if (!depositIndex) {
             throw new Error("Deposit index must be provided");
         }
@@ -22,18 +27,23 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         this.depositIndex = depositIndex;
+        this.index = BigInt(depositIndex);
         const signer = new ethers.Wallet(privateKey);
         this.publicKey = signer.address;
 
-        const bridgeAbi = ["function deposits(uint256) view returns (tuple(address account, uint256 amount))", "function underlying() view returns (address)"];
+        const bridgeAbi = ["function deposits(uint256) view returns (address account, uint256 amount)", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
 
-        const baseRPCUrl = process.env.RPC_URL;
-        this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
-            staticNetwork: true
-        });
+        // const baseRPCUrl = process.env.RPC_URL;
+        // this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
+        //     staticNetwork: true
+        // });
+        
+        this.mempool = getMempoolInstance();
+        this.transactionManagement = getTransactionInstance();
 
-        this.bridge = new ethers.Contract(process.env.BRIDGE_CONTRACT_ADDRESS ?? ZeroAddress, bridgeAbi, this.provider);
+        this.provider = createProvider(process.env.RPC_URL ?? "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
+        this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -49,27 +59,38 @@ export class MintCommand implements ISignedCommand<Transaction> {
         //     return signResult(Transaction.fromDocument(existingTx), this.privateKey);
         // }
 
-        const [receiver, amount] = await this.bridge.deposits(this.depositIndex);
+        // TODO: Get txId from bridge contract event
+        // const data = this.hash;
+        const data = `MINT_${this.depositIndex}`;
+        const exists = await this.transactionManagement.getTransactionByData(data);
+        
+        if (exists) {
+            throw new Error("Transaction already in blockchain");
+        }
 
-        const underlyingAssetAddress = await this.bridge.underlying();
-        const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
-        const underlyingAssetDecimals = await underlyingAsset.decimals();
-
-        const amountToMint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-
-        if (receiver == ethers.ZeroAddress) {
+        const [receiver, amount] = await this.bridge.deposits(this.index);
+        if (receiver === ethers.ZeroAddress) {
             throw new Error("Receiver must not be zero address");
         }
 
         if (amount <= 0) {
-            throw new Error("Amount must be greater than 0");
+            throw new Error("Value must be greater than 0");
         }
 
-        const mintTx: Transaction = Transaction.create(receiver, this.publicKey, amountToMint, this.privateKey);
+        let underlyingAssetDecimals: bigint = 6n;
+
+        const useCached = true;
+        if (!useCached) {
+            const underlyingAssetAddress = await this.bridge.underlying();
+            const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
+            underlyingAssetDecimals = await underlyingAsset.decimals();
+        }
+
+        const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
+        const mintTx: Transaction = await Transaction.create(receiver, CONTRACT_ADDRESSES.bridgeAddress, value, this.index, this.privateKey, data);
 
         // Send to mempool
-        const mempoolInstance = getMempoolInstance();
-        await mempoolInstance.add(mintTx);
+        await this.mempool.add(mintTx);
         return signResult(mintTx, this.privateKey);
     }
 }

@@ -11,6 +11,12 @@ export interface ICryptoModel extends IModel {
     verify(): boolean;
 }
 
+export interface IAccountDocument {
+    address: string;
+    balance: number;
+    nonce: number;
+}
+
 export interface IBlockDocument {
     index: number;
     version: number;
@@ -20,24 +26,26 @@ export interface IBlockDocument {
     timestamp: number;
     validator: string;
     signature: string;
-    transactions?: any[];
+    // transactions?: any[];
     tx_count?: number;
 }
 
-export interface IAccountDocument {
+export interface IGameStateDocument {
     address: string;
-    balance: number;
-    nonce: number;
+    state: any;
 }
 
 export interface ITransactionDocument {
+    nonce?: string;
     to: string;
     from: string;
     value: string;
+    hash: string;
     signature: string;
     timestamp: string;
     index?: string;
-    hash: string;
+    data?: string;
+    block_hash?: string;
 }
 
 export interface IContractSchemaDocument {

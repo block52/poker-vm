@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Deposit from "./components/Deposit";
-import PlayPage from "./components/playPage/PlayPage";
+import Table from "./components/playPage/Table";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiProvider } from "wagmi";
 
@@ -11,6 +11,7 @@ import { includeWalletIds } from "./walletIds/includeWalletIds";
 import { featuredWalletIds } from "./walletIds/featuredWalletIds";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
+import useUserWallet from "./hooks/useUserWallet";
 
 const queryClient = new QueryClient();
 
@@ -33,13 +34,15 @@ createAppKit({
 })
 
 function App() {
+    const { account, balance, isLoading } = useUserWallet();
+    
     return (
         <WagmiProvider config={wagmiAdapter.wagmiConfig}>
             <QueryClientProvider client={queryClient}>
                 <Router>
                     <div className="bg-[#2c3245] min-h-screen">
                         <Routes>
-                            <Route path="/table/:id" element={<PlayPage />} />
+                            <Route path="/table/:id" element={<Table />} />
                             <Route path="/deposit" element={<Deposit />} />
                             <Route path="/" element={<Dashboard />} />
                         </Routes>
