@@ -9,6 +9,7 @@ import { CreateAccountCommand } from "./commands/createAccountCommand";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
 import { GameStateCommand } from "./commands/gameStateCommand";
 import { GetBlocksCommand } from "./commands/getBlocksCommand";
+import { GetAllContractSchemasCommand } from "./commands/contractSchema/getAllContractSchemasCommand";
 import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
 import { GetNodesCommand } from "./commands/getNodesCommand";
 import { GetTransactionsCommand } from "./commands/getTransactionsCommand";
@@ -92,124 +93,131 @@ export class RPC {
         let result: ISignedResponse<any>;
         const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
-        switch (method) {
-            case RPCMethods.GET_ACCOUNT: {
-                if (!request.params) {
-                    return makeErrorRPCResponse(id, "Invalid params");
-                }
-                let command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+        try {
+            switch (method) {
 
-            case RPCMethods.GET_BLOCK: {
-
-                const params: BlockCommandParams = {
-                    index: BigInt(0),
-                    hash: ""
-                }
-
-                let command = new BlockCommand(params, validatorPrivateKey);
-
-                if (request.params) {
-                    // Use regex to check if the index is a number
-                    const regex = new RegExp("^[0-9]+$");
-                    const [index] = request.params as RPCRequestParams[RPCMethods.GET_BLOCK];
-                    if (!regex.test(index)) {
+                case RPCMethods.GET_ACCOUNT: {
+                    if (!request.params) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-
-                    params.index = BigInt(index);
-                    command = new BlockCommand(params, validatorPrivateKey);
+                    let command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
                 }
 
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_BLOCK: {
 
-            case RPCMethods.GET_BLOCK_BY_HASH : {
-                const params: BlockCommandParams = {
-                    index: undefined,
-                    hash: request.params[0] as string
+                    const params: BlockCommandParams = {
+                        index: BigInt(0),
+                        hash: ""
+                    }
+
+                    let command = new BlockCommand(params, validatorPrivateKey);
+
+                    if (request.params) {
+                        // Use regex to check if the index is a number
+                        const regex = new RegExp("^[0-9]+$");
+                        const [index] = request.params as RPCRequestParams[RPCMethods.GET_BLOCK];
+                        if (!regex.test(index)) {
+                            return makeErrorRPCResponse(id, "Invalid params");
+                        }
+
+                        params.index = BigInt(index);
+                        command = new BlockCommand(params, validatorPrivateKey);
+                    }
+
+                    result = await command.execute();
+                    break;
                 }
 
-                const command = new BlockCommand(params, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_BLOCK_BY_HASH: {
+                    const params: BlockCommandParams = {
+                        index: undefined,
+                        hash: request.params[0] as string
+                    }
 
-            case RPCMethods.GET_BLOCK_HEIGHT: {
-                const params: BlockCommandParams = {
-                    index: undefined,
-                    hash: undefined
+                    const command = new BlockCommand(params, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
                 }
 
-                const command = new BlockCommand(params, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_BLOCK_HEIGHT: {
+                    const params: BlockCommandParams = {
+                        index: undefined,
+                        hash: undefined
+                    }
 
-            case RPCMethods.GET_CONTRACT_SCHEMA: {
-                const [hash] = request.params as RPCRequestParams[RPCMethods.GET_CONTRACT_SCHEMA];
-                const command = new GetContractSchemaCommand(hash, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
-
-            case RPCMethods.GET_LAST_BLOCK: {
-                const params: BlockCommandParams = {
-                    index: undefined,
-                    hash: undefined
+                    const command = new BlockCommand(params, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
                 }
-                const command = new BlockCommand(params, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
 
-            case RPCMethods.GET_CLIENT: {
-                const command = new MeCommand(validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_CONTRACT_SCHEMA: {
+                    // const [hash] = request.params as RPCRequestParams[RPCMethods.GET_CONTRACT_SCHEMA];
+                    // const command = new GetContractSchemaCommand(hash, validatorPrivateKey);
+                    const command = new GetAllContractSchemasCommand(10, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
 
-            case RPCMethods.GET_NODES: {
-                const server = getServerInstance();
-                const nodes: Map<string, Node> = server.nodes;
-                const command = new GetNodesCommand(nodes, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_LAST_BLOCK: {
+                    const params: BlockCommandParams = {
+                        index: undefined,
+                        hash: undefined
+                    }
+                    const command = new BlockCommand(params, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
 
-            case RPCMethods.GET_MEMPOOL: {
-                const command = new MempoolCommand(validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_CLIENT: {
+                    const command = new MeCommand(validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
 
-            case RPCMethods.GET_TRANSACTIONS: {
-                const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
-                const blockHash = "";
-                const command = new GetTransactionsCommand(Number(count), blockHash, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_NODES: {
+                    const server = getServerInstance();
+                    const nodes: Map<string, Node> = server.nodes;
+                    const command = new GetNodesCommand(nodes, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
 
-            case RPCMethods.GET_BLOCKS: {
-                const [count] = request.params as RPCRequestParams[RPCMethods.GET_BLOCKS];
-                const command = new GetBlocksCommand(Number(count), validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_MEMPOOL: {
+                    const command = new MempoolCommand(validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
 
-            case RPCMethods.GET_GAME_STATE: {
-                const [address] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
-                const command = new GameStateCommand(address, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
+                case RPCMethods.GET_TRANSACTIONS: {
+                    const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
+                    const blockHash = "";
+                    const command = new GetTransactionsCommand(Number(count), blockHash, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
 
-            default:
-                return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
+                case RPCMethods.GET_BLOCKS: {
+                    const [count] = request.params as RPCRequestParams[RPCMethods.GET_BLOCKS];
+                    const command = new GetBlocksCommand(Number(count), validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.GET_GAME_STATE: {
+                    const [address] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
+                    const command = new GameStateCommand(address, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                default:
+                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
+            }
+        } catch (e) {
+            console.error(e);
+            return makeErrorRPCResponse(id, "Operation failed");
         }
 
         if (result === null) {
@@ -274,11 +282,13 @@ export class RPC {
                 // }
                 const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
 
+                // Todo: get from out of the signed request
                 const command = new TransferCommand(from, to, BigInt(amount), data, validatorPrivateKey);
                 result = await command.execute();
 
                 break;
             }
+
             case RPCMethods.CREATE_CONTRACT_SCHEMA: {
                 const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
                 const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);

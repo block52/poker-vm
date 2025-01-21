@@ -1,69 +1,184 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import { usePlayerContext } from "../context/usePlayerContext";
-import CheckboxList from "./playPage/common/CheckboxList";
-import { BigUnit } from "bigunit";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
+import useUserBySeat from "../hooks/useUserBySeat";
+import axios from "axios";
 
 const PokerActionPanel: React.FC = () => {
-    const { setPlayerAction, playerIndex, players, lastPot, pots } = usePlayerContext();
+    const { setPlayerAction, seat, totalPot, nextToAct, gamePlayers } = usePlayerContext();
+    const [publicKey, setPublicKey] = useState<string>();
     const [raiseAmount, setRaiseAmount] = useState(0);
+    const [isBetAction, setIsBetAction] = useState(false);
+    const [isCallAction, setIsCallAction] = useState(false);
+    const [isCheckAction, setIsCheckAction] = useState(false);
+    const [isRaiseAction, setIsRaiseAction] = useState(false);
+    const [balance, setBalance] = useState(0);
+    const { data } = useUserBySeat(publicKey || "", seat);
 
-    // const balance = BigUnit.from(players[0]?.stack, 18).toNumber();
-    // const pot = BigUnit.from(pots[0], 18).toNumber();
+    // Get current player's possible actions
+    const currentPlayerActions = gamePlayers?.find(p => p.seat === nextToAct)?.actions || [];
 
-    const balance = 1000;
-    const pot = 1000;
-    
+    // Check if each action is available
+    const canFold = currentPlayerActions.some(a => a.action === "fold");
+    const canCall = currentPlayerActions.some(a => a.action === "call");
+    const canRaise = currentPlayerActions.some(a => a.action === "raise");
+    const canCheck = currentPlayerActions.some(a => a.action === "check");
+    const canBet = currentPlayerActions.some(a => a.action === "bet");
+
+    // Get min/max for raise if available
+    const raiseAction = currentPlayerActions.find(a => a.action === "raise");
+    const minRaise = raiseAction?.min;
+    const maxRaise = raiseAction?.max;
+
     useEffect(() => {
-        setRaiseAmount(lastPot - pot + 1);
-    }, [lastPot]);
+        if (data) {
+            setBalance(data.stack);
+
+            for (const item of data.actions) {
+                if (item.action === PlayerActionType.BET) {
+                    setIsBetAction(true);
+                }
+                if (item.action === PlayerActionType.CHECK) {
+                    setIsCheckAction(true);
+                }
+                if (item.action === PlayerActionType.CALL) {
+                    setIsCallAction(true);
+                }
+                if (item.action === PlayerActionType.RAISE) {
+                    setIsRaiseAction(true);
+                }
+            }
+        }
+    }, [publicKey, seat]);
+
+    useEffect(() => {
+        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
+        if (!localKey) return setPublicKey(undefined);
+
+        setPublicKey(localKey);
+    }, [publicKey]);
 
     const handleRaiseChange = (newAmount: number) => {
-        setRaiseAmount(newAmount);
+        setRaiseAmount(newAmount);  
     };
 
-    const onFold = () => {
-        setPlayerAction("fold");
+    // Action handlers with TODOs for API integration
+    const handleFold = () => {
+        console.log("Player folded");
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.FOLD,
+        //    seat: seat,
+        //    amount: null
+        // }
+        setPlayerAction(PlayerActionType.FOLD);
     };
 
-    const onCheck = () => {
-        setPlayerAction("check");
+    const handleCall = () => {
+        const callAmount = currentPlayerActions.find(a => a.action === "call")?.min;
+        console.log("Player called", callAmount);
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.CALL,
+        //    seat: seat,
+        //    amount: callAmount
+        // }
+        setPlayerAction(PlayerActionType.CALL);
     };
 
-    const onRaise = () => {
-        setPlayerAction("raise", raiseAmount);
+    const handleRaise = () => {
+        console.log("Player raised to", raiseAmount);
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.RAISE,
+        //    seat: seat,
+        //    amount: raiseAmount
+        // }
+        setPlayerAction(PlayerActionType.RAISE, raiseAmount);
     };
+
+    const handleCheck = () => {
+        console.log("Player checked");
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.CHECK,
+        //    seat: seat,
+        //    amount: null
+        // }
+        setPlayerAction(PlayerActionType.CHECK);
+    };
+
+    const handleBet = () => {
+        console.log("Player bet");
+        // TODO: Call API endpoint /table/:id/action with:
+        // {
+        //    action: PlayerActionType.BET,
+        //    seat: seat,
+        //    amount: raiseAmount
+        // }
+        setPlayerAction(PlayerActionType.BET);
+    };
+
+    if(!data) {
+        return <></>
+    }
 
     return (
         <div className="flex justify-center rounded-lg h-full text-white z-[0]">
             {/* Action Buttons */}
-            <div className="left-0 absolute">
+            {/* <div className="left-0 absolute">
                 <CheckboxList />
-            </div>
+            </div> */}
             {/* <ChipPurchase /> */}
             <div className="flex flex-col w-[600px] space-y-6 mb-2 justify-center rounded-lg">
                 <div className="flex justify-between gap-2">
-                    <button
-                        disabled={playerIndex !== 0}
-                        className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={onFold}
-                    >
-                        FOLD
-                    </button>
-                    <button
-                        disabled={playerIndex !== 0}
-                        className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={onCheck}
-                    >
-                        CHECK
-                    </button>
-                    <button
-                        disabled={playerIndex !== 0}
-                        className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={onRaise}
-                    >
-                        {raiseAmount === balance ? "All-IN" : `RAISE ${raiseAmount}`}
-                    </button>
+                    {canFold && (
+                        <button
+                            disabled={seat != nextToAct}
+                            className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                            onClick={handleFold}
+                        >
+                            FOLD
+                        </button>
+                    )}
+                    {canCheck && (
+                        <button
+                            disabled={seat != nextToAct}
+                            className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                            onClick={handleCheck}
+                        >
+                            CHECK
+                        </button>
+                    )}
+                    {canCall && (
+                        <button
+                            disabled={seat != nextToAct}
+                            className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                            onClick={handleCall}
+                        >
+                            CALL {currentPlayerActions.find(a => a.action === "call")?.min}
+                        </button>
+                    )}
+                    {canRaise && (
+                        <button
+                            disabled={seat != nextToAct}
+                            className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                            onClick={handleRaise}
+                        >
+                            RAISE {raiseAmount}
+                        </button>
+                    )}
+                    {canBet && (
+                        <button
+                            disabled={seat != nextToAct}
+                            className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                            onClick={handleBet}
+                        >
+                            BET
+                        </button>
+                    )}
                 </div>
 
                 {/* Slider and Controls */}
@@ -71,6 +186,7 @@ const PokerActionPanel: React.FC = () => {
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg  border-[1px] border-gray-400"
                         onClick={() => handleRaiseChange(Math.max(raiseAmount - 1, 0))}
+                        disabled={seat != nextToAct}
                     >
                         -
                     </button>
@@ -81,10 +197,12 @@ const PokerActionPanel: React.FC = () => {
                         value={raiseAmount}
                         onChange={e => handleRaiseChange(Number(e.target.value))}
                         className="flex-1"
+                        disabled={seat != nextToAct}
                     />
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg  border-[1px] border-gray-400"
                         onClick={() => handleRaiseChange(raiseAmount + 1)}
+                        disabled={seat != nextToAct}
                     >
                         +
                     </button>
@@ -94,31 +212,36 @@ const PokerActionPanel: React.FC = () => {
                 <div className="flex justify-between gap-2">
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount(balance / 4)}
+                        onClick={() => setRaiseAmount(totalPot / 4)}
+                        disabled={seat != nextToAct}
                     >
                         1 / 4 Pot
                     </button>
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount(balance / 2)}
+                        onClick={() => setRaiseAmount(totalPot / 2)}
+                        disabled={seat != nextToAct}
                     >
                         1 / 2 Pot
                     </button>
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount((balance / 4) * 3)}
+                        onClick={() => setRaiseAmount((totalPot / 4) * 3)}
+                        disabled={seat != nextToAct}
                     >
                         3 / 4 Pot
                     </button>
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount(lastPot + 1)}
+                        onClick={() => setRaiseAmount(totalPot)}
+                        disabled={seat != nextToAct}
                     >
                         Pot
                     </button>
                     <button
                         className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount(balance)}
+                        onClick={() => setRaiseAmount(+balance)}
+                        disabled={seat != nextToAct}
                     >
                         ALL-IN
                     </button>

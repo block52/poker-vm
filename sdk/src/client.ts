@@ -4,7 +4,6 @@ import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
 import { Wallet } from "ethers";
-import crypto from "crypto";
 
 /**
  * NodeRpcClient class for interacting with a remote node via RPC
@@ -226,6 +225,11 @@ export class NodeRpcClient {
         });
     }
 
+    /**
+     * Get the state of a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @returns A Promise that resolves to a TexasHoldemState object
+        */
     public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),

@@ -82,7 +82,7 @@ export class Deck implements IJSONModel {
             case 13:
                 mnemonic += "K";
                 break;
-            case 14:
+            case 1:
                 mnemonic += "A";
                 break;
             default:

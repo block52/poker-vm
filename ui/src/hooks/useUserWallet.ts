@@ -3,7 +3,7 @@ import { Wallet, ethers } from "ethers";
 import axios from "axios";
 import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 
-interface UseUserWalletResult {
+interface UserWalletResult {
     b52: NodeRpcClient | null;
     account: string | null;
     balance: string | null;
@@ -15,7 +15,7 @@ interface UseUserWalletResult {
 export const STORAGE_PRIVATE_KEY = "user_eth_private_key";
 export const STORAGE_PUBLIC_KEY = "user_eth_public_key";
 
-const useUserWallet = (): UseUserWalletResult => {
+const useUserWallet = (): UserWalletResult => {
     const [account, setAccount] = useState<string | null>(null);
     const [balance, setBalance] = useState<string | null>(null);
     const [privateKey, setPrivateKey] = useState<string | null>(null);
@@ -53,7 +53,7 @@ const useUserWallet = (): UseUserWalletResult => {
                 let pubKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
 
                 // If no existing private key, generate a new one
-                if (!key) {
+                if (!key || !pubKey) {
                     const wallet = Wallet.createRandom();
                     key = wallet.privateKey;
                     pubKey = wallet.address;

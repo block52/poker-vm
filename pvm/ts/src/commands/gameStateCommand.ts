@@ -6,15 +6,12 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 export class GameStateCommand implements ISignedCommand<TexasHoldemState> {
     private readonly gameManagement: GameManagement;
 
-    constructor(
-        readonly address: string,
-        private readonly privateKey: string
-    ) {
+    constructor(readonly address: string, private readonly privateKey: string) {
         this.gameManagement = new GameManagement();
     }
 
     public async execute(): Promise<ISignedResponse<TexasHoldemState>> {
-        const game = this.gameManagement.get(this.address);
-        return signResult(game?.state ?? new TexasHoldemState(), this.privateKey);
+        const state: TexasHoldemState = await this.gameManagement.get(this.address);
+        return signResult(state, this.privateKey);
     }
 }

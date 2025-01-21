@@ -19,7 +19,7 @@ const Deposit: React.FC = () => {
     const BRIDGE_ADDRESS = CONTRACT_ADDRESSES.bridgeAddress;
 
     const { open, disconnect, isConnected, address } = useUserWalletConnect();
-    const { submit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();
+    const { deposit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();
     const { isApprovePending, isApproveConfirmed, isLoading, approve, approveError } = useApprove();
     const [publicKey, setPublicKey] = useState<string>();
     const [amount, setAmount] = useState<string>("0");
@@ -29,6 +29,10 @@ const Deposit: React.FC = () => {
     const [tmpDepositAmount, setTmpDepositAmount] = useState<bigint>(BigInt(0));
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
+
+    // console.log("allowance: ", allowance);
+    // console.log("balance: ", balance);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -48,7 +52,7 @@ const Deposit: React.FC = () => {
         if (isDepositConfirmed) {
             toast.success(`You have deposited ${amount}USDC to address(${BRIDGE_ADDRESS}) successfully`, { autoClose: 5000 });
             setAmount("0");
-            setWalletAllowance(walletAllowance - tmpDepositAmount)
+            setWalletAllowance(walletAllowance - tmpDepositAmount);
         }
     }, [isDepositConfirmed]);
 
@@ -56,7 +60,7 @@ const Deposit: React.FC = () => {
         if (isApproveConfirmed) {
             toast.success(`You have approved ${amount}USDC successfully`, { autoClose: 5000 });
             setAmount("0");
-            setWalletAllowance(tmpWalletAllowance)
+            setWalletAllowance(tmpWalletAllowance);
         }
     }, [isApproveConfirmed]);
 
@@ -83,7 +87,7 @@ const Deposit: React.FC = () => {
             console.error("Missing required information");
             return;
         }
-    
+
         try {
             const amountInInteger = BigUnit.from(+amount, decimals);
             const tx = await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInInteger.toBigInt());
@@ -92,17 +96,17 @@ const Deposit: React.FC = () => {
             console.error("Approval failed:", err);
         }
     };
-    
+
     const handleDeposit = async () => {
         if (allowed) {
             try {
                 console.log("Initiating deposit...");
                 if (publicKey) {
-                    await submit(BigUnit.from(+amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
+                    console.log(`isPending:  `, isDepositPending);
+                    await deposit(BigUnit.from(+amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
                     setTmpDepositAmount(BigUnit.from(+amount, decimals).toBigInt()); // Fixed incorrect function call
+                    console.log("Deposit successful");
                 }
-                console.log(`isPending:  `, isDepositPending);
-                console.log("Deposit successful");
             } catch (err) {
                 console.error("Deposit failed:", err);
             }
@@ -110,7 +114,6 @@ const Deposit: React.FC = () => {
             console.error("Insufficient allowance. Please approve more USDC.");
         }
     };
-    
 
     const handleGoBack = () => {
         navigate("/");
@@ -128,7 +131,7 @@ const Deposit: React.FC = () => {
                 onClick={handleGoBack}
             >
                 <i className="bi bi-arrow-left"></i>
-                Go Back
+                Lobby
             </button>
             <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-lg">
                 <h2 className="text-2xl font-semibold text-center mb-4">Deposit USDC</h2>
@@ -136,10 +139,14 @@ const Deposit: React.FC = () => {
                     className={`w-full p-3 ${isConnected ? "bg-red-500" : "bg-blue-500"} text-white rounded-lg mb-4`}
                     onClick={isConnected ? disconnect : open}
                 >
-                    {isConnected ? "Disconnect" : "Connect"}
+                    {isConnected ? "Disconnect" : "Connect Your Web3 Wallet"}
                 </button>
                 {address && <h4 className="border-b border-gray-600 text-blue-400 mb-2 break-words">Address: {address}</h4>}
-                {balance && <h4 className="border-b border-gray-600 text-blue-400 mb-4">Balance: {BigUnit.from(BigInt(balance), decimals).toString()}USDC</h4>}
+                {balance && (
+                    <h4 className="border-b border-gray-600 text-blue-400 mb-4">
+                        Balance: ${Number(BigUnit.from(BigInt(balance), decimals).toString()).toFixed(2)} USDC
+                    </h4>
+                )}
 
                 <div className="mb-4 relative">
                     <label htmlFor="amount" className="block text-sm font-medium text-gray-300">

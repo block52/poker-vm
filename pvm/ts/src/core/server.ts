@@ -13,7 +13,7 @@ import { Bridge } from "./bridge";
 export class Server {
     public readonly contractAddress: string;
     public readonly publicKey: string;
-    private readonly isValidator: boolean;
+    private isValidator: boolean;
     private _started: boolean = false;
     private _syncing: boolean = false;
     private _synced: boolean = false;
@@ -79,6 +79,13 @@ export class Server {
         await this.syncDeposits();
         await this.syncMempool();
 
+        const validatorInstance = getValidatorInstance();
+        this.isValidator = await validatorInstance.isValidator(this.publicKey);
+
+        // if (args.includes("--mine")) {
+        //     mine = true;
+        // }
+
         console.log("Polling...");
         const intervalId = setInterval(async () => {
             if (!this._started) {
@@ -100,6 +107,10 @@ export class Server {
     }
 
     public async mine() {
+        if (!this.isValidator) {
+            return;
+        }
+
         const validatorInstance = getValidatorInstance();
         const validatorAddress = await validatorInstance.getNextValidatorAddress();
 

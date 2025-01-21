@@ -136,6 +136,7 @@ export class Block implements IJSONModel {
 
     public toJson(): BlockDTO {
 
+        // TODO: roll back to this
         const transactions = this.transactions.map(tx => tx.toJson());
 
         return {

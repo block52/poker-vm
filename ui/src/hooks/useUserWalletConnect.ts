@@ -1,14 +1,14 @@
 import { useAppKit, useAppKitAccount, useDisconnect } from "@reown/appkit/react";
 import { useEffect, useMemo, useState } from "react";
 
-interface UseUsreWalletConnectResult {
+interface UseUserWalletConnectResult {
     open: () => void;
     disconnect: () => void;
     isConnected: boolean | null;
     address: string | undefined;
 }
 
-const useUserWalletConnect = (): UseUsreWalletConnectResult => {
+const useUserWalletConnect = (): UseUserWalletConnectResult => {
     const { open } = useAppKit()
     const { disconnect } = useDisconnect()
     const { address, isConnected } = useAppKitAccount()

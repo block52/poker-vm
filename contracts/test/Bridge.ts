@@ -1,8 +1,8 @@
-import { time, loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import hre, { ethers } from "hardhat";
 
-describe.only("Bridge", () => {
+describe("Bridge", () => {
     // USDC and Uniswap router addresses on mainnet
     const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
     const UNISWAP_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
@@ -69,7 +69,7 @@ describe.only("Bridge", () => {
         });
     });
 
-    describe.only("Direct USDC Deposits", () => {
+    describe("Direct USDC Deposits", () => {
         it("Should allow direct USDC deposits", async () => {
             const { bridge, otherAccount } = await loadFixture(fixture);
             const amount = ethers.parseUnits("100", 6);

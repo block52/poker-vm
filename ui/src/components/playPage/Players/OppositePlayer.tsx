@@ -5,6 +5,8 @@ import { usePlayerContext } from "../../../context/usePlayerContext";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import PlayerCard from "./PlayerCard";
 import { BigUnit } from "bigunit";
+import { STORAGE_PUBLIC_KEY } from "../../../hooks/useUserWallet";
+import useUserBySeat from "../../../hooks/useUserBySeat";
 
 type OppositePlayerProps = {
     left?: string; // Front side image source
@@ -20,19 +22,35 @@ type OppositePlayerProps = {
 
 const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
     const { players } = usePlayerContext();
+    const [publicKey, setPublicKey] = React.useState<string>();
+    
+    
+    React.useEffect(() => {
+        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
+        if (!localKey) return setPublicKey(undefined);
+        
+        setPublicKey(localKey);
+    }, []);
+    
+    const { data } = useUserBySeat(publicKey || "", index);
+
+    if(!data) {
+        return <></>
+    }
+
     return (
         <>
             <div
                 key={index}
                 className={`${
-                    players[index].status && players[index].status === PlayerStatus.FOLDED ? "opacity-60" : ""
+                    data.status && data.status === PlayerStatus.FOLDED ? "opacity-60" : ""
                 }  absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[10]`}
                 style={{
                     left: left,
                     top: top,
                     transition: "top 1s ease, left 1s ease"
                 }}
-                onClick={() => setCardVisible(index)}
+                // onClick={() => setCardVisible(index)}
             >
                 <div className="flex justify-center gap-1">
                     <img src={`/cards/Back.svg`} alt="Opposite Player Card" className="w-[35%] h-[auto]" />
@@ -45,17 +63,17 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                     >
                         {/* <p className="text-white font-bold text-sm mt-auto mb-1.5 self-center">+100</p> */}
                         <ProgressBar index={index} />
-                        {players[index].status && players[index].status === PlayerStatus.FOLDED && (
+                        {data.status && data.status === PlayerStatus.FOLDED && (
                             <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">FOLD</span>
                         )}
-                        {players[index].status && players[index].status === PlayerStatus.ALL_IN && (
+                        {data.status && data.status === PlayerStatus.ALL_IN && (
                             <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
                                 ALL IN
                             </span>
                         )}
                     </div>
                     <div className="absolute top-[0%] w-full">
-                        <Badge count={index + 1} value={BigUnit.from(players[index]?.stack, 18).toNumber()} color={color} />
+                        <Badge count={index + 1} value={BigUnit.from(data?.stack, 18).toNumber()} color={color} />
                     </div>
                 </div>
             </div>
