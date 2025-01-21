@@ -32,13 +32,14 @@ class TexasHoldemGame implements IPoker {
     private _actions: BaseAction[];
     private _minPlayers: number = 2;
 
-    constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _buttonPosition: number = 0) {
+    constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _dealer: number = 0) {
         this._players = [];
         this._currentRound = TexasHoldemRound.ANTE;
         this._currentPlayer = 0;
         this._bigBlindPosition = 0;
         this._smallBlindPosition = 0;
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
+        this._dealer = _dealer;
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
@@ -79,8 +80,8 @@ class TexasHoldemGame implements IPoker {
     get smallBlindPosition() {
         return this._smallBlindPosition;
     }
-    get buttonPosition() {
-        return this._buttonPosition;
+    get dealerPosition() {
+        return this._dealer;
     }
     get currentPlayerId() {
         return this._players[this._currentPlayer].id;

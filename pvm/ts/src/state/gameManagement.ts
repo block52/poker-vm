@@ -1,7 +1,10 @@
 import TexasHoldemGame from "../engine/texasHoldem";
 import { StateManager } from "./stateManager";
 import GameState from "../schema/gameState";
-import { TexasHoldemGameState } from "../models/game";
+import { PlayerState, TexasHoldemGameState } from "../models/game";
+import { ethers } from "ethers";
+import { Card } from "../models/deck";
+import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 
 export class GameManagement extends StateManager {
     // private static _game: Map<string, TexasHoldemGame> = new Map<string, TexasHoldemGame>();
@@ -26,6 +29,24 @@ export class GameManagement extends StateManager {
 
     async get(address: string): Promise<TexasHoldemGameState> {
         //  return GameManagement._game.get(address);
+
+        const players: PlayerState[] = [];
+        const communityCards: Card[] = [];
+        
+        if (address === ethers.ZeroAddress) {
+            const texasHoldemGameState = new TexasHoldemGameState(
+                ethers.ZeroAddress,
+                0.10, // small blind
+                0.20, // big blind
+                0, // dealer
+                players,
+                communityCards,
+                0, // pot
+                0, // current bet
+                TexasHoldemRound.ANTE,
+                undefined
+            );
+        }
 
         const gameState = await GameState.findOne({
             address

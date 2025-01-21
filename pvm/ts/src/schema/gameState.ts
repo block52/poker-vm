@@ -1,4 +1,4 @@
-import { Document, model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 import { IGameStateDocument } from "../models/interfaces";
 
 const gameStateSchema = new Schema<IGameStateDocument>({
@@ -7,7 +7,7 @@ const gameStateSchema = new Schema<IGameStateDocument>({
         required: true
     },
     state: {
-        type: Document,
+        type: Object,
         required: true
     }
 }, {
