@@ -15,14 +15,14 @@ const PokerLog: React.FC = () => {
             player: "Player 2",
             description: "wins main pot (1,600) with (Two pair, nines and fives).",
             winnings: "1,600",
-            cards: ["9D", "5D", "1D", "JS", "9S"]
+            cards: ["9D", "5D", "AD", "JS", "9S"]
         },
         {
             id: "4720731369",
             player: "Player 6",
             description: "wins main pot (1,210) with (Two pair, kings and threes).",
             winnings: "1,210",
-            cards: ["KS", "KC", "1C", "3S", "QH"]
+            cards: ["KS", "KC", "AC", "3S", "QH"]
         }
     ];
 

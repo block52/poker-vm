@@ -19,6 +19,7 @@ export interface PlayerContextType {
     gamePlayers: PlayerDTO[];
     nextToAct: number;
     playerSeats: number[];
+    communityCards: string[];
     // updatePlayer: (index: number, updatedPlayer: Player) => void;
     // setPlayerBalance: (index: number, balance: number) => void;
     // setPlayerPot: (index: number, balance: number) => void;

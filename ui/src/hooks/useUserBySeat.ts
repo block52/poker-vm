@@ -27,7 +27,7 @@ const useUserBySeat = (address: string, seat: number): UseUserSeatResult => {
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            console.log(response.data)
+            // console.log(response.data)
             setUserData(response.data);
         } catch (err) {
             setError(err instanceof Error ? err : new Error("An error occurred"));

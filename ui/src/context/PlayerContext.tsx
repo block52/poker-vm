@@ -46,6 +46,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [totalPot, setTotalPot] = useState<number>(0);
     const [gamePlayers, setGamePlayers] = useState<any>();
     const [smallBlind, setSmallBlind] = useState<string>("0");
+    const [communityCards, setCommunityCards] = useState<string[]>([]);
     const [bigBlind, setBigBlind] = useState<string>("0");
     const [tableType, setTableType] = useState<string>("");
     const [roundType, setRoundType] = useState<string>("");
@@ -84,6 +85,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setBigBlind(toDollarFromString(response.data.bigBlind));
             setTableType(response.data.type);
             setRoundType(response.data.round);
+            setCommunityCards(response.data.communityCards)
             setPlayerSeats(getPlayerSeats(response.data.players));
             let tmpTotalPot = 0; // Initialize tmpTotalPot with a value
 
@@ -262,6 +264,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             tableType,
             roundType,
             bigBlind,
+            communityCards,
             gamePlayers,
             playerIndex,
             dealerIndex,
@@ -271,7 +274,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setPlayerAction: () => {}
         }),
         // [players, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, fold, raise, check, setPlayerAction]
-        [players, pots, seat, playerSeats, tableType, roundType, smallBlind, bigBlind, totalPot, nextToAct, tableSize, playerIndex, gamePlayers, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, setPlayerAction]
+        [players, communityCards, pots, seat, playerSeats, tableType, roundType, smallBlind, bigBlind, totalPot, nextToAct, tableSize, playerIndex, gamePlayers, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, setPlayerAction]
     );
 
     return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>;

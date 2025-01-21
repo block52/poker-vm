@@ -50,7 +50,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                     top: top,
                     transition: "top 1s ease, left 1s ease"
                 }}
-                onClick={() => setCardVisible(index)}
+                // onClick={() => setCardVisible(index)}
             >
                 <div className="flex justify-center gap-1">
                     <img src={`/cards/Back.svg`} alt="Opposite Player Card" className="w-[35%] h-[auto]" />
