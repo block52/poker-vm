@@ -12,6 +12,7 @@ import { featuredWalletIds } from "./walletIds/featuredWalletIds";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import useUserWallet from "./hooks/useUserWallet";
+import QRDeposit from './components/QRDeposit';
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ function App() {
                             <Route path="/table/:id" element={<Table />} />
                             <Route path="/deposit" element={<Deposit />} />
                             <Route path="/" element={<Dashboard />} />
+                            <Route path="/qr-deposit" element={<QRDeposit />} />
                         </Routes>
                     </div>
                 </Router>
