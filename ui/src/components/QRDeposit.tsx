@@ -4,13 +4,14 @@ import { ethers } from 'ethers';
 import axios from 'axios';
 
 const DEPOSIT_ADDRESS = '0xBf1e380f3D1AE31854764081C488EaDA9F4CB195';
-const ETHERSCAN_API_KEY = 'YOUR_ETHERSCAN_API_KEY'; // You'll need to get this from Etherscan
+const ETHERSCAN_API_KEY = '6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2'; // You'll need to get this from Etherscan
 
 const QRDeposit: React.FC = () => {
     const [latestTransaction, setLatestTransaction] = useState<any>(null);
     const [expiryTime] = useState<number>(3 * 60 * 60); // 3 hours in seconds
     const [timeLeft, setTimeLeft] = useState<number>(expiryTime);
     const [copied, setCopied] = useState<boolean>(false);
+    const [isQuerying, setIsQuerying] = useState<boolean>(false);
 
     // Function to copy text to clipboard
     const copyToClipboard = async (text: string) => {
@@ -34,6 +35,7 @@ const QRDeposit: React.FC = () => {
     // Check for new transactions
     useEffect(() => {
         const fetchTransactions = async () => {
+            setIsQuerying(true); // Show query indicator
             try {
                 const response = await axios.get(
                     `https://api.etherscan.io/api?module=account&action=txlist&address=${DEPOSIT_ADDRESS}&startblock=0&endblock=99999999&sort=desc&apikey=${ETHERSCAN_API_KEY}`
@@ -44,12 +46,15 @@ const QRDeposit: React.FC = () => {
                 }
             } catch (error) {
                 console.error('Error fetching transactions:', error);
+            } finally {
+                setIsQuerying(false); // Hide query indicator after 1 second
+                setTimeout(() => setIsQuerying(false), 1000);
             }
         };
 
-        // Fetch initially and then every 30 seconds
+        // Fetch initially and then every 15 seconds (increased frequency)
         fetchTransactions();
-        const interval = setInterval(fetchTransactions, 30000);
+        const interval = setInterval(fetchTransactions, 15000);
 
         return () => clearInterval(interval);
     }, []);
@@ -111,7 +116,12 @@ const QRDeposit: React.FC = () => {
                     {/* Latest Transaction */}
                     {latestTransaction && (
                         <div className="mt-6">
-                            <h3 className="text-lg font-semibold mb-2">Latest Transaction</h3>
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-lg font-semibold">Latest Transaction</h3>
+                                <span className={`text-xs ${isQuerying ? 'text-green-400' : 'text-gray-400'}`}>
+                                    {isQuerying ? '🔄 Checking for new transactions...' : 'Last checked just now'}
+                                </span>
+                            </div>
                             <div className="bg-gray-700 p-3 rounded text-sm">
                                 <p>Hash: {latestTransaction.hash.slice(0, 10)}...{latestTransaction.hash.slice(-8)}</p>
                                 <p>Amount: {ethers.formatEther(latestTransaction.value)} ETH</p>
