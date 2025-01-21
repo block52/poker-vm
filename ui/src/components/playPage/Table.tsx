@@ -69,6 +69,8 @@ const Table = () => {
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
 
+    const { totalPot, seat, smallBlind, bigBlind, tableType, roundType, playerSeats, pots, communityCards } = usePlayerContext();
+
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
@@ -86,9 +88,15 @@ const Table = () => {
     const { account, balance, isLoading } = useUserWallet();
     const { type } = useTableType(id);
 
+
+
+    const [wagmiStore, setWagmiStore] = useState<any>(null);
+    const [block52Balance, setBlock52Balance] = useState<string>("");
+
     // Replace the wagmiStore state with direct wagmi hooks
     const { address, connector } = useAccount();
     const [block52Balance, setBlock52Balance] = useState<string>('');
+
 
     // const reorderPlayerPositions = (startIndex: number) => {
     //     // Separate out the color and position data
@@ -194,13 +202,26 @@ const Table = () => {
     };
 
     useEffect(() => {
+
+        // Get wagmi store data
+        const wagmiData = localStorage.getItem("wagmi.store");
+        if (wagmiData) {
+            const parsedData = JSON.parse(wagmiData);
+            setWagmiStore(parsedData);
+
+            // Get MetaMask account address from wagmiStore
+            const metamaskAddress = parsedData.state.connections.value[0][1].accounts[0];
+
+
+
         if (address) {
             axios.get(`https://proxy.block52.xyz/account/${address}`)
+
                 .then(response => {
                     setBlock52Balance(response.data.balance);
-                    console.log('Block52 Account Data:', response.data);
+                    console.log("Block52 Account Data:", response.data);
                 })
-                .catch(error => console.error('Error fetching Block52 balance:', error));
+                .catch(error => console.error("Error fetching Block52 balance:", error));
         }
     }, [address]);
 
@@ -227,7 +248,7 @@ const Table = () => {
     // });
 
     // Detailed game state logging
-    console.log('Current Game State:', {
+    console.log("Current Game State:", {
         // Round info
         round: context.roundType,
         totalPot: context.totalPot,
@@ -263,7 +284,7 @@ const Table = () => {
 
     // Add null check before logging
     if (!context || !context.gamePlayers) {
-        console.log('Context or gamePlayers not ready yet');
+        console.log("Context or gamePlayers not ready yet");
         return null; // or return a loading state
     }
 
@@ -284,25 +305,33 @@ const Table = () => {
 
                     {/* Middle Section - Add Wallet Info */}
                     <div className="flex flex-col items-center text-white text-sm">
+
+                        <div>Table Wallet: {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Not Connected"}</div>
                         <div>
                             Table Wallet: {address || 'Not Connected'}
                         </div>
+
                     </div>
 
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
+
+                            <span>{isLoading ? "Loading..." : ""}</span>
+                            {wagmiStore && (
+                                <div className="text-xs">
+                                    Connected: {wagmiStore.state.connections.value[0][1].connector.name}(
+                                    {wagmiStore.state.connections.value[0][1].accounts[0].slice(0, 6)}...
+                                    {wagmiStore.state.connections.value[0][1].accounts[0].slice(-4)})
+
                             <span>{isLoading ? 'Loading...' : ''}</span>
                             {address && connector && (
                                 <div className="text-xs">
                                     Connected: {connector.name || 'Unknown'} ({address})
+
                                 </div>
                             )}
-                            {block52Balance && (
-                                <div className="text-xs">
-                                    Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}
-                                </div>
-                            )}
+                            {block52Balance && <div className="text-xs">Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}</div>}
                         </div>
                         
                         <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
@@ -360,32 +389,48 @@ const Table = () => {
                                                 <span className="text-[#dbd3d3] mr-2">Main Pot: 50</span>
                                             </div>
                                             <div className="flex gap-2 mt-8">
-                                                {showThreeCards && (
-                                                    <>
-                                                        <div className="card animate-fall delay-200">
-                                                            <OppositePlayerCards frontSrc={`/cards/6D.svg`} backSrc="/cards/Back.svg" flipped={flipped1} />
-                                                        </div>
-                                                        <div className="card animate-fall delay-400">
-                                                            <OppositePlayerCards frontSrc={`/cards/JA.svg`} backSrc="/cards/Back.svg" flipped={flipped2} />
-                                                        </div>
-                                                        <div className="card animate-fall delay-600">
-                                                            <OppositePlayerCards frontSrc={`/cards/QB.svg`} backSrc="/cards/Back.svg" flipped={flipped3} />
-                                                        </div>
-                                                        {openOneMore ? (
-                                                            <div className="card animate-fall delay-600">
-                                                                <OppositePlayerCards frontSrc={`/cards/6B.svg`} backSrc="/cards/Back.svg" flipped={flipped3} />
-                                                            </div>
-                                                        ) : (
-                                                            <div className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"></div>
-                                                        )}
-                                                        {openTwoMore ? (
-                                                            <div className="card animate-fall delay-600">
-                                                                <OppositePlayerCards frontSrc={`/cards/8A.svg`} backSrc="/cards/Back.svg" flipped={flipped3} />
-                                                            </div>
-                                                        ) : (
-                                                            <div className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"></div>
-                                                        )}
-                                                    </>
+                                                <div className="card animate-fall delay-200">
+                                                    <OppositePlayerCards
+                                                        frontSrc={`/cards/${communityCards[0]}.svg`}
+                                                        backSrc="/cards/Back.svg"
+                                                        flipped={flipped1}
+                                                    />
+                                                </div>
+                                                <div className="card animate-fall delay-400">
+                                                    <OppositePlayerCards
+                                                        frontSrc={`/cards/${communityCards[1]}.svg`}
+                                                        backSrc="/cards/Back.svg"
+                                                        flipped={flipped2}
+                                                    />
+                                                </div>
+                                                <div className="card animate-fall delay-600">
+                                                    <OppositePlayerCards
+                                                        frontSrc={`/cards/${communityCards[2]}.svg`}
+                                                        backSrc="/cards/Back.svg"
+                                                        flipped={flipped3}
+                                                    />
+                                                </div>
+                                                {openOneMore ? (
+                                                    <div className="card animate-fall delay-600">
+                                                        <OppositePlayerCards
+                                                            frontSrc={`/cards/${communityCards[3]}.svg`}
+                                                            backSrc="/cards/Back.svg"
+                                                            flipped={flipped3}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"></div>
+                                                )}
+                                                {openTwoMore ? (
+                                                    <div className="card animate-fall delay-600">
+                                                        <OppositePlayerCards
+                                                            frontSrc={`/cards/${communityCards[4]}.svg`}
+                                                            backSrc="/cards/Back.svg"
+                                                            flipped={flipped3}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"></div>
                                                 )}
                                             </div>
                                             {/*//! CHIP */}
@@ -463,8 +508,9 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
-                        }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
+                        openSidebar ? "w-[300px]" : "w-0"
+                    }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
