@@ -13,6 +13,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { CONTRACT_ADDRESSES } from "../constants";
+import axios from 'axios';
+import { ethers } from 'ethers';
 
 const Deposit: React.FC = () => {
     const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
@@ -29,6 +31,7 @@ const Deposit: React.FC = () => {
     const [tmpDepositAmount, setTmpDepositAmount] = useState<bigint>(BigInt(0));
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
+    const [block52Balance, setBlock52Balance] = useState<string>('0');
 
     // console.log("allowance: ", allowance);
     // console.log("balance: ", balance);
@@ -75,6 +78,17 @@ const Deposit: React.FC = () => {
             toast.error(`Failed to approve`, { autoClose: 5000 });
         }
     }, [approveError]);
+
+    useEffect(() => {
+        if (address) {
+            axios.get(`https://proxy.block52.xyz/account/${address}`)
+                .then(response => {
+                    setBlock52Balance(response.data.balance);
+                    console.log("Block52 Account Data:", response.data);
+                })
+                .catch(error => console.error("Error fetching Block52 balance:", error));
+        }
+    }, [address]);
 
     const allowed = React.useMemo(() => {
         if (!walletAllowance || !decimals || !+amount) return false;
@@ -144,9 +158,14 @@ const Deposit: React.FC = () => {
                 {address && <h4 className="border-b border-gray-600 text-blue-400 mb-2 break-words">Address: {address}</h4>}
                 {balance && (
                     <h4 className="border-b border-gray-600 text-blue-400 mb-4">
-                        Balance: ${Number(BigUnit.from(BigInt(balance), decimals).toString()).toFixed(2)} USDC
+                        Crypto Wallet Balance: ${Number(BigUnit.from(BigInt(balance), decimals).toString()).toFixed(2)} USDC
                     </h4>
+
                 )}
+
+                <h4 className="border-b border-gray-600 text-blue-400 mb-4">
+                    Layer 2 Block52 Balance (Poker Table): ${Number(ethers.formatEther(block52Balance)).toFixed(2)} USDC
+                </h4>
 
                 <div className="mb-4 relative">
                     <label htmlFor="amount" className="block text-sm font-medium text-gray-300">
@@ -174,9 +193,8 @@ const Deposit: React.FC = () => {
                     {allowed ? (
                         <button
                             onClick={handleDeposit}
-                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${
-                                +amount === 0 && "opacity-50"
-                            }`}
+                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${+amount === 0 && "opacity-50"
+                                }`}
                             disabled={+amount === 0 || isDepositPending || isPending}
                         >
                             {isDepositPending || isPending ? "Depositing..." : "Deposit"}
@@ -185,9 +203,8 @@ const Deposit: React.FC = () => {
                     ) : (
                         <button
                             onClick={handleApprove}
-                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${
-                                +amount === 0 && "opacity-50"
-                            }`}
+                            className={`flex justify-center gap-4 w-full p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg ${+amount === 0 && "opacity-50"
+                                }`}
                             disabled={+amount === 0 || isApprovePending || isLoading}
                         >
                             {isLoading || isApprovePending ? "Approving..." : "Approve"}
