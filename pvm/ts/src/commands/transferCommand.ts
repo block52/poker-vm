@@ -7,6 +7,9 @@ import { ICommand, ISignedResponse } from "./interfaces";
 import GameManagement from "../state/gameManagement";
 import { get } from "axios";
 import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
+import { TexasHoldemGameState } from "../models/game";
+import { ethers } from "ethers";
+import TexasHoldemGame from "../engine/texasHoldem";
 
 export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly gameManagement: GameManagement;
@@ -33,24 +36,29 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         //     throw new Error("Account not found");
         // }
         
-        if (this.data) {
+        // HACK FOR NOW, if the to address is a game address, then we need to join the game
+        if (this.data || this.to === ethers.ZeroAddress) {
             console.log(`Data: ${this.data}`);
+
+            const gameState: TexasHoldemGameState = await this.gameManagement.get(this.to);
+            const game = TexasHoldemGame.fromState(gameState);
+
             // const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
             
             // const playerAction = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
             // console.log(`Player Action: ${playerAction.method}`);
 
-            if (this.data === "join") {
-                console.log(`Joining game...`);
-                // await this.gameManagement.join(this.to, this.from);
+            // if (this.data === "bet") {
+            //     console.log(`Joining game...`);
+            //     // await this.gameManagement.join(this.to, this.from);
 
-                // rehydrate the game 
-                const game = this.gameManagement.get(this.to);
+            //     // rehydrate the game 
+            //     const game = this.gameManagement.get(this.to);
 
-                if (!game) {
-                    throw new Error("Game not found");
-                }
-            }
+            //     if (!game) {
+            //         throw new Error("Game not found");
+            //     }
+            // }
 
             // Cast string to PlayerActionType
             const playerAction: PlayerActionType = this.data as PlayerActionType;

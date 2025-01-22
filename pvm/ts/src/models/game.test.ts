@@ -67,4 +67,24 @@ describe.only("Game Tests", () => {
 
         expect(texasHoldemGameState).toBeDefined();
     });
+
+    it.only("should recreate the texas holdem game from state", async () => {
+        const json = {
+            type: "cash",
+            address: ethers.ZeroAddress,
+            smallBlind: "10000000000000000000",
+            bigBlind: "30000000000000000000",
+            dealer: 0,
+            players: [],
+            communityCards: [],
+            pots: ["0"],
+            nextToAct: 0,
+            round: "preflop",
+            winners: [],
+            signature: ethers.ZeroHash
+        };
+
+        const texasHoldemGameState = TexasHoldemGameState.fromJson(json);
+
+    });
 });
