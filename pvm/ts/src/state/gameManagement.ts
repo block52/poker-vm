@@ -36,8 +36,8 @@ export class GameManagement extends StateManager {
         if (address === ethers.ZeroAddress) {
             const texasHoldemGameState = new TexasHoldemGameState(
                 ethers.ZeroAddress,
-                0.10, // small blind
-                0.20, // big blind
+                0.05, // small blind
+                0.10, // big blind
                 0, // dealer
                 players,
                 communityCards,

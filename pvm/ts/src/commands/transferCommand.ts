@@ -40,7 +40,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             // const playerAction = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
             // console.log(`Player Action: ${playerAction.method}`);
 
-            if (this.data === "join") {
+            if (this.data === PlayerActionType.JOIN) {
                 console.log(`Joining game...`);
                 // await this.gameManagement.join(this.to, this.from);
 
