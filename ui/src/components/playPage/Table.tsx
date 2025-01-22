@@ -208,10 +208,17 @@ const Table = () => {
             const parsedData = JSON.parse(wagmiData);
             setWagmiStore(parsedData);
 
-            // Get MetaMask account address from wagmiStore
-            const metamaskAddress = parsedData.state.connections.value[0][1].accounts[0];
+            // Get MetaMask account address from wagmiStore - Add null checks
+            const connections = parsedData?.state?.connections?.value;
+            const metamaskAddress = connections?.[0]?.[1]?.accounts?.[0];
+            
+            // Only proceed if we have a valid address
+            if (metamaskAddress) {
+                // Use the address if needed
+            }
         }
 
+        // Only make the API call if we have a valid address
         if (address) {
             axios.get(`https://proxy.block52.xyz/account/${address}`)
                 .then(response => {
