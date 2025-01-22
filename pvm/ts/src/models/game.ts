@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, PlayerDTO, TexasHoldemGameStateDTO, TexasHoldemJoinStateDTO, TexasHoldemStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, PlayerDTO, TexasHoldemGameStateDTO, TexasHoldemJoinStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { IJSONModel } from "./interfaces";
 import { Card } from "./deck";
 import TexasHoldemGame from "../engine/texasHoldem";
@@ -80,6 +80,7 @@ export class PlayerState implements IJSONModel {
     public toJson(): PlayerDTO { return this._dto; }
 }
 
+// Remove this class
 export class TexasHoldemJoinState implements IJSONModel {
     private readonly _dto: TexasHoldemJoinStateDTO;
 

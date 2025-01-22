@@ -86,5 +86,6 @@ describe.only("Game Tests", () => {
 
         const texasHoldemGameState = TexasHoldemGameState.fromJson(json);
 
+        expect(texasHoldemGameState).toBeDefined();
     });
 });

@@ -419,6 +419,10 @@ class TexasHoldemGame implements IPoker {
 
         return game;
     }
+
+    public static fromJson(json: any): TexasHoldemGame {
+        return new TexasHoldemGame(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, [], [], 0);
+    }
 }
 
 export default TexasHoldemGame;

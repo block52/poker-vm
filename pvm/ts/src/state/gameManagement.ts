@@ -50,6 +50,21 @@ export class GameManagement extends StateManager {
             return texasHoldemGameState;
         }
 
+        if (address === "0x0000000000000000000000000000000000000001") {
+            const texasHoldemGameState = await GameState.findOne({
+                address
+            });
+
+            // if (!texasHoldemGameState) {
+            //     throw new Error("Game not found");
+            // }
+
+            const json = texasHoldemGameState?.state.toJSON();
+
+            const game = TexasHoldemGame.fromState(texasHoldemGameState?.state);
+            return texasHoldemGameState;
+        }
+
         const gameState = await GameState.findOne({
             address
         });
