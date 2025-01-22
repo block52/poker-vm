@@ -60,7 +60,7 @@ export class GameManagement extends StateManager {
 
         // Store the game state in the database as a JSON object
         const json = gameState.state.toJSON();
-        const texasHoldemGameState = TexasHoldemGameState.fromJson(json);
+        const texasHoldemGameState: TexasHoldemGameState = TexasHoldemGameState.fromJson(json);
         return texasHoldemGameState;
     }
 

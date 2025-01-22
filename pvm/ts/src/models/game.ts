@@ -88,7 +88,6 @@ export class TexasHoldemJoinState implements IJSONModel {
     }
 
     public toJson(): TexasHoldemJoinStateDTO { return this._dto; }
-
 }
 
 export class TexasHoldemGameState implements IJSONModel {
@@ -135,9 +134,9 @@ export class TexasHoldemGameState implements IJSONModel {
     }
 }
 
-export class TexasHoldemState implements IJSONModel {
-    constructor(private _state?: TexasHoldemJoinState | TexasHoldemGameState) {
-    }
+// export class TexasHoldemState implements IJSONModel {
+//     constructor(private _state?: TexasHoldemJoinState | TexasHoldemGameState) {
+//     }
 
-    public toJson(): TexasHoldemStateDTO { return this._state?.toJson() ?? { type: "join", players: [] } };
-}
+//     public toJson(): TexasHoldemStateDTO { return this._state?.toJson() ?? { type: "join", players: [] } };
+// }

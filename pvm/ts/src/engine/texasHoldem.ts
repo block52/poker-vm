@@ -11,6 +11,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
 import { IPoker } from "./types";
+import { ethers } from "ethers";
 
 type Round = {
     type: TexasHoldemRound;
@@ -22,20 +23,28 @@ class TexasHoldemGame implements IPoker {
     private _players: Player[];
     private _rounds!: Round[];
     private _deck!: Deck;
-    private _communityCards!: Card[];
     private _sidePots!: Map<PlayerId, number>;
     private _winners?: Map<PlayerId, number>;
-    private _currentRound: TexasHoldemRound;
-    private _currentPlayer: number;
+    // private _currentRound: TexasHoldemRound;
+    // private _nextToAct: number;
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
     private _minPlayers: number = 2;
 
-    constructor(private _address: string, private _smallBlind: number, private _bigBlind: number, private _dealer: number = 0) {
+    constructor(
+        private _address: string,
+        private _smallBlind: number,
+        private _bigBlind: number,
+        private _dealer: number = 0,
+        private _nextToAct: number = 1,
+        private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
+        private _communityCards: Card[] = [],
+        private _pot: number = 0,
+    ) {
         this._players = [];
-        this._currentRound = TexasHoldemRound.ANTE;
-        this._currentPlayer = 0;
+        this._currentRound = _currentRound;
+        this._nextToAct = _nextToAct;
         this._bigBlindPosition = 0;
         this._smallBlindPosition = 0;
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
@@ -84,7 +93,7 @@ class TexasHoldemGame implements IPoker {
         return this._dealer;
     }
     get currentPlayerId() {
-        return this._players[this._currentPlayer].id;
+        return this._players[this._nextToAct].id;
     }
     get currentRound() {
         return this._currentRound;
@@ -241,7 +250,7 @@ class TexasHoldemGame implements IPoker {
         this._sidePots = new Map<PlayerId, number>();
         this._winners = undefined;
         this._currentRound = TexasHoldemRound.PREFLOP;
-        this._currentPlayer = this._dealer;
+        this._nextToAct = this._dealer;
 
         const active = this.getActivePlayers();
         if (active.length <= 1) throw new Error("Not enough active players to start next hand.");
@@ -249,7 +258,7 @@ class TexasHoldemGame implements IPoker {
         this._dealer = active[0]; // find the next free player from the previous button position and allocate the button to them
         this._smallBlindPosition = active[1];
         this._bigBlindPosition = active[2 % active.length];
-        this._currentPlayer = active[3 % active.length];
+        this._nextToAct = active[3 % active.length];
 
         // TODO: Handle scenario where position can't cover the blind
 
@@ -267,7 +276,7 @@ class TexasHoldemGame implements IPoker {
 
     private getActivePlayers(): number[] {
         return [...Array(this._players.length).keys()].reduce((acc, i) => {
-            const index = (this._currentPlayer + 1 + i) % this._players.length;
+            const index = (this._nextToAct + 1 + i) % this._players.length;
             return this.getPlayerStatus(this._players[index]) === PlayerStatus.ACTIVE ? [...acc, index] : acc;
         }, [] as Array<number>);
     }
@@ -283,7 +292,7 @@ class TexasHoldemGame implements IPoker {
         const anyAllIn = this._players.some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
 
         if (!active.length || (active.length == 1 && !anyAllIn) || active.map(i => this._players[i]).every(isPlayerTurnFinished)) this.nextHand();
-        else this._currentPlayer = active[0];
+        else this._nextToAct = active[0];
     }
 
     // complete round maybe?
@@ -301,7 +310,7 @@ class TexasHoldemGame implements IPoker {
             if (this._currentRound === TexasHoldemRound.FLOP) this._communityCards.push(...this._deck.deal(3));
             else if (this._currentRound === TexasHoldemRound.TURN || this._currentRound == TexasHoldemRound.RIVER)
                 this._communityCards.push(...this._deck.deal(1));
-            this._currentPlayer = this._dealer;
+            this._nextToAct = this._dealer;
             this.nextPlayer();
         } else this.calculateWinner();
     }
@@ -387,6 +396,28 @@ class TexasHoldemGame implements IPoker {
             default:
                 throw new Error("Invalid round.");
         }
+    }
+
+    // Rehydrate the game from a DTO
+    public static fromState(state: TexasHoldemGameState): TexasHoldemGame {
+        const sb = 10;
+        const bb = 30;
+        const dealer = 0;
+        const players: PlayerState[] = [];
+        const communityCards: Card[] = [];
+        const pot = 0;
+        const currentBet = 0;
+        const round = TexasHoldemRound.PREFLOP;
+        const winners = undefined;
+
+        const game = new TexasHoldemGame(ethers.ZeroAddress, sb, bb, dealer);
+
+        // game._players = state.players.map(p => new Player(p.address, p.stack, p.holeCards));
+        // game._communityCards = state.communityCards;
+        // game._currentRound = state.round;
+        // game._winners = state.winners;
+
+        return game;
     }
 }
 
