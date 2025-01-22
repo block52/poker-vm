@@ -531,7 +531,7 @@ const Table = () => {
             </div>
             {/* Add a message for empty table if needed */}
             {playerSeats.length === 0 && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white bg-black bg-opacity-50 p-4 rounded">
+                <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">
                     Waiting for players to join...
                 </div>
             )}
