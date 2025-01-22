@@ -46,24 +46,35 @@ const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
 
-    // Early return if no id or context
-    if (!id || !context) {
-        return <div className="h-screen flex items-center justify-center text-white">Loading...</div>;
+    // Early return if no id
+    if (!id) {
+        return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
     }
 
-      // Destructure context after we know it exists
-      const { 
+    // Destructure context including loading and error states
+    const { 
         totalPot, 
         seat, 
         smallBlind, 
         bigBlind, 
         tableType, 
         roundType, 
-        playerSeats, 
+        playerSeats,
         pots,
-        communityCards
-      
+        communityCards,
+        isLoading,
+        error
     } = context;
+
+    // Handle loading state
+    if (isLoading) {
+        return <div className="h-screen flex items-center justify-center text-white">Loading table...</div>;
+    }
+
+    // Handle error state
+    if (error) {
+        return <div className="h-screen flex items-center justify-center text-white">Error: {error.message}</div>;
+    }
 
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
@@ -85,7 +96,7 @@ const Table = () => {
 
     const navigate = useNavigate();
 
-    const { account, balance, isLoading } = useUserWallet();
+    const { account, balance, isLoading: walletLoading } = useUserWallet();
     const { type } = useTableType(id);
 
 
@@ -320,7 +331,7 @@ const Table = () => {
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
-                            <span>{isLoading ? "Loading..." : ""}</span>
+                            <span>{walletLoading ? "Loading..." : ""}</span>
                             
                             {address && connector && (
                                 <div className="text-xs">
@@ -518,6 +529,12 @@ const Table = () => {
                     </div>
                 </div>
             </div>
+            {/* Add a message for empty table if needed */}
+            {playerSeats.length === 0 && (
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white bg-black bg-opacity-50 p-4 rounded">
+                    Waiting for players to join...
+                </div>
+            )}
         </div>
     );
 };

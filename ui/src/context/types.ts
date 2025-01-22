@@ -33,4 +33,6 @@ export interface PlayerContextType {
     openOneMore: boolean;
     openTwoMore: boolean;
     showThreeCards: boolean;
+    isLoading: boolean;
+    error: Error | null;
 }
