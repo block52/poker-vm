@@ -6,6 +6,7 @@ import axios from "axios";
 import useUserWallet from "../hooks/useUserWallet";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { toDollarFromString } from "../utils/numberUtils";
+import { PROXY_URL } from '../App';
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
@@ -74,6 +75,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const mock_url = "https://orca-app-k9l4d.ondigitalocean.app"
             const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
             const response = await axios.get(`${mock_url}/table/${publicKey}`);
+
+            // const response = await axios.get(`${PROXY_URL}/table/${publicKey}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);

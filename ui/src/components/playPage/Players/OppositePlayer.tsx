@@ -38,6 +38,8 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
         return <></>
     }
 
+    const stackValue = data?.stack ? BigUnit.from(data.stack, 18).toNumber() : 0;
+
     return (
         <>
             <div
@@ -73,7 +75,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                         )}
                     </div>
                     <div className="absolute top-[0%] w-full">
-                        <Badge count={index + 1} value={BigUnit.from(data?.stack, 18).toNumber()} color={color} />
+                        <Badge count={index + 1} value={stackValue} color={color} />
                     </div>
                 </div>
             </div>

@@ -23,6 +23,7 @@ import useUserBySeat from "../../hooks/useUserBySeat";
 import axios from "axios";
 import { ethers } from "ethers";
 import { useAccount } from 'wagmi';
+import { PROXY_URL } from '../../App';
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -32,8 +33,6 @@ interface PositionArray {
     right?: string;
     color?: string;
 }
-
-const MOCK_API_URL = "https://orca-app-k9l4d.ondigitalocean.app";
 
 const calculateZoom = () => {
     const baseWidth = 1800;
@@ -220,7 +219,7 @@ const Table = () => {
 
         // Only make the API call if we have a valid address
         if (address) {
-            axios.get(`https://proxy.block52.xyz/account/${address}`)
+            axios.get(`${PROXY_URL}/account/${address}`)
                 .then(response => {
                     setBlock52Balance(response.data.balance);
                     console.log("Block52 Account Data:", response.data);
