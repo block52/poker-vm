@@ -23,6 +23,7 @@ import useUserBySeat from "../../hooks/useUserBySeat";
 import axios from "axios";
 import { ethers } from "ethers";
 import { useAccount } from 'wagmi';
+import { PROXY_URL } from '../../App';
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -32,8 +33,6 @@ interface PositionArray {
     right?: string;
     color?: string;
 }
-
-const MOCK_API_URL = "https://orca-app-k9l4d.ondigitalocean.app";
 
 const calculateZoom = () => {
     const baseWidth = 1800;
@@ -47,24 +46,35 @@ const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
 
-    // Early return if no id or context
-    if (!id || !context) {
-        return <div className="h-screen flex items-center justify-center text-white">Loading...</div>;
+    // Early return if no id
+    if (!id) {
+        return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
     }
 
-      // Destructure context after we know it exists
-      const { 
+    // Destructure context including loading and error states
+    const { 
         totalPot, 
         seat, 
         smallBlind, 
         bigBlind, 
         tableType, 
         roundType, 
-        playerSeats, 
+        playerSeats,
         pots,
-        communityCards
-      
+        communityCards,
+        isLoading,
+        error
     } = context;
+
+    // Handle loading state
+    if (isLoading) {
+        return <div className="h-screen flex items-center justify-center text-white">Loading table...</div>;
+    }
+
+    // Handle error state
+    if (error) {
+        return <div className="h-screen flex items-center justify-center text-white">Error: {error.message}</div>;
+    }
 
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
@@ -86,7 +96,7 @@ const Table = () => {
 
     const navigate = useNavigate();
 
-    const { account, balance, isLoading } = useUserWallet();
+    const { account, balance, isLoading: walletLoading } = useUserWallet();
     const { type } = useTableType(id);
 
 
@@ -208,12 +218,19 @@ const Table = () => {
             const parsedData = JSON.parse(wagmiData);
             setWagmiStore(parsedData);
 
-            // Get MetaMask account address from wagmiStore
-            const metamaskAddress = parsedData.state.connections.value[0][1].accounts[0];
+            // Get MetaMask account address from wagmiStore - Add null checks
+            const connections = parsedData?.state?.connections?.value;
+            const metamaskAddress = connections?.[0]?.[1]?.accounts?.[0];
+            
+            // Only proceed if we have a valid address
+            if (metamaskAddress) {
+                // Use the address if needed
+            }
         }
 
+        // Only make the API call if we have a valid address
         if (address) {
-            axios.get(`https://proxy.block52.xyz/account/${address}`)
+            axios.get(`${PROXY_URL}/account/${address}`)
                 .then(response => {
                     setBlock52Balance(response.data.balance);
                     console.log("Block52 Account Data:", response.data);
@@ -314,7 +331,7 @@ const Table = () => {
                     {/* Right Section */}
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
-                            <span>{isLoading ? "Loading..." : ""}</span>
+                            <span>{walletLoading ? "Loading..." : ""}</span>
                             
                             {address && connector && (
                                 <div className="text-xs">
@@ -512,6 +529,12 @@ const Table = () => {
                     </div>
                 </div>
             </div>
+            {/* Add a message for empty table if needed */}
+            {playerSeats.length === 0 && (
+                <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">
+                    Waiting for players to join...
+                </div>
+            )}
         </div>
     );
 };

@@ -6,6 +6,7 @@ import axios from "axios";
 import useUserWallet from "../hooks/useUserWallet";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { toDollarFromString } from "../utils/numberUtils";
+import { PROXY_URL } from '../App';
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
@@ -15,9 +16,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const isInitialized = useRef(false);
     const [players, setPlayers] = useState<PlayerDTO[]>(
         Array.from({ length: 9 }, (_, index) => ({
-            address: "0xa2F508c94a22D067Cbc001f493bfAD39555eA188",
+            address: "",  // Empty address for vacant seats
             seat: index,
-            stack: "",
+            stack: "0",   // Initialize with "0" instead of empty string
             isSmallBlind: false,
             isBigBlind: false,
             isDealer: false,
@@ -71,32 +72,33 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setError(null);
 
         try {
-            const mock_url = "https://orca-app-k9l4d.ondigitalocean.app"
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${mock_url}/table/${publicKey}`);
+            const response = await axios.get(`${PROXY_URL}/table/${publicKey}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            setPots(response.data.pots);
-            setGamePlayers(response.data.players)
-            setNextToAct(response.data.nextToAct);
-            setSmallBlind(toDollarFromString(response.data.smallBlind));
-            setBigBlind(toDollarFromString(response.data.bigBlind));
-            setTableType(response.data.type);
-            setRoundType(response.data.round);
-            setCommunityCards(response.data.communityCards)
-            setPlayerSeats(getPlayerSeats(response.data.players));
-            let tmpTotalPot = 0; // Initialize tmpTotalPot with a value
 
-            if (response.data.pots.length > 0) {
+            // Set default values if data is missing
+            setPots(response.data.pots || []);
+            setGamePlayers(response.data.players || [])
+            setNextToAct(response.data.nextToAct || 0);
+            setSmallBlind(toDollarFromString(response.data.smallBlind || "0"));
+            setBigBlind(toDollarFromString(response.data.bigBlind || "0"));
+            setTableType(response.data.type || "No Limit Hold'em");
+            setRoundType(response.data.round || "Pre-Flop");
+            setCommunityCards(response.data.communityCards || [])
+            setPlayerSeats(response.data.players ? getPlayerSeats(response.data.players) : []);
+
+            let tmpTotalPot = 0;
+            if (response.data.pots && response.data.pots.length > 0) {
                 response.data.pots.forEach((pot: any) => {
-                    tmpTotalPot += +toDollarFromString(pot); // Accumulate the total
+                    tmpTotalPot += +toDollarFromString(pot);
                 });
             }
-
             setTotalPot(tmpTotalPot);
+
         } catch (err) {
+            console.error("Error fetching table data:", err);
             setError(err instanceof Error ? err : new Error("An error occurred"));
         } finally {
             setIsLoading(false);
@@ -110,8 +112,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setError(null);
 
         try {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${url}/account/${publicKey}`);
+            const response = await axios.get(`${PROXY_URL}/account/${publicKey}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -137,8 +138,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setError(null);
 
         try {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${url}/table/${address}/player/${player}`);
+            const response = await axios.get(`${PROXY_URL}/table/${address}/player/${player}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -271,10 +271,14 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             openOneMore,
             openTwoMore,
             showThreeCards,
-            setPlayerAction: () => {}
+            setPlayerAction,
+            isLoading,  // Add loading state to context
+            error      // Add error state to context
         }),
-        // [players, tableSize, playerIndex, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, fold, raise, check, setPlayerAction]
-        [players, communityCards, pots, seat, playerSeats, tableType, roundType, smallBlind, bigBlind, totalPot, nextToAct, tableSize, playerIndex, gamePlayers, dealerIndex, openOneMore, openTwoMore, showThreeCards, lastPot, setPlayerAction]
+        [players, communityCards, pots, seat, playerSeats, tableType, roundType, 
+         smallBlind, bigBlind, totalPot, nextToAct, tableSize, playerIndex, 
+         gamePlayers, dealerIndex, openOneMore, openTwoMore, showThreeCards, 
+         lastPot, setPlayerAction, isLoading, error]
     );
 
     return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>;

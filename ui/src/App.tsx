@@ -14,6 +14,8 @@ import Dashboard from "./components/Dashboard";
 import useUserWallet from "./hooks/useUserWallet";
 import QRDeposit from './components/QRDeposit';
 
+export const PROXY_URL = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+
 const queryClient = new QueryClient();
 
 // Create modal

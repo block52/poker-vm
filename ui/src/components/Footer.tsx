@@ -21,16 +21,19 @@ const PokerActionPanel: React.FC = () => {
     const currentPlayerActions = gamePlayers?.find(p => p.seat === nextToAct)?.actions || [];
 
     // Check if each action is available
-    const canFold = currentPlayerActions.some(a => a.action === "fold");
-    const canCall = currentPlayerActions.some(a => a.action === "call");
-    const canRaise = currentPlayerActions.some(a => a.action === "raise");
-    const canCheck = currentPlayerActions.some(a => a.action === "check");
-    const canBet = currentPlayerActions.some(a => a.action === "bet");
+    const canFold = currentPlayerActions.some(a => a.action === PlayerActionType.FOLD);
+    const canCall = currentPlayerActions.some(a => a.action === PlayerActionType.CALL);
+    const canRaise = currentPlayerActions.some(a => a.action === PlayerActionType.RAISE);
+    const canCheck = currentPlayerActions.some(a => a.action === PlayerActionType.CHECK);
+    const canBet = currentPlayerActions.some(a => a.action === PlayerActionType.BET);
 
     // Get min/max for raise if available
-    const raiseAction = currentPlayerActions.find(a => a.action === "raise");
+    const raiseAction = currentPlayerActions.find(a => a.action === PlayerActionType.RAISE);
     const minRaise = raiseAction?.min;
     const maxRaise = raiseAction?.max;
+
+    // Update the find action for call amount
+    const callAmount = currentPlayerActions.find(a => a.action === PlayerActionType.CALL)?.min;
 
     useEffect(() => {
         if (data) {
@@ -77,7 +80,6 @@ const PokerActionPanel: React.FC = () => {
     };
 
     const handleCall = () => {
-        const callAmount = currentPlayerActions.find(a => a.action === "call")?.min;
         console.log("Player called", callAmount);
         // TODO: Call API endpoint /table/:id/action with:
         // {
@@ -158,7 +160,7 @@ const PokerActionPanel: React.FC = () => {
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={handleCall}
                         >
-                            CALL {currentPlayerActions.find(a => a.action === "call")?.min}
+                            CALL {callAmount}
                         </button>
                     )}
                     {canRaise && (
