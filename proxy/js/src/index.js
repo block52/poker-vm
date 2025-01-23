@@ -8,6 +8,9 @@ const dotenv = require("dotenv");
 const connectDB = require("./db");
 const Transaction = require("./models/transaction");
 
+const depositSessionsRouter = require("./routes/depositSessions");
+
+
 // Clients
 const Mocks = require("./clients/mocks");
 const Block52 = require("./clients/block52");
@@ -22,6 +25,17 @@ const clientType = process.env.CLIENT_TYPE || "mock";
 
 // Add JSON middleware
 app.use(express.json());
+
+
+connectDB().then(() => {
+    console.log("MongoDB connection established");
+}).catch(err => {
+    console.error("MongoDB connection error:", err);
+});
+
+
+// Routes
+app.use("/deposit-sessions", depositSessionsRouter);
 
 // Swagger configuration
 const swaggerOptions = {
@@ -179,7 +193,7 @@ app.post("/join", (req, res) => {
 
 app.post("/deposit", async (req, res) => {
     const recipient = req.body.recipient;
-    connectDB();
+  
 
     // Create a new transaction
     const newTransaction = new Transaction({
@@ -254,6 +268,8 @@ app.post("/transfer", (req, res) => {
     };
     res.send(response);
 });
+
+
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
