@@ -1,4 +1,3 @@
-
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction } from "../models";
@@ -7,7 +6,7 @@ import { ICommand, ISignedResponse } from "./interfaces";
 import GameManagement from "../state/gameManagement";
 import { get } from "axios";
 import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
-import { TexasHoldemGameState } from "../models/game";
+import { Player, TexasHoldemGameState } from "../models/game";
 import { ethers } from "ethers";
 import TexasHoldemGame from "../engine/texasHoldem";
 
@@ -21,7 +20,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
-
         const fromAccount = await this.accountManagement.getAccount(this.from);
 
         if (fromAccount.balance < this.amount) {
@@ -35,48 +33,65 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         // if (!fromAccount)
         //     throw new Error("Account not found");
         // }
-        
-        // HACK FOR NOW, if the to address is a game address, then we need to join the game
-        if (this.data || this.to === ethers.ZeroAddress) {
-            console.log(`Data: ${this.data}`);
 
-            const gameState: TexasHoldemGameState = await this.gameManagement.get(this.to);
-            const game = TexasHoldemGame.fromState(gameState);
+        try {
+            // HACK FOR NOW, if the to address is a game address, then we need to join the game
+            if (this.data || this.to === ethers.ZeroAddress) {
+                console.log(`Data: ${this.data}`);
 
-            // const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
-            
-            // const playerAction = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
-            // console.log(`Player Action: ${playerAction.method}`);
+                const json = await this.gameManagement.get(this.to);
+                const game = TexasHoldemGame.fromJson(json);
 
-            // if (this.data === "bet") {
-            //     console.log(`Joining game...`);
-            //     // await this.gameManagement.join(this.to, this.from);
+                if (!game) {
+                    // return defualt response
 
-            //     // rehydrate the game 
-            //     const game = this.gameManagement.get(this.to);
+                    
+                }
 
-            //     if (!game) {
-            //         throw new Error("Game not found");
-            //     }
-            // }
+                // const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
 
-            // Cast string to PlayerActionType
-            const playerAction: PlayerActionType = this.data as PlayerActionType;
-            
-            // if (gameCommand.method !== "join") {
-            //     const game = this.gameManagement.get(this.to);
-            //     if (!game)
-            //         throw new Error("Game not found");
-            //     game.performAction(this.from, gameCommand.method, gameCommand.params[0] ? parseInt(gameCommand.params[0]) : undefined);
-            // }
-            // else
-            //     this.gameManagement.join(this.to, this.from);
+                // const playerAction = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
+                // console.log(`Player Action: ${playerAction.method}`);
+
+                // if (this.data === "bet") {
+                //     console.log(`Joining game...`);
+                //     // await this.gameManagement.join(this.to, this.from);
+
+                //     // rehydrate the game
+                //     const game = this.gameManagement.get(this.to);
+
+                //     if (!game) {
+                //         throw new Error("Game not found");
+                //     }
+                // }
+
+                // Cast string to PlayerActionType
+                const playerAction: PlayerActionType = this.data as PlayerActionType;
+
+                if (this.data !== "join") {
+                    // const state = await this.gameManagement.get(this.to);
+                    // if (!state) throw new Error("Game not found");
+
+                    // const game = TexasHoldemGame.fromJson(state);
+
+                    // convert bigints to numbers with 18 decimal places
+                    const _chips = ethers.formatUnits(this.amount, 18);
+                    const chips: number = parseInt(_chips);
+                    const player: Player = new Player(this.from, chips, undefined);
+
+                    game.join(player);
+                }
+            }
+
+            // If we havent thrown an error, then we can create the transaction
+            const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+            const mempool = getMempoolInstance();
+            await mempool.add(transferTx);
+
+            return signResult(transferTx, this.privateKey);
+        } catch (e) {
+            console.error(e);
+            throw new Error("Error transferring funds");
         }
-
-        const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
-        const mempool = getMempoolInstance();
-        await mempool.add(transferTx);
-        
-        return signResult(transferTx, this.privateKey);
     }
 }

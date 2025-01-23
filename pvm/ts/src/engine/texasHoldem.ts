@@ -399,6 +399,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     // Rehydrate the game from a DTO
+    // NOT SURE THIS GUY IS NEEDED
     public static fromState(state: TexasHoldemGameState): TexasHoldemGame {
         const sb = 10;
         const bb = 30;
@@ -421,7 +422,8 @@ class TexasHoldemGame implements IPoker {
     }
 
     public static fromJson(json: any): TexasHoldemGame {
-        return new TexasHoldemGame(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, [], [], 0);
+        const players: PlayerState[] = [];
+        return new TexasHoldemGame(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, json.nextToAct, json.round, json.communityCards, json.pots[0]);
     }
 }
 
