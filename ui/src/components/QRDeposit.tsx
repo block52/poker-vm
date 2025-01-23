@@ -262,10 +262,8 @@ const QRDeposit: React.FC = () => {
                                     className="flex items-center justify-between bg-gray-700 p-2 rounded cursor-pointer"
                                     onClick={() => copyToClipboard(DEPOSIT_ADDRESS)}
                                 >
-                                    <span className="text-sm">{`${DEPOSIT_ADDRESS.slice(0, 6)}...${DEPOSIT_ADDRESS.slice(-4)}`}</span>
-                                    <span className="text-xs text-gray-400">
-                                        {copied ? 'Copied!' : 'Click to copy'}
-                                    </span>
+                                    <span className="text-sm">{`${DEPOSIT_ADDRESS}`}</span>
+                                    
                                 </div>
                             </div>
 
