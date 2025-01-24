@@ -13,7 +13,10 @@
         "hh:deploy:bridge": "npx hardhat ignition deploy ./ignition/modules/Bridge.ts --network mainnet --verify",
         "hh:wipe:token": "npx hardhat ignition wipe chain-8453 TokenModule#Token",
         "hh:wipe:vault": "npx hardhat ignition wipe chain-8453 VaultModule#Vault",
-        "hh:wipe:bridge": "npx hardhat ignition wipe chain-8453 BridgeModule#Bridge"
+        "hh:wipe:bridge": "npx hardhat ignition wipe chain-8453 BridgeModule#Bridge",
+        "hh:deploy:hello": "npx hardhat ignition deploy ./ignition/modules/HelloWorld.ts --network sepolia --verify",
+        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify",
+        "hh:deploy:deposit": "npx hardhat ignition deploy ./ignition/modules/Deposit.ts --network sepolia --verify" 
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
