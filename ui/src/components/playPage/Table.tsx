@@ -341,7 +341,7 @@ const Table = () => {
 
                             {block52Balance && (
                                 <div className="text-xs">
-                                    Block52 Balance (USD): ${Number(ethers.formatEther(block52Balance)).toFixed(2)}
+                                    Block52 Balance (USD): ${block52Balance ? Number(ethers.formatUnits(block52Balance.split('.')[0], 18)).toFixed(2) : '0.00'}
                                 </div>
                             )}
                         </div>
