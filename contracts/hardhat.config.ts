@@ -15,6 +15,11 @@ const config: HardhatUserConfig = {
                 url: `${process.env.RPC_URL}`
             }
         },
+        sepolia: {
+            url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
+            accounts: PK ? [PK] : [],
+            chainId: 11155111
+        },
         base: {
 			accounts: PK ? [PK] : [],
 			chainId: 8453,
@@ -38,6 +43,7 @@ const config: HardhatUserConfig = {
     },
     etherscan: {
         apiKey: {
+            sepolia: process.env.ETHERSCAN_API_KEY || "",
             base: process.env.ETHERSCAN_API_KEY || "",
             mainnet: process.env.ETHERSCAN_API_KEY || ""
         },
