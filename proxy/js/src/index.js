@@ -10,7 +10,6 @@ const Transaction = require("./models/transaction");
 
 const depositSessionsRouter = require("./routes/depositSessions");
 
-
 // Clients
 const Mocks = require("./clients/mocks");
 const Block52 = require("./clients/block52");
@@ -193,7 +192,7 @@ app.post("/join", (req, res) => {
 
 app.post("/deposit", async (req, res) => {
     const recipient = req.body.recipient;
-  
+
 
     // Create a new transaction
     const newTransaction = new Transaction({
