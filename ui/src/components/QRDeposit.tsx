@@ -3,9 +3,11 @@ import { QRCodeSVG } from 'qrcode.react';
 import { ethers } from 'ethers';
 import axios from 'axios';
 
-const DEPOSIT_ADDRESS = '0x292E9E6fd7C8E837270160D38E47F580DE24b828';
+const DEPOSIT_ADDRESS = '0xac8518FCf0915614958768fD7849C4A38429565f';
+const TOKEN_ADDRESS = '0x785282367Fb4ef95d8A9aC00bFe7609aCc0aE87D';
 const PROXY_URL = process.env.REACT_APP_PROXY_URL || "http://localhost:8080";
 const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || '6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2';
+const RPC_URL = "https://sepolia.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 
 interface DepositSession {
     _id: string;
@@ -14,6 +16,13 @@ interface DepositSession {
     status: 'PENDING' | 'COMPLETED' | 'EXPIRED';
     expiresAt: string;
     amount: number | null;
+}
+
+// Add ERC20 Transfer event interface
+interface TransferEvent {
+    from: string;
+    to: string;
+    value: bigint;
 }
 
 const QRDeposit: React.FC = () => {
@@ -189,6 +198,68 @@ const QRDeposit: React.FC = () => {
         }
     };
 
+    // Add function to check for token transfers
+    const checkForTransfer = async () => {
+        if (!currentSession || currentSession.status !== 'PENDING') return;
+        
+        try {
+            setIsQuerying(true);
+            const provider = new ethers.JsonRpcProvider(RPC_URL);
+            
+            // Get token contract
+            const tokenContract = new ethers.Contract(
+                TOKEN_ADDRESS,
+                ["event Transfer(address indexed from, address indexed to, uint256 value)"],
+                provider
+            );
+
+            // Get latest block number
+            const latestBlock = await provider.getBlockNumber();
+            
+            // Look for Transfer events in last few blocks
+            const events = await tokenContract.queryFilter(
+                tokenContract.filters.Transfer(null, DEPOSIT_ADDRESS),
+                latestBlock - 10,
+                latestBlock
+            );
+
+            if (events.length > 0) {
+                const lastTransfer = events[events.length - 1] as ethers.EventLog;
+                if (!lastTransfer.args) return;
+                const [from, to, value] = lastTransfer.args;
+                
+                console.log('=== Transfer Detected ===');
+                console.log('From:', from);
+                console.log('To:', to);
+                console.log('Value:', value.toString());
+                console.log('Session ID:', currentSession._id);
+                
+                const response = await axios.put(
+                    `${PROXY_URL}/deposit-sessions/${currentSession._id}/complete`,
+                    { amount: value.toString() }
+                );
+
+                if (response.data) {
+                    setCurrentSession(response.data);
+                    setShowQR(false);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking for transfers:', error);
+        } finally {
+            setIsQuerying(false);
+        }
+    };
+
+    // Add polling effect
+    useEffect(() => {
+        if (!showQR || !currentSession || currentSession.status !== 'PENDING') return;
+
+        const interval = setInterval(checkForTransfer, 5000); // Check every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [showQR, currentSession]);
+
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
             <div className="max-w-md w-full bg-gray-800 rounded-lg shadow-xl p-6">
@@ -201,7 +272,7 @@ const QRDeposit: React.FC = () => {
                         <p className="text-sm text-gray-300">Status: {currentSession.status}</p>
                         <p className="text-sm text-gray-300">Session ID: {currentSession._id}</p>
                         {currentSession.amount && (
-                            <p className="text-sm text-gray-300">Amount: {currentSession.amount} USDC</p>
+                            <p className="text-sm text-gray-300">Amount: ${(Number(currentSession.amount) / 1e18).toFixed(2)} USDC</p>
                         )}
                     </div>
                 )}

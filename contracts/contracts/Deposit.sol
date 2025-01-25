@@ -2,24 +2,32 @@
 pragma solidity ^0.8.24;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { Bridge } from "./Bridge.sol";
+
+interface ISimplifiedBridge {
+    function depositUnderlying(uint256 amount, address receiver) external returns(uint256);
+}
 
 contract Deposit is Ownable {
-    address public immutable bridge;
+    IERC20 public immutable token;
+    ISimplifiedBridge public immutable bridge;
 
-    mapping(bytes32 => bool) private usedNonces;
+    event DepositReceived(address indexed from, uint256 amount);
 
-    constructor(address underlying, address bridge_) Ownable(msg.sender) {
-        IERC20(underlying).approve(bridge_, type(uint256).max);
+    constructor(address _token, address _bridge) Ownable(msg.sender) {
+        token = IERC20(_token);
+        bridge = ISimplifiedBridge(_bridge);
+        // Approve bridge to spend our tokens
+        token.approve(_bridge, type(uint256).max);
     }
 
-    function deposit(uint256 amount, address receiver, address token, bytes32 txid) external onlyOwner returns(uint256) {
-        require(!usedNonces[txid], "Deposit: txid already used");
-        Bridge _bridge = Bridge(bridge);
+    // This will be called by our backend when it detects a deposit
+    function forwardDeposit(address user, uint256 amount) external onlyOwner {
+        require(token.balanceOf(address(this)) >= amount, "Insufficient balance");
+
+        // Call depositUnderlying without storing the unused return value
+        bridge.depositUnderlying(amount, user);
         
-        uint256 _amount = _bridge.deposit(amount, receiver, token);
-        return _amount;
+        emit DepositReceived(user, amount);
     }
 }
