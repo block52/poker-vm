@@ -1,11 +1,13 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const DEPLOYED_TOKEN = "0x785282367Fb4ef95d8A9aC00bFe7609aCc0aE87D";
-const DEPLOYED_BRIDGE = "0xAbaC38Bb3d9cdf0a68AA36E64a9D492C51e296ff";
+const USDCTOKEN = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";    // USDC on Ethereum
+const DEPLOYED_BRIDGE = "0xBf1e380f3D1AE31854764081C488EaDA9F4CB195";   // BridgeModule#Bridge on Ethereum
 
-const DepositTestModuleV2 = buildModule("DepositTestModuleV2", (m) => {
-    const deposit = m.contract("Deposit", [DEPLOYED_TOKEN, DEPLOYED_BRIDGE]);
+const DepositTestModule = buildModule("DepositTestModule", (m) => {
+    // Deploy new version of Deposit contract with token and bridge addresses
+    const deposit = m.contract("Deposit", [USDCTOKEN, DEPLOYED_BRIDGE]);
+
     return { deposit };
 });
 
-export default DepositTestModuleV2; 
+export default DepositTestModule; 

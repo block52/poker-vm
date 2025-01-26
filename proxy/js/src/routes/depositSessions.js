@@ -4,11 +4,14 @@ const { ethers } = require('ethers');
 const DepositSession = require('../models/depositSession');
 
 // Contract addresses
-const DEPOSIT_ADDRESS = "0xac8518FCf0915614958768fD7849C4A38429565f";
-const TOKEN_ADDRESS = "0x785282367Fb4ef95d8A9aC00bFe7609aCc0aE87D";
+const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+
+// Update contract addresses to mainnet
+const DEPOSIT_ADDRESS = "0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede";  // Your mainnet deposit contract
+
 
 // Using Sepolia RPC URL from hardhat.config.ts
-const RPC_URL = "https://sepolia.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
+const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 const PRIVATE_KEY = process.env.DEPOSIT_PRIVATE_KEY;
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
@@ -216,6 +219,17 @@ router.put("/:id/complete", async (req, res) => {
     console.log('Amount received:', amount);
 
     try {
+        // First check if session is already completed
+        const existingSession = await DepositSession.findOne({
+            _id: id,
+            status: "COMPLETED"
+        });
+
+        if (existingSession) {
+            console.log('Session already completed, skipping');
+            return res.json(existingSession);
+        }
+
         const session = await DepositSession.findById(id);
         console.log('Found session:', {
             id: session?._id,

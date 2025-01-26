@@ -1,3 +1,4 @@
 {
-  "BridgeModule#Bridge": "0xBf1e380f3D1AE31854764081C488EaDA9F4CB195"
+  "BridgeModule#Bridge": "0xBf1e380f3D1AE31854764081C488EaDA9F4CB195",
+  "DepositTestModule#Deposit": "0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede"
 }

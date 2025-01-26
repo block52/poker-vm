@@ -11,12 +11,12 @@
         "hh:deploy:token": "npx hardhat ignition deploy ./ignition/modules/Token.ts --network mainnet --verify",
         "hh:deploy:vault": "npx hardhat ignition deploy ./ignition/modules/Vault.ts --network mainnet --verify",
         "hh:deploy:bridge": "npx hardhat ignition deploy ./ignition/modules/Bridge.ts --network mainnet --verify",
+        "hh:deploy:deposit": "npx hardhat ignition deploy ./ignition/modules/Deposit.ts --network mainnet --verify",
         "hh:wipe:token": "npx hardhat ignition wipe chain-8453 TokenModule#Token",
         "hh:wipe:vault": "npx hardhat ignition wipe chain-8453 VaultModule#Vault",
         "hh:wipe:bridge": "npx hardhat ignition wipe chain-8453 BridgeModule#Bridge",
         "hh:deploy:hello": "npx hardhat ignition deploy ./ignition/modules/HelloWorld.ts --network sepolia --verify",
-        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify",
-        "hh:deploy:deposit": "npx hardhat ignition deploy ./ignition/modules/Deposit.ts --network sepolia --verify" 
+        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
@@ -25,7 +25,7 @@
         "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
         "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
         "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-        "@nomicfoundation/hardhat-verify": "^2.0.0",
+        "@nomicfoundation/hardhat-verify": "^2.0.12",
         "@typechain/ethers-v6": "^0.5.0",
         "@typechain/hardhat": "^9.0.0",
         "@types/chai": "^4.2.0",
