@@ -264,7 +264,10 @@ router.put("/:id/complete", async (req, res) => {
 
         res.json(session);
     } catch (error) {
-        console.error('Error in session completion:', error);
+        console.error('=== Error in session completion ===');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Stack trace:', error.stack);
         res.status(500).json({ error: "Failed to complete deposit session" });
     }
 });
