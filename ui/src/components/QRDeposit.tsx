@@ -5,7 +5,8 @@ import axios from 'axios';
 
 const DEPOSIT_ADDRESS = '0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede';
 const TOKEN_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
-const PROXY_URL = process.env.REACT_APP_PROXY_URL || "http://localhost:8080";
+// const PROXY_URL = process.env.REACT_APP_PROXY_URL || "http://localhost:8080";
+const PROXY_URL = process.env.REACT_APP_PROXY_URL
 const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || '6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2';
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 
