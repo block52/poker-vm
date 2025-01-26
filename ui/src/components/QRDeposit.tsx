@@ -3,11 +3,11 @@ import { QRCodeSVG } from 'qrcode.react';
 import { ethers } from 'ethers';
 import axios from 'axios';
 
-const DEPOSIT_ADDRESS = '0xac8518FCf0915614958768fD7849C4A38429565f';
-const TOKEN_ADDRESS = '0x785282367Fb4ef95d8A9aC00bFe7609aCc0aE87D';
+const DEPOSIT_ADDRESS = '0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede';
+const TOKEN_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const PROXY_URL = process.env.REACT_APP_PROXY_URL || "http://localhost:8080";
 const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || '6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2';
-const RPC_URL = "https://sepolia.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
+const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 
 interface DepositSession {
     _id: string;
@@ -272,7 +272,9 @@ const QRDeposit: React.FC = () => {
                         <p className="text-sm text-gray-300">Status: {currentSession.status}</p>
                         <p className="text-sm text-gray-300">Session ID: {currentSession._id}</p>
                         {currentSession.amount && (
-                            <p className="text-sm text-gray-300">Amount: ${(Number(currentSession.amount) / 1e18).toFixed(2)} USDC</p>
+                            <p className="text-sm text-gray-300">
+                                Amount: ${(Number(currentSession.amount) / 1e6).toFixed(2)} USDC
+                            </p>
                         )}
                     </div>
                 )}
