@@ -3,12 +3,13 @@ import { Player } from "../models/game";
 import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
+import { getAccountManagementInstance } from "../state/accountManagement";
 
-describe.skip("Texas Holdem Game", () => {
+describe("Texas Holdem Game", () => {
     describe("Heads up", () => {
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
-        it("should have the correct properties pre flop", () => {
+        it.only("should have the correct properties pre flop", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
@@ -16,12 +17,14 @@ describe.skip("Texas Holdem Game", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200));
-            // expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            // // get player state
-            // const player1 = game.getPlayer("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
-            // expect(player1).toBeDefined();
-            // expect(player1?.id).toEqual("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+            // get player state
+            const player1 = game.getPlayer("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+            expect(player1).toBeDefined();
+
+            const player2 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(player2).toBeDefined();
         });
 
         it("should allow a round to be played heads up", () => {

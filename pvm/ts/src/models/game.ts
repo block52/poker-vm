@@ -80,17 +80,6 @@ export class PlayerState implements IJSONModel {
     public toJson(): PlayerDTO { return this._dto; }
 }
 
-// // Remove this class
-// export class TexasHoldemJoinState implements IJSONModel {
-//     private readonly _dto: TexasHoldemJoinStateDTO;
-
-//     constructor(players: PlayerId[]) {
-//         this._dto = { type: "join", players };
-//     }
-
-//     public toJson(): TexasHoldemJoinStateDTO { return this._dto; }
-// }
-
 export class TexasHoldemGameState implements IJSONModel {
     // private static RoundMap = new Map<TexasHoldemRound, string>([
     //     [TexasHoldemRound.PREFLOP, "preflop"],

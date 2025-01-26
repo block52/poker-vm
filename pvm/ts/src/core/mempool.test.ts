@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { Transaction } from "../models";
-import { Mempool } from "./mempool";
+import { getMempoolInstance, Mempool } from "./mempool";
 
 import { getTransactionInstance } from "../state/transactionManagement";
 
@@ -22,9 +22,14 @@ describe.skip("Should get new mempool", () => {
         (getTransactionInstance as jest.Mock).mockReturnValue(mockTransactionManagement);
     });
 
-    it("should get new mempool", async () => {
+    it("should get new mempool", () => {
         const mempool = new Mempool();
         expect(mempool).toBeInstanceOf(Mempool);
+    });
+
+    it("should get mempool instance", () => {
+        const mempool = getMempoolInstance();
+        expect(mempool).toBeDefined();
     });
 
     it("should only allow one transaction in mempool", async () => {

@@ -20,7 +20,10 @@ type Round = {
 
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
-    private _players: Player[];
+    
+    // Players should be a map of player to seat index
+    // private _players: Map<number, Player>;
+    private readonly _players: Player[];
     private _rounds!: Round[];
     private _deck!: Deck;
     private _sidePots!: Map<PlayerId, number>;
@@ -30,7 +33,9 @@ class TexasHoldemGame implements IPoker {
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
+
     private _minPlayers: number = 2;
+    private _maxPlayers: number = 9;
 
     constructor(
         private _address: string,
@@ -38,11 +43,18 @@ class TexasHoldemGame implements IPoker {
         private _bigBlind: number,
         private _dealer: number = 0,
         private _nextToAct: number = 1,
-        private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
+        private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private _communityCards: Card[] = [],
         private _pot: number = 0,
     ) {
+        // this._players = new Map<number, Player>();
+        // Create an array of players with max size of 9
+
         this._players = [];
+        for (let i = 0; i < this._maxPlayers; i++) {
+            this._players.push(new Player(ethers.ZeroAddress, 0));
+        }
+        
         this._currentRound = _currentRound;
         this._nextToAct = _nextToAct;
         this._bigBlindPosition = 0;
@@ -155,7 +167,9 @@ class TexasHoldemGame implements IPoker {
 
     join(player: Player) {
         // if (this.currentStage != StageType.JOIN) throw new Error("Cannot join once game started.");
-        this._players.push(player);
+
+        const seat = this.getNextSeat();
+        this._players[seat] = player;
 
         if (this._players.length === 1 && this.currentRound === TexasHoldemRound.ANTE) {
             // post small blind
@@ -170,8 +184,17 @@ class TexasHoldemGame implements IPoker {
     }
 
     join2(address: string, stack: number) {
+        if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
+
         const player = new Player(address, stack);
         this.join(player);
+    }
+
+    leave(playerId: string) {
+        const index = this._players.findIndex(p => p.id === playerId);
+        if (index === -1) throw new Error("Player not found.");
+        
+        this._players.splice(index, 1);
     }
 
     getValidActions(playerId: string): LegalAction[] {
@@ -223,14 +246,14 @@ class TexasHoldemGame implements IPoker {
         let totalActions: number = 0;
 
         if (this._currentRound !== TexasHoldemRound.ANTE) {
-            for (const stage = TexasHoldemRound.ANTE; stage <= this._currentRound; this.setNextRound()) {
-                const actions = this.getPlayerActions(player, stage);
-                totalActions += actions.length;
+            // for (const stage = TexasHoldemRound.ANTE; stage <= this._currentRound; this.setNextRound()) {
+            //     const actions = this.getPlayerActions(player, stage);
+            //     totalActions += actions.length;
 
-                if (actions.some(m => m.action === PlayerActionType.FOLD)) return PlayerStatus.FOLDED;
+            //     if (actions.some(m => m.action === PlayerActionType.FOLD)) return PlayerStatus.FOLDED;
 
-                if (actions.some(m => m.action === PlayerActionType.ALL_IN)) return PlayerStatus.ALL_IN;
-            }
+            //     if (actions.some(m => m.action === PlayerActionType.ALL_IN)) return PlayerStatus.ALL_IN;
+            // }
         }
 
         return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
@@ -240,7 +263,7 @@ class TexasHoldemGame implements IPoker {
         // if (this._currentRound === TexasHoldemRound.ANTE) throw new Error("Cannot retrieve stakes until game started.");
 
         const i = this.getRoundAsNumber(round);
-        const _round = this._rounds.filter(r => r.type === round);
+        // const _round = this._rounds.filter(r => r.type === round);
 
         return this._rounds[i].actions.reduce((acc, v) => {
             acc.set(v.playerId, (acc.get(v.playerId) ?? 0) + (v.amount ?? 0));
@@ -319,6 +342,16 @@ class TexasHoldemGame implements IPoker {
 
         if (!active.length || (active.length == 1 && !anyAllIn) || active.map(i => this._players[i]).every(isPlayerTurnFinished)) this.nextHand();
         else this._nextToAct = active[0];
+    }
+
+    private getNextSeat(): number {
+        for (let i = 0; i < this._players.length; i++) {
+            if (this._players[i] === undefined || this._players[i].id === ethers.ZeroAddress) {
+                return i;
+            }
+        }
+
+        return this._players.length;
     }
 
     // complete round maybe?

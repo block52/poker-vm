@@ -5,7 +5,6 @@ import { Player, TexasHoldemGameState } from "../models/game";
 import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { N } from "ethers";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
     private readonly gameManagement: GameManagement;
@@ -22,7 +21,11 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
         const game = TexasHoldemGame.fromJson(json);
 
         // Get all transactions from mempool and replay them
-        const transactions = await this.mempool.findAll(tx => tx.to === this.address);
+        const transactions = this.mempool.findAll(tx => tx.to === this.address);
+        // const transactions = this.mempool.get();
+
+        // filter transactions by address
+        // transactions.filter(tx => tx.to === this.address);
 
         transactions.forEach(tx => {
             switch (tx.data) {

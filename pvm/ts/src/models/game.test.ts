@@ -66,7 +66,6 @@ describe.only("Game Tests", () => {
         };
 
         const texasHoldemGameState = TexasHoldemGameState.fromJson(json);
-
         expect(texasHoldemGameState).toBeDefined();
     });
 
@@ -96,28 +95,155 @@ describe.only("Game Tests", () => {
         const sb = 10;
         const bb = 30;
         const dealer = 0;
-        const communityCards: Card[] = [];        
+        const communityCards: Card[] = [];
         const round = TexasHoldemRound.PREFLOP;
-        
+
         const texasHoldemGame = new TexasHoldemGame(address, sb, bb, dealer, 0, round, communityCards, 0);
         const state: TexasHoldemGameState = texasHoldemGame.state;
         const json = state.toJson();
 
         expect(state).toBeDefined();
-        
+
         expect(json).toEqual({
             type: "cash",
-            address: ethers.ZeroAddress,
+            address: "0x0000000000000000000000000000000000000000",
             smallBlind: "10000000000000000000",
             bigBlind: "30000000000000000000",
             dealer: 0,
-            players: [],
+            players: [
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 0,
+                    stack: "0",
+                    isSmallBlind: true,
+                    isBigBlind: true,
+                    isDealer: true,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 1,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 2,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 3,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 4,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 5,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 6,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 7,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    address: "0x0000000000000000000000000000000000000000",
+                    seat: 8,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    lastAction: undefined,
+                    actions: [],
+                    status: "active",
+                    timeout: 0,
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            ],
             communityCards: [],
             pots: ["0"],
             nextToAct: 0,
             round: "preflop",
             winners: [],
-            signature: ethers.ZeroHash
+            signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
         });
     });
 });
