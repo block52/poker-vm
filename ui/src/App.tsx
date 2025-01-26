@@ -14,9 +14,9 @@ import Dashboard from "./components/Dashboard";
 import useUserWallet from "./hooks/useUserWallet";
 import QRDeposit from './components/QRDeposit';
 
-// export const PROXY_URL = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-export const PROXY_URL = process.env.REACT_APP_PROXY_URL
-console.log(PROXY_URL);
+// Move this to a separate config file (e.g., src/config.ts)
+export const PROXY_URL = process.env.REACT_APP_PROXY_URL || 'https://proxy.block52.xyz';
+console.log('PROXY_URL in App:', PROXY_URL); // Debug log
 
 const queryClient = new QueryClient();
 
