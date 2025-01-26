@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { Transaction } from "./transaction";
 
 describe("Transaction Tests", () => {
-    it.only("should create new Transaction model", async () => {
+    it("should create new Transaction model", async () => {
         // build leopard coyote vintage just syrup whip truth accident ritual absurd seat
         const actual = await Transaction.create(
             "to",
