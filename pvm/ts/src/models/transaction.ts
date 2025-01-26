@@ -44,7 +44,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
     }
 
     public calculateHash(): string {
-        return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.timestamp}`).digest("hex");
+        return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.nonce}`).digest("hex");
     }
 
     // get hash(): string {

@@ -80,16 +80,16 @@ export class PlayerState implements IJSONModel {
     public toJson(): PlayerDTO { return this._dto; }
 }
 
-// Remove this class
-export class TexasHoldemJoinState implements IJSONModel {
-    private readonly _dto: TexasHoldemJoinStateDTO;
+// // Remove this class
+// export class TexasHoldemJoinState implements IJSONModel {
+//     private readonly _dto: TexasHoldemJoinStateDTO;
 
-    constructor(players: PlayerId[]) {
-        this._dto = { type: "join", players };
-    }
+//     constructor(players: PlayerId[]) {
+//         this._dto = { type: "join", players };
+//     }
 
-    public toJson(): TexasHoldemJoinStateDTO { return this._dto; }
-}
+//     public toJson(): TexasHoldemJoinStateDTO { return this._dto; }
+// }
 
 export class TexasHoldemGameState implements IJSONModel {
     // private static RoundMap = new Map<TexasHoldemRound, string>([
@@ -134,10 +134,3 @@ export class TexasHoldemGameState implements IJSONModel {
         return new TexasHoldemGameState(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, [], [], 0, 0, TexasHoldemRound.PREFLOP);
     }
 }
-
-// export class TexasHoldemState implements IJSONModel {
-//     constructor(private _state?: TexasHoldemJoinState | TexasHoldemGameState) {
-//     }
-
-//     public toJson(): TexasHoldemStateDTO { return this._state?.toJson() ?? { type: "join", players: [] } };
-// }

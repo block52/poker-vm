@@ -1,22 +1,23 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { getMempoolInstance } from "../core/mempool";
+import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
 import GameManagement from "../state/gameManagement";
-import { get } from "axios";
 import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
-import { Player, TexasHoldemGameState } from "../models/game";
+import { Player } from "../models/game";
 import { ethers } from "ethers";
 import TexasHoldemGame from "../engine/texasHoldem";
 
 export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly gameManagement: GameManagement;
+    private readonly mempool: Mempool;
     private readonly accountManagement: AccountManagement;
 
     constructor(private from: string, private to: string, private amount: bigint, private data: string | null, private readonly privateKey: string) {
         this.gameManagement = new GameManagement();
         this.accountManagement = getAccountManagementInstance();
+        this.mempool = getMempoolInstance();
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -43,10 +44,10 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 const game = TexasHoldemGame.fromJson(json);
 
                 if (!game) {
-                    // return defualt response
-
-                    
+                    // return default response
                 }
+
+                // Replay tx from mempool
 
                 // const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
 
@@ -66,9 +67,9 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 // }
 
                 // Cast string to PlayerActionType
-                const playerAction: PlayerActionType = this.data as PlayerActionType;
+                const playerAction: PlayerActionType = this.data as PlayerActionType || "join";
 
-                if (this.data !== "join") {
+                if (this.data === "join") {
                     // const state = await this.gameManagement.get(this.to);
                     // if (!state) throw new Error("Game not found");
 

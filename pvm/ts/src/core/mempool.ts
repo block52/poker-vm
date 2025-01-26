@@ -51,6 +51,22 @@ export class Mempool {
         return txs.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
     }
 
+    public getTransaction(hash: string): Transaction | undefined {
+        return this.txMap.get(hash);
+    }
+
+    public find(predicate: (tx: Transaction) => boolean): Transaction | undefined {
+        return Array.from(this.txMap.values()).find(predicate);
+    }
+
+    public findAll(predicate: (tx: Transaction) => boolean): Transaction[] {
+        return Array.from(this.txMap.values()).filter(predicate);
+    }
+
+    public remove(hash: string) {
+        this.txMap.delete(hash);
+    }
+
     public async purge() {
         for (const tx of this.txMap.values()) {
             if (await this.transactionManagement.exists(tx.hash)) {

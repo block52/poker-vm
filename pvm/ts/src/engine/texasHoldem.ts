@@ -1,5 +1,5 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { IUpdate, Turn, Player, PlayerId, TexasHoldemGameState, TexasHoldemJoinState, LegalAction, PlayerState } from "../models/game";
+import { IUpdate, Turn, Player, PlayerId, TexasHoldemGameState, LegalAction, PlayerState } from "../models/game";
 import { Card, Deck, DeckType } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -52,7 +52,7 @@ class TexasHoldemGame implements IPoker {
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) {}
+            constructor(public game: TexasHoldemGame) { }
 
             addAction(action: Turn): void {
                 const ante_stage: Round = {
@@ -99,32 +99,53 @@ class TexasHoldemGame implements IPoker {
         return this._currentRound;
     }
     get pot() {
-        return this.getPot();
+        return this._pot;
     }
     get winners() {
         return this._winners;
     }
     get state() {
-        const players: PlayerState[] = this._players.map((p, i) => {
-            const player = new Player(p.id, p.chips, p.holeCards);
-            return player.getPlayerState(this, i);
-        });
+        // const players: PlayerState[] = this._players.map((p, i) => {
+        //     const player = new Player(p.id, p.chips, p.holeCards);
+        //     return player.getPlayerState(this, i);
+        // });
 
-        return this.currentRound === TexasHoldemRound.ANTE
-            ? new TexasHoldemJoinState(this._players.map(p => p.id))
-            : new TexasHoldemGameState(
-                  this._address,
-                  this._smallBlind,
-                  this._bigBlind,
-                  this._dealer,
-                  players,
-                  this._communityCards,
-                  this.pot,
-                  this.getMaxStake(),
-                  this._currentRound,
-                  this._winners
-              );
+        const players: PlayerState[] = [];
+
+        for (let i = 0; i < this._players.length; i++) {
+            const player = new Player(this._players[i].id, this._players[i].chips, this._players[i].holeCards);
+            players.push(player.getPlayerState(this, i));
+        }
+
+        return new TexasHoldemGameState(
+            this._address,
+            this._smallBlind,
+            this._bigBlind,
+            this._dealer,
+            players,
+            this._communityCards,
+            this.pot,
+            0,
+            this._currentRound,
+            this._winners
+        );
     }
+
+    // return this.currentRound === TexasHoldemRound.ANTE
+    //     ? new TexasHoldemJoinState(this._players.map(p => p.id))
+    //     : new TexasHoldemGameState(
+    //           this._address,
+    //           this._smallBlind,
+    //           this._bigBlind,
+    //           this._dealer,
+    //           players,
+    //           this._communityCards,
+    //           this.pot,
+    //           this.getMaxStake(),
+    //           this._currentRound,
+    //           this._winners
+    //       );
+    //}
 
     deal() {
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
@@ -141,11 +162,16 @@ class TexasHoldemGame implements IPoker {
             new SmallBlindAction(this, this._update).execute(player);
         }
 
-        // Check if we havent dealt
+        // Check if we haven't dealt
         if (this._players.length === this._minPlayers && this.currentRound === TexasHoldemRound.ANTE) {
             // new BigBlindAction(this, this._update).execute(player);
             // this.deal();
         }
+    }
+
+    join2(address: string, stack: number) {
+        const player = new Player(address, stack);
+        this.join(player);
     }
 
     getValidActions(playerId: string): LegalAction[] {

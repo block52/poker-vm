@@ -1,8 +1,8 @@
 import { ethers } from "ethers";
 import { Transaction } from "./transaction";
 
-describe.skip("Transaction Tests", () => {
-    it("should create new Transaction model", async () => {
+describe("Transaction Tests", () => {
+    it.only("should create new Transaction model", async () => {
         // build leopard coyote vintage just syrup whip truth accident ritual absurd seat
         const actual = await Transaction.create(
             "to",
@@ -13,6 +13,10 @@ describe.skip("Transaction Tests", () => {
             "data"
         );
         expect(actual).toBeDefined();
+
+        const hash = actual.calculateHash();
+        expect(hash).toBeDefined();
+        expect(hash).toEqual("58990a597533a2026a1a901058c4db0a2aae6c7e499c8e5730c14db397c08cf8");
     });
 
     it("should create transaction properties", async () => {

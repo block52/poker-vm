@@ -1,17 +1,56 @@
-import { TexasHoldemGameState } from "../models/game";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { getMempoolInstance, Mempool } from "../core/mempool";
+import TexasHoldemGame from "../engine/texasHoldem";
+import { Player, TexasHoldemGameState } from "../models/game";
 import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
+import { N } from "ethers";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
     private readonly gameManagement: GameManagement;
+    private readonly mempool: Mempool;
 
     constructor(readonly address: string, private readonly privateKey: string) {
         this.gameManagement = new GameManagement();
+        this.mempool = getMempoolInstance();
     }
 
     public async execute(): Promise<ISignedResponse<TexasHoldemGameState>> {
-        const state: TexasHoldemGameState = await this.gameManagement.get(this.address);
-        return signResult(state, this.privateKey);
+        // Get the game state as JSON
+        const json = await this.gameManagement.get(this.address);
+        const game = TexasHoldemGame.fromJson(json);
+
+        // Get all transactions from mempool and replay them
+        const transactions = await this.mempool.findAll(tx => tx.to === this.address);
+
+        transactions.forEach(tx => {
+            switch (tx.data) {
+                case "join":
+                    // const player = new Player(tx.from, Number(tx.value));
+                    game.join2(tx.from, Number(tx.value));
+                    break;
+                case "bet":
+                    game.performAction(tx.from, PlayerActionType.BET, Number(tx.value));
+                    break;
+                case "call":
+                    game.performAction(tx.from, PlayerActionType.CALL, Number(tx.value));
+                    break;
+                case "fold":
+                    game.performAction(tx.from, PlayerActionType.FOLD);
+                    break;
+                case "check":
+                    game.performAction(tx.from, PlayerActionType.CHECK);
+                    break;
+                case "raise":
+                    game.performAction(tx.from, PlayerActionType.RAISE, Number(tx.value));
+                    break;
+                default:
+                    throw new Error("Invalid action");
+            };
+        });
+
+        const state = game.state;
+        return await signResult(state, this.privateKey);
     }
 }
