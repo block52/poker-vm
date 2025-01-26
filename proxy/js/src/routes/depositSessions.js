@@ -219,6 +219,17 @@ router.put("/:id/complete", async (req, res) => {
     console.log('Amount received:', amount);
 
     try {
+        // First check if session is already completed
+        const existingSession = await DepositSession.findOne({
+            _id: id,
+            status: "COMPLETED"
+        });
+
+        if (existingSession) {
+            console.log('Session already completed, skipping');
+            return res.json(existingSession);
+        }
+
         const session = await DepositSession.findById(id);
         console.log('Found session:', {
             id: session?._id,
@@ -253,10 +264,7 @@ router.put("/:id/complete", async (req, res) => {
 
         res.json(session);
     } catch (error) {
-        console.error('=== Error in session completion ===');
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Stack trace:', error.stack);
+        console.error('Error in session completion:', error);
         res.status(500).json({ error: "Failed to complete deposit session" });
     }
 });
