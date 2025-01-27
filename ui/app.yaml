@@ -1,0 +1,13 @@
+name: poker-vm
+services:
+  - name: poker-vm-ui
+    type: static-site
+    build_command: yarn build
+    output_dir: build
+    routes:
+      - path: /
+      - path: /*
+        rewrite: /index.html
+    envs:
+      - key: REACT_APP_PROXY_URL
+        value: https://proxy.block52.xyz
