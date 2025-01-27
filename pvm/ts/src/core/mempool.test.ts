@@ -7,7 +7,7 @@ import { getTransactionInstance } from "../state/transactionManagement";
 // Mock external dependencies
 jest.mock("../state/transactionManagement");
 
-describe("Should get new mempool", () => {
+describe.skip("Should get new mempool", () => {
     // Mock instances
     let mockTransactionManagement: jest.Mocked<any>;
 

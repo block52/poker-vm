@@ -1,4 +1,3 @@
-import { get } from "axios";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Account } from "../models";
 import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
@@ -18,7 +17,7 @@ export class AccountCommand implements ISignedCommand<Account> {
     }
 
     public async execute(): Promise<ISignedResponse<Account>> {
-        let account = await this.accountManagement.getAccount(this.address);
+        const account = await this.accountManagement.getAccount(this.address);
 
         const fromTxs = this.mempool.findAll(tx => tx.from === this.address);
         const toTxs = this.mempool.findAll(tx => tx.to === this.address);

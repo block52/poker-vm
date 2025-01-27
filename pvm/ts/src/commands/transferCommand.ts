@@ -8,6 +8,7 @@ import { AccountManagement, getAccountManagementInstance } from "../state/accoun
 import { Player } from "../models/game";
 import { ethers } from "ethers";
 import TexasHoldemGame from "../engine/texasHoldem";
+import { AccountCommand } from "./accountCommand";
 
 export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly gameManagement: GameManagement;
@@ -21,9 +22,17 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
-        const fromAccount = await this.accountManagement.getAccount(this.from);
 
-        if (fromAccount.balance < this.amount) {
+        const accountCommand = new AccountCommand(this.from, this.privateKey);
+        const accountResponse = await accountCommand.execute();
+        const fromAccount = accountResponse.data;
+
+        // const fromAccount = await this.accountManagement.getAccount(this.from);
+
+        console.log(`From Account: ${fromAccount}`);
+        console.log(`From Account Balance: ${fromAccount.balance}`);
+
+        if (this.amount > fromAccount.balance) {
             throw new Error("Insufficient balance");
         }
 

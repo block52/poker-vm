@@ -67,12 +67,12 @@ class TexasHoldemGame implements IPoker {
             constructor(public game: TexasHoldemGame) { }
 
             addAction(action: Turn): void {
-                const ante_stage: Round = {
+                const ante_round: Round = {
                     type: TexasHoldemRound.ANTE,
                     actions: []
                 };
 
-                this.game._rounds.push(ante_stage);
+                this.game._rounds.push(ante_round);
                 // this.game._rounds[this.game._currentRound].moves.push(move);
                 // if (![PlayerAction.SMALL_BLIND, PlayerAction.BIG_BLIND].includes(move.action)) this.game.nextPlayer();
             }
