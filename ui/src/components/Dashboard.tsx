@@ -4,6 +4,8 @@ import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import "./Dashboard.css";
 import useUserWalletConnect from "../hooks/useUserWalletConnect"; // Add this import
 import useUserWallet from "../hooks/useUserWallet"; // Add this import
+import axios from "axios";
+import { PROXY_URL } from "../config/constants";
 
 // Create an enum of game types
 enum GameType {
@@ -25,31 +27,78 @@ const Dashboard: React.FC = () => {
     const [variantSelected, setVariantSelected] = useState<string>("texas-holdem");
     const [seatSelected, setSeatSelected] = useState<number>(6);
     const { isConnected, open, address } = useUserWalletConnect();
-    const { balance } = useUserWallet();
+    const { balance: b52Balance } = useUserWallet();
+    const [games, setGames] = useState([]);
+
+    // Add logging to fetch games
+    const fetchGames = async () => {
+        console.log("\n=== Fetching Games from Proxy ===");
+        try {
+            const response = await axios.get(`${PROXY_URL}/games`);
+            console.log("Games Response:", response.data);
+            
+            // Map the response to our game types
+            const games = response.data.map((game: any) => ({
+                id: game.id,
+                variant: game.variant,
+                type: game.type,
+                limit: game.limit,
+                maxPlayers: game.max_players,
+                minBuy: game.min,
+                maxBuy: game.max
+            }));
+            
+            console.log("Processed Games:", games);
+            setGames(games);
+        } catch (error) {
+            console.error("Error fetching games:", error);
+        }
+    };
 
     useEffect(() => {
+        console.log("Dashboard mounted, fetching games...");
+        fetchGames();
+    }, []);
+
+    useEffect(() => {
+        console.log("\n=== Dashboard Mounted ===");
+        console.log("Connected Wallet:", address);
+        console.log("Balance:", b52Balance);
+        console.log("======================\n");
+
         const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
+        console.log("Local Storage Key:", localKey);
         if (!localKey) return setPublicKey(undefined);
 
         setPublicKey(localKey);
     }, []);
 
     const handleGameType = (type: GameType) => {
+        console.log("\n=== Game Type Selected ===");
+        console.log("Type:", type);
+        
         if (type === GameType.CASH) {
+            console.log("Setting type to CASH");
             setTypeSelected("cash");
         }
 
         if (type === GameType.TOURNAMENT) {
+            console.log("Setting type to TOURNAMENT");
             setTypeSelected("tournament");
         }
     };
 
     const handleGameVariant = (variant: Variant) => {
+        console.log("\n=== Game Variant Selected ===");
+        console.log("Variant:", variant);
+        
         if (variant === Variant.TEXAS_HOLDEM) {
+            console.log("Setting variant to TEXAS HOLDEM");
             setVariantSelected("texas-holdem");
         }
 
         if (variant === Variant.OMAHA) {
+            console.log("Setting variant to OMAHA");
             setVariantSelected("omaha");
         }
     };
@@ -79,6 +128,12 @@ const Dashboard: React.FC = () => {
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
 
+    // Add the same format function
+    const formatBalance = (rawBalance: string | number) => {
+        const value = Number(rawBalance) / 1e18;
+        return value.toFixed(2);
+    };
+
     return (
         <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black">
             <div className="bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-xl">
@@ -91,7 +146,9 @@ const Dashboard: React.FC = () => {
                             Block 52 Account: <span className="font-mono text-pink-500">{publicKey}</span>
                         </p>
                         <p className="text-white text-lg">
-                            Balance: <span className="font-bold text-pink-500">${(Number(balance) || 0).toFixed(2)} USDC</span>
+                            Balance: <span className="font-bold text-pink-500">
+                                ${formatBalance(b52Balance || '0')} USDC
+                            </span>
                         </p>
                         <Link
                             to="/qr-deposit"

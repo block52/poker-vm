@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { ethers } from 'ethers';
 import axios from 'axios';
 import { PROXY_URL } from '../config/constants';
+import useUserWallet from "../hooks/useUserWallet";
 
 const DEPOSIT_ADDRESS = '0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede';
 const TOKEN_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
@@ -29,6 +30,7 @@ interface TransferEvent {
 }
 
 const QRDeposit: React.FC = () => {
+    const { balance: b52Balance } = useUserWallet();
     const [showQR, setShowQR] = useState<boolean>(false);
     const [latestTransaction, setLatestTransaction] = useState<any>(null);
     const [timeLeft, setTimeLeft] = useState<number>(300); // 5 minutes in seconds
@@ -263,11 +265,25 @@ const QRDeposit: React.FC = () => {
         return () => clearInterval(interval);
     }, [showQR, currentSession]);
 
+    // Add a format function
+    const formatBalance = (rawBalance: string | number) => {
+        // Convert the raw balance (with 18 decimals) to a human-readable number
+        const value = Number(rawBalance) / 1e18;
+        return value.toFixed(2);
+    };
+
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
             <div className="max-w-md w-full bg-gray-800 rounded-lg shadow-xl p-6">
                 <h1 className="text-2xl font-bold text-center mb-6">Deposit USDC</h1>
                 
+                <div className="bg-gray-700 rounded-lg p-4 mb-6">
+                    <p className="text-lg mb-2">Block 52 Balance:</p>
+                    <p className="text-xl font-bold text-pink-500">
+                        ${formatBalance(b52Balance || '0')} USDC
+                    </p>
+                </div>
+
                 {/* Session Status */}
                 {currentSession && (
                     <div className="bg-gray-700 rounded-lg p-4 mb-6">
