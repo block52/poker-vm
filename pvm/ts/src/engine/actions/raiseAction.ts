@@ -2,6 +2,7 @@ import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { Player, Range } from "../../models/game";
 import BaseAction from "./baseAction";
 
+// Obsolete, use BetAction instead
 class RaiseAction extends BaseAction {
     get type(): PlayerActionType { return PlayerActionType.RAISE }
 
@@ -14,7 +15,7 @@ class RaiseAction extends BaseAction {
         return { minAmount: this.game.bigBlind, maxAmount: player.chips - this.getDeductAmount(player, 0) };
     }
 
-    protected getDeductAmount(player: Player, amount?: number): number {
+    protected getDeductAmount(player: Player, amount?: BigInt): BigInt {
         return this.game.getMaxStake() - this.game.getPlayerStake(player) + amount!;
     }
 }

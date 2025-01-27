@@ -32,7 +32,7 @@ abstract class BaseAction {
 
         // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
         // the amount only specifies that over the existing maximum which the player may not yet have covered
-        const deductAmount = this.getDeductAmount(player, amount);
+        const deductAmount: BigInt = this.getDeductAmount(player, amount);
         if (deductAmount) {
             if (player.chips < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
@@ -42,8 +42,8 @@ abstract class BaseAction {
         this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
     }
 
-    protected getDeductAmount(_player: Player, amount?: number): number | undefined {
-        return amount;
+    protected getDeductAmount(_player: Player, amount?: BigInt): BigInt {
+        return amount ? BigInt(amount) : BigInt(0);
     }
 }
 

@@ -14,7 +14,7 @@ export type Range = {
 export type Turn = {
     playerId: PlayerId;
     action: PlayerActionType;
-    amount?: number;
+    amount?: BigInt;
 };
 
 export type LegalAction = ActionDTO;
@@ -26,7 +26,7 @@ export interface IUpdate {
 export class Player {
     constructor(
         private readonly _address: string,
-        public chips: number,
+        public chips: BigInt,
         public holeCards?: [Card, Card]
     ) { }
 
@@ -59,7 +59,7 @@ export class PlayerState implements IJSONModel {
     ) {
         const holeCards = player.holeCards?.map(p => p.value);
         const lastActionDTO = (lastAction && lastAction.amount) ? { action: lastAction.action, amount: lastAction.amount.toString() } : undefined;
-        const stack = ethers.parseUnits(player.chips.toString(), 18).toString();
+        const stack = player.chips.toString();
 
         this._dto = { 
             address: player.id, 
@@ -108,9 +108,9 @@ export class TexasHoldemGameState implements IJSONModel {
         // const round = TexasHoldemGameState.RoundMap.get(round_)!;
         const winners = winners_ ? Array.from(winners_.entries()).map(([address, amount]) => ({ address, amount })) : [];
 
-        const smallBlind = ethers.parseUnits(sb.toString(), 18).toString();
-        const bigBlind = ethers.parseUnits(bb.toString(), 18).toString();
-        const pots = [ethers.parseUnits(pot.toString(), 18).toString()];
+        const smallBlind = sb.toString();
+        const bigBlind = bb.toString();;
+        const pots = [pot.toString()];
 
         this._dto = { type: "cash", address, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash };
     }

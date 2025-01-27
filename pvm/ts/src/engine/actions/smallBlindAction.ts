@@ -9,7 +9,7 @@ class SmallBlindAction extends BaseAction {
         return undefined; 
     }
 
-    getDeductAmount(_player: Player, _amount?: number): number | undefined {
+    getDeductAmount(_player: Player, _amount?: BigInt): BigInt {
         return this.game.smallBlind;
     }
 }
