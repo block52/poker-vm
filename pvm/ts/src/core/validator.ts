@@ -15,7 +15,7 @@ export class Validator {
     private count: number;
     private lastUpdate: Date;
 
-    constructor(private readonly rpcUrl: string) {
+    constructor(private rpcUrl: string) {
         this.blockManager = getBlockchainInstance();        
         const provider = createProvider(rpcUrl);
         this.count = 0;
@@ -57,6 +57,11 @@ export class Validator {
         const validatorIndex = nextBlockIndex % this.validatorCount;
 
         const { publicKey: validatorAddress } = this.nodes[validatorIndex];
+
+        const node1 = "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846";
+        const texasHodl = "0xeE3A5673dE06Fa3Efd2fA2B6F46B5f75C0AcEb8D";
+        const dogNode = "0xA5A3443679d1154264d419F8C716435AA4972D9d";
+
         // console.log(`Next validator index: ${validatorIndex}, ${validatorAddress}`);
 
         // dog node metamask 0xA5A3443679d1154264d419F8C716435AA4972D9d
@@ -66,7 +71,8 @@ export class Validator {
         // return pub_keys[nextBlockIndex % 2];
         
         // return "0xA5A3443679d1154264d419F8C716435AA4972D9d"; // dog node
-        return validatorAddress;
+        // return validatorAddress;
+        return node1;
     }
 }
 
