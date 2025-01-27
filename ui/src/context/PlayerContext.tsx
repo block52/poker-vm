@@ -6,7 +6,7 @@ import axios from "axios";
 import useUserWallet from "../hooks/useUserWallet";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { toDollarFromString } from "../utils/numberUtils";
-import { PROXY_URL } from '../App';
+import { PROXY_URL } from '../config/constants';
 
 export const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
-import { PROXY_URL } from '../App';
+import { PROXY_URL } from '../config/constants';
 
 interface UseUserSeatResult {
     data: any;

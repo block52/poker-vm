@@ -4,6 +4,7 @@ import Table from "./components/playPage/Table";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiProvider } from "wagmi";
 
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { projectId, metadata, networks, wagmiAdapter } from "./config";
 import { mainnet } from "@reown/appkit/networks";
@@ -13,9 +14,10 @@ import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import useUserWallet from "./hooks/useUserWallet";
 import QRDeposit from './components/QRDeposit';
+import { PROXY_URL } from "./config/constants";
 
 // Move this to a separate config file (e.g., src/config.ts)
-export const PROXY_URL = process.env.REACT_APP_PROXY_URL || 'https://proxy.block52.xyz';
+// export const PROXY_URL = process.env.REACT_APP_PROXY_URL || 'http://localhost:8080';
 console.log('PROXY_URL in App:', PROXY_URL); // Debug log
 
 const queryClient = new QueryClient();

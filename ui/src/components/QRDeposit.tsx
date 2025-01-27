@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ethers } from 'ethers';
 import axios from 'axios';
+import { PROXY_URL } from '../config/constants';
 
 const DEPOSIT_ADDRESS = '0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede';
 const TOKEN_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
-// const PROXY_URL = process.env.REACT_APP_PROXY_URL || "http://localhost:8080";
-const PROXY_URL = process.env.REACT_APP_PROXY_URL || 'https://proxy.block52.xyz';
+
+
 console.log('PROXY_URL:', PROXY_URL); // Debug log
 const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || '6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2';
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
@@ -17,7 +18,7 @@ interface DepositSession {
     depositAddress: string;
     status: 'PENDING' | 'COMPLETED' | 'EXPIRED';
     expiresAt: string;
-    amount: number | null;
+    amount: number | null; 
 }
 
 // Add ERC20 Transfer event interface

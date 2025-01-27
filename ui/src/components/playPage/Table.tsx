@@ -23,7 +23,7 @@ import useUserBySeat from "../../hooks/useUserBySeat";
 import axios from "axios";
 import { ethers } from "ethers";
 import { useAccount } from 'wagmi';
-import { PROXY_URL } from '../../App';
+import { PROXY_URL } from '../../config/constants';
 
 //* Define the interface for the position object
 interface PositionArray {
