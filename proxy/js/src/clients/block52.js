@@ -28,18 +28,32 @@ class Block52 {
             id: this.requestId
         };
 
-        const { data } = await axios.post(this.node_url, rpc_request);
-        console.log("Block52 getAccount", data);
+        console.log('\n=== Proxy Sending RPC Request ===');
+        console.log('To:', this.node_url);
+        console.log('Request:', JSON.stringify(rpc_request, null, 2));
 
-        this.requestId++;
-        
-        return {
-            nonce: 0,
-            address: data.result.data.address,
-            privateKey: "",
-            path: "",
-            balance: data.result.data.balance
-        };
+        try {
+            const { data } = await axios.post(this.node_url, rpc_request);
+            console.log('\n=== Proxy Received Response ===');
+            console.log('Response:', JSON.stringify(data, null, 2));
+            console.log('===============================\n');
+
+            this.requestId++;
+            
+            return {
+                nonce: 0,
+                address: data.result.data.address,
+                privateKey: "",
+                path: "",
+                balance: data.result.data.balance
+            };
+        } catch (error) {
+            console.error('\n=== Proxy Error ===');
+            console.error('Error:', error.message);
+            console.error('Response:', error.response?.data);
+            console.error('===================\n');
+            throw error;
+        }
     }
 
     async getPlayer(index, id) {
