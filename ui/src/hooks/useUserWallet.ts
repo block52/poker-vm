@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Wallet, ethers } from "ethers";
 import axios from "axios";
 import { NodeRpcClient } from "@bitcoinbrisbane/block52";
-
+import { PROXY_URL } from "../config/constants";
 interface UserWalletResult {
     b52: NodeRpcClient | null;
     account: string | null;
@@ -30,7 +30,7 @@ const useUserWallet = (): UserWalletResult => {
         setError(null);
 
         try {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const url = PROXY_URL; 
             const response = await axios.get(`${url}/account/${account}`);
 
             if (response.status !== 200) {
