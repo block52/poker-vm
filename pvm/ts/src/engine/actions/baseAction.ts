@@ -17,7 +17,7 @@ abstract class BaseAction {
         return undefined;
     }
 
-    execute(player: Player, amount?: number): void {
+    execute(player: Player, amount?: BigInt): void {
         const range = this.verify(player);
         if (range) {
             if (!amount)
@@ -43,7 +43,7 @@ abstract class BaseAction {
     }
 
     protected getDeductAmount(_player: Player, amount?: BigInt): BigInt {
-        return amount ? BigInt(amount) : BigInt(0);
+        return amount ? amount : 0n;
     }
 }
 

@@ -9,13 +9,13 @@ describe("Texas Holdem Game", () => {
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
         it.only("should have the correct properties pre flop", () => {
-            const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
+            const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n, 2);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250));
+            game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250n));
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200));
+            game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200n));
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // get player state
@@ -28,8 +28,8 @@ describe("Texas Holdem Game", () => {
 
         it("should allow a round to be played heads up", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
-            game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250));
-            game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200));
+            game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250n));
+            game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200n));
 
             // get player state
             const player1 = game.getPlayer("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
@@ -54,11 +54,11 @@ describe("Texas Holdem Game", () => {
     });
 
     it("should process messages", function () {
-        const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30);
+        const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
 
-        game.join(new Player("1", 100));
-        game.join(new Player("2", 200));
-        game.join(new Player("3", 300));
+        game.join(new Player("1", 100n));
+        game.join(new Player("2", 200n));
+        game.join(new Player("3", 300n));
         game.deal();
 
         // Pre-flop
@@ -81,11 +81,11 @@ describe("Texas Holdem Game", () => {
     });
 
     it("should allow a round to be played", () => {
-        const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 25, 2);
-        game.join(new Player("1", 250));
-        game.join(new Player("2", 200));
-        game.join(new Player("3", 100));
-        game.join(new Player("4", 100));
+        const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 25n, 2);
+        game.join(new Player("1", 250n));
+        game.join(new Player("2", 200n));
+        game.join(new Player("3", 100n));
+        game.join(new Player("4", 100n));
         game.deal();
 
         expect(game.getBets().get("4")).toEqual(10); // Small blind

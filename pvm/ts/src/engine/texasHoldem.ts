@@ -56,7 +56,7 @@ class TexasHoldemGame implements IPoker {
 
         this._players = [];
         for (let i = 0; i < this._maxPlayers; i++) {
-            this._players.push(new Player(ethers.ZeroAddress, 0));
+            this._players.push(new Player(ethers.ZeroAddress, 0n));
         }
         
         this._currentRound = _currentRound;
@@ -193,7 +193,7 @@ class TexasHoldemGame implements IPoker {
         // }
     }
 
-    join2(address: string, stack: number) {
+    join2(address: string, stack: BigInt) {
         // This wont work because we fill the array with empty players
         // if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
 
@@ -209,10 +209,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     getValidActions(playerId: string): LegalAction[] {
-        const player = this.getPlayer(playerId);
-        return this._actions.map(verifyAction).filter(a => a) as LegalAction[];
-
-        function verifyAction(action: BaseAction) {
+        const verifyAction = (action: BaseAction) => {
             try {
                 const range = action.verify(player);
                 return { action: action.type, ...(range ? { minAmount: range.minAmount, maxAmount: range.maxAmount } : {}) };
@@ -220,6 +217,9 @@ class TexasHoldemGame implements IPoker {
                 return null;
             }
         }
+
+        const player = this.getPlayer(playerId);
+        return this._actions.map(verifyAction).filter(a => a) as LegalAction[];
     }
 
     getLastAction(playerId: string): Turn | undefined {
@@ -277,7 +277,7 @@ class TexasHoldemGame implements IPoker {
         // const _round = this._rounds.filter(r => r.type === round);
 
         return this._rounds[i].actions.reduce((acc, v) => {
-            acc.set(v.playerId, (acc.get(v.playerId) ?? 0) + (v.amount ?? 0));
+            acc.set(v.playerId, (acc.get(v.playerId) ?? 0n) + (v.amount ?? 0n));
             return acc;
         }, new Map<string, BigInt>());
     }
@@ -289,16 +289,18 @@ class TexasHoldemGame implements IPoker {
     // I dont understand this?
     getMaxStake(bets = this.getBets()): BigInt {
         // return bets.size ? Math.max(...bets.values()) : 0;
-        return BigInt(10000000000); // hack, change this
+        return 10000000000000000000n;
     }
 
     getPot(bets = this.getBets()): BigInt {
-        return Array.from(bets.values()).reduce((acc, v) => acc + v, 0);
+        // return Array.from(bets.values()).reduce((acc, v) => acc + v, 0);
+        // todo: fix
+        return 0n;
     }
 
     // Not sure why we need this
     private getStartingPot(): BigInt {
-        let pot = 0n;
+        let pot: BigInt = 0n;
         for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getBets(stage));
         return pot;
     }

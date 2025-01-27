@@ -7,8 +7,8 @@ import { ethers } from "ethers";
 export type PlayerId = string;
 
 export type Range = {
-    minAmount: number;
-    maxAmount: number;
+    minAmount: BigInt;
+    maxAmount: BigInt;
 }
 
 export type Turn = {
@@ -93,20 +93,20 @@ export class TexasHoldemGameState implements IJSONModel {
 
     constructor(
         address: string,
-        sb: number,
-        bb: number,
+        sb: BigInt,
+        bb: BigInt,
         dealer: number,
         players_: PlayerState[],
         communityCards_: Card[],
-        pot: number,
-        currentBet: number,
+        pot: BigInt,
+        currentBet: BigInt,
         round_: TexasHoldemRound,
-        winners_?: Map<PlayerId, number>
+        winners_?: Map<PlayerId, BigInt>
     ) {
         const players = players_.map(p => p.toJson());
         const communityCards = communityCards_.map(c => c.value);
         // const round = TexasHoldemGameState.RoundMap.get(round_)!;
-        const winners = winners_ ? Array.from(winners_.entries()).map(([address, amount]) => ({ address, amount })) : [];
+        const winners = winners_ ? Array.from(winners_.entries()).map(([address, amount]) => ({ address, amount: Number(amount) })) : [];
 
         const smallBlind = sb.toString();
         const bigBlind = bb.toString();;
@@ -118,6 +118,6 @@ export class TexasHoldemGameState implements IJSONModel {
     public toJson(): TexasHoldemGameStateDTO { return this._dto; }
 
     public static fromJson(json: any): TexasHoldemGameState {
-        return new TexasHoldemGameState(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, [], [], 0, 0, TexasHoldemRound.PREFLOP);
+        return new TexasHoldemGameState(json.address, BigInt(parseInt(json.smallBlind)), BigInt(parseInt(json.bigBlind)), json.dealer, [], [], BigInt(0), BigInt(0), TexasHoldemRound.PREFLOP);
     }
 }
