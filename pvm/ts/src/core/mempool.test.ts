@@ -7,7 +7,7 @@ import { getTransactionInstance } from "../state/transactionManagement";
 // Mock external dependencies
 jest.mock("../state/transactionManagement");
 
-describe.skip("Should get new mempool", () => {
+describe("Should get new mempool", () => {
     // Mock instances
     let mockTransactionManagement: jest.Mocked<any>;
 
@@ -39,6 +39,8 @@ describe.skip("Should get new mempool", () => {
 
         await mempool.add(tx);
         expect(mempool.get().length).toBe(1);
+
+        // todo: should throw when trying to add more than 1 transaction
     });
 
     it("should not allow duplicate transactions in mempool", async () => {
@@ -49,6 +51,17 @@ describe.skip("Should get new mempool", () => {
         await mempool.add(tx);
         await mempool.add(tx);
         expect(mempool.get().length).toBe(1);
+    });
+
+    it.skip("should find transaction in mempool", async () => {
+        // todo: need to mock .exists on the transaction management
+        const mempool = new Mempool(10);
+
+        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0, undefined, "mock-data-1");
+
+        await mempool.add(tx);
+        const foundTx = mempool.find((tx) => tx.hash === "tx1");
+        expect(foundTx).toBeDefined();
     });
 
     it("should clear mempool", async () => {

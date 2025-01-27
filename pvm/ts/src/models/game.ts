@@ -39,7 +39,7 @@ export class Player {
         
         const lastMove = game.getLastAction(this.id);
         const validMoves = game.getValidActions(this.id);
-        //const actions = validMoves.map(m => ({ action: m.action, min: m.minAmount.toString(), max: m.maxAmount.toString() }));
+        // const actions = validMoves.map(m => ({ action: m.action, min: m.minAmount.toString(), max: m.maxAmount.toString() }));
         return new PlayerState(this, isSmallBlind, isBigBlind, isDealer, lastMove, position, PlayerStatus.ACTIVE, validMoves);
     }
 }
@@ -111,8 +111,6 @@ export class TexasHoldemGameState implements IJSONModel {
         const smallBlind = ethers.parseUnits(sb.toString(), 18).toString();
         const bigBlind = ethers.parseUnits(bb.toString(), 18).toString();
         const pots = [ethers.parseUnits(pot.toString(), 18).toString()];
-
-        console.log("TexasHoldemGameState", { address, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash });
 
         this._dto = { type: "cash", address, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash };
     }

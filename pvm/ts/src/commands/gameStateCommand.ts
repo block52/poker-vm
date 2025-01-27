@@ -22,10 +22,6 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
 
         // Get all transactions from mempool and replay them
         const transactions = this.mempool.findAll(tx => tx.to === this.address);
-        // const transactions = this.mempool.get();
-
-        // filter transactions by address
-        // transactions.filter(tx => tx.to === this.address);
 
         transactions.forEach(tx => {
             switch (tx.data) {

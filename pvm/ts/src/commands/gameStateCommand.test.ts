@@ -1,50 +1,78 @@
-import { Block, Transaction } from "../models";
 import { getMempoolInstance, Mempool } from "../core/mempool";
+import TexasHoldemGame from "../engine/texasHoldem";
+import { Transaction } from "../models";
+import { TexasHoldemGameState } from "../models/game";
 import { GameStateCommand } from "./gameStateCommand";
 import { ethers } from "ethers";
 
+// seed "panther ahead despair juice crystal inch seat drill sight special vote guide"
 const privateKey = "0x0000000000000000000000000000000000000000000000000000000000000001";
-//"0xb101505bc06d3df59f281d23395fc0225e6df8bf6c2a6e39358a3151f62bd0a8"
+// "0xb101505bc06d3df59f281d23395fc0225e6df8bf6c2a6e39358a3151f62bd0a8"
 
-jest.mock('../core/mempool', () => {
-  const originalModule = jest.requireActual('../core/mempool');
-  
-  return {
-    ...originalModule,
-    getMempoolInstance: jest.fn(),
-    Mempool: jest.fn()
-  };
+jest.mock("../core/mempool", () => {
+    const originalModule = jest.requireActual("../core/mempool");
+
+    return {
+        ...originalModule,
+        getMempoolInstance: jest.fn(),
+        Mempool: jest.fn()
+    };
 });
 
 describe("GameStateCommand", () => {
     let mockMempool: jest.Mocked<Mempool>;
-    // const mockMempool = new Mempool() as jest.Mocked<Mempool>;
 
     beforeEach(() => {
-      // Create a mock Mempool instance
-      mockMempool = {
-        findAll: jest.fn().mockReturnValue([]),
-        get: jest.fn().mockReturnValue([]),
-        // Add other methods you might use
-      } as unknown as jest.Mocked<Mempool>;
-  
-      // Mock getMempoolInstance to return the mock Mempool
-      (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
+        // Create a mock Mempool instance
+        mockMempool = {
+            findAll: jest.fn().mockReturnValue([]),
+            get: jest.fn().mockReturnValue([])
+            // Add other methods you might use
+        } as unknown as jest.Mocked<Mempool>;
+
+        // Mock getMempoolInstance to return the mock Mempool
+        (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
     });
 
-    it.only("should get default table state", async () => {
-        // const mempool = new Mempool();
-        // // const specificBlock = new Block(5, "previousHash", Date.now(), "validator");
-        // // mockBlockchainManagement.getBlock.mockResolvedValue(specificBlock);
-
-        // const tx = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 100n, ethers.ZeroAddress, ethers.ZeroHash, Date.now(), 0, 0n, "join");
-        // await mempool.add(tx);
-        // const txs = [tx];
-        // mockMempool.get.mockReturnValue(txs);
-
+    it("should get default table state", async () => {
         const command = new GameStateCommand(ethers.ZeroAddress, privateKey);
         const result = await command.execute();
 
         expect(result).toBeDefined();
+    });
+
+    describe.only("GameStateCommand with transactions", () => {
+        const tableAddress = ethers.ZeroAddress;
+        const joinTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 100n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
+
+        const txs = [joinTx];
+
+        beforeEach(() => {
+            // Create a mock Mempool instance
+            mockMempool = {
+                findAll: jest.fn().mockReturnValue(txs),
+                get: jest.fn().mockReturnValue([])
+                // Add other methods you might use
+            } as unknown as jest.Mocked<Mempool>;
+
+            // Mock getMempoolInstance to return the mock Mempool
+            (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
+        });
+
+        it("should allow two players to join the game", async () => {
+            const command = new GameStateCommand(ethers.ZeroAddress, privateKey);
+            const result = await command.execute();
+
+            expect(result).toBeDefined();
+            const data: TexasHoldemGameState = result.data;
+            const json = data.toJson();
+
+            // Return the full ring of players
+            expect(json.players.length).toBe(9);
+
+            // Check the first player
+            const player1 = json.players[0];
+            expect(player1.address).toBe("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+        });
     });
 });

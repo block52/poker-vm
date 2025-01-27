@@ -3,7 +3,6 @@ import { Player } from "../models/game";
 import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
-import { getAccountManagementInstance } from "../state/accountManagement";
 
 describe("Texas Holdem Game", () => {
     describe("Heads up", () => {

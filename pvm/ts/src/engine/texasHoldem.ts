@@ -184,7 +184,8 @@ class TexasHoldemGame implements IPoker {
     }
 
     join2(address: string, stack: number) {
-        if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
+        // This wont work because we fill the array with empty players
+        // if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
 
         const player = new Player(address, stack);
         this.join(player);
@@ -320,6 +321,9 @@ class TexasHoldemGame implements IPoker {
 
     private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
         const i = this.getRoundAsNumber(round);
+
+        if (this._rounds[i] === undefined) return [];
+
         return this._rounds[i].actions.filter(m => m.playerId === player.id);
     }
 
@@ -345,13 +349,13 @@ class TexasHoldemGame implements IPoker {
     }
 
     private getNextSeat(): number {
-        for (let i = 0; i < this._players.length; i++) {
+        for (let i = 0; i < this._maxPlayers; i++) {
             if (this._players[i] === undefined || this._players[i].id === ethers.ZeroAddress) {
                 return i;
             }
         }
 
-        return this._players.length;
+        throw new Error("No available seats.");
     }
 
     // complete round maybe?
