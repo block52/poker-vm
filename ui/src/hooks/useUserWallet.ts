@@ -84,7 +84,7 @@ const useUserWallet = (): UserWalletResult => {
 
     useEffect(() => {
         if (privateKey) {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const url = PROXY_URL; 
             const client = new NodeRpcClient(url, privateKey);
             setClient(client);
         }
