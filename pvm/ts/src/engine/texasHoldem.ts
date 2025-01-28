@@ -178,7 +178,7 @@ class TexasHoldemGame implements IPoker {
         // Auto join the first player
         if (this._players.length === 1 && this.currentRound === TexasHoldemRound.ANTE) {
             // post small blind
-            new SmallBlindAction(this, this._update).execute(player);
+            new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
         }
 
         // // Auto join the second player
