@@ -68,8 +68,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
             throw new Error("Transaction already in blockchain");
         }
 
-        const [receiver, amount] = await this.bridge.deposits(this.index);
-        if (receiver === ethers.ZeroAddress) {
+        const [account, amount] = await this.bridge.deposits(this.index);
+        if (account === ethers.ZeroAddress) {
             throw new Error("Receiver must not be zero address");
         }
 
@@ -87,7 +87,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-        const mintTx: Transaction = await Transaction.create(receiver, CONTRACT_ADDRESSES.bridgeAddress, value, this.index, this.privateKey, data);
+        const mintTx: Transaction = await Transaction.create(account, CONTRACT_ADDRESSES.bridgeAddress, value, this.index, this.privateKey, data);
 
         // Send to mempool
         await this.mempool.add(mintTx);
