@@ -1,37 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { ethers } = require('ethers');
-const DepositSession = require('../models/depositSession');
-
-// Contract addresses
-const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 // Update contract addresses to mainnet
 const DEPOSIT_ADDRESS = "0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede";  // Your mainnet deposit contract
-
 
 // Using Sepolia RPC URL from hardhat.config.ts
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 const PRIVATE_KEY = process.env.DEPOSIT_PRIVATE_KEY;
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-
-// ABI for ERC20 approve and transfer
-const ERC20_ABI = [
-    "function approve(address spender, uint256 amount) external returns (bool)",
-    "function transfer(address to, uint256 amount) external returns (bool)",
-    "function balanceOf(address account) external view returns (uint256)"
-];
-
-// ABI for Bridge depositUnderlying
-const BRIDGE_ABI = [
-    "function depositUnderlying(uint256 amount, address receiver) external returns(uint256)"
-];
-
-// ABI for Deposit forwardDeposit
-const DEPOSIT_ABI = [
-    "function forwardDeposit(address user, uint256 amount) external"
-];
 
 // Add this function to handle the token transfer
 async function handleTokenTransfer(amount, userAddress) {
@@ -151,6 +128,7 @@ async function handleTokenTransfer(amount, userAddress) {
         return false;
     }
 }
+
 // Create deposit session
 router.post("/", async (req, res) => {
     console.log('Received deposit session request:', req.body);
