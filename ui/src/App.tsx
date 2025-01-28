@@ -15,6 +15,8 @@ import Dashboard from "./components/Dashboard";
 import useUserWallet from "./hooks/useUserWallet";
 import QRDeposit from './components/QRDeposit';
 import { PROXY_URL } from "./config/constants";
+import { TableProvider } from './context/TableContext';
+import { PlayerProvider } from './context/PlayerContext';
 
 // Move this to a separate config file (e.g., src/config.ts)
 // export const PROXY_URL = process.env.REACT_APP_PROXY_URL || 'http://localhost:8080';
@@ -41,6 +43,7 @@ createAppKit({
 })
 
 function App() {
+    console.log('App component rendering');
     const { account, balance, isLoading } = useUserWallet();
     
     return (
@@ -49,27 +52,33 @@ function App() {
                 <Router>
                     <div className="bg-[#2c3245] min-h-screen">
                         <Routes>
-                            <Route path="/table/:id" element={<Table />} />
+                            <Route path="/table/:id" element={
+                                <TableProvider>
+                                
+                                        <Table />
+                              
+                                </TableProvider>
+                            } />
                             <Route path="/deposit" element={<Deposit />} />
                             <Route path="/" element={<Dashboard />} />
                             <Route path="/qr-deposit" element={<QRDeposit />} />
                         </Routes>
                     </div>
                 </Router>
+                <ToastContainer
+                    position="top-right"
+                    autoClose={false}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick={false}
+                    rtl={false}
+                    pauseOnFocusLoss={false}
+                    draggable
+                    pauseOnHover={false}
+                    closeButton={true}
+                    theme={"dark"}
+                />
             </QueryClientProvider>
-            <ToastContainer
-                position="top-right"
-                autoClose={false}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick={false}
-                rtl={false}
-                pauseOnFocusLoss={false}
-                draggable
-                pauseOnHover={false}
-                closeButton={true}
-                theme={"dark"}
-            />
         </WagmiProvider>
     );
 }

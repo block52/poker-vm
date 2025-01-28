@@ -73,6 +73,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         try {
             const response = await axios.get(`${PROXY_URL}/table/${publicKey}`);
+            console.log("Table Data:", response.data);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);

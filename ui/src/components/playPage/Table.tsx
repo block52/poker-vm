@@ -24,6 +24,7 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { useAccount } from 'wagmi';
 import { PROXY_URL } from '../../config/constants';
+import { useTableContext } from "../../context/TableContext";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -42,9 +43,66 @@ const calculateZoom = () => {
     return Math.min(scaleWidth, scaleHeight);
 };
 
+const useTableData = () => {
+    const { tableData } = useTableContext();
+    
+    // Only access data if tableData exists and has a data property
+    const data = tableData?.data || {};
+    
+    return {
+        tableDataType: data.type || '',
+        tableDataAddress: data.address || '',
+        tableDataSmallBlind: `${Number(ethers.formatUnits(data.smallBlind || '0', 18))}`,
+        tableDataBigBlind: `${Number(ethers.formatUnits(data.bigBlind || '0', 18))}`,
+        tableDataDealer: data.dealer || 0,
+        tableDataPlayers: data.players || [],
+        tableDataCommunityCards: data.communityCards || [],
+        tableDataPots: data.pots || ['0'],
+        tableDataNextToAct: data.nextToAct || 0,
+        tableDataRound: data.round || '',
+        tableDataWinners: data.winners || [],
+        tableDataSignature: data.signature || '',
+    };
+};
+
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
+    const { tableData } = useTableContext();
+    
+    // Add the new hook usage here with prefixed names
+    const {
+        tableDataType,
+        tableDataAddress,
+        tableDataSmallBlind,
+        tableDataBigBlind,
+        tableDataDealer,
+        tableDataPlayers,
+        tableDataCommunityCards,
+        tableDataPots,
+        tableDataNextToAct,
+        tableDataRound,
+        tableDataWinners,
+        tableDataSignature
+    } = useTableData();
+
+    // Add console logs for debugging
+    console.log('Raw Table Context Data:', JSON.stringify(tableData));
+    console.log('Table Context Data:', tableData);
+    console.log('Destructured Table Data:', {
+        tableDataType,
+        tableDataAddress,
+        tableDataSmallBlind,
+        tableDataBigBlind,
+        tableDataDealer,
+        tableDataPlayers,
+        tableDataCommunityCards,
+        tableDataPots,
+        tableDataNextToAct,
+        tableDataRound,
+        tableDataWinners,
+        tableDataSignature
+    });
 
     // Early return if no id
     if (!id) {
@@ -53,29 +111,16 @@ const Table = () => {
 
     // Destructure context including loading and error states
     const { 
-        totalPot, 
-        seat, 
-        smallBlind, 
-        bigBlind, 
-        tableType, 
-        roundType, 
-        playerSeats,
-        pots,
-        communityCards,
-        isLoading,
-        error
+        seat, // todo
+        playerSeats, // todo
+        pots, // todo
+        communityCards, // todo
     } = context;
 
     // Handle loading state
-    if (isLoading) {
-        return <div className="h-screen flex items-center justify-center text-white">Loading table...</div>;
-    }
+  
 
-    // Handle error state
-    if (error) {
-        return <div className="h-screen flex items-center justify-center text-white">Error: {error.message}</div>;
-    }
-
+   
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -97,31 +142,36 @@ const Table = () => {
     const navigate = useNavigate();
 
     const { account, balance, isLoading: walletLoading } = useUserWallet();
-    const { type } = useTableType(id);
 
-
-
-    const [wagmiStore, setWagmiStore] = useState<any>(null);
     const [block52Balance, setBlock52Balance] = useState<string>("");
 
     // Replace the wagmiStore state with direct wagmi hooks
     const { address, connector } = useAccount();
 
+    // Add this after the useTableData destructuring
+    const activePlayers = tableDataPlayers.filter((player: any) => 
+        player.address !== "0x0000000000000000000000000000000000000000"
+    );
 
-    // const reorderPlayerPositions = (startIndex: number) => {
-    //     // Separate out the color and position data
-    //     const colors = playerPositionArray.map(item => item.color);
-    //     const positions = playerPositionArray.map(({ left, top }) => ({ left, top }));
+    useEffect(() => {
+        console.log('Active Players:', activePlayers);
+        // If there are active players, set their positions
+        if (activePlayers.length > 0) {
+            // Player in seat 0
+            if (activePlayers.find((p: any) => p.seat === 0)) {
+                const player0 = activePlayers.find((p: any) => p.seat === 0);
+                console.log('Player 0:', player0);
+                // You can use this data to update the player position 0
+            }
 
-    //     // Reorder the positions array starting from `startIndex`
-    //     const reorderedPositions = [...positions.slice(startIndex), ...positions.slice(0, startIndex)];
-
-    //     // Reconstruct the array with reordered positions and the same color order
-    //     return reorderedPositions.map((position, index) => ({
-    //         ...position,
-    //         color: colors[index]
-    //     }));
-    // };
+            // Player in seat 1
+            if (activePlayers.find((p: any) => p.seat === 1)) {
+                const player1 = activePlayers.find((p: any) => p.seat === 1);
+                console.log('Player 1:', player1);
+                // You can use this data to update the player position 1
+            }
+        }
+    }, [tableDataPlayers]);
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -211,93 +261,7 @@ const Table = () => {
         navigate("/");
     };
 
-    useEffect(() => {
-        // Get wagmi store data
-        const wagmiData = localStorage.getItem("wagmi.store");
-        if (wagmiData) {
-            const parsedData = JSON.parse(wagmiData);
-            setWagmiStore(parsedData);
-
-            // Get MetaMask account address from wagmiStore - Add null checks
-            const connections = parsedData?.state?.connections?.value;
-            const metamaskAddress = connections?.[0]?.[1]?.accounts?.[0];
-            
-            // Only proceed if we have a valid address
-            if (metamaskAddress) {
-                // Use the address if needed
-            }
-        }
-
-        // Only make the API call if we have a valid address
-        if (address) {
-            axios.get(`${PROXY_URL}/account/${address}`)
-                .then(response => {
-                    setBlock52Balance(response.data.balance);
-                    console.log("Block52 Account Data:", response.data);
-                })
-                .catch(error => console.error("Error fetching Block52 balance:", error));
-        }
-    }, [address]);
-
-    // Detailed logging of all context values
-    // console.log('Player Context:', {
-    //     players: context.players,
-    //     pots: context.pots,
-    //     tableSize: context.tableSize,
-    //     seat: context.seat,
-    //     totalPot: context.totalPot,
-    //     bigBlind: context.bigBlind,
-    //     smallBlind: context.smallBlind,
-    //     roundType: context.roundType,
-    //     tableType: context.tableType,
-    //     gamePlayers: context.gamePlayers,
-    //     nextToAct: context.nextToAct,
-    //     playerSeats: context.playerSeats,
-    //     dealerIndex: context.dealerIndex,
-    //     lastPot: context.lastPot,
-    //     playerIndex: context.playerIndex,
-    //     openOneMore: context.openOneMore,
-    //     openTwoMore: context.openTwoMore,
-    //     showThreeCards: context.showThreeCards
-    // });
-
-    // Detailed game state logging
-    console.log("Current Game State:", {
-        // Round info
-        round: context.roundType,
-        totalPot: context.totalPot,
-        blinds: `${context.smallBlind}/${context.bigBlind}`,
-
-        // Community cards
-        communityCards: context.communityCards,
-
-        // Active players
-        activeSeats: context.playerSeats,
-        nextToAct: context.nextToAct,
-
-        // Current player's possible actions
-        currentPlayer: context.gamePlayers?.find(p => p.seat === context.nextToAct),
-        possibleActions: context.gamePlayers
-            ?.find(p => p.seat === context.nextToAct)
-            ?.actions?.map(a => ({
-                action: a.action,
-                min: a.min,
-                max: a.max
-            })),
-
-        // Dealer position
-        dealer: context.dealerIndex,
-
-        // Player states
-        smallBlindPlayer: context.gamePlayers?.find(p => p.isSmallBlind),
-        bigBlindPlayer: context.gamePlayers?.find(p => p.isBigBlind),
-
-        // Last actions
-        lastActions: context.gamePlayers?.map(p => ({
-            seat: p.seat,
-            lastAction: p.lastAction
-        }))
-    });
+  
 
     // Add null check before logging
     if (!context || !context.gamePlayers) {
@@ -322,10 +286,12 @@ const Table = () => {
 
                     {/* Middle Section - Add Wallet Info */}
                     <div className="flex flex-col items-center text-white text-sm">
-                        <div>Table Wallet: {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Not Connected"}</div>
-                        <div>
-                            Table Wallet: {address || 'Not Connected'}
-                        </div>
+                        <div>Table Address: {id ? id : "Invalid Table"}</div>
+                        {tableData && (
+                            <div>
+                                Table Type: {tableData.data?.type}
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Section */}
@@ -355,9 +321,9 @@ const Table = () => {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
                     {/* Left Section */}
                     <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">${`${smallBlind}/$${bigBlind}`}</span>
+                        <span className="px-2 rounded text-[12px]">${`${tableDataSmallBlind}/$${tableDataBigBlind}`}</span>
                         <span className="ml-2 text-[12px]">
-                            Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableType}</span>
+                            Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableDataType}</span>
                         </span>
                     </div>
 
@@ -391,11 +357,11 @@ const Table = () => {
                                         <div className="z-[20] relative flex flex-col w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
                                             <div className="px-4 h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
-                                                <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
+                                                <span className="text-[#dbd3d3] mr-2">Total Pot: {tableDataPots}</span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">
-                                                    Round: <span className="font-semibold text-yellow-400 ml-1">{roundType}</span>
+                                                    Round: <span className="font-semibold text-yellow-400 ml-1">{tableDataRound}</span>
                                                 </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
@@ -463,9 +429,9 @@ const Table = () => {
                                     </div>
                                     {playerPositionArray.map((position, index) => (
                                         <div key={index} className="z-[10]">
-                                            {!playerSeats.includes(index) ? (
+                                            {!activePlayers.find((p: any) => p.seat === index) ? (
                                                 <VacantPlayer index={index} left={position.left} top={position.top} />
-                                            ) : index !== seat ? (
+                                            ) : (
                                                 <OppositePlayer
                                                     index={index}
                                                     currentIndex={currentIndex}
@@ -473,18 +439,9 @@ const Table = () => {
                                                     left={position.left}
                                                     top={position.top}
                                                     color={position.color}
-                                                    status={players[index]?.status}
+                                                    status={tableDataPlayers[index]?.status}
                                                     isCardVisible={isCardVisible}
                                                     setCardVisible={setCardVisible}
-                                                />
-                                            ) : (
-                                                <Player
-                                                    index={index}
-                                                    currentIndex={currentIndex}
-                                                    left={position.left}
-                                                    top={position.top}
-                                                    color={position.color}
-                                                    status={players[index]?.status}
                                                 />
                                             )}
                                             <div>
@@ -530,7 +487,7 @@ const Table = () => {
                 </div>
             </div>
             {/* Add a message for empty table if needed */}
-            {playerSeats.length === 0 && (
+            {activePlayers.length === 0 && (
                 <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">
                     Waiting for players to join...
                 </div>
