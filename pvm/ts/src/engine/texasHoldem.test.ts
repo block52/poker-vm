@@ -64,16 +64,16 @@ describe("Texas Holdem Game", () => {
         // Pre-flop
         game.performAction("1", PlayerActionType.CALL);
         game.performAction("2", PlayerActionType.CALL);
-        game.performAction("3", PlayerActionType.FOLD);
+        game.performAction("3", PlayerActionType.FOLD, 0n);
 
         // Flop
-        game.performAction("2", PlayerActionType.CHECK);
+        game.performAction("2", PlayerActionType.CHECK, 0n);
         game.performAction("1", PlayerActionType.BET, 30n);
         game.performAction("2", PlayerActionType.CALL);
 
         // Turn
-        game.performAction("2", PlayerActionType.CHECK);
-        game.performAction("1", PlayerActionType.CHECK);
+        game.performAction("2", PlayerActionType.CHECK, 0n);
+        game.performAction("1", PlayerActionType.CHECK, 0n);
 
         // River
         game.performAction("2", PlayerActionType.CHECK);

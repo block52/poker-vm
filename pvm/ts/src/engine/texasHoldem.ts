@@ -233,7 +233,7 @@ class TexasHoldemGame implements IPoker {
         return undefined;
     }
 
-    performAction(playerId: string, action: PlayerActionType, amount: BigInt) {
+    performAction(playerId: string, action: PlayerActionType, amount?: BigInt) {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
                 if (this._players.length < this._minPlayers) {
@@ -244,7 +244,22 @@ class TexasHoldemGame implements IPoker {
             // throw new Error(`Cannot perform ${action} until game started.`);
         }
 
-        return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
+        const player = this.getPlayer(playerId);
+
+        switch (action) {
+            case PlayerActionType.FOLD:
+                return new FoldAction(this, this._update).execute(player, 0n);
+            case PlayerActionType.CHECK:
+                return new CheckAction(this, this._update).execute(player, 0n);
+            case PlayerActionType.BET:
+                return new BetAction(this, this._update).execute(player, amount);
+            case PlayerActionType.CALL:
+                return new CallAction(this, this._update).execute(player, amount);
+            default:
+                throw new Error("Invalid action.");
+        }
+
+        // return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
 
     getPlayer(playerId: string): Player {
