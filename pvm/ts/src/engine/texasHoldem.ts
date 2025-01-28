@@ -327,7 +327,6 @@ class TexasHoldemGame implements IPoker {
         const bets = new Map<string, bigint>();
 
         this._rounds[i].actions.forEach(m => {
-            // const action = m.action;
             const amount = m.amount ?? 0n;
             bets.set(m.playerId, amount);
         });
@@ -352,20 +351,16 @@ class TexasHoldemGame implements IPoker {
     }
 
     getPot(bets = this.getBets()): bigint {
-        // return Array.from(bets.values()).reduce((acc, v) => acc + v, 0);
-        // todo: fix
+        // todo: check this
         
         let pot: bigint = 0n;
-        let value: bigint = 0n;
 
-        const sum = pot + value;
+        for(let [key, value] of bets) {
+            // console.log(key, value);
+            pot += value;
+        }
 
-        // for(let [key, value] of bets) {
-        //     // console.log(key, value);
-        //     pot += value;
-        // }
-
-        return 0n;
+        return pot;
     }
 
     // Not sure why we need this
