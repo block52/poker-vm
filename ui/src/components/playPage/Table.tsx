@@ -165,8 +165,8 @@ const Table = () => {
             }
 
             // Player in seat 1
-            if (activePlayers.find(p => p.seat === 1)) {
-                const player1 = activePlayers.find(p => p.seat === 1);
+            if (activePlayers.find((p: any) => p.seat === 1)) {
+                const player1 = activePlayers.find((p: any) => p.seat === 1);
                 console.log('Player 1:', player1);
                 // You can use this data to update the player position 1
             }
@@ -429,7 +429,7 @@ const Table = () => {
                                     </div>
                                     {playerPositionArray.map((position, index) => (
                                         <div key={index} className="z-[10]">
-                                            {!activePlayers.find(p => p.seat === index) ? (
+                                            {!activePlayers.find((p: any) => p.seat === index) ? (
                                                 <VacantPlayer index={index} left={position.left} top={position.top} />
                                             ) : (
                                                 <OppositePlayer
