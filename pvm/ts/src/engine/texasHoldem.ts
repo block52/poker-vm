@@ -182,10 +182,27 @@ class TexasHoldemGame implements IPoker {
     }
 
     join(player: Player) {
-        // if (this.currentStage != StageType.JOIN) throw new Error("Cannot join once game started.");
-
         const seat = this.getNextSeat();
         this._players[seat] = player;
+
+        // Check to see if player is already in the game
+        if (this._players.some(p => p.id === player.id)) {
+            // throw new Error("Player already in game.");
+            console.log("Player already in game.");
+            return;
+        }
+
+        // if (player.chips < this._minBuyIn) {
+        //     // throw new Error("Player does not have enough chips to join.");
+        //     console.log("Player does not have enough chips to join.");
+        //     return;
+        // }
+
+        if (this.getPlayerCount() >= this._maxPlayers) {
+            // throw new Error("Game full.");
+            console.log("Game full.");
+            return;
+        }
 
         // Auto join the first player
         if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.ANTE) {
@@ -194,11 +211,11 @@ class TexasHoldemGame implements IPoker {
             new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
         }
 
-        // // Auto join the second player
-        // if (this._players.length === 2 && this.currentRound === TexasHoldemRound.ANTE) {
-        //     // post big blind
-        //     new BigBlindAction(this, this._update).execute(player);
-        // }
+        // Auto join the second player
+        if (this._players.length === 2 && this.currentRound === TexasHoldemRound.ANTE) {
+            // post big blind
+            new BigBlindAction(this, this._update).execute(player, this._bigBlind);
+        }
 
         // // Check if we haven't dealt
         // if (this._players.length === this._minPlayers && this.currentRound === TexasHoldemRound.ANTE) {
