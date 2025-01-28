@@ -189,7 +189,7 @@ class TexasHoldemGame implements IPoker {
         if (this._players.some(p => p.id === player.id)) {
             // throw new Error("Player already in game.");
             console.log("Player already in game.");
-            return;
+            // return;
         }
 
         // if (player.chips < this._minBuyIn) {

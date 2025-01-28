@@ -29,7 +29,18 @@ export class TransactionManagement extends StateManager {
         return tx !== null;
     }
 
-    public async getTransactions(blockHash: string, count?: number): Promise<TransactionList> {
+    // public async getTransactions(blockHash: string, count?: number): Promise<TransactionList> {
+    //     await this.connect();
+
+    //     const transactions = await Transactions.find({ blockHash })
+    //         .sort({ timestamp: -1 })
+    //         .limit(count ?? 100);
+
+    //     const txs = transactions.map(tx => Transaction.fromDocument(tx));
+    //     return new TransactionList(txs);
+    // }
+
+    public async getTransactions(blockHash: string, count?: number): Promise<Transaction[]> {
         await this.connect();
 
         const transactions = await Transactions.find({ blockHash })
@@ -37,7 +48,7 @@ export class TransactionManagement extends StateManager {
             .limit(count ?? 100);
 
         const txs = transactions.map(tx => Transaction.fromDocument(tx));
-        return new TransactionList(txs);
+        return txs;
     }
 
     public async getTransaction(txid: string): Promise<Transaction | null> {
