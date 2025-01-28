@@ -7,14 +7,14 @@ import { ethers } from "ethers";
 export type PlayerId = string;
 
 export type Range = {
-    minAmount: number;
-    maxAmount: number;
+    minAmount: BigInt;
+    maxAmount: BigInt;
 }
 
 export type Turn = {
     playerId: PlayerId;
     action: PlayerActionType;
-    amount?: number;
+    amount?: BigInt;
 };
 
 export type LegalAction = ActionDTO;
@@ -26,7 +26,7 @@ export interface IUpdate {
 export class Player {
     constructor(
         private readonly _address: string,
-        public chips: number,
+        public chips: BigInt,
         public holeCards?: [Card, Card]
     ) { }
 
@@ -59,7 +59,7 @@ export class PlayerState implements IJSONModel {
     ) {
         const holeCards = player.holeCards?.map(p => p.value);
         const lastActionDTO = (lastAction && lastAction.amount) ? { action: lastAction.action, amount: lastAction.amount.toString() } : undefined;
-        const stack = ethers.parseUnits(player.chips.toString(), 18).toString();
+        const stack = player.chips.toString();
 
         this._dto = { 
             address: player.id, 
@@ -93,24 +93,24 @@ export class TexasHoldemGameState implements IJSONModel {
 
     constructor(
         address: string,
-        sb: number,
-        bb: number,
+        sb: BigInt,
+        bb: BigInt,
         dealer: number,
         players_: PlayerState[],
         communityCards_: Card[],
-        pot: number,
-        currentBet: number,
+        pot: BigInt,
+        currentBet: BigInt,
         round_: TexasHoldemRound,
-        winners_?: Map<PlayerId, number>
+        winners_?: Map<PlayerId, BigInt>
     ) {
         const players = players_.map(p => p.toJson());
         const communityCards = communityCards_.map(c => c.value);
         // const round = TexasHoldemGameState.RoundMap.get(round_)!;
-        const winners = winners_ ? Array.from(winners_.entries()).map(([address, amount]) => ({ address, amount })) : [];
+        const winners = winners_ ? Array.from(winners_.entries()).map(([address, amount]) => ({ address, amount: Number(amount) })) : [];
 
-        const smallBlind = ethers.parseUnits(sb.toString(), 18).toString();
-        const bigBlind = ethers.parseUnits(bb.toString(), 18).toString();
-        const pots = [ethers.parseUnits(pot.toString(), 18).toString()];
+        const smallBlind = sb.toString();
+        const bigBlind = bb.toString();;
+        const pots = [pot.toString()];
 
         this._dto = { type: "cash", address, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash };
     }
@@ -118,6 +118,6 @@ export class TexasHoldemGameState implements IJSONModel {
     public toJson(): TexasHoldemGameStateDTO { return this._dto; }
 
     public static fromJson(json: any): TexasHoldemGameState {
-        return new TexasHoldemGameState(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, [], [], 0, 0, TexasHoldemRound.PREFLOP);
+        return new TexasHoldemGameState(json.address, BigInt(parseInt(json.smallBlind)), BigInt(parseInt(json.bigBlind)), json.dealer, [], [], BigInt(0), BigInt(0), TexasHoldemRound.PREFLOP);
     }
 }

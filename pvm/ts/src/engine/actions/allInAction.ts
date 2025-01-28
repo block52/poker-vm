@@ -7,12 +7,12 @@ class AllInAction extends BaseAction {
 
     verify(player: Player): Range | undefined {
         super.verify(player);
-        if (player.chips === 0) // !! check this as what happens if run out of chips in middle of game
+        if (player.chips === 0n) // !! check this as what happens if run out of chips in middle of game.  Answer, you sit out.
             throw new Error("Player has no chips so can't go all-in.");
         return undefined;
     }
 
-    protected getDeductAmount(player: Player, _amount?: number) {
+    protected getDeductAmount(player: Player, _amount: BigInt): BigInt {
         return player.chips;
     }
 }

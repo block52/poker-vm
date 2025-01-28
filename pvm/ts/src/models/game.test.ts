@@ -8,13 +8,13 @@ describe.only("Game Tests", () => {
     // Remove texas holdem game state, now obsolete
     it.skip("should get texas holdem state as DTO", async () => {
         const address = ethers.ZeroAddress;
-        const sb = 10;
-        const bb = 30;
+        const sb: BigInt = 10n;
+        const bb: BigInt = 30n;
         const dealer = 0;
         const players: PlayerState[] = [];
         const communityCards: Card[] = [];
-        const pot = 0;
-        const currentBet = 0;
+        const pot: BigInt = 0n;
+        const currentBet: BigInt = 0n;
         const round = TexasHoldemRound.PREFLOP;
         const winners = undefined;
 
@@ -92,13 +92,13 @@ describe.only("Game Tests", () => {
 
     it.only("should create a state object from the game", async () => {
         const address = ethers.ZeroAddress;
-        const sb = 10;
-        const bb = 30;
+        const sb: BigInt = 10n;
+        const bb = 30n;
         const dealer = 0;
         const communityCards: Card[] = [];
         const round = TexasHoldemRound.PREFLOP;
 
-        const texasHoldemGame = new TexasHoldemGame(address, sb, bb, dealer, 0, round, communityCards, 0);
+        const texasHoldemGame = new TexasHoldemGame(address, sb, bb, dealer, 0, round, communityCards, 0n);
         const state: TexasHoldemGameState = texasHoldemGame.state;
         const json = state.toJson();
 
