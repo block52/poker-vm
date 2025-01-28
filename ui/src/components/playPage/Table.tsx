@@ -43,15 +43,66 @@ const calculateZoom = () => {
     return Math.min(scaleWidth, scaleHeight);
 };
 
+const useTableData = () => {
+    const { tableData } = useTableContext();
+    
+    // Only access data if tableData exists and has a data property
+    const data = tableData?.data || {};
+    
+    return {
+        tableDataType: data.type || '',
+        tableDataAddress: data.address || '',
+        tableDataSmallBlind: `${Number(ethers.formatUnits(data.smallBlind || '0', 18))}`,
+        tableDataBigBlind: `${Number(ethers.formatUnits(data.bigBlind || '0', 18))}`,
+        tableDataDealer: data.dealer || 0,
+        tableDataPlayers: data.players || [],
+        tableDataCommunityCards: data.communityCards || [],
+        tableDataPots: data.pots || ['0'],
+        tableDataNextToAct: data.nextToAct || 0,
+        tableDataRound: data.round || '',
+        tableDataWinners: data.winners || [],
+        tableDataSignature: data.signature || '',
+    };
+};
+
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
     const { tableData } = useTableContext();
+    
+    // Add the new hook usage here with prefixed names
+    const {
+        tableDataType,
+        tableDataAddress,
+        tableDataSmallBlind,
+        tableDataBigBlind,
+        tableDataDealer,
+        tableDataPlayers,
+        tableDataCommunityCards,
+        tableDataPots,
+        tableDataNextToAct,
+        tableDataRound,
+        tableDataWinners,
+        tableDataSignature
+    } = useTableData();
 
-    // Add console log for raw table data
-    // console.log('Raw Table Context Data:', JSON.stringify(tableData));
-    // Keep existing formatted log if needed
+    // Add console logs for debugging
+    console.log('Raw Table Context Data:', JSON.stringify(tableData));
     console.log('Table Context Data:', tableData);
+    console.log('Destructured Table Data:', {
+        tableDataType,
+        tableDataAddress,
+        tableDataSmallBlind,
+        tableDataBigBlind,
+        tableDataDealer,
+        tableDataPlayers,
+        tableDataCommunityCards,
+        tableDataPots,
+        tableDataNextToAct,
+        tableDataRound,
+        tableDataWinners,
+        tableDataSignature
+    });
 
     // Early return if no id
     if (!id) {
@@ -60,17 +111,15 @@ const Table = () => {
 
     // Destructure context including loading and error states
     const { 
-        totalPot, 
-        seat, 
-        smallBlind, 
-        bigBlind, 
-        tableType, 
-        roundType, 
-        playerSeats,
-        pots,
-        communityCards,
-        isLoading,
-        error
+        seat, // todo
+        bigBlind, // todo
+        tableType, // todo
+        roundType, // todo
+        playerSeats, // todo
+        pots, // todo
+        communityCards, // todo
+        isLoading, // todo
+        error // todo
     } = context;
 
     // Handle loading state
@@ -104,7 +153,7 @@ const Table = () => {
     const navigate = useNavigate();
 
     const { account, balance, isLoading: walletLoading } = useUserWallet();
-    const { type } = useTableType(id);
+
 
 
 
@@ -218,36 +267,7 @@ const Table = () => {
         navigate("/");
     };
 
-    useEffect(() => {
-        // Get wagmi store data
-        const wagmiData = localStorage.getItem("wagmi.store");
-        if (wagmiData) {
-            const parsedData = JSON.parse(wagmiData);
-            setWagmiStore(parsedData);
-
-            // Get MetaMask account address from wagmiStore - Add null checks
-            const connections = parsedData?.state?.connections?.value;
-            const metamaskAddress = connections?.[0]?.[1]?.accounts?.[0];
-            
-            // Only proceed if we have a valid address
-            if (metamaskAddress) {
-                // Use the address if needed
-            }
-        }
-
-        // Only make the API call if we have a valid address
-        if (address) {
-            axios.get(`${PROXY_URL}/account/${address}`)
-                .then(response => {
-                    setBlock52Balance(response.data.balance);
-                    console.log("Block52 Account Data:", response.data);
-                })
-                .catch(error => console.error("Error fetching Block52 balance:", error));
-        }
-    }, [address]);
-
-
-
+  
 
     // Add null check before logging
     if (!context || !context.gamePlayers) {
@@ -307,7 +327,7 @@ const Table = () => {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
                     {/* Left Section */}
                     <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">${`${smallBlind}/$${bigBlind}`}</span>
+                        <span className="px-2 rounded text-[12px]">${`${tableDataSmallBlind}/$${tableDataBigBlind}`}</span>
                         <span className="ml-2 text-[12px]">
                             Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableType}</span>
                         </span>
@@ -343,7 +363,7 @@ const Table = () => {
                                         <div className="z-[20] relative flex flex-col w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
                                             <div className="px-4 h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
-                                                <span className="text-[#dbd3d3] mr-2">Total Pot: {totalPot}</span>
+                                                <span className="text-[#dbd3d3] mr-2">Total Pot: {tableDataPots}</span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">
