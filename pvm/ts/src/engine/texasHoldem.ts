@@ -252,9 +252,11 @@ class TexasHoldemGame implements IPoker {
             case PlayerActionType.CHECK:
                 return new CheckAction(this, this._update).execute(player, 0n);
             case PlayerActionType.BET:
+                if (!amount) throw new Error("Amount must be provided for bet.");
                 return new BetAction(this, this._update).execute(player, amount);
             case PlayerActionType.CALL:
-                return new CallAction(this, this._update).execute(player, amount);
+                const call: BigInt = 0n;
+                return new CallAction(this, this._update).execute(player, call);
             default:
                 throw new Error("Invalid action.");
         }
