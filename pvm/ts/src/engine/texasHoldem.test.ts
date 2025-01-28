@@ -27,7 +27,7 @@ describe("Texas Holdem Game", () => {
         });
 
         it("should allow a round to be played heads up", () => {
-            const game = new TexasHoldemGame(ethers.ZeroAddress, 10, 30, 2);
+            const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n, 2);
             game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250n));
             game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200n));
 
@@ -68,7 +68,7 @@ describe("Texas Holdem Game", () => {
 
         // Flop
         game.performAction("2", PlayerActionType.CHECK);
-        game.performAction("1", PlayerActionType.BET, 30);
+        game.performAction("1", PlayerActionType.BET, 30n);
         game.performAction("2", PlayerActionType.CALL);
 
         // Turn
@@ -99,9 +99,9 @@ describe("Texas Holdem Game", () => {
         expect(game.getValidActions("1")).toEqual([]);
         expect(game.getValidActions("3")).toEqual([]);
         expect(game.getValidActions("4")).toEqual([]);
-        expect(() => game.performAction("1", PlayerActionType.BET, 40)).toThrow("Must be currently active player.");
+        expect(() => game.performAction("1", PlayerActionType.BET, 40n)).toThrow("Must be currently active player.");
         expect(() => game.performAction("3", PlayerActionType.FOLD)).toThrow("Must be currently active player.");
-        expect(() => game.performAction("4", PlayerActionType.RAISE, 30)).toThrow("Must be currently active player.");
+        expect(() => game.performAction("4", PlayerActionType.RAISE, 30n)).toThrow("Must be currently active player.");
         expect(game.getValidActions("2")).toEqual([
             {
                 action: "fold"
@@ -184,8 +184,8 @@ describe("Texas Holdem Game", () => {
         ]);
         game.performAction("4", PlayerActionType.CHECK);
 
-        expect(() => game.performAction("1", PlayerActionType.BET, 10)).toThrow("Amount is less than minimum allowed.");
-        game.performAction("1", PlayerActionType.BET, 25);
+        expect(() => game.performAction("1", PlayerActionType.BET, 10n)).toThrow("Amount is less than minimum allowed.");
+        game.performAction("1", PlayerActionType.BET, 25n);
 
         expect(() => game.performAction("2", PlayerActionType.CHECK)).toThrow("Player has insufficient stake to check.");
         game.performAction("2", PlayerActionType.CALL);
@@ -199,8 +199,8 @@ describe("Texas Holdem Game", () => {
         expect(game.currentPlayerId).toEqual("4");
 
         game.performAction("4", PlayerActionType.CHECK);
-        game.performAction("1", PlayerActionType.BET, 25);
-        game.performAction("2", PlayerActionType.RAISE, 50);
+        game.performAction("1", PlayerActionType.BET, 25n);
+        game.performAction("2", PlayerActionType.RAISE, 50n);
 
         expect(game.getValidActions("4")).toEqual([
             {
@@ -215,7 +215,7 @@ describe("Texas Holdem Game", () => {
         //expect(() => game.performAction("4", PlayerActionType.CALL)).toThrow("Player has insufficient chips to call.");
         game.performAction("4", PlayerActionType.ALL_IN);
 
-        game.performAction("1", PlayerActionType.RAISE, 25);
+        game.performAction("1", PlayerActionType.RAISE, 25n);
         expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
         game.performAction("2", PlayerActionType.CALL);
 
@@ -223,9 +223,9 @@ describe("Texas Holdem Game", () => {
         expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
         expect(game.currentPlayerId).toEqual("1");
         game.performAction("1", PlayerActionType.CHECK);
-        game.performAction("2", PlayerActionType.BET, 25);
+        game.performAction("2", PlayerActionType.BET, 25n);
         expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
-        game.performAction("1", PlayerActionType.RAISE, 25);
+        game.performAction("1", PlayerActionType.RAISE, 25n);
         game.performAction("2", PlayerActionType.ALL_IN);
 
         expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);

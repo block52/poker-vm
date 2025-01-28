@@ -85,9 +85,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                     // const game = TexasHoldemGame.fromJson(state);
 
                     // convert bigints to numbers with 18 decimal places
-                    const _chips = ethers.formatUnits(this.amount, 18);
-                    const chips: number = parseInt(_chips);
-                    const player: Player = new Player(this.from, chips, undefined);
+                    const player: Player = new Player(this.from, this.amount, undefined);
 
                     game.join(player);
                 }

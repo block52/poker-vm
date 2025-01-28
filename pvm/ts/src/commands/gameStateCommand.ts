@@ -27,13 +27,13 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
             switch (tx.data) {
                 case "join":
                     // const player = new Player(tx.from, Number(tx.value));
-                    game.join2(tx.from, Number(tx.value));
+                    game.join2(tx.from, tx.value);
                     break;
                 case "bet":
-                    game.performAction(tx.from, PlayerActionType.BET, Number(tx.value));
+                    game.performAction(tx.from, PlayerActionType.BET, tx.value);
                     break;
                 case "call":
-                    game.performAction(tx.from, PlayerActionType.CALL, Number(tx.value));
+                    game.performAction(tx.from, PlayerActionType.CALL, tx.value);
                     break;
                 case "fold":
                     game.performAction(tx.from, PlayerActionType.FOLD);
@@ -42,7 +42,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
                     game.performAction(tx.from, PlayerActionType.CHECK);
                     break;
                 case "raise":
-                    game.performAction(tx.from, PlayerActionType.RAISE, Number(tx.value));
+                    game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
                     break;
                 default:
                     throw new Error("Invalid action");

@@ -26,8 +26,8 @@ class TexasHoldemGame implements IPoker {
     private readonly _players: Player[];
     private _rounds!: Round[];
     private _deck!: Deck;
-    private _sidePots!: Map<PlayerId, number>;
-    private _winners?: Map<PlayerId, number>;
+    private _sidePots!: Map<PlayerId, BigInt>;
+    private _winners?: Map<PlayerId, BigInt>;
     // private _currentRound: TexasHoldemRound;
     // private _nextToAct: number;
     private _bigBlindPosition: number;
@@ -141,7 +141,7 @@ class TexasHoldemGame implements IPoker {
             players,
             this._communityCards,
             this.pot,
-            0,
+            0n,
             this._currentRound,
             this._winners
         );
@@ -233,7 +233,7 @@ class TexasHoldemGame implements IPoker {
         return undefined;
     }
 
-    performAction(playerId: string, action: PlayerActionType, amount?: number) {
+    performAction(playerId: string, action: PlayerActionType, amount?: BigInt) {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
                 if (this._players.length < this._minPlayers) {
@@ -276,10 +276,20 @@ class TexasHoldemGame implements IPoker {
         const i = this.getRoundAsNumber(round);
         // const _round = this._rounds.filter(r => r.type === round);
 
-        return this._rounds[i].actions.reduce((acc, v) => {
-            acc.set(v.playerId, (acc.get(v.playerId) ?? 0n) + (v.amount ?? 0n));
-            return acc;
-        }, new Map<string, BigInt>());
+        const bets = new Map<string, BigInt>();
+
+        this._rounds[i].actions.forEach(m => {
+            // const action = m.action;
+            const amount = m.amount ?? 0n;
+            bets.set(m.playerId, amount);
+        });
+
+        // return this._rounds[i].actions.reduce((acc, v) => {
+        //     acc.set(v.playerId, (acc.get(v.playerId) ?? 0n) + (v.amount ?? 0n));
+        //     return acc;
+        // }, new Map<string, BigInt>());
+
+        return bets;
     }
 
     getPlayerStake(player: Player, stakes = this.getBets()): BigInt {
@@ -289,7 +299,8 @@ class TexasHoldemGame implements IPoker {
     // I dont understand this?
     getMaxStake(bets = this.getBets()): BigInt {
         // return bets.size ? Math.max(...bets.values()) : 0;
-        return 10000000000000000000n;
+        const max: BigInt = 10000000000000000000n;
+        return max;
     }
 
     getPot(bets = this.getBets()): BigInt {
@@ -300,8 +311,8 @@ class TexasHoldemGame implements IPoker {
 
     // Not sure why we need this
     private getStartingPot(): BigInt {
-        let pot: BigInt = 0n;
-        for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getBets(stage));
+        const pot: BigInt = 0n;
+        // for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getBets(stage));
         return pot;
     }
 

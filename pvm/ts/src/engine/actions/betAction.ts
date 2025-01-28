@@ -9,8 +9,12 @@ class BetAction extends BaseAction {
 
     verify(player: Player): Range | undefined {
         super.verify(player);
-        if (player.chips < this.game.bigBlind) throw new Error("Player has insufficient chips to bet.");
-        if (this.game.getMaxStake() > 0n) throw new Error("A bet has already been made.");
+        if (player.chips < this.game.bigBlind) {
+            return { minAmount: player.chips, maxAmount: player.chips };
+        }
+        
+        // if (this.game.getMaxStake() > 0n) throw new Error("A bet has already been made.");
+        
         return { minAmount: this.game.bigBlind, maxAmount: player.chips };
     }
 }

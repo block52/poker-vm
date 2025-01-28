@@ -11,7 +11,7 @@ class BigBlindAction extends BaseAction {
         return undefined;
     }
 
-    getDeductAmount(_player: Player, _amount?: BigInt): BigInt {
+    getDeductAmount(): BigInt {
         return this.game.bigBlind;
     }
 }

@@ -10,15 +10,19 @@ abstract class BaseAction {
     verify(player: Player): Range | undefined {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
             throw new Error("Hand has ended.");
-        if (this.game.currentPlayerId != player.id)
-            throw new Error("Must be currently active player.")
-        if (this.game.getPlayerStatus(player) != PlayerStatus.ACTIVE)
+
+        if (this.game.currentPlayerId !== player.id)
+            throw new Error("Must be currently active player.");
+
+        if (this.game.getPlayerStatus(player) !== PlayerStatus.ACTIVE)
             throw new Error(`Only active player can ${this.type}.`);
+
         return undefined;
     }
 
-    execute(player: Player, amount?: BigInt): void {
+    execute(player: Player, amount: BigInt): void {
         const range = this.verify(player);
+
         if (range) {
             if (!amount)
                 throw new Error(`Amount needs to be specified for ${this.type}`);
@@ -36,7 +40,9 @@ abstract class BaseAction {
         if (deductAmount) {
             if (player.chips < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
-            player.chips -= deductAmount;
+            // player.chips -= deductAmount;
+
+            player.chips ;
         }
 
         this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
