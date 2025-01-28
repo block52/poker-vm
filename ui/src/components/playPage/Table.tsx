@@ -148,21 +148,30 @@ const Table = () => {
     // Replace the wagmiStore state with direct wagmi hooks
     const { address, connector } = useAccount();
 
+    // Add this after the useTableData destructuring
+    const activePlayers = tableDataPlayers.filter((player: any) => 
+        player.address !== "0x0000000000000000000000000000000000000000"
+    );
 
-    // const reorderPlayerPositions = (startIndex: number) => {
-    //     // Separate out the color and position data
-    //     const colors = playerPositionArray.map(item => item.color);
-    //     const positions = playerPositionArray.map(({ left, top }) => ({ left, top }));
+    useEffect(() => {
+        console.log('Active Players:', activePlayers);
+        // If there are active players, set their positions
+        if (activePlayers.length > 0) {
+            // Player in seat 0
+            if (activePlayers.find((p: any) => p.seat === 0)) {
+                const player0 = activePlayers.find((p: any) => p.seat === 0);
+                console.log('Player 0:', player0);
+                // You can use this data to update the player position 0
+            }
 
-    //     // Reorder the positions array starting from `startIndex`
-    //     const reorderedPositions = [...positions.slice(startIndex), ...positions.slice(0, startIndex)];
-
-    //     // Reconstruct the array with reordered positions and the same color order
-    //     return reorderedPositions.map((position, index) => ({
-    //         ...position,
-    //         color: colors[index]
-    //     }));
-    // };
+            // Player in seat 1
+            if (activePlayers.find(p => p.seat === 1)) {
+                const player1 = activePlayers.find(p => p.seat === 1);
+                console.log('Player 1:', player1);
+                // You can use this data to update the player position 1
+            }
+        }
+    }, [tableDataPlayers]);
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -420,9 +429,9 @@ const Table = () => {
                                     </div>
                                     {playerPositionArray.map((position, index) => (
                                         <div key={index} className="z-[10]">
-                                            {!playerSeats.includes(index) ? (
+                                            {!activePlayers.find(p => p.seat === index) ? (
                                                 <VacantPlayer index={index} left={position.left} top={position.top} />
-                                            ) : index !== seat ? (
+                                            ) : (
                                                 <OppositePlayer
                                                     index={index}
                                                     currentIndex={currentIndex}
@@ -430,18 +439,9 @@ const Table = () => {
                                                     left={position.left}
                                                     top={position.top}
                                                     color={position.color}
-                                                    status={players[index]?.status}
+                                                    status={tableDataPlayers[index]?.status}
                                                     isCardVisible={isCardVisible}
                                                     setCardVisible={setCardVisible}
-                                                />
-                                            ) : (
-                                                <Player
-                                                    index={index}
-                                                    currentIndex={currentIndex}
-                                                    left={position.left}
-                                                    top={position.top}
-                                                    color={position.color}
-                                                    status={players[index]?.status}
                                                 />
                                             )}
                                             <div>
@@ -487,7 +487,7 @@ const Table = () => {
                 </div>
             </div>
             {/* Add a message for empty table if needed */}
-            {playerSeats.length === 0 && (
+            {activePlayers.length === 0 && (
                 <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">
                     Waiting for players to join...
                 </div>
