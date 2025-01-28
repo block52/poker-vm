@@ -12,7 +12,7 @@ class AllInAction extends BaseAction {
         return undefined;
     }
 
-    protected getDeductAmount(player: Player, _amount: BigInt): BigInt {
+    protected getDeductAmount(player: Player, _amount: bigint): bigint {
         return player.chips;
     }
 }

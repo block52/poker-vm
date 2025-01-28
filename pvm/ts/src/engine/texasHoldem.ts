@@ -26,8 +26,8 @@ class TexasHoldemGame implements IPoker {
     private readonly _players: Player[];
     private _rounds!: Round[];
     private _deck!: Deck;
-    private _sidePots!: Map<PlayerId, BigInt>;
-    private _winners?: Map<PlayerId, BigInt>;
+    private _sidePots!: Map<PlayerId, bigint>;
+    private _winners?: Map<PlayerId, bigint>;
     // private _currentRound: TexasHoldemRound;
     // private _nextToAct: number;
     private _bigBlindPosition: number;
@@ -38,18 +38,18 @@ class TexasHoldemGame implements IPoker {
     private _maxPlayers: number = 9;
 
     // Table limits
-    private _minBuyIn: BigInt = ethers.parseEther("10"); // 10000000000000000000n; 10 dollars
-    private _maxBuyIn: BigInt = ethers.parseEther("100"); // 10000000000000000000n; 100 dollars
+    private _minBuyIn: bigint = ethers.parseEther("10"); // 10000000000000000000n; 10 dollars
+    private _maxBuyIn: bigint = ethers.parseEther("100"); // 10000000000000000000n; 100 dollars
 
     constructor(
         private _address: string,
-        private _smallBlind: BigInt,
-        private _bigBlind: BigInt,
+        private _smallBlind: bigint,
+        private _bigBlind: bigint,
         private _dealer: number = 0,
         private _nextToAct: number = 1,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private _communityCards: Card[] = [],
-        private _pot: BigInt = 0n,
+        private _pot: bigint = 0n,
     ) {
         // this._players = new Map<number, Player>();
         // Create an array of players with max size of 9
@@ -164,6 +164,7 @@ class TexasHoldemGame implements IPoker {
     //}
 
     getPlayerCount() {
+        // TODO: Do this functionally with reduce or some?
         let count = 0;
         for (let i = 0; i < this._players.length; i++) {
             if (this._players[i].id !== ethers.ZeroAddress) {
@@ -223,7 +224,7 @@ class TexasHoldemGame implements IPoker {
         // }
     }
 
-    join2(address: string, stack: BigInt) {
+    join2(address: string, stack: bigint) {
         // This wont work because we fill the array with empty players
         // if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
 
@@ -263,7 +264,7 @@ class TexasHoldemGame implements IPoker {
         return undefined;
     }
 
-    performAction(playerId: string, action: PlayerActionType, amount?: BigInt) {
+    performAction(playerId: string, action: PlayerActionType, amount?: bigint) {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
                 if (this._players.length < this._minPlayers) {
@@ -285,7 +286,7 @@ class TexasHoldemGame implements IPoker {
                 if (!amount) throw new Error("Amount must be provided for bet.");
                 return new BetAction(this, this._update).execute(player, amount);
             case PlayerActionType.CALL:
-                const call: BigInt = 0n;
+                const call: bigint = 0n;
                 return new CallAction(this, this._update).execute(player, call);
             default:
                 throw new Error("Invalid action.");
@@ -317,13 +318,13 @@ class TexasHoldemGame implements IPoker {
         return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
     }
 
-    getBets(round: TexasHoldemRound = this._currentRound): Map<string, BigInt> {
+    getBets(round: TexasHoldemRound = this._currentRound): Map<string, bigint> {
         // if (this._currentRound === TexasHoldemRound.ANTE) throw new Error("Cannot retrieve stakes until game started.");
 
         const i = this.getRoundAsNumber(round);
         // const _round = this._rounds.filter(r => r.type === round);
 
-        const bets = new Map<string, BigInt>();
+        const bets = new Map<string, bigint>();
 
         this._rounds[i].actions.forEach(m => {
             // const action = m.action;
@@ -339,26 +340,37 @@ class TexasHoldemGame implements IPoker {
         return bets;
     }
 
-    getPlayerStake(player: Player, stakes = this.getBets()): BigInt {
+    getPlayerStake(player: Player, stakes = this.getBets()): bigint {
         return stakes.get(player.id) ?? 0n;
     }
 
     // I dont understand this?
-    getMaxStake(bets = this.getBets()): BigInt {
+    getMaxStake(bets = this.getBets()): bigint {
         // return bets.size ? Math.max(...bets.values()) : 0;
-        const max: BigInt = 10000000000000000000n;
+        const max: bigint = 10000000000000000000n;
         return max;
     }
 
-    getPot(bets = this.getBets()): BigInt {
+    getPot(bets = this.getBets()): bigint {
         // return Array.from(bets.values()).reduce((acc, v) => acc + v, 0);
         // todo: fix
+        
+        let pot: bigint = 0n;
+        let value: bigint = 0n;
+
+        const sum = pot + value;
+
+        // for(let [key, value] of bets) {
+        //     // console.log(key, value);
+        //     pot += value;
+        // }
+
         return 0n;
     }
 
     // Not sure why we need this
-    private getStartingPot(): BigInt {
-        const pot: BigInt = 0n;
+    private getStartingPot(): bigint {
+        const pot: bigint = 0n;
         // for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getBets(stage));
         return pot;
     }
@@ -369,7 +381,7 @@ class TexasHoldemGame implements IPoker {
 
         this._deck = new Deck(DeckType.STANDARD_52);
         this._communityCards = [];
-        this._sidePots = new Map<PlayerId, BigInt>();
+        this._sidePots = new Map<PlayerId, bigint>();
         this._winners = undefined;
         this._currentRound = TexasHoldemRound.PREFLOP;
         this._nextToAct = this._dealer;
@@ -468,9 +480,9 @@ class TexasHoldemGame implements IPoker {
         );
         const active = this._players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE);
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
-        this._winners = new Map<PlayerId, BigInt>();
+        this._winners = new Map<PlayerId, bigint>();
 
-        let pot: BigInt = this.getStartingPot();
+        let pot: bigint = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
         let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
 
@@ -486,8 +498,8 @@ class TexasHoldemGame implements IPoker {
 
         // winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
 
-        function update(player: Player, portion: BigInt, winners: Map<PlayerId, BigInt>) {
-            // player.chips += portion;
+        function update(player: Player, portion: bigint, winners: Map<PlayerId, bigint>) {
+            player.chips += portion;
             // winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
         }
 

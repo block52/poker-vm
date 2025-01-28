@@ -9,7 +9,7 @@ class SmallBlindAction extends BaseAction {
         return undefined; 
     }
 
-    getDeductAmount(): BigInt {
+    getDeductAmount(): bigint {
         return this.game.smallBlind;
     }
 }
