@@ -17,7 +17,7 @@ class RaiseAction extends BaseAction {
         return { minAmount: this.game.bigBlind, maxAmount: player.chips };
     }
 
-    protected getDeductAmount(player: Player, amount: BigInt): BigInt {
+    protected getDeductAmount(player: Player, amount: bigint): bigint {
         // return this.game.getMaxStake() - this.game.getPlayerStake(player) + amount!;
         // return this.game.getMaxStake() - this.game.getPlayerStake(player) + amount
 

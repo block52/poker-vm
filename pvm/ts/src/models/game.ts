@@ -7,14 +7,14 @@ import { ethers } from "ethers";
 export type PlayerId = string;
 
 export type Range = {
-    minAmount: BigInt;
-    maxAmount: BigInt;
+    minAmount: bigint;
+    maxAmount: bigint;
 }
 
 export type Turn = {
     playerId: PlayerId;
     action: PlayerActionType;
-    amount?: BigInt;
+    amount?: bigint;
 };
 
 export type LegalAction = ActionDTO;
@@ -26,7 +26,7 @@ export interface IUpdate {
 export class Player {
     constructor(
         private readonly _address: string,
-        public chips: BigInt,
+        public chips: bigint,
         public holeCards?: [Card, Card]
     ) { }
 
@@ -93,15 +93,15 @@ export class TexasHoldemGameState implements IJSONModel {
 
     constructor(
         address: string,
-        sb: BigInt,
-        bb: BigInt,
+        sb: bigint,
+        bb: bigint,
         dealer: number,
         players_: PlayerState[],
         communityCards_: Card[],
-        pot: BigInt,
-        currentBet: BigInt,
+        pot: bigint,
+        currentBet: bigint,
         round_: TexasHoldemRound,
-        winners_?: Map<PlayerId, BigInt>
+        winners_?: Map<PlayerId, bigint>
     ) {
         const players = players_.map(p => p.toJson());
         const communityCards = communityCards_.map(c => c.value);

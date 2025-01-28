@@ -8,13 +8,13 @@ describe.only("Game Tests", () => {
     // Remove texas holdem game state, now obsolete
     it.skip("should get texas holdem state as DTO", async () => {
         const address = ethers.ZeroAddress;
-        const sb: BigInt = 10n;
-        const bb: BigInt = 30n;
+        const sb: bigint = 10n;
+        const bb: bigint = 30n;
         const dealer = 0;
         const players: PlayerState[] = [];
         const communityCards: Card[] = [];
-        const pot: BigInt = 0n;
-        const currentBet: BigInt = 0n;
+        const pot: bigint = 0n;
+        const currentBet: bigint = 0n;
         const round = TexasHoldemRound.PREFLOP;
         const winners = undefined;
 
@@ -92,7 +92,7 @@ describe.only("Game Tests", () => {
 
     it.only("should create a state object from the game", async () => {
         const address = ethers.ZeroAddress;
-        const sb: BigInt = 10n;
+        const sb: bigint = 10n;
         const bb = 30n;
         const dealer = 0;
         const communityCards: Card[] = [];
