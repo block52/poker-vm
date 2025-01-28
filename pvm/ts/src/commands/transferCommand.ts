@@ -79,12 +79,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 const playerAction: PlayerActionType = this.data as PlayerActionType || "join";
 
                 if (this.data === "join") {
-                    // const state = await this.gameManagement.get(this.to);
-                    // if (!state) throw new Error("Game not found");
-
-                    // const game = TexasHoldemGame.fromJson(state);
-
-                    // convert bigints to numbers with 18 decimal places
+                    console.log(`Joining game...`);
                     const player: Player = new Player(this.from, this.amount, undefined);
 
                     game.join(player);

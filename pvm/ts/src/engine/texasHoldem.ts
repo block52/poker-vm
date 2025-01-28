@@ -163,6 +163,18 @@ class TexasHoldemGame implements IPoker {
     //       );
     //}
 
+    getPlayerCount() {
+        let count = 0;
+        for (let i = 0; i < this._players.length; i++) {
+            if (this._players[i].id !== ethers.ZeroAddress) {
+                count++;
+            }
+        }
+
+        console.log("Player count: ", count);
+        return count;
+    }
+
     deal() {
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
@@ -176,8 +188,9 @@ class TexasHoldemGame implements IPoker {
         this._players[seat] = player;
 
         // Auto join the first player
-        if (this._players.length === 1 && this.currentRound === TexasHoldemRound.ANTE) {
+        if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.ANTE) {
             // post small blind
+            console.log("Posting small blind");
             new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
         }
 
