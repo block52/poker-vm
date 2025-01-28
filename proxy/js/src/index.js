@@ -11,7 +11,7 @@ const Transaction = require("./models/transaction");
 const depositSessionsRouter = require("./routes/depositSessions");
 
 // Clients
-const Mocks = require("./clients/mocks");
+
 const Block52 = require("./clients/block52");
 
 const app = express();
@@ -20,7 +20,10 @@ app.use(cors());
 
 // Load environment variables
 dotenv.config();
-const clientType = process.env.CLIENT_TYPE || "mock";
+const clientType = process.env.CLIENT_TYPE || "block52";
+
+// Add this debug log
+console.log(`Configured client: ${clientType}, NODE_URL: ${process.env.NODE_URL || 'using default'}`);
 
 // Add JSON middleware
 app.use(express.json());
@@ -77,8 +80,8 @@ const getClient = () => {
     }
 
     if (clientType === "block52") {
-        console.log("Using Block52 client");
         const node_url = process.env.NODE_URL || "https://node1.block52.xyz/";
+        console.log("Using Block52 client with node URL:", node_url);
         return new Block52(node_url);
     }
 
@@ -231,34 +234,6 @@ app.put("/deposit/:id", async (req, res) => {
     res.send(response);
 });
 
-// // Deposit to the layer 2
-// app.post("/deposit", (req, res) => {
-//     const signature = req.body?.signature;
-//     if (!signature) {
-//         res.status(400).send("Signature required");
-//         return;
-//     }
-
-//     const nonce = req.body?.nonce;
-//     if (!nonce) {
-//         res.status(400).send("Nonce required");
-//         return;
-//     }
-
-//     const txId = req.body?.txId;
-//     if (!txId) {
-//         res.status(400).send("Transaction ID required");
-//         return;
-//     }
-
-//     const response = {
-//         id: 1,
-//         balance: ethers.utils.formatEther(req.body.balance),
-//         tx: ethers.ZeroHash
-//     };
-
-//     res.send(response);
-// });
 
 app.post("/transfer", (req, res) => {
     const response = {
