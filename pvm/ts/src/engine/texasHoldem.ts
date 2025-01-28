@@ -233,7 +233,7 @@ class TexasHoldemGame implements IPoker {
         return undefined;
     }
 
-    performAction(playerId: string, action: PlayerActionType, amount?: BigInt) {
+    performAction(playerId: string, action: PlayerActionType, amount: BigInt) {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
                 if (this._players.length < this._minPlayers) {
@@ -322,7 +322,7 @@ class TexasHoldemGame implements IPoker {
 
         this._deck = new Deck(DeckType.STANDARD_52);
         this._communityCards = [];
-        this._sidePots = new Map<PlayerId, number>();
+        this._sidePots = new Map<PlayerId, BigInt>();
         this._winners = undefined;
         this._currentRound = TexasHoldemRound.PREFLOP;
         this._nextToAct = this._dealer;
@@ -340,8 +340,8 @@ class TexasHoldemGame implements IPoker {
         this._deck.shuffle();
         this._players.forEach(p => (p.holeCards = this._deck.deal(2) as [Card, Card]));
 
-        new BigBlindAction(this, update).execute(this._players[this._bigBlindPosition]);
-        new SmallBlindAction(this, update).execute(this._players[this._smallBlindPosition]);
+        new BigBlindAction(this, update).execute(this._players[this._bigBlindPosition], this._bigBlind);
+        new SmallBlindAction(this, update).execute(this._players[this._smallBlindPosition], this._smallBlind);
     }
 
     private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
@@ -405,11 +405,14 @@ class TexasHoldemGame implements IPoker {
 
     private calculateSidePots(): void {
         const startingPot = this.getStartingPot();
-        const numActive = this._players.filter(p => this.getPlayerStatus(p) == PlayerStatus.ACTIVE).length;
-        // TODO: Check this will work in all cases when multiple side pots in same round
-        this._players
-            .filter(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN && !this._sidePots.has(p.id))
-            .forEach(p => this._sidePots.set(p.id, startingPot + this.getPlayerStake(p) * (1 + numActive)));
+        const numActive = this._players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE).length;
+        
+        // TODO: ROLL BACK
+
+        // // TODO: Check this will work in all cases when multiple side pots in same round
+        // this._players
+        //     .filter(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN && !this._sidePots.has(p.id))
+        //     .forEach(p => this._sidePots.set(p.id, startingPot + this.getPlayerStake(p) * (1 + numActive)));
     }
 
     private calculateWinner(): void {
@@ -417,28 +420,28 @@ class TexasHoldemGame implements IPoker {
             this._players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
         const active = this._players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE);
-        const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
-        this._winners = new Map<PlayerId, number>();
+        // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
+        this._winners = new Map<PlayerId, BigInt>();
 
-        let pot = this.getStartingPot();
+        let pot: BigInt = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
         let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
 
-        while (orderedPots.length) {
-            const [playerId, sidePot] = orderedPots[0];
-            const remainder = pot - sidePot;
-            winningPlayers.forEach(p => update(p, remainder / winningPlayers.length, this._winners!));
-            winningHands = PokerSolver.Hand.winners(winningHands.concat(hands.get(playerId)));
-            winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
-            pot = sidePot;
-            orderedPots.shift();
-        }
+        // while (orderedPots.length) {
+        //     const [playerId, sidePot] = orderedPots[0];
+        //     // const remainder: BigInt = pot - sidePot;
+        //     // winningPlayers.forEach(p => update(p, remainder / winningPlayers.length, this._winners!));
+        //     // winningHands = PokerSolver.Hand.winners(winningHands.concat(hands.get(playerId)));
+        //     // winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
+        //     // pot = sidePot;
+        //     // orderedPots.shift();
+        // }
 
-        winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
+        // winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
 
-        function update(player: Player, portion: number, winners: Map<PlayerId, number>) {
-            player.chips += portion;
-            winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
+        function update(player: Player, portion: BigInt, winners: Map<PlayerId, BigInt>) {
+            // player.chips += portion;
+            // winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
         }
 
         function toPokerSolverMnemonic(card: Card) {
@@ -489,13 +492,13 @@ class TexasHoldemGame implements IPoker {
     // Rehydrate the game from a DTO
     // NOT SURE THIS GUY IS NEEDED
     public static fromState(state: TexasHoldemGameState): TexasHoldemGame {
-        const sb = 10;
-        const bb = 30;
+        const sb = 10n;
+        const bb = 30n;
         const dealer = 0;
         const players: PlayerState[] = [];
         const communityCards: Card[] = [];
-        const pot = 0;
-        const currentBet = 0;
+        const pot = 0n;
+        const currentBet = 0n;
         const round = TexasHoldemRound.PREFLOP;
         const winners = undefined;
 
@@ -511,7 +514,7 @@ class TexasHoldemGame implements IPoker {
 
     public static fromJson(json: any): TexasHoldemGame {
         const players: PlayerState[] = [];
-        return new TexasHoldemGame(json.address, parseInt(json.smallBlind), parseInt(json.bigBlind), json.dealer, json.nextToAct, json.round, json.communityCards, json.pots[0]);
+        return new TexasHoldemGame(json.address, BigInt(parseInt(json.smallBlind)), BigInt(parseInt(json.bigBlind)), json.dealer, json.nextToAct, json.round, json.communityCards, json.pots[0]);
     }
 }
 

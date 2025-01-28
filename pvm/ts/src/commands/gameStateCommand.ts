@@ -36,10 +36,10 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
                     game.performAction(tx.from, PlayerActionType.CALL, tx.value);
                     break;
                 case "fold":
-                    game.performAction(tx.from, PlayerActionType.FOLD);
+                    game.performAction(tx.from, PlayerActionType.FOLD, 0n);
                     break;
                 case "check":
-                    game.performAction(tx.from, PlayerActionType.CHECK);
+                    game.performAction(tx.from, PlayerActionType.CHECK, 0n);
                     break;
                 case "raise":
                     game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
