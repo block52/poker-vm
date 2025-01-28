@@ -45,10 +45,10 @@ const calculateZoom = () => {
 
 const useTableData = () => {
     const { tableData } = useTableContext();
-    
+
     // Only access data if tableData exists and has a data property
     const data = tableData?.data || {};
-    
+
     return {
         tableDataType: data.type || '',
         tableDataAddress: data.address || '',
@@ -69,7 +69,7 @@ const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
     const { tableData } = useTableContext();
-    
+
     // Add the new hook usage here with prefixed names
     const {
         tableDataType,
@@ -87,8 +87,8 @@ const Table = () => {
     } = useTableData();
 
     // Add console logs for debugging
-    console.log('Raw Table Context Data:', JSON.stringify(tableData));
-    console.log('Table Context Data:', tableData);
+
+    // console.log('Table Context Data:', tableData);
     console.log('Destructured Table Data:', {
         tableDataType,
         tableDataAddress,
@@ -110,17 +110,16 @@ const Table = () => {
     }
 
     // Destructure context including loading and error states
-    const { 
+    const {
         seat, // todo
-        playerSeats, // todo
         pots, // todo
         communityCards, // todo
     } = context;
 
     // Handle loading state
-  
 
-   
+
+
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -149,7 +148,7 @@ const Table = () => {
     const { address, connector } = useAccount();
 
     // Add this after the useTableData destructuring
-    const activePlayers = tableDataPlayers.filter((player: any) => 
+    const activePlayers = tableDataPlayers.filter((player: any) =>
         player.address !== "0x0000000000000000000000000000000000000000"
     );
 
@@ -261,7 +260,7 @@ const Table = () => {
         navigate("/");
     };
 
-  
+
 
     // Add null check before logging
     if (!context || !context.gamePlayers) {
@@ -298,7 +297,7 @@ const Table = () => {
                     <div className="flex items-center">
                         <div className="flex flex-col items-end justify-center text-white text-[13px]">
                             <span>{walletLoading ? "Loading..." : ""}</span>
-                            
+
                             {address && connector && (
                                 <div className="text-xs">
                                     Connected: {connector.name || 'Unknown'} ({address})
@@ -311,7 +310,7 @@ const Table = () => {
                                 </div>
                             )}
                         </div>
-                        
+
                         <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
                             <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigate("/deposit")} />
                         </div>
@@ -365,7 +364,11 @@ const Table = () => {
                                                 </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
-                                                <span className="text-[#dbd3d3] mr-2">Main Pot: 50</span>
+                                                <span className="text-[#dbd3d3] mr-2">
+                                                    Main Pot: {tableDataPots[0] === "0"
+                                                        ? Number(tableDataSmallBlind) + Number(tableDataBigBlind)
+                                                        : tableDataPots[0]}
+                                                </span>
                                             </div>
                                             <div className="flex gap-2 mt-8">
                                                 <div className="card animate-fall delay-200">
@@ -474,9 +477,8 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
-                        openSidebar ? "w-[300px]" : "w-0"
-                    }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
+                        }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
