@@ -112,26 +112,15 @@ const Table = () => {
     // Destructure context including loading and error states
     const { 
         seat, // todo
-        bigBlind, // todo
-        tableType, // todo
-        roundType, // todo
         playerSeats, // todo
         pots, // todo
         communityCards, // todo
-        isLoading, // todo
-        error // todo
     } = context;
 
     // Handle loading state
-    if (isLoading) {
-        return <div className="h-screen flex items-center justify-center text-white">Loading table...</div>;
-    }
+  
 
-    // Handle error state
-    if (error) {
-        return <div className="h-screen flex items-center justify-center text-white">Error: {error.message}</div>;
-    }
-
+   
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -154,10 +143,6 @@ const Table = () => {
 
     const { account, balance, isLoading: walletLoading } = useUserWallet();
 
-
-
-
-    const [wagmiStore, setWagmiStore] = useState<any>(null);
     const [block52Balance, setBlock52Balance] = useState<string>("");
 
     // Replace the wagmiStore state with direct wagmi hooks
@@ -329,7 +314,7 @@ const Table = () => {
                     <div className="flex items-center">
                         <span className="px-2 rounded text-[12px]">${`${tableDataSmallBlind}/$${tableDataBigBlind}`}</span>
                         <span className="ml-2 text-[12px]">
-                            Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableType}</span>
+                            Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableDataType}</span>
                         </span>
                     </div>
 
@@ -367,7 +352,7 @@ const Table = () => {
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">
-                                                    Round: <span className="font-semibold text-yellow-400 ml-1">{roundType}</span>
+                                                    Round: <span className="font-semibold text-yellow-400 ml-1">{tableDataRound}</span>
                                                 </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
