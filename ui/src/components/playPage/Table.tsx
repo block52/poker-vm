@@ -24,6 +24,7 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { useAccount } from 'wagmi';
 import { PROXY_URL } from '../../config/constants';
+import { useTableContext } from "../../context/TableContext";
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -45,6 +46,12 @@ const calculateZoom = () => {
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
+    const { tableData } = useTableContext();
+
+    // Add console log for raw table data
+    // console.log('Raw Table Context Data:', JSON.stringify(tableData));
+    // Keep existing formatted log if needed
+    console.log('Table Context Data:', tableData);
 
     // Early return if no id
     if (!id) {
@@ -239,65 +246,8 @@ const Table = () => {
         }
     }, [address]);
 
-    // Detailed logging of all context values
-    // console.log('Player Context:', {
-    //     players: context.players,
-    //     pots: context.pots,
-    //     tableSize: context.tableSize,
-    //     seat: context.seat,
-    //     totalPot: context.totalPot,
-    //     bigBlind: context.bigBlind,
-    //     smallBlind: context.smallBlind,
-    //     roundType: context.roundType,
-    //     tableType: context.tableType,
-    //     gamePlayers: context.gamePlayers,
-    //     nextToAct: context.nextToAct,
-    //     playerSeats: context.playerSeats,
-    //     dealerIndex: context.dealerIndex,
-    //     lastPot: context.lastPot,
-    //     playerIndex: context.playerIndex,
-    //     openOneMore: context.openOneMore,
-    //     openTwoMore: context.openTwoMore,
-    //     showThreeCards: context.showThreeCards
-    // });
 
-    // Detailed game state logging
-    console.log("Current Game State:", {
-        // Round info
-        round: context.roundType,
-        totalPot: context.totalPot,
-        blinds: `${context.smallBlind}/${context.bigBlind}`,
 
-        // Community cards
-        communityCards: context.communityCards,
-
-        // Active players
-        activeSeats: context.playerSeats,
-        nextToAct: context.nextToAct,
-
-        // Current player's possible actions
-        currentPlayer: context.gamePlayers?.find(p => p.seat === context.nextToAct),
-        possibleActions: context.gamePlayers
-            ?.find(p => p.seat === context.nextToAct)
-            ?.actions?.map(a => ({
-                action: a.action,
-                min: a.min,
-                max: a.max
-            })),
-
-        // Dealer position
-        dealer: context.dealerIndex,
-
-        // Player states
-        smallBlindPlayer: context.gamePlayers?.find(p => p.isSmallBlind),
-        bigBlindPlayer: context.gamePlayers?.find(p => p.isBigBlind),
-
-        // Last actions
-        lastActions: context.gamePlayers?.map(p => ({
-            seat: p.seat,
-            lastAction: p.lastAction
-        }))
-    });
 
     // Add null check before logging
     if (!context || !context.gamePlayers) {
@@ -322,10 +272,12 @@ const Table = () => {
 
                     {/* Middle Section - Add Wallet Info */}
                     <div className="flex flex-col items-center text-white text-sm">
-                        <div>Table Wallet: {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Not Connected"}</div>
-                        <div>
-                            Table Wallet: {address || 'Not Connected'}
-                        </div>
+                        <div>Table Address: {id ? id : "Invalid Table"}</div>
+                        {tableData && (
+                            <div>
+                                Table Type: {tableData.data?.type}
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Section */}

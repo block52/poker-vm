@@ -64,7 +64,7 @@ class Block52 {
     async getTable(id) {
         const rpc_request = {
             jsonrpc: "2.0",
-            method: "get_table",
+            method: "get_game_state",
             params: [id],
             id: this.requestId
         };
