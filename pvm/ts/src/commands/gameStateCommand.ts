@@ -24,13 +24,13 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
         const game = TexasHoldemGame.fromJson(json);
 
         // Get all transactions from the chain
-        const minedTransactions = await this.transactionManagement.getTransactions(this.address);
+        // const minedTransactions = await this.transactionManagement.getTransactions(this.address);
 
         // Get all transactions from mempool and replay them
-        const transactions = this.mempool.findAll(tx => tx.to === this.address);
+        const allTransactions = this.mempool.findAll(tx => tx.to === this.address);
 
         // Merge transactions
-        const allTransactions = [...minedTransactions, ...transactions];
+        // const allTransactions = [...minedTransactions, ...transactions];
 
         allTransactions.forEach(tx => {
             switch (tx.data) {

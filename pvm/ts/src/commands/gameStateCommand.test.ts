@@ -116,13 +116,13 @@ describe("GameStateCommand", () => {
             // Check the first player
             const player1 = json.players[0];
             expect(player1.address).toBe("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
-            expect(player1.stack).toBe("10000000000000000000");
+            expect(player1.stack).toBe("100000000000000000000");
             expect(player1.isSmallBlind).toBe(true);
 
             // Check the second player
             const player2 = json.players[1];
             expect(player2.address).toBe("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-            expect(player2.stack).toBe("10000000000000000000");
+            expect(player2.stack).toBe("100000000000000000000");
             // expect(player2.isBigBlind).toBe(true);
         });
     });
