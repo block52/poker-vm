@@ -107,8 +107,8 @@ describe.only("Game Tests", () => {
         expect(json).toEqual({
             type: "cash",
             address: "0x0000000000000000000000000000000000000000",
-            smallBlind: "10000000000000000000",
-            bigBlind: "30000000000000000000",
+            smallBlind: "10",
+            bigBlind: "30",
             dealer: 0,
             players: [
                 {
