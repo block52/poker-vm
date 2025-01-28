@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { ethers } = require('ethers');
 
 // Update contract addresses to mainnet
 const DEPOSIT_ADDRESS = "0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede";  // Your mainnet deposit contract
