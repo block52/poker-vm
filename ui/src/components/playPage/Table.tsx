@@ -25,6 +25,7 @@ import { ethers } from "ethers";
 import { useAccount } from 'wagmi';
 import { PROXY_URL } from '../../config/constants';
 import { useTableContext } from "../../context/TableContext";
+import { FaCopy } from 'react-icons/fa';
 
 //* Define the interface for the position object
 interface PositionArray {
@@ -63,6 +64,22 @@ const useTableData = () => {
         tableDataWinners: data.winners || [],
         tableDataSignature: data.signature || '',
     };
+};
+
+// Helper function to format Wei to USD with commas
+const formatWeiToUSD = (weiAmount: string | number): string => {
+    try {
+        // Convert from Wei (18 decimals) to standard units
+        const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
+        // Format to 2 decimal places and add commas
+        return usdValue.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    } catch (error) {
+        console.error('Error formatting Wei amount:', error);
+        return '0.00';
+    }
 };
 
 const Table = () => {
@@ -268,6 +285,11 @@ const Table = () => {
         return null; // or return a loading state
     }
 
+    // Add this helper function for copying to clipboard
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        // You could add a toast notification here if you want
+    };
 
     return (
         <div className="h-screen">
@@ -293,26 +315,43 @@ const Table = () => {
                         )}
                     </div>
 
-                    {/* Right Section */}
+                    {/* Right Section - Updated with icon and compact layout */}
                     <div className="flex items-center">
-                        <div className="flex flex-col items-end justify-center text-white text-[13px]">
-                            <span>{walletLoading ? "Loading..." : ""}</span>
-
-                            {address && connector && (
-                                <div className="text-xs">
-                                    Connected: {connector.name || 'Unknown'} ({address})
-                                </div>
-                            )}
-
-                            {block52Balance && (
-                                <div className="text-xs">
-                                    Block52 Balance (USD): ${block52Balance ? Number(ethers.formatUnits(block52Balance.split('.')[0], 18)).toFixed(2) : '0.00'}
-                                </div>
+                        <div className="flex flex-col items-end justify-center text-white text-[11px] mr-2">
+                            {walletLoading ? (
+                                <span>Loading...</span>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-1 text-gray-300">
+                                        <span className="opacity-75">Account:</span>
+                                        <span className="font-mono text-[10px]">
+                                            {`${localStorage.getItem('user_eth_public_key')?.slice(0, 6)}...${localStorage.getItem('user_eth_public_key')?.slice(-4)}`}
+                                        </span>
+                                        <FaCopy 
+                                            className="ml-1 cursor-pointer hover:text-green-400 transition-colors duration-200"
+                                            size={12}
+                                            onClick={() => copyToClipboard(localStorage.getItem('user_eth_public_key') || '')}
+                                            title="Copy full address"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-1 mt-1">
+                                        <span className="opacity-75">Balance:</span>
+                                        <span className="font-medium text-green-400">
+                                            ${balance ? formatWeiToUSD(balance) : '0.00'}
+                                            <span className="text-[10px] ml-1 text-gray-400">USDC</span>
+                                        </span>
+                                    </div>
+                                </>
                             )}
                         </div>
 
                         <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
-                            <RiMoneyDollarCircleLine color="#f0f0f0" size={25} onClick={() => navigate("/deposit")} />
+                            <RiMoneyDollarCircleLine 
+                                color="#f0f0f0" 
+                                size={25} 
+                                onClick={() => navigate("/deposit")}
+                                className="hover:text-green-400 transition-colors duration-200" 
+                            />
                         </div>
                     </div>
                 </div>
