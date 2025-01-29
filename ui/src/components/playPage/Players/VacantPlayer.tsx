@@ -48,6 +48,21 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     const smallBlindDisplay = ethers.formatUnits(smallBlindWei, 18);
     const bigBlindDisplay = ethers.formatUnits(bigBlindWei, 18);
 
+    // Get dealer position from table data
+    const dealerPosition = tableData?.data?.dealer || 0;
+    
+    // Calculate small blind and big blind positions
+    const smallBlindPosition = (dealerPosition + 1) % 9; // Assuming 9 max seats
+    const bigBlindPosition = (dealerPosition + 2) % 9;
+
+    // Helper function to get position name
+    const getPositionName = (index: number) => {
+        if (index === dealerPosition) return "Dealer (D)";
+        if (index === smallBlindPosition) return "Small Blind (SB)";
+        if (index === bigBlindPosition) return "Big Blind (BB)";
+        return "";
+    };
+
     const handleJoinClick = () => {
         if (isFirstPlayer) {
             handleJoinTable(smallBlindWei);
@@ -121,6 +136,14 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
                             : `Click to Join ($${bigBlindDisplay})`
                         : ""}
             </div>
+            {/* Position indicator */}
+            {getPositionName(index) && (
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                    <div className="px-2 py-1 bg-gray-800/80 rounded-md text-xs text-white">
+                        {getPositionName(index)}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
