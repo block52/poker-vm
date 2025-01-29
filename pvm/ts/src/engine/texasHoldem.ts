@@ -218,10 +218,10 @@ class TexasHoldemGame implements IPoker {
             new BigBlindAction(this, this._update).execute(player, this._bigBlind);
         }
 
-        // // Check if we haven't dealt
-        // if (this._players.length === this._minPlayers && this.currentRound === TexasHoldemRound.ANTE) {
-        //     this.deal();
-        // }
+        // Check if we haven't dealt
+        if (this.getPlayerCount() === this._minPlayers && this.currentRound === TexasHoldemRound.ANTE) {
+            this.deal();
+        }
     }
 
     join2(address: string, stack: bigint) {
