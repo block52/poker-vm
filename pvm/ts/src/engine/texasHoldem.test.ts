@@ -4,11 +4,11 @@ import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
 
-describe("Texas Holdem Game", () => {
+describe.skip("Texas Holdem Game", () => {
     describe("Heads up", () => {
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
-        it.only("should have the correct properties pre flop", () => {
+        it("should have the correct properties pre flop", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n, 2);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 

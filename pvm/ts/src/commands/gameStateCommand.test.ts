@@ -41,7 +41,7 @@ describe("GameStateCommand", () => {
         expect(result).toBeDefined();
     });
 
-    describe("GameStateCommand join table with transactions", () => {
+    describe.skip("GameStateCommand join table with transactions", () => {
         const tableAddress = ethers.ZeroAddress;
         const joinTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
         const join2Tx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
@@ -81,7 +81,7 @@ describe("GameStateCommand", () => {
         });
     });
 
-    describe.only("GameStateCommand join table with transactions", () => {
+    describe("GameStateCommand join table with transactions", () => {
         const tableAddress = ethers.ZeroAddress;
         const joinTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
         const join2Tx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
@@ -109,21 +109,24 @@ describe("GameStateCommand", () => {
             expect(result).toBeDefined();
             const data: TexasHoldemGameState = result.data;
             const json = data.toJson();
+            expect(json.dealer).toBe(0);
 
             // Return the full ring of players
             expect(json.players.length).toBe(9);
 
             // Check the first player
-            const player1 = json.players[0];
+            const player1 = json.players[1];
             expect(player1.address).toBe("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
             expect(player1.stack).toBe("100000000000000000000");
             expect(player1.isSmallBlind).toBe(true);
+            expect(player1.seat).toBe(1);
 
             // Check the second player
-            const player2 = json.players[1];
+            const player2 = json.players[2];
             expect(player2.address).toBe("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             expect(player2.stack).toBe("100000000000000000000");
             // expect(player2.isBigBlind).toBe(true);
+            expect(player2.seat).toBe(2);
         });
     });
 });

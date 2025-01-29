@@ -33,6 +33,8 @@ export class Player {
     get id(): PlayerId { return this._address; }
 
     getPlayerState(game: TexasHoldemGame, position: number): PlayerState {
+        console.log("getPlayerState", this.id, position);
+        console.log("getPlayerState bb", game.bigBlindPosition);
         const isSmallBlind = game.smallBlindPosition === position;
         const isBigBlind = game.bigBlindPosition === position;
         const isDealer = game.dealerPosition === position;
@@ -92,10 +94,12 @@ export class TexasHoldemGameState implements IJSONModel {
     private readonly _dto: TexasHoldemGameStateDTO;
 
     constructor(
-        address: string,
+        readonly address: string,
         sb: bigint,
         bb: bigint,
-        dealer: number,
+        readonly smallBlindPosition: number,
+        readonly bigBlindPosition: number,
+        readonly dealer: number,
         players_: PlayerState[],
         communityCards_: Card[],
         pot: bigint,
@@ -109,15 +113,15 @@ export class TexasHoldemGameState implements IJSONModel {
         const winners = winners_ ? Array.from(winners_.entries()).map(([address, amount]) => ({ address, amount: Number(amount) })) : [];
 
         const smallBlind = sb.toString();
-        const bigBlind = bb.toString();;
+        const bigBlind = bb.toString();
         const pots = [pot.toString()];
 
-        this._dto = { type: "cash", address, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash };
+        this._dto = { type: "cash", address, smallBlindPosition, bigBlindPosition, smallBlind, bigBlind, dealer, players, communityCards, pots, nextToAct: 0, round: round_, winners, signature: ethers.ZeroHash };
     }
 
     public toJson(): TexasHoldemGameStateDTO { return this._dto; }
 
     public static fromJson(json: any): TexasHoldemGameState {
-        return new TexasHoldemGameState(json.address, BigInt(parseInt(json.smallBlind)), BigInt(parseInt(json.bigBlind)), json.dealer, [], [], BigInt(0), BigInt(0), TexasHoldemRound.PREFLOP);
+        return new TexasHoldemGameState(json.address, BigInt(parseInt(json.smallBlind)), BigInt(parseInt(json.bigBlind)), json.smallBlindPostion, json.bigBlindPostion, json.dealer, [], [], BigInt(0), BigInt(0), TexasHoldemRound.PREFLOP);
     }
 }

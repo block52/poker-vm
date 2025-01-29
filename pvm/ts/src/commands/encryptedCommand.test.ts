@@ -1,7 +1,7 @@
 import { EncryptCommand } from "./encryptCommand";
 
 describe("EncryptedCommand", () => {
-  it.only("should encrypt data with static iv", async () => {
+  it("should encrypt data with static iv", async () => {
     // build leopard coyote vintage just syrup whip truth accident ritual absurd seat
     const iv = "17164074518ccb49876b175b";
     const cards = "AD-TS";

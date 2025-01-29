@@ -22,7 +22,7 @@ class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
     
     // Players should be a map of player to seat index
-    // private _players: Map<number, Player>;
+    
     private readonly _players: Player[];
     private _rounds!: Round[];
     private _deck!: Deck;
@@ -61,8 +61,8 @@ class TexasHoldemGame implements IPoker {
         
         this._currentRound = _currentRound;
         this._nextToAct = _nextToAct;
-        this._bigBlindPosition = 0;
-        this._smallBlindPosition = 0;
+        this._bigBlindPosition = _dealer + 1;
+        this._smallBlindPosition = _dealer + 2;
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         this._dealer = _dealer;
         // this._buttonPosition--; // avoid auto-increment on next game for join round
@@ -130,13 +130,18 @@ class TexasHoldemGame implements IPoker {
 
         for (let i = 0; i < this._players.length; i++) {
             const player = new Player(this._players[i].id, this._players[i].chips, this._players[i].holeCards);
-            players.push(player.getPlayerState(this, i));
+
+            const seat = this._players.findIndex(p => p.id === player.id);
+            console.log("Seat: ", seat);
+            players.push(player.getPlayerState(this, seat));
         }
 
         return new TexasHoldemGameState(
             this._address,
             this._smallBlind,
             this._bigBlind,
+            this._smallBlindPosition,
+            this._bigBlindPosition,
             this._dealer,
             players,
             this._communityCards,
@@ -183,15 +188,16 @@ class TexasHoldemGame implements IPoker {
     }
 
     join(player: Player) {
-        const seat = this.getNextSeat();
-        this._players[seat] = player;
-
         // Check to see if player is already in the game
         if (this._players.some(p => p.id === player.id)) {
             // throw new Error("Player already in game.");
-            console.log("Player already in game.");
-            // return;
+            console.log(`Player ${player.id} already in game.`);
+            return;
         }
+
+        const seat = this.getNextSeat();
+        console.log("Joining to seat: ", seat);
+        this._players[seat] = player;
 
         // if (player.chips < this._minBuyIn) {
         //     // throw new Error("Player does not have enough chips to join.");
@@ -428,9 +434,16 @@ class TexasHoldemGame implements IPoker {
     }
 
     private getNextSeat(): number {
-        for (let i = 0; i < this._maxPlayers; i++) {
+        // const emptyIndex = this._players.findIndex(player => player.id === ethers.ZeroAddress);
+        // if (emptyIndex !== -1) {
+        //     return emptyIndex;
+        // }
+
+        const firstSeat = this._dealer + 1;
+
+        for (let i = firstSeat; i < this._maxPlayers + firstSeat; i++) {
             if (this._players[i] === undefined || this._players[i].id === ethers.ZeroAddress) {
-                return i;
+                return i % this._maxPlayers;
             }
         }
 

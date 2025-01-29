@@ -71,6 +71,8 @@ export type TexasHoldemGameStateDTO = {
     address: string;
     smallBlind: string;
     bigBlind: string;
+    smallBlindPosition: number;
+    bigBlindPosition: number;
     dealer: number;
     players: PlayerDTO[];
     communityCards: number[];
