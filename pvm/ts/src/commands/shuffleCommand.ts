@@ -24,6 +24,6 @@ export class ShuffleCommand implements ISignedCommand<Deck> {
 
         this.deck.shuffle();
 
-        return signResult(this.deck, this.privateKey);
+        return await signResult(this.deck, this.privateKey);
     }
 }

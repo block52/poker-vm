@@ -1,3 +1,4 @@
+import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { SigningKey } from "ethers";
 
@@ -11,13 +12,9 @@ export class SharedSecretCommand implements ISignedCommand<string> {
     }
 
     public async execute(): Promise<ISignedResponse<string>> {
-
         const signingKey = new SigningKey(this.privateKey);
         const sharedSecret = signingKey.computeSharedSecret(this.publicKey);
 
-        return {
-            response: sharedSecret,
-            signature: signingKey.signDigest(sharedSecret)
-        };
+        return await signResult(sharedSecret, this.privateKey);
     }
 }
