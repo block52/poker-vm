@@ -7,7 +7,7 @@ const swaggerJSDoc = require("swagger-jsdoc");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
 const Transaction = require("./models/transaction");
-
+const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 
 // Clients
@@ -188,9 +188,58 @@ app.post("/table/:id", (req, res) => {
 app.post("/join", (req, res) => {
     const response = {
         id: 1,
-        balance: ethers.utils.formatEther(req.body.balance)
+        balance: ethers.utils.formatEther(req.body.balance),
+        version: "2.0",
+        method: "transfer",
+        params: [
+            req.body.recipient,
+            req.body.amount
+        ]
     };
     res.send(response);
+});
+
+app.post("/table/:tableId/join", async (req, res) => {
+    console.log('=== JOIN TABLE REQUEST ===');
+    console.log('Request body:', req.body);
+    console.log('Route params:', req.params);
+
+    const { address, buyInAmount, seat } = req.body;
+    const { tableId } = req.params;
+
+    try {
+        // Format the RPC call structure
+        const rpcCall = {
+            id: "1",
+            version: "2.0",
+            method: "transfer",
+            params: [
+                address,        // Player's address
+                tableId,        // Table address
+                buyInAmount,    // Buy in amount
+                "join"
+            ]
+        };
+
+        console.log('=== FORMATTED RPC CALL ===');
+        console.log(JSON.stringify(rpcCall, null, 2));
+
+        // Make the actual RPC call to node1
+        const response = await axios.post('https://node1.block52.xyz', rpcCall, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('=== NODE1 RESPONSE ===');
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error('=== ERROR ===');
+        console.error('Error details:', error);
+        res.status(500).json({ error: "Failed to join table", details: error.message });
+    }
 });
 
 app.post("/deposit", async (req, res) => {
