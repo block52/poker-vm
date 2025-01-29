@@ -18,19 +18,14 @@ type VacantPlayerProps = {
 const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     const { id: tableId } = useParams();
     const { tableData, setTableData } = useTableContext();
-
-    // Get big blind from table data
-    const bigBlindWei = tableData?.data?.bigBlind || "30";
-    const bigBlindDisplay = Number(ethers.formatUnits(bigBlindWei, 18));
-
     const userAddress = localStorage.getItem('user_eth_public_key');
-    
-    // Check if user is already at the table
+
+    // First, check if user is already playing
     const isUserAlreadyPlaying = tableData?.data?.players?.some(
         (player: any) => player.address === userAddress
     );
 
-    // Find the next available seat
+    // Then use getNextAvailableSeat
     const getNextAvailableSeat = () => {
         if (isUserAlreadyPlaying) return -1;
         const players = tableData?.data?.players || [];
@@ -41,15 +36,49 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
 
     const nextAvailableSeat = getNextAvailableSeat();
     const isNextAvailableSeat = index === nextAvailableSeat;
+    
+    // Check if this is the first player
+    const isFirstPlayer = tableData?.data?.players?.every(
+        (player: any) => player.address === "0x0000000000000000000000000000000000000000"
+    );
 
-    const handleJoinTable = async () => {
-        if (!isNextAvailableSeat || !userAddress) return;
+    // Get blind values from table data
+    const smallBlindWei = tableData?.data?.smallBlind || '0';
+    const bigBlindWei = tableData?.data?.bigBlind || '0';
+    const smallBlindDisplay = ethers.formatUnits(smallBlindWei, 18);
+    const bigBlindDisplay = ethers.formatUnits(bigBlindWei, 18);
+
+    // Get dealer position from table data
+    const dealerPosition = tableData?.data?.dealer || 0;
+    
+    // Calculate small blind and big blind positions
+    const smallBlindPosition = (dealerPosition + 1) % 9; // Assuming 9 max seats
+    const bigBlindPosition = (dealerPosition + 2) % 9;
+
+    // Helper function to get position name
+    const getPositionName = (index: number) => {
+        if (index === dealerPosition) return "Dealer (D)";
+        if (index === smallBlindPosition) return "Small Blind (SB)";
+        if (index === bigBlindPosition) return "Big Blind (BB)";
+        return "";
+    };
+
+    const handleJoinClick = () => {
+        if (isFirstPlayer) {
+            handleJoinTable(smallBlindWei);
+        } else {
+            handleJoinTable(bigBlindWei);
+        }
+    };
+
+    const handleJoinTable = async (buyInWei: string) => {
+        if (!userAddress) return;
 
         try {
             const requestData = {
                 address: userAddress,
                 tableId,
-                buyInAmount: bigBlindWei,
+                buyInAmount: buyInWei,
                 seat: index
             };
             
@@ -59,7 +88,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
             const response = await axios.post(`${PROXY_URL}/table/${tableId}/join`, requestData);
             console.log('Join response:', response.data);
 
-            // Only update if we get valid data back
             if (response.data && response.data.tableDataPlayers?.length > 0) {
                 const updatedTableData = {
                     data: {
@@ -80,10 +108,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
                 
                 console.log('Updating table with:', updatedTableData);
                 setTableData(updatedTableData);
-            } else {
-                console.warn('Received empty or invalid data from server');
             }
-
         } catch (error) {
             console.error('Error joining table:', error);
         }
@@ -91,7 +116,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
 
     return (
         <div
-            onClick={() => isNextAvailableSeat && !isUserAlreadyPlaying && handleJoinTable()}
+            onClick={() => isNextAvailableSeat && !isUserAlreadyPlaying && handleJoinClick()}
             className={`absolute flex flex-col justify-center text-gray-600 w-[175px] h-[170px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 ${
                 isNextAvailableSeat && !isUserAlreadyPlaying ? 'hover:cursor-pointer' : 'cursor-default'
             }`}
@@ -104,11 +129,21 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
             </div>
             <div className="text-white text-center">
                 {isUserAlreadyPlaying 
-                    ? ""
+                    ? "Already playing"
                     : isNextAvailableSeat 
-                        ? `Click to Join ($${bigBlindDisplay})`
+                        ? isFirstPlayer 
+                            ? `Click to Join ($${smallBlindDisplay})`
+                            : `Click to Join ($${bigBlindDisplay})`
                         : ""}
             </div>
+            {/* Position indicator */}
+            {getPositionName(index) && (
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                    <div className="px-2 py-1 bg-gray-800/80 rounded-md text-xs text-white">
+                        {getPositionName(index)}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
