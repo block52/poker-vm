@@ -18,19 +18,16 @@ type VacantPlayerProps = {
 const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     const { id: tableId } = useParams();
     const { tableData, setTableData } = useTableContext();
-
-    // Get big blind from table data
-    const bigBlindWei = tableData?.data?.bigBlind || "30";
-    const bigBlindDisplay = Number(ethers.formatUnits(bigBlindWei, 18));
-
+    const [showBuyInForm, setShowBuyInForm] = useState(false);
+    const [buyInAmount, setBuyInAmount] = useState('');
     const userAddress = localStorage.getItem('user_eth_public_key');
-    
-    // Check if user is already at the table
+
+    // First, check if user is already playing
     const isUserAlreadyPlaying = tableData?.data?.players?.some(
         (player: any) => player.address === userAddress
     );
 
-    // Find the next available seat
+    // Then use getNextAvailableSeat
     const getNextAvailableSeat = () => {
         if (isUserAlreadyPlaying) return -1;
         const players = tableData?.data?.players || [];
@@ -41,15 +38,49 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
 
     const nextAvailableSeat = getNextAvailableSeat();
     const isNextAvailableSeat = index === nextAvailableSeat;
+    
+    // Check if this is the first player
+    const isFirstPlayer = tableData?.data?.players?.every(
+        (player: any) => player.address === "0x0000000000000000000000000000000000000000"
+    );
 
-    const handleJoinTable = async () => {
-        if (!isNextAvailableSeat || !userAddress) return;
+    // Get big blind value from table data
+    const bigBlindWei = tableData?.data?.bigBlind || '0';
+    const bigBlindDisplay = ethers.formatUnits(bigBlindWei, 18);
+
+    console.log('Debug info:', {
+        isUserAlreadyPlaying,
+        nextAvailableSeat,
+        isNextAvailableSeat,
+        isFirstPlayer,
+        index,
+        players: tableData?.data?.players
+    });
+
+    const handleJoinClick = () => {
+        if (isFirstPlayer) {
+            setShowBuyInForm(true);
+        } else {
+            handleJoinTable(bigBlindWei);
+        }
+    };
+
+    const handleBuyInSubmit = () => {
+        if (!buyInAmount) return;
+        // Convert USDC amount to Wei
+        const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
+        handleJoinTable(buyInWei);
+        setShowBuyInForm(false);
+    };
+
+    const handleJoinTable = async (buyInWei: string) => {
+        if (!userAddress) return;
 
         try {
             const requestData = {
                 address: userAddress,
                 tableId,
-                buyInAmount: bigBlindWei,
+                buyInAmount: buyInWei,
                 seat: index
             };
             
@@ -59,7 +90,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
             const response = await axios.post(`${PROXY_URL}/table/${tableId}/join`, requestData);
             console.log('Join response:', response.data);
 
-            // Only update if we get valid data back
             if (response.data && response.data.tableDataPlayers?.length > 0) {
                 const updatedTableData = {
                     data: {
@@ -80,10 +110,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
                 
                 console.log('Updating table with:', updatedTableData);
                 setTableData(updatedTableData);
-            } else {
-                console.warn('Received empty or invalid data from server');
             }
-
         } catch (error) {
             console.error('Error joining table:', error);
         }
@@ -91,7 +118,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
 
     return (
         <div
-            onClick={() => isNextAvailableSeat && !isUserAlreadyPlaying && handleJoinTable()}
+            onClick={() => isNextAvailableSeat && !isUserAlreadyPlaying && handleJoinClick()}
             className={`absolute flex flex-col justify-center text-gray-600 w-[175px] h-[170px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 ${
                 isNextAvailableSeat && !isUserAlreadyPlaying ? 'hover:cursor-pointer' : 'cursor-default'
             }`}
@@ -102,13 +129,38 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
             }`}>
                 <FaRegUserCircle color="#f0f0f0" className="w-10 h-10" />
             </div>
-            <div className="text-white text-center">
-                {isUserAlreadyPlaying 
-                    ? ""
-                    : isNextAvailableSeat 
-                        ? `Click to Join ($${bigBlindDisplay})`
-                        : ""}
-            </div>
+            {showBuyInForm ? (
+                <div 
+                    className="text-white text-center bg-gray-800/90 p-3 rounded-lg"
+                    onClick={(e) => e.stopPropagation()} // Prevent parent click
+                >
+                    <input
+                        type="number"
+                        value={buyInAmount}
+                        onChange={(e) => setBuyInAmount(e.target.value)}
+                        placeholder="Enter USDC amount"
+                        className="w-full mb-2 px-2 py-1 bg-gray-700 rounded text-white text-sm"
+                        min="0"
+                        step="0.01"
+                    />
+                    <button
+                        onClick={handleBuyInSubmit}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors duration-200"
+                    >
+                        Join Table
+                    </button>
+                </div>
+            ) : (
+                <div className="text-white text-center">
+                    {isUserAlreadyPlaying 
+                        ? ""
+                        : isNextAvailableSeat 
+                            ? isFirstPlayer 
+                                ? "Click to Join (Set Buy-in)"
+                                : `Click to Join ($${bigBlindDisplay})`
+                            : ""}
+                </div>
+            )}
         </div>
     );
 };
