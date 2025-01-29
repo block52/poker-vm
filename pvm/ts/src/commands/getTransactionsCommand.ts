@@ -1,9 +1,10 @@
-import { TransactionList } from "../models/transactionList";
+import { Transaction } from "../models";
+// import { TransactionList } from "../models/transactionList";
 import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class GetTransactionsCommand implements ISignedCommand<TransactionList> {
+export class GetTransactionsCommand implements ISignedCommand<Transaction[]> {
     private readonly transactionManagement: TransactionManagement;
     private readonly count: number;
     private readonly blockHash: string;
@@ -14,8 +15,9 @@ export class GetTransactionsCommand implements ISignedCommand<TransactionList> {
         this.blockHash = blockHash;
     }
 
-    public async execute(): Promise<ISignedResponse<TransactionList>> {
-        const transactionList = await this.transactionManagement.getTransactions(this.blockHash, this.count);
-        return signResult(transactionList, this.privateKey);
+    public async execute(): Promise<ISignedResponse<Transaction[]>> {
+        const transactions = await this.transactionManagement.getTransactions(this.blockHash, this.count);
+
+        return signResult(transactions, this.privateKey);
     }
 }
