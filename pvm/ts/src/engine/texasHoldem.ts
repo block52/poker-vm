@@ -12,6 +12,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IPoker } from "./types";
 import { ethers } from "ethers";
+import { CircularLinkedList } from "./linkedList";
 
 type Round = {
     type: TexasHoldemRound;
@@ -24,6 +25,8 @@ class TexasHoldemGame implements IPoker {
     // Players should be a map of player to seat index
     
     private readonly _players: Player[];
+    private readonly __players: CircularLinkedList<Player>;
+
     private _rounds!: Round[];
     private _deck!: Deck;
     private _sidePots!: Map<PlayerId, bigint>;
@@ -58,6 +61,8 @@ class TexasHoldemGame implements IPoker {
         for (let i = 0; i < this._maxPlayers; i++) {
             this._players.push(new Player(ethers.ZeroAddress, 0n));
         }
+
+        this.__players = new CircularLinkedList<Player>(this._maxPlayers);
         
         this._currentRound = _currentRound;
         this._nextToAct = _nextToAct;
@@ -448,6 +453,12 @@ class TexasHoldemGame implements IPoker {
         }
 
         throw new Error("No available seats.");
+    }
+
+    private getNextSeat2(): number {
+        // get from circular linked list
+
+        const player = this.__players.next();
     }
 
     // complete round maybe?

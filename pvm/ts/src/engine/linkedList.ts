@@ -30,6 +30,16 @@ export class CircularLinkedList<T> {
         }
     }
 
+    next(): Node<T> | null {
+        if (!this.head) {
+            return null;
+        }
+
+        const current = this.head;
+        this.head = this.head.next;
+        return current;
+    }
+
     // Insert at the end of the list
     append(data: T): void {
         if (this.size >= this.maxSize) {
