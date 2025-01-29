@@ -5,25 +5,34 @@ import { Player, TexasHoldemGameState } from "../models/game";
 import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
+import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
     private readonly gameManagement: GameManagement;
+    private readonly transactionManagement: TransactionManagement;
     private readonly mempool: Mempool;
 
     constructor(readonly address: string, private readonly privateKey: string) {
         this.gameManagement = new GameManagement();
+        this.transactionManagement = getTransactionInstance();
         this.mempool = getMempoolInstance();
     }
 
     public async execute(): Promise<ISignedResponse<TexasHoldemGameState>> {
-        // Get the game state as JSON
+        // Get the game state as JSON from the chain
         const json = await this.gameManagement.get(this.address);
         const game = TexasHoldemGame.fromJson(json);
 
-        // Get all transactions from mempool and replay them
-        const transactions = this.mempool.findAll(tx => tx.to === this.address);
+        // Get all transactions from the chain
+        // const minedTransactions = await this.transactionManagement.getTransactions(this.address);
 
-        transactions.forEach(tx => {
+        // Get all transactions from mempool and replay them
+        const allTransactions = this.mempool.findAll(tx => tx.to === this.address);
+
+        // Merge transactions
+        // const allTransactions = [...minedTransactions, ...transactions];
+
+        allTransactions.forEach(tx => {
             switch (tx.data) {
                 case "join":
                     // const player = new Player(tx.from, Number(tx.value));

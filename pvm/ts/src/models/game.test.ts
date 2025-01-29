@@ -4,7 +4,7 @@ import { Card } from "./deck";
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../engine/texasHoldem";
 
-describe.only("Game Tests", () => {
+describe("Game Tests", () => {
     // Remove texas holdem game state, now obsolete
     it.skip("should get texas holdem state as DTO", async () => {
         const address = ethers.ZeroAddress;
@@ -90,7 +90,7 @@ describe.only("Game Tests", () => {
         expect(texasHoldemGameState).toBeDefined();
     });
 
-    it.only("should create a state object from the game", async () => {
+    it("should create a state object from the game", async () => {
         const address = ethers.ZeroAddress;
         const sb: bigint = 10000000000000000000n;
         const bb: bigint = 30000000000000000000n;
@@ -107,8 +107,8 @@ describe.only("Game Tests", () => {
         expect(json).toEqual({
             type: "cash",
             address: "0x0000000000000000000000000000000000000000",
-            smallBlind: "10000000000000000000",
-            bigBlind: "30000000000000000000",
+            smallBlind: "10",
+            bigBlind: "30",
             dealer: 0,
             players: [
                 {
