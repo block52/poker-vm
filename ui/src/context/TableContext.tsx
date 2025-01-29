@@ -47,9 +47,17 @@ export const TableProvider = ({ children }: { children: ReactNode }) => {
         }
       };
   
+      // Initial fetch
       fetchTableData();
-      
-      return () => console.log('TableProvider unmounted');
+  
+      // Set up 5-second polling
+      const interval = setInterval(fetchTableData, 1000);
+  
+      // Cleanup
+      return () => {
+        console.log('TableProvider unmounted');
+        clearInterval(interval);
+      };
     }, [tableId]);
   
     return (
