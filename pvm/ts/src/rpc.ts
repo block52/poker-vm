@@ -29,6 +29,7 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
+import { SharedSecretCommand } from "./commands/sharedSecretCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -208,6 +209,13 @@ export class RPC {
                 case RPCMethods.GET_GAME_STATE: {
                     const [address] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
                     const command = new GameStateCommand(address, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.GET_SHARED_SECRET: {
+                    const [publicKey] = request.params as RPCRequestParams[RPCMethods.GET_SHARED_SECRET];
+                    const command = new SharedSecretCommand(publicKey, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

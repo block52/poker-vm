@@ -92,8 +92,8 @@ describe.only("Game Tests", () => {
 
     it.only("should create a state object from the game", async () => {
         const address = ethers.ZeroAddress;
-        const sb: bigint = 10n;
-        const bb = 30n;
+        const sb: bigint = 10000000000000000000n;
+        const bb: bigint = 30000000000000000000n;
         const dealer = 0;
         const communityCards: Card[] = [];
         const round = TexasHoldemRound.PREFLOP;
