@@ -18,8 +18,6 @@ type VacantPlayerProps = {
 const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     const { id: tableId } = useParams();
     const { tableData, setTableData } = useTableContext();
-    const [showBuyInForm, setShowBuyInForm] = useState(false);
-    const [buyInAmount, setBuyInAmount] = useState('');
     const userAddress = localStorage.getItem('user_eth_public_key');
 
     // First, check if user is already playing
@@ -44,33 +42,18 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
         (player: any) => player.address === "0x0000000000000000000000000000000000000000"
     );
 
-    // Get big blind value from table data
+    // Get blind values from table data
+    const smallBlindWei = tableData?.data?.smallBlind || '0';
     const bigBlindWei = tableData?.data?.bigBlind || '0';
+    const smallBlindDisplay = ethers.formatUnits(smallBlindWei, 18);
     const bigBlindDisplay = ethers.formatUnits(bigBlindWei, 18);
-
-    console.log('Debug info:', {
-        isUserAlreadyPlaying,
-        nextAvailableSeat,
-        isNextAvailableSeat,
-        isFirstPlayer,
-        index,
-        players: tableData?.data?.players
-    });
 
     const handleJoinClick = () => {
         if (isFirstPlayer) {
-            setShowBuyInForm(true);
+            handleJoinTable(smallBlindWei);
         } else {
             handleJoinTable(bigBlindWei);
         }
-    };
-
-    const handleBuyInSubmit = () => {
-        if (!buyInAmount) return;
-        // Convert USDC amount to Wei
-        const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
-        handleJoinTable(buyInWei);
-        setShowBuyInForm(false);
     };
 
     const handleJoinTable = async (buyInWei: string) => {
@@ -129,41 +112,15 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
             }`}>
                 <FaRegUserCircle color="#f0f0f0" className="w-10 h-10" />
             </div>
-            {showBuyInForm ? (
-                <div 
-                    className="text-white text-center bg-gray-800/90 p-3 rounded-lg"
-                    onClick={(e) => e.stopPropagation()} // Prevent parent click
-                >
-                    <input
-                        type="number"
-                        value={buyInAmount}
-                        onChange={(e) => setBuyInAmount(e.target.value)}
-                        placeholder="Enter USDC amount"
-                        className="w-full mb-2 px-2 py-1 bg-gray-700 rounded text-white text-sm"
-                        min="0"
-                        step="0.01"
-                    />
-                    <button
-                        onClick={handleBuyInSubmit}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors duration-200"
-                    >
-                        Join Table
-                    </button>
-                </div>
-            ) : (
-                <div className="text-white text-center">
-                    {isUserAlreadyPlaying 
-                        ? "Already playing"
-                        : isNextAvailableSeat 
-                            ? isFirstPlayer 
-                                ? <div>
-                                    <div>Click to Join</div>
-                                    <div className="text-sm text-gray-300">(Set Buy-in)</div>
-                                  </div>
-                                : `Click to Join ($${bigBlindDisplay})`
-                            : "Click to Join"}
-                </div>
-            )}
+            <div className="text-white text-center">
+                {isUserAlreadyPlaying 
+                    ? "Already playing"
+                    : isNextAvailableSeat 
+                        ? isFirstPlayer 
+                            ? `Click to Join ($${smallBlindDisplay})`
+                            : `Click to Join ($${bigBlindDisplay})`
+                        : ""}
+            </div>
         </div>
     );
 };
