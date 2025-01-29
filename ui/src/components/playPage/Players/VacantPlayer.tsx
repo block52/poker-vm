@@ -153,12 +153,15 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
             ) : (
                 <div className="text-white text-center">
                     {isUserAlreadyPlaying 
-                        ? ""
+                        ? "Already playing"
                         : isNextAvailableSeat 
                             ? isFirstPlayer 
-                                ? "Click to Join (Set Buy-in)"
+                                ? <div>
+                                    <div>Click to Join</div>
+                                    <div className="text-sm text-gray-300">(Set Buy-in)</div>
+                                  </div>
                                 : `Click to Join ($${bigBlindDisplay})`
-                            : ""}
+                            : "Click to Join"}
                 </div>
             )}
         </div>
