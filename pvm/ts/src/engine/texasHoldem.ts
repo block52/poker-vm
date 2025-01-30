@@ -12,7 +12,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IPoker } from "./types";
 import { ethers } from "ethers";
-import { CircularLinkedList } from "./linkedList";
+import { FixedCircularList } from "./linkedList";
 
 type Round = {
     type: TexasHoldemRound;
@@ -25,7 +25,7 @@ class TexasHoldemGame implements IPoker {
     // Players should be a map of player to seat index
     
     private readonly _players: Player[];
-    private readonly __players: CircularLinkedList<Player>;
+    private readonly _seats: FixedCircularList<Player>;
 
     private _rounds!: Round[];
     private _deck!: Deck;
@@ -62,12 +62,13 @@ class TexasHoldemGame implements IPoker {
             this._players.push(new Player(ethers.ZeroAddress, 0n));
         }
 
-        this.__players = new CircularLinkedList<Player>(this._maxPlayers);
+        this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
         
         this._currentRound = _currentRound;
         this._nextToAct = _nextToAct;
-        this._bigBlindPosition = _dealer + 1;
-        this._smallBlindPosition = _dealer + 2;
+        this._smallBlindPosition = _dealer + 1;
+        this._bigBlindPosition = _dealer + 2;
+        
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         this._dealer = _dealer;
         // this._buttonPosition--; // avoid auto-increment on next game for join round
@@ -189,7 +190,7 @@ class TexasHoldemGame implements IPoker {
     deal() {
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
-        this.init(this._update);
+        // this.init(this._update);
     }
 
     join(player: Player) {
@@ -201,8 +202,11 @@ class TexasHoldemGame implements IPoker {
         }
 
         const seat = this.getNextSeat();
-        console.log("Joining to seat: ", seat);
+        console.log("Joining to seat:", seat);
         this._players[seat] = player;
+
+        console.log("Player joined: ", player.id);
+        console.log("Player count: ", this.getPlayerCount());
 
         // if (player.chips < this._minBuyIn) {
         //     // throw new Error("Player does not have enough chips to join.");
@@ -212,7 +216,7 @@ class TexasHoldemGame implements IPoker {
 
         if (this.getPlayerCount() >= this._maxPlayers) {
             // throw new Error("Game full.");
-            console.log("Game full.");
+            console.log("Table full.");
             return;
         }
 
@@ -224,7 +228,7 @@ class TexasHoldemGame implements IPoker {
         }
 
         // Auto join the second player
-        if (this._players.length === 2 && this.currentRound === TexasHoldemRound.ANTE) {
+        if (this.getPlayerCount() === 2 && this.currentRound === TexasHoldemRound.ANTE) {
             // post big blind
             new BigBlindAction(this, this._update).execute(player, this._bigBlind);
         }
@@ -390,7 +394,7 @@ class TexasHoldemGame implements IPoker {
         this._sidePots = new Map<PlayerId, bigint>();
         this._winners = undefined;
         this._currentRound = TexasHoldemRound.PREFLOP;
-        this._nextToAct = this._dealer;
+        this._nextToAct = this._dealer; // this is wrong
 
         const active = this.getActivePlayers();
         if (active.length <= 1) throw new Error("Not enough active players to start next hand.");
@@ -453,13 +457,6 @@ class TexasHoldemGame implements IPoker {
         }
 
         throw new Error("No available seats.");
-    }
-
-    private getNextSeat2(): number {
-        // get from circular linked list
-
-        const player = this.__players.next();
-        return 0
     }
 
     // complete round maybe?
@@ -566,29 +563,6 @@ class TexasHoldemGame implements IPoker {
             default:
                 throw new Error("Invalid round.");
         }
-    }
-
-    // Rehydrate the game from a DTO
-    // NOT SURE THIS GUY IS NEEDED
-    public static fromState(state: TexasHoldemGameState): TexasHoldemGame {
-        const sb = 10n;
-        const bb = 30n;
-        const dealer = 0;
-        const players: PlayerState[] = [];
-        const communityCards: Card[] = [];
-        const pot = 0n;
-        const currentBet = 0n;
-        const round = TexasHoldemRound.PREFLOP;
-        const winners = undefined;
-
-        const game = new TexasHoldemGame(ethers.ZeroAddress, sb, bb, dealer);
-
-        // game._players = state.players.map(p => new Player(p.address, p.stack, p.holeCards));
-        // game._communityCards = state.communityCards;
-        // game._currentRound = state.round;
-        // game._winners = state.winners;
-
-        return game;
     }
 
     public static fromJson(json: any): TexasHoldemGame {

@@ -35,6 +35,7 @@ export class Player {
     getPlayerState(game: TexasHoldemGame, position: number): PlayerState {
         console.log("getPlayerState", this.id, position);
         console.log("getPlayerState bb", game.bigBlindPosition);
+
         const isSmallBlind = game.smallBlindPosition === position;
         const isBigBlind = game.bigBlindPosition === position;
         const isDealer = game.dealerPosition === position;
