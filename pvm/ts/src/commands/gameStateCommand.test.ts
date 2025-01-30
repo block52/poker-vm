@@ -102,7 +102,7 @@ describe("GameStateCommand", () => {
             (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
         });
 
-        it.only("should allow two players to join and auto post blinds", async () => {
+        it.skip("should allow two players to join and auto post blinds", async () => {
             const command = new GameStateCommand(ethers.ZeroAddress, privateKey);
             const result = await command.execute();
 

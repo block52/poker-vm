@@ -459,6 +459,7 @@ class TexasHoldemGame implements IPoker {
         // get from circular linked list
 
         const player = this.__players.next();
+        return 0
     }
 
     // complete round maybe?
