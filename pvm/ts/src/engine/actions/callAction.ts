@@ -7,8 +7,9 @@ class CallAction extends BaseAction {
 
     verify(player: Player): Range | undefined {
         super.verify(player);
-        if (this.game.getMaxStake() === 0n)
-            throw new Error("A bet must be made before it can be called.")
+
+        // if (this.game.getMaxStake() === 0n)
+        //     throw new Error("A bet must be made before it can be called.")
 
         const deductAmount: bigint = this.getDeductAmount(player);
 
@@ -23,6 +24,17 @@ class CallAction extends BaseAction {
 
     protected getDeductAmount(player: Player, _amount?: bigint): bigint {
         // return this.game.getMaxStake() - this.game.getPlayerStake(player);
+        // get previous player bet
+
+        const lastAction = this.game.getLastAction();
+        if (!lastAction) {
+            return 0n;
+        }
+
+        if (lastAction?.action === PlayerActionType.BET) {
+            return lastAction?.amount || 0n; // Should never be 0n
+        }
+
         return 0n;
     }
 }

@@ -1,6 +1,7 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { IUpdate, Player, Range } from "../../models/game";
 import TexasHoldemGame from "../texasHoldem";
+// import { IPlayerAction } from "../types";
 
 abstract class BaseAction {
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
@@ -11,11 +12,11 @@ abstract class BaseAction {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
             throw new Error("Hand has ended.");
 
-        if (this.game.currentPlayerId !== player.id)
-            throw new Error("Must be currently active player.");
+        // if (this.game.currentPlayerId !== player.id)
+        //     throw new Error("Must be currently active player.");
 
-        if (this.game.getPlayerStatus(player) !== PlayerStatus.ACTIVE)
-            throw new Error(`Only active player can ${this.type}.`);
+        // if (this.game.getPlayerStatus(player) !== PlayerStatus.ACTIVE)
+        //     throw new Error(`Only active player can ${this.type}.`);
 
         return undefined;
     }
@@ -40,9 +41,7 @@ abstract class BaseAction {
         if (deductAmount) {
             if (player.chips < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
-            // player.chips -= deductAmount;
-
-            player.chips ;
+            player.chips -= deductAmount;
         }
 
         this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });

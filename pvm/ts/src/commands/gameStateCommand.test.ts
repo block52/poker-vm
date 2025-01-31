@@ -1,5 +1,5 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import TexasHoldemGame from "../engine/texasHoldem";
+import { getTransactionInstance } from "../state/transactionManagement";
 import { Transaction } from "../models";
 import { TexasHoldemGameState } from "../models/game";
 import { GameStateCommand } from "./gameStateCommand";
@@ -9,6 +9,7 @@ import { ethers } from "ethers";
 const privateKey = "0x0000000000000000000000000000000000000000000000000000000000000001";
 // "0xb101505bc06d3df59f281d23395fc0225e6df8bf6c2a6e39358a3151f62bd0a8"
 
+jest.mock("../state/transactionManagement");
 jest.mock("../core/mempool", () => {
     const originalModule = jest.requireActual("../core/mempool");
 
@@ -21,6 +22,7 @@ jest.mock("../core/mempool", () => {
 
 describe("GameStateCommand", () => {
     let mockMempool: jest.Mocked<Mempool>;
+    let mockTransactionManagement: jest.Mocked<any>;
 
     beforeEach(() => {
         // Create a mock Mempool instance
@@ -32,6 +34,12 @@ describe("GameStateCommand", () => {
 
         // Mock getMempoolInstance to return the mock Mempool
         (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
+
+        // Setup mock transaction management
+        mockTransactionManagement = {
+            getTransactionByData: jest.fn()
+        };
+        (getTransactionInstance as jest.Mock).mockReturnValue(mockTransactionManagement);
     });
 
     it("should get default table state", async () => {
@@ -84,11 +92,11 @@ describe("GameStateCommand", () => {
     describe("GameStateCommand join table with transactions", () => {
         const tableAddress = ethers.ZeroAddress;
         const joinTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
-        // const join2Tx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
+        const join2Tx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
         // const sbTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 10n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "bet");
         // const bbTx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 25n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "bet");
 
-        const txs = [joinTx];
+        const txs = [joinTx, join2Tx];
 
         beforeEach(() => {
             // Create a mock Mempool instance
@@ -102,7 +110,7 @@ describe("GameStateCommand", () => {
             (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
         });
 
-        it.only("should allow two players to join and auto post blinds", async () => {
+        it("should allow two players to join and auto post blinds", async () => {
             const command = new GameStateCommand(ethers.ZeroAddress, privateKey);
             const result = await command.execute();
 
@@ -110,7 +118,7 @@ describe("GameStateCommand", () => {
 
             // We should have an empty table
             const data: TexasHoldemGameState = result.data;
-            
+
             const json = data.toJson();
             expect(json.dealer).toBe(0);
             expect(json.smallBlindPosition).toBe(1);
@@ -126,12 +134,69 @@ describe("GameStateCommand", () => {
             expect(player1.isSmallBlind).toBe(true);
             expect(player1.seat).toBe(1);
 
-            // // Check the second player
-            // const player2 = json.players[2];
-            // expect(player2.address).toBe("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-            // expect(player2.stack).toBe("100000000000000000000");
-            // expect(player2.isBigBlind).toBe(true);
-            // expect(player2.seat).toBe(2);
+            // Check the second player
+            const player2 = json.players[2];
+            expect(player2.address).toBe("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(player2.stack).toBe("100000000000000000000");
+            expect(player2.isBigBlind).toBe(true);
+            expect(player2.seat).toBe(2);
+
+            // refresh the game state
+            const result2 = await command.execute();
+            const json2 = result2.data.toJson();
+
+            // Should be in the preflop round
+            expect(json2.round).toBe("preflop");
+        });
+    });
+
+    describe("GameStateCommand join table with transactions and post blinds", () => {
+        const tableAddress = ethers.ZeroAddress;
+        const joinTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
+        const join2Tx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
+        
+        // Small blind should call
+        const sbTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 10n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "call");
+        const txs = [joinTx, join2Tx, sbTx];
+
+        beforeEach(() => {
+            // Create a mock Mempool instance
+            mockMempool = {
+                findAll: jest.fn().mockReturnValue(txs),
+                get: jest.fn().mockReturnValue([])
+                // Add other methods you might use
+            } as unknown as jest.Mocked<Mempool>;
+
+            // Mock getMempoolInstance to return the mock Mempool
+            (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
+        });
+
+        it.only("should allow two players to join and post blinds and deal cards and place first actions", async () => {
+            const command = new GameStateCommand(ethers.ZeroAddress, privateKey);
+            let result = await command.execute();
+
+            expect(result).toBeDefined();
+
+            // We should have an empty table
+            const data: TexasHoldemGameState = result.data;
+
+            let json = data.toJson();
+            expect(json.dealer).toBe(0);
+            expect(json.smallBlindPosition).toBe(1);
+            expect(json.bigBlindPosition).toBe(2);
+
+            // Return the full ring of players
+            expect(json.players.length).toBe(9);
+
+            // Check the first player
+            const player1 = json.players[1];
+            expect(player1.address).toBe("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+            expect(player1.stack).toBe("100000000000000000000");
+
+            // Check the second player
+            const player2 = json.players[2];
+            expect(player2.address).toBe("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(player2.stack).toBe("100000000000000000000"); // Should be less 10 for the small blind
         });
     });
 });

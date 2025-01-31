@@ -40,8 +40,9 @@ export class Player {
         const isBigBlind = game.bigBlindPosition === position;
         const isDealer = game.dealerPosition === position;
         
-        const lastMove = game.getLastAction(this.id);
+        const lastMove = game.getPlayersLastAction(this.id);
         const validMoves = game.getValidActions(this.id);
+
         // const actions = validMoves.map(m => ({ action: m.action, min: m.minAmount.toString(), max: m.maxAmount.toString() }));
         return new PlayerState(this, isSmallBlind, isBigBlind, isDealer, lastMove, position, PlayerStatus.ACTIVE, validMoves);
     }
