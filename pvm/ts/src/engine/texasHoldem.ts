@@ -25,7 +25,8 @@ class TexasHoldemGame implements IPoker {
     // Players should be a map of player to seat index
     
     private readonly _playersMap: Map<number, Player>;
-    private readonly _players: Player[];
+    // private readonly _players: Player[];
+    private readonly _players: (Player | null)[];
     private readonly _seats: FixedCircularList<Player>;
 
     private _rounds!: Round[];
@@ -63,7 +64,7 @@ class TexasHoldemGame implements IPoker {
         this._playersMap = new Map<number, Player>();
 
         for (let i = 0; i < this._maxPlayers; i++) {
-            this._players.push(new Player(ethers.ZeroAddress, 0n));
+            this._players.push(null);
         }
 
         this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
@@ -103,10 +104,10 @@ class TexasHoldemGame implements IPoker {
     }
 
     get players() {
-        // return [...this._players];
+        return [...this._players];
 
         // return player or nullable player in an array
-        return this._players.map(p => p.id === ethers.ZeroAddress ? null : p);
+        // return this._players.map(p => p.id === ethers.ZeroAddress ? null : p);
 
         // for (let i = 0; i < this._players.length; i++) {
         //     const player = this._playersMap.get(i);
@@ -131,7 +132,9 @@ class TexasHoldemGame implements IPoker {
         return this._dealer;
     }
     get currentPlayerId() {
-        return this._players[this._nextToAct].id;
+        // return this._players[this._nextToAct].id;
+        // return this._players[this._nextToAct].id ?? ethers.ZeroAddress;
+        return this._players[this._nextToAct]?.id ?? ethers.ZeroAddress;
     }
     get currentRound() {
         return this._currentRound;
@@ -148,22 +151,16 @@ class TexasHoldemGame implements IPoker {
         //     return player.getPlayerState(this, i);
         // });
 
-        // Make nullale array of players
 
-        
-
-        const players: PlayerState[] = [];
+        const playerStates: (PlayerState[] | null) = [];
         const _players = this.players;
 
+        // TODO: DO WITH A MAP
         for (let i = 0; i < this._players.length; i++) {
-            // const player = new Player(this._players[i].id, this._players[i].chips, this._players[i].holeCards);
-
-            // const seat = this._players.findIndex(p => p.id === player.id);
-            // console.log("Seat: ", seat);
-            // players.push(player.getPlayerState(this, seat));
-
             const player = _players[i];
-            players.push(null);
+            if (player) {
+                playerStates.push(player.getPlayerState(this, i));
+            }
         }
 
         return new TexasHoldemGameState(
@@ -173,7 +170,7 @@ class TexasHoldemGame implements IPoker {
             this._smallBlindPosition,
             this._bigBlindPosition,
             this._dealer,
-            players,
+            playerStates,
             this._communityCards,
             this.pot,
             0n,
