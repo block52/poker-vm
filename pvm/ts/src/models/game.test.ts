@@ -4,7 +4,7 @@ import { Card } from "./deck";
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../engine/texasHoldem";
 
-describe.skip("Game Tests", () => {
+describe.only("Game Tests", () => {
     // Remove texas holdem game state, now obsolete
     it("should get texas holdem state as DTO", async () => {
         const address = ethers.ZeroAddress;
@@ -26,8 +26,10 @@ describe.skip("Game Tests", () => {
         expect(dto).toEqual({
             type: "cash",
             address: ethers.ZeroAddress,
-            smallBlind: "10000000000000000000",
-            bigBlind: "30000000000000000000",
+            smallBlind: "10",
+            smallBlindPosition: 1,
+            bigBlind: "30",
+            bigBlindPosition: 2,
             dealer: 0,
             players: [],
             communityCards: [],
@@ -39,7 +41,7 @@ describe.skip("Game Tests", () => {
         });
     });
 
-    it("should get texas holdem state from DTO", async () => {
+    it("should get texas holdem state from JSON", async () => {
         // const address = ethers.ZeroAddress;
         // const sb = 10;
         // const bb = 30;
@@ -109,7 +111,9 @@ describe.skip("Game Tests", () => {
             type: "cash",
             address: "0x0000000000000000000000000000000000000000",
             smallBlind: "10000000000000000000",
+            smallBlindPosition: 1,
             bigBlind: "30000000000000000000",
+            bigBlindPosition: 2,
             dealer: 0,
             players: [
                 {
@@ -128,7 +132,7 @@ describe.skip("Game Tests", () => {
                 },
                 {
                     address: "0x0000000000000000000000000000000000000000",
-                    seat: 0,
+                    seat: 1,
                     stack: "0",
                     isSmallBlind: true,
                     isBigBlind: false,

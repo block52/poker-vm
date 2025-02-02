@@ -24,6 +24,7 @@ class TexasHoldemGame implements IPoker {
     
     // Players should be a map of player to seat index
     
+    private readonly _playersMap: Map<number, Player>;
     private readonly _players: Player[];
     private readonly _seats: FixedCircularList<Player>;
 
@@ -33,6 +34,7 @@ class TexasHoldemGame implements IPoker {
     private _winners?: Map<PlayerId, bigint>;
     // private _currentRound: TexasHoldemRound;
     // private _nextToAct: number;
+
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
@@ -58,6 +60,8 @@ class TexasHoldemGame implements IPoker {
         // Create an array of players with max size of 9
 
         this._players = [];
+        this._playersMap = new Map<number, Player>();
+
         for (let i = 0; i < this._maxPlayers; i++) {
             this._players.push(new Player(ethers.ZeroAddress, 0n));
         }
@@ -66,6 +70,7 @@ class TexasHoldemGame implements IPoker {
         
         this._currentRound = _currentRound;
         this._nextToAct = _nextToAct;
+
         this._smallBlindPosition = _dealer + 1;
         this._bigBlindPosition = _dealer + 2;
         
@@ -83,6 +88,7 @@ class TexasHoldemGame implements IPoker {
                 };
 
                 this.game._rounds.push(ante_round);
+
                 // this.game._rounds[this.game._currentRound].moves.push(move);
                 // if (![PlayerAction.SMALL_BLIND, PlayerAction.BIG_BLIND].includes(move.action)) this.game.nextPlayer();
             }
@@ -97,7 +103,17 @@ class TexasHoldemGame implements IPoker {
     }
 
     get players() {
-        return [...this._players];
+        // return [...this._players];
+
+        // return player or nullable player in an array
+        return this._players.map(p => p.id === ethers.ZeroAddress ? null : p);
+
+        // for (let i = 0; i < this._players.length; i++) {
+        //     const player = this._playersMap.get(i);
+        //     players.push(player);
+        // }
+
+        // return players;
     }
     get bigBlind() {
         return this._bigBlind;
@@ -132,14 +148,22 @@ class TexasHoldemGame implements IPoker {
         //     return player.getPlayerState(this, i);
         // });
 
+        // Make nullale array of players
+
+        
+
         const players: PlayerState[] = [];
+        const _players = this.players;
 
         for (let i = 0; i < this._players.length; i++) {
-            const player = new Player(this._players[i].id, this._players[i].chips, this._players[i].holeCards);
+            // const player = new Player(this._players[i].id, this._players[i].chips, this._players[i].holeCards);
 
-            const seat = this._players.findIndex(p => p.id === player.id);
-            console.log("Seat: ", seat);
-            players.push(player.getPlayerState(this, seat));
+            // const seat = this._players.findIndex(p => p.id === player.id);
+            // console.log("Seat: ", seat);
+            // players.push(player.getPlayerState(this, seat));
+
+            const player = _players[i];
+            players.push(null);
         }
 
         return new TexasHoldemGameState(
@@ -385,33 +409,33 @@ class TexasHoldemGame implements IPoker {
         return pot;
     }
 
-    private init(update: IUpdate): void {
-        // this._rounds = [{ actions: [] }];
-        // this._rounds = []; // TODO: add ante stage
+    // private init(update: IUpdate): void {
+    //     // this._rounds = [{ actions: [] }];
+    //     // this._rounds = []; // TODO: add ante stage
 
-        this._deck = new Deck(DeckType.STANDARD_52);
-        this._communityCards = [];
-        this._sidePots = new Map<PlayerId, bigint>();
-        this._winners = undefined;
-        this._currentRound = TexasHoldemRound.PREFLOP;
-        this._nextToAct = this._dealer; // this is wrong
+    //     this._deck = new Deck(DeckType.STANDARD_52);
+    //     this._communityCards = [];
+    //     this._sidePots = new Map<PlayerId, bigint>();
+    //     this._winners = undefined;
+    //     this._currentRound = TexasHoldemRound.PREFLOP;
+    //     this._nextToAct = this._dealer; // this is wrong
 
-        const active = this.getActivePlayers();
-        if (active.length <= 1) throw new Error("Not enough active players to start next hand.");
+    //     const active = this.getActivePlayers();
+    //     if (active.length <= 1) throw new Error("Not enough active players to start next hand.");
 
-        this._dealer = active[0]; // find the next free player from the previous button position and allocate the button to them
-        this._smallBlindPosition = active[1];
-        this._bigBlindPosition = active[2 % active.length];
-        this._nextToAct = active[3 % active.length];
+    //     this._dealer = active[0]; // find the next free player from the previous button position and allocate the button to them
+    //     this._smallBlindPosition = active[1];
+    //     this._bigBlindPosition = active[2 % active.length];
+    //     this._nextToAct = active[3 % active.length];
 
-        // TODO: Handle scenario where position can't cover the blind
+    //     // TODO: Handle scenario where position can't cover the blind
 
-        this._deck.shuffle();
-        this._players.forEach(p => (p.holeCards = this._deck.deal(2) as [Card, Card]));
+    //     this._deck.shuffle();
+    //     this._players.forEach(p => (p.holeCards = this._deck.deal(2) as [Card, Card]));
 
-        new BigBlindAction(this, update).execute(this._players[this._bigBlindPosition], this._bigBlind);
-        new SmallBlindAction(this, update).execute(this._players[this._smallBlindPosition], this._smallBlind);
-    }
+    //     new BigBlindAction(this, update).execute(this._players[this._bigBlindPosition], this._bigBlind);
+    //     new SmallBlindAction(this, update).execute(this._players[this._smallBlindPosition], this._smallBlind);
+    // }
 
     private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
         const i = this.getRoundAsNumber(round);
