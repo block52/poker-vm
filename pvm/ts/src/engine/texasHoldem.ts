@@ -21,9 +21,9 @@ type Round = {
 
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
-    
+
     // Players should be a map of player to seat index
-    
+
     private readonly _playersMap: Map<number, Player>;
     // private readonly _players: Player[];
     private readonly _players: (Player | null)[];
@@ -55,7 +55,7 @@ class TexasHoldemGame implements IPoker {
         private _nextToAct: number = 1,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private _communityCards: Card[] = [],
-        private _pot: bigint = 0n,
+        private _pot: bigint = 0n
     ) {
         // this._players = new Map<number, Player>();
         // Create an array of players with max size of 9
@@ -68,19 +68,19 @@ class TexasHoldemGame implements IPoker {
         }
 
         this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
-        
+
         this._currentRound = _currentRound;
         this._nextToAct = _nextToAct;
 
         this._smallBlindPosition = _dealer + 1;
         this._bigBlindPosition = _dealer + 2;
-        
+
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         this._dealer = _dealer;
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) { }
+            constructor(public game: TexasHoldemGame) {}
 
             addAction(action: Turn): void {
                 const ante_round: Round = {
@@ -151,8 +151,7 @@ class TexasHoldemGame implements IPoker {
         //     return player.getPlayerState(this, i);
         // });
 
-
-        const playerStates: (PlayerState[] | null) = [];
+        const playerStates: PlayerState[] | null = [];
         const _players = this.players;
 
         // TODO: DO WITH A MAP
@@ -195,17 +194,12 @@ class TexasHoldemGame implements IPoker {
     //       );
     //}
 
-    getPlayerCount() {
-        // TODO: Do this functionally with reduce or some?
-        let count = 0;
-        for (let i = 0; i < this._players.length; i++) {
-            if (this._players[i].id !== ethers.ZeroAddress) {
-                count++;
-            }
-        }
+    exists(playerId: string): boolean {
+        return this._players.some(p => p !== null && p.id === playerId);
+    }
 
-        console.log("Player count: ", count);
-        return count;
+    getPlayerCount() {
+        return this._players.filter(p => p !== null).length;
     }
 
     deal() {
@@ -215,19 +209,30 @@ class TexasHoldemGame implements IPoker {
     }
 
     join(player: Player) {
-        // Check to see if player is already in the game
-        if (this._players.some(p => p.id === player.id)) {
-            // throw new Error("Player already in game.");
-            console.log(`Player ${player.id} already in game.`);
+        if (this.exists(player.id)) {
+            // throw new Error("Player already joined.");
+            console.log("Player already joined.");
             return;
         }
 
-        const seat = this.getNextSeat();
-        console.log("Joining to seat:", seat);
-        this._players[seat] = player;
+        const seat = this.findNextSeat();
+        this.joinAtSeat(player, seat);
+    }
 
-        console.log("Player joined: ", player.id);
-        console.log("Player count: ", this.getPlayerCount());
+    join2(address: string, stack: bigint) {
+        // This wont work because we fill the array with empty players
+        // if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
+
+        const player = new Player(address, stack);
+        this.join(player);
+    }
+
+    joinAtSeat(player: Player, seat: number) {
+        if (this._players[seat] !== null) {
+            throw new Error("Seat already taken.");
+        }
+
+        this._players[seat] = player;
 
         // if (player.chips < this._minBuyIn) {
         //     // throw new Error("Player does not have enough chips to join.");
@@ -260,19 +265,10 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    join2(address: string, stack: bigint) {
-        // This wont work because we fill the array with empty players
-        // if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
-
-        const player = new Player(address, stack);
-        this.join(player);
-    }
-
     leave(playerId: string) {
-        const index = this._players.findIndex(p => p.id === playerId);
+        const index = this._players.findIndex(p => p !== null && p.id === playerId);
         if (index === -1) throw new Error("Player not found.");
-        
-        this._players.splice(index, 1);
+        this._players[index] = null;
     }
 
     getValidActions(playerId: string): LegalAction[] {
@@ -283,7 +279,7 @@ class TexasHoldemGame implements IPoker {
             } catch {
                 return null;
             }
-        }
+        };
 
         const player = this.getPlayer(playerId);
         return this._actions.map(verifyAction).filter(a => a) as LegalAction[];
@@ -332,7 +328,13 @@ class TexasHoldemGame implements IPoker {
     }
 
     getPlayer(playerId: string): Player {
-        const player = this._players.find(p => p.id === playerId);
+        const player = this._players.find(p => p !== null && p.id === playerId);
+        if (!player) throw new Error("Player not found.");
+        return player;
+    }
+
+    getPlayerAtSeat(seat: number): Player {
+        const player = this._players[seat];
         if (!player) throw new Error("Player not found.");
         return player;
     }
@@ -344,14 +346,16 @@ class TexasHoldemGame implements IPoker {
             // for (const stage = TexasHoldemRound.ANTE; stage <= this._currentRound; this.setNextRound()) {
             //     const actions = this.getPlayerActions(player, stage);
             //     totalActions += actions.length;
-
             //     if (actions.some(m => m.action === PlayerActionType.FOLD)) return PlayerStatus.FOLDED;
-
             //     if (actions.some(m => m.action === PlayerActionType.ALL_IN)) return PlayerStatus.ALL_IN;
             // }
         }
 
         return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
+    }
+
+    getActivePlayerCount(): number {
+        return this._players.filter(p => p !== null && this.getPlayerStatus(p) === PlayerStatus.ACTIVE).length;
     }
 
     getBets(round: TexasHoldemRound = this._currentRound): Map<string, bigint> {
@@ -375,8 +379,8 @@ class TexasHoldemGame implements IPoker {
         return bets;
     }
 
-    getPlayerStake(player: Player, stakes = this.getBets()): bigint {
-        return stakes.get(player.id) ?? 0n;
+    getPlayerStake(player: Player, bets = this.getBets()): bigint {
+        return bets.get(player.id) ?? 0n;
     }
 
     // I dont understand this?
@@ -388,10 +392,10 @@ class TexasHoldemGame implements IPoker {
 
     getPot(bets = this.getBets()): bigint {
         // todo: check this
-        
+
         let pot: bigint = 0n;
 
-        for(let [key, value] of bets) {
+        for (let [key, value] of bets) {
             // console.log(key, value);
             pot += value;
         }
@@ -443,37 +447,61 @@ class TexasHoldemGame implements IPoker {
     }
 
     private getActivePlayers(): number[] {
-        return [...Array(this._players.length).keys()].reduce((acc, i) => {
-            const index = (this._nextToAct + 1 + i) % this._players.length;
-            return this.getPlayerStatus(this._players[index]) === PlayerStatus.ACTIVE ? [...acc, index] : acc;
-        }, [] as Array<number>);
+        // return [...Array(this._players.length).keys()].reduce((acc, i) => {
+        //     const index = (this._nextToAct + 1 + i) % this._players.length;
+        //     const player = this._players[index];
+        //     return player && this.getPlayerStatus(player) === PlayerStatus.ACTIVE ? [...acc, index] : acc;
+        // }, [] as Array<number>);
+
+        const activePlayers: number[] = [];
+
+        for (let i = 0; i < this._players.length; i++) {
+            const player = this._players[i];
+            if (player && this.getPlayerStatus(player) === PlayerStatus.ACTIVE) {
+                activePlayers.push(i);
+            }
+        }
+
+        return activePlayers;
     }
+
+    private getSeatedPlayers(): Player[] {
+        return this._players.filter(p => p !== null);
+    }
+
+    // private nextPlayer(): void {
+    //     const bets = this.getBets();
+    //     const maxStakes = this.getMaxStake(bets);
+
+    //     const isPlayerTurnFinished = (p: Player) =>
+    //         this.getPlayerActions(p).filter(m => m.action != PlayerActionType.BIG_BLIND).length && this.getPlayerStake(p, bets) === maxStakes;
+
+    //     const active = this.getActivePlayers();
+    //     const anyAllIn = this.getSeatedPlayers().some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
+
+    //     if (!active.length || (active.length == 1 && !anyAllIn) || active.map(i => this._players[i]).every(isPlayerTurnFinished)) this.nextHand();
+    //     else this._nextToAct = active[0];
+    // }
 
     private nextPlayer(): void {
-        const bets = this.getBets();
-        const maxStakes = this.getMaxStake(bets);
-
-        const isPlayerTurnFinished = (p: Player) =>
-            this.getPlayerActions(p).filter(m => m.action != PlayerActionType.BIG_BLIND).length && this.getPlayerStake(p, bets) === maxStakes;
-
-        const active = this.getActivePlayers();
-        const anyAllIn = this._players.some(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN);
-
-        if (!active.length || (active.length == 1 && !anyAllIn) || active.map(i => this._players[i]).every(isPlayerTurnFinished)) this.nextHand();
-        else this._nextToAct = active[0];
     }
 
-    private getNextSeat(): number {
+    findNextSeat(): number {
         // const emptyIndex = this._players.findIndex(player => player.id === ethers.ZeroAddress);
         // if (emptyIndex !== -1) {
         //     return emptyIndex;
         // }
 
-        const firstSeat = this._dealer + 1;
+        let firstSeat = this._dealer + 1;
+
+        // Need to loop around
+        if (firstSeat === this._maxPlayers - 1) {
+            firstSeat = 0;
+        }
 
         for (let i = firstSeat; i < this._maxPlayers + firstSeat; i++) {
-            if (this._players[i] === undefined || this._players[i].id === ethers.ZeroAddress) {
-                return i % this._maxPlayers;
+            if (this._players[i] === null) {
+                return i;
             }
         }
 
@@ -502,8 +530,8 @@ class TexasHoldemGame implements IPoker {
 
     private calculateSidePots(): void {
         const startingPot = this.getStartingPot();
-        const numActive = this._players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE).length;
-        
+        const numActive = this.getSeatedPlayers().filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE).length;
+
         // TODO: ROLL BACK
 
         // // TODO: Check this will work in all cases when multiple side pots in same round
@@ -513,16 +541,19 @@ class TexasHoldemGame implements IPoker {
     }
 
     private calculateWinner(): void {
+        const players = this.getSeatedPlayers();
+
         const hands = new Map<PlayerId, any>(
-            this._players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
+            players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
-        const active = this._players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE);
+
+        const active = players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE);
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
         this._winners = new Map<PlayerId, bigint>();
 
         let pot: bigint = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
-        let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
+        // let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
 
         // while (orderedPots.length) {
         //     const [playerId, sidePot] = orderedPots[0];
@@ -587,8 +618,16 @@ class TexasHoldemGame implements IPoker {
     }
 
     public static fromJson(json: any): TexasHoldemGame {
-        const players: PlayerState[] = [];
-        return new TexasHoldemGame(json.address, BigInt(parseInt(json.smallBlind)), BigInt(parseInt(json.bigBlind)), json.dealer, json.nextToAct, json.round, json.communityCards, json.pots[0]);
+        return new TexasHoldemGame(
+            json.address,
+            BigInt(parseInt(json.smallBlind)),
+            BigInt(parseInt(json.bigBlind)),
+            json.dealer,
+            json.nextToAct,
+            json.round,
+            json.communityCards,
+            json.pots[0]
+        );
     }
 }
 

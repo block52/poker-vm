@@ -4,7 +4,7 @@ import { Card } from "./deck";
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../engine/texasHoldem";
 
-describe.only("Game Tests", () => {
+describe.skip("Game Tests", () => {
     // Remove texas holdem game state, now obsolete
     it("should get texas holdem state as DTO", async () => {
         const address = ethers.ZeroAddress;

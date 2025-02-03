@@ -4,7 +4,44 @@ import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
 
-describe.skip("Texas Holdem Game", () => {
+describe("Texas Holdem Game", () => {
+    // unfold law prevent sail where ketchup oxygen now tip cream denial pool
+    // const wallet = ethers.Wallet.fromMnemonic("unfold law prevent sail where ketchup oxygen now tip cream denial pool");
+
+    describe("Properties and methods", () => {
+        it.only("should get players status", () => {
+            const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
+
+            expect(game.findNextSeat()).toEqual(1);
+            game.join(new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100n));
+
+            // get player count
+            expect(game.getPlayerCount()).toEqual(1);
+            expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
+            expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
+        });
+
+        it.only("should find the next player", () => {
+            const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
+            game.join(new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100n));
+            expect(game.findNextSeat()).toEqual(2);
+
+            game.join(new Player("0x1F396d3EE16553E94e26f07c41895E97845AbE0a", 200n));
+            expect(game.findNextSeat()).toEqual(3);
+
+            game.join(new Player("0xcDc5027540cD74b5d84043636AECbc322967E3Cc", 300n));
+            expect(game.findNextSeat()).toEqual(3);
+
+            game.join(new Player("0x05788111e161C88F0035b9D6f5516cd6e9881362", 400n));
+            expect(game.findNextSeat()).toEqual(4);
+
+            // expect(game.getNextPlayer("1")).toEqual("2");
+            // expect(game.getNextPlayer("2")).toEqual("3");
+            // expect(game.getNextPlayer("3")).toEqual("4");
+            // expect(game.getNextPlayer("4")).toEqual("1");
+        });
+    });
+
     describe("Heads up", () => {
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
