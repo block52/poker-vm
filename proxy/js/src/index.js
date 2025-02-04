@@ -204,7 +204,7 @@ app.post("/table/:tableId/join", async (req, res) => {
     console.log('Request body:', req.body);
     console.log('Route params:', req.params);
 
-    const { address, buyInAmount, seat } = req.body;
+    const { address, buyInAmount, seat, signature, publicKey } = req.body;
     const { tableId } = req.params;
 
     try {
@@ -217,8 +217,12 @@ app.post("/table/:tableId/join", async (req, res) => {
                 address,        // Player's address
                 tableId,        // Table address
                 buyInAmount,    // Buy in amount
-                "join"
-            ]
+                "join",
+            ],
+            signature,
+            publicKey
+            // todo: add "signature" of rpc call to be processeed by the node 
+
         };
 
         console.log('=== FORMATTED RPC CALL ===');
