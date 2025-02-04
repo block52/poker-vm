@@ -19,6 +19,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     const { id: tableId } = useParams();
     const { tableData, setTableData } = useTableContext();
     const userAddress = localStorage.getItem('user_eth_public_key');
+    const privateKey = localStorage.getItem('user_eth_private_key');
+    const wallet = new ethers.Wallet(privateKey!);
 
     // First, check if user is already playing
     const isUserAlreadyPlaying = tableData?.data?.players?.some(
@@ -74,12 +76,18 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     const handleJoinTable = async (buyInWei: string) => {
         if (!userAddress) return;
 
+        const messageToSign = `${userAddress}${tableId}${buyInWei}${index}`;
+        const signature = await wallet.signMessage(messageToSign);
+        const publicKey = await wallet.getAddress();
+
         try {
             const requestData = {
                 address: userAddress,
                 tableId,
                 buyInAmount: buyInWei,
-                seat: index
+                seat: index,
+                signature: signature,  // TODO: UPDATE END POINT app.post("/table/:tableId/join" TO PAS THE SGNATURE TO THE NODE
+                publicKey: publicKey
             };
             
             console.log('Current table state:', tableData);
