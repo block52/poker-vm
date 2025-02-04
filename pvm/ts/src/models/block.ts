@@ -101,7 +101,7 @@ export class Block implements IJSONModel {
     }
 
     public verify(): boolean {
-        if (!this.signature) {
+        if (!this.signature || this.signature === ethers.ZeroHash) {
             return false;
         }
 
