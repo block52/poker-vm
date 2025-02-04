@@ -212,10 +212,8 @@ class TexasHoldemGame implements IPoker {
         const players = this.getSeatedPlayers();
         players.forEach(p => {
             // todo: get share secret
-            const card1 = this._deck.getNext();
-            const card2 = this._deck.getNext();
-
-            p.holeCards = [card1, card2];
+            const cards = this._deck.deal(2) as [Card, Card];
+            p.holeCards = cards;
         });
     }
 

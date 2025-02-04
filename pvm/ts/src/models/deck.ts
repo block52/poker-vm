@@ -3,7 +3,7 @@ export enum SUIT {
     DIAMONDS = 2,
     HEARTS = 3,
     SPADES = 4
-};
+}
 
 export type Card = {
     suit: SUIT;
@@ -22,7 +22,6 @@ export interface IDeck {
 }
 
 export class Deck implements IDeck, IJSONModel {
-
     // todo make this a stack
     private cards: Card[] = [];
     public hash: string = "";
@@ -33,18 +32,26 @@ export class Deck implements IDeck, IJSONModel {
         this.hash = ethers.ZeroHash;
         this.createHash();
         this.seedHash = ethers.ZeroHash;
+        this.initStandard52();
     }
 
     private createHash(): void {
-        const cardMnemonics = this.cards.map((card) => card.mnemonic);
+        const cardMnemonics = this.cards.map(card => card.mnemonic);
         const cardsAsString = cardMnemonics.join("-");
         this.hash = createHash("sha256").update(cardsAsString).digest("hex");
     }
 
     public shuffle(seed?: number[]): void {
         // TODO: Switch to crypto.randomInt for better randomness
-        if (!seed)
-            seed = Array.from({ length: this.cards.length }, () => Math.floor(1000000 * Math.random()))
+        if (!seed || seed.length === 0) {
+            seed = Array.from({ length: this.cards.length }, () => Math.floor(1000000 * Math.random()));
+        }
+
+        // Validate seed length matches cards length
+        if (seed.length !== this.cards.length) {
+            throw new Error(`Seed length (${seed.length}) must match cards length (${this.cards.length})`);
+        }
+
         const seedAsString = seed.join("-");
         this.seedHash = createHash("sha256").update(seedAsString).digest("hex");
 
@@ -113,7 +120,7 @@ export class Deck implements IDeck, IJSONModel {
                     suit: suit,
                     rank: rank,
                     value: 13 * (suit - 1) + (rank - 1),
-                    mnemonic: this.getCardMnemonic(suit, rank),
+                    mnemonic: this.getCardMnemonic(suit, rank)
                 });
             }
         }
