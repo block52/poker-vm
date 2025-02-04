@@ -29,9 +29,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
 
         // const fromAccount = await this.accountManagement.getAccount(this.from);
 
-        console.log(`From Account: ${fromAccount}`);
-        console.log(`From Account Balance: ${fromAccount.balance}`);
-
         if (this.amount > fromAccount.balance) {
             throw new Error("Insufficient balance");
         }

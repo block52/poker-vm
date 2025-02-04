@@ -1,6 +1,6 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { IUpdate, Turn, Player, PlayerId, TexasHoldemGameState, LegalAction, PlayerState } from "../models/game";
-import { Card, Deck, DeckType } from "../models/deck";
+import { Card, Deck } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
 import BigBlindAction from "./actions/bigBlindAction";
@@ -202,10 +202,21 @@ class TexasHoldemGame implements IPoker {
         return this._players.filter(p => p !== null).length;
     }
 
-    deal() {
+    deal(seed: number[] = []): void {
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
         // this.init(this._update);
+        this._deck = new Deck();
+        this._deck.shuffle(seed)
+
+        const players = this.getSeatedPlayers();
+        players.forEach(p => {
+            // todo: get share secret
+            const card1 = this._deck.getNext();
+            const card2 = this._deck.getNext();
+
+            p.holeCards = [card1, card2];
+        });
     }
 
     join(player: Player) {
@@ -232,6 +243,12 @@ class TexasHoldemGame implements IPoker {
             throw new Error("Seat already taken.");
         }
 
+        if (this.getPlayerCount() + 1 >= this._maxPlayers) {
+            // throw new Error("Game full.");
+            console.log("Table full.");
+            return;
+        }
+
         this._players[seat] = player;
 
         // if (player.chips < this._minBuyIn) {
@@ -239,12 +256,6 @@ class TexasHoldemGame implements IPoker {
         //     console.log("Player does not have enough chips to join.");
         //     return;
         // }
-
-        if (this.getPlayerCount() >= this._maxPlayers) {
-            // throw new Error("Game full.");
-            console.log("Table full.");
-            return;
-        }
 
         // Auto join the first player
         if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.ANTE) {

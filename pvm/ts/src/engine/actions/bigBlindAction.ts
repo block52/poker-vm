@@ -1,5 +1,5 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { Player } from "../../models/game";
+import { Player, Range } from "../../models/game";
 import BaseAction from "./baseAction";
 
 class BigBlindAction extends BaseAction {
@@ -7,8 +7,8 @@ class BigBlindAction extends BaseAction {
         return PlayerActionType.BIG_BLIND;
     }
 
-    verify(_player: Player) {
-        return undefined;
+    verify(_player: Player) : Range {
+        return { minAmount: this.game.bigBlind, maxAmount: this.game.bigBlind };
     }
 
     getDeductAmount(): bigint {

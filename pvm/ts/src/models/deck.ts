@@ -1,9 +1,3 @@
-export enum DeckType {
-    STANDARD_52 = 0,
-    SHORT_DECK = 1,
-    FIVE_HUNDRED = 2,
-}
-
 export enum SUIT {
     CLUBS = 1,
     DIAMONDS = 2,
@@ -22,7 +16,12 @@ import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { IJSONModel } from "./interfaces";
 
-export class Deck implements IJSONModel {
+export interface IDeck {
+    shuffle(seed?: number[]): void;
+    getNext(): Card;
+}
+
+export class Deck implements IDeck, IJSONModel {
 
     // todo make this a stack
     private cards: Card[] = [];
@@ -30,21 +29,7 @@ export class Deck implements IJSONModel {
     public seedHash: string;
     private top: number = 0;
 
-    constructor(type: DeckType) {
-        switch (type) {
-            case DeckType.STANDARD_52:
-                this.initStandard52();
-                break;
-            case DeckType.SHORT_DECK:
-                this.initShortDeck();
-                break;
-            case DeckType.FIVE_HUNDRED:
-                this.initFiveHundred();
-                break;
-            default:
-                throw new Error("Invalid deck type");
-        }
-
+    constructor() {
         this.hash = ethers.ZeroHash;
         this.createHash();
         this.seedHash = ethers.ZeroHash;
@@ -132,13 +117,5 @@ export class Deck implements IJSONModel {
                 });
             }
         }
-    }
-
-    private initShortDeck(): void {
-        throw new Error("Not implemented");
-    }
-
-    private initFiveHundred(): void {
-        throw new Error("Not implemented");
     }
 }

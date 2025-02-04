@@ -1,6 +1,4 @@
-import { ethers } from "ethers";
 import { Deck } from "../models";
-import { DeckType } from "../models/deck";
 import { RandomCommand } from "./randomCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { signResult } from "./abstractSignedCommand";
@@ -9,7 +7,7 @@ export class ShuffleCommand implements ISignedCommand<Deck> {
     private readonly deck: Deck;
 
     constructor(private readonly privateKey: string) {
-        this.deck = new Deck(DeckType.STANDARD_52);
+        this.deck = new Deck();
     }
 
     public async execute(): Promise<ISignedResponse<Deck>> {

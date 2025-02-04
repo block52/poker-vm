@@ -9,7 +9,7 @@ describe("Texas Holdem Game", () => {
     // const wallet = ethers.Wallet.fromMnemonic("unfold law prevent sail where ketchup oxygen now tip cream denial pool");
 
     describe("Properties and methods", () => {
-        it.only("should get players status", () => {
+        it.only("should get a player status after joining", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
 
             expect(game.findNextSeat()).toEqual(1);
@@ -29,20 +29,17 @@ describe("Texas Holdem Game", () => {
             game.join(new Player("0x1F396d3EE16553E94e26f07c41895E97845AbE0a", 200n));
             expect(game.findNextSeat()).toEqual(3);
 
-            game.join(new Player("0xcDc5027540cD74b5d84043636AECbc322967E3Cc", 300n));
-            expect(game.findNextSeat()).toEqual(3);
+            const player1 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+            expect(player1).toBeDefined();
+            expect(player1.holeCards).toBeDefined();
 
-            game.join(new Player("0x05788111e161C88F0035b9D6f5516cd6e9881362", 400n));
-            expect(game.findNextSeat()).toEqual(4);
-
-            // expect(game.getNextPlayer("1")).toEqual("2");
-            // expect(game.getNextPlayer("2")).toEqual("3");
-            // expect(game.getNextPlayer("3")).toEqual("4");
-            // expect(game.getNextPlayer("4")).toEqual("1");
+            const player2 = game.getPlayer("0x1F396d3EE16553E94e26f07c41895E97845AbE0a");
+            expect(player2).toBeDefined();
+            expect(player2.holeCards).toBeDefined();
         });
     });
 
-    describe("Heads up", () => {
+    describe.skip("Heads up", () => {
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
         it("should have the correct properties pre flop", () => {

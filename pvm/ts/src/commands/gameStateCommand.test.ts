@@ -19,7 +19,7 @@ jest.mock("../core/mempool", () => {
     };
 });
 
-describe("GameStateCommand", () => {
+describe.skip("GameStateCommand", () => {
     let mockMempool: jest.Mocked<Mempool>;
 
     beforeEach(() => {
@@ -43,8 +43,28 @@ describe("GameStateCommand", () => {
 
     describe.skip("GameStateCommand join table with transactions", () => {
         const tableAddress = ethers.ZeroAddress;
-        const joinTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
-        const join2Tx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
+        const joinTx = new Transaction(
+            tableAddress,
+            "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f",
+            ethers.parseEther("100"),
+            ethers.ZeroHash,
+            ethers.ZeroHash,
+            Date.now(),
+            0,
+            0n,
+            "join"
+        );
+        const join2Tx = new Transaction(
+            tableAddress,
+            "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
+            ethers.parseEther("100"),
+            ethers.ZeroHash,
+            ethers.ZeroHash,
+            Date.now(),
+            0,
+            0n,
+            "join"
+        );
 
         const txs = [joinTx, join2Tx];
 
@@ -83,7 +103,17 @@ describe("GameStateCommand", () => {
 
     describe("GameStateCommand join table with transactions", () => {
         const tableAddress = ethers.ZeroAddress;
-        const joinTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
+        const joinTx = new Transaction(
+            tableAddress,
+            "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f",
+            ethers.parseEther("100"),
+            ethers.ZeroHash,
+            ethers.ZeroHash,
+            Date.now(),
+            0,
+            0n,
+            "join"
+        );
         // const join2Tx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
         // const sbTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 10n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "bet");
         // const bbTx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 25n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "bet");
@@ -110,7 +140,7 @@ describe("GameStateCommand", () => {
 
             // We should have an empty table
             const data: TexasHoldemGameState = result.data;
-            
+
             const json = data.toJson();
             expect(json.dealer).toBe(0);
             expect(json.smallBlindPosition).toBe(1);

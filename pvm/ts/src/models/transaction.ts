@@ -53,7 +53,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
 
     public static async create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Promise<Transaction> {
         const timestamp = Date.now();
-        const _data = `${to}${from}${value}${nonce}${timestamp}${data}`;
+        const _data = `${to}${from}${value}${nonce}${data}`;
         const signature = await signData(privateKey, _data);
 
         const hash = createHash("sha256").update(_data).digest("hex");

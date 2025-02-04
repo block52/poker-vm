@@ -42,7 +42,7 @@ abstract class BaseAction {
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
             // player.chips -= deductAmount;
 
-            player.chips ;
+            player.chips -= deductAmount;
         }
 
         this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
