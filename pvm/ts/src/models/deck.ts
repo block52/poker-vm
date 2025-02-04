@@ -42,7 +42,6 @@ export class Deck implements IDeck, IJSONModel {
     }
 
     public shuffle(seed?: number[]): void {
-        // TODO: Switch to crypto.randomInt for better randomness
         if (!seed || seed.length === 0) {
             seed = Array.from({ length: this.cards.length }, () => Math.floor(1000000 * Math.random()));
         }
@@ -60,6 +59,10 @@ export class Deck implements IDeck, IJSONModel {
             const j = seed[i] % (i + 1);
             [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
         }
+
+        // Explicitly update hash after shuffling
+        this.createHash();
+        console.log('Hash after shuffle:', this.hash);
     }
 
     public getCardMnemonic(suit: SUIT, rank: number): string {
@@ -114,8 +117,9 @@ export class Deck implements IDeck, IJSONModel {
     }
 
     private initStandard52(): void {
+        this.cards = []; // Clear existing cards
         for (let suit = SUIT.CLUBS; suit <= SUIT.SPADES; suit++) {
-            for (let rank = 2; rank <= 14; rank++) {
+            for (let rank = 1; rank <= 13; rank++) { // Changed from 2-14 to 1-13
                 this.cards.push({
                     suit: suit,
                     rank: rank,
@@ -124,5 +128,6 @@ export class Deck implements IDeck, IJSONModel {
                 });
             }
         }
+        this.createHash(); // Make sure hash is updated after initializing cards
     }
 }
