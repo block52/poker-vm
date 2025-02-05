@@ -242,6 +242,7 @@ export class Server {
         const diff = now.getTime() - this._lastDepositSync.getTime();
 
         if (diff < 3600000) {
+            console.log("Last deposit sync was less than 1 hour ago, skipping deposit sync");
             return;
         }
 
