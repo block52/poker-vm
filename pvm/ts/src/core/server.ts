@@ -231,6 +231,11 @@ export class Server {
 
     private async syncDeposits() {
 
+        if (!this.isValidator) {
+            console.log("Not a validator, skipping deposit sync");
+            return;
+        }
+
         console.log("Syncing deposits...");
 
         // Check if the last deposit sync was more than 1 hour ago
@@ -242,11 +247,11 @@ export class Server {
             return;
         }
 
-        //if (this.isValidator) {
+        if (this.isValidator) {
             const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
             await bridge.resync();
             this._lastDepositSync = new Date();
-        //}
+        }
     }
 
     private async resyncBlockchain() {
