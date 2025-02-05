@@ -72,6 +72,7 @@ export class Server {
     }
 
     public async bootstrap(args: string[] = []) {
+        await this.resyncBlockchain();
         await this.loadNodes();
 
         console.log("Bootstrapping...");
@@ -84,9 +85,6 @@ export class Server {
         this.isValidator = await validatorInstance.isValidator(this.publicKey);
 
         await this.syncDeposits();
-        // if (args.includes("--mine")) {
-        //     mine = true;
-        // }
 
         console.log("Polling...");
         const intervalId = setInterval(async () => {
@@ -152,7 +150,6 @@ export class Server {
         console.log("Loading boot nodes...");
         let count = 0;
         if (this._nodes.size === 0) {
-
             const me: Node = await this.me();
             const nodes = await getBootNodes(me.url);
 
@@ -232,11 +229,10 @@ export class Server {
     }
 
     private async syncDeposits() {
+
+        console.log("Syncing deposits...");
+
         // Check if the last deposit sync was more than 1 hour ago
-        if (!this.isValidator) {
-            console.log("Not a validator, skipping deposit sync");
-            return;
-        }
 
         const now = new Date();
         const diff = now.getTime() - this._lastDepositSync.getTime();
@@ -246,11 +242,11 @@ export class Server {
             return;
         }
 
-        if (this.isValidator) {
+        //if (this.isValidator) {
             const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
             await bridge.resync();
             this._lastDepositSync = new Date();
-        }
+        //}
     }
 
     private async resyncBlockchain() {
