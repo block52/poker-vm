@@ -108,6 +108,7 @@ export class Server {
 
     public async mine() {
         if (!this.isValidator) {
+            console.log("Not a validator, skipping mine");
             return;
         }
 
@@ -233,7 +234,6 @@ export class Server {
         console.log("Syncing deposits...");
 
         // Check if the last deposit sync was more than 1 hour ago
-
         const now = new Date();
         const diff = now.getTime() - this._lastDepositSync.getTime();
 
