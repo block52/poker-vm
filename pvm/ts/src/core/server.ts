@@ -74,6 +74,8 @@ export class Server {
     public async bootstrap(args: string[] = []) {
         await this.loadNodes();
 
+        console.log("Bootstrapping...");
+        console.log("args", args);
         args.includes("--reset") ? await this.resyncBlockchain() : await this.syncBlockchain();
 
         await this.syncMempool();
@@ -164,6 +166,7 @@ export class Server {
 
     private async syncMempool() {
         if (!this.started) {
+            console.log("Server not started, skipping mempool sync");
             return;
         }
 
@@ -231,6 +234,7 @@ export class Server {
     private async syncDeposits() {
         // Check if the last deposit sync was more than 1 hour ago
         if (!this.isValidator) {
+            console.log("Not a validator, skipping deposit sync");
             return;
         }
 
