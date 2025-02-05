@@ -19,7 +19,7 @@ jest.mock("../core/mempool", () => {
     };
 });
 
-describe.skip("GameStateCommand", () => {
+describe.only("GameStateCommand", () => {
     let mockMempool: jest.Mocked<Mempool>;
 
     beforeEach(() => {

@@ -67,7 +67,7 @@ export class Bridge {
         const events = await this.bridgeContract.queryFilter("Deposited", 0, "latest");
 
         for (const event of events) {
-            console.log(event);
+            // console.log(event);
             const depositEvent = event as EventLog;
             if (depositEvent.args) {
                 //TODO: FIX BUG IN CONTRACT, OUT BY 1 ERROR

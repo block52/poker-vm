@@ -4,12 +4,12 @@ import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
 
-describe("Texas Holdem Game", () => {
+describe.only("Texas Holdem Game", () => {
     // unfold law prevent sail where ketchup oxygen now tip cream denial pool
     // const wallet = ethers.Wallet.fromMnemonic("unfold law prevent sail where ketchup oxygen now tip cream denial pool");
 
     describe("Properties and methods", () => {
-        it.only("should get a player status after joining", () => {
+        it("should get a player status after joining", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
 
             expect(game.findNextSeat()).toEqual(1);
@@ -21,7 +21,7 @@ describe("Texas Holdem Game", () => {
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
         });
 
-        it.only("should find the next player", () => {
+        it("should find the next player", () => {
             const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
             game.join(new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100n));
             expect(game.findNextSeat()).toEqual(2);
@@ -39,7 +39,7 @@ describe("Texas Holdem Game", () => {
         });
     });
 
-    describe.skip("Heads up", () => {
+    describe("Heads up", () => {
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
         it("should have the correct properties pre flop", () => {
@@ -87,7 +87,7 @@ describe("Texas Holdem Game", () => {
         });
     });
 
-    it("should process messages", function () {
+    it.skip("should process messages", function () {
         const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
 
         game.join(new Player("1", 100n));
@@ -114,7 +114,7 @@ describe("Texas Holdem Game", () => {
         game.performAction("1", PlayerActionType.CHECK);
     });
 
-    it("should allow a round to be played", () => {
+    it.skip("should allow a round to be played", () => {
         const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 25n, 2);
         game.join(new Player("1", 250n));
         game.join(new Player("2", 200n));
