@@ -27,8 +27,8 @@ export class Bridge {
         });
     }
 
-    public async onDeposit(from: string, value: bigint, index: bigint, transactionHash: string): Promise<void> {
-        console.log(`Deposit detected from {from}: {value} tokens at index {index} with transaction hash {transactionHash}`);
+    public async onDeposit(receiver: string, value: bigint, index: bigint, transactionHash: string): Promise<void> {
+        console.log(`Deposit detected to ${receiver}: ${value} tokens at index ${index} with transaction hash ${transactionHash}`);
         const privateKey = process.env.VALIDATOR_KEY;
 
         if (!privateKey) {
@@ -44,7 +44,7 @@ export class Bridge {
     }
 
     // Remove this function
-    public async onTransfer(from: string, to: string, value: bigint, transactionHash: string): Promise<void> {
+    public async onTransfer(receiver: string, to: string, value: bigint, transactionHash: string): Promise<void> {
         const privateKey = process.env.VALIDATOR_KEY;
 
         if (!privateKey) {
