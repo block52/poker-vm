@@ -3,7 +3,7 @@ const router = express.Router();
 const { ethers } = require('ethers');
 
 // Update contract addresses to mainnet
-const DEPOSIT_ADDRESS = "0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede";  // Your mainnet deposit contract
+const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";  // Your mainnet deposit contract
 
 // Using Sepolia RPC URL from hardhat.config.ts
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";

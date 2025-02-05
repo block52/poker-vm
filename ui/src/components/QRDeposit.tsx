@@ -5,7 +5,7 @@ import axios from 'axios';
 import { PROXY_URL } from '../config/constants';
 import useUserWallet from "../hooks/useUserWallet";
 
-const DEPOSIT_ADDRESS = '0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede';
+const DEPOSIT_ADDRESS = '0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C';
 const TOKEN_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 
 
