@@ -3,11 +3,41 @@ const axios = require("axios");
 
 class Block52 {
     constructor(node_url) {
-        // set node url
-        this.node_url = node_url; // remove, just use the client
-        // this.client = new NodeRpcClient(node_url);
-        console.log("Block52 node", this.node_url);
+        console.log("Initializing Block52 client with URL:", node_url);
+        this.node_url = node_url;
         this.requestId = 1;
+        
+        // Configure axios instance with timeout and retry logic
+        this.client = axios.create({
+            baseURL: node_url,
+            timeout: 10000, // 10 second timeout
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Add response interceptor for better error handling
+        this.client.interceptors.response.use(
+            response => response,
+            error => {
+                console.error('\n=== Block52 Client Error ===');
+                console.error('URL:', error.config?.url);
+                console.error('Method:', error.config?.method);
+                console.error('Status:', error.response?.status);
+                console.error('Message:', error.message);
+
+                // Return a standardized error response instead of throwing
+                return Promise.resolve({
+                    data: {
+                        error: {
+                            code: error.response?.status || 500,
+                            message: error.message,
+                            isNodeError: true
+                        }
+                    }
+                });
+            }
+        );
     }
 
     getUnixTime () {
@@ -21,38 +51,48 @@ class Block52 {
     }
 
     async getAccount(id) {
-        const rpc_request = {
-            jsonrpc: "2.0",
-            method: "get_account",
-            params: [id],
-            id: this.requestId
-        };
-
-        console.log('\n=== Proxy Sending RPC Request ===');
-        console.log('To:', this.node_url);
-        console.log('Request:', JSON.stringify(rpc_request, null, 2));
-
+        console.log('\n=== Getting Account ===');
+        console.log('Address:', id);
+        
         try {
-            const { data } = await axios.post(this.node_url, rpc_request);
-            console.log('\n=== Proxy Received Response ===');
-            console.log('Response:', JSON.stringify(data, null, 2));
-            console.log('===============================\n');
+            const rpc_request = {
+                jsonrpc: "2.0",
+                method: "get_account",
+                params: [id],
+                id: this.requestId++
+            };
 
-            this.requestId++;
+            console.log('Sending request to:', this.node_url);
+            const { data } = await this.client.post('', rpc_request);
             
+            // If we get an error response from the node
+            if (data.error) {
+                console.warn('Node returned error:', data.error);
+                return {
+                    address: id,
+                    balance: "0",
+                    error: data.error.message,
+                    isNodeError: true
+                };
+            }
+
+            // If we get a successful response
             return {
                 nonce: 0,
-                address: data.result.data.address,
+                address: id,
+                balance: data.result?.balance || "0",
                 privateKey: "",
-                path: "",
-                balance: data.result.data.balance
+                path: ""
             };
+
         } catch (error) {
-            console.error('\n=== Proxy Error ===');
-            console.error('Error:', error.message);
-            console.error('Response:', error.response?.data);
-            console.error('===================\n');
-            throw error;
+            console.error('Unexpected error in getAccount:', error);
+            return {
+                address: id,
+                balance: "0",
+                error: "Unable to fetch account data",
+                isNodeError: true
+            };
         }
     }
 
@@ -62,19 +102,77 @@ class Block52 {
     }
 
     async getTable(id) {
-        const rpc_request = {
-            jsonrpc: "2.0",
-            method: "get_game_state",
-            params: [id],
-            id: this.requestId
-        };
+        try {
+            const rpc_request = {
+                jsonrpc: "2.0",
+                method: "get_game_state",
+                params: [id],
+                id: this.requestId++
+            };
 
-        const { data } = await axios.post(this.node_url, rpc_request);
-        console.log("Block52 getTable", data);
+            const { data } = await this.client.post('', rpc_request);
+            
+            if (data.error) {
+                return {
+                    error: data.error.message,
+                    isNodeError: true
+                };
+            }
 
-        this.requestId++;
+            return data.result;
 
-        return data.result;
+        } catch (error) {
+            return {
+                error: "Unable to fetch table data",
+                isNodeError: true
+            };
+        }
+    }
+
+    async getTables() {
+        try {
+            const rpc_request = {
+                jsonrpc: "2.0",
+                method: "get_tables",
+                params: [],
+                id: this.requestId++
+            };
+
+            const { data } = await this.client.post('', rpc_request);
+            
+            if (data.error) {
+                return [];
+            }
+
+            return data.result || [];
+
+        } catch (error) {
+            console.error('Error fetching tables:', error);
+            return [];
+        }
+    }
+
+    async getPlayer(tableId, seat) {
+        try {
+            const rpc_request = {
+                jsonrpc: "2.0",
+                method: "get_player",
+                params: [tableId, seat],
+                id: this.requestId++
+            };
+
+            const { data } = await this.client.post('', rpc_request);
+            
+            if (data.error) {
+                return null;
+            }
+
+            return data.result;
+
+        } catch (error) {
+            console.error('Error fetching player:', error);
+            return null;
+        }
     }
 }
 

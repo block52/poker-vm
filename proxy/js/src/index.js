@@ -90,19 +90,41 @@ const getClient = () => {
 
 // Routes
 app.get("/account/:id", async (req, res) => {
-    const client = getClient();
-    const account = await client.getAccount(req.params.id);
+    console.log('\n=== Account Request ===');
+    console.log('Address:', req.params.id);
+    
+    try {
+        const client = getClient();
+        const account = await client.getAccount(req.params.id);
 
-    // const balance = ethers.formatUnits(account.balance.toString());
+        // If there was a node error, still return a 200 with fallback data
+        if (account.isNodeError) {
+            console.warn('Node error when fetching account:', account.error);
+            return res.json({
+                nonce: 0,
+                address: req.params.id,
+                balance: "0",
+                error: account.error
+            });
+        }
 
-    const response = {
-        nonce: 0,
-        address: account.address,
-        balance: account.balance.toString()
-    };
+        // Normal successful response
+        res.json({
+            nonce: account.nonce || 0,
+            address: account.address,
+            balance: account.balance.toString()
+        });
 
-    res.send(response);
-    return;
+    } catch (error) {
+        console.error('Unexpected error in route handler:', error);
+        // Return fallback data instead of error status
+        res.json({
+            nonce: 0,
+            address: req.params.id,
+            balance: "0",
+            error: "Internal server error"
+        });
+    }
 });
 
 // app.get("/account/balance", async (req, res) => {
