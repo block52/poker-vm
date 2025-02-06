@@ -1,12 +1,28 @@
+/**
+ * Block52 Client
+ * Handles all RPC communication with Block52 nodes
+ */
+
+// ===================================
+// 1. Import Dependencies
+// ===================================
 const axios = require("axios");
 // const { NodeRpcClient } = "@bitcoinbrisbane/block52";
 
+
+// ===================================
+// 2. Client Class Definition
+// ===================================
 class Block52 {
+    /**
+    * Initialize Block52 client with node URL
+    * @param {string} node_url - URL of the Block52 node
+    */
     constructor(node_url) {
         console.log("Initializing Block52 client with URL:", node_url);
         this.node_url = node_url;
         this.requestId = 1;
-        
+
         // Configure axios instance with timeout and retry logic
         this.client = axios.create({
             baseURL: node_url,
@@ -40,20 +56,41 @@ class Block52 {
         );
     }
 
-    getUnixTime () {
+    // ===================================
+    // 3. System Methods
+    // ===================================
+
+    /**
+     * Get current Unix timestamp
+     * @returns {number} Current Unix timestamp
+     */
+
+    getUnixTime() {
         // todo: return the current time in UNIX format from the node
         return Math.floor(Date.now());
     }
+
+    // ===================================
+    // 4. Account Methods
+    // ===================================
+
+    /**
+     * Get account nonce
+     * @param {string} id - Account address
+     * @returns {Promise<number>} Account nonce
+     */
 
     async getNonce(id) {
         const account = await this.client.getAccount(id);
         return account.nonce;
     }
 
+    /**
+     * Get account details
+     * @param {string} id - Account address
+     * @returns {Promise<Object>} Account details
+     */
     async getAccount(id) {
-        console.log('\n=== Getting Account ===');
-        console.log('Address:', id);
-        
         try {
             const rpc_request = {
                 jsonrpc: "2.0",
@@ -64,7 +101,7 @@ class Block52 {
 
             console.log('Sending request to:', this.node_url);
             const { data } = await this.client.post('', rpc_request);
-            
+
             // If we get an error response from the node
             if (data.error) {
                 console.warn('Node returned error:', data.error);
@@ -101,6 +138,17 @@ class Block52 {
         return response.data;
     }
 
+    // ===================================
+    // 5. Table Methods
+    // ===================================
+
+    /**
+     * Get table details
+     * @param {string} id - Table address
+     * @returns {Promise<Object>} Table details
+     */
+
+
     async getTable(id) {
         try {
             const rpc_request = {
@@ -111,7 +159,7 @@ class Block52 {
             };
 
             const { data } = await this.client.post('', rpc_request);
-            
+
             if (data.error) {
                 return {
                     error: data.error.message,
@@ -129,6 +177,10 @@ class Block52 {
         }
     }
 
+     /**
+     * Get all available tables
+     * @returns {Promise<Array>} List of tables
+     */
     async getTables() {
         try {
             const rpc_request = {
@@ -139,7 +191,7 @@ class Block52 {
             };
 
             const { data } = await this.client.post('', rpc_request);
-            
+
             if (data.error) {
                 return [];
             }
@@ -152,6 +204,17 @@ class Block52 {
         }
     }
 
+     // ===================================
+    // 6. Player Methods
+    // ===================================
+    
+    /**
+     * Get player information
+     * @param {string} tableId - Table ID
+     * @param {number} seat - Seat number
+     * @returns {Promise<Object|null>} Player details
+     */
+
     async getPlayer(tableId, seat) {
         try {
             const rpc_request = {
@@ -162,7 +225,7 @@ class Block52 {
             };
 
             const { data } = await this.client.post('', rpc_request);
-            
+
             if (data.error) {
                 return null;
             }
@@ -176,4 +239,7 @@ class Block52 {
     }
 }
 
+// ===================================
+// 7. Export
+// ===================================
 module.exports = Block52;
