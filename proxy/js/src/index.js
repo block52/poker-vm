@@ -268,47 +268,6 @@ app.post("/table/:tableId/join", async (req, res) => {
     }
 });
 
-app.post("/deposit", async (req, res) => {
-    const recipient = req.body.recipient;
-
-
-    // Create a new transaction
-    const newTransaction = new Transaction({
-        address: "0x123...",
-        amount: 1.5
-        // timestamp will be set automatically
-    });
-
-    // Save to database
-    await newTransaction.save();
-
-    const response = {
-        index,
-        address
-    };
-
-    res.send(response);
-});
-
-app.put("/deposit/:id", async (req, res) => {
-    // get erc20 balance abi
-    const erc20Abi = ["function balanceOf(address owner) view returns (uint256)"];
-
-    const usdcAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
-    const provider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL);
-    const contract = new ethers.Contract(usdcAddress, erc20Abi, provider);
-
-    const balance = await contract.balanceOf(req.params.id);
-    const response = {
-        id: 1,
-        balance: ethers.utils.formatUnits(balance.toString(), 6)
-    };
-
-    const transaction = await Transaction.findById(req.params.id);
-
-    res.send(response);
-});
-
 
 app.post("/transfer", (req, res) => {
     const response = {
