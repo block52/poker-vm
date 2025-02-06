@@ -275,7 +275,7 @@ const QRDeposit: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
             <div className="max-w-md w-full bg-gray-800 rounded-lg shadow-xl p-6">
-                <h1 className="text-2xl font-bold text-center mb-6">Deposit USDC</h1>
+                <h1 className="text-2xl font-bold text-center mb-6">Deposit USDC in to Block52</h1>
                 
                 <div className="bg-gray-700 rounded-lg p-4 mb-6">
                     <p className="text-lg mb-2">Block 52 Balance:</p>
@@ -310,13 +310,15 @@ const QRDeposit: React.FC = () => {
                     </div>
                 )}
 
-                {/* Logged In Account Display */}
-                <div className="bg-gray-700 rounded-lg p-4 mb-6">
-                    <h2 className="text-lg font-semibold mb-2">Logged In Account</h2>
-                    <p className="text-sm text-gray-300 break-all">
-                        {loggedInAccount || 'Not logged in'}
-                    </p>
-                </div>
+                {/* Block52 Account Display */}
+                {!showQR && (
+                    <div className="bg-gray-700 rounded-lg p-4 mb-6">
+                        <h2 className="text-lg font-semibold mb-2">Block52 Account</h2>
+                        <p className="text-sm text-gray-300 break-all">
+                            {loggedInAccount || 'Not logged in'}
+                        </p>
+                    </div>
+                )}
 
                 {!showQR ? (
                     <button
