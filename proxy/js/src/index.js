@@ -127,12 +127,7 @@ app.get("/account/:id", async (req, res) => {
     }
 });
 
-// app.get("/account/balance", async (req, res) => {
-//     const client = getClient();
-//     const account = client.getAccount(req.query.id);
-//     res.send(account.balance);
-//     return;
-// });
+
 
 app.get("/time", (req, res) => {
     // Return the current time in UNIX format
