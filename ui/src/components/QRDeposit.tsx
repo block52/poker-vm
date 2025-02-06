@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ethers } from 'ethers';
+import { Eip1193Provider, ethers, parseUnits } from 'ethers';
 import axios from 'axios';
 import { PROXY_URL } from '../config/constants';
 import useUserWallet from "../hooks/useUserWallet";
 import useUserWalletConnect from "../hooks/useUserWalletConnect";
-import { parseUnits } from "ethers";
 
 const DEPOSIT_ADDRESS = '0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C';
 const TOKEN_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
@@ -313,7 +312,7 @@ const QRDeposit: React.FC = () => {
         setIsTransferring(true);
         try {
             // Get signer from connected wallet
-            const provider = new ethers.BrowserProvider(window.ethereum);
+            const provider = new ethers.BrowserProvider(window.ethereum as unknown as Eip1193Provider); 
             const signer = await provider.getSigner();
             
             // Create USDC contract instance
