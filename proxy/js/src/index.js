@@ -12,7 +12,6 @@ const cors = require("cors");
 const ethers = require("ethers");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
-const Transaction = require("./models/transaction");
 const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
