@@ -56,7 +56,7 @@ export const TableProvider = ({ children }: { children: ReactNode }) => {
       fetchTableData();
   
       // Set up 5-second polling
-      const interval = setInterval(fetchTableData, 1000);
+      const interval = setInterval(fetchTableData, 20000);
   
       // Cleanup
       return () => {
