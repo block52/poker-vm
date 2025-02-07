@@ -9,5 +9,17 @@ export default defineConfig({
             plugins: [tailwindcss()]
         }
     },
-    plugins: [react()]
+    plugins: [react()],
+    build: {
+        outDir: 'build',
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
+    },
+    server: {
+        port: 3000,
+    },
+    base: '/',
 });
