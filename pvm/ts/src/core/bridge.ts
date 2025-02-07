@@ -5,7 +5,6 @@
 import { ethers, EventLog } from "ethers";
 import { MintCommand } from "../commands/mintCommand";
 import { createProvider } from "./provider";
-import { getTransactionInstance } from "../state/transactionManagement";
 import { CONTRACT_ADDRESSES } from "./constants";
 
 const abi = ["event Transfer(address indexed from, address indexed to, uint256 value)"];

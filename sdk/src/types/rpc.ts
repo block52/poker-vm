@@ -35,6 +35,7 @@ export enum RPCMethods {
     GET_MEMPOOL = "get_mempool",
     GET_NODES = "get_nodes",
     GET_SHARED_SECRET = "get_shared_secret",
+    GET_TRANSACTION = "get_transaction",
     GET_TRANSACTIONS = "get_transactions",
     MINE = "mine",
     MINED_BLOCK_HASH = "mined_block_hash",
@@ -64,6 +65,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_MEMPOOL]: []; // No parameters
     [RPCMethods.GET_NODES]: []; // No parameters
     [RPCMethods.GET_SHARED_SECRET]: [string]; // [publicKey]
+    [RPCMethods.GET_TRANSACTION]: [string]; // [hash]
     [RPCMethods.GET_TRANSACTIONS]: [string]; // [count]
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]

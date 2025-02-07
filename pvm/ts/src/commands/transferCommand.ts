@@ -75,7 +75,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 // Cast string to PlayerActionType
                 const playerAction: PlayerActionType = this.data as PlayerActionType || "join";
 
-                if (this.data === "join") {
+                if (playerAction === "join") {
                     console.log(`Joining game...`);
                     const player: Player = new Player(this.from, this.amount, undefined);
 

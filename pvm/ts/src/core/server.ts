@@ -173,11 +173,6 @@ export class Server {
     }
 
     private async syncMempool() {
-        if (!this.started) {
-            console.log("Server not started, skipping mempool sync");
-            return;
-        }
-    
         console.log("Syncing mempool...");
         const mempool = getMempoolInstance();
     
@@ -237,7 +232,6 @@ export class Server {
         //);
     }
 
-
     private async purgeMempool() {
         console.log("Purging mempool...");
         const mempool = getMempoolInstance();
@@ -245,11 +239,10 @@ export class Server {
     }
 
     private async syncDeposits() {
-
-        if (!this.isValidator) {
-            console.log("Not a validator, skipping deposit sync");
-            return;
-        }
+        // if (!this.isValidator) {
+        //     console.log("Not a validator, skipping deposit sync");
+        //     return;
+        // }
 
         console.log("Syncing deposits...");
 

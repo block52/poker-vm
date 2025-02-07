@@ -196,6 +196,13 @@ export class RPC {
                     break;
                 }
 
+                case RPCMethods.GET_TRANSACTION: {
+                    const [hash] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTION];
+                    const command = new GetTransactionsCommand(Number(count), blockHash, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
                 case RPCMethods.GET_TRANSACTIONS: {
                     const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
                     const blockHash = ""; // todo: need to redploy sdk
