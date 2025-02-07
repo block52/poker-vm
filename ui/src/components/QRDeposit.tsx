@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ethers } from 'ethers';
+import { Eip1193Provider, ethers, parseUnits } from 'ethers';
 import axios from 'axios';
 import { PROXY_URL } from '../config/constants';
 import useUserWallet from "../hooks/useUserWallet";
+import useUserWalletConnect from "../hooks/useUserWalletConnect";
 
-const DEPOSIT_ADDRESS = '0x2172af2ecBF2e44286c092dDc2f676E9Adfb9Ede';
+const DEPOSIT_ADDRESS = '0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C';
 const TOKEN_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 
 
@@ -29,8 +30,16 @@ interface TransferEvent {
     value: bigint;
 }
 
+// Add USDC contract ABI (just the transfer method)
+const USDC_ABI = [
+    "function transfer(address to, uint256 amount) returns (bool)",
+    "function approve(address spender, uint256 amount) returns (bool)",
+    "function balanceOf(address account) view returns (uint256)"
+];
+
 const QRDeposit: React.FC = () => {
     const { balance: b52Balance } = useUserWallet();
+    const { isConnected, open, address: web3Address } = useUserWalletConnect();
     const [showQR, setShowQR] = useState<boolean>(false);
     const [latestTransaction, setLatestTransaction] = useState<any>(null);
     const [timeLeft, setTimeLeft] = useState<number>(300); // 5 minutes in seconds
@@ -40,6 +49,9 @@ const QRDeposit: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [currentSession, setCurrentSession] = useState<DepositSession | null>(null);
+    const [depositAmount, setDepositAmount] = useState<string>("");
+    const [web3Balance, setWeb3Balance] = useState<string>("0");
+    const [isTransferring, setIsTransferring] = useState(false);
 
     // Add countdown timer effect
     useEffect(() => {
@@ -117,6 +129,27 @@ const QRDeposit: React.FC = () => {
             console.log('Loaded logged in account:', storedKey);
         }
     }, []);
+
+    // Function to get USDC balance of connected wallet
+    const fetchWeb3Balance = async () => {
+        if (!web3Address) return;
+        
+        try {
+            const provider = new ethers.JsonRpcProvider(RPC_URL);
+            const usdcContract = new ethers.Contract(TOKEN_ADDRESS, USDC_ABI, provider);
+            const balance = await usdcContract.balanceOf(web3Address);
+            setWeb3Balance(ethers.formatUnits(balance, 6)); // USDC has 6 decimals
+        } catch (error) {
+            console.error('Error fetching USDC balance:', error);
+        }
+    };
+
+    // Fetch balance when wallet connects
+    useEffect(() => {
+        if (web3Address) {
+            fetchWeb3Balance();
+        }
+    }, [web3Address]);
 
     const handleGenerateQR = async () => {
         console.log('Generate QR button clicked');
@@ -272,10 +305,46 @@ const QRDeposit: React.FC = () => {
         return value.toFixed(2);
     };
 
+    // Function to handle direct USDC transfer
+    const handleDirectTransfer = async () => {
+        if (!web3Address || !currentSession) return;
+        
+        setIsTransferring(true);
+        try {
+            // Get signer from connected wallet
+            const provider = new ethers.BrowserProvider(window.ethereum as unknown as Eip1193Provider); 
+            const signer = await provider.getSigner();
+            
+            // Create USDC contract instance
+            const usdcContract = new ethers.Contract(TOKEN_ADDRESS, USDC_ABI, signer);
+            
+            // Convert amount to USDC units (6 decimals)
+            const amount = parseUnits(depositAmount, 6);
+            
+            // Send transfer transaction
+            const tx = await usdcContract.transfer(DEPOSIT_ADDRESS, amount);
+            await tx.wait();
+
+            // Update session with amount
+            await completeSession(parseFloat(depositAmount));
+            
+            // Refresh balances
+            fetchWeb3Balance();
+            
+            // Show success message
+            alert('Deposit successful!');
+        } catch (error) {
+            console.error('Transfer failed:', error);
+            alert('Transfer failed. Please try again.');
+        } finally {
+            setIsTransferring(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
             <div className="max-w-md w-full bg-gray-800 rounded-lg shadow-xl p-6">
-                <h1 className="text-2xl font-bold text-center mb-6">Deposit USDC</h1>
+                <h1 className="text-2xl font-bold text-center mb-6">Deposit USDC in to Block52</h1>
                 
                 <div className="bg-gray-700 rounded-lg p-4 mb-6">
                     <p className="text-lg mb-2">Block 52 Balance:</p>
@@ -310,12 +379,56 @@ const QRDeposit: React.FC = () => {
                     </div>
                 )}
 
-                {/* Logged In Account Display */}
-                <div className="bg-gray-700 rounded-lg p-4 mb-6">
-                    <h2 className="text-lg font-semibold mb-2">Logged In Account</h2>
-                    <p className="text-sm text-gray-300 break-all">
-                        {loggedInAccount || 'Not logged in'}
-                    </p>
+                {/* Block52 Account Display */}
+                {!showQR && (
+                    <div className="bg-gray-700 rounded-lg p-4 mb-6">
+                        <h2 className="text-lg font-semibold mb-2">Block52 Account</h2>
+                        <p className="text-sm text-gray-300 break-all">
+                            {loggedInAccount || 'Not logged in'}
+                        </p>
+                    </div>
+                )}
+
+                {/* Web3 Wallet Connection Section */}
+                <div className="mt-6 p-4 bg-gray-700 rounded-lg">
+                    <h2 className="text-lg font-semibold mb-4">Deposit with Web3 Wallet</h2>
+                    
+                    {!isConnected ? (
+                        <button
+                            onClick={open}
+                            className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Connect Wallet
+                        </button>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <span>Connected: {web3Address?.slice(0, 6)}...{web3Address?.slice(-4)}</span>
+                                <span>Balance: {web3Balance} USDC</span>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <input
+                                    type="number"
+                                    value={depositAmount}
+                                    onChange={(e) => setDepositAmount(e.target.value)}
+                                    placeholder="Enter USDC amount"
+                                    className="w-full p-2 bg-gray-600 rounded border border-gray-500"
+                                    min="0"
+                                    step="0.01"
+                                />
+                                
+                                <button
+                                    onClick={handleDirectTransfer}
+                                    disabled={!depositAmount || isTransferring || !currentSession}
+                                    className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 
+                                             disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {isTransferring ? 'Processing...' : 'Deposit USDC'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {!showQR ? (

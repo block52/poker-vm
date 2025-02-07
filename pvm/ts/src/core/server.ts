@@ -10,6 +10,16 @@ import { getValidatorInstance } from "./validator";
 import { getBootNodes } from "../state/nodeManagement";
 import { Bridge } from "./bridge";
 
+let serverInstance: Server | null = null;
+
+export function getServerInstance(): Server {
+    if (!serverInstance) {
+        const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
+        serverInstance = new Server(privateKey);
+    }
+    return serverInstance;
+}
+
 export class Server {
     public readonly contractAddress: string;
     public readonly publicKey: string;
@@ -72,8 +82,11 @@ export class Server {
     }
 
     public async bootstrap(args: string[] = []) {
+        await this.resyncBlockchain();
         await this.loadNodes();
 
+        console.log("Bootstrapping...");
+        console.log("args", args);
         args.includes("--reset") ? await this.resyncBlockchain() : await this.syncBlockchain();
 
         await this.syncMempool();
@@ -82,9 +95,6 @@ export class Server {
         this.isValidator = await validatorInstance.isValidator(this.publicKey);
 
         await this.syncDeposits();
-        // if (args.includes("--mine")) {
-        //     mine = true;
-        // }
 
         console.log("Polling...");
         const intervalId = setInterval(async () => {
@@ -108,6 +118,7 @@ export class Server {
 
     public async mine() {
         if (!this.isValidator) {
+            console.log("Not a validator, skipping mine");
             return;
         }
 
@@ -150,7 +161,6 @@ export class Server {
         console.log("Loading boot nodes...");
         let count = 0;
         if (this._nodes.size === 0) {
-
             const me: Node = await this.me();
             const nodes = await getBootNodes(me.url);
 
@@ -164,15 +174,20 @@ export class Server {
 
     private async syncMempool() {
         if (!this.started) {
+            console.log("Server not started, skipping mempool sync");
             return;
         }
-
+    
         console.log("Syncing mempool...");
         const mempool = getMempoolInstance();
-
+    
         for (const [url, node] of this._nodes) {
             try {
-                const client = new NodeRpcClient(url, this.privateKey);
+                const client = new NodeRpcClient(
+                    url, 
+                    this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
+                );
+                
                 const otherMempool: TransactionDTO[] = await client.getMempool();
                 // Add to own mempool
                 await Promise.all(
@@ -180,10 +195,10 @@ export class Server {
                         await mempool.add(Transaction.fromJson(transaction));
                     })
                 );
+    
             } catch (error) {
-                // Don't evict the node
+                console.error("Error connecting to node:", error);
                 console.warn(`Missing node ${url}`);
-                // this._nodes.delete(url);
             }
         }
 
@@ -222,6 +237,7 @@ export class Server {
         //);
     }
 
+
     private async purgeMempool() {
         console.log("Purging mempool...");
         const mempool = getMempoolInstance();
@@ -229,15 +245,20 @@ export class Server {
     }
 
     private async syncDeposits() {
-        // Check if the last deposit sync was more than 1 hour ago
+
         if (!this.isValidator) {
+            console.log("Not a validator, skipping deposit sync");
             return;
         }
 
+        console.log("Syncing deposits...");
+
+        // Check if the last deposit sync was more than 1 hour ago
         const now = new Date();
         const diff = now.getTime() - this._lastDepositSync.getTime();
 
         if (diff < 3600000) {
+            console.log("Last deposit sync was less than 1 hour ago, skipping deposit sync");
             return;
         }
 
@@ -280,7 +301,12 @@ export class Server {
         // Find the highest tip
         for (const [url, node] of this._nodes) {
             try {
-                const client = new NodeRpcClient(node.url, this.privateKey);
+                const client = new NodeRpcClient(
+                    url, 
+                    this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
+                );
+                
+                console.log("Trying to connect to node:", node.url);
                 const block = await client.getLastBlock();
                 console.info(`Received block ${block.index} ${block.hash} from ${node.url}`);
 
@@ -290,104 +316,37 @@ export class Server {
                     highestNode = node;
                 }
 
-                // // If were higher than the tip, broadcast the block
-                // for (let i = block.index; i <= tip; i++) {
-                //     console.log(`Sending block hash ${i} to ${node.url}`);
-                //     const block: Block = await blockchain.getBlock(i);
-                //     await client.sendBlock(block.hash, JSON.stringify(block.toJson()));
-                // }
-
                 // Update the node height
                 nodeHeights.set(node.url, block.index);
 
             } catch (error) {
-                console.warn(`Missing node ${node.url}`);
+                console.error("Error connecting to node:", error);
+                console.warn(`Missing node ${url}`);
             }
         }
-
-        console.log(`Highest node is ${highestNode.url} with tip ${highestTip}`);
-
-        if (lastBlock.index === highestTip) {
-            console.log("Blockchain is synced");
-            this._synced = true;
-        }
-
-        if (this._synced) {
-            this._syncing = false;
-            return;
-        }
-
-        // Sync with the highest node
-        const client = new NodeRpcClient(highestNode.url, this.privateKey);
-
-        for (let i = tip; i <= highestTip; i++) {
-            const blockDTO: BlockDTO = await client.getBlock(i);
-            console.log(blockDTO);
-
-            if (!blockDTO) {
-                console.warn(`Block ${i} is missing`);
-                continue;
-            }
-
-            console.log(`Verifying block ${blockDTO.hash} from ${highestNode.url}`);
-            const block = Block.fromJson(blockDTO);
-
-            if (!block.verify()) {
-                console.warn(`Block ${block.hash} is invalid`);
-                continue;
-            }
-
-            console.log(`Adding block ${block.hash} from ${highestNode.url}`);
-            await blockchain.addBlock(block);
-        }
-
-        this._syncing = false;
     }
 
-    private async findHighestTip(): Promise<Node> {
-        // Get my current tip
+    private async findHighestTip(): Promise<void> {
         const blockchain = getBlockchainInstance();
         const lastBlock = await blockchain.getLastBlock();
-        let tip = lastBlock.index;
+        const tip = lastBlock.index;
 
-        let highestNode: Node = Array.from(this._nodes.values())[0];
         let highestTip = 0;
-
         for (const [url, node] of this._nodes) {
             try {
-                const client = new NodeRpcClient(node.url, this.privateKey);
+                const client = new NodeRpcClient(
+                    url, 
+                    this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
+                );
                 const block = await client.getLastBlock();
-
                 if (block.index > highestTip) {
                     highestTip = block.index;
-                    highestNode = node;
                 }
             } catch (error) {
-                console.warn(`Missing node ${node.url}`);
+                console.warn(`Missing node ${url}`);
             }
         }
 
-        if (highestTip > tip) {
-            this._synced = false;
-        }
-
-        return highestNode;
+        this._synced = tip >= highestTip;
     }
 }
-
-let instance: Server;
-export const getServerInstance = (): Server => {
-    if (!instance) {
-        instance = new Server(process.env.VALIDATOR_KEY || ZeroHash);
-    }
-    return instance;
-};
-
-const start = async () => {
-    const server = getServerInstance();
-    if (server.started) {
-        return;
-    }
-    await server.bootstrap();
-    await server.start();
-};

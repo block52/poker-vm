@@ -96,7 +96,6 @@ export class RPC {
 
         try {
             switch (method) {
-
                 case RPCMethods.GET_ACCOUNT: {
                     if (!request.params) {
                         return makeErrorRPCResponse(id, "Invalid params");
@@ -107,11 +106,10 @@ export class RPC {
                 }
 
                 case RPCMethods.GET_BLOCK: {
-
                     const params: BlockCommandParams = {
                         index: BigInt(0),
                         hash: ""
-                    }
+                    };
 
                     let command = new BlockCommand(params, validatorPrivateKey);
 
@@ -135,7 +133,7 @@ export class RPC {
                     const params: BlockCommandParams = {
                         index: undefined,
                         hash: request.params[0] as string
-                    }
+                    };
 
                     const command = new BlockCommand(params, validatorPrivateKey);
                     result = await command.execute();
@@ -146,7 +144,7 @@ export class RPC {
                     const params: BlockCommandParams = {
                         index: undefined,
                         hash: undefined
-                    }
+                    };
 
                     const command = new BlockCommand(params, validatorPrivateKey);
                     result = await command.execute();
@@ -165,7 +163,7 @@ export class RPC {
                     const params: BlockCommandParams = {
                         index: undefined,
                         hash: undefined
-                    }
+                    };
                     const command = new BlockCommand(params, validatorPrivateKey);
                     result = await command.execute();
                     break;
@@ -247,90 +245,95 @@ export class RPC {
         const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
         let result: ISignedResponse<any | null>;
-        switch (method) {
-            // Write methods
+        try {
+            switch (method) {
+                // Write methods
 
-            case RPCMethods.GET_BLOCK: {
-                const blockHash = request.params[0] as string;
-                const blockJSON = request.params[1] as string;
-                const blockDTO: BlockDTO = JSON.parse(blockJSON);
-                const command = new ReceiveMinedBlockCommand(blockHash, blockDTO, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
-
-            case RPCMethods.MINT: {
-                if (request.params?.length !== 1) {
-                    return makeErrorRPCResponse(id, "Invalid params");
+                case RPCMethods.GET_BLOCK: {
+                    const blockHash = request.params[0] as string;
+                    const blockJSON = request.params[1] as string;
+                    const blockDTO: BlockDTO = JSON.parse(blockJSON);
+                    const command = new ReceiveMinedBlockCommand(blockHash, blockDTO, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
                 }
-                const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
 
-                const command = new MintCommand(depositIndex, "", validatorPrivateKey);
-                result = await command.execute();
+                case RPCMethods.MINT: {
+                    if (request.params?.length !== 1) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
 
-                break;
-            }
+                    const command = new MintCommand(depositIndex, "", validatorPrivateKey);
+                    result = await command.execute();
 
-            case RPCMethods.BURN: {
-                if (request.params?.length !== 3) {
-                    return makeErrorRPCResponse(id, "Invalid params");
+                    break;
                 }
-                const [burnFrom, amountString, bridgeTo] = request.params as RPCRequestParams[RPCMethods.BURN];
-                const amount = BigInt(amountString); // JSON doesn't allow BigInts
 
-                const command = new BurnCommand(burnFrom, amount, bridgeTo, validatorPrivateKey);
-                result = await command.execute();
+                case RPCMethods.BURN: {
+                    if (request.params?.length !== 3) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [burnFrom, amountString, bridgeTo] = request.params as RPCRequestParams[RPCMethods.BURN];
+                    const amount = BigInt(amountString); // JSON doesn't allow BigInts
 
-                break;
+                    const command = new BurnCommand(burnFrom, amount, bridgeTo, validatorPrivateKey);
+                    result = await command.execute();
+
+                    break;
+                }
+
+                case RPCMethods.TRANSFER: {
+                    // if (request.params?.length !== 3) {
+                    //     return makeErrorRPCResponse(id, "Invalid params");
+                    // }
+                    const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
+
+                    // Todo: get from out of the signed request
+                    const command = new TransferCommand(from, to, BigInt(amount), data, validatorPrivateKey);
+                    result = await command.execute();
+
+                    break;
+                }
+
+                case RPCMethods.CREATE_CONTRACT_SCHEMA: {
+                    const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
+                    const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.CREATE_ACCOUNT: {
+                    const [privateKey] = request.params as RPCRequestParams[RPCMethods.CREATE_ACCOUNT];
+                    const command = new CreateAccountCommand(privateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.MINE: {
+                    const command = new MineCommand(validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.MINED_BLOCK_HASH: {
+                    const blockHash = request.params[0] as string;
+                    const nodeUrl = request.params[1] as string;
+                    const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                default:
+                    return makeErrorRPCResponse(id, "Method not found");
             }
-
-            case RPCMethods.TRANSFER: {
-                // if (request.params?.length !== 3) {
-                //     return makeErrorRPCResponse(id, "Invalid params");
-                // }
-                const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
-
-                // Todo: get from out of the signed request
-                const command = new TransferCommand(from, to, BigInt(amount), data, validatorPrivateKey);
-                result = await command.execute();
-
-                break;
-            }
-
-            case RPCMethods.CREATE_CONTRACT_SCHEMA: {
-                const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
-                const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
-
-            case RPCMethods.CREATE_ACCOUNT: {
-                const [privateKey] = request.params as RPCRequestParams[RPCMethods.CREATE_ACCOUNT];
-                const command = new CreateAccountCommand(privateKey);
-                result = await command.execute();
-                break;
-            }
-
-            case RPCMethods.MINE: {
-                const command = new MineCommand(validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
-
-            case RPCMethods.MINED_BLOCK_HASH: {
-                const blockHash = request.params[0] as string;
-                const nodeUrl = request.params[1] as string;
-                const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
-                result = await command.execute();
-                break;
-            }
-
-            default:
-                return makeErrorRPCResponse(id, "Method not found");
+            return {
+                id,
+                result: result.data.toJson()
+            };
+        } catch (e) {
+            console.error(e);
+            return makeErrorRPCResponse(id, "Operation failed");
         }
-        return {
-            id,
-            result: result.data.toJson()
-        };
     }
 }

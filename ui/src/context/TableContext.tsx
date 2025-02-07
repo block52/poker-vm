@@ -27,6 +27,7 @@ export const TableProvider = ({ children }: { children: ReactNode }) => {
   
     useEffect(() => {
       console.log('TableProvider mounted with ID:', tableId);
+      console.log('Using PROXY_URL:', PROXY_URL);
       
       const fetchTableData = async () => {
         console.log('Fetch attempt with ID:', tableId);
@@ -36,7 +37,11 @@ export const TableProvider = ({ children }: { children: ReactNode }) => {
         
         setIsLoading(true);
         try {
-          const response = await axios.get(`${PROXY_URL}/table/${tableId}`);
+          const baseUrl = window.location.hostname === 'app.block52.xyz' 
+            ? 'https://proxy.block52.xyz'
+            : PROXY_URL;
+            
+          const response = await axios.get(`${baseUrl}/table/${tableId}`);
           console.log('Table response:', response.data);
           setTableData(response.data);
         } catch (err) {
@@ -51,7 +56,7 @@ export const TableProvider = ({ children }: { children: ReactNode }) => {
       fetchTableData();
   
       // Set up 5-second polling
-      const interval = setInterval(fetchTableData, 1000);
+      const interval = setInterval(fetchTableData, 20000);
   
       // Cleanup
       return () => {

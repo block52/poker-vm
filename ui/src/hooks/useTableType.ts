@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { PROXY_URL } from "../config/constants";
 
 interface UseTableTypeResult {
     type: string | null;
@@ -20,7 +21,7 @@ const useTableType = (address: string): UseTableTypeResult => {
         setError(null);
 
         try {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const url = PROXY_URL;
             const response = await axios.get(`${url}/table/${address}`);
 
             if (response.status !== 200) {

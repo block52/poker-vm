@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@bitcoinbrisbane/block52": "^1.0.31",
+    "adm-zip": "^0.5.16",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "bigunit": "^1.2.5",

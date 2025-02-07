@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
-
+import { PROXY_URL } from "../config/constants";
 interface UseGameTypeResult {
     type: string | null;
     isLoading: boolean;
@@ -20,7 +20,7 @@ const useGameType = (address: string): UseGameTypeResult => {
         setError(null);
 
         try {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const url = PROXY_URL;
             const response = await axios.get(`${url}/games/`);
 
             if (response.status !== 200) {

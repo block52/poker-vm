@@ -18,8 +18,7 @@ import { PROXY_URL } from "./config/constants";
 import { TableProvider } from './context/TableContext';
 import { PlayerProvider } from './context/PlayerContext';
 
-// Move this to a separate config file (e.g., src/config.ts)
-// export const PROXY_URL = process.env.REACT_APP_PROXY_URL || 'http://localhost:8080';
+
 console.log('PROXY_URL in App:', PROXY_URL); // Debug log
 
 const queryClient = new QueryClient();

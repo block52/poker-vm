@@ -7,7 +7,6 @@ import { CONTRACT_ADDRESSES } from "./constants";
 
 export class Validator {
     private readonly stakingContract: ethers.Contract;
-    // private readonly provider: ethers.JsonRpcProvider;
     private readonly blockManager: BlockchainManagement;
     private validatorCount: number = 0;
     private nodes: Node[] = [];
@@ -16,14 +15,19 @@ export class Validator {
     private lastUpdate: Date;
 
     constructor(private rpcUrl: string) {
-        this.blockManager = getBlockchainInstance();        
+        this.blockManager = getBlockchainInstance();
         const provider = createProvider(rpcUrl);
         this.count = 0;
         this.lastUpdate = new Date("2025-01-01");
-        this.stakingContract = new ethers.Contract(CONTRACT_ADDRESSES.vaultAddress, ["function isValidator(address) view returns (bool)", "function validatorCount() view returns (uint256)"], provider);
+        this.stakingContract = new ethers.Contract(
+            CONTRACT_ADDRESSES.vaultAddress,
+            ["function isValidator(address) view returns (bool)", "function validatorCount() view returns (uint256)"],
+            provider
+        );
     }
 
     public async isValidator(address: string): Promise<boolean> {
+        console.log("checking vault contract with", address);
         return await this.stakingContract.isValidator(address);
     }
 
@@ -53,14 +57,13 @@ export class Validator {
             return ZeroAddress;
         }
 
-        // For now, we will just use the first validator in the list
-        const validatorIndex = nextBlockIndex % this.validatorCount;
+        // // For now, we will just use the first validator in the list
+        // const validatorIndex = nextBlockIndex % this.validatorCount;
+        // const { publicKey: validatorAddress } = this.nodes[validatorIndex];
 
-        const { publicKey: validatorAddress } = this.nodes[validatorIndex];
-
-        const node1 = "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846";
-        const texasHodl = "0xeE3A5673dE06Fa3Efd2fA2B6F46B5f75C0AcEb8D";
-        const dogNode = "0xA5A3443679d1154264d419F8C716435AA4972D9d";
+        // const node1 = "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846";
+        // const texasHodl = "0xeE3A5673dE06Fa3Efd2fA2B6F46B5f75C0AcEb8D";
+        // const dogNode = "0xA5A3443679d1154264d419F8C716435AA4972D9d";
 
         // console.log(`Next validator index: ${validatorIndex}, ${validatorAddress}`);
 
@@ -69,10 +72,12 @@ export class Validator {
         // hack
         // const pub_keys = ["0xeE3A5673dE06Fa3Efd2fA2B6F46B5f75C0AcEb8D", "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846"];
         // return pub_keys[nextBlockIndex % 2];
-        
+
         // return "0xA5A3443679d1154264d419F8C716435AA4972D9d"; // dog node
         // return validatorAddress;
-        return node1;
+
+        // 0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846 is node 1s address
+        return "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846";
     }
 }
 

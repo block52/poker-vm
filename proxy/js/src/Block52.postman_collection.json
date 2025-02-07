@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "Block52 API",
+    "description": "Block52 Proxy API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health check endpoint",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        }
+      }
+    },
+    {
+      "name": "Get account information",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/account/{id}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "account",
+            "{id}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get current server time",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/time",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "time"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get current nonce",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/nonce",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "nonce"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get all available tables",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tables",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tables"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get specific table information",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/table/{id}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "table",
+            "{id}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get player at specific seat",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/table/{id}/player/{seat}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "table",
+            "{id}",
+            "player",
+            "{seat}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Join a table",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/table/{tableId}/join",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "table",
+            "{tableId}",
+            "join"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address\": \"0x123...\",\n  \"buyInAmount\": \"1000000000000000000\",\n  \"seat\": 1,\n  \"signature\": \"0x456...\",\n  \"publicKey\": \"0x789...\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
