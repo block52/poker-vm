@@ -1,10 +1,10 @@
 import { ICommand } from "./interfaces";
 
 export class ShutdownCommand implements ICommand<boolean> {
-    constructor(    
-        private userName: string,
-        private password: string,
-    ) {}
+    constructor(
+        private readonly userName: string,
+        private readonly password: string,
+    ) { }
 
     public async execute(): Promise<boolean> {
         if (

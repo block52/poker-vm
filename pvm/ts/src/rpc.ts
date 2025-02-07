@@ -30,6 +30,7 @@ import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
 import { SharedSecretCommand } from "./commands/sharedSecretCommand";
+import { PurgeMempoolCommand } from "./commands/purgeMempoolCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -63,6 +64,12 @@ export class RPC {
     static async handleControlMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<any>> {
         let result: any;
         switch (method) {
+            case RPCMethods.PURGE: {
+                const [username, password] = request.params as RPCRequestParams[RPCMethods.PURGE];
+                const command = new PurgeMempoolCommand(username, password);
+                result = await command.execute();
+                break;
+            }
             case RPCMethods.START: {
                 const command = new StartServerCommand();
                 result = await command.execute();
