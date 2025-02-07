@@ -4,15 +4,12 @@ services:
     type: static-site
     build_command: yarn build
     output_dir: build
+    catchall_document: index.html
     routes:
       - path: /assets/*
+        preserve_path_prefix: true
       - path: /static/*
-      - path: /table/*
-        rewrite: /index.html
-      - path: /qr-deposit
-        rewrite: /index.html
-      - path: /deposit
-        rewrite: /index.html
+        preserve_path_prefix: true
       - path: /*
         rewrite: /index.html
     envs:
