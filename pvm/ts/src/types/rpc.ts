@@ -12,6 +12,7 @@ export const READ_METHODS = [
     RPCMethods.GET_MEMPOOL,
     RPCMethods.GET_NODES,
     RPCMethods.GET_SHARED_SECRET,
+    RPCMethods.GET_TRANSACTION,
     RPCMethods.GET_TRANSACTIONS
 ];
 
@@ -26,4 +27,4 @@ export const WRITE_METHODS = [
     RPCMethods.TRANSFER
 ];
 
-export const CONTROL_METHODS = [RPCMethods.START, RPCMethods.STOP, RPCMethods.SHUTDOWN];
+export const CONTROL_METHODS = [RPCMethods.PURGE, RPCMethods.START, RPCMethods.STOP, RPCMethods.SHUTDOWN];

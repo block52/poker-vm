@@ -8,17 +8,20 @@ import { BurnCommand } from "./commands/burnCommand";
 import { CreateAccountCommand } from "./commands/createAccountCommand";
 import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
 import { GameStateCommand } from "./commands/gameStateCommand";
-import { GetBlocksCommand } from "./commands/getBlocksCommand";
 import { GetAllContractSchemasCommand } from "./commands/contractSchema/getAllContractSchemasCommand";
+import { GetBlocksCommand } from "./commands/getBlocksCommand";
 import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
 import { GetNodesCommand } from "./commands/getNodesCommand";
+import { GetTransactionCommand } from "./commands/getTransactionCommand";
 import { GetTransactionsCommand } from "./commands/getTransactionsCommand";
 import { MeCommand } from "./commands/meCommand";
 import { MempoolCommand } from "./commands/mempoolCommand";
 import { MineCommand } from "./commands/mineCommand";
 import { MintCommand } from "./commands/mintCommand";
+import { PurgeMempoolCommand } from "./commands/purgeMempoolCommand";
 import { ReceiveMinedBlockCommand } from "./commands/receiveMinedBlockCommand";
 import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
+import { SharedSecretCommand } from "./commands/sharedSecretCommand";
 import { ShutdownCommand } from "./commands/shutdownCommand";
 import { StartServerCommand } from "./commands/startServerCommand";
 import { StopServerCommand } from "./commands/stopServerCommand";
@@ -29,8 +32,6 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
-import { SharedSecretCommand } from "./commands/sharedSecretCommand";
-import { PurgeMempoolCommand } from "./commands/purgeMempoolCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -198,7 +199,7 @@ export class RPC {
 
                 case RPCMethods.GET_TRANSACTION: {
                     const [hash] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTION];
-                    const command = new GetTransactionsCommand(Number(count), blockHash, validatorPrivateKey);
+                    const command = new GetTransactionCommand(hash, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
