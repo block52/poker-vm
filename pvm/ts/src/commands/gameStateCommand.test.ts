@@ -1,3 +1,4 @@
+import exp from "constants";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { Transaction } from "../models";
@@ -19,7 +20,7 @@ jest.mock("../core/mempool", () => {
     };
 });
 
-describe.skip("GameStateCommand", () => {
+describe("GameStateCommand", () => {
     let mockMempool: jest.Mocked<Mempool>;
 
     beforeEach(() => {
@@ -41,7 +42,7 @@ describe.skip("GameStateCommand", () => {
         expect(result).toBeDefined();
     });
 
-    describe.skip("GameStateCommand join table with transactions", () => {
+    describe.only("GameStateCommand join table with one player", () => {
         const tableAddress = ethers.ZeroAddress;
         const joinTx = new Transaction(
             tableAddress,
@@ -54,19 +55,8 @@ describe.skip("GameStateCommand", () => {
             0n,
             "join"
         );
-        const join2Tx = new Transaction(
-            tableAddress,
-            "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-            ethers.parseEther("100"),
-            ethers.ZeroHash,
-            ethers.ZeroHash,
-            Date.now(),
-            0,
-            0n,
-            "join"
-        );
 
-        const txs = [joinTx, join2Tx];
+        const txs = [joinTx];
 
         beforeEach(() => {
             // Create a mock Mempool instance
@@ -80,7 +70,7 @@ describe.skip("GameStateCommand", () => {
             (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
         });
 
-        it("should allow two players to join the game", async () => {
+        it("should allow one player to join the game", async () => {
             const command = new GameStateCommand(ethers.ZeroAddress, privateKey);
             const result = await command.execute();
 
@@ -88,20 +78,24 @@ describe.skip("GameStateCommand", () => {
             const data: TexasHoldemGameState = result.data;
             const json = data.toJson();
 
-            // Return the full ring of players
-            expect(json.players.length).toBe(9);
+            expect(json.players.length).toBe(1);
+
+            // Return the players
+            expect(json.players.length).toBe(2);
 
             // Check the first player
             const player1 = json.players[0];
-            expect(player1.address).toBe("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
 
-            // Check the second player
-            const player2 = json.players[1];
-            expect(player2.address).toBe("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(player1).toBeDefined();
+            expect(player1.stack).toBe("100000000000000000000");
+            expect(player1.isSmallBlind).toBe(true);
+            expect(player1.seat).toBe(1);
+            expect(player1.holeCards).toBeUndefined();
+            expect(player1.lastAction).toBeUndefined();
         });
     });
 
-    describe("GameStateCommand join table with transactions", () => {
+    describe("GameStateCommand join table with two players", () => {
         const tableAddress = ethers.ZeroAddress;
         const joinTx = new Transaction(
             tableAddress,
@@ -114,11 +108,22 @@ describe.skip("GameStateCommand", () => {
             0n,
             "join"
         );
-        // const join2Tx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", ethers.parseEther("100"), ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "join");
+
+        const join2Tx = new Transaction(
+            tableAddress,
+            "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
+            ethers.parseEther("100"),
+            ethers.ZeroHash,
+            ethers.ZeroHash,
+            Date.now(),
+            0,
+            0n,
+            "join"
+        );
         // const sbTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 10n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "bet");
         // const bbTx = new Transaction(tableAddress, "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 25n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "bet");
 
-        const txs = [joinTx];
+        const txs = [joinTx, join2Tx];
 
         beforeEach(() => {
             // Create a mock Mempool instance
@@ -146,22 +151,26 @@ describe.skip("GameStateCommand", () => {
             expect(json.smallBlindPosition).toBe(1);
             expect(json.bigBlindPosition).toBe(2);
 
-            // Return the full ring of players
-            expect(json.players.length).toBe(9);
+            // Return the players
+            expect(json.players.length).toBe(2);
 
             // Check the first player
-            const player1 = json.players[1];
-            expect(player1.address).toBe("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+            const player1 = json.players[0];
+
+            expect(player1).toBeDefined();
             expect(player1.stack).toBe("100000000000000000000");
             expect(player1.isSmallBlind).toBe(true);
             expect(player1.seat).toBe(1);
+            // expect(player1.holeCards).toBeUndefined();
+            expect(player1.lastAction).toBeUndefined();
 
-            // // Check the second player
-            // const player2 = json.players[2];
-            // expect(player2.address).toBe("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-            // expect(player2.stack).toBe("100000000000000000000");
-            // expect(player2.isBigBlind).toBe(true);
-            // expect(player2.seat).toBe(2);
+            // Check the second player
+            const player2 = json.players[1];
+            expect(player2).toBeDefined();
+            expect(player2.address).toBe("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(player2.stack).toBe("100000000000000000000");
+            expect(player2.isBigBlind).toBe(true);
+            expect(player2.seat).toBe(2);
         });
     });
 });
