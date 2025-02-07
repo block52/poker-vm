@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { PROXY_URL } from "../config/constants";
 
 interface UserUserLastActionResult {
     action: string;
@@ -22,7 +23,7 @@ const userUserLastAction = (address: string, player: number): UserUserLastAction
         setError(null);
 
         try {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const url = PROXY_URL;
             const response = await axios.get(`${url}/table/${address}/player/${player}`);
 
             if (response.status !== 200) {

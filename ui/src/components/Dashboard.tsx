@@ -6,7 +6,6 @@ import useUserWalletConnect from "../hooks/useUserWalletConnect"; // Add this im
 import useUserWallet from "../hooks/useUserWallet"; // Add this import
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
-
 // Create an enum of game types
 enum GameType {
     CASH = "cash",

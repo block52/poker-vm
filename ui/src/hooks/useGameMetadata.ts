@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { PROXY_URL } from "../config/constants";
 
 interface UseBalanceResult {
     balance: string | null;
@@ -20,7 +21,7 @@ const useGameMetadata = (address: string): UseBalanceResult => {
         setError(null);
 
         try {
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
+            const url = PROXY_URL;
             const response = await axios.get(`${url}/account/${address}`);
 
             if (response.status !== 200) {
