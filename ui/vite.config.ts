@@ -17,9 +17,14 @@ export default defineConfig({
                 manualChunks: undefined,
             },
         },
+        copyPublicDir: true,
     },
     server: {
         port: 3000,
+        middlewareMode: true
     },
     base: '/',
+    preview: {
+        port: 3000
+    },
 });

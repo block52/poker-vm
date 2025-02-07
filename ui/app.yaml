@@ -5,7 +5,8 @@ services:
     build_command: yarn build
     output_dir: build
     routes:
-      - path: /
+      - path: /assets/*
+      - path: /static/*
       - path: /table/*
         rewrite: /index.html
       - path: /qr-deposit
