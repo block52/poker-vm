@@ -6,6 +6,12 @@ services:
     output_dir: build
     routes:
       - path: /
+      - path: /table/*
+        rewrite: /index.html
+      - path: /qr-deposit
+        rewrite: /index.html
+      - path: /deposit
+        rewrite: /index.html
       - path: /*
         rewrite: /index.html
     envs:
