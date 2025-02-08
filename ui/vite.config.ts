@@ -20,11 +20,13 @@ export default defineConfig({
         copyPublicDir: true,
     },
     server: {
-        port: 3000,
-        middlewareMode: true
+        host: 'localhost',
+        port: 3002,
+        strictPort: true,
+        middlewareMode: false
     },
     base: '/',
     preview: {
-        port: 3000
+        port: 3002
     },
 });
