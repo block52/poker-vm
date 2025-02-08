@@ -269,12 +269,36 @@ app.get("/time", (req, res) => {
     res.send(response);
 });
 
-app.get("/nonce", (req, res) => {
-    const response = {
-        nonce: getUnixTime()
-    };
+app.get("/nonce/:address", async (req, res) => {
+    console.log('\n=== Nonce Request ===');
+    console.log('Address:', req.params.address);
 
-    res.send(response);
+    try {
+        const client = getClient();
+        const account = await client.getAccount(req.params.address);
+        
+        // Clean response with no duplicates
+        const response = {
+            result: {
+                data: {
+                    address: req.params.address,
+                    balance: account.balance?.toString() || "0",
+                    nonce: account.nonce || 0
+                },
+                signature: account.signature
+            },
+            timestamp: getUnixTime()
+        };
+
+        console.log('Clean nonce response:', response);
+        res.json(response);
+    } catch (error) {
+        console.error('Error getting nonce:', error);
+        res.status(500).json({
+            error: "Failed to get nonce",
+            details: error.message
+        });
+    }
 });
 
 

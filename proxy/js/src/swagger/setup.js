@@ -1,16 +1,60 @@
+const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config");
 const fs = require('fs');
 const path = require('path');
+const archiver = require('archiver');
 
 const swaggerSetup = (app) => {
-    // Serve Swagger documentation
-    app.use("/docs", swaggerUi.serve);
-    app.get("/docs", swaggerUi.setup(swaggerSpec, {
-        explorer: true,
-        customCss: '.swagger-ui .topbar { display: none }',
-        customSiteTitle: "Block 52 API Documentation"
-    }));
+    const swaggerUiOptions = {
+        customSiteTitle: "Block52 API Documentation",
+        customfavIcon: "https://block52.xyz/favicon.ico",
+        swaggerOptions: {
+            persistAuthorization: true
+        },
+        customCss: `
+            .swagger-ui .topbar .download-url-wrapper { display: none } 
+            .swagger-ui .topbar { 
+                padding: 10px 0;
+                background-color: #1b1b1b;
+            }
+            
+            .download-container {
+                position: fixed;
+                top: 10px;
+                right: 20px;
+                z-index: 1000;
+            }
+            
+            .download-button {
+                background-color: #49cc90;
+                color: white !important;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                text-decoration: none;
+                display: inline-block;
+                font-family: sans-serif;
+                font-size: 14px;
+            }
+            
+            .download-button:hover {
+                background-color: #41b883;
+            }
+        `,
+        customHeaders: `
+            <div class="download-container">
+                <a href="/swagger.json" class="download-button" download="swagger.json">
+                    ⬇️ Download Swagger
+                </a>
+            </div>
+        `
+    };
+
+    // Serve swagger docs
+    app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
     // Expose swagger.json endpoint
     app.get("/swagger.json", (req, res) => {
@@ -18,7 +62,7 @@ const swaggerSetup = (app) => {
         res.send(swaggerSpec);
     });
 
-    // Generate Postman collection
+    // Generate and download Postman collection with environment
     app.get("/postman-collection", (req, res) => {
         const postmanCollection = {
             info: {
@@ -34,7 +78,7 @@ const swaggerSetup = (app) => {
             const methods = swaggerSpec.paths[path];
             Object.keys(methods).forEach(method => {
                 const endpoint = methods[method];
-                const postmanRequest = {
+                postmanCollection.item.push({
                     name: endpoint.summary || path,
                     request: {
                         method: method.toUpperCase(),
@@ -45,58 +89,34 @@ const swaggerSetup = (app) => {
                             path: path.split('/').filter(p => p)
                         }
                     }
-                };
-
-                // Add query parameters if they exist
-                if (endpoint.parameters) {
-                    const queryParams = endpoint.parameters.filter(p => p.in === 'query');
-                    if (queryParams.length > 0) {
-                        postmanRequest.request.url.query = queryParams.map(p => ({
-                            key: p.name,
-                            value: "",
-                            description: p.description,
-                            disabled: !p.required
-                        }));
-                    }
-                }
-
-                // Add request body if it exists
-                if (endpoint.requestBody) {
-                    postmanRequest.request.body = {
-                        mode: 'raw',
-                        raw: JSON.stringify(endpoint.requestBody.content['application/json']?.example || {}, null, 2),
-                        options: {
-                            raw: {
-                                language: 'json'
-                            }
-                        }
-                    };
-                }
-
-                postmanCollection.item.push(postmanRequest);
+                });
             });
         });
 
-        // Add environment variables
+        // Create environment file
         const environment = {
             name: "Block52 Environment",
             values: [
                 {
                     key: "baseUrl",
                     value: "http://localhost:8080",
-                    type: "default"
+                    type: "default",
+                    enabled: true
                 }
             ]
         };
 
-        // Create a zip file containing both collection and environment
-        const zip = require('adm-zip')();
-        zip.addFile('Block52.postman_collection.json', Buffer.from(JSON.stringify(postmanCollection, null, 2)));
-        zip.addFile('Block52.postman_environment.json', Buffer.from(JSON.stringify(environment, null, 2)));
+        // Create zip file
+        const archive = archiver('zip');
+        
+        res.attachment('block52-postman.zip');
+        archive.pipe(res);
 
-        res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', 'attachment; filename=Block52-Postman.zip');
-        res.send(zip.toBuffer());
+        // Add collection and environment files to zip
+        archive.append(JSON.stringify(postmanCollection, null, 2), { name: 'Block52.postman_collection.json' });
+        archive.append(JSON.stringify(environment, null, 2), { name: 'Block52.postman_environment.json' });
+
+        archive.finalize();
     });
 };
 

@@ -73,24 +73,6 @@ const swaggerOptions = {
                     }
                 }
             },
-            "/nonce": {
-                get: {
-                    tags: ["System"],
-                    summary: "Get current nonce",
-                    responses: {
-                        "200": {
-                            description: "Current nonce value",
-                            content: {
-                                "application/json": {
-                                    example: {
-                                        nonce: 1677649200
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             "/tables": {
                 get: {
                     tags: ["Tables"],
@@ -152,6 +134,63 @@ const swaggerOptions = {
                     }
                 }
             },
+            "/nonce/{address}": {
+                get: {
+                    tags: ["Account"],
+                    summary: "Get account nonce",
+                    parameters: [{
+                        name: "address",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string" },
+                        description: "Ethereum address"
+                    }],
+                    responses: {
+                        "200": {
+                            description: "Account nonce and timestamp",
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object",
+                                        properties: {
+                                            nonce: {
+                                                type: "integer",
+                                                description: "Account nonce"
+                                            },
+                                            timestamp: {
+                                                type: "integer",
+                                                description: "Current Unix timestamp"
+                                            }
+                                        }
+                                    },
+                                    example: {
+                                        nonce: 0,
+                                        timestamp: 1677649200
+                                    }
+                                }
+                            }
+                        },
+                        "500": {
+                            description: "Error getting nonce",
+                            content: {
+                                "application/json": {
+                                    schema: {
+                                        type: "object",
+                                        properties: {
+                                            error: {
+                                                type: "string"
+                                            },
+                                            details: {
+                                                type: "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "/table/{tableId}/join": {
                 post: {
                     tags: ["Tables"],
@@ -174,7 +213,8 @@ const swaggerOptions = {
                                         buyInAmount: { type: "string" },
                                         seat: { type: "integer" },
                                         signature: { type: "string" },
-                                        publicKey: { type: "string" }
+                                        publicKey: { type: "string" },
+                                        nonce: { type: "string" }
                                     }
                                 },
                                 example: {
@@ -182,7 +222,8 @@ const swaggerOptions = {
                                     buyInAmount: "1000000000000000000",
                                     seat: 1,
                                     signature: "0x456...",
-                                    publicKey: "0x789..."
+                                    publicKey: "0x789...",
+                                    nonce: "0"
                                 }
                             }
                         }
