@@ -17,7 +17,7 @@ type VacantPlayerProps = {
 
 const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     const { id: tableId } = useParams();
-    const { tableData, setTableData } = useTableContext();
+    const { tableData, setTableData, nonce, refreshNonce } = useTableContext();
     const userAddress = localStorage.getItem('user_eth_public_key');
     const privateKey = localStorage.getItem('user_eth_private_key');
     const wallet = new ethers.Wallet(privateKey!);
@@ -74,20 +74,35 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     };
 
     const handleJoinTable = async (buyInWei: string) => {
-        if (!userAddress) return;
-
-        const messageToSign = `${userAddress}${tableId}${buyInWei}${index}`;
-        const signature = await wallet.signMessage(messageToSign);
-        const publicKey = await wallet.getAddress();
-
+        if (!userAddress || !privateKey) return;
+        
         try {
+            // Get fresh nonce before joining
+            await refreshNonce(userAddress);
+            
+            // Create wallet from private key
+            const wallet = new ethers.Wallet(privateKey);
+            
+            // Build message components with nonce
+            const from = userAddress;
+            const to = tableId || "0x0000000000000000000000000000000000000000";
+            const amount = buyInWei;
+            const action = "join";
+            const currentNonce = nonce?.toString() || "0";
+
+            // Create and sign message with nonce
+            const message = `${from}${to}${amount}${action}${currentNonce}`;
+            const signature = await wallet.signMessage(message);
+            const publicKey = await wallet.getAddress();
+
             const requestData = {
-                address: userAddress,
-                tableId,
-                buyInAmount: buyInWei,
-                seat: index,
-                signature: signature,  // TODO: UPDATE END POINT app.post("/table/:tableId/join" TO PAS THE SGNATURE TO THE NODE
-                publicKey: publicKey
+                id: "1",
+                version: "2.0",
+                method: "transfer",
+                params: [from, to, amount, action],
+                signature,
+                publicKey,
+                nonce: currentNonce
             };
             
             console.log('Current table state:', tableData);

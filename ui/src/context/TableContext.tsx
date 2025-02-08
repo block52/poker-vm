@@ -1,29 +1,27 @@
-import { createContext, useContext, ReactNode, useEffect, useState } from "react";
+import React, { createContext, useContext, ReactNode, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from '../config/constants';
 
-export type TableContextType = {
+interface TableContextType {
   tableData: any;
   isLoading: boolean;
   error: Error | null;
   setTableData: (data: any) => void;
-};
+  nonce: number | null;
+  refreshNonce: (address: string) => Promise<void>;
+}
 
-export const TableContext = createContext<TableContextType>({
-  tableData: null,
-  isLoading: true,
-  error: null,
-  setTableData: () => {}
-});
+const TableContext = createContext<TableContextType | undefined>(undefined);
 
-export const TableProvider = ({ children }: { children: ReactNode }) => {
+export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { id: tableId } = useParams<{ id: string }>();
     console.log('Params in TableProvider:', useParams());
     
     const [tableData, setTableData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const [nonce, setNonce] = useState<number | null>(null);
   
     useEffect(() => {
       console.log('TableProvider mounted with ID:', tableId);
@@ -65,8 +63,35 @@ export const TableProvider = ({ children }: { children: ReactNode }) => {
       };
     }, [tableId]);
   
+    const refreshNonce = async (address: string) => {
+        try {
+            const response = await axios.get(`${PROXY_URL}/nonce/${address}`);
+            console.log('Destructured Nonce Data:', {
+                nonce: response.data.result.data.nonce,
+                balance: response.data.result.data.balance,
+                signature: response.data.result.signature,
+                timestamp: response.data.timestamp
+            });
+            setNonce(response.data.result.data.nonce);
+            return response.data.result.data.nonce;
+        } catch (error) {
+            console.error('Error fetching nonce:', error);
+            return null;
+        }
+    };
+
+    // Refresh nonce periodically
+    useEffect(() => {
+        const address = localStorage.getItem('user_eth_public_key');
+        if (address) {
+            refreshNonce(address);
+            const interval = setInterval(() => refreshNonce(address), 30000); // Every 30 seconds
+            return () => clearInterval(interval);
+        }
+    }, []);
+  
     return (
-      <TableContext.Provider value={{ tableData, setTableData, isLoading, error }}>
+      <TableContext.Provider value={{ tableData, setTableData, isLoading, error, nonce, refreshNonce }}>
         {children}
       </TableContext.Provider>
     );
@@ -74,7 +99,7 @@ export const TableProvider = ({ children }: { children: ReactNode }) => {
   
   export const useTableContext = () => {
     const context = useContext(TableContext);
-    if (!context) {
+    if (context === undefined) {
       throw new Error('useTableContext must be used within a TableProvider');
     }
     return context;
