@@ -230,7 +230,7 @@ app.get("/account/:id", async (req, res) => {
         const client = getClient();
         const account = await client.getAccount(req.params.id);
 
-        // If there was a node error, still return a 200 with fallback data
+        // If there was a node error, still return a 200 with the actual data
         if (account.isNodeError) {
             console.warn('Node error when fetching account:', account.error);
             return res.json({
@@ -241,16 +241,15 @@ app.get("/account/:id", async (req, res) => {
             });
         }
 
-        // Normal successful response
+        // Return the properly formatted account data
         res.json({
             nonce: account.nonce || 0,
             address: account.address,
-            balance: account.balance.toString()
+            balance: account.balance.toString()  // Make sure balance is returned as string
         });
 
     } catch (error) {
         console.error('Unexpected error in route handler:', error);
-        // Return fallback data instead of error status
         res.json({
             nonce: 0,
             address: req.params.id,

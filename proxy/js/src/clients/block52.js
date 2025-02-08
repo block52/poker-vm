@@ -99,34 +99,30 @@ class Block52 {
                 id: this.requestId++
             };
 
-            console.log('Sending request to:', this.node_url);
+            console.log('Sending account request to:', this.node_url);
             const { data } = await this.client.post('', rpc_request);
 
-            // If we get an error response from the node
+            // Add better error handling and logging
+            console.log('Account response:', data);
+
             if (data.error) {
-                console.warn('Node returned error:', data.error);
                 return {
-                    address: id,
-                    balance: "0",
                     error: data.error.message,
                     isNodeError: true
                 };
             }
 
-            // If we get a successful response
+            // Properly extract and return the account data
             return {
-                nonce: 0,
-                address: id,
-                balance: data.result?.balance || "0",
-                privateKey: "",
-                path: ""
+                address: data.result.data.address,
+                balance: data.result.data.balance,
+                nonce: data.result.data.nonce,
+                signature: data.result.signature
             };
 
         } catch (error) {
-            console.error('Unexpected error in getAccount:', error);
+            console.error('Error in getAccount:', error);
             return {
-                address: id,
-                balance: "0",
                 error: "Unable to fetch account data",
                 isNodeError: true
             };
