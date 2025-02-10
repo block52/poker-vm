@@ -27,9 +27,14 @@ export class Validator {
     }
 
     public async isValidator(address: string): Promise<boolean> {
-        console.log("checking vault contract with", address);
-        return await this.stakingContract.isValidator(address);
+       // In dev mode, always return true
+       if (process.env.DEV_MODE === "true") {
+        console.log("Dev mode: Always returning true for validator check");
+        return true;
     }
+    console.log("checking vault contract with", address);
+    return await this.stakingContract.isValidator(address);
+}
 
     public async getValidatorCount(): Promise<number> {
         // Only update the validator count every 60 minutes otherwise return the cached value
@@ -42,6 +47,17 @@ export class Validator {
     }
 
     public async getNextValidatorAddress(sync: boolean = false): Promise<string> {
+        // In dev mode, always return our address
+        if (process.env.DEV_MODE === "true") {
+            console.log("Dev mode: Using our address as validator");
+            // Return our validator address instead of ZeroAddress
+            const validatorAddress = process.env.VALIDATOR_ADDRESS;
+            if (!validatorAddress) {
+                throw new Error("VALIDATOR_ADDRESS not set in .env");
+            }
+            return validatorAddress;  // Return your actual address
+        }
+
         const lastBlock = await this.blockManager.getLastBlock();
         const nextBlockIndex = lastBlock.index + 1;
 
@@ -77,7 +93,8 @@ export class Validator {
         // return validatorAddress;
 
         // 0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846 is node 1s address
-        return "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846";
+         // Always return our address in dev mode
+         return process.env.VALIDATOR_ADDRESS || ethers.ZeroAddress;
     }
 }
 

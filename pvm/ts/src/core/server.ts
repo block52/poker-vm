@@ -139,7 +139,10 @@ export class Server {
 
             // Broadcast the block hash to the network
             const me = await this.me();
-            const nodes = await getBootNodes(me.url);
+            const nodes = await getBootNodes(
+                me.url, 
+                process.env.DEV_MODE === "true"
+            );
 
             for (const node of nodes) {
                 console.log(`Broadcasting block hash to ${node.url}`);
@@ -162,7 +165,10 @@ export class Server {
         let count = 0;
         if (this._nodes.size === 0) {
             const me: Node = await this.me();
-            const nodes = await getBootNodes(me.url);
+            const nodes = await getBootNodes(
+                me.url, 
+                process.env.DEV_MODE === "true"
+            );
 
             for (const node of nodes) {
                 this._nodes.set(node.url, node);
