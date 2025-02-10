@@ -92,9 +92,11 @@ export class Validator {
         // return "0xA5A3443679d1154264d419F8C716435AA4972D9d"; // dog node
         // return validatorAddress;
 
+        return "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846";
+
         // 0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846 is node 1s address
          // Always return our address in dev mode
-         return process.env.VALIDATOR_ADDRESS || ethers.ZeroAddress;
+        //  return process.env.VALIDATOR_ADDRESS || ethers.ZeroAddress;
     }
 }
 
