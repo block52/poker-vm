@@ -61,18 +61,75 @@ export class Bridge {
     }
 
     public async resync(): Promise<void> {
+        console.log("\n🔄 Bridge: Starting resync...");
+        
         // Get all transactions from the bridge contract
-        // For each transaction, call onDeposit
         const events = await this.bridgeContract.queryFilter("Deposited", 0, "latest");
+        console.log(`📊 Bridge: Found ${events.length} deposit events to process`);
 
-        for (const event of events) {
-            // console.log(event);
+        // First, log all events found
+        console.log("\n📋 Bridge: All found events:");
+        events.forEach((event, i) => {
             const depositEvent = event as EventLog;
             if (depositEvent.args) {
-                //TODO: FIX BUG IN CONTRACT, OUT BY 1 ERROR
-                const index: bigint = depositEvent.args.index - 1n;
-                await this.onDeposit(depositEvent.args.account, depositEvent.args.amount, index, depositEvent.transactionHash);
+                console.log(`\nEvent ${i}:`, {
+                    blockNumber: depositEvent.blockNumber,
+                    txHash: depositEvent.transactionHash,
+                    raw_data: {
+                        account: depositEvent.args.account,
+                        amount: depositEvent.args.amount.toString(),
+                        amountInEth: Number(depositEvent.args.amount) / 1e18,
+                        index: depositEvent.args.index.toString()
+                    }
+                });
+            }
+        });
+
+        // Then process each event
+        for (const event of events) {
+            const depositEvent = event as EventLog;
+            if (depositEvent.args) {
+                // Log the raw event data
+                console.log("\n📝 Bridge: Processing deposit event:", {
+                    raw_index: depositEvent.args.index.toString(),
+                    adjusted_index: (depositEvent.args.index - 1n).toString(),
+                    account: depositEvent.args.account,
+                    amount: depositEvent.args.amount.toString(),
+                    amountInEth: Number(depositEvent.args.amount) / 1e18,
+                    txHash: depositEvent.transactionHash,
+                    blockNumber: depositEvent.blockNumber,
+                    // Add full event data for debugging
+                    raw_event: {
+                        args: {
+                            account: depositEvent.args.account,
+                            amount: depositEvent.args.amount.toString(),
+                            index: depositEvent.args.index.toString()
+                        },
+                        event: depositEvent.fragment.name,
+                        eventSignature: depositEvent.eventSignature,
+                    }
+                });
+
+                try {
+                    //TODO: FIX BUG IN CONTRACT, OUT BY 1 ERROR
+                    const index: bigint = depositEvent.args.index - 1n;
+                    await this.onDeposit(
+                        depositEvent.args.account, 
+                        depositEvent.args.amount, 
+                        index, 
+                        depositEvent.transactionHash
+                    );
+                    console.log(`✅ Bridge: Successfully processed deposit at index ${index}`);
+                } catch (error) {
+                    console.log(`❌ Bridge: Failed to process deposit:`, {
+                        index: depositEvent.args.index.toString(),
+                        error: (error as Error).message,
+                        stack: (error as Error).stack
+                    });
+                }
             }
         }
+        
+        console.log("\n🏁 Bridge: Resync complete");
     }
 }
