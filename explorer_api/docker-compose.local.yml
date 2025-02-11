@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  explorer_mongodb:
+    container_name: explorer_mongodb
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: explorer_db
+    ports:
+      - 27018:27017
+    volumes:
+      - explorer_mongodb_data:/data/db
+
+volumes:
+  explorer_mongodb_data: 

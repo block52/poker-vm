@@ -4,15 +4,19 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "dev": "NODE_ENV=development node src/index.js",
+    "prod": "NODE_ENV=production node src/index.js"
   },
   "engines": {
     "node": "20.13"
   },
   "dependencies": {
+    "@bitcoinbrisbane/block52": "^1.0.43",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
     "express": "^4.20.0",
-    "mongoose": "^8.9.5"
+    "mongoose": "^8.9.5",
+    "winston": "^3.17.0"
   }
 }
