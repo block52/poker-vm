@@ -51,6 +51,14 @@ export class TransactionManagement extends StateManager {
         return txs;
     }
 
+    public async getTransactionsByAddress(address: string, count?: number): Promise<Transaction[]> {
+        await this.connect();
+        const transactions = await Transactions.find({ to: address })
+            .sort({ timestamp: -1 })
+            .limit(count ?? 100);
+        return transactions.map(tx => Transaction.fromDocument(tx));
+    }
+
     public async getTransaction(txid: string): Promise<Transaction | null> {
         await this.connect();
         const tx = await Transactions.findOne({ hash: txid });
