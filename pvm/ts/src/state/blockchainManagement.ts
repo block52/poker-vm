@@ -15,45 +15,29 @@ export class BlockchainManagement extends StateManager {
     public async addBlock(block: Block): Promise<void> {
         await this.connect();
 
-        // Check to see if the block already exists
+        // Check if block already exists
         const existingBlock = await Blocks.findOne({ hash: block.hash });
         if (existingBlock) {
             console.log(`Block already exists: ${block.hash}`);
             return;
         }
 
-        // todo add block hash to each transaction
-        // // Validate transactions
-        const transactionManagement = new TransactionManagement();
-        await transactionManagement.addTransactions(block.transactions);
-
-        // // Write to DB in parallel
-        // await Promise.all([
-        //     this.blockchainManagement.addBlock(block),
-        //     this.transactionManagement.addTransactions(uniqueTxs),
-        // ]);
-
-        // Update the account balances
-        if (block.transactions) {
+        // First update account balances if there are transactions
+        if (block.transactions && block.transactions.length > 0) {
             const accountManagement = new AccountManagement();
             await accountManagement.applyTransactions(block.transactions);
+
+            // Add transactions to transaction management
+            const transactionManagement = new TransactionManagement();
+            await transactionManagement.addTransactions(block.transactions);
         }
 
-        // Save the block document to the database
-        const newBlock = new Blocks(block.toDocument());
+        // Save the block with transaction hashes
+        const blockDoc = block.toDocument();
+        const newBlock = new Blocks(blockDoc);
         await newBlock.save();
 
-        // if (block.transactions) {
-
-        //   // // add block hash to each transaction
-        //   // block.transactions.forEach(tx => {
-        //   //   tx.blockHash = block.hash;
-        //   // });
-
-        //   // Save transactions
-        //   const transactionManagement = new TransactionManagement();
-        //   await transactionManagement.addTransactions(block.transactions);
-        // }
+        console.log(`Block saved with ${block.transactions.length} transaction hashes`);
     }
 
     public getGenesisBlock(): Block {

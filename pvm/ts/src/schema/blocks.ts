@@ -38,6 +38,11 @@ const blocksSchema = new Schema<IBlockDocument>({
     required: false,
     type: Number,
   },
+  transactions: {
+    required: false,
+    type: [String],
+    default: [],
+  }
 });
 
 export default model("Blocks", blocksSchema);

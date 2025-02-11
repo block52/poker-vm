@@ -26,8 +26,8 @@ export interface IBlockDocument {
     timestamp: number;
     validator: string;
     signature: string;
-    // transactions?: any[];
     tx_count?: number;
+    transactions: string[];  // Array of transaction hashes, matching BlockDTO naming
 }
 
 export interface IGameStateDocument {
