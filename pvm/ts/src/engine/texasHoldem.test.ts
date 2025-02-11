@@ -75,7 +75,7 @@ describe.only("Texas Holdem Game", () => {
             expect(player2?.id).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
 
             const players = game.players;
-            expect(players).toHaveLength(2);
+            expect(players).toHaveLength(9); // 9 players, but with empty seats
 
             // game.deal();
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);

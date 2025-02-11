@@ -80,6 +80,8 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                     const player: Player = new Player(this.from, this.amount, undefined);
 
                     game.join(player);
+
+                    // save game
                 }
             }
 

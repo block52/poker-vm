@@ -37,7 +37,6 @@ export class GameManagement extends StateManager {
         const communityCards: Card[] = [];
         
         if (address === ethers.ZeroAddress) {
-
             // create this as pure json object
             const json = {
                 type: "cash",
