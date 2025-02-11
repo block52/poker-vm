@@ -5,7 +5,7 @@ import { IBlockDocument, IJSONModel } from "./interfaces";
 import { BlockDTO } from "@bitcoinbrisbane/block52";
 
 export class Block implements IJSONModel {
-    public readonly transactions: Transaction[];
+    public transactions: Transaction[];
     public version = 1;
     public hash: string;
     public merkleRoot: string;
@@ -163,9 +163,7 @@ export class Block implements IJSONModel {
     }
 
     public static fromDocument(document: IBlockDocument): Block {
-        // Roll back to this
-        // const transactions = document.transactions?.map((tx) => Transaction.fromDocument(tx));
-        return new Block(
+        const block = new Block(
             document.index,
             document.previous_block_hash,
             document.timestamp,
@@ -173,8 +171,24 @@ export class Block implements IJSONModel {
             document.hash,
             document.merkle_root,
             document.signature
-            //transactions,
         );
+
+        // Store the transaction hashes
+        if (document.transactions) {
+            block.transactions = document.transactions.map(txHash => {
+                // Create a minimal Transaction object with just the hash
+                return new Transaction(
+                    '', // to
+                    '', // from
+                    BigInt(0), // value
+                    txHash, // hash
+                    '', // signature
+                    0, // timestamp
+                );
+            });
+        }
+
+        return block;
     }
 
     public toDocument(): IBlockDocument {
@@ -187,7 +201,8 @@ export class Block implements IJSONModel {
             timestamp: this.timestamp,
             validator: this.validator,
             signature: this.signature,
-            tx_count: this.transactions.length
+            tx_count: this.transactions.length,
+            transactions: this.transactions.map(tx => tx.hash)  // Store just the transaction hashes
         };
     }
 }
