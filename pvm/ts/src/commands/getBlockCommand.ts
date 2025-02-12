@@ -5,11 +5,12 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
 
-export class GetBlocksCommand implements ISignedCommand<Block[]> {
+export class GetBlockCommand implements ISignedCommand<Block> {
     private readonly blockchainManagement: BlockchainManagement;
     private readonly transactionManagement: TransactionManagement;
 
     constructor(
+        private readonly hash: string,
         private readonly count: number = 100,
         private readonly privateKey: string
     ) {
@@ -17,16 +18,12 @@ export class GetBlocksCommand implements ISignedCommand<Block[]> {
         this.transactionManagement = getTransactionInstance();
     }
 
-    public async execute(): Promise<ISignedResponse<Block[]>> {
-        const blocks: Block[] = await this.blockchainManagement.getBlocks(this.count);
+    public async execute(): Promise<ISignedResponse<Block>> {
+        const block: Block = await this.blockchainManagement.getBlockByHash(this.hash);
+        const transactions = await this.transactionManagement.getTransactions(this.hash);
 
-        const transactions = [];
+        block.transactions.push(...transactions);
 
-        for (const block of blocks) {
-            const blockTransactions = await this.transactionManagement.getTransactions(block.hash);
-            transactions.push(...blockTransactions);
-        }
-
-        return signResult(blocks, this.privateKey);
+        return signResult(block, this.privateKey);
     }
 }   

@@ -3,7 +3,6 @@ import Blocks from "../schema/blocks";
 import { StateManager } from "./stateManager";
 import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
-import { BlockList } from "../models/blockList";
 import { AccountManagement } from "./accountManagement";
 import { TransactionManagement } from "./transactionManagement";
 
@@ -72,6 +71,15 @@ export class BlockchainManagement extends StateManager {
         return Block.fromDocument(block);
     }
 
+    public async getBlockHeader(index: number): Promise<Block> {
+        await this.connect();
+        const block = await Blocks.findOne({ index });
+        if (!block) {
+            throw new Error("Block not found");
+        }
+        return Block.fromDocument(block);
+    }
+
     public async getBlock(index: number): Promise<Block> {
         await this.connect();
         const block = await Blocks.findOne({ index });
@@ -81,13 +89,13 @@ export class BlockchainManagement extends StateManager {
         return Block.fromDocument(block);
     }
 
-    public async getBlocks(count?: number): Promise<BlockList> {
+    public async getBlocks(count?: number): Promise<Block[]> {
         await this.connect();
         const blocks = await Blocks.find({})
             .sort({ timestamp: -1 })
             .limit(count ?? 20);
 
-        return new BlockList(blocks.map(block => Block.fromDocument(block)));
+        return blocks.map(block => Block.fromDocument(block));
     }
 
     public async reset(): Promise<void> {

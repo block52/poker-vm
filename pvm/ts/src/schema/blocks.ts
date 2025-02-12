@@ -37,11 +37,6 @@ const blocksSchema = new Schema<IBlockDocument>({
   tx_count: {
     required: false,
     type: Number,
-  },
-  transactions: {
-    required: false,
-    type: [String],
-    default: [],
   }
 });
 
