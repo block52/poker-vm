@@ -82,7 +82,6 @@ export class Server {
     }
 
     public async bootstrap(args: string[] = []) {
-        await this.resyncBlockchain();
         await this.loadNodes();
 
         console.log("Bootstrapping...");
