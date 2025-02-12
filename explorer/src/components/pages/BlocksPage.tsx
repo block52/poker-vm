@@ -3,10 +3,19 @@ import { PageLayout } from "../layout/PageLayout";
 
 interface Block {
     _id: string;
-    index: number;
     hash: string;
-    timestamp: string;
+    index: number;
+    previousHash: string;
+    merkleRoot: string;
+    signature: string;
+    timestamp: number;
+    validator: string;
+    version: string;
+    transactions: any[];
     transactionCount: number;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
 }
 
 export default function BlocksPage() {
@@ -74,22 +83,32 @@ export default function BlocksPage() {
                                     <tr>
                                         <th className="p-2 border-b border-gray-700">Height</th>
                                         <th className="p-2 border-b border-gray-700">Hash</th>
+                                        <th className="p-2 border-b border-gray-700">Previous Hash</th>
+                                        <th className="p-2 border-b border-gray-700">Merkle Root</th>
+                                        <th className="p-2 border-b border-gray-700">Signature</th>
                                         <th className="p-2 border-b border-gray-700">Timestamp</th>
-                                        <th className="p-2 border-b border-gray-700">Transactions</th>
+                                        <th className="p-2 border-b border-gray-700">Validator</th>
+                                        <th className="p-2 border-b border-gray-700">Version</th>
+                                        <th className="p-2 border-b border-gray-700">Tx Count</th>
+                                        <th className="p-2 border-b border-gray-700">Created At</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {blocks.map((block) => (
                                         <tr key={block._id} className="hover:bg-gray-800">
                                             <td className="p-2 border-b border-gray-700 text-center">{block.index}</td>
-                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">
-                                                {block.hash.substring(0, 20)}...
-                                            </td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.hash}</td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.previousHash}</td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.merkleRoot}</td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.signature}</td>
                                             <td className="p-2 border-b border-gray-700 text-center">
                                                 {new Date(block.timestamp).toLocaleString()}
                                             </td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.validator}</td>
+                                            <td className="p-2 border-b border-gray-700 text-center">{block.version}</td>
+                                            <td className="p-2 border-b border-gray-700 text-center">{block.transactionCount}</td>
                                             <td className="p-2 border-b border-gray-700 text-center">
-                                                {block.transactionCount}
+                                                {new Date(block.createdAt).toLocaleString()}
                                             </td>
                                         </tr>
                                     ))}
