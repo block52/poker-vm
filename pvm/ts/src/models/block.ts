@@ -148,7 +148,7 @@ export class Block implements IJSONModel {
             timestamp: this.timestamp,
             validator: this.validator,
             version: this.version.toString(),
-            transactions: [],
+            transactions: transactions,
             transactionCount: this.transactions.length
         };
     }

@@ -47,7 +47,7 @@ export class TransactionManagement extends StateManager {
     public async getTransactions(blockHash: string, count?: number): Promise<Transaction[]> {
         await this.connect();
 
-        const transactions = await Transactions.find({ blockHash })
+        const transactions = await Transactions.find({ block_hash: blockHash })
             .sort({ timestamp: -1 })
             .limit(count ?? 100);
 
