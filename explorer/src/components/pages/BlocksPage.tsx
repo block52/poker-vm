@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { PageLayout } from "../layout/PageLayout";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 interface Block {
     _id: string;
@@ -19,6 +20,8 @@ interface Block {
 }
 
 export default function BlocksPage() {
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [blocks, setBlocks] = useState<Block[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -29,14 +32,28 @@ export default function BlocksPage() {
         blocksPerPage: 100
     });
 
-    const fetchBlocks = async (page = 1) => {
+    const page = Number(searchParams.get('page')) || 1;
+    const limit = Number(searchParams.get('limit')) || 100;
+    const sort = searchParams.get('sort') || '-index';
+
+    // Check if we need to set default parameters
+    useEffect(() => {
+        if (!searchParams.get('page') || !searchParams.get('limit') || !searchParams.get('sort')) {
+            navigate('/blocks?page=1&limit=100&sort=-index', { replace: true });
+            return;
+        }
+    }, []);
+
+    const fetchBlocks = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:3800/blocks?page=${page}&limit=100`);
+            const response = await fetch(`http://localhost:3800/blocks?page=${page}&limit=${limit}&sort=${sort}`);
             const data = await response.json();
-            console.log(data);
-            setBlocks(data.blocks);
-            setPagination(data.pagination);
+            
+            if (data.blocks && Array.isArray(data.blocks)) {
+                setBlocks(data.blocks);
+                setPagination(data.pagination);
+            }
             setError(null);
         } catch (err) {
             setError('Failed to fetch blocks');
@@ -48,17 +65,15 @@ export default function BlocksPage() {
 
     useEffect(() => {
         fetchBlocks();
-    }, []);
+    }, [page, limit, sort]);
 
     const handleNextPage = () => {
-        if (pagination.currentPage < pagination.totalPages) {
-            fetchBlocks(pagination.currentPage + 1);
-        }
+        navigate(`/blocks?page=${page + 1}&limit=${limit}&sort=${sort}`);
     };
 
     const handlePrevPage = () => {
-        if (pagination.currentPage > 1) {
-            fetchBlocks(pagination.currentPage - 1);
+        if (page > 1) {
+            navigate(`/blocks?page=${page - 1}&limit=${limit}&sort=${sort}`);
         }
     };
 
@@ -119,17 +134,17 @@ export default function BlocksPage() {
                         <div className="mt-4 flex justify-between items-center">
                             <button
                                 onClick={handlePrevPage}
-                                disabled={pagination.currentPage === 1}
+                                disabled={page === 1}
                                 className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Previous
                             </button>
                             <span>
-                                Page {pagination.currentPage} of {pagination.totalPages}
+                                Page {page} of {pagination.totalPages}
                             </span>
                             <button
                                 onClick={handleNextPage}
-                                disabled={pagination.currentPage === pagination.totalPages}
+                                disabled={page === pagination.totalPages}
                                 className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Next
