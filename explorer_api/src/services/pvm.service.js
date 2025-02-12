@@ -48,8 +48,8 @@ class PVMService {
             logger.info('Starting block synchronization with PVM');
 
             // Clear existing data - just blocks for now
-            await blockService.clearDatabase();
-            logger.info('Database cleared, starting fresh sync');
+            // await blockService.clearDatabase();
+            // logger.info('Database cleared, starting fresh sync');
             
             this.currentBlockIndex = 1; // Reset to start from beginning
             
@@ -89,7 +89,7 @@ class PVMService {
             await syncNextBlock();
 
             // Continue syncing every 5 seconds
-            setInterval(syncNextBlock, 5000);
+            setInterval(syncNextBlock, 500);
 
         } catch (error) {
             logger.error('Error starting block sync', {
