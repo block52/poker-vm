@@ -29,7 +29,7 @@ export class BlockchainManagement extends StateManager {
 
             // Add transactions to transaction management
             const transactionManagement = new TransactionManagement();
-            await transactionManagement.addTransactions(block.transactions);
+            await transactionManagement.addTransactions(block.transactions, block.hash);
         }
 
         // Save the block with transaction hashes
