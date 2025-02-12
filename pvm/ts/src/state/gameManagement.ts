@@ -7,6 +7,7 @@ import { Card } from "../models/deck";
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IJSONModel } from "../models/interfaces";
+import contractSchemas from "../schema/contractSchemas";
 
 export class GameManagement extends StateManager {
     // private static _game: Map<string, TexasHoldemGame> = new Map<string, TexasHoldemGame>();
@@ -42,34 +43,40 @@ export class GameManagement extends StateManager {
             return json;
         }
 
-        // if (address === "0x0000000000000000000000000000000000000001") {
-        //     const texasHoldemGameState = await GameState.findOne({
-        //         address
-        //     });
-
-        //     // if (!texasHoldemGameState) {
-        //     //     throw new Error("Game not found");
-        //     // }
-
-        //     const json = texasHoldemGameState?.state.toJSON();
-        //     const game = TexasHoldemGame.fromJson(json);
-        //     return game;
-        // }
-
         const gameState = await GameState.findOne({
             address
         });
 
-        if (!gameState) {
-            throw new Error("Game not found");
+        if (gameState) {
+            const json = gameState.state.toJSON();
+            return json;
         }
 
-        // Store the game state in the database as a JSON object
-        const json = gameState.state.toJSON();
-        return json;
+        const schema = await contractSchemas.findOne({ address: address });
 
-        // const texasHoldemGameState: TexasHoldemGameState = TexasHoldemGameState.fromJson(json);
-        // return texasHoldemGameState;
+        if (schema) {
+            const args = schema.schema.split(",");
+            // const game = new TexasHoldemGame(args);
+
+            const json = {
+                type: "cash",
+                address: address,
+                smallBlind: args[2],
+                bigBlind: args[2],
+                dealer: 0,
+                players: [],
+                communityCards: [],
+                pots: ["0"],
+                nextToAct: 0,
+                round: "preflop",
+                winners: [],
+                signature: ethers.ZeroHash
+            };
+
+            return json;
+        }
+        
+        throw new Error("Game not found");
     }
 
     // async get(address: string): Promise<TexasHoldemGameState> {
