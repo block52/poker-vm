@@ -31,6 +31,7 @@ export default function BlocksPage() {
         totalBlocks: 0,
         blocksPerPage: 100
     });
+    const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
     const page = Number(searchParams.get('page')) || 1;
     const limit = Number(searchParams.get('limit')) || 100;
@@ -77,9 +78,23 @@ export default function BlocksPage() {
         }
     };
 
+    const truncateHash = (hash: string) => {
+        return hash.slice(0, 3) + '...' + hash.slice(-3);
+    };
+
+    const handleCopyClick = async (text: string, id: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopySuccess(id);
+            setTimeout(() => setCopySuccess(null), 2000);
+        } catch (err) {
+            console.error('Failed to copy text:', err);
+        }
+    };
+
     return (
         <PageLayout>
-            <div className="container mx-auto p-4">
+            <div className="container-fluid px-4">
                 <h1 className="text-2xl font-bold mb-4">Blocks</h1>
                 
                 {loading && (
@@ -92,8 +107,8 @@ export default function BlocksPage() {
 
                 {!loading && !error && (
                     <div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full bg-background border border-gray-700">
+                        <div className="overflow-x-auto w-full">
+                            <table className="w-full bg-background border border-gray-700">
                                 <thead>
                                     <tr>
                                         <th className="p-2 border-b border-gray-700">Height</th>
@@ -103,7 +118,7 @@ export default function BlocksPage() {
                                         <th className="p-2 border-b border-gray-700">Signature</th>
                                         <th className="p-2 border-b border-gray-700">Timestamp</th>
                                         <th className="p-2 border-b border-gray-700">Validator</th>
-                                        <th className="p-2 border-b border-gray-700">Version</th>
+                                        {/* <th className="p-2 border-b border-gray-700">Version</th> */}
                                         <th className="p-2 border-b border-gray-700">Tx Count</th>
                                         <th className="p-2 border-b border-gray-700">Created At</th>
                                     </tr>
@@ -117,13 +132,73 @@ export default function BlocksPage() {
                                                     {block.hash}
                                                 </Link>
                                             </td>
-                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.previousHash}</td>
-                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.merkleRoot}</td>
-                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.signature}</td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{truncateHash(block.previousHash)}</span>
+                                                    <button
+                                                        onClick={() => handleCopyClick(block.previousHash, `prev-${block._id}`)}
+                                                        className="p-1 hover:bg-gray-700 rounded"
+                                                        title="Copy previous hash"
+                                                    >
+                                                        {copySuccess === `prev-${block._id}` ? (
+                                                            <span className="text-green-500">✓</span>
+                                                        ) : (
+                                                            <span>📋</span>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{truncateHash(block.merkleRoot)}</span>
+                                                    <button
+                                                        onClick={() => handleCopyClick(block.merkleRoot, `merkle-${block._id}`)}
+                                                        className="p-1 hover:bg-gray-700 rounded"
+                                                        title="Copy merkle root"
+                                                    >
+                                                        {copySuccess === `merkle-${block._id}` ? (
+                                                            <span className="text-green-500">✓</span>
+                                                        ) : (
+                                                            <span>📋</span>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{truncateHash(block.signature)}</span>
+                                                    <button
+                                                        onClick={() => handleCopyClick(block.signature, block._id)}
+                                                        className="p-1 hover:bg-gray-700 rounded"
+                                                        title="Copy signature"
+                                                    >
+                                                        {copySuccess === block._id ? (
+                                                            <span className="text-green-500">✓</span>
+                                                        ) : (
+                                                            <span>📋</span>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </td>
                                             <td className="p-2 border-b border-gray-700 text-center">
                                                 {new Date(block.timestamp).toLocaleString()}
                                             </td>
-                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.validator}</td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{truncateHash(block.validator)}</span>
+                                                    <button
+                                                        onClick={() => handleCopyClick(block.validator, `validator-${block._id}`)}
+                                                        className="p-1 hover:bg-gray-700 rounded"
+                                                        title="Copy validator address"
+                                                    >
+                                                        {copySuccess === `validator-${block._id}` ? (
+                                                            <span className="text-green-500">✓</span>
+                                                        ) : (
+                                                            <span>📋</span>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </td>
                                             <td className="p-2 border-b border-gray-700 text-center">{block.version}</td>
                                             <td className="p-2 border-b border-gray-700 text-center">{block.transactionCount}</td>
                                             <td className="p-2 border-b border-gray-700 text-center">
