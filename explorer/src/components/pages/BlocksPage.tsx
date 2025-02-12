@@ -94,7 +94,7 @@ export default function BlocksPage() {
 
     return (
         <PageLayout>
-            <div className="container-fluid px-4">
+            <div className="container mx-auto p-4">
                 <h1 className="text-2xl font-bold mb-4">Blocks</h1>
                 
                 {loading && (
@@ -107,8 +107,8 @@ export default function BlocksPage() {
 
                 {!loading && !error && (
                     <div>
-                        <div className="overflow-x-auto w-full">
-                            <table className="w-full bg-background border border-gray-700">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full bg-background border border-gray-700">
                                 <thead>
                                     <tr>
                                         <th className="p-2 border-b border-gray-700">Height</th>
@@ -199,7 +199,7 @@ export default function BlocksPage() {
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td className="p-2 border-b border-gray-700 text-center">{block.version}</td>
+                                            {/* <td className="p-2 border-b border-gray-700 text-center">{block.version}</td> */}
                                             <td className="p-2 border-b border-gray-700 text-center">{block.transactionCount}</td>
                                             <td className="p-2 border-b border-gray-700 text-center">
                                                 {new Date(block.createdAt).toLocaleString()}
