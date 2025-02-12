@@ -47,9 +47,9 @@ class BlockService {
             }
 
             // Debug log to see what we're getting from PVM
-            logger.debug('Raw block data received from PVM:', {
-                blockData: JSON.stringify(blockData, null, 2)
-            });
+            // logger.debug('Raw block data received from PVM:', {
+            //     blockData: JSON.stringify(blockData, null, 2)
+            // });
 
             // Prepare the block data with transaction count
             const blockToSave = {
@@ -61,20 +61,20 @@ class BlockService {
             const block = new Block(blockToSave);
             
             // Debug log what we're about to save
-            logger.debug('Block data being saved:', {
-                blockIndex: block.index,
-                blockHash: block.hash,
-                transactionCount: block.transactionCount,
-                fullBlock: JSON.stringify(block.toObject(), null, 2)
-            });
+            // logger.debug('Block data being saved:', {
+            //     blockIndex: block.index,
+            //     blockHash: block.hash,
+            //     transactionCount: block.transactionCount,
+            //     fullBlock: JSON.stringify(block.toObject(), null, 2)
+            // });
 
             await block.save();
             
-            logger.info('Block saved to database', {
-                blockIndex: block.index,
-                blockHash: block.hash,
-                transactionCount: block.transactionCount
-            });
+            // logger.info('Block saved to database', {
+            //     blockIndex: block.index,
+            //     blockHash: block.hash,
+            //     transactionCount: block.transactionCount
+            // });
             
             return block;
         } catch (error) {
@@ -129,12 +129,27 @@ class BlockService {
         }
     }
 
-    async getBlocks(skip = 0, limit = 20) {
+    async getBlocks(skip = 0, limit = 100) {
         try {
-            return await Block.find()
+            // Fetch blocks
+            const blocks = await Block.find()
                 .sort({ index: -1 })
                 .skip(skip)
                 .limit(limit);
+            
+            // Get total count for pagination
+            const totalBlocks = await Block.countDocuments();
+            
+            // Return blocks with pagination info
+            return {
+                blocks,
+                pagination: {
+                    currentPage: Math.floor(skip / limit) + 1,
+                    totalPages: Math.ceil(totalBlocks / limit),
+                    totalBlocks,
+                    blocksPerPage: limit
+                }
+            };
         } catch (error) {
             logger.error('Error fetching blocks', {
                 error: error.message,

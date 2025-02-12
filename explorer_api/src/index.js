@@ -5,7 +5,9 @@ const dotenv = require("dotenv");
 const logger = require("./config/logger");
 const pvmService = require('./services/pvm.service');
 const { BlockDTO, TransactionDTO } = require('@bitcoinbrisbane/block52');
-
+const Block = require('./models/block.model');
+const blockService = require('./services/block.service');
+const connectDatabase = require('./config/database');
 dotenv.config();
 
 const PORT = process.env.PORT || 3800;
@@ -22,37 +24,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Connect to MongoDB with detailed logging
-mongoose.connect(process.env.DB_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  logger.info('Successfully connected to MongoDB', {
-    dbUrl: process.env.DB_URL.replace(/mongodb:\/\/([^:]+):([^@]+)@/, 'mongodb://***:***@') // Hide credentials in logs
-  });
-})
-.catch((err) => {
-  logger.error('MongoDB connection error:', { 
-    error: err.message, 
-    stack: err.stack,
-    dbUrl: process.env.DB_URL.replace(/mongodb:\/\/([^:]+):([^@]+)@/, 'mongodb://***:***@')
-  });
-  process.exit(1);
-});
-
-// Add connection event listeners
-mongoose.connection.on('error', err => {
-  logger.error('MongoDB connection error:', { error: err.message });
-});
-
-mongoose.connection.on('disconnected', () => {
-  logger.warn('MongoDB disconnected');
-});
-
-mongoose.connection.on('reconnected', () => {
-  logger.info('MongoDB reconnected');
-});
 
 // Hello World GET route
 app.get("/", (req, res) => {
@@ -75,10 +46,17 @@ app.get("/block/:id", async (req, res) => {
   }
 });
 
-app.get("/blocks", (req, res) => {
+app.get("/blocks", async (req, res) => {
   try {
     logger.info('Fetching blocks list', { query: req.query });
-    res.send("Blocks route");
+    
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 100;
+    const skip = (page - 1) * limit;
+
+    const result = await blockService.getBlocks(skip, limit);
+    res.json(result);
+
   } catch (error) {
     logger.error('Error fetching blocks:', {
       error: error.message,
@@ -99,17 +77,42 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-// Start the server
-app.listen(PORT, async () => {
-  logger.info(`B52 Explorer server started`, {
-    port: PORT,
-    environment: process.env.NODE_ENV || 'development',
-    nodeVersion: process.version
-  });
+// Initialize database and start server
+const startServer = async () => {
+    try {
+        // Connect to database first
+        const dbConnected = await connectDatabase();
+        if (!dbConnected) {
+            logger.error('Failed to connect to database. Exiting...');
+            process.exit(1);
+        }
 
-  // Start block synchronization
-  pvmService.startBlockSync();
-});
+        // Start the server only after successful DB connection
+        app.listen(PORT, () => {
+            logger.info(`B52 Explorer server started`, {
+                port: PORT,
+                environment: process.env.NODE_ENV || 'development',
+                nodeVersion: process.version
+            });
+
+            // Start block synchronization only after server is running
+            pvmService.startBlockSync().catch(error => {
+                logger.error('Failed to start block sync:', {
+                    error: error.message,
+                    stack: error.stack
+                });
+            });
+        });
+    } catch (error) {
+        logger.error('Failed to start server:', {
+            error: error.message,
+            stack: error.stack
+        });
+        process.exit(1);
+    }
+};
+
+startServer();
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
