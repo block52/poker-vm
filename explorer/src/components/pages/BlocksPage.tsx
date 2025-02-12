@@ -138,6 +138,10 @@ export default function BlocksPage() {
                                 <thead>
                                     <tr>
                                         <th className="p-2 border-b border-gray-700">Height</th>
+                                        <th className="p-2 border-b border-gray-700">Age</th>
+                                        <th className="p-2 border-b border-gray-700">Tx Count</th>
+
+
                                         <th className="p-2 border-b border-gray-700">Hash</th>
                                         <th className="p-2 border-b border-gray-700">Previous Hash</th>
                                         <th className="p-2 border-b border-gray-700">Merkle Root</th>
@@ -145,14 +149,17 @@ export default function BlocksPage() {
                                         {/* <th className="p-2 border-b border-gray-700">Timestamp</th> */}
                                         <th className="p-2 border-b border-gray-700">Validator</th>
                                         {/* <th className="p-2 border-b border-gray-700">Version</th> */}
-                                        <th className="p-2 border-b border-gray-700">Tx Count</th>
-                                        <th className="p-2 border-b border-gray-700">Age</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {blocks.map((block) => (
                                         <tr key={block._id} className="hover:bg-gray-800">
                                             <td className="p-2 border-b border-gray-700 text-center">{block.index}</td>
+                                            <td className="p-2 border-b border-gray-700 text-center">
+                                                {formatBlockAge(block.timestamp)}
+                                            </td>
+                                            <td className="p-2 border-b border-gray-700 text-center">{block.transactionCount}</td>
+
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">
                                                 <Link to={`/block/${block.hash}`} className="hover:text-blue-400">
                                                     {block.hash}
@@ -226,10 +233,7 @@ export default function BlocksPage() {
                                                 </div>
                                             </td>
                                             {/* <td className="p-2 border-b border-gray-700 text-center">{block.version}</td> */}
-                                            <td className="p-2 border-b border-gray-700 text-center">{block.transactionCount}</td>
-                                            <td className="p-2 border-b border-gray-700 text-center">
-                                                {formatBlockAge(block.timestamp)}
-                                            </td>
+                                           
                                         </tr>
                                     ))}
                                 </tbody>
