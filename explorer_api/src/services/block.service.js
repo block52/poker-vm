@@ -48,17 +48,14 @@ class BlockService {
 
             // Debug log to see what we're getting from PVM
             logger.debug('Raw block data received from PVM:', {
-                blockData: JSON.stringify(blockData, null, 2),
-                hasTransactions: !!blockData.transactions,
-                transactionsType: typeof blockData.transactions,
-                transactionsIsArray: Array.isArray(blockData.transactions),
-                transactionsLength: blockData.transactions?.length
+                blockData: JSON.stringify(blockData, null, 2)
             });
 
-            // Save transaction hashes with the block
+            // Prepare the block data with transaction count
             const blockToSave = {
                 ...blockData,
-                transactions: Array.isArray(blockData.transactions) ? blockData.transactions : []
+                transactionCount: blockData.transactions?.length || 0,
+                transactions: blockData.transactions || []
             };
 
             const block = new Block(blockToSave);
@@ -67,7 +64,7 @@ class BlockService {
             logger.debug('Block data being saved:', {
                 blockIndex: block.index,
                 blockHash: block.hash,
-                transactions: block.transactions,
+                transactionCount: block.transactionCount,
                 fullBlock: JSON.stringify(block.toObject(), null, 2)
             });
 
@@ -76,8 +73,7 @@ class BlockService {
             logger.info('Block saved to database', {
                 blockIndex: block.index,
                 blockHash: block.hash,
-                transactionCount: block.transactions?.length || 0,
-                savedTransactions: block.transactions
+                transactionCount: block.transactionCount
             });
             
             return block;
@@ -92,7 +88,7 @@ class BlockService {
             logger.error('Error saving block to database', {
                 error: error.message,
                 stack: error.stack,
-                blockIndex: blockData.index
+                blockIndex: blockData?.index
             });
             throw error;
         }

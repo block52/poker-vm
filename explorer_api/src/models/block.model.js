@@ -1,20 +1,18 @@
 const mongoose = require('mongoose');
-const { BlockDTO, TransactionDTO } = require('@bitcoinbrisbane/block52');
 
 // Transaction Schema (nested within Block)
 const transactionSchema = new mongoose.Schema({
+    nonce: { type: String, required: false },
     to: { type: String, required: true },
     from: { type: String, required: true },
     value: { type: String, required: true },
     hash: { type: String, required: true },
     signature: { type: String, required: true },
     timestamp: { type: String, required: true },
-    index: { type: String, required: false },
-    nonce: { type: String, required: false },
     data: { type: String, required: false }
 }, { _id: false });
 
-// Block Schema - matching BlockDTO interface
+// Block Schema - matching the actual PVM response
 const blockSchema = new mongoose.Schema({
     hash: {
         type: String,
@@ -28,6 +26,18 @@ const blockSchema = new mongoose.Schema({
         unique: true,
         index: true
     },
+    previousHash: {
+        type: String,
+        required: true
+    },
+    merkleRoot: {
+        type: String,
+        required: true
+    },
+    signature: {
+        type: String,
+        required: true
+    },
     timestamp: {
         type: Number,
         required: true
@@ -40,21 +50,13 @@ const blockSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    signature: {
-        type: String,
-        required: true
-    },
-    merkleRoot: {
-        type: String,
-        required: true
-    },
-    previousHash: {
-        type: String,
-        required: true
-    },
     transactions: {
-        type: [String], // Array of transaction hashes
+        type: [transactionSchema],
         default: []
+    },
+    transactionCount: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true
@@ -63,9 +65,11 @@ const blockSchema = new mongoose.Schema({
 // Type checking function
 blockSchema.methods.validateAgainstDTO = function() {
     const blockData = this.toObject();
-    // Check if the data structure matches BlockDTO
-    const requiredFields = ['hash', 'index', 'timestamp', 'validator', 'version', 
-                          'signature', 'merkleRoot', 'previousHash', 'transactions'];
+    const requiredFields = [
+        'hash', 'index', 'previousHash', 'merkleRoot', 
+        'signature', 'timestamp', 'validator', 'version', 
+        'transactions'
+    ];
     
     return requiredFields.every(field => field in blockData);
 };
