@@ -162,7 +162,10 @@ export default function BlocksPage() {
 
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">
                                                 <div className="flex items-center gap-2">
-                                                    <Link to={`/block/${block.hash}`} className="hover:text-blue-400">
+                                                    <Link 
+                                                        to={`/block/${block.hash}`} 
+                                                        className="text-blue-400 hover:text-blue-300 underline"
+                                                    >
                                                         {truncateHash(block.hash)}
                                                     </Link>
                                                     <button
