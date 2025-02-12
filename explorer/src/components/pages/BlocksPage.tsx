@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { PageLayout } from "../layout/PageLayout";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 
 interface Block {
     _id: string;
@@ -112,7 +112,11 @@ export default function BlocksPage() {
                                     {blocks.map((block) => (
                                         <tr key={block._id} className="hover:bg-gray-800">
                                             <td className="p-2 border-b border-gray-700 text-center">{block.index}</td>
-                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.hash}</td>
+                                            <td className="p-2 border-b border-gray-700 font-mono text-sm">
+                                                <Link to={`/block/${block.hash}`} className="hover:text-blue-400">
+                                                    {block.hash}
+                                                </Link>
+                                            </td>
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.previousHash}</td>
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.merkleRoot}</td>
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">{block.signature}</td>
