@@ -60,6 +60,7 @@ export class TransactionManagement extends StateManager {
         const transactions = await Transactions.find({ to: address })
             .sort({ timestamp: -1 })
             .limit(count ?? 100);
+        
         return transactions.map(tx => Transaction.fromDocument(tx));
     }
 

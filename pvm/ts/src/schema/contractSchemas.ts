@@ -12,7 +12,8 @@ const contractSchemasSchema = new Schema<IContractSchemaDocument>({
     },
     schema: {
         required: true,
-        type: Object,
+        // type: Object,
+        type: String,
     },
     hash: {
         required: true,

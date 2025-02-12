@@ -4,7 +4,7 @@ export type AccountDTO = {
     nonce: number;
 };
 
-export type BlockDTO = {
+export type BlockHeaderDTO = {
     hash: string;
     index: number;
     timestamp: number;
@@ -13,6 +13,10 @@ export type BlockDTO = {
     signature: string;
     merkleRoot: string;
     previousHash: string;
+    transactionCount: number;
+};
+
+export type BlockDTO = BlockHeaderDTO & {
     transactions: TransactionDTO[];
 };
 
