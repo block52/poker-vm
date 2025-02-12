@@ -92,6 +92,32 @@ export default function BlocksPage() {
         }
     };
 
+
+    const formatBlockAge = (timestamp: number) => {
+        const now = Date.now();
+        const diff = now - timestamp;
+        
+        // Convert to seconds
+        const seconds = Math.floor(diff / 1000);
+        
+        if (seconds < 60) {
+            return `${seconds} secs ago`;
+        }
+        
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) {
+            return `${minutes} min${minutes === 1 ? '' : 's'} ago`;
+        }
+        
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) {
+            return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+        }
+        
+        const days = Math.floor(hours / 24);
+        return `${days} day${days === 1 ? '' : 's'} ago`;
+    };
+
     return (
         <PageLayout>
             <div className="container mx-auto p-4">
@@ -116,11 +142,11 @@ export default function BlocksPage() {
                                         <th className="p-2 border-b border-gray-700">Previous Hash</th>
                                         <th className="p-2 border-b border-gray-700">Merkle Root</th>
                                         <th className="p-2 border-b border-gray-700">Signature</th>
-                                        <th className="p-2 border-b border-gray-700">Timestamp</th>
+                                        {/* <th className="p-2 border-b border-gray-700">Timestamp</th> */}
                                         <th className="p-2 border-b border-gray-700">Validator</th>
                                         {/* <th className="p-2 border-b border-gray-700">Version</th> */}
                                         <th className="p-2 border-b border-gray-700">Tx Count</th>
-                                        <th className="p-2 border-b border-gray-700">Created At</th>
+                                        <th className="p-2 border-b border-gray-700">Age</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -180,9 +206,9 @@ export default function BlocksPage() {
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td className="p-2 border-b border-gray-700 text-center">
+                                            {/* <td className="p-2 border-b border-gray-700 text-center">
                                                 {new Date(block.timestamp).toLocaleString()}
-                                            </td>
+                                            </td> */}
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <span>{truncateHash(block.validator)}</span>
@@ -202,7 +228,7 @@ export default function BlocksPage() {
                                             {/* <td className="p-2 border-b border-gray-700 text-center">{block.version}</td> */}
                                             <td className="p-2 border-b border-gray-700 text-center">{block.transactionCount}</td>
                                             <td className="p-2 border-b border-gray-700 text-center">
-                                                {new Date(block.createdAt).toLocaleString()}
+                                                {formatBlockAge(block.timestamp)}
                                             </td>
                                         </tr>
                                     ))}
