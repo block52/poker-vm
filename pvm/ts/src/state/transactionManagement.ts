@@ -14,9 +14,13 @@ export class TransactionManagement extends StateManager {
         await newTransaction.save();
     }
 
-    public async addTransactions(txs: Transaction[]): Promise<void> {
+    public async addTransactions(txs: Transaction[], blockHash: string): Promise<void> {
         await this.connect();
-        const transactions = txs.map(tx => new Transactions(tx.toDocument()));
+
+        const transactions = txs.map(tx => {
+            tx.blockHash = blockHash;
+            return new Transactions(tx.toDocument());
+        });
 
         if (transactions.length > 0) {
             await Transactions.insertMany(transactions);

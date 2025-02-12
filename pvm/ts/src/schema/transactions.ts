@@ -39,7 +39,7 @@ const transactionSchema = new Schema<ITransactionDocument>({
     type: String,
   },
   block_hash: {
-    required: false,
+    required: true,
     type: String,
   },
 });
