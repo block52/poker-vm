@@ -4,6 +4,7 @@ import { Navbar } from "./components/ui/navbar";
 import BlocksPage from "./components/pages/BlocksPage";
 import MempoolPage from "./components/pages/MempoolPage";
 import TransactionsPage from "./components/pages/TransactionsPage";
+import BlockPage from "./components/pages/BlockPage";
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                         <Routes>
                             <Route path="/" element={<BlocksPage />} />
                             <Route path="/blocks" element={<BlocksPage />} />
+                            <Route path="/block/:hash" element={<BlockPage />} />
                             <Route path="/mempool" element={<MempoolPage />} />
                             <Route path="/transactions" element={<TransactionsPage />} />
                         </Routes>
