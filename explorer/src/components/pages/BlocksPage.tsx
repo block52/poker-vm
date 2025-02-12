@@ -50,7 +50,7 @@ export default function BlocksPage() {
             setLoading(true);
             const response = await fetch(`http://localhost:3800/blocks?page=${page}&limit=${limit}&sort=${sort}`);
             const data = await response.json();
-            
+
             if (data.blocks && Array.isArray(data.blocks)) {
                 setBlocks(data.blocks);
                 setPagination(data.pagination);
@@ -96,24 +96,24 @@ export default function BlocksPage() {
     const formatBlockAge = (timestamp: number) => {
         const now = Date.now();
         const diff = now - timestamp;
-        
+
         // Convert to seconds
         const seconds = Math.floor(diff / 1000);
-        
+
         if (seconds < 60) {
             return `${seconds} secs ago`;
         }
-        
+
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) {
             return `${minutes} min${minutes === 1 ? '' : 's'} ago`;
         }
-        
+
         const hours = Math.floor(minutes / 60);
         if (hours < 24) {
             return `${hours} hr${hours === 1 ? '' : 's'} ago`;
         }
-        
+
         const days = Math.floor(hours / 24);
         return `${days} day${days === 1 ? '' : 's'} ago`;
     };
@@ -122,7 +122,7 @@ export default function BlocksPage() {
         <PageLayout>
             <div className="container mx-auto p-4">
                 <h1 className="text-2xl font-bold mb-4">Blocks</h1>
-                
+
                 {loading && (
                     <div className="text-center">Loading blocks...</div>
                 )}
@@ -161,9 +161,22 @@ export default function BlocksPage() {
                                             <td className="p-2 border-b border-gray-700 text-center">{block.transactionCount}</td>
 
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">
-                                                <Link to={`/block/${block.hash}`} className="hover:text-blue-400">
-                                                    {block.hash}
-                                                </Link>
+                                                <div className="flex items-center gap-2">
+                                                    <Link to={`/block/${block.hash}`} className="hover:text-blue-400">
+                                                        {truncateHash(block.hash)}
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleCopyClick(block.hash, `hash-${block._id}`)}
+                                                        className="p-1 hover:bg-gray-700 rounded"
+                                                        title="Copy block hash"
+                                                    >
+                                                        {copySuccess === `hash-${block._id}` ? (
+                                                            <span className="text-green-500">✓</span>
+                                                        ) : (
+                                                            <span>📋</span>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">
                                                 <div className="flex items-center gap-2">
@@ -233,7 +246,7 @@ export default function BlocksPage() {
                                                 </div>
                                             </td>
                                             {/* <td className="p-2 border-b border-gray-700 text-center">{block.version}</td> */}
-                                           
+
                                         </tr>
                                     ))}
                                 </tbody>
