@@ -39,14 +39,20 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.get("/block/:id", async (req, res) => {
+app.get("/block/:hash", async (req, res) => {
   try {
-    logger.info('Fetching block by ID', { blockId: req.params.id });
-    // TODO: Implement block fetching logic
-    res.send(response.data);
+    logger.info('Fetching block by hash', { blockHash: req.params.hash });
+    
+    const block = await blockService.getBlockByHash(req.params.hash);
+    
+    if (!block) {
+      return res.status(404).json({ error: 'Block not found' });
+    }
+    
+    res.json(block);
   } catch (error) {
     logger.error('Error fetching block:', {
-      blockId: req.params.id,
+      blockHash: req.params.hash,
       error: error.message,
       stack: error.stack
     });
@@ -60,9 +66,10 @@ app.get("/blocks", async (req, res) => {
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 100;
+    const sort = req.query.sort || '-index';
     const skip = (page - 1) * limit;
 
-    const result = await blockService.getBlocks(skip, limit);
+    const result = await blockService.getBlocks(skip, limit, sort);
     res.json(result);
 
   } catch (error) {

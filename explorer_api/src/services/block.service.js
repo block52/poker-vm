@@ -129,18 +129,25 @@ class BlockService {
         }
     }
 
-    async getBlocks(skip = 0, limit = 100) {
+    async getBlocks(skip = 0, limit = 100, sort = '-index') {
         try {
-            // Fetch blocks
+            // Convert sort parameter to MongoDB sort object
+            const sortObj = {};
+            if (sort.startsWith('-')) {
+                sortObj[sort.substring(1)] = -1;
+            } else {
+                sortObj[sort] = 1;
+            }
+
+            // Fetch blocks with proper sorting
             const blocks = await Block.find()
-                .sort({ index: -1 })
+                .sort(sortObj)
                 .skip(skip)
                 .limit(limit);
             
             // Get total count for pagination
             const totalBlocks = await Block.countDocuments();
             
-            // Return blocks with pagination info
             return {
                 blocks,
                 pagination: {
@@ -154,7 +161,8 @@ class BlockService {
             logger.error('Error fetching blocks', {
                 error: error.message,
                 skip,
-                limit
+                limit,
+                sort
             });
             throw error;
         }
