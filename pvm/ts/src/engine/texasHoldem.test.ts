@@ -10,7 +10,7 @@ describe.only("Texas Holdem Game", () => {
 
     describe("Properties and methods", () => {
         it("should get a player status after joining", () => {
-            const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
+            const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000");
 
             expect(game.findNextSeat()).toEqual(1);
             game.join(new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100n));
@@ -22,7 +22,7 @@ describe.only("Texas Holdem Game", () => {
         });
 
         it("should find the next player", () => {
-            const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
+            const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000");
             game.join(new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100n));
             expect(game.findNextSeat()).toEqual(2);
 
@@ -43,7 +43,7 @@ describe.only("Texas Holdem Game", () => {
         // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
 
         it("should have the correct properties pre flop", () => {
-            const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n, 2);
+            const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000");
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250n));
@@ -61,7 +61,7 @@ describe.only("Texas Holdem Game", () => {
         });
 
         it("should allow a round to be played heads up", () => {
-            const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n, 2);
+            const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000");
             game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250n));
             game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200n));
 
@@ -88,7 +88,7 @@ describe.only("Texas Holdem Game", () => {
     });
 
     it.skip("should process messages", function () {
-        const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 30n);
+        const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000");
 
         game.join(new Player("1", 100n));
         game.join(new Player("2", 200n));
@@ -115,7 +115,7 @@ describe.only("Texas Holdem Game", () => {
     });
 
     it.skip("should allow a round to be played", () => {
-        const game = new TexasHoldemGame(ethers.ZeroAddress, 10n, 25n, 2);
+        const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000", 2);
         game.join(new Player("1", 250n));
         game.join(new Player("2", 200n));
         game.join(new Player("3", 100n));
@@ -123,7 +123,7 @@ describe.only("Texas Holdem Game", () => {
         game.deal();
 
         expect(game.getBets().get("4")).toEqual(10); // Small blind
-        expect(game.getBets().get("1")).toEqual(25); // Big blind
+        expect(game.getBets().get("1")).toEqual(30); // Big blind
         expect(game.getBets().get("2")).toEqual(undefined);
         expect(game.getBets().get("3")).toEqual(undefined);
 

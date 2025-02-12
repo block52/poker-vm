@@ -36,12 +36,15 @@ class TexasHoldemGame implements IPoker {
     // private _currentRound: TexasHoldemRound;
     // private _nextToAct: number;
 
+    private readonly _smallBlind: bigint;
+    private readonly _bigBlind: bigint;
+
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
 
-    private _minPlayers: number = 2;
-    private _maxPlayers: number = 9;
+    private readonly _minPlayers: number;
+    private readonly _maxPlayers: number;
 
     // Table limits
     private _minBuyIn: bigint = ethers.parseEther("10"); // 10000000000000000000n; 10 dollars
@@ -49,8 +52,9 @@ class TexasHoldemGame implements IPoker {
 
     constructor(
         private _address: string,
-        private _smallBlind: bigint,
-        private _bigBlind: bigint,
+        // private _smallBlind: bigint,
+        // private _bigBlind: bigint,
+        schema: string,
         private _dealer: number = 0,
         private _nextToAct: number = 1,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
@@ -59,6 +63,13 @@ class TexasHoldemGame implements IPoker {
     ) {
         // this._players = new Map<number, Player>();
         // Create an array of players with max size of 9
+
+        const args = schema.split(",");
+
+        this._minPlayers = Number(args[0]);
+        this._maxPlayers = Number(args[1]);
+        this._smallBlind = BigInt(args[2]);
+        this._bigBlind = BigInt(args[3]);
 
         this._players = [];
         this._playersMap = new Map<number, Player>();
@@ -627,10 +638,12 @@ class TexasHoldemGame implements IPoker {
     }
 
     public static fromJson(json: any): TexasHoldemGame {
+
+        const schema = `${json.minPlayers},${json.maxPlayers},${json.smallBlind},${json.bigBlind}`;
+
         return new TexasHoldemGame(
             json.address,
-            BigInt(parseInt(json.smallBlind)),
-            BigInt(parseInt(json.bigBlind)),
+            schema,
             json.dealer,
             json.nextToAct,
             json.round,

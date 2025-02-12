@@ -95,13 +95,11 @@ describe.skip("Game Tests", () => {
 
     it("should create a state object from the game", async () => {
         const address = ethers.ZeroAddress;
-        const sb: bigint = 10000000000000000000n;
-        const bb: bigint = 30000000000000000000n;
         const dealer = 0;
         const communityCards: Card[] = [];
         const round = TexasHoldemRound.PREFLOP;
 
-        const texasHoldemGame = new TexasHoldemGame(address, sb, bb, dealer, 0, round, communityCards, 0n);
+        const texasHoldemGame = new TexasHoldemGame(address, "2,9,10000000000000000000,300000000000000000", dealer, 0, round, communityCards, 0n);
         const state: TexasHoldemGameState = texasHoldemGame.state;
         const json = state.toJson();
 

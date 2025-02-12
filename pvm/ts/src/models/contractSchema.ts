@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { IContractSchemaDocument, IJSONModel } from "./interfaces";
 
 export class ContractSchema implements IJSONModel {
+    private readonly _address: string;
     private readonly _hash: string;
     private readonly _category: string;
     private readonly _name: string;
@@ -11,7 +12,8 @@ export class ContractSchema implements IJSONModel {
         category: string,
         name: string,
         jsonSchema: any,
-        hash?: string
+        hash?: string,
+        address?: string
     ) {
         this._schema = jsonSchema;
 
@@ -20,6 +22,12 @@ export class ContractSchema implements IJSONModel {
         if (hash && hash !== calculatedHash) {
             throw new Error("Hash mismatch");
         }
+
+        if (!address) {
+            address = this.calculateAddress();
+        }
+
+        this._address = address;
         this._hash = calculatedHash;
         this._category = category;
         this._name = name;
@@ -43,6 +51,7 @@ export class ContractSchema implements IJSONModel {
 
     public toDocument(): IContractSchemaDocument {
         return {
+            address: this._address,
             category: this._category,
             name: this._name,
             schema: this._schema,
@@ -67,5 +76,16 @@ export class ContractSchema implements IJSONModel {
 
     public get schema(): any {
         return this._schema;
+    }
+
+    public get address(): string {
+        return this._hash;
+    }
+
+    private calculateAddress(): string {
+        return createHash("KECCAK256")
+            .update(this._hash)
+            .digest("hex")
+            .substring(0, 39) // first 40 characters
     }
 }

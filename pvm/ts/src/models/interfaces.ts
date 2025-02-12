@@ -49,6 +49,7 @@ export interface ITransactionDocument {
 }
 
 export interface IContractSchemaDocument {
+    address: string;
     category: string;
     name: string;
     schema: any;

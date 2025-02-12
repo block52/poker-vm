@@ -2,6 +2,10 @@ import { model, Schema } from "mongoose";
 import { IContractSchemaDocument } from "../models/interfaces";
 
 const contractSchemasSchema = new Schema<IContractSchemaDocument>({
+    address: {
+        required: true,
+        type: String,
+    },
     category: {
         required: true,
         type: String,

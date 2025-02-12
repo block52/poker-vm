@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 import { Card } from "../models/deck";
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
+import { IJSONModel } from "../models/interfaces";
 
 export class GameManagement extends StateManager {
     // private static _game: Map<string, TexasHoldemGame> = new Map<string, TexasHoldemGame>();
@@ -17,25 +18,10 @@ export class GameManagement extends StateManager {
         this.mempool = getMempoolInstance();
     }
 
-    // join(gameAddress: string, playerAddress: string) {
-    //     let game = GameManagement._game.get(gameAddress);
-
-    //     if (!game) {
-    //         game = new TexasHoldemGame(gameAddress, 10, 30);
-    //         GameManagement._game.set(gameAddress, game);
-    //     }
-
-    //     game.join(new Player(playerAddress, 100));
-    //     console.log(`Player ${playerAddress} joining ${gameAddress}`);
-    //     if (game.deal.length === 3)
-    //         game.deal();
-    // }
-
-     async get(address: string): Promise<any> {
-
+    async get(address: string): Promise<any> {
         const players: PlayerState[] = [];
         const communityCards: Card[] = [];
-        
+
         if (address === ethers.ZeroAddress) {
             // create this as pure json object
             const json = {
@@ -91,7 +77,7 @@ export class GameManagement extends StateManager {
 
     //     const players: PlayerState[] = [];
     //     const communityCards: Card[] = [];
-        
+
     //     if (address === ethers.ZeroAddress) {
     //         const texasHoldemGameState = new TexasHoldemGameState(
     //             ethers.ZeroAddress,
@@ -137,7 +123,7 @@ export class GameManagement extends StateManager {
     //     return texasHoldemGameState;
     // }
 
-    async save(gameState: TexasHoldemGameState): Promise<void> {
+    async save(gameState: IJSONModel): Promise<void> {
         const game = new GameState(gameState.toJson());
         await game.save();
     }

@@ -90,6 +90,7 @@ export class RPC {
             default:
                 return makeErrorRPCResponse(request.id, "Method not found");
         }
+
         return {
             id: request.id,
             result: result
@@ -342,9 +343,16 @@ export class RPC {
                 default:
                     return makeErrorRPCResponse(id, "Method not found");
             }
+            // return {
+            //     id,
+            //     result: result.data.toJson()
+            // };
             return {
-                id,
-                result: result.data.toJson()
+                id: request.id,
+                result: {
+                    ...result,
+                    data: result.data?.toJson ? result.data.toJson() : result.data
+                }
             };
         } catch (e) {
             console.error(e);
