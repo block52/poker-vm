@@ -24,7 +24,7 @@ class PVMService {
                 }
             });
 
-            console.log('Raw PVM response:', response.data);
+            // console.log('Raw PVM response:', response.data);
 
             if (response.data?.result?.data) {
                 return response.data.result.data;
@@ -59,16 +59,16 @@ class PVMService {
                     
                     if (block) {
                         // Log the block data
-                        console.log('Retrieved block data:', JSON.stringify(block, null, 2));
+                        // console.log('Retrieved block data:', JSON.stringify(block, null, 2));
                         
                         // Save the block to database
                         const savedBlock = await blockService.createBlock(block);
                         if (savedBlock) {
-                            logger.info('Block saved successfully', { 
-                                blockIndex: this.currentBlockIndex,
-                                blockHash: block.hash,
-                                transactionCount: block.transactions?.length || 0
-                            });
+                            // logger.info('Block saved successfully', { 
+                            //     blockIndex: this.currentBlockIndex,
+                            //     blockHash: block.hash,
+                            //     transactionCount: block.transactions?.length || 0
+                            // });
                         }
                         
                         this.currentBlockIndex++;
