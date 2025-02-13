@@ -323,6 +323,13 @@ export class Server {
             }
         }
 
+        if (highestTip === 0) {
+            console.error("No nodes to sync with");
+            this._syncing = false;
+            this._synced = true;
+            return;
+        }
+
         const client = new NodeRpcClient(highestNode.url, this.privateKey);
 
         // Sync with the highest node
