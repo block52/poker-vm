@@ -1,6 +1,6 @@
 const axios = require("axios");
 const logger = require("../config/logger");
-const blockService = require("./block.service");
+
 
 class RPCService {
     constructor() {
