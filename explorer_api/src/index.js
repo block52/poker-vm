@@ -2,13 +2,13 @@ const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
 const logger = require("./config/logger");
-const pvmService = require("./services/pvm.service");
+
 const { BlockDTO, TransactionDTO } = require("@bitcoinbrisbane/block52");
-const Block = require("./models/block.model");
-const blockService = require("./services/block.service");
-const connectDatabase = require("./config/database");
+
+
 dotenv.config();
 const cors = require("cors");
+const rpcService = require("./services/rpc.service");
 
 app.use(
     cors({
@@ -38,46 +38,58 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
-app.get("/block/:hash", async (req, res) => {
+
+app.get("/rpc/blocks", async (req, res) => {
     try {
-        logger.info("Fetching block by hash", { blockHash: req.params.hash });
+        logger.info("Fetching blocks directly from RPC");
+        const blocks = await rpcService.getBlocks();
+        
+        if (!blocks) {
+            return res.status(404).json({ error: "Blocks not found via RPC" });
+        }
 
-        const block = await blockService.getBlockByHash(req.params.hash);
+        res.json(blocks);
+    } catch (error) {
+        logger.error("Error fetching blocks from RPC:", {
+            error: error.message
+        });
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
+
+
+
+app.get("/rpc/block/:index", async (req, res) => {
+    try {
+        logger.info("Fetching block directly from RPC", { blockIndex: req.params.index });
+        const block = await rpcService.getBlock(parseInt(req.params.index));
+        
         if (!block) {
-            return res.status(404).json({ error: "Block not found" });
+            return res.status(404).json({ error: "Block not found via RPC" });
         }
 
         res.json(block);
     } catch (error) {
-        logger.error("Error fetching block:", {
-            blockHash: req.params.hash,
-            error: error.message,
-            stack: error.stack
+        logger.error("Error fetching block from RPC:", {
+            blockIndex: req.params.index,
+            error: error.message
         });
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
-app.get("/blocks", async (req, res) => {
-    try {
-        logger.info("Fetching blocks list", { query: req.query });
 
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 100;
-        const sort = req.query.sort || "-index";
-        const skip = (page - 1) * limit;
 
-        const result = await blockService.getBlocks(skip, limit, sort);
-        res.json(result);
-    } catch (error) {
-        logger.error("Error fetching blocks:", {
-            error: error.message,
-            stack: error.stack
-        });
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
+// ================================
+// old routes
+// ================================
+
+
+
+
+
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -94,11 +106,7 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
     try {
         // Connect to database first
-        const dbConnected = await connectDatabase();
-        if (!dbConnected) {
-            logger.error("Failed to connect to database. Exiting...");
-            process.exit(1);
-        }
+      
 
         // Start the server only after successful DB connection
         app.listen(PORT, () => {
@@ -109,12 +117,12 @@ const startServer = async () => {
             });
 
             // Start block synchronization only after server is running
-            pvmService.startBlockSync().catch(error => {
-                logger.error("Failed to start block sync:", {
-                    error: error.message,
-                    stack: error.stack
-                });
-            });
+            // pvmService.startBlockSync().catch(error => {
+            //     logger.error("Failed to start block sync:", {
+            //         error: error.message,
+            //         stack: error.stack
+            //     });
+            // });
         });
     } catch (error) {
         logger.error("Failed to start server:", {
