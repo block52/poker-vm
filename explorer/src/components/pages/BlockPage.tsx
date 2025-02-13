@@ -36,10 +36,17 @@ export default function BlockPage() {
 
     useEffect(() => {
         const fetchBlock = async () => {
+            if (!hash) return;
+            
             try {
                 setLoading(true);
                 const apiUrl = import.meta.env.VITE_EXPLORER_API_URL || 'http://localhost:3800';
                 const response = await fetch(`${apiUrl}/rpc/block/${hash}`);
+                
+                if (!response.ok) {
+                    throw new Error('Block not found');
+                }
+
                 const data = await response.json();
                 setBlock(data);
                 setError(null);
