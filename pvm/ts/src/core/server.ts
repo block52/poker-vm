@@ -296,6 +296,7 @@ export class Server {
         // create a map of nodes to their highest tip
         const nodeHeights = new Map<string, number>();
 
+
         // Find the highest tip
         for (const [url, node] of this._nodes) {
             try {
@@ -321,6 +322,14 @@ export class Server {
                 console.error("Error connecting to node:", error);
                 console.warn(`Missing node ${url}`);
             }
+        }
+
+        const client = new NodeRpcClient(highestNode.url, this.privateKey);
+
+        // Sync with the highest node
+        for (let i = tip; i < highestTip; i++) {
+            const block = await client.getBlock(i);
+            await blockchain.addBlock(Block.fromJson(block));
         }
     }
 
