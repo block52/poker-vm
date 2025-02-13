@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@bitcoinbrisbane/block52": "^1.0.43",
-    "@reown/appkit": "1.6.4",
+    "@reown/appkit": "1.6.6",
     "@reown/appkit-adapter-ethers": "^1.6.4",
     "@reown/appkit-adapter-wagmi": "^1.6.4",
     "@tanstack/react-query": "^5.64.0",
