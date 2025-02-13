@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { PageLayout } from "../layout/PageLayout";
+import axios from "axios";
 
 interface Transaction {
     nonce: string;
@@ -14,9 +15,8 @@ interface Transaction {
 }
 
 interface Block {
-    _id: string;
-    hash: string;
     index: number;
+    hash: string;
     previousHash: string;
     merkleRoot: string;
     signature: string;
@@ -25,9 +25,6 @@ interface Block {
     version: string;
     transactions: Transaction[];
     transactionCount: number;
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
 }
 
 export default function BlockPage() {
@@ -40,9 +37,9 @@ export default function BlockPage() {
         const fetchBlock = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`http://localhost:3800/block/${hash}`);
-                const data = await response.json();
-                setBlock(data);
+                const apiUrl = import.meta.env.VITE_EXPLORER_API_URL || 'http://localhost:3800';
+                const response = await axios.get(`${apiUrl}/rpc/block/${hash}`);
+                setBlock(response.data);
                 setError(null);
             } catch (err) {
                 setError('Failed to fetch block');
@@ -54,6 +51,12 @@ export default function BlockPage() {
 
         fetchBlock();
     }, [hash]);
+
+    const formatValue = (value: string) => {
+        // Convert from wei to ETH
+        const eth = Number(value) / 1e18;
+        return `${eth} ETH`;
+    };
 
     return (
         <PageLayout>
@@ -81,7 +84,6 @@ export default function BlockPage() {
                                     <p><span className="font-semibold">Validator:</span> <span className="font-mono text-sm">{block.validator}</span></p>
                                     <p><span className="font-semibold">Version:</span> {block.version}</p>
                                     <p><span className="font-semibold">Transaction Count:</span> {block.transactionCount}</p>
-                                    <p><span className="font-semibold">Created At:</span> {new Date(block.createdAt).toLocaleString()}</p>
                                 </div>
                             </div>
                         </div>
@@ -90,14 +92,14 @@ export default function BlockPage() {
                         <div className="bg-card rounded-lg p-4 border border-border">
                             <h2 className="text-xl font-semibold mb-4">Transactions ({block.transactionCount})</h2>
                             <div className="space-y-4">
-                                {block.transactions.map((tx, index) => (
+                                {block.transactions.map((tx) => (
                                     <div key={tx.hash} className="p-4 border border-border rounded-lg">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <p><span className="font-semibold">Hash:</span> <span className="font-mono text-sm">{tx.hash}</span></p>
                                                 <p><span className="font-semibold">From:</span> <span className="font-mono text-sm">{tx.from}</span></p>
                                                 <p><span className="font-semibold">To:</span> <span className="font-mono text-sm">{tx.to}</span></p>
-                                                <p><span className="font-semibold">Value:</span> {tx.value}</p>
+                                                <p><span className="font-semibold">Value:</span> {formatValue(tx.value)}</p>
                                             </div>
                                             <div className="space-y-2">
                                                 <p><span className="font-semibold">Nonce:</span> {tx.nonce}</p>
