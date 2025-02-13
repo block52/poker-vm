@@ -641,6 +641,8 @@ class TexasHoldemGame implements IPoker {
 
         const schema = `${json.minPlayers},${json.maxPlayers},${json.smallBlind},${json.bigBlind}`;
 
+        // todo: add all the players
+
         return new TexasHoldemGame(
             json.address,
             schema,

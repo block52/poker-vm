@@ -296,7 +296,6 @@ export class Server {
         // create a map of nodes to their highest tip
         const nodeHeights = new Map<string, number>();
 
-
         // Find the highest tip
         for (const [url, node] of this._nodes) {
             try {
@@ -328,8 +327,21 @@ export class Server {
 
         // Sync with the highest node
         for (let i = tip; i < highestTip; i++) {
-            const block = await client.getBlock(i);
-            await blockchain.addBlock(Block.fromJson(block));
+            const blockDTO: BlockDTO = await client.getBlock(i);
+
+            console.log(`Syncing block ${blockDTO.index} ${blockDTO.hash} from ${highestNode.url}`);
+            
+            if (blockDTO) {
+                const block = Block.fromJson(blockDTO);
+
+                if (!block.verify()) {
+                    console.error(`Block ${block.hash} is invalid`);
+                    continue;
+                }
+
+                console.log(`Adding block ${block.hash} to blockchain`);
+                await blockchain.addBlock(block);
+            }
         }
     }
 

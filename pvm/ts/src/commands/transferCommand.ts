@@ -80,9 +80,32 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                     const player: Player = new Player(this.from, this.amount, undefined);
 
                     game.join(player);
-
-                    // save game
                 }
+
+
+                // switch (tx.data) {
+                //     case "join":
+                //         // const player = new Player(tx.from, Number(tx.value));
+                //         game.join2(tx.from, tx.value);
+                //         break;
+                //     case "bet":
+                //         game.performAction(tx.from, PlayerActionType.BET, tx.value);
+                //         break;
+                //     case "call":
+                //         game.performAction(tx.from, PlayerActionType.CALL, tx.value);
+                //         break;
+                //     case "fold":
+                //         game.performAction(tx.from, PlayerActionType.FOLD, 0n);
+                //         break;
+                //     case "check":
+                //         game.performAction(tx.from, PlayerActionType.CHECK, 0n);
+                //         break;
+                //     case "raise":
+                //         game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
+                //         break;
+                //     default:
+                //         throw new Error("Invalid action");
+                // };
             }
 
             // If we havent thrown an error, then we can create the transaction
