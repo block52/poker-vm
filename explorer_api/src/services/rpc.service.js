@@ -4,7 +4,7 @@ const blockService = require("./block.service");
 
 class RPCService {
     constructor() {
-        this.baseUrl = process.env.PVM_URL || "http://localhost:3000";
+        this.baseUrl = process.env.B25_RPC_URL || "https://node1.block52.xyz";
         this.currentBlockIndex = 1;
         this.isSyncing = false;
 
