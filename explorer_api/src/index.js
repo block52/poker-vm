@@ -2,13 +2,14 @@ const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
 const logger = require("./config/logger");
-const pvmService = require("./services/pvm.service");
+
 const { BlockDTO, TransactionDTO } = require("@bitcoinbrisbane/block52");
 const Block = require("./models/block.model");
 const blockService = require("./services/block.service");
 const connectDatabase = require("./config/database");
 dotenv.config();
 const cors = require("cors");
+const rpcService = require("./services/rpc.service");
 
 app.use(
     cors({
@@ -37,6 +38,58 @@ app.get("/", (req, res) => {
     logger.debug("Processing root route request");
     res.send("Hello World!");
 });
+
+
+app.get("/rpc/blocks", async (req, res) => {
+    try {
+        logger.info("Fetching blocks directly from RPC");
+        const blocks = await rpcService.getBlocks();
+        
+        if (!blocks) {
+            return res.status(404).json({ error: "Blocks not found via RPC" });
+        }
+
+        res.json(blocks);
+    } catch (error) {
+        logger.error("Error fetching blocks from RPC:", {
+            error: error.message
+        });
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+
+
+
+app.get("/rpc/block/:index", async (req, res) => {
+    try {
+        logger.info("Fetching block directly from RPC", { blockIndex: req.params.index });
+        const block = await rpcService.getBlock(parseInt(req.params.index));
+        
+        if (!block) {
+            return res.status(404).json({ error: "Block not found via RPC" });
+        }
+
+        res.json(block);
+    } catch (error) {
+        logger.error("Error fetching block from RPC:", {
+            blockIndex: req.params.index,
+            error: error.message
+        });
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+
+
+// ================================
+// old routes
+// ================================
+
+
+
+
+
 
 app.get("/block/:hash", async (req, res) => {
     try {
@@ -79,6 +132,7 @@ app.get("/blocks", async (req, res) => {
     }
 });
 
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     logger.error("Unhandled error:", {
@@ -109,12 +163,12 @@ const startServer = async () => {
             });
 
             // Start block synchronization only after server is running
-            pvmService.startBlockSync().catch(error => {
-                logger.error("Failed to start block sync:", {
-                    error: error.message,
-                    stack: error.stack
-                });
-            });
+            // pvmService.startBlockSync().catch(error => {
+            //     logger.error("Failed to start block sync:", {
+            //         error: error.message,
+            //         stack: error.stack
+            //     });
+            // });
         });
     } catch (error) {
         logger.error("Failed to start server:", {
