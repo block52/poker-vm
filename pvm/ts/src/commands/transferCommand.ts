@@ -42,8 +42,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         // }
 
         try {
-            // HACK FOR NOW, if the to address is a game address, then we need to join the game
-            if (this.data || this.to === ethers.ZeroAddress) {
+            if (this.data) {
                 console.log(`Data: ${this.data}`);
 
                 const json = await this.gameManagement.get(this.to);
@@ -73,39 +72,33 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 // }
 
                 // Cast string to PlayerActionType
-                const playerAction: PlayerActionType = this.data as PlayerActionType || "join";
+                const playerAction: PlayerActionType = this.data as PlayerActionType;
 
-                if (playerAction === "join") {
-                    console.log(`Joining game...`);
-                    const player: Player = new Player(this.from, this.amount, undefined);
-
-                    game.join(player);
-                }
-
-
-                // switch (tx.data) {
-                //     case "join":
-                //         // const player = new Player(tx.from, Number(tx.value));
-                //         game.join2(tx.from, tx.value);
-                //         break;
-                //     case "bet":
-                //         game.performAction(tx.from, PlayerActionType.BET, tx.value);
-                //         break;
-                //     case "call":
-                //         game.performAction(tx.from, PlayerActionType.CALL, tx.value);
-                //         break;
-                //     case "fold":
-                //         game.performAction(tx.from, PlayerActionType.FOLD, 0n);
-                //         break;
-                //     case "check":
-                //         game.performAction(tx.from, PlayerActionType.CHECK, 0n);
-                //         break;
-                //     case "raise":
-                //         game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
-                //         break;
-                //     default:
-                //         throw new Error("Invalid action");
-                // };
+                switch (playerAction) {
+                    case "join":
+                        console.log(`Joining game...`);
+                        const player: Player = new Player(this.from, this.amount, undefined);
+    
+                        game.join(player);
+                        break;
+                    case "bet":
+                        //game.performAction(tx.from, PlayerActionType.BET, tx.value);
+                        break;
+                    case "call":
+                        //game.performAction(tx.from, PlayerActionType.CALL, tx.value);
+                        break;
+                    case "fold":
+                        //game.performAction(tx.from, PlayerActionType.FOLD, 0n);
+                        break;
+                    case "check":
+                        //game.performAction(tx.from, PlayerActionType.CHECK, 0n);
+                        break;
+                    case "raise":
+                        //game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
+                        break;
+                    default:
+                        throw new Error("Invalid action");
+                };
             }
 
             // If we havent thrown an error, then we can create the transaction

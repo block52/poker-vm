@@ -24,7 +24,7 @@ export class GameManagement extends StateManager {
         const communityCards: Card[] = [];
 
         if (address === ethers.ZeroAddress) {
-            // create this as pure json object
+            // TODO: import from the the data folder
             const json = {
                 type: "cash",
                 address: ethers.ZeroAddress,
@@ -59,10 +59,14 @@ export class GameManagement extends StateManager {
             // const game = new TexasHoldemGame(args);
 
             const json = {
-                type: "cash",
+                type: args[1],
                 address: address,
-                smallBlind: args[2],
-                bigBlind: args[2],
+                minBuyIn: 0n,
+                maxBuyIn: 0n,
+                minPlayers: args[2],
+                maxPlayers: args[3],
+                smallBlind: args[4],
+                bigBlind: args[5],
                 dealer: 0,
                 players: [],
                 communityCards: [],

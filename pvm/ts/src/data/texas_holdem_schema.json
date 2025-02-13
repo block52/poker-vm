@@ -1,8 +1,16 @@
 {
-    "type": "Poker",
-    "variant": "Texas Hold'em",
-    "limit": "No Limit",
-    "small_blind": 0.5,
-    "big_blind": 1,
-    "ante": 0
+    "type": "cash",
+    "address": "ethers.ZeroAddress",
+    "smallBlind": "10000000000000000000",
+    "bigBlind": "30000000000000000000",
+    "dealer": 0,
+    "players": [],
+    "communityCards": [],
+    "pots": [
+        "0"
+    ],
+    "nextToAct": 0,
+    "round": "preflop",
+    "winners": [],
+    "signature": "ethers.ZeroHash"
 }
