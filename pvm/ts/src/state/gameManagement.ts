@@ -58,6 +58,8 @@ export class GameManagement extends StateManager {
             const args = schema.schema.split(",");
             // const game = new TexasHoldemGame(args);
 
+            const players: PlayerState[] = [];
+
             const json = {
                 type: args[1],
                 address: address,
@@ -82,57 +84,6 @@ export class GameManagement extends StateManager {
         
         throw new Error("Game not found");
     }
-
-    // async get(address: string): Promise<TexasHoldemGameState> {
-    //     //  return GameManagement._game.get(address);
-
-    //     const players: PlayerState[] = [];
-    //     const communityCards: Card[] = [];
-
-    //     if (address === ethers.ZeroAddress) {
-    //         const texasHoldemGameState = new TexasHoldemGameState(
-    //             ethers.ZeroAddress,
-    //             0.05, // small blind
-    //             0.10, // big blind
-    //             0, // dealer
-    //             players,
-    //             communityCards,
-    //             0, // pot
-    //             0, // current bet
-    //             TexasHoldemRound.ANTE,
-    //             undefined
-    //         );
-
-    //         return texasHoldemGameState;
-    //     }
-
-    //     // if (address === "0x0000000000000000000000000000000000000001") {
-    //     //     const texasHoldemGameState = await GameState.findOne({
-    //     //         address
-    //     //     });
-
-    //     //     // if (!texasHoldemGameState) {
-    //     //     //     throw new Error("Game not found");
-    //     //     // }
-
-    //     //     const json = texasHoldemGameState?.state.toJSON();
-    //     //     const game = TexasHoldemGame.fromJson(json);
-    //     //     return game;
-    //     // }
-
-    //     const gameState = await GameState.findOne({
-    //         address
-    //     });
-
-    //     if (!gameState) {
-    //         throw new Error("Game not found");
-    //     }
-
-    //     // Store the game state in the database as a JSON object
-    //     const json = gameState.state.toJSON();
-    //     const texasHoldemGameState: TexasHoldemGameState = TexasHoldemGameState.fromJson(json);
-    //     return texasHoldemGameState;
-    // }
 
     async save(gameState: IJSONModel): Promise<void> {
         const game = new GameState(gameState.toJson());

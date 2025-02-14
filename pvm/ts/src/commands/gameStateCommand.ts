@@ -28,36 +28,36 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
         // console.log(`Mined transactions: ${minedTransactions.length}`);
 
         // // Get all transactions from mempool and replay them
-        // const mempoolTransactions = this.mempool.findAll(tx => tx.to === this.address);
-        // console.log(`Mempool transactions: ${mempoolTransactions.length}`);
+        const mempoolTransactions = this.mempool.findAll(tx => tx.to === this.address);
+        console.log(`Mempool transactions: ${mempoolTransactions.length}`);
         // // Merge transactions
         // const allTransactions = [...minedTransactions, ...mempoolTransactions];
 
-        // allTransactions.forEach(tx => {
-        //     switch (tx.data) {
-        //         case "join":
-        //             // const player = new Player(tx.from, Number(tx.value));
-        //             game.join2(tx.from, tx.value);
-        //             break;
-        //         case "bet":
-        //             game.performAction(tx.from, PlayerActionType.BET, tx.value);
-        //             break;
-        //         case "call":
-        //             game.performAction(tx.from, PlayerActionType.CALL, tx.value);
-        //             break;
-        //         case "fold":
-        //             game.performAction(tx.from, PlayerActionType.FOLD, 0n);
-        //             break;
-        //         case "check":
-        //             game.performAction(tx.from, PlayerActionType.CHECK, 0n);
-        //             break;
-        //         case "raise":
-        //             game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
-        //             break;
-        //         default:
-        //             throw new Error("Invalid action");
-        //     };
-        // });
+        mempoolTransactions.forEach(tx => {
+            switch (tx.data) {
+                case "join":
+                    // const player = new Player(tx.from, Number(tx.value));
+                    game.join2(tx.from, tx.value);
+                    break;
+                case "bet":
+                    game.performAction(tx.from, PlayerActionType.BET, tx.value);
+                    break;
+                case "call":
+                    game.performAction(tx.from, PlayerActionType.CALL, tx.value);
+                    break;
+                case "fold":
+                    game.performAction(tx.from, PlayerActionType.FOLD, 0n);
+                    break;
+                case "check":
+                    game.performAction(tx.from, PlayerActionType.CHECK, 0n);
+                    break;
+                case "raise":
+                    game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
+                    break;
+                default:
+                    throw new Error("Invalid action");
+            };
+        });
 
         const state = game.state;
         return await signResult(state, this.privateKey);

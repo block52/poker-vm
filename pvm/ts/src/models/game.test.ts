@@ -20,7 +20,20 @@ describe.skip("Game Tests", () => {
         const round = TexasHoldemRound.PREFLOP;
         const winners = undefined;
 
-        const texasHoldemGameState = new TexasHoldemGameState(address, sb, bb, sbPosition, bbPosition, dealer, players, communityCards, pot, currentBet, round, winners);
+        const texasHoldemGameState = new TexasHoldemGameState(
+            address,
+            sb,
+            bb,
+            sbPosition,
+            bbPosition,
+            dealer,
+            players,
+            communityCards,
+            pot,
+            currentBet,
+            round,
+            winners
+        );
         const dto = texasHoldemGameState.toJson();
 
         expect(dto).toEqual({
@@ -99,7 +112,20 @@ describe.skip("Game Tests", () => {
         const communityCards: Card[] = [];
         const round = TexasHoldemRound.PREFLOP;
 
-        const texasHoldemGame = new TexasHoldemGame(address, 10000000000000000000n, 100000000000000000000n, dealer, 0, round, communityCards, 0n);
+        const texasHoldemGame = new TexasHoldemGame(
+            address,
+            10000000000000000000n,
+            100000000000000000000n,
+            2,
+            9,
+            100000000000000000n,
+            200000000000000000n,
+            0,
+            1,
+            round,
+            communityCards,
+            0n
+        );
         const state: TexasHoldemGameState = texasHoldemGame.state;
         const json = state.toJson();
 

@@ -36,11 +36,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         // todo: check nonce
 
         // Check if from is a game account
-
-        // if (!fromAccount)
-        //     throw new Error("Account not found");
-        // }
-
+        
         try {
             if (this.data) {
                 console.log(`Data: ${this.data}`);
@@ -53,23 +49,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 }
 
                 // Replay tx from mempool
-
-                // const gameCommand = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
-
-                // const playerAction = JSON.parse(this.data) as { method: PlayerActionType | "join", params: [string] };
-                // console.log(`Player Action: ${playerAction.method}`);
-
-                // if (this.data === "bet") {
-                //     console.log(`Joining game...`);
-                //     // await this.gameManagement.join(this.to, this.from);
-
-                //     // rehydrate the game
-                //     const game = this.gameManagement.get(this.to);
-
-                //     if (!game) {
-                //         throw new Error("Game not found");
-                //     }
-                // }
 
                 // Cast string to PlayerActionType
                 const playerAction: PlayerActionType = this.data as PlayerActionType;
@@ -101,7 +80,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 };
             }
 
-            // If we havent thrown an error, then we can create the transaction
+            // If we haven't thrown an error, then we can create the transaction
             const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
             const mempool = getMempoolInstance();
             await mempool.add(transferTx);
