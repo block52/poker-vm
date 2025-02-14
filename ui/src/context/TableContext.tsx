@@ -2,6 +2,7 @@ import React, { createContext, useContext, ReactNode, useEffect, useState } from
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from '../config/constants';
+import { ethers } from "ethers";
 
 interface TableContextType {
   tableData: any;
@@ -10,6 +11,7 @@ interface TableContextType {
   setTableData: (data: any) => void;
   nonce: number | null;
   refreshNonce: (address: string) => Promise<void>;
+  userPublicKey: string | null;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -22,6 +24,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const [nonce, setNonce] = useState<number | null>(null);
+    const [userPublicKey, setUserPublicKey] = useState<string | null>(null);
+
   
     useEffect(() => {
       console.log('TableProvider mounted with ID:', tableId);
@@ -62,6 +66,25 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         clearInterval(interval);
       };
     }, [tableId]);
+
+
+    useEffect(() => {
+      const calculatePublicKey = async () => {
+          const privateKey = localStorage.getItem('user_eth_private_key');
+          if (privateKey) {
+              try {
+                  const wallet = new ethers.Wallet(privateKey);
+                  const publicKey = wallet.signingKey.publicKey;
+                  setUserPublicKey(publicKey);
+                  console.log('Calculated Public Key:', publicKey);
+              } catch (error) {
+                  console.error('Error calculating public key:', error);
+              }
+          }
+      };
+
+      calculatePublicKey();
+  }, []);
   
     const refreshNonce = async (address: string) => {
         try {
@@ -91,7 +114,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
   
     return (
-      <TableContext.Provider value={{ tableData, setTableData, isLoading, error, nonce, refreshNonce }}>
+      <TableContext.Provider value={{ tableData, setTableData, isLoading, error, nonce, refreshNonce, userPublicKey }}>
         {children}
       </TableContext.Provider>
     );
