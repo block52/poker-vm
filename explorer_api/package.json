@@ -9,7 +9,7 @@
     "prod": "NODE_ENV=production node src/index.js"
   },
   "engines": {
-    "node": "20.13"
+    "node": "20.18.3"
   },
   "dependencies": {
     "@bitcoinbrisbane/block52": "^1.0.43",
