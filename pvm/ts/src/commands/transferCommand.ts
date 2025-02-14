@@ -4,20 +4,17 @@ import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
 import GameManagement from "../state/gameManagement";
-import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
 import { Player } from "../models/game";
-import { ethers } from "ethers";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
+import contractSchemas from "../schema/contractSchemas";
 
 export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly gameManagement: GameManagement;
     private readonly mempool: Mempool;
-    private readonly accountManagement: AccountManagement;
 
     constructor(private from: string, private to: string, private amount: bigint, private data: string | null, private readonly privateKey: string) {
         this.gameManagement = new GameManagement();
-        this.accountManagement = getAccountManagementInstance();
         this.mempool = getMempoolInstance();
     }
 
@@ -27,14 +24,11 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         const accountResponse = await accountCommand.execute();
         const fromAccount = accountResponse.data;
 
-        // const fromAccount = await this.accountManagement.getAccount(this.from);
-
         if (this.amount > fromAccount.balance) {
             throw new Error("Insufficient balance");
         }
 
         // todo: check nonce
-
         // Check if from is a game account
         
         try {
@@ -82,8 +76,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
 
             // If we haven't thrown an error, then we can create the transaction
             const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
-            const mempool = getMempoolInstance();
-            await mempool.add(transferTx);
+            await this.mempool.add(transferTx);
 
             return signResult(transferTx, this.privateKey);
         } catch (e) {
@@ -91,4 +84,9 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             throw new Error("Error transferring funds");
         }
     }
+
+    private async isGameTransaction(address: string): Promise<Boolean> {
+        const existingContractSchema = await contractSchemas.find({ address: address });
+        return existingContractSchema !== undefined;
+    }   
 }
