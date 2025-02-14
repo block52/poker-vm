@@ -66,6 +66,10 @@ export default function BlockPage() {
         return `${usdc.toFixed(2)} USDC`;
     };
 
+    const navigateToBlock = (newIndex: number) => {
+        window.location.href = `/block/${newIndex}`;
+    };
+
     return (
         <PageLayout>
             <div className="container mx-auto p-4">
@@ -76,6 +80,26 @@ export default function BlockPage() {
 
                 {block && !loading && !error && (
                     <div className="space-y-6">
+                        {/* Navigation Buttons */}
+                        <div className="flex justify-between items-center mb-4">
+                            <button
+                                onClick={() => navigateToBlock(block.index - 1)}
+                                disabled={block.index === 0}
+                                className="px-4 py-2 bg-slate-700 rounded hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                ← Previous Block
+                            </button>
+                            <span className="text-xl font-semibold">
+                                Block #{block.index}
+                            </span>
+                            <button
+                                onClick={() => navigateToBlock(block.index + 1)}
+                                className="px-4 py-2 bg-slate-700 rounded hover:bg-slate-600"
+                            >
+                                Next Block →
+                            </button>
+                        </div>
+
                         {/* Block Details - Updated styling */}
                         <div className="bg-slate-900 rounded-lg p-6 border border-slate-800 shadow-lg">
                             <h2 className="text-xl font-semibold mb-4 text-slate-200 border-b border-slate-700 pb-2">
