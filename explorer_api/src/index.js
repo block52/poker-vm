@@ -13,10 +13,6 @@ const rpcService = require("./services/rpc.service");
 app.use(
     cors({
         origin: [
-            "http://localhost:5173",
-            "http://explorer-api.block52.xyz",
-            "https://explorer-api.block52.xyz",
-            "http://explorer.block52.xyz",
             "https://explorer.block52.xyz"
         ],
         methods: ["GET", "POST", "PUT", "DELETE"],
