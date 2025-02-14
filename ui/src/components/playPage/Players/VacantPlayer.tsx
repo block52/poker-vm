@@ -16,8 +16,9 @@ type VacantPlayerProps = {
 };
 
 const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
+    console.log("VacantPlayer", left, top, index);
     const { id: tableId } = useParams();
-    const { tableData, setTableData, nonce, refreshNonce } = useTableContext();
+    const { tableData, setTableData, nonce, refreshNonce, userPublicKey } = useTableContext();
     const userAddress = localStorage.getItem("user_eth_public_key");
     const privateKey = localStorage.getItem("user_eth_private_key");
     const wallet = new ethers.Wallet(privateKey!);
@@ -64,6 +65,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
     };
 
     const handleJoinClick = () => {
+        console.log("checking we can see the publick key from the table context", userPublicKey);
         if (isFirstPlayer) {
             handleJoinTable(smallBlindWei);
         } else {
