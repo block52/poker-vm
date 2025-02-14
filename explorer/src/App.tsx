@@ -17,7 +17,7 @@ function App() {
                             <Route path="/" element={<LatestBlocksPage />} />
                             <Route path="/blocks" element={<LatestBlocksPage />} />
                             <Route path="/latestblocks" element={<LatestBlocksPage />} />
-                            <Route path="/block/:hash" element={<BlockPage />} />
+                            <Route path="/block/:index" element={<BlockPage />} />
                             <Route path="/mempool" element={<MempoolPage />} />
                             <Route path="/transactions" element={<TransactionsPage />} />
                         </Routes>

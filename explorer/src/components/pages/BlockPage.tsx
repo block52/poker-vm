@@ -28,7 +28,7 @@ interface Block {
 }
 
 export default function BlockPage() {
-    const { hash } = useParams();
+    const { index } = useParams();
     const [block, setBlock] = useState<Block | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -36,12 +36,12 @@ export default function BlockPage() {
 
     useEffect(() => {
         const fetchBlock = async () => {
-            if (!hash) return;
+            if (!index) return;
             
             try {
                 setLoading(true);
                 const apiUrl = import.meta.env.VITE_EXPLORER_API_URL || 'http://localhost:3800';
-                const response = await fetch(`${apiUrl}/rpc/block/${hash}`);
+                const response = await fetch(`${apiUrl}/rpc/block/${index}`);
                 
                 if (!response.ok) {
                     throw new Error('Block not found');
@@ -59,7 +59,7 @@ export default function BlockPage() {
         };
 
         fetchBlock();
-    }, [hash]);
+    }, [index]);
 
     const formatValue = (value: string) => {
         const usdc = Number(value) / 1e18;
