@@ -56,9 +56,6 @@ export class GameManagement extends StateManager {
 
         if (schema) {
             const args = schema.schema.split(",");
-            // const game = new TexasHoldemGame(args);
-
-            const players: PlayerState[] = [];
 
             const json = {
                 type: args[1],
@@ -91,4 +88,12 @@ export class GameManagement extends StateManager {
     }
 }
 
-export default GameManagement;
+// export default GameManagement;
+
+let instance: GameManagement;
+export const getGameManagementInstance = (): GameManagement => {
+  if (!instance) {
+    instance = new GameManagement();
+  }
+  return instance;
+}

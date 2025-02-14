@@ -118,7 +118,6 @@ export class AccountManagement extends StateManager {
     }
 }
 
-// export default AccountManagement;
 let instance: AccountManagement;
 export const getAccountManagementInstance = (): AccountManagement => {
   if (!instance) {
