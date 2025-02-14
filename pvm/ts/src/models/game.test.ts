@@ -99,7 +99,7 @@ describe.skip("Game Tests", () => {
         const communityCards: Card[] = [];
         const round = TexasHoldemRound.PREFLOP;
 
-        const texasHoldemGame = new TexasHoldemGame(address, "2,9,10000000000000000000,300000000000000000", dealer, 0, round, communityCards, 0n);
+        const texasHoldemGame = new TexasHoldemGame(address, 10000000000000000000n, 100000000000000000000n, dealer, 0, round, communityCards, 0n);
         const state: TexasHoldemGameState = texasHoldemGame.state;
         const json = state.toJson();
 
