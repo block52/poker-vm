@@ -1,7 +1,6 @@
 const axios = require("axios");
 const logger = require("../config/logger");
 
-
 class RPCService {
     constructor() {
         this.baseUrl = process.env.B25_RPC_URL || "https://node1.block52.xyz";

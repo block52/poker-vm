@@ -5,16 +5,13 @@ const logger = require("./config/logger");
 
 const { BlockDTO, TransactionDTO } = require("@bitcoinbrisbane/block52");
 
-
 dotenv.config();
 const cors = require("cors");
 const rpcService = require("./services/rpc.service");
 
 app.use(
     cors({
-        origin: [
-            "https://explorer.block52.xyz"
-        ],
+        origin: ["https://explorer.block52.xyz"],
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type"]
     })
@@ -40,12 +37,11 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
 });
 
-
 app.get("/rpc/blocks", async (req, res) => {
     try {
         logger.info("Fetching blocks directly from RPC");
         const blocks = await rpcService.getBlocks();
-        
+
         if (!blocks) {
             return res.status(404).json({ error: "Blocks not found via RPC" });
         }
@@ -59,14 +55,11 @@ app.get("/rpc/blocks", async (req, res) => {
     }
 });
 
-
-
-
 app.get("/rpc/block/:index", async (req, res) => {
     try {
         logger.info("Fetching block directly from RPC", { blockIndex: req.params.index });
         const block = await rpcService.getBlock(parseInt(req.params.index));
-        
+
         if (!block) {
             return res.status(404).json({ error: "Block not found via RPC" });
         }
@@ -81,17 +74,9 @@ app.get("/rpc/block/:index", async (req, res) => {
     }
 });
 
-
-
 // ================================
 // old routes
 // ================================
-
-
-
-
-
-
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -108,13 +93,11 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
     try {
         // Connect to database first
-      
 
         // Start the server only after successful DB connection
         app.listen(PORT, () => {
             logger.info(`B52 Explorer server started`, {
-                port: PORT,
-              
+                port: PORT
             });
 
             // Start block synchronization only after server is running
