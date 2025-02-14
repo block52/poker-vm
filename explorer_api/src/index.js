@@ -118,8 +118,7 @@ const startServer = async () => {
         app.listen(PORT, () => {
             logger.info(`B52 Explorer server started`, {
                 port: PORT,
-                environment: process.env.NODE_ENV || "development",
-                nodeVersion: process.version
+              
             });
 
             // Start block synchronization only after server is running
