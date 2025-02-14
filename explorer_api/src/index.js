@@ -24,7 +24,7 @@ app.use(
     })
 );
 
-const PORT = process.env.PORT || 3800;
+const PORT = process.env.PORT || 8080;
 
 // Middleware to log all requests
 app.use((req, res, next) => {
