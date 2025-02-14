@@ -108,7 +108,14 @@ export default function LatestBlocksPage() {
                             <tbody>
                                 {blocks.map((block) => (
                                     <tr key={block.hash} className="hover:bg-gray-800">
-                                        <td className="p-2 border-b border-gray-700 text-center">{block.index}</td>
+                                        <td className="p-2 border-b border-gray-700 text-center">
+                                            <Link 
+                                                to={`/block/${block.index}`} 
+                                                className="text-blue-400 hover:text-blue-300 underline"
+                                            >
+                                                {block.index}
+                                            </Link>
+                                        </td>
                                         <td className="p-2 border-b border-gray-700 text-center">
                                             {formatBlockAge(block.timestamp)}
                                         </td>
@@ -116,12 +123,7 @@ export default function LatestBlocksPage() {
                                         
                                         <td className="p-2 border-b border-gray-700 font-mono text-sm">
                                             <div className="flex items-center gap-2">
-                                                <Link 
-                                                    to={`/block/${block.hash}`} 
-                                                    className="text-blue-400 hover:text-blue-300 underline"
-                                                >
-                                                    {truncateHash(block.hash)}
-                                                </Link>
+                                                <span>{truncateHash(block.hash)}</span>
                                                 <button
                                                     onClick={() => handleCopyClick(block.hash, `hash-${block.hash}`)}
                                                     className="p-1 hover:bg-gray-700 rounded"
