@@ -10,6 +10,7 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import contractSchemas from "../schema/contractSchemas";
 import { IContractSchemaDocument } from "../models/interfaces";
 import TexasHoldemGame from "../engine/texasHoldem";
+import { GameStateCommand } from "./gameStateCommand";
 
 export class MineCommand implements ISignedCommand<Block | null> {
     private readonly mempool: Mempool;
@@ -33,33 +34,34 @@ export class MineCommand implements ISignedCommand<Block | null> {
         const lastBlock = await this.blockchainManagement.getLastBlock();
         const block = Block.create(lastBlock.index + 1, lastBlock.hash, uniqueTxs, this.privateKey);
 
+        await this.processGameTransactions(uniqueTxs);
         await this.blockchainManagement.addBlock(block);
+        
         await this.mempool.clear();
 
         return signResult(block, this.privateKey);
     }
 
     private async processGameTransactions(txs: Transaction[]) {
-        
-        for (let i = 0; i < txs.length; i++) {
-            const tx = txs[i];
-            const schema = await contractSchemas.findOne({ address: tx.to });
+        const validGameTxs = await this.filterGameTransactions(txs);
 
-            if (!schema) {
-                continue;
-            }
-
-            // get last game state
-            const gameState = await this.gameStateManagement.get(tx.to);
-
-            if (schema.category === "texasholdem") {
-                const game = TexasHoldemGame.fromJson(gameState);
-                game.performAction(tx.from, PlayerActionType.BET, tx.value);
-
-                // update game state
-                await this.gameStateManagement.save(game.state);
-            }
+        // find unique to addresses from the transactions
+        const uniqueAddresses = new Set<string>();
+        for (let i = 0; i < validGameTxs.length; i++) {
+            const tx = validGameTxs[i];
+            uniqueAddresses.add(tx.to);
         }
+
+        const commands: GameStateCommand[] = [];
+
+        // iterate over the unique addresses
+        for (const address of uniqueAddresses) {
+            const command = new GameStateCommand(address, this.privateKey);
+            commands.push(command);
+        }
+
+        // execute the commands as promise all
+        await Promise.all(commands.map(c => c.execute()));
     }
 
     private async filterGameTransactions(txs: Transaction[]): Promise<Transaction[]> {
@@ -76,43 +78,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
             }
 
             validTxs.push(tx);
-
-            // if (schema) {
-            //     const args = schema.schema.split(",");
-            //     const game = this.gameStateManagement.getGame(txs[i].to);
-            //     if (!game) {
-            //         continue;
-            //     }
-
-            //     const tx = txs[i];
-            //     if (tx.verify()) {
-            //         validTxs.push(tx);
-            //     }
-            // }
-
-            // switch (tx.data) {
-            //     case "join":
-            //         // const player = new Player(tx.from, Number(tx.value));
-            //         game.join2(tx.from, tx.value);
-            //         break;
-            //     case "bet":
-            //         game.performAction(tx.from, PlayerActionType.BET, tx.value);
-            //         break;
-            //     case "call":
-            //         game.performAction(tx.from, PlayerActionType.CALL, tx.value);
-            //         break;
-            //     case "fold":
-            //         game.performAction(tx.from, PlayerActionType.FOLD, 0n);
-            //         break;
-            //     case "check":
-            //         game.performAction(tx.from, PlayerActionType.CHECK, 0n);
-            //         break;
-            //     case "raise":
-            //         game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
-            //         break;
-            //     default:
-            //         throw new Error("Invalid action");
-            // };
         }
 
         return validTxs;
