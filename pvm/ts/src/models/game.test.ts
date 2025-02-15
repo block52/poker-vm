@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { PlayerState, TexasHoldemGameState } from "./game";
 import { Card } from "./deck";
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import TexasHoldemGame from "../engine/texasHoldem";
+import TexasHoldemGame, { PlayerStateType } from "../engine/texasHoldem";
 
 describe.skip("Game Tests", () => {
     // Remove texas holdem game state, now obsolete
@@ -112,6 +112,8 @@ describe.skip("Game Tests", () => {
         const communityCards: Card[] = [];
         const round = TexasHoldemRound.PREFLOP;
 
+        const players: PlayerStateType[] = [];
+
         const texasHoldemGame = new TexasHoldemGame(
             address,
             10000000000000000000n,
@@ -124,7 +126,8 @@ describe.skip("Game Tests", () => {
             1,
             round,
             communityCards,
-            0n
+            0n,
+            players
         );
         const state: TexasHoldemGameState = texasHoldemGame.state;
         const json = state.toJson();

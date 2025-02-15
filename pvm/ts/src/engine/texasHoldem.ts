@@ -12,7 +12,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IPoker } from "./types";
 import { ethers } from "ethers";
-import { FixedCircularList } from "./linkedList";
+// import { FixedCircularList } from "./linkedList";
 
 type Round = {
     type: TexasHoldemRound;
@@ -28,6 +28,14 @@ type GameOptions = {
     bigBlind: bigint;
 };
 
+// this is a DTO
+export type PlayerStateType = {
+    address: string;
+    seat: number;
+    chips: bigint;
+    cards: [Card, Card];
+};
+
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
 
@@ -36,28 +44,16 @@ class TexasHoldemGame implements IPoker {
     private readonly _playersMap: Map<number, Player>;
     // private readonly _players: Player[];
     private readonly _players: (Player | null)[];
-    private readonly _seats: FixedCircularList<Player>;
+    // private readonly _seats: FixedCircularList<Player>;
 
     private _rounds!: Round[];
     private _deck!: Deck;
     private _sidePots!: Map<PlayerId, bigint>;
     private _winners?: Map<PlayerId, bigint>;
-    // private _currentRound: TexasHoldemRound;
-    // private _nextToAct: number;
-
-    // private readonly _smallBlind: bigint;
-    // private readonly _bigBlind: bigint;
 
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
-
-    // private readonly _minPlayers: number;
-    // private readonly _maxPlayers: number;
-
-    // Table limits
-    // private _minBuyIn: bigint = ethers.parseEther("10"); // 10000000000000000000n; 10 dollars
-    // private _maxBuyIn: bigint = ethers.parseEther("100"); // 10000000000000000000n; 100 dollars
 
     constructor(
         private _address: string,
@@ -71,7 +67,8 @@ class TexasHoldemGame implements IPoker {
         private _nextToAct: number = 1,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private _communityCards: Card[] = [],
-        private _pot: bigint = 0n
+        private _pot: bigint = 0n,
+        private playerStates: PlayerStateType[]
     ) {
         // this._players = new Map<number, Player>();
         // Create an array of players with max size of 9
@@ -86,11 +83,28 @@ class TexasHoldemGame implements IPoker {
         this._players = [];
         this._playersMap = new Map<number, Player>();
 
-        for (let i = 0; i < this._maxPlayers; i++) {
-            this._players.push(null);
+        // Do this functionally
+        for (let i = 0; i < playerStates.length; i++) {
+            const { seat, chips, cards } = playerStates[i];
+            const player = new Player(this._address, chips, cards);
+            this._players[seat] = player;
+            this._playersMap.set(seat, player);
         }
 
-        this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
+        for (let i = 0; i < this._maxPlayers; i++) {
+            const playerState = playerStates.find(p => p.seat === i);
+
+            if (playerState) {
+                const { seat, chips, cards } = playerState;
+                const player = new Player(this._address, chips, cards);
+                this._players[seat] = player;
+                this._playersMap.set(seat, player);
+            } else {
+                this._players.push(null);
+            }
+        }
+
+        // this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
 
         this._currentRound = _currentRound;
         this._nextToAct = _nextToAct;
@@ -230,7 +244,7 @@ class TexasHoldemGame implements IPoker {
 
         // this.init(this._update);
         this._deck = new Deck();
-        this._deck.shuffle(seed)
+        this._deck.shuffle(seed);
 
         const players = this.getSeatedPlayers();
         players.forEach(p => {
@@ -515,8 +529,7 @@ class TexasHoldemGame implements IPoker {
     //     else this._nextToAct = active[0];
     // }
 
-    private nextPlayer(): void {
-    }
+    private nextPlayer(): void {}
 
     findNextSeat(): number {
         // const emptyIndex = this._players.findIndex(player => player.id === ethers.ZeroAddress);
@@ -650,10 +663,17 @@ class TexasHoldemGame implements IPoker {
     }
 
     public static fromJson(json: any): TexasHoldemGame {
-
         // const schema = `${json.minPlayers},${json.maxPlayers},${json.smallBlind},${json.bigBlind}`;
 
         // todo: add all the players
+        const playerStates: PlayerStateType[] = json.players.map((p: any) => {
+            return {
+                address: p.id,
+                seat: p.seat,
+                chips: p.chips,
+                cards: [p.holeCards[0], p.holeCards[1]]
+            };
+        });
 
         return new TexasHoldemGame(
             json.address,
@@ -667,7 +687,8 @@ class TexasHoldemGame implements IPoker {
             json.nextToAct,
             json.round,
             json.communityCards,
-            json.pots[0]
+            json.pots[0],
+            playerStates
         );
     }
 }

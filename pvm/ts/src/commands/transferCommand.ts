@@ -3,7 +3,7 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import GameManagement from "../state/gameManagement";
+import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
 import { Player } from "../models/game";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
@@ -14,7 +14,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly mempool: Mempool;
 
     constructor(private from: string, private to: string, private amount: bigint, private data: string | null, private readonly privateKey: string) {
-        this.gameManagement = new GameManagement();
+        this.gameManagement = getGameManagementInstance();
         this.mempool = getMempoolInstance();
     }
 
@@ -32,7 +32,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         // Check if from is a game account
         
         try {
-            if (this.data) {
+            if (this.data && await this.isGameTransaction(this.to)) {
                 console.log(`Data: ${this.data}`);
 
                 const json = await this.gameManagement.get(this.to);

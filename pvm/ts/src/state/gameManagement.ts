@@ -1,10 +1,8 @@
-import TexasHoldemGame from "../engine/texasHoldem";
 import { StateManager } from "./stateManager";
 import GameState from "../schema/gameState";
-import { PlayerState, TexasHoldemGameState } from "../models/game";
+import { PlayerState } from "../models/game";
 import { ethers } from "ethers";
 import { Card } from "../models/deck";
-import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IJSONModel } from "../models/interfaces";
 import contractSchemas from "../schema/contractSchemas";
@@ -78,13 +76,24 @@ export class GameManagement extends StateManager {
 
             return json;
         }
-        
+
         throw new Error("Game not found");
     }
 
     async save(gameState: IJSONModel): Promise<void> {
+        // Update or insert the game state
         const game = new GameState(gameState.toJson());
-        await game.save();
+
+        const existingGameState = await GameState.findOne({
+            address: game.address
+        });
+
+        if (existingGameState) {
+            existingGameState.state = game.state;
+            await existingGameState.save();
+        } else {
+            await game.save();
+        };
     }
 }
 
@@ -92,8 +101,8 @@ export class GameManagement extends StateManager {
 
 let instance: GameManagement;
 export const getGameManagementInstance = (): GameManagement => {
-  if (!instance) {
-    instance = new GameManagement();
-  }
-  return instance;
+    if (!instance) {
+        instance = new GameManagement();
+    }
+    return instance;
 }
