@@ -9,12 +9,10 @@ import { getTransactionInstance, TransactionManagement } from "../state/transact
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
     private readonly gameManagement: GameManagement;
-    private readonly transactionManagement: TransactionManagement;
     private readonly mempool: Mempool;
 
     constructor(readonly address: string, private readonly privateKey: string) {
         this.gameManagement = new GameManagement();
-        this.transactionManagement = getTransactionInstance();
         this.mempool = getMempoolInstance();
     }
 
