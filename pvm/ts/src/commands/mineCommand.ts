@@ -1,7 +1,5 @@
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block, Transaction } from "../models";
-
 import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
 import { GameManagement } from "../state/gameManagement";
 import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
@@ -9,9 +7,8 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import contractSchemas from "../schema/contractSchemas";
 import { IContractSchemaDocument } from "../models/interfaces";
-import TexasHoldemGame from "../engine/texasHoldem";
 import { GameStateCommand } from "./gameStateCommand";
-import { GameState } from "../schema/gameState";
+import GameState from "../schema/gameState";
 
 export class MineCommand implements ISignedCommand<Block | null> {
     private readonly mempool: Mempool;
