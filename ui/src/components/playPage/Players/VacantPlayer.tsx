@@ -85,10 +85,10 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
 
             // Build message components with nonce
             const from = userAddress;
-            const to = tableId || "0x0000000000000000000000000000000000000000";
+            const to = tableId;
             const amount = buyInWei;
             const action = "join";
-            const currentNonce = nonce?.toString() || "0";
+            const currentNonce = nonce?.toString();
 
             // Create and sign message with nonce
             const message = `${from}${to}${amount}${action}${currentNonce}`;
