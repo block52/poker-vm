@@ -25,7 +25,7 @@ export class ContractSchema implements IJSONModel {
         }
 
         this._hash = calculatedHash;
-        this._address = this._hash.slice(0, 42);
+        this._address = address || this.calculateAddress(this._hash);
         this._category = category;
         this._name = name;
         this._schema = jsonSchema;
@@ -76,10 +76,11 @@ export class ContractSchema implements IJSONModel {
     }
 
     public get address(): string {
-        return this._hash;
+        // return this.calculateAddress(this._hash);
+        return this._address;
     }
 
     private calculateAddress(hash: string): string {
-        return hash.slice(0, 42);
+        return `0x${hash.slice(0, 42)}`;
     }
 }

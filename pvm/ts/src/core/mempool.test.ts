@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 import { Transaction } from "../models";
 import { getMempoolInstance, Mempool } from "./mempool";
-
 import { getTransactionInstance } from "../state/transactionManagement";
 
 // Mock external dependencies

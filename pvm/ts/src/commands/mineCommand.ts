@@ -11,6 +11,7 @@ import contractSchemas from "../schema/contractSchemas";
 import { IContractSchemaDocument } from "../models/interfaces";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { GameStateCommand } from "./gameStateCommand";
+import { GameState } from "../schema/gameState";
 
 export class MineCommand implements ISignedCommand<Block | null> {
     private readonly mempool: Mempool;
@@ -30,20 +31,22 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         const validTxs: Transaction[] = this.validate(txs);
         const uniqueTxs: Transaction[] = await this.filter(validTxs);
+        await this.processGameTransactions(uniqueTxs);
 
         const lastBlock = await this.blockchainManagement.getLastBlock();
         const block = Block.create(lastBlock.index + 1, lastBlock.hash, uniqueTxs, this.privateKey);
 
-        await this.processGameTransactions(uniqueTxs);
         await this.blockchainManagement.addBlock(block);
-        
         await this.mempool.clear();
 
         return signResult(block, this.privateKey);
     }
 
     private async processGameTransactions(txs: Transaction[]) {
+        console.log(`Processing ${txs.length} game transactions`);
         const validGameTxs = await this.filterGameTransactions(txs);
+
+        console.log(`Valid game transactions: ${validGameTxs.length}`);
 
         // find unique to addresses from the transactions
         const uniqueAddresses = new Set<string>();
@@ -61,7 +64,15 @@ export class MineCommand implements ISignedCommand<Block | null> {
         }
 
         // execute the commands as promise all
-        await Promise.all(commands.map(c => c.execute()));
+        // await Promise.all(commands.map(c => c.execute()));
+        for (let i = 0; i < commands.length; i++) {
+            const result = await commands[i].execute();
+            const gameState = new GameState({
+                address: result.data.address,
+                state: result.data
+            });
+            this.gameStateManagement.save(gameState);
+        }
     }
 
     private async filterGameTransactions(txs: Transaction[]): Promise<Transaction[]> {
@@ -69,7 +80,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         // txs.forEach(tx => {
         for (let i = 0; i < txs.length; i++) {
-
             const tx = txs[i];
             const schema = await contractSchemas.findOne({ address: tx.to });
 
