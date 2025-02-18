@@ -19,14 +19,12 @@ const Block52 = require("./clients/block52");
 
 const { getUnixTime } = require("./utils/helpers");
 
-
 // ===================================
 // 2. Load Environment Configuration
 // ===================================
 dotenv.config();
 const clientType = process.env.CLIENT_TYPE || "block52";
 const port = process.env.PORT || 8080;
-
 
 // ===================================
 // 3. Initialize Client (Singleton)
@@ -56,14 +54,12 @@ const getClient = () => {
 getClient();
 
 // Add this debug log
-console.log(`Configured client: ${clientType}, NODE_URL: ${process.env.NODE_URL || 'using default'}`);
-
+console.log(`Configured client: ${clientType}, NODE_URL: ${process.env.NODE_URL || "using default"}`);
 
 // ===================================
 // 4. Initialize Express Application
 // ===================================
 const app = express();
-
 
 // ===================================
 // 5. Configure Middleware
@@ -73,23 +69,22 @@ app.use(cors());
 // Parse JSON bodies
 app.use(express.json());
 
-
 // ===================================
 // 6. Database Connection
 // ===================================
-connectDB().then(() => {
-    console.log("MongoDB connection established");
-}).catch(err => {
-    console.error("MongoDB connection error:", err);
-});
-
+connectDB()
+    .then(() => {
+        console.log("MongoDB connection established");
+    })
+    .catch(err => {
+        console.error("MongoDB connection error:", err);
+    });
 
 // ===================================
 // 7. Configure API Documentation
 // ===================================
 // Setup Swagger
 swaggerSetup(app);
-
 
 // ===================================
 // 8. Register Routes
@@ -103,8 +98,78 @@ app.get("/", (req, res) => {
 app.use("/deposit-sessions", depositSessionsRouter);
 
 
+
+
+
 // ===================================
-// 9. Game lobby-related endpoints
+// 9. Generic RPC endpoint
+// ===================================
+app.post("/rpc", async (req, res) => {
+    console.log("=== RPC REQUEST ===");
+    console.log("Request body:", req.body);
+
+    try {
+        /* Example RPC call for joining a table:
+        {
+            "id": "1",
+            "version": "2.0",
+            "method": "transfer",
+            "params": [
+                "0x123...789",  // Player's address
+                "0xabc...def",  // Table address
+                "1000000000",   // Buy in amount
+                "join"
+            ],
+            "signature": "0xf65ac7f...",  // Player's signature
+            "publicKey": "0x789...def"    // Player's public key
+        }
+
+        // Example RPC call for creating a table:
+        {
+            "method": "create_contract_schema",
+            "version": "2.0",
+            "id": "1",
+            "params": [
+                "texas-holdem", 
+                "cash", 
+                "no-limit", 
+                "2", 
+                "9", 
+                "1000000000000000000000", 
+                "300000000000000000000"
+            ]
+        }
+        */
+
+        const response = await axios.post("https://node1.block52.xyz", req.body, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE1 RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== RPC ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({
+            error: "RPC call failed",
+            details: error.message
+        });
+    }
+});
+
+
+
+
+
+
+
+
+// ===================================
+// 10. Game lobby-related endpoints
 // ===================================
 app.get("/games", (req, res) => {
     const id1 = ethers.ZeroAddress;
@@ -121,9 +186,8 @@ app.get("/games", (req, res) => {
     res.send(response);
 });
 
-
 // ===================================
-// 10. Table-related endpoints
+// 11. Table-related endpoints
 // ===================================
 app.get("/tables", async (req, res) => {
     const client = getClient();
@@ -141,10 +205,9 @@ app.get("/table/:id/player/:seat", (req, res) => {
     res.send(player);
 });
 
-
 app.get("/table/:id", async (req, res) => {
-    console.log('=== TABLE REQUEST ===');
-    console.log('Route params:', req.params);
+    console.log("=== TABLE REQUEST ===");
+    console.log("Route params:", req.params);
 
     const id = req.params.id;
     console.log(`Fetching table with ID: ${id}`);
@@ -153,13 +216,13 @@ app.get("/table/:id", async (req, res) => {
         const client = getClient();
         const table = await client.getTable(id);
 
-        console.log('=== TABLE RESPONSE FROM NODE1 ===');
+        console.log("=== TABLE RESPONSE FROM NODE1 ===");
         console.log(JSON.stringify(table, null, 2));
 
         res.send(table);
     } catch (error) {
-        console.error('=== TABLE ERROR ===');
-        console.error('Error details:', error);
+        console.error("=== TABLE ERROR ===");
+        console.error("Error details:", error);
         res.status(500).json({
             error: "Failed to fetch table",
             details: error.message
@@ -167,14 +230,13 @@ app.get("/table/:id", async (req, res) => {
     }
 });
 
-
 // ===================================
-// 11. Join table endpoint
+// 12. Join table endpoint
 // ===================================
 app.post("/table/:tableId/join", async (req, res) => {
-    console.log('=== JOIN TABLE REQUEST ===');
-    console.log('Request body:', req.body);
-    console.log('Route params:', req.params);
+    console.log("=== JOIN TABLE REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("Route params:", req.params);
 
     const { address, buyInAmount, seat, signature, publicKey } = req.body;
     const { tableId } = req.params;
@@ -186,45 +248,43 @@ app.post("/table/:tableId/join", async (req, res) => {
             version: "2.0",
             method: "transfer",
             params: [
-                address,        // Player's address
-                tableId,        // Table address
-                buyInAmount,    // Buy in amount
-                "join",
+                address, // Player's address
+                tableId, // Table address
+                buyInAmount, // Buy in amount
+                "join"
             ],
             signature,
             publicKey
-            // todo: add "signature" of rpc call to be processeed by the node 
-
+            // todo: add "signature" of rpc call to be processeed by the node
         };
 
-        console.log('=== FORMATTED RPC CALL ===');
+        console.log("=== FORMATTED RPC CALL ===");
         console.log(JSON.stringify(rpcCall, null, 2));
 
         // Make the actual RPC call to node1
-        const response = await axios.post('https://node1.block52.xyz', rpcCall, {
+        const response = await axios.post("https://node1.block52.xyz", rpcCall, {
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json"
             }
         });
 
-        console.log('=== NODE1 RESPONSE ===');
+        console.log("=== NODE1 RESPONSE ===");
         console.log(response.data);
 
         res.json(response.data);
     } catch (error) {
-        console.error('=== ERROR ===');
-        console.error('Error details:', error);
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
         res.status(500).json({ error: "Failed to join table", details: error.message });
     }
 });
 
-
 // ===================================
-// 11. Account-related endpoints
+// 13. Account-related endpoints
 // ===================================
 app.get("/account/:id", async (req, res) => {
-    console.log('\n=== Account Request ===');
-    console.log('Address:', req.params.id);
+    console.log("\n=== Account Request ===");
+    console.log("Address:", req.params.id);
 
     try {
         const client = getClient();
@@ -232,7 +292,7 @@ app.get("/account/:id", async (req, res) => {
 
         // If there was a node error, still return a 200 with the actual data
         if (account.isNodeError) {
-            console.warn('Node error when fetching account:', account.error);
+            console.warn("Node error when fetching account:", account.error);
             return res.json({
                 nonce: 0,
                 address: req.params.id,
@@ -245,11 +305,10 @@ app.get("/account/:id", async (req, res) => {
         res.json({
             nonce: account.nonce || 0,
             address: account.address,
-            balance: account.balance.toString()  // Make sure balance is returned as string
+            balance: account.balance.toString() // Make sure balance is returned as string
         });
-
     } catch (error) {
-        console.error('Unexpected error in route handler:', error);
+        console.error("Unexpected error in route handler:", error);
         res.json({
             nonce: 0,
             address: req.params.id,
@@ -270,13 +329,13 @@ app.get("/time", (req, res) => {
 });
 
 app.get("/nonce/:address", async (req, res) => {
-    console.log('\n=== Nonce Request ===');
-    console.log('Address:', req.params.address);
+    console.log("\n=== Nonce Request ===");
+    console.log("Address:", req.params.address);
 
     try {
         const client = getClient();
         const account = await client.getAccount(req.params.address);
-        
+
         // Clean response with no duplicates
         const response = {
             result: {
@@ -290,10 +349,10 @@ app.get("/nonce/:address", async (req, res) => {
             timestamp: getUnixTime()
         };
 
-        console.log('Clean nonce response:', response);
+        console.log("Clean nonce response:", response);
         res.json(response);
     } catch (error) {
-        console.error('Error getting nonce:', error);
+        console.error("Error getting nonce:", error);
         res.status(500).json({
             error: "Failed to get nonce",
             details: error.message
@@ -301,12 +360,8 @@ app.get("/nonce/:address", async (req, res) => {
     }
 });
 
-
-
-
-
 // ===================================
-// 9. Start Server
+// 14. Start Server
 // ===================================
 app.listen(port, () => {
     console.log(`
@@ -320,18 +375,17 @@ app.listen(port, () => {
     `);
 });
 
-
 // ===================================
-// 10. Handle Process Events
+// 15. Handle Process Events
 // ===================================
-process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received: closing HTTP server');
+process.on("SIGTERM", () => {
+    console.log("SIGTERM signal received: closing HTTP server");
     // Perform cleanup here
     process.exit(0);
 });
 
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
+process.on("uncaughtException", err => {
+    console.error("Uncaught Exception:", err);
     // Perform cleanup here
     process.exit(1);
 });
