@@ -4,7 +4,7 @@ import { Card } from "./deck";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { ethers } from "ethers";
 
-export type PlayerId = string;
+// export type PlayerId = string;
 
 export type Range = {
     minAmount: bigint;
@@ -12,7 +12,7 @@ export type Range = {
 }
 
 export type Turn = {
-    playerId: PlayerId;
+    playerId: string;
     action: PlayerActionType;
     amount?: bigint;
 };
@@ -30,11 +30,13 @@ export class Player {
         public holeCards?: [Card, Card]
     ) { }
 
-    get id(): PlayerId { return this._address; }
+    get id(): string { return this._address; }
 
     getPlayerState(game: TexasHoldemGame, position: number): PlayerState {
         // console.log("getPlayerState", this.id, position);
         // console.log("getPlayerState bb", game.bigBlindPosition);
+
+        const playerId = this.id;
 
         const isSmallBlind = game.smallBlindPosition === position;
         const isBigBlind = game.bigBlindPosition === position;
@@ -106,7 +108,7 @@ export class TexasHoldemGameState implements IJSONModel {
         pot: bigint,
         currentBet: bigint,
         round_: TexasHoldemRound,
-        winners_?: Map<PlayerId, bigint>
+        winners_?: Map<string, bigint>
     ) {
         const players = players_.map(p => p.toJson());
         const communityCards = communityCards_.map(c => c.value);

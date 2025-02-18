@@ -1,5 +1,5 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { IUpdate, Turn, Player, PlayerId, TexasHoldemGameState, LegalAction, PlayerState } from "../models/game";
+import { IUpdate, Turn, Player, TexasHoldemGameState, LegalAction, PlayerState } from "../models/game";
 import { Card, Deck } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -33,7 +33,7 @@ export type PlayerStateType = {
     address: string;
     seat: number;
     chips: bigint;
-    cards: [Card, Card];
+    cards?: [Card, Card];
 };
 
 class TexasHoldemGame implements IPoker {
@@ -48,8 +48,8 @@ class TexasHoldemGame implements IPoker {
 
     private _rounds!: Round[];
     private _deck!: Deck;
-    private _sidePots!: Map<PlayerId, bigint>;
-    private _winners?: Map<PlayerId, bigint>;
+    private _sidePots!: Map<string, bigint>;
+    private _winners?: Map<string, bigint>;
 
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
@@ -374,7 +374,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     getPlayer(playerId: string): Player {
-        const player = this._players.find(p => p !== null && p.id === playerId);
+        const player = this._players.find((p): p is Player => p !== null && p.id === playerId);
         if (!player) throw new Error("Player not found.");
         return player;
     }
@@ -397,7 +397,9 @@ class TexasHoldemGame implements IPoker {
             // }
         }
 
-        return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
+        // return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
+
+        return PlayerStatus.ACTIVE;
     }
 
     getActivePlayerCount(): number {
@@ -588,13 +590,13 @@ class TexasHoldemGame implements IPoker {
     private calculateWinner(): void {
         const players = this.getSeatedPlayers();
 
-        const hands = new Map<PlayerId, any>(
+        const hands = new Map<string, any>(
             players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
 
         const active = players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE);
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
-        this._winners = new Map<PlayerId, bigint>();
+        this._winners = new Map<string, bigint>();
 
         let pot: bigint = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
@@ -612,7 +614,7 @@ class TexasHoldemGame implements IPoker {
 
         // winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
 
-        function update(player: Player, portion: bigint, winners: Map<PlayerId, bigint>) {
+        function update(player: Player, portion: bigint, winners: Map<string, bigint>) {
             player.chips += portion;
             // winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
         }
@@ -667,11 +669,21 @@ class TexasHoldemGame implements IPoker {
 
         // todo: add all the players
         const playerStates: PlayerStateType[] = json.players.map((p: any) => {
+
+            // const holeCards = p.cards.map((c: any) => {
+            //     return {
+            //         suit: c.suit,
+            //         rank: c.rank,
+            //         value: c.value,
+            //         mnemonic: c.mnemonic
+            //     };
+            // });
+
             return {
-                address: p.id,
+                address: p.id || p.address, // TODO: check this
                 seat: p.seat,
                 chips: p.chips,
-                cards: [p.holeCards[0], p.holeCards[1]]
+                cards: p.cards // ? holeCards : undefined
             };
         });
 

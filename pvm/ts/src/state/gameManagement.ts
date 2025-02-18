@@ -46,8 +46,9 @@ export class GameManagement extends StateManager {
         });
 
         if (gameState) {
-            const json = gameState.state.toJSON();
-            return json;
+            // this is stored in MongoDB as an object / document
+            const state = gameState.state;
+            return state;
         }
 
         const schema = await contractSchemas.findOne({ address: address });
@@ -80,9 +81,9 @@ export class GameManagement extends StateManager {
         throw new Error("Game not found");
     }
 
-    async save(gameState: IJSONModel): Promise<void> {
+    async save(state: IJSONModel): Promise<void> {
         // Update or insert the game state
-        const game = new GameState(gameState.toJson());
+        const game = new GameState(state.toJson());
 
         const existingGameState = await GameState.findOne({
             address: game.address
@@ -95,6 +96,24 @@ export class GameManagement extends StateManager {
             await game.save();
         };
     }
+
+    async saveFromJSON(json: any): Promise<void> {
+        const game = new GameState({
+            address: json.address,
+            state: json
+        });
+
+        const existingGameState = await GameState.findOne({
+            address: game.address
+        });
+
+        if (existingGameState) {
+            existingGameState.state = game.state;
+            await existingGameState.save();
+        } else {
+            await game.save();
+        };
+    };
 }
 
 // export default GameManagement;
