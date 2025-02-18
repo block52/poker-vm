@@ -2,32 +2,36 @@ import { ZeroHash } from "ethers";
 
 import { BlockDTO, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
-import { AccountCommand } from "./commands/accountCommand";
-import { BlockCommand, BlockCommandParams } from "./commands/blockCommand";
-import { BurnCommand } from "./commands/burnCommand";
-import { CreateAccountCommand } from "./commands/createAccountCommand";
-import { CreateContractSchemaCommand } from "./commands/contractSchema/createContractSchemaCommand";
-import { GameStateCommand } from "./commands/gameStateCommand";
-import { GetAllContractSchemasCommand } from "./commands/contractSchema/getAllContractSchemasCommand";
-import { GetBlocksCommand } from "./commands/getBlocksCommand";
-import { GetContractSchemaCommand } from "./commands/contractSchema/getContractSchemaCommand";
-import { GetNodesCommand } from "./commands/getNodesCommand";
-import { GetTransactionCommand } from "./commands/getTransactionCommand";
-import { GetTransactionsCommand } from "./commands/getTransactionsCommand";
-import { MeCommand } from "./commands/meCommand";
-import { MempoolCommand } from "./commands/mempoolCommand";
-import { MineCommand } from "./commands/mineCommand";
-import { MintCommand } from "./commands/mintCommand";
-import { PurgeMempoolCommand } from "./commands/purgeMempoolCommand";
-import { ReceiveMinedBlockCommand } from "./commands/receiveMinedBlockCommand";
-import { ReceiveMinedBlockHashCommand } from "./commands/receiveMinedBlockHashCommand";
-import { SharedSecretCommand } from "./commands/sharedSecretCommand";
-import { ShutdownCommand } from "./commands/shutdownCommand";
-import { StartServerCommand } from "./commands/startServerCommand";
-import { StopServerCommand } from "./commands/stopServerCommand";
-import { TransferCommand } from "./commands/transferCommand";
+import {
+    AccountCommand,
+    BlockCommand,
+    BlockCommandParams,
+    BurnCommand,
+    CreateAccountCommand,
+    CreateContractSchemaCommand,
+    GameStateCommand,
+    GetAllContractSchemasCommand,
+    GetBlocksCommand,
+    GetContractSchemaCommand,
+    GetNodesCommand,
+    GetTransactionCommand,
+    GetTransactionsCommand,
+    ISignedResponse,
+    MeCommand,
+    MempoolCommand,
+    MineCommand,
+    MintCommand,
+    PurgeMempoolCommand,
+    ReceiveMinedBlockCommand,
+    ReceiveMinedBlockHashCommand,
+    SharedSecretCommand,
+    ShutdownCommand,
+    StartServerCommand,
+    StopServerCommand,
+    TransferCommand
+} from "./commands";
 
-import { ISignedResponse } from "./commands/interfaces";
+
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
