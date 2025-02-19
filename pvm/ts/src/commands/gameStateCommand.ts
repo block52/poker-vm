@@ -1,13 +1,12 @@
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemGameStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { Player, TexasHoldemGameState } from "../models/game";
 import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
 
-export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
+export class GameStateCommand implements ISignedCommand<TexasHoldemGameStateDTO> {
     private readonly gameManagement: GameManagement;
     private readonly mempool: Mempool;
 
@@ -16,7 +15,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
         this.mempool = getMempoolInstance();
     }
 
-    public async execute(): Promise<ISignedResponse<TexasHoldemGameState>> {
+    public async execute(): Promise<ISignedResponse<TexasHoldemGameStateDTO>> {
         // Get the game state as JSON from the chain
         const json = await this.gameManagement.get(this.address);
         const game = TexasHoldemGame.fromJson(json);
@@ -57,7 +56,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemGameState> {
             };
         });
 
-        const state = game.state;
+        const state = game.toJson();
         return await signResult(state, this.privateKey);
     }
 }

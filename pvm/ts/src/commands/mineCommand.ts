@@ -6,7 +6,6 @@ import { getTransactionInstance, TransactionManagement } from "../state/transact
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import contractSchemas from "../schema/contractSchemas";
-import { IContractSchemaDocument } from "../models/interfaces";
 import { GameStateCommand } from "./gameStateCommand";
 import GameState from "../schema/gameState";
 
@@ -68,7 +67,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
                 address: result.data.address,
                 state: result.data
             });
-            this.gameStateManagement.save(gameState);
+            // this.gameStateManagement.save(gameState);
         }
     }
 

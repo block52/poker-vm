@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, LegalActionDTO, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemGameStateDTO, TexasHoldemRound, WinnerDTO } from "@bitcoinbrisbane/block52";
 import { IUpdate, Turn, Player, PlayerId, TexasHoldemGameState, LegalAction, PlayerState } from "../models/game";
 import { Card, Deck } from "../models/deck";
 import BaseAction from "./actions/baseAction";
@@ -28,22 +28,23 @@ type GameOptions = {
     bigBlind: bigint;
 };
 
-// this is a DTO
 export type PlayerStateType = {
     address: string;
-    seat: number;
     chips: bigint;
+    playerStatus: PlayerStatus;
     cards: [Card, Card];
 };
+
 
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
 
     // Players should be a map of player to seat index
 
-    private readonly _playersMap: Map<number, Player>;
+    private readonly _playersMap: Map<number, Player | null>;
+
     // private readonly _players: Player[];
-    private readonly _players: (Player | null)[];
+    // private readonly _players: (Player | null)[];
     // private readonly _seats: FixedCircularList<Player>;
 
     private _rounds!: Round[];
@@ -68,7 +69,7 @@ class TexasHoldemGame implements IPoker {
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private _communityCards: Card[] = [],
         private _pot: bigint = 0n,
-        private playerStates: PlayerStateType[]
+        private playerStates: Map<number, Player>
     ) {
         // this._players = new Map<number, Player>();
         // Create an array of players with max size of 9
@@ -80,29 +81,29 @@ class TexasHoldemGame implements IPoker {
         // this._smallBlind = BigInt(args[2]);
         // this._bigBlind = BigInt(args[3]);
 
-        this._players = [];
+        // this._players = [];
         this._playersMap = new Map<number, Player>();
 
-        // Do this functionally
-        for (let i = 0; i < playerStates.length; i++) {
-            const { seat, chips, cards } = playerStates[i];
-            const player = new Player(this._address, chips, cards);
-            this._players[seat] = player;
-            this._playersMap.set(seat, player);
-        }
+        // // Do this functionally
+        // for (let i = 0; i < playerStates.length; i++) {
+        //     const { seat, chips, cards } = playerStates[i];
+        //     // const player = new Player(this._address, chips, cards);
+        //     this._players[seat] = player;
+        //     this._playersMap.set(seat, player);
+        // }
 
-        for (let i = 0; i < this._maxPlayers; i++) {
-            const playerState = playerStates.find(p => p.seat === i);
+        // for (let i = 0; i < this._maxPlayers; i++) {
+        //     const playerState = playerStates.find(p => p.seat === i);
 
-            if (playerState) {
-                const { seat, chips, cards } = playerState;
-                const player = new Player(this._address, chips, cards);
-                this._players[seat] = player;
-                this._playersMap.set(seat, player);
-            } else {
-                this._players.push(null);
-            }
-        }
+        //     if (playerState) {
+        //         const { seat, chips, cards } = playerState;
+        //         // const player = new Player(this._address, chips, cards);
+        //         this._players[seat] = player;
+        //         this._playersMap.set(seat, player);
+        //     } else {
+        //         this._players.push(null);
+        //     }
+        // }
 
         // this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
 
@@ -141,7 +142,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     get players() {
-        return [...this._players];
+        // return [...this._players];
 
         // return player or nullable player in an array
         // return this._players.map(p => p.id === ethers.ZeroAddress ? null : p);
@@ -152,6 +153,8 @@ class TexasHoldemGame implements IPoker {
         // }
 
         // return players;
+
+        return this._playersMap;
     }
     get bigBlind() {
         return this._bigBlind;
@@ -171,7 +174,9 @@ class TexasHoldemGame implements IPoker {
     get currentPlayerId() {
         // return this._players[this._nextToAct].id;
         // return this._players[this._nextToAct].id ?? ethers.ZeroAddress;
-        return this._players[this._nextToAct]?.id ?? ethers.ZeroAddress;
+        // return this._players[this._nextToAct]?.address ?? ethers.ZeroAddress;
+
+        return this._playersMap.get(this._nextToAct)?.address ?? ethers.ZeroAddress;
     }
     get currentRound() {
         return this._currentRound;
@@ -182,38 +187,38 @@ class TexasHoldemGame implements IPoker {
     get winners() {
         return this._winners;
     }
-    get state() {
-        // const players: PlayerState[] = this._players.map((p, i) => {
-        //     const player = new Player(p.id, p.chips, p.holeCards);
-        //     return player.getPlayerState(this, i);
-        // });
+    // get state() {
+    //     // const players: PlayerState[] = this._players.map((p, i) => {
+    //     //     const player = new Player(p.id, p.chips, p.holeCards);
+    //     //     return player.getPlayerState(this, i);
+    //     // });
 
-        const playerStates: PlayerState[] | null = [];
-        const _players = this.players;
+    //     const playerStates: PlayerState[] | null = [];
+    //     const _players = this.players;
 
-        // TODO: DO WITH A MAP
-        for (let i = 0; i < this._players.length; i++) {
-            const player = _players[i];
-            if (player) {
-                playerStates.push(player.getPlayerState(this, i));
-            }
-        }
+    //     // // TODO: DO WITH A MAP
+    //     // for (let i = 0; i < this._players.length; i++) {
+    //     //     const player = _players[i];
+    //     //     if (player) {
+    //     //         // playerStates.push(player.getPlayerState(this, i));
+    //     //     }
+    //     // }
 
-        return new TexasHoldemGameState(
-            this._address,
-            this._smallBlind,
-            this._bigBlind,
-            this._smallBlindPosition,
-            this._bigBlindPosition,
-            this._dealer,
-            playerStates,
-            this._communityCards,
-            this.pot,
-            0n,
-            this._currentRound,
-            this._winners
-        );
-    }
+    //     return new TexasHoldemGameState(
+    //         this._address,
+    //         this._smallBlind,
+    //         this._bigBlind,
+    //         this._smallBlindPosition,
+    //         this._bigBlindPosition,
+    //         this._dealer,
+    //         playerStates,
+    //         this._communityCards,
+    //         this.pot,
+    //         0n,
+    //         this._currentRound,
+    //         this._winners
+    //     );
+    // }
 
     // return this.currentRound === TexasHoldemRound.ANTE
     //     ? new TexasHoldemJoinState(this._players.map(p => p.id))
@@ -232,11 +237,17 @@ class TexasHoldemGame implements IPoker {
     //}
 
     exists(playerId: string): boolean {
-        return this._players.some(p => p !== null && p.id === playerId);
+        for (const [seat, player] of this._playersMap.entries()) {
+            if (player?.address === playerId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     getPlayerCount() {
-        return this._players.filter(p => p !== null).length;
+        return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null).length;
     }
 
     deal(seed: number[] = []): void {
@@ -250,12 +261,12 @@ class TexasHoldemGame implements IPoker {
         players.forEach(p => {
             // todo: get share secret
             const cards = this._deck.deal(2) as [Card, Card];
-            p.holeCards = cards;
+            // p.holeCards = cards;
         });
     }
 
     join(player: Player) {
-        if (this.exists(player.id)) {
+        if (this.exists(player.address)) {
             // throw new Error("Player already joined.");
             console.log("Player already joined.");
             return;
@@ -311,13 +322,12 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    leave(playerId: string) {
-        const index = this._players.findIndex(p => p !== null && p.id === playerId);
-        if (index === -1) throw new Error("Player not found.");
-        this._players[index] = null;
+    leave(address: string) {
+        const player = this.getPlayerSeatNumber(address);
+        this._playersMap.set(player, null);
     }
 
-    getValidActions(playerId: string): LegalAction[] {
+    getValidActions(address: string): LegalAction[] {
         const verifyAction = (action: BaseAction) => {
             try {
                 const range = action.verify(player);
@@ -327,25 +337,25 @@ class TexasHoldemGame implements IPoker {
             }
         };
 
-        const player = this.getPlayer(playerId);
+        const player = this.getPlayer(address);
         return this._actions.map(verifyAction).filter(a => a) as LegalAction[];
     }
 
-    getLastAction(playerId: string): Turn | undefined {
-        const player = this.getPlayer(playerId);
+    getLastAction(address: string): Turn | undefined {
+        const player = this.getPlayer(address);
         const status = this.getPlayerStatus(player);
 
         if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
-        if (status === PlayerStatus.ALL_IN) return { playerId, action: PlayerActionType.ALL_IN };
-        if (status === PlayerStatus.FOLDED) return { playerId, action: PlayerActionType.FOLD };
+        if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN };
+        if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD };
 
         return undefined;
     }
 
-    performAction(playerId: string, action: PlayerActionType, amount?: bigint) {
+    performAction(address: string, action: PlayerActionType, amount?: bigint) {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
-                if (this._players.length < this._minPlayers) {
+                if (this._.length < this._minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
             }
@@ -353,7 +363,7 @@ class TexasHoldemGame implements IPoker {
             // throw new Error(`Cannot perform ${action} until game started.`);
         }
 
-        const player = this.getPlayer(playerId);
+        const player = this.getPlayer(address);
 
         switch (action) {
             case PlayerActionType.FOLD:
@@ -373,16 +383,38 @@ class TexasHoldemGame implements IPoker {
         // return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
 
-    getPlayer(playerId: string): Player {
-        const player = this._players.find(p => p !== null && p.id === playerId);
+    getPlayer(address: string): Player {
+        if (!this.exists(address)) {
+            throw new Error("Player not found.");
+        }
+
+        for (const [seat, player] of this._playersMap.entries()) {
+            if (player?.address === address) {
+                return player;
+            }
+        }
+
+        throw new Error("Player not found.");
+    }
+
+    getPlayerAtSeat(seat: number): Player {
+        const player = this._playersMap.get(seat);
         if (!player) throw new Error("Player not found.");
         return player;
     }
 
-    getPlayerAtSeat(seat: number): Player {
-        const player = this._players[seat];
-        if (!player) throw new Error("Player not found.");
-        return player;
+    getPlayerSeatNumber(address: string): number {
+        if (!this.exists(address)) {
+            throw new Error("Player not found.");
+        }
+
+        for (const [seat, player] of this._playersMap.entries()) {
+            if (player?.address === address) {
+                return seat;
+            }
+        }
+
+        throw new Error("Player not found.");
     }
 
     getPlayerStatus(player: Player): PlayerStatus {
@@ -397,11 +429,19 @@ class TexasHoldemGame implements IPoker {
             // }
         }
 
-        return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
+        // return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
+
+        return PlayerStatus.ACTIVE;
     }
 
+    /**
+     * Gets the number of active players in the game
+     * @returns The number of players with status "active"
+     */
     getActivePlayerCount(): number {
-        return this._players.filter(p => p !== null && this.getPlayerStatus(p) === PlayerStatus.ACTIVE).length;
+        //return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.s === "active").length;
+        
+        return 0;
     }
 
     getBets(round: TexasHoldemRound = this._currentRound): Map<string, bigint> {
@@ -426,7 +466,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     getPlayerStake(player: Player, bets = this.getBets()): bigint {
-        return bets.get(player.id) ?? 0n;
+        return bets.get(player.address) ?? 0n;
     }
 
     // I dont understand this?
@@ -489,30 +529,30 @@ class TexasHoldemGame implements IPoker {
 
         if (this._rounds[i] === undefined) return [];
 
-        return this._rounds[i].actions.filter(m => m.playerId === player.id);
+        return this._rounds[i].actions.filter(m => m.playerId === player.address);
     }
 
-    private getActivePlayers(): number[] {
-        // return [...Array(this._players.length).keys()].reduce((acc, i) => {
-        //     const index = (this._nextToAct + 1 + i) % this._players.length;
-        //     const player = this._players[index];
-        //     return player && this.getPlayerStatus(player) === PlayerStatus.ACTIVE ? [...acc, index] : acc;
-        // }, [] as Array<number>);
+    // private getActivePlayers(): number[] {
+    //     // return [...Array(this._players.length).keys()].reduce((acc, i) => {
+    //     //     const index = (this._nextToAct + 1 + i) % this._players.length;
+    //     //     const player = this._players[index];
+    //     //     return player && this.getPlayerStatus(player) === PlayerStatus.ACTIVE ? [...acc, index] : acc;
+    //     // }, [] as Array<number>);
 
-        const activePlayers: number[] = [];
+    //     const activePlayers: number[] = [];
 
-        for (let i = 0; i < this._players.length; i++) {
-            const player = this._players[i];
-            if (player && this.getPlayerStatus(player) === PlayerStatus.ACTIVE) {
-                activePlayers.push(i);
-            }
-        }
+    //     for (let i = 0; i < this._players.length; i++) {
+    //         const player = this._players[i];
+    //         if (player && this.getPlayerStatus(player) === PlayerStatus.ACTIVE) {
+    //             activePlayers.push(i);
+    //         }
+    //     }
 
-        return activePlayers;
-    }
+    //     return activePlayers;
+    // }
 
     private getSeatedPlayers(): Player[] {
-        return this._players.filter(p => p !== null);
+        return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
     }
 
     // private nextPlayer(): void {
@@ -532,21 +572,12 @@ class TexasHoldemGame implements IPoker {
     private nextPlayer(): void {}
 
     findNextSeat(): number {
-        // const emptyIndex = this._players.findIndex(player => player.id === ethers.ZeroAddress);
-        // if (emptyIndex !== -1) {
-        //     return emptyIndex;
-        // }
+        const maxSeats = this._maxPlayers; //this._playersMap.size;
 
-        let firstSeat = this._dealer + 1;
-
-        // Need to loop around
-        if (firstSeat === this._maxPlayers - 1) {
-            firstSeat = 0;
-        }
-
-        for (let i = firstSeat; i < this._maxPlayers + firstSeat; i++) {
-            if (this._players[i] === null) {
-                return i;
+        for (let seatNumber = 1; seatNumber <= maxSeats; seatNumber++) {
+            // Check if seat is empty (null) or doesn't exist in the map
+            if (!this._playersMap.has(seatNumber) || this._playersMap.get(seatNumber) === null) {
+                return seatNumber;
             }
         }
 
@@ -613,13 +644,18 @@ class TexasHoldemGame implements IPoker {
         // winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
 
         function update(player: Player, portion: bigint, winners: Map<PlayerId, bigint>) {
-            player.chips += portion;
+            // player.chips += portion;
             // winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
         }
 
         function toPokerSolverMnemonic(card: Card) {
             return card.mnemonic.replace("10", "T");
         }
+    }
+
+    private updatePlayer(addres: string, amount: bigint): void {
+        const player = this.getPlayer(addres);
+        player.chips += amount;
     }
 
     private getNextRound(): TexasHoldemRound {
@@ -688,8 +724,66 @@ class TexasHoldemGame implements IPoker {
             json.round,
             json.communityCards,
             json.pots[0],
-            playerStates
+            json.players
         );
+    }
+
+    public toJson(): TexasHoldemGameStateDTO {
+
+        const players: PlayerDTO[] = Array.from(this._playersMap.values()).map((player, i) => {
+
+            const lastAction: ActionDTO = {
+                action: PlayerActionType.CHECK,
+                amount: "0"
+            };
+
+            const actions: LegalActionDTO[] = [];
+
+            return {
+                address: player?.address ?? ethers.ZeroAddress,
+                seat: i,
+                stack: player?.chips.toString() ?? "0",
+                isSmallBlind: i === this._smallBlindPosition,
+                isBigBlind: i === this._bigBlindPosition,
+                isDealer: i === this._dealer,
+                holeCards: player?.holeCards ? [player.holeCards[0].value, player.holeCards[1].value] : undefined,
+                status: player?.status ?? PlayerStatus.SITTING_OUT,
+                lastAction,
+                actions: actions,
+                timeout: 0,
+                signature: ethers.ZeroHash
+            };
+        });
+
+        const winners: WinnerDTO[] = [];
+
+        return {
+            type: "cash",
+            address: this._address,
+            smallBlind: this._smallBlind.toString(),
+            bigBlind: this._bigBlind.toString(),
+            smallBlindPosition: this._smallBlindPosition,
+            bigBlindPosition: this._bigBlindPosition,
+            dealer: this._dealer,
+            players: players,
+            communityCards: this._communityCards.map(c => c.value),
+            pots: [this._pot.toString()],
+            nextToAct: this._nextToAct,
+            round: this._currentRound,
+            winners: winners,
+            signature: ethers.ZeroHash
+        };
+
+        // minBuyIn: this._minBuyIn,
+        // maxBuyIn: this._maxBuyIn,
+        // minPlayers: this._minPlayers,
+        // maxPlayers: this._maxPlayers,
+        // dealer: this._dealer,
+        // nextToAct: this._nextToAct,
+        // round: this._currentRound,
+        // communityCards: this._communityCards,
+        // pots: [this._pot],
+        // players: Array.from(this._playersMap.values())
     }
 }
 
