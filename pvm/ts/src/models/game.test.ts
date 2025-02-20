@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { Card } from "./deck";
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import TexasHoldemGame, { PlayerStateType } from "../engine/texasHoldem";
+import TexasHoldemGame from "../engine/texasHoldem";
 
 describe.skip("Game Tests", () => {
     // // Remove texas holdem game state, now obsolete

@@ -1,5 +1,5 @@
 import { ActionDTO, LegalActionDTO, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemGameStateDTO, TexasHoldemRound, WinnerDTO } from "@bitcoinbrisbane/block52";
-import { IUpdate, Turn, Player, PlayerId, TexasHoldemGameState, LegalAction, PlayerState } from "../models/game";
+import { IUpdate, Turn, Player, LegalAction } from "../models/game";
 import { Card, Deck } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -10,7 +10,7 @@ import FoldAction from "./actions/foldAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IPoker } from "./types";
+import { IPoker, PlayerState } from "./types";
 import { ethers } from "ethers";
 // import { FixedCircularList } from "./linkedList";
 
@@ -28,14 +28,6 @@ type GameOptions = {
     bigBlind: bigint;
 };
 
-export type PlayerStateType = {
-    address: string;
-    chips: bigint;
-    playerStatus: PlayerStatus;
-    cards: [Card, Card];
-};
-
-
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
 
@@ -49,8 +41,8 @@ class TexasHoldemGame implements IPoker {
 
     private _rounds!: Round[];
     private _deck!: Deck;
-    private _sidePots!: Map<PlayerId, bigint>;
-    private _winners?: Map<PlayerId, bigint>;
+    private _sidePots!: Map<string, bigint>;
+    private _winners?: Map<string, bigint>;
 
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
@@ -276,16 +268,16 @@ class TexasHoldemGame implements IPoker {
         this.joinAtSeat(player, seat);
     }
 
-    join2(address: string, stack: bigint) {
+    join2(address: string, chips: bigint) {
         // This wont work because we fill the array with empty players
         // if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
 
-        const player = new Player(address, stack);
+        const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
         this.join(player);
     }
 
     joinAtSeat(player: Player, seat: number) {
-        if (this._players[seat] !== null) {
+        if (this._playersMap.get(seat) !== null) {
             throw new Error("Seat already taken.");
         }
 
@@ -295,7 +287,7 @@ class TexasHoldemGame implements IPoker {
             return;
         }
 
-        this._players[seat] = player;
+        this._playersMap.set(seat, player);
 
         // if (player.chips < this._minBuyIn) {
         //     // throw new Error("Player does not have enough chips to join.");
@@ -355,7 +347,8 @@ class TexasHoldemGame implements IPoker {
     performAction(address: string, action: PlayerActionType, amount?: bigint) {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
-                if (this._.length < this._minPlayers) {
+
+                if (this.getActivePlayerCount() < this._minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
             }
@@ -619,13 +612,13 @@ class TexasHoldemGame implements IPoker {
     private calculateWinner(): void {
         const players = this.getSeatedPlayers();
 
-        const hands = new Map<PlayerId, any>(
+        const hands = new Map<string, any>(
             players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
 
         const active = players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE);
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
-        this._winners = new Map<PlayerId, bigint>();
+        this._winners = new Map<string, bigint>();
 
         let pot: bigint = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
@@ -643,7 +636,7 @@ class TexasHoldemGame implements IPoker {
 
         // winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
 
-        function update(player: Player, portion: bigint, winners: Map<PlayerId, bigint>) {
+        function update(player: Player, portion: bigint, winners: Map<string, bigint>) {
             // player.chips += portion;
             // winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
         }
@@ -702,7 +695,7 @@ class TexasHoldemGame implements IPoker {
         // const schema = `${json.minPlayers},${json.maxPlayers},${json.smallBlind},${json.bigBlind}`;
 
         // todo: add all the players
-        const playerStates: PlayerStateType[] = json.players.map((p: any) => {
+        const playerStates: PlayerState[] = json.players.map((p: any) => {
             return {
                 address: p.id,
                 seat: p.seat,

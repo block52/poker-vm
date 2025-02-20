@@ -50,9 +50,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 switch (playerAction) {
                     case "join":
                         console.log(`Joining game...`);
-                        const player: Player = new Player(this.from, this.amount, undefined);
-    
-                        game.join(player);
+                        game.join2(this.from, this.amount);
                         break;
                     case "bet":
                         //game.performAction(tx.from, PlayerActionType.BET, tx.value);

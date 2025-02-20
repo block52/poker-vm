@@ -2,9 +2,6 @@ import { ActionDTO, PlayerActionType, PlayerStatus, PlayerDTO, TexasHoldemGameSt
 import { IJSONModel } from "./interfaces";
 import { Card } from "./deck";
 // import TexasHoldemGame from "../engine/texasHoldem";
-import { ethers } from "ethers";
-
-// export type PlayerId = string;
 
 export type Range = {
     minAmount: bigint;
@@ -55,7 +52,7 @@ export class Player implements IJSONModel {
     holeCards: [Card, Card] | undefined;
     lastAction: Turn | undefined;
     status: PlayerStatus = PlayerStatus.ACTIVE;
-    actions: LegalAction[] = [];
+    // actions: LegalAction[] = [];
 
     get id(): string { return this.address; }
 
@@ -70,15 +67,15 @@ export class Player implements IJSONModel {
         // position: number,
         chips: bigint,
         holeCards: [Card, Card] | undefined,
-        status: PlayerStatus,
-        actions: LegalAction[]
+        status: PlayerStatus
+        // actions: LegalAction[]
     ) {
 
         this.chips = chips;
         this.holeCards = holeCards;
         this.lastAction = lastAction;
         this.status = status;
-        this.actions = actions;
+        // this.actions = actions;
 
         // const holeCards = player.holeCards?.map(p => p.value);
         // const lastActionDTO = (lastAction && lastAction.amount) ? { action: lastAction.action, amount: lastAction.amount.toString() } : undefined;
