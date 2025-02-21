@@ -49,11 +49,11 @@ class TexasHoldemGame implements IPoker {
     private _actions: BaseAction[];
 
     constructor(
-        private _address: string,
-        private _minBuyIn: bigint,
-        private _maxBuyIn: bigint,
-        private _minPlayers: number,
-        private _maxPlayers: number,
+        private readonly _address: string,
+        private readonly _minBuyIn: bigint,
+        private readonly _maxBuyIn: bigint,
+        private readonly _minPlayers: number,
+        private readonly _maxPlayers: number,
         private _smallBlind: bigint,
         private _bigBlind: bigint,
         private _dealer: number = 0,
@@ -107,6 +107,7 @@ class TexasHoldemGame implements IPoker {
 
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         this._dealer = _dealer;
+
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
@@ -565,7 +566,7 @@ class TexasHoldemGame implements IPoker {
     private nextPlayer(): void {}
 
     findNextSeat(): number {
-        const maxSeats = this._maxPlayers; //this._playersMap.size;
+        const maxSeats = this._maxPlayers;
 
         for (let seatNumber = 1; seatNumber <= maxSeats; seatNumber++) {
             // Check if seat is empty (null) or doesn't exist in the map
@@ -714,9 +715,9 @@ class TexasHoldemGame implements IPoker {
             json.bigBlind,
             json.dealer,
             json.nextToAct,
-            json.round,
+            json.currentRound,
             json.communityCards,
-            json.pots[0],
+            json.pots,
             json.players
         );
     }

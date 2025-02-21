@@ -10,29 +10,33 @@ describe.only("Texas Holdem Game", () => {
 
     describe.only("Properties and methods", () => {
         it("should create instance of TexasHoldemGame from JSON", () => {
-
             const json = {
                 address: ethers.ZeroAddress,
-                minPlayers: 2,
-                maxPlayers: 9,
                 minBuyIn: 1000000000000000000000n,
                 maxBuyIn: 3000000000000000000000n,
+                minPlayers: 2,
+                maxPlayers: 9,
                 smallBlind: 10000000000000000000n,
                 bigBlind: 30000000000000000000n,
-                dealer: ethers.ZeroAddress,
-                players: [],
+                dealer: 9,
+                nextToAct: 1,
+                currentRound: "ante",
                 communityCards: [],
-                pot: 0,
-                currentBet: 0,
-                currentRound: TexasHoldemRound.ANTE,
-                currentTurn: ethers.ZeroAddress
+                pot: 0n,
+                players: []
             }
 
             const game = TexasHoldemGame.fromJson(json);
             expect(game).toBeDefined();
 
-            // expect(game.address).toEqual(ethers.ZeroAddress);
-            // expect(game.minPlayers).toEqual(2);
+            // Game properties
+            expect(game.bigBlind).toEqual(30000000000000000000n);
+            expect(game.smallBlind).toEqual(10000000000000000000n);
+            
+            // Player properties
+            expect(game.exists(ethers.ZeroAddress)).toBeFalsy();
+            expect(game.getPlayerCount()).toEqual(0);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
         });
     });
 

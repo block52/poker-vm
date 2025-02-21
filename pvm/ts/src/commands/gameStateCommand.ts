@@ -4,7 +4,6 @@ import TexasHoldemGame from "../engine/texasHoldem";
 import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemGameStateDTO> {
     private readonly gameManagement: GameManagement;

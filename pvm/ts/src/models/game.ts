@@ -1,7 +1,6 @@
 import { ActionDTO, PlayerActionType, PlayerStatus, PlayerDTO, TexasHoldemGameStateDTO, TexasHoldemJoinStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { IJSONModel } from "./interfaces";
 import { Card } from "./deck";
-// import TexasHoldemGame from "../engine/texasHoldem";
 
 export type Range = {
     minAmount: bigint;
@@ -51,7 +50,7 @@ export class Player implements IJSONModel {
     chips: bigint = BigInt(0);
     holeCards: [Card, Card] | undefined;
     lastAction: Turn | undefined;
-    status: PlayerStatus = PlayerStatus.ACTIVE;
+    status: PlayerStatus = PlayerStatus.SITTING_OUT;
     // actions: LegalAction[] = [];
 
     get id(): string { return this.address; }
