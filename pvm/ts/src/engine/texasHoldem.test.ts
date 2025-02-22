@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 
 describe.only("Texas Holdem Game", () => {
     const seed = "unfold law prevent sail where ketchup oxygen now tip cream denial pool";
-    // const wallet = ethers.Wallet.fromMnemonic("unfold law prevent sail where ketchup oxygen now tip cream denial pool");
+    const wallet = ethers.Wallet.fromPhrase(seed);
     
     const json = {
         address: ethers.ZeroAddress,
@@ -48,12 +48,21 @@ describe.only("Texas Holdem Game", () => {
     describe("Ante game states", () => {
         it("should find next seat", () => {
             expect(game.findNextSeat()).toEqual(1);
-            // game.join(new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100n));
+        });
 
-            // // get player count
-            // expect(game.getPlayerCount()).toEqual(1);
-            // expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
-            // expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
+        it("should not have player", () => {
+            expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeFalsy();
+        });
+
+        it("should not allow player to join with insufficient funds", () => {
+            expect(() => game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100000000000000000n)).toThrow("Player has insufficient chips to join.");
+        });
+
+        it("should allow players to join", () => {
+            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
+            expect(game.getPlayerCount()).toEqual(1);
+            expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
+            expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
         });
 
         // it("should find the next player", () => {

@@ -2,7 +2,7 @@ import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/game";
 import { FixedCircularList } from "./linkedList";
 
-describe.only("Linked List Test", () => {
+describe("Linked List Test", () => {
     describe("Fixed List", () => {
         it("should test and find the next free seat", () => {
             const list = new FixedCircularList<Player>(9, null);

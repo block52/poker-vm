@@ -32,7 +32,6 @@ class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
 
     // Players should be a map of player to seat index
-
     private readonly _playersMap: Map<number, Player | null>;
 
     // private readonly _players: Player[];
@@ -61,19 +60,11 @@ class TexasHoldemGame implements IPoker {
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private _communityCards: Card[] = [],
         private _pot: bigint = 0n,
-        playerStates: Map<number, Player>
+        playerStates: Map<number, Player | null>,
     ) {
-        this._playersMap = new Map<number, Player | null>();
+        // this._playersMap = new Map<number, Player | null>();
 
-        for (let i = 0; i < this._maxPlayers; i++) {
-            const playerState = playerStates.get(i);
-            if (playerState) {
-                this._playersMap.set(i, playerState);
-            } else {
-                this._playersMap.set(i, null);
-            }
-        }
-
+        this._playersMap = new Map<number, Player | null>(playerStates);
         // this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
 
         this._currentRound = _currentRound;
@@ -251,12 +242,14 @@ class TexasHoldemGame implements IPoker {
         // if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
 
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
-        this.join(player);
+        const seat = this.findNextSeat();
+        this.joinAtSeat(player, seat);
     }
 
     joinAtSeat(player: Player, seat: number) {
-        if (this._playersMap.get(seat) !== null) {
-            throw new Error("Seat already taken.");
+        if (this.exists(player.address)) {
+            console.log("Player already joined.");
+            throw new Error("Player already joined.");
         }
 
         if (this.getPlayerCount() + 1 >= this._maxPlayers) {

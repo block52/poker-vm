@@ -40,7 +40,6 @@ abstract class BaseAction {
         if (deductAmount) {
             if (player.chips < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
-            // player.chips -= deductAmount;
 
             player.chips -= deductAmount;
         }
