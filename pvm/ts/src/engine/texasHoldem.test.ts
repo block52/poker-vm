@@ -67,45 +67,31 @@ describe.only("Texas Holdem Game", () => {
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
             expect(game.findNextSeat()).toEqual(2);
         });
-
-        // it("should find the next player", () => {
-        //     const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000");
-        //     game.join(new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100n));
-        //     expect(game.findNextSeat()).toEqual(2);
-
-        //     game.join(new Player("0x1F396d3EE16553E94e26f07c41895E97845AbE0a", 200n));
-        //     expect(game.findNextSeat()).toEqual(3);
-
-        //     const player1 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-        //     expect(player1).toBeDefined();
-        //     expect(player1.holeCards).toBeDefined();
-
-        //     const player2 = game.getPlayer("0x1F396d3EE16553E94e26f07c41895E97845AbE0a");
-        //     expect(player2).toBeDefined();
-        //     expect(player2.holeCards).toBeDefined();
-        // });
     });
 
-    // describe("Heads up", () => {
-    //     // const wallet = ethers.Wallet.fromPhrase("panther ahead despair juice crystal inch seat drill sight special vote guide");
+    describe("Heads up", () => {
+        beforeEach(() => {
+            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
+            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
+        });
 
-    //     it("should have the correct properties pre flop", () => {
-    //         const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000");
-    //         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+        it("should have the correct properties pre flop", () => {
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            expect(game.getPlayerCount()).toEqual(2);
+            expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
+            expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
+        });
 
-    //         game.join(new Player("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 250n));
-    //         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+        it.skip("should have the correct properties pre flop", () => {
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-    //         game.join(new Player("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 200n));
-    //         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            // get player state
+            const player1 = game.getPlayer("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
+            expect(player1).toBeDefined();
 
-    //         // get player state
-    //         const player1 = game.getPlayer("0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f");
-    //         expect(player1).toBeDefined();
-
-    //         const player2 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-    //         expect(player2).toBeDefined();
-    //     });
+            const player2 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(player2).toBeDefined();
+        });
 
     //     it("should allow a round to be played heads up", () => {
     //         const game = new TexasHoldemGame(ethers.ZeroAddress, "2,9,10000000000000000000,300000000000000000");
@@ -310,5 +296,5 @@ describe.only("Texas Holdem Game", () => {
     //     game.performAction("2", PlayerActionType.ALL_IN);
 
     //     expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
-    // });
+    });
 });
