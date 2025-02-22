@@ -57,45 +57,22 @@ class TexasHoldemGame implements IPoker {
         private _smallBlind: bigint,
         private _bigBlind: bigint,
         private _dealer: number = 0,
-        private _nextToAct: number = 1,
+        private _nextToAct: number,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private _communityCards: Card[] = [],
         private _pot: bigint = 0n,
-        private playerStates: Map<number, Player>
+        playerStates: Map<number, Player>
     ) {
-        // this._players = new Map<number, Player>();
-        // Create an array of players with max size of 9
+        this._playersMap = new Map<number, Player | null>();
 
-        // const args = schema.split(",");
-
-        // this._minPlayers = Number(args[0]);
-        // this._maxPlayers = Number(args[1]);
-        // this._smallBlind = BigInt(args[2]);
-        // this._bigBlind = BigInt(args[3]);
-
-        // this._players = [];
-        this._playersMap = new Map<number, Player>();
-
-        // // Do this functionally
-        // for (let i = 0; i < playerStates.length; i++) {
-        //     const { seat, chips, cards } = playerStates[i];
-        //     // const player = new Player(this._address, chips, cards);
-        //     this._players[seat] = player;
-        //     this._playersMap.set(seat, player);
-        // }
-
-        // for (let i = 0; i < this._maxPlayers; i++) {
-        //     const playerState = playerStates.find(p => p.seat === i);
-
-        //     if (playerState) {
-        //         const { seat, chips, cards } = playerState;
-        //         // const player = new Player(this._address, chips, cards);
-        //         this._players[seat] = player;
-        //         this._playersMap.set(seat, player);
-        //     } else {
-        //         this._players.push(null);
-        //     }
-        // }
+        for (let i = 0; i < this._maxPlayers; i++) {
+            const playerState = playerStates.get(i);
+            if (playerState) {
+                this._playersMap.set(i, playerState);
+            } else {
+                this._playersMap.set(i, null);
+            }
+        }
 
         // this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
 
@@ -565,7 +542,7 @@ class TexasHoldemGame implements IPoker {
 
     private nextPlayer(): void {}
 
-    findNextSeat(): number {
+    public findNextSeat(): number {
         const maxSeats = this._maxPlayers;
 
         for (let seatNumber = 1; seatNumber <= maxSeats; seatNumber++) {
