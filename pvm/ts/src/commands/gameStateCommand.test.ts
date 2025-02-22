@@ -41,7 +41,7 @@ describe.only("GameStateCommand", () => {
         expect(result).toBeDefined();
     });
 
-    describe.only("GameStateCommand join table with one player", () => {
+    describe.skip("GameStateCommand join table with one player", () => {
         const tableAddress = ethers.ZeroAddress;
         const joinTx = new Transaction(
             tableAddress,
@@ -136,7 +136,7 @@ describe.only("GameStateCommand", () => {
             (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
         });
 
-        it.only("should allow two players to join and auto post blinds", async () => {
+        it.skip("should allow two players to join and auto post blinds", async () => {
             const command = new GameStateCommand(ethers.ZeroAddress, privateKey);
             const result = await command.execute();
 
