@@ -7,7 +7,7 @@ import { ethers } from "ethers";
 describe.only("Texas Holdem Game", () => {
     const seed = "unfold law prevent sail where ketchup oxygen now tip cream denial pool";
     const wallet = ethers.Wallet.fromPhrase(seed);
-    
+
     const json = {
         address: ethers.ZeroAddress,
         minBuyIn: 1000000000000000000000n,
@@ -37,7 +37,7 @@ describe.only("Texas Holdem Game", () => {
             // Game properties
             expect(game.bigBlind).toEqual(30000000000000000000n);
             expect(game.smallBlind).toEqual(10000000000000000000n);
-            
+
             // Player properties
             expect(game.exists(ethers.ZeroAddress)).toBeFalsy();
             expect(game.getPlayerCount()).toEqual(0);
@@ -55,7 +55,9 @@ describe.only("Texas Holdem Game", () => {
         });
 
         it("should not allow player to join with insufficient funds", () => {
-            expect(() => game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100000000000000000n)).toThrow("Player has insufficient chips to join.");
+            expect(() => game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 100000000000000000n)).toThrow(
+                "Player has insufficient chips to post small blind."
+            );
         });
 
         it("should allow players to join", () => {
@@ -63,6 +65,7 @@ describe.only("Texas Holdem Game", () => {
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
+            expect(game.findNextSeat()).toEqual(2);
         });
 
         // it("should find the next player", () => {
