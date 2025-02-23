@@ -42,13 +42,13 @@ export class FixedCircularList<T> {
 
     // Find index of next null element starting from current position
     next(startIndex: number = 1): number | null {
-        if (startIndex < 1 || startIndex >= this.maxSize) {
+        if (startIndex < 1 || startIndex > this.maxSize) {
             throw new Error(`Start index ${startIndex} is out of bounds for list of size ${this.maxSize}`);
         }
 
         // Get to start position
         let current = this.head;
-        for (let i = 0; i < startIndex; i++) {
+        for (let i = 1; i < startIndex; i++) {
             current = current.next!;
         }
 
