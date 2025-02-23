@@ -38,10 +38,10 @@ abstract class BaseAction {
         // the amount only specifies that over the existing maximum which the player may not yet have covered
         const deductAmount = this.getDeductAmount(player, amount);
         if (deductAmount) {
-            if (player.chips.toBigInt() < deductAmount)
+            if (player.chips < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
 
-            player.chips = player.chips.sub(deductAmount);
+            player.chips -= deductAmount;
         }
 
         this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });

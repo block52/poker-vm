@@ -47,7 +47,7 @@ export interface IUpdate {
 export class Player implements IJSONModel {
     // private readonly _dto: PlayerDTO;
 
-    chips: bigint = BigInt(0);
+    chips: bigint = 0n;
     holeCards: [Card, Card] | undefined;
     lastAction: Turn | undefined;
     status: PlayerStatus = PlayerStatus.SITTING_OUT;

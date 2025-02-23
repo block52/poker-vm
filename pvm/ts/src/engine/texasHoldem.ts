@@ -634,7 +634,7 @@ class TexasHoldemGame implements IPoker {
 
         const active = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
-        this._winners = new Map<string, BigUnit>();
+        this._winners = new Map<string, bigint>();
 
         let pot: bigint = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
@@ -662,9 +662,9 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    private updatePlayer(addres: string, amount: BigUnit): void {
-        const player = this.getPlayer(addres);
-        player.chips = player.chips.add(amount);
+    private updatePlayer(address: string, amount: bigint): void {
+        const player = this.getPlayer(address);
+        player.chips += amount;
     }
 
     private getNextRound(): TexasHoldemRound {
@@ -782,17 +782,6 @@ class TexasHoldemGame implements IPoker {
             winners: winners,
             signature: ethers.ZeroHash
         };
-
-        // minBuyIn: this._minBuyIn,
-        // maxBuyIn: this._maxBuyIn,
-        // minPlayers: this._minPlayers,
-        // maxPlayers: this._maxPlayers,
-        // dealer: this._dealer,
-        // nextToAct: this._nextToAct,
-        // round: this._currentRound,
-        // communityCards: this._communityCards,
-        // pots: [this._pot],
-        // players: Array.from(this._playersMap.values())
     }
 }
 
