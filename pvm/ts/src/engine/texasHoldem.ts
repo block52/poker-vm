@@ -12,6 +12,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IPoker, PlayerState } from "./types";
 import { ethers } from "ethers";
+
 // import { FixedCircularList } from "./linkedList";
 
 type Round = {
@@ -50,11 +51,11 @@ class TexasHoldemGame implements IPoker {
     constructor(
         private readonly _address: string,
         private readonly _minBuyIn: bigint,
-        private readonly _maxBuyIn: bigint,
+        private readonly  _maxBuyIn: bigint,
         private readonly _minPlayers: number,
         private readonly _maxPlayers: number,
-        private _smallBlind: bigint,
-        private _bigBlind: bigint,
+        private readonly _smallBlind: bigint,
+        private readonly _bigBlind: bigint,
         private _dealer: number = 0,
         private _nextToAct: number,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
@@ -75,11 +76,11 @@ class TexasHoldemGame implements IPoker {
 
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         this._dealer = _dealer;
-
+        
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) {}
+            constructor(public game: TexasHoldemGame) { }
 
             addAction(action: Turn): void {
                 const ante_round: Round = {
@@ -137,7 +138,8 @@ class TexasHoldemGame implements IPoker {
         // return this._players[this._nextToAct].id ?? ethers.ZeroAddress;
         // return this._players[this._nextToAct]?.address ?? ethers.ZeroAddress;
 
-        return this._playersMap.get(this._nextToAct)?.address ?? ethers.ZeroAddress;
+        const i = this.findNextPlayerToAct();
+        return this._playersMap.get(i)?.address ?? ethers.ZeroAddress;
     }
     get currentRound() {
         return this._currentRound;
@@ -269,14 +271,17 @@ class TexasHoldemGame implements IPoker {
         // Auto join the first player
         if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.ANTE) {
             // post small blind
-            console.log("Posting small blind");
             new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
+
+            // todo: set next to act
         }
 
         // Auto join the second player
         if (this.getPlayerCount() === 2 && this.currentRound === TexasHoldemRound.ANTE) {
             // post big blind
             new BigBlindAction(this, this._update).execute(player, this._bigBlind);
+
+            // todo: set next to act
         }
 
         // Check if we haven't dealt
@@ -288,7 +293,47 @@ class TexasHoldemGame implements IPoker {
     leave(address: string) {
         const player = this.getPlayerSeatNumber(address);
         this._playersMap.set(player, null);
+
+        // todo: do transfer
     }
+
+    getNextPlayerToAct(): Player {
+        return this.getPlayerAtSeat(this._nextToAct);
+    }
+
+    private findNextPlayerToAct(): number {
+        const players = this.getSeatedPlayers();
+
+        let nextToAct = this._nextToAct;
+
+        // loop through the players from the next player to the end of the list
+        for (let i = this._nextToAct; i < players.length; i++) {
+            const player = players[i];
+
+            if (player) {
+                if (this.getPlayerStatus(player?.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player?.address) === PlayerStatus.NOT_ACTED) {
+                    nextToAct = i;
+                    break;
+                }
+            }
+        }
+
+        // if we didn't find a player to act, loop from the start of the list to the next player
+        if (nextToAct === this._nextToAct) {
+            for (let i = 0; i < this._nextToAct; i++) {
+                const player = players[i];
+
+                if (player) {
+                    if (this.getPlayerStatus(player.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player.address) === PlayerStatus.NOT_ACTED) {
+                        nextToAct = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return nextToAct;
+    };
 
     getValidActions(address: string): LegalAction[] {
         const verifyAction = (action: BaseAction) => {
@@ -306,7 +351,7 @@ class TexasHoldemGame implements IPoker {
 
     getLastAction(address: string): Turn | undefined {
         const player = this.getPlayer(address);
-        const status = this.getPlayerStatus(player);
+        const status = this.getPlayerStatus(address);
 
         if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
         if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN };
@@ -381,7 +426,7 @@ class TexasHoldemGame implements IPoker {
         throw new Error("Player not found.");
     }
 
-    getPlayerStatus(player: Player): PlayerStatus {
+    getPlayerStatus(address: string): PlayerStatus {
         let totalActions: number = 0;
 
         if (this._currentRound !== TexasHoldemRound.ANTE) {
@@ -404,7 +449,7 @@ class TexasHoldemGame implements IPoker {
      */
     getActivePlayerCount(): number {
         //return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.s === "active").length;
-        
+
         return 0;
     }
 
@@ -533,7 +578,7 @@ class TexasHoldemGame implements IPoker {
     //     else this._nextToAct = active[0];
     // }
 
-    private nextPlayer(): void {}
+    private nextPlayer(): void { }
 
     public findNextSeat(): number {
         const maxSeats = this._maxPlayers;
@@ -570,7 +615,7 @@ class TexasHoldemGame implements IPoker {
 
     private calculateSidePots(): void {
         const startingPot = this.getStartingPot();
-        const numActive = this.getSeatedPlayers().filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE).length;
+        const numActive = this.getSeatedPlayers().filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE).length;
 
         // TODO: ROLL BACK
 
@@ -587,9 +632,9 @@ class TexasHoldemGame implements IPoker {
             players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
 
-        const active = players.filter(p => this.getPlayerStatus(p) === PlayerStatus.ACTIVE);
+        const active = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
-        this._winners = new Map<string, bigint>();
+        this._winners = new Map<string, BigUnit>();
 
         let pot: bigint = this.getStartingPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
@@ -617,9 +662,9 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    private updatePlayer(addres: string, amount: bigint): void {
+    private updatePlayer(addres: string, amount: BigUnit): void {
         const player = this.getPlayer(addres);
-        player.chips += amount;
+        player.chips = player.chips.add(amount);
     }
 
     private getNextRound(): TexasHoldemRound {

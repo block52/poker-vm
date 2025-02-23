@@ -11,10 +11,10 @@ abstract class BaseAction {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
             throw new Error("Hand has ended.");
 
-        if (this.game.currentPlayerId !== player.id)
+        if (this.game.currentPlayerId !== player.address)
             throw new Error("Must be currently active player.");
 
-        if (this.game.getPlayerStatus(player) !== PlayerStatus.ACTIVE)
+        if (this.game.getPlayerStatus(player.address) !== PlayerStatus.ACTIVE)
             throw new Error(`Only active player can ${this.type}.`);
 
         return undefined;
@@ -38,10 +38,10 @@ abstract class BaseAction {
         // the amount only specifies that over the existing maximum which the player may not yet have covered
         const deductAmount = this.getDeductAmount(player, amount);
         if (deductAmount) {
-            if (player.chips < deductAmount)
+            if (player.chips.toBigInt() < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
 
-            player.chips -= deductAmount;
+            player.chips = player.chips.sub(deductAmount);
         }
 
         this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
