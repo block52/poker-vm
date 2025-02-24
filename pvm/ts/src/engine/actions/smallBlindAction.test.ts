@@ -13,29 +13,31 @@ describe("SmallBlindAction", () => {
         console.log("\n=== POKER HAND SETUP ===");
         console.log("Game State: Starting new hand");
         console.log("Round: ANTE (where blinds are posted)");
+        
         // Setup initial game state
-        const playerStates = [
-            {
-                address: "0x123",
-                seat: 0,
-                chips: 1000n,
-                cards: [] as any
-            }
-        ];
+        const playerStates = new Map<number, Player | null>();
+        const initialPlayer = new Player(
+            "0x123",             // address
+            undefined,           // lastAction
+            1000n,              // chips
+            undefined,          // holeCards
+            PlayerStatus.ACTIVE  // status
+        );
+        playerStates.set(0, initialPlayer);
 
         game = new TexasHoldemGame(
             "0xgame",
-            10n, // minBuyIn
-            30n, // maxBuyIn
-            2, // minPlayers
-            9, // maxPlayers
-            10n, // smallBlind - First forced bet
-            20n, // bigBlind - Second forced bet
-            0, // dealer - Button position
-            1, // nextToAct - Small blind position
-            TexasHoldemRound.ANTE, // Current round: ANTE for posting blinds
-            [], // communityCards - No cards dealt yet
-            0n, // pot - Empty at start of hand
+            10n,          // minBuyIn
+            30n,          // maxBuyIn
+            2,            // minPlayers
+            9,            // maxPlayers
+            10n,          // smallBlind
+            20n,          // bigBlind
+            0,            // dealer
+            1,            // nextToAct
+            TexasHoldemRound.ANTE,
+            [],           // communityCards
+            0n,           // pot
             playerStates
         );
 
@@ -47,7 +49,13 @@ describe("SmallBlindAction", () => {
         };
 
         action = new SmallBlindAction(game, updateMock);
-        player = new Player("0x123", 1000n);
+        player = new Player(
+            "0x123",             // address
+            undefined,           // lastAction
+            1000n,              // chips
+            undefined,          // holeCards
+            PlayerStatus.ACTIVE  // status
+        );
         console.log("Player stack size:", player.chips.toString());
         console.log("Small blind amount:", game.smallBlind.toString());
     });
@@ -129,7 +137,7 @@ describe("SmallBlindAction", () => {
             console.log("Action recorded in game history");
             console.log("Next: Big blind player will act");
             expect(updateMock.addAction).toHaveBeenCalledWith({
-                playerId: "0x123",
+                playerId: player.id,
                 action: PlayerActionType.SMALL_BLIND,
                 amount: game.smallBlind
             });
@@ -140,7 +148,8 @@ describe("SmallBlindAction", () => {
             console.log("Attempting to post incorrect small blind amount");
             console.log(`Required amount: ${game.smallBlind.toString()}`);
             console.log(`Attempted amount: ${(game.smallBlind + 1n).toString()}`);
-            expect(() => action.execute(player, game.smallBlind + 1n)).toThrow("Amount is greater than maximum allowed.");
+            expect(() => action.execute(player, game.smallBlind + 1n))
+                .toThrow("Amount is greater than maximum allowed.");
         });
     });
 });
