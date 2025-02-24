@@ -30,28 +30,31 @@ describe("BaseAction", () => {
 
     beforeEach(() => {
         // Setup initial game state
-        const playerStates = [
-            {
-                address: "0x123",
-                seat: 0,
-                chips: 1000n,
-                cards: [] as any
-            }
-        ];
+        const playerStates = new Map<number, Player | null>();
+        
+        // Create player with correct constructor parameters
+        const initialPlayer = new Player(
+            "0x123",             // address
+            undefined,           // lastAction
+            1000n,              // chips
+            undefined,          // holeCards
+            PlayerStatus.ACTIVE  // status
+        );
+        playerStates.set(0, initialPlayer);
 
         game = new TexasHoldemGame(
             "0xgame",
-            100n, // minBuyIn
-            1000n, // maxBuyIn
-            2, // minPlayers
-            9, // maxPlayers
-            10n, // smallBlind
-            20n, // bigBlind
-            0, // dealer
-            1, // nextToAct
+            100n,         // minBuyIn
+            1000n,        // maxBuyIn
+            2,           // minPlayers
+            9,           // maxPlayers
+            10n,         // smallBlind
+            20n,         // bigBlind
+            0,           // dealer
+            1,           // nextToAct
             TexasHoldemRound.PREFLOP,
-            [], // communityCards
-            0n, // pot
+            [],          // communityCards
+            0n,          // pot
             playerStates
         );
 
@@ -63,7 +66,13 @@ describe("BaseAction", () => {
         };
 
         action = new TestAction(game, updateMock);
-        player = new Player("0x123", 1000n);
+        player = new Player(
+            "0x123",
+            undefined,
+            1000n,
+            undefined,
+            PlayerStatus.ACTIVE
+        );
     });
 
     describe("verify", () => {
@@ -147,7 +156,13 @@ describe("BaseAction", () => {
         describe("chip handling", () => {
             it("should throw error if player has insufficient chips", () => {
                 action.shouldReturnRange = true;
-                const poorPlayer = new Player("0x123", 5n);
+                const poorPlayer = new Player(
+                    "0x123",
+                    undefined,
+                    5n,
+                    undefined,
+                    PlayerStatus.ACTIVE
+                );
 
                 expect(() => action.execute(poorPlayer, 50n)).toThrow("Player has insufficient chips to check.");
             });
@@ -161,7 +176,13 @@ describe("BaseAction", () => {
 
             it("should handle all-in scenario", () => {
                 action.shouldReturnRange = true;
-                const allInPlayer = new Player("0x123", 50n);
+                const allInPlayer = new Player(
+                    "0x123",
+                    undefined,
+                    50n,
+                    undefined,
+                    PlayerStatus.ACTIVE
+                );
                 action.execute(allInPlayer, 50n);
 
                 expect(allInPlayer.chips).toBe(0n);
@@ -234,7 +255,13 @@ describe("BaseAction", () => {
 
         describe("betting sequence validation", () => {
             it("should handle all-in situations correctly", () => {
-                const shortStackPlayer = new Player("0x123", 25n);
+                const shortStackPlayer = new Player(
+                    "0x123",
+                    undefined,
+                    25n,
+                    undefined,
+                    PlayerStatus.ACTIVE
+                );
                 action.shouldReturnRange = true;
                 action.execute(shortStackPlayer, 25n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
@@ -284,7 +311,13 @@ describe("BaseAction", () => {
 
             it("should check if player has sufficient chips", () => {
                 action.shouldReturnRange = true;
-                const poorPlayer = new Player("0x123", 5n);
+                const poorPlayer = new Player(
+                    "0x123",
+                    undefined,
+                    5n,
+                    undefined,
+                    PlayerStatus.ACTIVE
+                );
                 expect(() => action.execute(poorPlayer, 50n)).toThrow("Player has insufficient chips to check");
             });
 
@@ -297,7 +330,13 @@ describe("BaseAction", () => {
 
             it("should convert to ALL_IN when player uses all chips", () => {
                 action.shouldReturnRange = true;
-                const allInPlayer = new Player("0x123", 50n);
+                const allInPlayer = new Player(
+                    "0x123",
+                    undefined,
+                    50n,
+                    undefined,
+                    PlayerStatus.ACTIVE
+                );
                 action.execute(allInPlayer, 50n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
             });
