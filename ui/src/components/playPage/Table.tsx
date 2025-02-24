@@ -27,6 +27,16 @@ import { PROXY_URL } from '../../config/constants';
 import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from 'react-icons/fa';
 
+
+
+//* Here's the typical sequence of a poker hand:
+//* ANTE - Initial forced bets
+//* PREFLOP - Players get their hole cards, betting round
+//* FLOP - First 3 community cards dealt, betting round
+//* TURN - Fourth community card dealt, betting round
+//* RIVER - Final community card dealt, final betting round
+//* SHOWDOWN - Players show their cards to determine winner
+
 //* Define the interface for the position object
 interface PositionArray {
     left?: string;
