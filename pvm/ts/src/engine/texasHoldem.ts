@@ -372,7 +372,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     // Should be get last players action
-    getLastAction(address: string): Turn | undefined {
+    getPlayersLastAction(address: string): Turn | undefined {
         const player = this.getPlayer(address);
         const status = this.getPlayerStatus(address);
 

@@ -95,7 +95,7 @@ describe.only("Texas Holdem Game", () => {
         });
     });
 
-    describe.only("Game Flow", () => {
+    describe("Game Flow", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
@@ -122,10 +122,10 @@ describe.only("Texas Holdem Game", () => {
             
             // Test different actions
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
-            expect(game.getLastAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")?.action).toEqual(PlayerActionType.CHECK);
+            expect(game.getPlayersLastAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")?.action).toEqual(PlayerActionType.CHECK);
             
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, 50000000000000000000n);
-            expect(game.getLastAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")?.action).toEqual(PlayerActionType.BET);
+            expect(game.getPlayersLastAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")?.action).toEqual(PlayerActionType.BET);
         });
 
         it("should validate legal actions", () => {
@@ -146,7 +146,7 @@ describe.only("Texas Holdem Game", () => {
         });
 
         it.only("should complete a full round of play", () => {
-            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
             // Pre-flop
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, TEN_TOKENS);
