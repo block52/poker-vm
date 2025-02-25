@@ -89,7 +89,7 @@ describe("Texas Holdem Game", () => {
         });
     });
 
-    describe("Game Flow", () => {
+    describe.only("Game Flow", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {

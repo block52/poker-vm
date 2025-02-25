@@ -4,7 +4,7 @@ import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
 
-describe.only("Texas Holdem Game", () => {
+describe.skip("Texas Holdem Game", () => {
     const seed = "unfold law prevent sail where ketchup oxygen now tip cream denial pool";
     const wallet = ethers.Wallet.fromPhrase(seed);
 

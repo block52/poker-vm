@@ -313,11 +313,12 @@ class TexasHoldemGame implements IPoker {
 
     private findNextPlayerToAct(): number {
         const players = this.getSeatedPlayers();
+        const playerCount = this.getPlayerCount();
 
         let nextToAct = this._nextToAct;
 
         // loop through the players from the next player to the end of the list
-        for (let i = this._nextToAct; i < players.length; i++) {
+        for (let i = this._nextToAct; i < playerCount; i++) {
             const player = players[i];
 
             if (player) {
