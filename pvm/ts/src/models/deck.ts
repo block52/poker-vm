@@ -62,7 +62,6 @@ export class Deck implements IDeck, IJSONModel {
 
         // Explicitly update hash after shuffling
         this.createHash();
-        console.log('Hash after shuffle:', this.hash);
     }
 
     public getCardMnemonic(suit: SUIT, rank: number): string {

@@ -33,7 +33,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
 
     it("initialises with correct private key", () => {
         expect(singletonShuffleCommand).toBeDefined();
-        console.log("Private key used for ShuffleCommand:", singletonShuffleCommand["privateKey"]);
     });
 
     it("throws error if random data length is insufficient", async () => {
@@ -42,7 +41,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
         (RandomCommand.prototype.execute as jest.Mock).mockResolvedValue({
             data: invalidSeed
         });
-        console.log("Invalid seed provided:", invalidSeed);
         await expect(singletonShuffleCommand.execute()).rejects.toThrow("Insufficient random data for shuffle seed.");
     });
 
@@ -72,8 +70,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
             .toJson()
             .cards.map((c: Card) => c.mnemonic)
             .join(",");
-        console.log("Shuffle 1 deck order:", deckOrder1);
-        console.log("Shuffle 2 deck order:", deckOrder2);
         // With the same fixed seed, the deck order should be identical.
         expect(deckOrder1).toEqual(deckOrder2);
     });
@@ -94,8 +90,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
             .toJson()
             .cards.map((c: Card) => c.mnemonic)
             .join(",");
-        console.log("Original deck order:", originalOrder);
-        console.log("Shuffled deck order:", shuffledOrder);
         expect(shuffledOrder).not.toEqual(originalOrder);
     });
 
@@ -106,8 +100,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
             data: highSeed
         });
         const response = await singletonShuffleCommand.execute();
-        console.log("High-value seed used for shuffle:", highSeed);
-        console.log("Deck after high-value shuffle:", response.data.toJson());
         expect(response.data.toJson().cards.length).toBe(52);
     });
 
@@ -123,7 +115,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
         const shuffleSpy = jest.spyOn(singletonShuffleCommand["deck"], "shuffle");
 
         await singletonShuffleCommand.execute();
-        console.log("Shuffle method call count:", shuffleSpy.mock.calls.length);
         expect(shuffleSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -142,8 +133,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
             data: mockSeed
         });
         const response2 = await singletonShuffleCommand.execute();
-        console.log("Deck length after shuffle 1:", response1.data.toJson().cards.length);
-        console.log("Deck length after shuffle 2:", response2.data.toJson().cards.length);
         expect(response1.data.toJson().cards.length).toBe(52);
         expect(response2.data.toJson().cards.length).toBe(52);
     });
@@ -162,7 +151,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
         const shuffleSpy = jest.spyOn(singletonShuffleCommand["deck"], "shuffle");
         await singletonShuffleCommand.execute();
         expect(shuffleSpy).toHaveBeenCalledWith(expectedSeed);
-        console.log("Expected seed after modulo:", expectedSeed);
     });
 
     it("produces different deck hashes when different seeds are used", async () => {
@@ -185,8 +173,6 @@ describe("ShuffleCommand (Singleton Unit Test)", () => {
         const response2 = await singletonShuffleCommand.execute();
         const hash1 = response1.data.hash;
         const hash2 = response2.data.hash;
-        console.log("Deck hash after shuffle with seed1:", hash1);
-        console.log("Deck hash after shuffle with seed2:", hash2);
         expect(hash1).not.toEqual(hash2);
     });
 });

@@ -106,10 +106,6 @@ describe("Deck", () => {
                 .toJson()
                 .cards.map((c: Card) => c.mnemonic)
                 .join(",");
-            console.log("Original order:", originalOrder);
-            console.log("New order:", newOrder);
-            console.log("Original hash:", originalHash);
-            console.log("New hash:", deck.hash);
 
             expect(newOrder).not.toEqual(originalOrder); // First verify cards actually changed
             expect(deck.hash).not.toEqual(originalHash); // Then verify hash changed

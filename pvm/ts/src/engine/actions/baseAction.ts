@@ -11,10 +11,10 @@ abstract class BaseAction {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
             throw new Error("Hand has ended.");
 
-        if (this.game.currentPlayerId !== player.id)
+        if (this.game.getNextPlayerToAct()?.address !== player.address)
             throw new Error("Must be currently active player.");
 
-        if (this.game.getPlayerStatus(player) !== PlayerStatus.ACTIVE)
+        if (this.game.getPlayerStatus(player.address) !== PlayerStatus.ACTIVE)
             throw new Error(`Only active player can ${this.type}.`);
 
         return undefined;
@@ -40,7 +40,6 @@ abstract class BaseAction {
         if (deductAmount) {
             if (player.chips < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
-            // player.chips -= deductAmount;
 
             player.chips -= deductAmount;
         }
