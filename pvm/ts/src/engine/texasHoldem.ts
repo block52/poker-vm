@@ -221,7 +221,6 @@ class TexasHoldemGame implements IPoker {
 
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
-        // this.init(this._update);
         this._deck = new Deck();
         this._deck.shuffle(seed);
 
