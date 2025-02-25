@@ -1,5 +1,5 @@
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
-import { Player } from "../models/game";
+import { Player } from "../../models/game";
 import { FixedCircularList } from "./linkedList";
 
 describe.only("Fixed List Tests", () => {

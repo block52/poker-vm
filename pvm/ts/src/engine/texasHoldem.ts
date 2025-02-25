@@ -12,8 +12,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IPoker, PlayerState } from "./types";
 import { ethers } from "ethers";
-
-// import { FixedCircularList } from "./linkedList";
+import { Stack } from "../core/datastructures/stack";
 
 type Round = {
     type: TexasHoldemRound;
@@ -49,6 +48,7 @@ class TexasHoldemGame implements IPoker {
     private _actions: BaseAction[];
 
     private _lastActedSeat: number;
+    private _previousActions = new Stack<Turn>();
 
     constructor(
         private readonly _address: string,
@@ -284,7 +284,9 @@ class TexasHoldemGame implements IPoker {
             this._lastActedSeat = seat;
 
             // Add to bets to preflop round
-            this._rounds[1].actions.push({ playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind });
+            const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind };
+            this._rounds[1].actions.push(turn);
+            this._previousActions.push(turn);
         }
 
         // Auto join the second player
@@ -296,7 +298,9 @@ class TexasHoldemGame implements IPoker {
             this._lastActedSeat = seat;
 
             // Add to bets to preflop round
-            this._rounds[1].actions.push({ playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind });
+            const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._bigBlind };
+            this._rounds[1].actions.push(turn);
+            this._previousActions.push(turn);
         }
 
         // Check if we haven't dealt
@@ -316,10 +320,6 @@ class TexasHoldemGame implements IPoker {
         const i = this.findNextPlayerToAct();
         return this.getPlayerAtSeat(i);
     }
-
-    // private setNextPlayerToAct(seat: number): void {
-    //     this._nextToAct = seat;
-    // }
 
     private findNextPlayerToAct(): number {
         const players = this.getSeatedPlayers();
@@ -369,6 +369,10 @@ class TexasHoldemGame implements IPoker {
 
         const player = this.getPlayer(address);
         return this._actions.map(verifyAction).filter(a => a) as LegalAction[];
+    }
+
+    getLastAction(): Turn | undefined {
+        return this._previousActions.peek();
     }
 
     // Should be get last players action
