@@ -48,6 +48,8 @@ class TexasHoldemGame implements IPoker {
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
 
+    private _lastActedSeat: number;
+
     constructor(
         private readonly _address: string,
         private readonly _minBuyIn: bigint,
@@ -75,9 +77,10 @@ class TexasHoldemGame implements IPoker {
 
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         this._dealer = _dealer === 0 ? _maxPlayers : _dealer;
+        
+        // remove this
         this._nextToAct = _nextToAct;
-
-        // this._buttonPosition--; // avoid auto-increment on next game for join round
+        this._lastActedSeat = _nextToAct; // Need to recalculate this
 
         this._update = new (class implements IUpdate {
             constructor(public game: TexasHoldemGame) { }
@@ -134,12 +137,10 @@ class TexasHoldemGame implements IPoker {
         return this._dealer;
     }
     get currentPlayerId() {
-        // return this._players[this._nextToAct].id;
-        // return this._players[this._nextToAct].id ?? ethers.ZeroAddress;
-        // return this._players[this._nextToAct]?.address ?? ethers.ZeroAddress;
+        // const i = this.findNextPlayerToAct();
+        // return this._playersMap.get(i)?.address ?? ethers.ZeroAddress;
 
-        const i = this.findNextPlayerToAct();
-        return this._playersMap.get(i)?.address ?? ethers.ZeroAddress;
+        return this.getPlayerAtSeat(this._lastActedSeat)?.address ?? ethers.ZeroAddress;
     }
     get currentRound() {
         return this._currentRound;
@@ -211,14 +212,12 @@ class TexasHoldemGame implements IPoker {
 
     getPlayerCount() {
         const count = Array.from(this._playersMap.values()).filter((player): player is Player => player !== null).length;
-        console.log("Player count: ", count);
         return count;
     }
 
     deal(seed: number[] = []): void {
         // Check minimum players
-        if (this.getActivePlayerCount() < this._minPlayers)  throw new Error("Not enough active players");
-
+        if (this.getActivePlayerCount() < this._minPlayers) throw new Error("Not enough active players");
 
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
@@ -279,7 +278,8 @@ class TexasHoldemGame implements IPoker {
             // post small blind
             new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
 
-            // todo: set next to act
+            // This is the last player to act
+            this._lastActedSeat = seat;
         }
 
         // Auto join the second player
@@ -287,7 +287,8 @@ class TexasHoldemGame implements IPoker {
             // post big blind
             new BigBlindAction(this, this._update).execute(player, this._bigBlind);
 
-            // todo: set next to act
+            // This is the last player to act
+            this._lastActedSeat = seat;
         }
 
         // Check if we haven't dealt
@@ -304,21 +305,22 @@ class TexasHoldemGame implements IPoker {
     }
 
     getNextPlayerToAct(): Player {
-        return this.getPlayerAtSeat(this._nextToAct);
+        const i = this.findNextPlayerToAct();
+        return this.getPlayerAtSeat(i);
     }
 
-    private setNextPlayerToAct(seat: number): void {
-        this._nextToAct = seat;
-    }
+    // private setNextPlayerToAct(seat: number): void {
+    //     this._nextToAct = seat;
+    // }
 
     private findNextPlayerToAct(): number {
         const players = this.getSeatedPlayers();
         const playerCount = this.getPlayerCount();
 
-        let nextToAct = this._nextToAct;
+        let nextToAct = this._lastActedSeat;
 
         // loop through the players from the next player to the end of the list
-        for (let i = this._nextToAct; i < playerCount; i++) {
+        for (let i = this._lastActedSeat; i < playerCount; i++) {
             const player = players[i];
 
             if (player) {
@@ -330,8 +332,8 @@ class TexasHoldemGame implements IPoker {
         }
 
         // if we didn't find a player to act, loop from the start of the list to the next player
-        if (nextToAct === this._nextToAct) {
-            for (let i = 1; i < this._nextToAct; i++) {
+        if (nextToAct === this._lastActedSeat) {
+            for (let i = 1; i < this._lastActedSeat; i++) {
                 const player = players[i];
 
                 if (player) {
@@ -346,6 +348,7 @@ class TexasHoldemGame implements IPoker {
         return nextToAct;
     };
 
+    // Should be get valid players actions
     getValidActions(address: string): LegalAction[] {
         const verifyAction = (action: BaseAction) => {
             try {
@@ -360,6 +363,7 @@ class TexasHoldemGame implements IPoker {
         return this._actions.map(verifyAction).filter(a => a) as LegalAction[];
     }
 
+    // Should be get last players action
     getLastAction(address: string): Turn | undefined {
         const player = this.getPlayer(address);
         const status = this.getPlayerStatus(address);
@@ -384,32 +388,29 @@ class TexasHoldemGame implements IPoker {
         }
 
         const player = this.getPlayer(address);
-        let nextToAct = 0;
-        
+        const seat = this.getPlayerSeatNumber(address);
+
         // TODO: ROLL BACK TO FUNCTIONALITY
         switch (action) {
             case PlayerActionType.FOLD:
                 const fold = new FoldAction(this, this._update).execute(player, 0n);
-                nextToAct = this.findNextPlayerToAct();
                 break;
             case PlayerActionType.CHECK:
                 const check = new CheckAction(this, this._update).execute(player, 0n);
-                nextToAct = this.findNextPlayerToAct();
                 break;
             case PlayerActionType.BET:
                 if (!amount) throw new Error("Amount must be provided for bet.");
                 const bet = new BetAction(this, this._update).execute(player, amount);
-                nextToAct = this.findNextPlayerToAct();
                 break;
             case PlayerActionType.CALL:
                 const call = new CallAction(this, this._update).execute(player, 0n);
-                nextToAct = this.findNextPlayerToAct();
                 break;
             default:
                 throw new Error("Invalid action.");
         }
 
-        this.setNextPlayerToAct(nextToAct);
+        // set last player who acted
+        this._lastActedSeat = seat;
 
         // return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
@@ -604,7 +605,7 @@ class TexasHoldemGame implements IPoker {
 
     private nextPlayer(): void { }
 
-    public findNextSeat(): number {
+    findNextSeat(): number {
         const maxSeats = this._maxPlayers;
 
         for (let seatNumber = 1; seatNumber <= maxSeats; seatNumber++) {
