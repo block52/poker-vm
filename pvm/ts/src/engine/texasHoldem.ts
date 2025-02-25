@@ -247,9 +247,6 @@ class TexasHoldemGame implements IPoker {
     }
 
     join2(address: string, chips: bigint) {
-        // This wont work because we fill the array with empty players
-        // if (this._players.length >= this._maxPlayers) throw new Error("Game full.");
-
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
         const seat = this.findNextSeat();
         this.joinAtSeat(player, seat);
