@@ -324,7 +324,7 @@ class TexasHoldemGame implements IPoker {
             if (player) {
                 if (this.getPlayerStatus(player?.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player?.address) === PlayerStatus.NOT_ACTED) {
                     nextToAct = i;
-                    break;
+                    return i;
                 }
             }
         }
