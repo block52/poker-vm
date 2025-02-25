@@ -216,6 +216,10 @@ class TexasHoldemGame implements IPoker {
     }
 
     deal(seed: number[] = []): void {
+        // Check minimum players
+        if (this.getActivePlayerCount() < this._minPlayers)  throw new Error("Not enough active players");
+
+
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
         // this.init(this._update);
