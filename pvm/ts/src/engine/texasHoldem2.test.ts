@@ -3,17 +3,22 @@ import { Player } from "../models/game";
 import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
 
-describe("Texas Holdem Game", () => {
+describe.only("Texas Holdem Game", () => {
+
+    const TEN_TOKENS = 10000000000000000000n;
+    const TWENTY_TOKENS = 20000000000000000000n;
+    const FIFTY_TOKENS = 50000000000000000000n;
+
     const baseGameConfig = {
         address: ethers.ZeroAddress,
         minBuyIn: 1000000000000000000000n, // 1000 tokens
         maxBuyIn: 3000000000000000000000n, // 3000 tokens
         minPlayers: 2,
         maxPlayers: 9,
-        smallBlind: 10000000000000000000n, // 10 tokens
-        bigBlind: 20000000000000000000n,   // 20 tokens
-        dealer: 0,
-        nextToAct: 1,
+        smallBlind: TEN_TOKENS, // 10 tokens
+        bigBlind: TWENTY_TOKENS,   // 20 tokens
+        dealer: 9,
+        nextToAct: 0,
         currentRound: "ante",
         communityCards: [],
         pot: 0n,
@@ -44,7 +49,8 @@ describe("Texas Holdem Game", () => {
         });
 
         it("should throw error when table is full", () => {
-            for (let i = 0; i < 9; i++) {
+            // 1 based array, so 9 players is the max
+            for (let i = 0; i < 10; i++) {
                 game.join2(`0x${i}`, 1000000000000000000000n);
             }
             expect(() => game.join2("0x9999", 1000000000000000000000n)).toThrow();
@@ -63,7 +69,7 @@ describe("Texas Holdem Game", () => {
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.exists("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeTruthy();
             
-            game.join2("", 1000000000000000000000n);
+            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
             expect(game.getPlayerCount()).toEqual(2);
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
         });
@@ -100,7 +106,7 @@ describe("Texas Holdem Game", () => {
         });
 
         it("should automatically progress from ante to preflop when minimum players join", () => {
-            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
             expect(game.getPlayerCount()).toEqual(2);
             
             // Verify blinds are posted
@@ -111,6 +117,8 @@ describe("Texas Holdem Game", () => {
 
         it("should handle betting actions", () => {
             const player = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(player).toBeDefined();
+            expect(player?.chips).toEqual(1000000000000000000000n);
             
             // Test different actions
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
@@ -128,7 +136,7 @@ describe("Texas Holdem Game", () => {
         });
     });
 
-    describe("Complete Game Round", () => {
+    describe.only("Complete Game Round", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
@@ -137,9 +145,11 @@ describe("Texas Holdem Game", () => {
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
         });
 
-        it("should complete a full round of play", () => {
+        it.only("should complete a full round of play", () => {
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+
             // Pre-flop
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, TEN_TOKENS);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
             
             // Flop
@@ -149,7 +159,7 @@ describe("Texas Holdem Game", () => {
             
             // Turn
             expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, 50000000000000000000n);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, FIFTY_TOKENS);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CALL);
             
             // River

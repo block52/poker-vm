@@ -282,6 +282,9 @@ class TexasHoldemGame implements IPoker {
 
             // This is the last player to act
             this._lastActedSeat = seat;
+
+            // Add to bets to preflop round
+            this._rounds[1].actions.push({ playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind });
         }
 
         // Auto join the second player
@@ -291,6 +294,9 @@ class TexasHoldemGame implements IPoker {
 
             // This is the last player to act
             this._lastActedSeat = seat;
+
+            // Add to bets to preflop round
+            this._rounds[1].actions.push({ playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind });
         }
 
         // Check if we haven't dealt
@@ -380,7 +386,6 @@ class TexasHoldemGame implements IPoker {
     performAction(address: string, action: PlayerActionType, amount?: bigint) {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
-
                 if (this.getActivePlayerCount() < this._minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
@@ -391,28 +396,23 @@ class TexasHoldemGame implements IPoker {
 
         const player = this.getPlayer(address);
         const seat = this.getPlayerSeatNumber(address);
+        this._lastActedSeat = seat;
 
         // TODO: ROLL BACK TO FUNCTIONALITY
         switch (action) {
             case PlayerActionType.FOLD:
-                const fold = new FoldAction(this, this._update).execute(player, 0n);
-                break;
+                return new FoldAction(this, this._update).execute(player, 0n);
             case PlayerActionType.CHECK:
-                const check = new CheckAction(this, this._update).execute(player, 0n);
-                break;
+                return new CheckAction(this, this._update).execute(player, 0n);
             case PlayerActionType.BET:
                 if (!amount) throw new Error("Amount must be provided for bet.");
-                const bet = new BetAction(this, this._update).execute(player, amount);
-                break;
+                return new BetAction(this, this._update).execute(player, amount);
             case PlayerActionType.CALL:
-                const call = new CallAction(this, this._update).execute(player, 0n);
-                break;
+                return new CallAction(this, this._update).execute(player, 0n);
             default:
+                // do we need to roll back last acted seat?
                 throw new Error("Invalid action.");
         }
-
-        // set last player who acted
-        this._lastActedSeat = seat;
 
         // return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
