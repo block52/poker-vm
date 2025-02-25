@@ -51,7 +51,7 @@ class TexasHoldemGame implements IPoker {
     constructor(
         private readonly _address: string,
         private readonly _minBuyIn: bigint,
-        private readonly  _maxBuyIn: bigint,
+        private readonly _maxBuyIn: bigint,
         private readonly _minPlayers: number,
         private readonly _maxPlayers: number,
         private readonly _smallBlind: bigint,
@@ -76,7 +76,7 @@ class TexasHoldemGame implements IPoker {
 
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
         this._dealer = _dealer;
-        
+
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
         this._update = new (class implements IUpdate {
@@ -210,7 +210,9 @@ class TexasHoldemGame implements IPoker {
     }
 
     getPlayerCount() {
-        return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null).length;
+        const count = Array.from(this._playersMap.values()).filter((player): player is Player => player !== null).length;
+        console.log("Player count: ", count);
+        return count;
     }
 
     deal(seed: number[] = []): void {
@@ -450,7 +452,9 @@ class TexasHoldemGame implements IPoker {
     getActivePlayerCount(): number {
         //return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.s === "active").length;
 
-        return 0;
+        const players = this.getSeatedPlayers();
+        const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+        return activePlayers.length;
     }
 
     getBets(round: TexasHoldemRound = this._currentRound): Map<string, bigint> {
