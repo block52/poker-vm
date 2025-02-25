@@ -231,6 +231,8 @@ class TexasHoldemGame implements IPoker {
             const cards = this._deck.deal(2) as [Card, Card];
             // p.holeCards = cards;
         });
+
+        this.setNextRound();
     }
 
     join(player: Player) {
