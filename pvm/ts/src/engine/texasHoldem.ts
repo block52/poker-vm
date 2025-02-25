@@ -56,7 +56,7 @@ class TexasHoldemGame implements IPoker {
         private readonly _maxPlayers: number,
         private readonly _smallBlind: bigint,
         private readonly _bigBlind: bigint,
-        private _dealer: number = 0,
+        private _dealer: number,
         private _nextToAct: number,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private _communityCards: Card[] = [],
@@ -69,13 +69,13 @@ class TexasHoldemGame implements IPoker {
         // this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
 
         this._currentRound = _currentRound;
-        this._nextToAct = _nextToAct;
 
         this._smallBlindPosition = _dealer + 1;
         this._bigBlindPosition = _dealer + 2;
 
         this._rounds = [{ type: TexasHoldemRound.ANTE, actions: [] }];
-        this._dealer = _dealer;
+        this._dealer = _dealer === 0 ? _maxPlayers : _dealer;
+        this._nextToAct = _nextToAct;
 
         // this._buttonPosition--; // avoid auto-increment on next game for join round
 
@@ -303,6 +303,10 @@ class TexasHoldemGame implements IPoker {
         return this.getPlayerAtSeat(this._nextToAct);
     }
 
+    private setNextPlayerToAct(seat: number): void {
+        this._nextToAct = seat;
+    }
+
     private findNextPlayerToAct(): number {
         const players = this.getSeatedPlayers();
 
@@ -322,7 +326,7 @@ class TexasHoldemGame implements IPoker {
 
         // if we didn't find a player to act, loop from the start of the list to the next player
         if (nextToAct === this._nextToAct) {
-            for (let i = 0; i < this._nextToAct; i++) {
+            for (let i = 1; i < this._nextToAct; i++) {
                 const player = players[i];
 
                 if (player) {
@@ -375,21 +379,32 @@ class TexasHoldemGame implements IPoker {
         }
 
         const player = this.getPlayer(address);
-
+        let nextToAct = 0;
+        
+        // TODO: ROLL BACK TO FUNCTIONALITY
         switch (action) {
             case PlayerActionType.FOLD:
-                return new FoldAction(this, this._update).execute(player, 0n);
+                const fold = new FoldAction(this, this._update).execute(player, 0n);
+                nextToAct = this.findNextPlayerToAct();
+                break;
             case PlayerActionType.CHECK:
-                return new CheckAction(this, this._update).execute(player, 0n);
+                const check = new CheckAction(this, this._update).execute(player, 0n);
+                nextToAct = this.findNextPlayerToAct();
+                break;
             case PlayerActionType.BET:
                 if (!amount) throw new Error("Amount must be provided for bet.");
-                return new BetAction(this, this._update).execute(player, amount);
+                const bet = new BetAction(this, this._update).execute(player, amount);
+                nextToAct = this.findNextPlayerToAct();
+                break;
             case PlayerActionType.CALL:
-                const call: bigint = 0n;
-                return new CallAction(this, this._update).execute(player, call);
+                const call = new CallAction(this, this._update).execute(player, 0n);
+                nextToAct = this.findNextPlayerToAct();
+                break;
             default:
                 throw new Error("Invalid action.");
         }
+
+        this.setNextPlayerToAct(nextToAct);
 
         // return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
