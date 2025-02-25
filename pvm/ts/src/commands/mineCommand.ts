@@ -6,7 +6,6 @@ import { getTransactionInstance, TransactionManagement } from "../state/transact
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import contractSchemas from "../schema/contractSchemas";
-import { IContractSchemaDocument } from "../models/interfaces";
 import { GameStateCommand } from "./gameStateCommand";
 import GameState from "../schema/gameState";
 
@@ -64,14 +63,11 @@ export class MineCommand implements ISignedCommand<Block | null> {
         // await Promise.all(commands.map(c => c.execute()));
         for (let i = 0; i < commands.length; i++) {
             const result = await commands[i].execute();
-            // const gameState = new GameState({
-            //     address: result.data.address,
-            //     state: result.data
-            // });
-
-            const json = result.data.toJson();
-            
-            await this.gameStateManagement.saveFromJSON(json);
+            const gameState = new GameState({
+                address: result.data.address,
+                state: result.data
+            });
+            // this.gameStateManagement.save(gameState);
         }
     }
 

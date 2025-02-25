@@ -23,7 +23,6 @@ describe("RandomCommand Unit Tests", () => {
 
         expect(result.data?.length).toBe(size);
         expect(result.data).toBeInstanceOf(Buffer);
-        console.log("Generated buffer:", result.data);
     });
 
     it("calls signResult with correct arguments", async () => {

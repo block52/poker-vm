@@ -1,15 +1,14 @@
 import { StateManager } from "./stateManager";
 import GameState from "../schema/gameState";
-import { PlayerState } from "../models/game";
 import { ethers } from "ethers";
 import { Card } from "../models/deck";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IJSONModel } from "../models/interfaces";
 import contractSchemas from "../schema/contractSchemas";
+import { PlayerState } from "../engine/types";
 
 export class GameManagement extends StateManager {
     // private static _game: Map<string, TexasHoldemGame> = new Map<string, TexasHoldemGame>();
-
     private readonly mempool: Mempool;
 
     constructor() {
@@ -90,7 +89,7 @@ export class GameManagement extends StateManager {
         });
 
         if (existingGameState) {
-            existingGameState.state = game.state;
+            existingGameState.state = game.state; // Arbitrary JSON object
             await existingGameState.save();
         } else {
             await game.save();
@@ -115,8 +114,6 @@ export class GameManagement extends StateManager {
         };
     };
 }
-
-// export default GameManagement;
 
 let instance: GameManagement;
 export const getGameManagementInstance = (): GameManagement => {

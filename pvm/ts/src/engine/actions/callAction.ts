@@ -22,8 +22,12 @@ class CallAction extends BaseAction {
     }
 
     protected getDeductAmount(player: Player, _amount?: bigint): bigint {
-        // return this.game.getMaxStake() - this.game.getPlayerStake(player);
-        return 0n;
+        const lastAction = this.game.getLastAction();
+
+        // default to big blind if no previous action.
+        // Note: this could fail in some edge cases where the big blind is
+        // not the minimum bet.
+        return lastAction?.amount || this.game.bigBlind;
     }
 }
 

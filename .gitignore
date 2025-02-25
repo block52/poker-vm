@@ -418,3 +418,4 @@ ui/node_modules/*
 ui/dist/*
 .env
 bot/.env
+.vscode/launch.json
