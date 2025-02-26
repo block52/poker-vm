@@ -1,6 +1,7 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { IUpdate, Player, Range } from "../../models/game";
+import { Player } from "../../models/game";
 import TexasHoldemGame from "../texasHoldem";
+import { IUpdate, Range } from "../types";
 
 abstract class BaseAction {
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }

@@ -1,5 +1,5 @@
 import { ActionDTO, LegalActionDTO, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemGameStateDTO, TexasHoldemRound, WinnerDTO } from "@bitcoinbrisbane/block52";
-import { IUpdate, Turn, Player, LegalAction } from "../models/game";
+import { Player } from "../models/game";
 import { Card, Deck } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -10,7 +10,7 @@ import FoldAction from "./actions/foldAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IPoker, PlayerState } from "./types";
+import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
 import { ethers } from "ethers";
 import { Stack } from "../core/datastructures/stack";
 
@@ -107,18 +107,6 @@ class TexasHoldemGame implements IPoker {
     }
 
     get players() {
-        // return [...this._players];
-
-        // return player or nullable player in an array
-        // return this._players.map(p => p.id === ethers.ZeroAddress ? null : p);
-
-        // for (let i = 0; i < this._players.length; i++) {
-        //     const player = this._playersMap.get(i);
-        //     players.push(player);
-        // }
-
-        // return players;
-
         return this._playersMap;
     }
     get bigBlind() {
@@ -137,9 +125,6 @@ class TexasHoldemGame implements IPoker {
         return this._dealer;
     }
     get currentPlayerId() {
-        // const i = this.findNextPlayerToAct();
-        // return this._playersMap.get(i)?.address ?? ethers.ZeroAddress;
-
         return this.getPlayerAtSeat(this._lastActedSeat)?.address ?? ethers.ZeroAddress;
     }
     get currentRound() {

@@ -1,7 +1,8 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { IUpdate, Player, Range, Turn } from "../../models/game";
+import { Player } from "../../models/game";
 import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
+import { IUpdate, Range, Turn } from "../types";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {

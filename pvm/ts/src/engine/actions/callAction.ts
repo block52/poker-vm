@@ -1,6 +1,7 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { Player, Range } from "../../models/game";
+import { Player} from "../../models/game";
 import BaseAction from "./baseAction";
+import { Range } from "../types";
 
 class CallAction extends BaseAction {
     get type(): PlayerActionType { return PlayerActionType.CALL }
