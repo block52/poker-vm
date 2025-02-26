@@ -8,8 +8,13 @@ class CallAction extends BaseAction implements IAction {
 
     verify(player: Player): Range | undefined {
         super.verify(player);
-        if (this.game.getMaxStake() === 0n)
-            throw new Error("A bet must be made before it can be called.")
+        const lastAction = this.game.getLastAction();
+
+        if (!lastAction)
+            throw new Error("No previous action to call.");
+
+        if (lastAction?.amount === 0n || !lastAction?.amount)
+            throw new Error("Should check instead.");
 
         const deductAmount: bigint = this.getDeductAmount(player);
 
@@ -19,7 +24,7 @@ class CallAction extends BaseAction implements IAction {
         if (player.chips < deductAmount)
             throw new Error("Player has insufficient chips to call.");
 
-        return undefined;
+        return { minAmount: lastAction.amount, maxAmount: lastAction.amount };
     }
 
     protected getDeductAmount(player: Player, _amount?: bigint): bigint {

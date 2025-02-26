@@ -379,6 +379,10 @@ class TexasHoldemGame implements IPoker {
             // throw new Error(`Cannot perform ${action} until game started.`);
         }
 
+        if (!this.exists(address)) {
+            throw new Error("Player not found.");
+        }
+
         const player = this.getPlayer(address);
         const seat = this.getPlayerSeatNumber(address);
         this._lastActedSeat = seat;
