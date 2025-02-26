@@ -178,16 +178,19 @@ describe.only("Texas Holdem Game", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
+            expect(game.hasRoundEnded()).toBeTruthy();
             
             // Turn
             expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, FIFTY_TOKENS);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CALL);
+            expect(game.hasRoundEnded()).toBeTruthy();
             
             // River
             expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.FOLD);
+            expect(game.hasRoundEnded()).toBeTruthy();
             
             // Verify game state after completion
             expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);

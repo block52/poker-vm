@@ -447,13 +447,6 @@ class TexasHoldemGame implements IPoker {
         return bets.get(player.address) ?? 0n;
     }
 
-    // // I dont understand this?
-    // getMaxStake(bets = this.getBets()): bigint {
-    //     // return bets.size ? Math.max(...bets.values()) : 0;
-    //     const max: bigint = 10000000000000000000n;
-    //     return max;
-    // }
-
     getPot(bets = this.getBets()): bigint {
         // todo: check this
         let pot: bigint = 0n;
