@@ -88,7 +88,7 @@ class TexasHoldemGame implements IPoker {
         this._lastActedSeat = _nextToAct; // Need to recalculate this
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) {}
+            constructor(public game: TexasHoldemGame) { }
 
             addAction(action: Turn): void {
                 const ante_round: Round = {
@@ -585,15 +585,21 @@ class TexasHoldemGame implements IPoker {
         const players = this.getSeatedPlayers();
 
         for (const player of players) {
-            const last = player.lastAction;
-            if (!last) return false;
-            if (
-                last.action !== PlayerActionType.FOLD &&
-                last.action !== PlayerActionType.ALL_IN &&
-                last.action !== PlayerActionType.CALL &&
-                last.action !== PlayerActionType.CHECK
-            )
-                return false;
+
+            // this needs to be last action for that round
+            const actions: Turn[] = this.getPlayerActions(player, this._currentRound);
+            if (actions.length === 0) return false;
+
+            for (let i = 0; i < actions.length - 1; i++) {
+                const last = actions[i];
+                if (
+                    last.action !== PlayerActionType.FOLD &&
+                    last.action !== PlayerActionType.ALL_IN &&
+                    last.action !== PlayerActionType.CALL &&
+                    last.action !== PlayerActionType.CHECK
+                )
+                    return false;
+            }
         }
 
         return true;
