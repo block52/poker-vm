@@ -458,8 +458,6 @@ class TexasHoldemGame implements IPoker {
      * @returns The number of players with status "active"
      */
     getActivePlayerCount(): number {
-        //return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.s === "active").length;
-
         const players = this.getSeatedPlayers();
         const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
         return activePlayers.length;
@@ -469,19 +467,12 @@ class TexasHoldemGame implements IPoker {
         // if (this._currentRound === TexasHoldemRound.ANTE) throw new Error("Cannot retrieve stakes until game started.");
 
         const i = this.getRoundAsNumber(round);
-        // const _round = this._rounds.filter(r => r.type === round);
-
         const bets = new Map<string, bigint>();
 
         this._rounds[i].actions.forEach(m => {
             const amount = m.amount ?? 0n;
             bets.set(m.playerId, amount);
         });
-
-        // return this._rounds[i].actions.reduce((acc, v) => {
-        //     acc.set(v.playerId, (acc.get(v.playerId) ?? 0n) + (v.amount ?? 0n));
-        //     return acc;
-        // }, new Map<string, BigInt>());
 
         return bets;
     }
@@ -499,11 +490,9 @@ class TexasHoldemGame implements IPoker {
 
     getPot(bets = this.getBets()): bigint {
         // todo: check this
-
         let pot: bigint = 0n;
 
         for (let [key, value] of bets) {
-            // console.log(key, value);
             pot += value;
         }
 
@@ -547,7 +536,6 @@ class TexasHoldemGame implements IPoker {
 
     private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
         const i = this.getRoundAsNumber(round);
-
         if (this._rounds[i] === undefined) return [];
 
         return this._rounds[i].actions.filter(m => m.playerId === player.address);

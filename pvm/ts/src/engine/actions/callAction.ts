@@ -1,9 +1,9 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { Player} from "../../models/game";
+import { Player } from "../../models/game";
 import BaseAction from "./baseAction";
-import { Range } from "../types";
+import { IAction, Range } from "../types";
 
-class CallAction extends BaseAction {
+class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CALL }
 
     verify(player: Player): Range | undefined {
@@ -15,10 +15,10 @@ class CallAction extends BaseAction {
 
         if (deductAmount === 0n)
             throw new Error("Player has already met maximum so can check instead.");
-        
+
         if (player.chips < deductAmount)
             throw new Error("Player has insufficient chips to call.");
-        
+
         return undefined;
     }
 

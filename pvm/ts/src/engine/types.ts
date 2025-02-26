@@ -1,12 +1,17 @@
-// !! TODO: Cleanup
-
 import { ActionDTO, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/game";
 import { Card } from "../models/deck";
 
+export interface IAction {
+    type: PlayerActionType;
+    verify(player: Player): Range | undefined;
+}
+
 export interface IPoker {
     deal(): void;
     join(player: Player): void;
+    joinAtSeat(player: Player, seat: number): void;
+    leave(address: string): void;
 }
 
 export type PlayerState = {
