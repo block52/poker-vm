@@ -26,7 +26,12 @@ class CallAction extends BaseAction implements IAction {
         if (player.chips < deductAmount)
             deductAmount = player.chips;
 
-        return { minAmount: lastAction.amount, maxAmount: lastAction.amount };
+        return { minAmount: deductAmount, maxAmount: deductAmount };
+    }
+
+    execute(player: Player): void {
+        const range = this.verify(player);
+        super.execute(player, range?.minAmount);
     }
 
     protected getDeductAmount(player: Player, _amount: bigint): bigint {

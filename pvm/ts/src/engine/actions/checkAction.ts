@@ -6,12 +6,9 @@ import { Range } from "../types";
 class CheckAction extends BaseAction {
     get type(): PlayerActionType { return PlayerActionType.CHECK }
 
-    verify(player: Player): Range {
+    verify(player: Player): Range | undefined {
         super.verify(player);
-        // if (this.game.getPlayerStake(player) < this.game.getMaxStake())
-        //     throw new Error("Player has insufficient stack to check.")
-        
-        return { minAmount: 0n, maxAmount: 0n };
+        return undefined
     }
 }
 
