@@ -12,7 +12,8 @@ abstract class BaseAction {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
             throw new Error("Hand has ended.");
 
-        if (this.game.getNextPlayerToAct()?.address !== player.address)
+        const nextPlayerAddress = this.game.getNextPlayerToAct()?.address;
+        if (nextPlayerAddress !== player.address)
             throw new Error("Must be currently active player.");
 
         if (this.game.getPlayerStatus(player.address) !== PlayerStatus.ACTIVE)

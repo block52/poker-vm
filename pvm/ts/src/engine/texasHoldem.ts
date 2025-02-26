@@ -13,6 +13,7 @@ import PokerSolver from "pokersolver";
 import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
 import { ethers } from "ethers";
 import { Stack } from "../core/datastructures/stack";
+import { FixedCircularList } from "../core/datastructures/linkedList";
 
 type Round = {
     type: TexasHoldemRound;
@@ -33,10 +34,7 @@ class TexasHoldemGame implements IPoker {
 
     // Players should be a map of player to seat index
     private readonly _playersMap: Map<number, Player | null>;
-
-    // private readonly _players: Player[];
-    // private readonly _players: (Player | null)[];
-    // private readonly _seats: FixedCircularList<Player>;
+    private readonly _players: FixedCircularList<Player>;
 
     private _rounds!: Round[];
     private _deck!: Deck;
@@ -65,10 +63,8 @@ class TexasHoldemGame implements IPoker {
         private _pot: bigint = 0n,
         playerStates: Map<number, Player | null>,
     ) {
-        // this._playersMap = new Map<number, Player | null>();
-
         this._playersMap = new Map<number, Player | null>(playerStates);
-        // this._seats = new FixedCircularList<Player>(this._maxPlayers, null);
+        this._players = new FixedCircularList<Player>(this._maxPlayers, null);
 
         this._currentRound = _currentRound;
 
@@ -125,7 +121,10 @@ class TexasHoldemGame implements IPoker {
         return this._dealer;
     }
     get currentPlayerId() {
-        return this.getPlayerAtSeat(this._lastActedSeat)?.address ?? ethers.ZeroAddress;
+        const player = this.getPlayerAtSeat(this._lastActedSeat);
+
+        return player?.address ?? ethers.ZeroAddress;
+        // return this.getPlayerAtSeat(this._lastActedSeat)?.address ?? ethers.ZeroAddress;
     }
     get currentRound() {
         return this._currentRound;
@@ -136,55 +135,7 @@ class TexasHoldemGame implements IPoker {
     get winners() {
         return this._winners;
     }
-    // get state() {
-    //     // const players: PlayerState[] = this._players.map((p, i) => {
-    //     //     const player = new Player(p.id, p.chips, p.holeCards);
-    //     //     return player.getPlayerState(this, i);
-    //     // });
-
-    //     const playerStates: PlayerState[] | null = [];
-    //     const _players = this.players;
-
-    //     // // TODO: DO WITH A MAP
-    //     // for (let i = 0; i < this._players.length; i++) {
-    //     //     const player = _players[i];
-    //     //     if (player) {
-    //     //         // playerStates.push(player.getPlayerState(this, i));
-    //     //     }
-    //     // }
-
-    //     return new TexasHoldemGameState(
-    //         this._address,
-    //         this._smallBlind,
-    //         this._bigBlind,
-    //         this._smallBlindPosition,
-    //         this._bigBlindPosition,
-    //         this._dealer,
-    //         playerStates,
-    //         this._communityCards,
-    //         this.pot,
-    //         0n,
-    //         this._currentRound,
-    //         this._winners
-    //     );
-    // }
-
-    // return this.currentRound === TexasHoldemRound.ANTE
-    //     ? new TexasHoldemJoinState(this._players.map(p => p.id))
-    //     : new TexasHoldemGameState(
-    //           this._address,
-    //           this._smallBlind,
-    //           this._bigBlind,
-    //           this._dealer,
-    //           players,
-    //           this._communityCards,
-    //           this.pot,
-    //           this.getMaxStake(),
-    //           this._currentRound,
-    //           this._winners
-    //       );
-    //}
-
+    
     exists(playerId: string): boolean {
         for (const [seat, player] of this._playersMap.entries()) {
             if (player?.address === playerId) {
@@ -268,6 +219,9 @@ class TexasHoldemGame implements IPoker {
             const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind };
             this._rounds[1].actions.push(turn);
             this._previousActions.push(turn);
+
+            player.addAction(turn);
+            player.updateStatus(PlayerStatus.ACTIVE);
         }
 
         // Auto join the second player
@@ -282,6 +236,9 @@ class TexasHoldemGame implements IPoker {
             const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._bigBlind };
             this._rounds[1].actions.push(turn);
             this._previousActions.push(turn);
+
+            player.addAction(turn);
+            player.updateStatus(PlayerStatus.ACTIVE);
         }
 
         // Check if we haven't dealt
@@ -298,43 +255,39 @@ class TexasHoldemGame implements IPoker {
     }
 
     getNextPlayerToAct(): Player {
-        const i = this.findNextPlayerToAct();
-        return this.getPlayerAtSeat(i);
+        const player = this.findNextPlayerToAct();
+
+        if (!player) {
+            throw new Error("Player not found.");
+        }
+
+        return player;
     }
 
-    private findNextPlayerToAct(): number {
-        const players = this.getSeatedPlayers();
-        const playerCount = this.getPlayerCount();
+    private findNextPlayerToAct(): Player | undefined {
+        let next = this._lastActedSeat + 1;
 
-        let nextToAct = this._lastActedSeat;
+        if (next === this._maxPlayers) {
+            next = 1;
+        }
 
-        // loop through the players from the next player to the end of the list
-        for (let i = this._lastActedSeat; i < playerCount; i++) {
-            const player = players[i];
+        for (let i = next; i <= this._maxPlayers; i++) {
+            const player = this.getPlayerAtSeat(i);
 
-            if (player) {
-                if (this.getPlayerStatus(player?.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player?.address) === PlayerStatus.NOT_ACTED) {
-                    nextToAct = i;
-                    return i;
-                }
+            if (player && (this.getPlayerStatus(player.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player.address) === PlayerStatus.NOT_ACTED)) {
+                return player;
             }
         }
 
-        // if we didn't find a player to act, loop from the start of the list to the next player
-        if (nextToAct === this._lastActedSeat) {
-            for (let i = 1; i < this._lastActedSeat; i++) {
-                const player = players[i];
+        for (let i = 1; i < next; i++) {
+            const player = this.getPlayerAtSeat(i);
 
-                if (player) {
-                    if (this.getPlayerStatus(player.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player.address) === PlayerStatus.NOT_ACTED) {
-                        nextToAct = i;
-                        break;
-                    }
-                }
+            if (player && (this.getPlayerStatus(player.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player.address) === PlayerStatus.NOT_ACTED)) {
+                return player;
             }
         }
 
-        return nextToAct;
+        return undefined;
     };
 
     // Should be get valid players actions
@@ -384,25 +337,32 @@ class TexasHoldemGame implements IPoker {
         }
 
         const player = this.getPlayer(address);
+        player.addAction({ playerId: address, action, amount });
         const seat = this.getPlayerSeatNumber(address);
-        this._lastActedSeat = seat;
 
         // TODO: ROLL BACK TO FUNCTIONALITY
         switch (action) {
+            // todo: bb, sb, ante
             case PlayerActionType.FOLD:
-                return new FoldAction(this, this._update).execute(player);
+                player.updateStatus(PlayerStatus.FOLDED);
+                const fold = new FoldAction(this, this._update).execute(player);
+                break
             case PlayerActionType.CHECK:
-                return new CheckAction(this, this._update).execute(player);
+                const check = new CheckAction(this, this._update).execute(player);
+                break;
             case PlayerActionType.BET:
                 if (!amount) throw new Error("Amount must be provided for bet.");
-                return new BetAction(this, this._update).execute(player, amount);
+                const bet = new BetAction(this, this._update).execute(player, amount);
+                break;
             case PlayerActionType.CALL:
-                return new CallAction(this, this._update).execute(player);
+                const call = new CallAction(this, this._update).execute(player);
+                break;
             default:
                 // do we need to roll back last acted seat?
                 throw new Error("Invalid action.");
         }
 
+        this._lastActedSeat = seat;
         // return this._actions.find(a => a.type == action)?.execute(this.getPlayer(playerId), amount);
     }
 
@@ -420,9 +380,13 @@ class TexasHoldemGame implements IPoker {
         throw new Error("Player not found.");
     }
 
-    getPlayerAtSeat(seat: number): Player {
+    getPlayerAtSeat(seat: number): Player | undefined {
         const player = this._playersMap.get(seat);
-        if (!player) throw new Error("Player not found.");
+
+        if (!player) {
+            return undefined;
+        }
+        
         return player;
     }
 
@@ -441,20 +405,8 @@ class TexasHoldemGame implements IPoker {
     }
 
     getPlayerStatus(address: string): PlayerStatus {
-        let totalActions: number = 0;
-
-        if (this._currentRound !== TexasHoldemRound.ANTE) {
-            // for (const stage = TexasHoldemRound.ANTE; stage <= this._currentRound; this.setNextRound()) {
-            //     const actions = this.getPlayerActions(player, stage);
-            //     totalActions += actions.length;
-            //     if (actions.some(m => m.action === PlayerActionType.FOLD)) return PlayerStatus.FOLDED;
-            //     if (actions.some(m => m.action === PlayerActionType.ALL_IN)) return PlayerStatus.ALL_IN;
-            // }
-        }
-
-        // return !totalActions && !player.chips ? PlayerStatus.SITTING_OUT : PlayerStatus.ACTIVE;
-
-        return PlayerStatus.ACTIVE;
+        const player = this.getPlayer(address);
+        return player.status;
     }
 
     /**
@@ -468,8 +420,6 @@ class TexasHoldemGame implements IPoker {
     }
 
     getBets(round: TexasHoldemRound = this._currentRound): Map<string, bigint> {
-        // if (this._currentRound === TexasHoldemRound.ANTE) throw new Error("Cannot retrieve stakes until game started.");
-
         const i = this.getRoundAsNumber(round);
         const bets = new Map<string, bigint>();
 
