@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/game";
 import { Card } from "../models/deck";
 
@@ -12,6 +12,10 @@ export interface IPoker {
     join(player: Player): void;
     joinAtSeat(player: Player, seat: number): void;
     leave(address: string): void;
+    getLastAction(): Turn | undefined;
+    performAction(address: string, action: PlayerActionType, amount?: bigint): void;
+    getBets(round: TexasHoldemRound): Map<string, bigint>;
+    hasRoundEnded(): boolean;
 }
 
 export type PlayerState = {

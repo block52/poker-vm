@@ -330,7 +330,7 @@ class TexasHoldemGame implements IPoker {
         return undefined;
     }
 
-    performAction(address: string, action: PlayerActionType, amount?: bigint) {
+    performAction(address: string, action: PlayerActionType, amount?: bigint): void {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
                 if (this.getActivePlayerCount() < this._minPlayers) {
