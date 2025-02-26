@@ -172,6 +172,7 @@ describe.only("Texas Holdem Game", () => {
             // Pre-flop
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, TEN_TOKENS);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
+            expect(game.hasRoundEnded()).toBeTruthy();
             
             // Flop
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
