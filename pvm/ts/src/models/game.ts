@@ -8,7 +8,7 @@ export class Player implements IJSONModel {
     chips: bigint = 0n;
     holeCards: [Card, Card] | undefined;
     lastAction: Turn | undefined;
-    status: PlayerStatus = PlayerStatus.SITTING_OUT;
+    status: PlayerStatus = PlayerStatus.ACTIVE;
     // actions: LegalAction[] = [];
 
     private _previousActions: Stack<Turn> = new Stack<Turn>();
@@ -24,7 +24,6 @@ export class Player implements IJSONModel {
         holeCards: [Card, Card] | undefined,
         status: PlayerStatus
     ) {
-
         this.chips = chips;
         this.holeCards = holeCards;
         this.lastAction = lastAction;
@@ -48,6 +47,10 @@ export class Player implements IJSONModel {
         //     timeout: 0, 
         //     signature: ethers.ZeroHash
         // };
+    }
+
+    updateStatus(status: PlayerStatus): void {
+        this.status = status;
     }
 
     addAction(action: Turn): void {
