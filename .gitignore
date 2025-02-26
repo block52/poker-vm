@@ -419,3 +419,4 @@ ui/dist/*
 .env
 bot/.env
 .vscode/launch.json
+.vscode/launch.json

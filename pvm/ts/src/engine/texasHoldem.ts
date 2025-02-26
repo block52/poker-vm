@@ -390,14 +390,14 @@ class TexasHoldemGame implements IPoker {
         // TODO: ROLL BACK TO FUNCTIONALITY
         switch (action) {
             case PlayerActionType.FOLD:
-                return new FoldAction(this, this._update).execute(player, 0n);
+                return new FoldAction(this, this._update).execute(player);
             case PlayerActionType.CHECK:
-                return new CheckAction(this, this._update).execute(player, 0n);
+                return new CheckAction(this, this._update).execute(player);
             case PlayerActionType.BET:
                 if (!amount) throw new Error("Amount must be provided for bet.");
                 return new BetAction(this, this._update).execute(player, amount);
             case PlayerActionType.CALL:
-                return new CallAction(this, this._update).execute(player, 0n);
+                return new CallAction(this, this._update).execute(player);
             default:
                 // do we need to roll back last acted seat?
                 throw new Error("Invalid action.");

@@ -2,6 +2,7 @@ import { PlayerStatus, PlayerDTO } from "@bitcoinbrisbane/block52";
 import { IJSONModel } from "./interfaces";
 import { Card } from "./deck";
 import { Turn } from "../engine/types";
+import { Stack } from "../core/datastructures/stack";
 
 export class Player implements IJSONModel {
     chips: bigint = 0n;
@@ -9,6 +10,8 @@ export class Player implements IJSONModel {
     lastAction: Turn | undefined;
     status: PlayerStatus = PlayerStatus.SITTING_OUT;
     // actions: LegalAction[] = [];
+
+    private _previousActions: Stack<Turn> = new Stack<Turn>();
 
     get id(): string { return this.address; }
 
@@ -47,12 +50,11 @@ export class Player implements IJSONModel {
         // };
     }
 
-    // public setDealer(isDealer: boolean): void {
-    //     // this._dto.isDealer = isDealer;
-    //     this.isDealer = isDealer;
-    // }
-
     addAction(action: Turn): void {
+        this._previousActions.push(action);
+
+        // Could peek at the top of the stack to get the last action.
+        this.lastAction = action;
     };
 
     public toJson(): PlayerDTO { 
