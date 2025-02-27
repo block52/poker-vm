@@ -73,11 +73,11 @@ describe("Raise Action", () => {
     describe("type", () => {
         it("should return RAISE action type", () => {
             const type = action.type;
-            expect(action.type).toBe(PlayerActionType.SMALL_BLIND);
+            expect(action.type).toBe(PlayerActionType.RAISE);
         });
     });
 
-    describe.only("verify", () => {
+    describe("verify", () => {
         beforeEach(() => {
             jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
