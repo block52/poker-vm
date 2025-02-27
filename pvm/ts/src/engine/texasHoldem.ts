@@ -45,7 +45,6 @@ class TexasHoldemGame implements IPoker {
     private readonly _playersMap: Map<number, Player | null>;
     // private readonly _players: FixedCircularList<Player>;
 
-    // private _rounds!: Round[];
     private _rounds = new Map<TexasHoldemRound, Turn[]>();
     private _deck!: Deck;
     private _sidePots!: Map<string, bigint>;
@@ -147,7 +146,6 @@ class TexasHoldemGame implements IPoker {
         const player = this.getPlayerAtSeat(this._lastActedSeat);
 
         return player?.address ?? ethers.ZeroAddress;
-        // return this.getPlayerAtSeat(this._lastActedSeat)?.address ?? ethers.ZeroAddress;
     }
     get currentRound() {
         return this._currentRound;
