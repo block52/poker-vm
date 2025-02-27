@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react"; // Import React and useEffect
 import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
-import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
+import { STORAGE_PUBLIC_KEY, STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import "./Dashboard.css";
 import useUserWalletConnect from "../hooks/useUserWalletConnect"; // Add this import
 import useUserWallet from "../hooks/useUserWallet"; // Add this import
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
+import { Wallet } from "ethers";
 // Create an enum of game types
 enum GameType {
     CASH = "cash",
@@ -28,6 +29,10 @@ const Dashboard: React.FC = () => {
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
     const { balance: b52Balance } = useUserWallet();
     const [games, setGames] = useState([]);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importKey, setImportKey] = useState("");
+    const [importError, setImportError] = useState("");
+    const [showPrivateKey, setShowPrivateKey] = useState(false);
 
     // Add logging to fetch games
     const fetchGames = async () => {
@@ -134,24 +139,166 @@ const Dashboard: React.FC = () => {
         return value.toFixed(2);
     };
 
+    const handleImportPrivateKey = () => {
+        try {
+            // Validate private key format
+            if (!importKey.startsWith('0x')) {
+                setImportError("Private key must start with 0x");
+                return;
+            }
+            if (importKey.length !== 66) {
+                setImportError("Invalid private key length");
+                return;
+            }
+
+            // Create wallet from private key to validate and get address
+            const wallet = new Wallet(importKey);
+            
+            // Save to localStorage
+            localStorage.setItem(STORAGE_PRIVATE_KEY, importKey);
+            localStorage.setItem(STORAGE_PUBLIC_KEY, wallet.address);
+
+            // Reset form and close modal
+            setImportKey("");
+            setImportError("");
+            setShowImportModal(false);
+
+            // Refresh page to update wallet
+            window.location.reload();
+        } catch (err) {
+            setImportError("Invalid private key format");
+        }
+    };
+
+    const handleCopyPrivateKey = async () => {
+        const privateKey = localStorage.getItem(STORAGE_PRIVATE_KEY);
+        if (privateKey) {
+            try {
+                await navigator.clipboard.writeText(privateKey);
+                // Could add a toast notification here if you want
+            } catch (err) {
+                console.error('Failed to copy private key:', err);
+            }
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black">
+            {/* Import Private Key Modal */}
+            {showImportModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-gray-800 p-6 rounded-xl w-96">
+                        <h3 className="text-xl font-bold text-white mb-4">Import Private Key</h3>
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Enter private key (0x...)"
+                                value={importKey}
+                                onChange={(e) => setImportKey(e.target.value)}
+                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-pink-500 focus:outline-none"
+                            />
+                            {importError && (
+                                <p className="text-red-500 text-sm">{importError}</p>
+                            )}
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => {
+                                        setShowImportModal(false);
+                                        setImportKey("");
+                                        setImportError("");
+                                    }}
+                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleImportPrivateKey}
+                                    className="px-4 py-2 text-sm bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition duration-300"
+                                >
+                                    Import
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-xl">
                 <h1 className="text-4xl font-extrabold text-center text-white mb-8">Start Playing Now</h1>
 
                 {/* Block52 Wallet Section */}
                 <div className="bg-gray-700 p-4 rounded-lg mb-6">
-                    <h2 className="text-xl font-bold text-white mb-2">Block52 Game Wallet</h2>
+                    <div className="flex items-center gap-2 mb-2">
+                        <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
+                        <div className="relative group">
+                            <svg 
+                                className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth="2" 
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <p className="mb-2">
+                                    This is your Layer 2 gaming wallet, automatically created for you. No Web3 wallet required!
+                                </p>
+                                <p className="mb-2">
+                                    You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.
+                                </p>
+                                <p>
+                                    All your in-game funds are secured and can be withdrawn at any time.
+                                </p>
+                                <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+                            </div>
+                        </div>
+                    </div>
                     {publicKey && (
                         <div className="space-y-2">
-                            <p className="text-white text-sm">
-                                Address: <span className="font-mono text-pink-500">{formatAddress(publicKey)}</span>
-                            </p>
-                            <p className="text-white text-sm">
-                                Balance: <span className="font-bold text-pink-500">
-                                    ${formatBalance(b52Balance || '0')} USDC
-                                </span>
-                            </p>
+                            <div className="flex justify-between items-center">
+                                <p className="text-white text-sm">
+                                    Address: <span className="font-mono text-pink-500">{formatAddress(publicKey)}</span>
+                                </p>
+                                <button
+                                    onClick={() => setShowImportModal(true)}
+                                    className="text-sm text-blue-400 hover:text-blue-300 transition duration-300"
+                                >
+                                    Import Private Key
+                                </button>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <p className="text-white text-sm">
+                                    Balance: <span className="font-bold text-pink-500">
+                                        ${formatBalance(b52Balance || '0')} USDC
+                                    </span>
+                                </p>
+                                <button
+                                    onClick={() => setShowPrivateKey(!showPrivateKey)}
+                                    className="text-sm text-blue-400 hover:text-blue-300 transition duration-300"
+                                >
+                                    {showPrivateKey ? 'Hide Private Key' : 'Show Private Key'}
+                                </button>
+                            </div>
+                            {showPrivateKey && (
+                                <div className="mt-2 p-2 bg-gray-800 rounded-lg">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-white text-sm font-mono break-all">
+                                            {localStorage.getItem(STORAGE_PRIVATE_KEY)}
+                                        </p>
+                                        <button
+                                            onClick={handleCopyPrivateKey}
+                                            className="ml-2 px-2 py-1 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded transition duration-300"
+                                        >
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                             <Link
                                 to="/qr-deposit"
                                 className="block mt-2 text-center text-white bg-green-600 hover:bg-green-700 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-lg"
@@ -164,7 +311,33 @@ const Dashboard: React.FC = () => {
 
                 {/* Web3 Wallet Section */}
                 <div className="bg-gray-700 p-4 rounded-lg mb-6">
-                    <h2 className="text-xl font-bold text-white mb-2">Web3 Wallet</h2>
+                    <div className="flex items-center gap-2 mb-2">
+                        <h2 className="text-xl font-bold text-white">Web3 Wallet</h2>
+                        <div className="relative group">
+                            <svg 
+                                className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth="2" 
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <p className="mb-2">
+                                    Optional: Connect your Web3 wallet (like MetaMask) for additional features.
+                                </p>
+                                <p>
+                                    Not required to play - you can use the Block52 Game Wallet instead!
+                                </p>
+                                <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div className="flex justify-between items-center">
                         <div>
                             <p className="text-white text-sm">
