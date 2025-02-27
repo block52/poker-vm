@@ -7,7 +7,6 @@ class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CALL }
 
     verify(player: Player): Range | undefined {
-        super.verify(player);
         const lastAction = this.game.getLastAction();
 
         if (!lastAction)
@@ -17,8 +16,7 @@ class CallAction extends BaseAction implements IAction {
             throw new Error("Should check instead.");
 
         // Get the sum of my bets in this round.
-        const sumBets = this.getSumBets(player.address);
-        let deductAmount: bigint = this.getDeductAmount(player, sumBets);
+        let deductAmount: bigint = this.getDeductAmount(player);
 
         if (deductAmount === 0n)
             throw new Error("Player has already met maximum so can check instead.");
@@ -26,21 +24,30 @@ class CallAction extends BaseAction implements IAction {
         if (player.chips < deductAmount)
             deductAmount = player.chips;
 
+
         return { minAmount: deductAmount, maxAmount: deductAmount };
     }
 
     execute(player: Player): void {
-        const range = this.verify(player);
-        super.execute(player, range?.minAmount);
+        const deductAmount = this.getDeductAmount(player);
+        if (deductAmount) {
+            if (player.chips < deductAmount)
+                throw new Error(`Player has insufficient chips to ${this.type}.`);
+
+            player.chips -= deductAmount;
+        }
+
+        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
     }
 
-    protected getDeductAmount(player: Player, _amount: bigint): bigint {
+    protected getDeductAmount(player: Player): bigint {
         const lastAction = this.game.getLastAction();
+        const sumBets = this.getSumBets(player.address);
 
         // default to big blind if no previous action.
         // Note: this could fail in some edge cases where the big blind is
         // not the minimum bet.
-        return (lastAction?.amount || this.game.bigBlind) - _amount;
+        return (lastAction?.amount || this.game.bigBlind) - sumBets;
     }
 
     private getSumBets(playerId: string): bigint {

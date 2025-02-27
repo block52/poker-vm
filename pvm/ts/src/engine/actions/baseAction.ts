@@ -46,7 +46,8 @@ abstract class BaseAction {
             player.chips -= deductAmount;
         }
 
-        this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
+        // this.update.addAction({ playerId: player.id, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
+        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
     }
 
     protected getDeductAmount(_player: Player, amount?: bigint): bigint {
