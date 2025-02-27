@@ -3,26 +3,27 @@ import { Player } from "../../models/game";
 import BaseAction from "./baseAction";
 import { Range } from "../types";
 
-// Obsolete, use BetAction instead
 class RaiseAction extends BaseAction {
-    get type(): PlayerActionType { return PlayerActionType.RAISE }
+    get type(): PlayerActionType {
+        return PlayerActionType.RAISE;
+    }
 
     verify(player: Player): Range | undefined {
         super.verify(player);
-        // if (this.game.getMaxStake() === 0n)
-        //     throw new Error("A bet must be made before it can be raised.");
-        
-        if (player.chips < this.getDeductAmount(player, this.game.bigBlind))
-            throw new Error("Player has insufficient chips to raise.");
 
-        return { minAmount: this.game.bigBlind, maxAmount: player.chips };
+        const lastBet = this.game.getLastAction();
+        if (!lastBet) throw new Error("No previous bet to raise.");
+
+        const minAmount = (lastBet?.amount || 0n) + this.game.bigBlind;
+        if (player.chips < minAmount) throw new Error("Player has insufficient chips to raise.");
+
+        const minAmount = (lastBet?.amount || 0n) + this.game.bigBlind;
+
+        return { minAmount: minAmount, maxAmount: player.chips };
     }
 
     protected getDeductAmount(player: Player, amount: bigint): bigint {
-        // return this.game.getMaxStake() - this.game.getPlayerStake(player) + amount!;
-        // return this.game.getMaxStake() - this.game.getPlayerStake(player) + amount
-
-        return 0n
+        return player.chips < amount ? player.chips : amount;
     }
 }
 
