@@ -19,35 +19,36 @@ async function handleTokenTransfer(amount, userAddress) {
     console.log('Amount:', amount.toString());
     console.log('User Address:', userAddress);
 
-    const wallet = new ethers.Wallet(process.env.DEPOSIT_PRIVATE_KEY, provider);
-    
-    // Full ABI from Etherscan
-    const DEPOSIT_ABI = [
+    // Create interface with the full ABI
+    const depositInterface = new ethers.Interface([
         {
             "inputs": [
                 {"internalType": "address", "name": "user", "type": "address"},
                 {"internalType": "uint256", "name": "amount", "type": "uint256"}
             ],
-            "name": "forwardDeposit",
+            "name": "forwardDepositUnderlying", // Changed to forwardDepositUnderlying based on contract
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
-        },
-        // ... other ABI entries can be added as needed ...
-    ];
+        }
+    ]);
 
     try {
+        const wallet = new ethers.Wallet(process.env.DEPOSIT_PRIVATE_KEY, provider);
+        
+        // Create contract instance with interface
         const depositContract = new ethers.Contract(
             DEPOSIT_ADDRESS,
-            DEPOSIT_ABI,
+            depositInterface,
             wallet
         );
 
-        console.log('Attempting forwardDeposit with:');
+        console.log('Attempting forwardDepositUnderlying with:');
         console.log('- User:', userAddress);
         console.log('- Amount:', amount);
 
-        const tx = await depositContract.forwardDeposit(
+        // Call the contract function
+        const tx = await depositContract.forwardDepositUnderlying(
             userAddress,
             amount,
             {
