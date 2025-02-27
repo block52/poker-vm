@@ -18,7 +18,7 @@ describe.only("Texas Holdem Game", () => {
         bigBlind: TWENTY_TOKENS,   // 20 tokens
         dealer: 9,
         nextToAct: 0,
-        currentRound: "ante",
+        currentRound: "preflop",
         communityCards: [],
         pot: 0n,
         players: []
@@ -37,7 +37,7 @@ describe.only("Texas Holdem Game", () => {
             expect(game.dealerPosition).toEqual(9);
             // expect(game.currentPlayerId).toEqual(ethers.ZeroAddress);
             expect(game.getPlayerCount()).toEqual(0);
-            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
             expect(game.pot).toEqual(0n);
         });
 
@@ -170,27 +170,24 @@ describe.only("Texas Holdem Game", () => {
             expect(game.getNextPlayerToAct().address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
 
             // Pre-flop
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, TEN_TOKENS);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            expect(game.hasRoundEnded()).toBeTruthy();
             
             // Flop
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            expect(game.hasRoundEnded()).toBeTruthy();
             
             // Turn
             expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, FIFTY_TOKENS);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CALL);
-            expect(game.hasRoundEnded()).toBeTruthy();
             
             // River
             expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.FOLD);
-            expect(game.hasRoundEnded()).toBeTruthy();
             
             // Verify game state after completion
             expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);

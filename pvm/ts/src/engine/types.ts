@@ -15,7 +15,6 @@ export interface IPoker {
     getLastAction(): Turn | undefined;
     performAction(address: string, action: PlayerActionType, amount?: bigint): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;
-    hasRoundEnded(): boolean;
 }
 
 export type PlayerState = {
