@@ -262,7 +262,12 @@ export class Server {
 
         if (this.isValidator) {
             const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
-            await bridge.resync();
+    
+              // First sync historical deposits
+              await bridge.resync();
+            
+              // Then start listening for new deposits
+              await bridge.listenToBridge();
             this._lastDepositSync = new Date();
         }
     }
