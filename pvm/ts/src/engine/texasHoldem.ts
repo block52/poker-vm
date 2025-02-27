@@ -527,24 +527,9 @@ class TexasHoldemGame implements IPoker {
         return actions.filter(action => action.playerId === player.address);
     }
 
-    // private getActivePlayers(): number[] {
-    //     // return [...Array(this._players.length).keys()].reduce((acc, i) => {
-    //     //     const index = (this._nextToAct + 1 + i) % this._players.length;
-    //     //     const player = this._players[index];
-    //     //     return player && this.getPlayerStatus(player) === PlayerStatus.ACTIVE ? [...acc, index] : acc;
-    //     // }, [] as Array<number>);
-
-    //     const activePlayers: number[] = [];
-
-    //     for (let i = 0; i < this._players.length; i++) {
-    //         const player = this._players[i];
-    //         if (player && this.getPlayerStatus(player) === PlayerStatus.ACTIVE) {
-    //             activePlayers.push(i);
-    //         }
-    //     }
-
-    //     return activePlayers;
-    // }
+    private getActivePlayers(): Player[] {
+        return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.status === PlayerStatus.ACTIVE);
+    }
 
     private getSeatedPlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
