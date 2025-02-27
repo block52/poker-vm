@@ -25,7 +25,7 @@ const Dashboard: React.FC = () => {
     const [typeSelected, setTypeSelected] = useState<string>("cash");
     const [variantSelected, setVariantSelected] = useState<string>("texas-holdem");
     const [seatSelected, setSeatSelected] = useState<number>(6);
-    const { isConnected, open, address } = useUserWalletConnect();
+    const { isConnected, open, disconnect, address } = useUserWalletConnect();
     const { balance: b52Balance } = useUserWallet();
     const [games, setGames] = useState([]);
 
@@ -139,25 +139,64 @@ const Dashboard: React.FC = () => {
             <div className="bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-xl">
                 <h1 className="text-4xl font-extrabold text-center text-white mb-8">Start Playing Now</h1>
 
-                {/* Show browser account balance in USDC */}
-                {publicKey && (
-                    <div className="text-center mb-6 space-y-2">
-                        <p className="text-white text-lg">
-                            Block 52 Account: <span className="font-mono text-pink-500">{publicKey}</span>
-                        </p>
-                        <p className="text-white text-lg">
-                            Balance: <span className="font-bold text-pink-500">
-                                ${formatBalance(b52Balance || '0')} USDC
-                            </span>
-                        </p>
-                        <Link
-                            to="/qr-deposit"
-                            className="block mt-4 text-center text-white bg-green-600 hover:bg-green-700 rounded-xl py-4 px-8 text-xl font-bold transition duration-300 transform hover:scale-105 shadow-lg"
-                        >
-                            Deposit
-                        </Link>
+                {/* Block52 Wallet Section */}
+                <div className="bg-gray-700 p-4 rounded-lg mb-6">
+                    <h2 className="text-xl font-bold text-white mb-2">Block52 Game Wallet</h2>
+                    {publicKey && (
+                        <div className="space-y-2">
+                            <p className="text-white text-sm">
+                                Address: <span className="font-mono text-pink-500">{formatAddress(publicKey)}</span>
+                            </p>
+                            <p className="text-white text-sm">
+                                Balance: <span className="font-bold text-pink-500">
+                                    ${formatBalance(b52Balance || '0')} USDC
+                                </span>
+                            </p>
+                            <Link
+                                to="/qr-deposit"
+                                className="block mt-2 text-center text-white bg-green-600 hover:bg-green-700 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-lg"
+                            >
+                                Deposit
+                            </Link>
+                        </div>
+                    )}
+                </div>
+
+                {/* Web3 Wallet Section */}
+                <div className="bg-gray-700 p-4 rounded-lg mb-6">
+                    <h2 className="text-xl font-bold text-white mb-2">Web3 Wallet</h2>
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <p className="text-white text-sm">
+                                Status: <span className={`font-bold ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
+                                    {isConnected ? 'Connected' : 'Not Connected'}
+                                </span>
+                            </p>
+                            {isConnected && address && (
+                                <p className="text-white text-sm">
+                                    Address: <span className="font-mono text-pink-500">{formatAddress(address)}</span>
+                                </p>
+                            )}
+                        </div>
+                        <div>
+                            {!isConnected ? (
+                                <button 
+                                    onClick={open}
+                                    className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300"
+                                >
+                                    Connect
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={disconnect}
+                                    className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-300"
+                                >
+                                    Disconnect
+                                </button>
+                            )}
+                        </div>
                     </div>
-                )}
+                </div>
 
                 <div className="space-y-6">
                     {/* Game options always visible */}
@@ -224,23 +263,6 @@ const Dashboard: React.FC = () => {
                     >
                         Next
                     </Link>
-
-                    {/* Web3 wallet status below Next button */}
-                    <div className="text-right mt-4">
-                        <p className="text-white text-sm">
-                            Web3 Wallet: <span className={`font-bold ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
-                                {isConnected ? 'Connected' : 'Not Connected'}
-                            </span>
-                            {!isConnected && (
-                                <button 
-                                    onClick={open}
-                                    className="ml-4 px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300"
-                                >
-                                    Connect
-                                </button>
-                            )}
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
