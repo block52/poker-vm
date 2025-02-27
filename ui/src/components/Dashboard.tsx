@@ -141,7 +141,36 @@ const Dashboard: React.FC = () => {
 
                 {/* Block52 Wallet Section */}
                 <div className="bg-gray-700 p-4 rounded-lg mb-6">
-                    <h2 className="text-xl font-bold text-white mb-2">Block52 Game Wallet</h2>
+                    <div className="flex items-center gap-2 mb-2">
+                        <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
+                        <div className="relative group">
+                            <svg 
+                                className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth="2" 
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <p className="mb-2">
+                                    This is your Layer 2 gaming wallet, automatically created for you. No Web3 wallet required!
+                                </p>
+                                <p className="mb-2">
+                                    You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.
+                                </p>
+                                <p>
+                                    All your in-game funds are secured and can be withdrawn at any time.
+                                </p>
+                                <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+                            </div>
+                        </div>
+                    </div>
                     {publicKey && (
                         <div className="space-y-2">
                             <p className="text-white text-sm">
@@ -164,7 +193,33 @@ const Dashboard: React.FC = () => {
 
                 {/* Web3 Wallet Section */}
                 <div className="bg-gray-700 p-4 rounded-lg mb-6">
-                    <h2 className="text-xl font-bold text-white mb-2">Web3 Wallet</h2>
+                    <div className="flex items-center gap-2 mb-2">
+                        <h2 className="text-xl font-bold text-white">Web3 Wallet</h2>
+                        <div className="relative group">
+                            <svg 
+                                className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth="2" 
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <p className="mb-2">
+                                    Optional: Connect your Web3 wallet (like MetaMask) for additional features.
+                                </p>
+                                <p>
+                                    Not required to play - you can use the Block52 Game Wallet instead!
+                                </p>
+                                <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div className="flex justify-between items-center">
                         <div>
                             <p className="text-white text-sm">
