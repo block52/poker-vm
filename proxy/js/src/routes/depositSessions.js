@@ -20,11 +20,20 @@ async function handleTokenTransfer(amount, userAddress) {
     console.log('User Address:', userAddress);
 
     const wallet = new ethers.Wallet(process.env.DEPOSIT_PRIVATE_KEY, provider);
-    console.log('Wallet address:', wallet.address);
-
-    // Define the ABI properly for the function we're calling
+    
+    // Full ABI from Etherscan
     const DEPOSIT_ABI = [
-        "function forwardDeposit(address user, uint256 amount)"
+        {
+            "inputs": [
+                {"internalType": "address", "name": "user", "type": "address"},
+                {"internalType": "uint256", "name": "amount", "type": "uint256"}
+            ],
+            "name": "forwardDeposit",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        // ... other ABI entries can be added as needed ...
     ];
 
     try {
@@ -36,28 +45,27 @@ async function handleTokenTransfer(amount, userAddress) {
 
         console.log('Attempting forwardDeposit with:');
         console.log('- User:', userAddress);
-        console.log('- Amount:', amount.toString());
-        
-        // Properly encode the function call with parameters
+        console.log('- Amount:', amount);
+
         const tx = await depositContract.forwardDeposit(
             userAddress,
             amount,
-            { gasLimit: 300000 } // Increased gas limit to be safe
+            {
+                gasLimit: 300000
+            }
         );
-        console.log('Transaction hash:', tx.hash);
         
+        console.log('Transaction hash:', tx.hash);
         const receipt = await tx.wait();
         console.log('Transaction confirmed in block:', receipt.blockNumber);
-
-        // Check if transaction was successful
+        
         if (receipt.status === 1) {
             console.log('Transaction successful');
             return true;
+        } else {
+            console.log('Transaction failed');
+            return false;
         }
-        
-        console.error('Transaction failed');
-        return false;
-
     } catch (error) {
         console.error('=== Error in handleTokenTransfer ===');
         console.error('Error name:', error.name);
