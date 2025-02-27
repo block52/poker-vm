@@ -22,54 +22,9 @@ async function handleTokenTransfer(amount, userAddress) {
     const wallet = new ethers.Wallet(process.env.DEPOSIT_PRIVATE_KEY, provider);
     console.log('Wallet address:', wallet.address);
 
-    // Define both contract ABIs
+    // Define the ABI properly for the function we're calling
     const DEPOSIT_ABI = [
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "user",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                }
-            ],
-            "name": "forwardDeposit",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "bridge",
-            "outputs": [{"type": "address"}],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ];
-
-    const BRIDGE_ABI = [
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "receiver",
-                    "type": "address"
-                }
-            ],
-            "name": "depositUnderlying",
-            "outputs": [{"type": "uint256"}],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }
+        "function forwardDeposit(address user, uint256 amount)"
     ];
 
     try {
@@ -79,25 +34,15 @@ async function handleTokenTransfer(amount, userAddress) {
             wallet
         );
 
-        // Get bridge address and create bridge contract instance
-        const bridgeAddress = await depositContract.bridge();
-        console.log('Bridge address:', bridgeAddress);
-        
-        const bridgeContract = new ethers.Contract(
-            bridgeAddress,
-            BRIDGE_ABI,
-            provider
-        );
-        console.log('Bridge contract initialized');
-
         console.log('Attempting forwardDeposit with:');
         console.log('- User:', userAddress);
         console.log('- Amount:', amount.toString());
         
+        // Properly encode the function call with parameters
         const tx = await depositContract.forwardDeposit(
             userAddress,
-            BigInt(amount),
-            { gasLimit: 200000 }
+            amount,
+            { gasLimit: 300000 } // Increased gas limit to be safe
         );
         console.log('Transaction hash:', tx.hash);
         
@@ -106,15 +51,11 @@ async function handleTokenTransfer(amount, userAddress) {
 
         // Check if transaction was successful
         if (receipt.status === 1) {
-            console.log('Transaction successful in block:', receipt.blockNumber);
-            // Look for token transfer event
-            if (receipt.logs && receipt.logs.length > 0) {
-                console.log('Transaction completed with token transfer');
-                return true;
-            }
+            console.log('Transaction successful');
+            return true;
         }
         
-        console.error('Transaction failed or no token transfer detected');
+        console.error('Transaction failed');
         return false;
 
     } catch (error) {
