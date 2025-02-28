@@ -404,6 +404,7 @@ pvm/ts/dist/index.js
 explorer_frontend/build/*
 pvm/ts/.env
 pvm/ts/.env
+explorer/.env
 
 proxy/python/venv/*
 proxy/python/.env
