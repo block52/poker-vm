@@ -21,10 +21,16 @@ export class Bridge {
     }
 
     public async listenToBridge(): Promise<void> {
-        this.bridgeContract.on("Deposited", async (account: string, amount: bigint, index: bigint, event: EventLog) => {
+        // Define full event interface
+        const filter = this.bridgeContract.filters.Deposited();
+        
+        this.bridgeContract.on(filter, async (account: string, amount: bigint, index: bigint, event: any) => {
+            // Get the full transaction details
+            const tx = await event.getTransaction();
+            
             console.log("\n🎯 Processing Live Deposit Event:", {
                 blockNumber: event.blockNumber,
-                txHash: event.transactionHash,
+                txHash: tx.hash, // Get hash from transaction
                 raw_data: {
                     account: account,
                     amount: {
@@ -41,12 +47,7 @@ export class Bridge {
             });
 
             try {
-                await this.onDeposit(
-                    account,
-                    amount,
-                    index,
-                    event.transactionHash
-                );
+                await this.onDeposit(account, amount, index, tx.hash);
                 console.log(`✅ Successfully processed live deposit at index ${index}`);
             } catch (error) {
                 console.error("❌ Failed to process live deposit:", error);
