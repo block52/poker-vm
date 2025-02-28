@@ -47,7 +47,7 @@ class RPCService {
                     id: "1",
                     method: "get_blocks",
                     version: "2.0",
-                    params: [""]
+                    params: ["100"]
                 },
                 {
                     headers: {
