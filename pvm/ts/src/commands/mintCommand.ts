@@ -52,6 +52,11 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // If we're a validator, we can mint
         // Check the DB for the tx hash
         // If it's not in the DB, mint
+        console.log("\n🎬 MintCommand Execute Started:", {
+            depositIndex: this.depositIndex,
+            hash: this.hash,
+            publicKey: this.publicKey
+        });
 
         // const existingTx = await Blocks.findOne({ transactions: { $elemMatch: { identifier: this.depositIndex } } });
         // console.log(existingTx);
@@ -62,12 +67,15 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // TODO: Get txId from bridge contract event
         // const data = this.hash;
         const data = `MINT_${this.depositIndex}`;
+        console.log("📝 Checking for existing transaction with data:", data);
         const exists = await this.transactionManagement.getTransactionByData(data);
         
         if (exists) {
+            console.log("⚠️ Transaction already exists in blockchain");
             throw new Error("Transaction already in blockchain");
         }
 
+        console.log("🔍 Fetching deposit details from bridge contract...");
         const [account, amount] = await this.bridge.deposits(this.index);
         if (account === ethers.ZeroAddress) {
             throw new Error("Receiver must not be zero address");
@@ -76,6 +84,14 @@ export class MintCommand implements ISignedCommand<Transaction> {
         if (amount <= 0) {
             throw new Error("Value must be greater than 0");
         }
+        console.log("📊 Deposit Details:", {
+            account,
+            amount: {
+                raw: amount.toString(),
+                hex: `0x${amount.toString(16)}`,
+                usdc: Number(amount) / 1e6
+            }
+        });
 
         let underlyingAssetDecimals: bigint = 6n;
 
@@ -85,12 +101,30 @@ export class MintCommand implements ISignedCommand<Transaction> {
             const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
             underlyingAssetDecimals = await underlyingAsset.decimals();
         }
+        const value: bigint = NativeToken.convertFromDecimals(amount, 6n);
+        console.log("💰 Converted value:", {
+            original: amount.toString(),
+            converted: value.toString(),
+            asTokens: Number(value) / 1e18
+        });
 
-        const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
-        const mintTx: Transaction = await Transaction.create(account, CONTRACT_ADDRESSES.bridgeAddress, value, this.index, this.privateKey, data);
+  
+      
 
-        // Send to mempool
+        console.log("📝 Creating transaction...");
+        const mintTx: Transaction = await Transaction.create(
+            account, 
+            CONTRACT_ADDRESSES.bridgeAddress, 
+            value, 
+            this.index, 
+            this.privateKey, 
+            data
+        );
+
+        console.log("📨 Sending to mempool...");
         await this.mempool.add(mintTx);
+        
+        console.log("✅ MintCommand execution complete");
         return signResult(mintTx, this.privateKey);
     }
 }
