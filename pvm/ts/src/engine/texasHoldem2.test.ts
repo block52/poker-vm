@@ -47,12 +47,13 @@ describe.only("Texas Holdem Game", () => {
             expect(game.findNextSeat()).toEqual(2);
         });
 
-        it.skip("should throw error when table is full", () => {
-            // 1 based array, so 9 players is the max
-            for (let i = 0; i < 10; i++) {
+        it("should throw error when table is full", () => {
+            for (let i = 1; i <= 9; i++) {
                 game.join2(`0x${i}`, 1000000000000000000000n);
             }
-            expect(() => game.join2("0x9999", 1000000000000000000000n)).toThrow();
+        
+            console.log(" Trying to add extra player...");
+            expect(() => game.join2("0x9999", 1000000000000000000000n)).toThrow("Table full.");
         });
     });
 
