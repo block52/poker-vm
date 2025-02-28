@@ -52,7 +52,7 @@ describe.only("Texas Holdem Game", () => {
                 game.join2(`0x${i}`, 1000000000000000000000n);
             }
         
-            console.log("✅ Trying to add extra player...");
+            console.log(" Trying to add extra player...");
             expect(() => game.join2("0x9999", 1000000000000000000000n)).toThrow("Table full.");
         });
     });
