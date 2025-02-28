@@ -5,6 +5,7 @@ import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
 import { AccountManagement } from "./accountManagement";
 import { TransactionManagement } from "./transactionManagement";
+import { getTransactionInstance } from "./transactionManagement";
 
 export class BlockchainManagement extends StateManager {
     constructor() {
@@ -95,7 +96,18 @@ export class BlockchainManagement extends StateManager {
             .sort({ timestamp: -1 })
             .limit(count ?? 20);
 
-        return blocks.map(block => Block.fromDocument(block));
+        // Get transaction management instance
+        const transactionManagement = getTransactionInstance();
+
+        // Convert to Block objects and load transaction counts
+        const blockObjects = await Promise.all(blocks.map(async blockDoc => {
+            const block = Block.fromDocument(blockDoc);
+            const transactions = await transactionManagement.getTransactions(block.hash);
+            block.transactionCount = transactions.length;
+            return block;
+        }));
+
+        return blockObjects;
     }
 
     public async reset(): Promise<void> {
