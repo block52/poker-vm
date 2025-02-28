@@ -1,15 +1,28 @@
 // assuming that `inquirer` has already been installed
 const inquirer = require("inquirer");
-const client = require("@bitcoinbrisbane/block52-client");
+const RPCRequest = require("@bitcoinbrisbane/block52");
+const crypto = require("crypto");
+const dotenv = require("dotenv");
+dotenv.config();
+
+let pk = process.env.PK || "";
 
 const questions = [
   {
     type: "list",
     name: "action",
     message: "What do you want to do?",
-    choices: ["New account", "List contracts / games", "Join a game", "exit"],
+    choices: ["Create an account", "Import private key", "Join a game", "Exit / Quit"],
   },
 ];
+
+const createPrivateKey = async () => {
+  const geekA = crypto.createECDH('secp521r1'); 
+  geekA.generateKeys(); 
+  const key = geekA.getPrivateKey('base64'); 
+  console.log(key);
+  return "";
+}
 
 const ask = async () => {
   let response = null;
@@ -18,16 +31,16 @@ const ask = async () => {
     const answers = await prompt(questions);
 
     switch (answers.action) {
-      case "New account":
-        client.getNodes();
+      case "Create an account":
+        await createPrivateKey();
         break;
-      case "List contracts / games":
-        client.getNodes();
+      case "Import private key":
+
         break;
       case "Join a game":
-        client.getNodes();
+
         break;
-      case "exit":
+      case "Exit / Quit":
         break;
       default:
         console.log("Invalid action");
