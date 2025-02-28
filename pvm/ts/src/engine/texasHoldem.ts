@@ -209,17 +209,19 @@ class TexasHoldemGame implements IPoker {
     }
 
     joinAtSeat(player: Player, seat: number) {
+        // Check if the player is already in the game
         if (this.exists(player.address)) {
             console.log("Player already joined.");
             throw new Error("Player already joined.");
         }
 
-        if (this.getPlayerCount() + 1 >= this._maxPlayers) {
-            // throw new Error("Game full.");
-            console.log("Table full.");
-            return;
+        //ensure the seat is valid
+        if (seat === -1) {
+            console.log(`Table full. Current players: ${this.getPlayerCount()}, Max players: ${this._maxPlayers}`); 
+            throw new Error("Table full."); // This must be thrown
         }
 
+        console.log(`Player ${player.address} joined at seat ${seat}`);
         this._playersMap.set(seat, player);
 
         // if (player.chips < this._minBuyIn) {
@@ -542,14 +544,17 @@ class TexasHoldemGame implements IPoker {
     findNextSeat(): number {
         const maxSeats = this._maxPlayers;
 
+        // Iterate through all seat numbers to find next available (empty) seat
         for (let seatNumber = 1; seatNumber <= maxSeats; seatNumber++) {
             // Check if seat is empty (null) or doesn't exist in the map
             if (!this._playersMap.has(seatNumber) || this._playersMap.get(seatNumber) === null) {
-                return seatNumber;
-            }
+                return seatNumber; // return first available seat.
+            } 
         }
 
-        throw new Error("No available seats.");
+        // If no seats available, return -1 instead of throwing error
+        //This allows `joinAtSeat` to handle full-table scenario.
+        return -1;
     }
 
     // complete round maybe?
