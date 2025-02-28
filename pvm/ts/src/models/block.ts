@@ -189,6 +189,9 @@ export class Block implements IJSONModel {
             });
         }
 
+        // Set the transaction count from the document
+        block.transactionCount = document.tx_count || 0;
+
         return block;
     }
 

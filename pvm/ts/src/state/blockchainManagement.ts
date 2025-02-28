@@ -96,18 +96,7 @@ export class BlockchainManagement extends StateManager {
             .sort({ timestamp: -1 })
             .limit(count ?? 20);
 
-        // Get transaction management instance
-        const transactionManagement = getTransactionInstance();
-
-        // Convert to Block objects and load transaction counts
-        const blockObjects = await Promise.all(blocks.map(async blockDoc => {
-            const block = Block.fromDocument(blockDoc);
-            const transactions = await transactionManagement.getTransactions(block.hash);
-            block.transactionCount = transactions.length;
-            return block;
-        }));
-
-        return blockObjects;
+        return blocks.map(block => Block.fromDocument(block));
     }
 
     public async reset(): Promise<void> {
