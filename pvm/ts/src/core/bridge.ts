@@ -27,7 +27,21 @@ export class Bridge {
     }
 
     public async onDeposit(receiver: string, value: bigint, index: bigint, transactionHash: string): Promise<void> {
-        console.log(`Deposit detected to ${receiver}: ${value} tokens at index ${index} with transaction hash ${transactionHash}`);
+        console.log(`\n🏦 Deposit Processing:`, {
+            receiver,
+            value: {
+                raw: value.toString(),
+                hex: `0x${value.toString(16)}`,
+                decimal: Number(value)
+            },
+            index: {
+                raw: index.toString(),
+                hex: `0x${index.toString(16)}`,
+                decimal: Number(index)
+            },
+            transactionHash
+        });
+
         const privateKey = process.env.VALIDATOR_KEY;
 
         if (!privateKey) {
@@ -35,10 +49,18 @@ export class Bridge {
         }
 
         try {
+            console.log("🔨 Creating MintCommand with:", {
+                index: index.toString(),
+                txHash: transactionHash,
+                privateKeyPresent: !!privateKey
+            });
+
             const mintCommand = new MintCommand(index.toString(), transactionHash, privateKey);
+            console.log("⚡ Executing MintCommand...");
             await mintCommand.execute();
         } catch (e) {
-            console.error(e);
+            console.error("💥 MintCommand Error:", e);
+            throw e;
         }
     }
 
@@ -63,55 +85,59 @@ export class Bridge {
     public async resync(): Promise<void> {
         console.log("\n🔄 Bridge: Starting resync...");
         
-        // Get all transactions from the bridge contract
         const events = await this.bridgeContract.queryFilter("Deposited", 0, "latest");
         console.log(`📊 Bridge: Found ${events.length} deposit events to process`);
 
-        // First, log all events found
-        console.log("\n📋 Bridge: All found events:");
+        // First, log all events found with more detail
+        console.log("\n📋 Bridge: All found events (Raw Format):");
         events.forEach((event, i) => {
             const depositEvent = event as EventLog;
             if (depositEvent.args) {
-                console.log(`\nEvent ${i}:`, {
+                console.log(`\n🔍 Event ${i} Details:`, {
                     blockNumber: depositEvent.blockNumber,
                     txHash: depositEvent.transactionHash,
                     raw_data: {
                         account: depositEvent.args.account,
-                        amount: depositEvent.args.amount.toString(),
-                        amountInEth: Number(depositEvent.args.amount) / 1e18,
-                        index: depositEvent.args.index.toString()
+                        amount: {
+                            raw: depositEvent.args.amount.toString(),
+                            hex: `0x${depositEvent.args.amount.toString(16)}`,
+                            decimal: Number(depositEvent.args.amount)
+                        },
+                        index: {
+                            raw: depositEvent.args.index.toString(),
+                            hex: `0x${depositEvent.args.index.toString(16)}`,
+                            decimal: Number(depositEvent.args.index)
+                        }
                     }
                 });
             }
         });
 
-        // Then process each event
+        // Then process each event with more logging
         for (const event of events) {
             const depositEvent = event as EventLog;
             if (depositEvent.args) {
-                // Log the raw event data
-                console.log("\n📝 Bridge: Processing deposit event:", {
+                console.log("\n🎯 Processing Deposit Event:", {
                     raw_index: depositEvent.args.index.toString(),
                     adjusted_index: (depositEvent.args.index - 1n).toString(),
                     account: depositEvent.args.account,
-                    amount: depositEvent.args.amount.toString(),
-                    amountInEth: Number(depositEvent.args.amount) / 1e18,
+                    amount: {
+                        raw: depositEvent.args.amount.toString(),
+                        hex: `0x${depositEvent.args.amount.toString(16)}`,
+                        decimal: Number(depositEvent.args.amount)
+                    },
                     txHash: depositEvent.transactionHash,
-                    blockNumber: depositEvent.blockNumber,
-                    // Add full event data for debugging
-                    raw_event: {
-                        args: {
-                            account: depositEvent.args.account,
-                            amount: depositEvent.args.amount.toString(),
-                            index: depositEvent.args.index.toString()
-                        },
-                        event: depositEvent.fragment.name,
-                        eventSignature: depositEvent.eventSignature,
-                    }
+                    blockNumber: depositEvent.blockNumber
                 });
 
                 try {
-                    //TODO: FIX BUG IN CONTRACT, OUT BY 1 ERROR
+                    console.log("📤 Calling onDeposit with parameters:", {
+                        receiver: depositEvent.args.account,
+                        value: depositEvent.args.amount.toString(),
+                        index: (depositEvent.args.index - 1n).toString(),
+                        txHash: depositEvent.transactionHash
+                    });
+
                     const index: bigint = depositEvent.args.index - 1n;
                     await this.onDeposit(
                         depositEvent.args.account, 
@@ -119,9 +145,9 @@ export class Bridge {
                         index, 
                         depositEvent.transactionHash
                     );
-                    console.log(`✅ Bridge: Successfully processed deposit at index ${index}`);
+                    console.log(`✅ Successfully processed deposit at index ${index}`);
                 } catch (error) {
-                    console.log(`❌ Bridge: Failed to process deposit:`, {
+                    console.log(`❌ Failed to process deposit:`, {
                         index: depositEvent.args.index.toString(),
                         error: (error as Error).message,
                         stack: (error as Error).stack
