@@ -65,6 +65,7 @@ export default function LatestBlocksPage() {
             try {
                 const apiUrl = import.meta.env.VITE_EXPLORER_API_URL || 'http://localhost:3800';
                 const response = await fetch(`${apiUrl}/rpc/blocks`);
+                console.log('Response:', response);
                 const data = await response.json();
                 setBlocks(data);
                 setLoading(false);
