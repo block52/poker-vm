@@ -26,28 +26,29 @@ export class Bridge {
         
         this.bridgeContract.on(filter, async (account: string, amount: bigint, index: bigint, event: any) => {
             // Get the full transaction details
-            const tx = await event.getTransaction();
-            
-            console.log("\n🎯 Processing Live Deposit Event:", {
-                blockNumber: event.blockNumber,
-                txHash: tx.hash, // Get hash from transaction
-                raw_data: {
-                    account: account,
-                    amount: {
-                        raw: amount.toString(),
-                        hex: `0x${amount.toString(16)}`,
-                        decimal: Number(amount)
-                    },
-                    index: {
-                        raw: index.toString(),
-                        hex: `0x${index.toString(16)}`,
-                        decimal: Number(index)
-                    }
-                }
-            });
-
             try {
-                await this.onDeposit(account, amount, index, tx.hash);
+                // Wait for the transaction to be mined to get full details
+                const tx = await this.provider.getTransaction(event.log.transactionHash);
+                
+                console.log("\n🎯 Processing Live Deposit Event:", {
+                    blockNumber: event.log.blockNumber,
+                    txHash: event.log.transactionHash,
+                    raw_data: {
+                        account: account,
+                        amount: {
+                            raw: amount.toString(),
+                            hex: `0x${amount.toString(16)}`,
+                            decimal: Number(amount)
+                        },
+                        index: {
+                            raw: index.toString(),
+                            hex: `0x${index.toString(16)}`,
+                            decimal: Number(index)
+                        }
+                    }
+                });
+
+                await this.onDeposit(account, amount, index, event.log.transactionHash);
                 console.log(`✅ Successfully processed live deposit at index ${index}`);
             } catch (error) {
                 console.error("❌ Failed to process live deposit:", error);
