@@ -67,7 +67,10 @@ export class AccountManagement extends StateManager {
                 }
 
                 balance += amount;
-                await Accounts.updateOne({ address }, { $inc: { balance: balance.toString() } });
+                await Accounts.updateOne(
+                    { address }, 
+                    { $set: { balance: balance.toString() } }
+                );
             }
         }
     }
