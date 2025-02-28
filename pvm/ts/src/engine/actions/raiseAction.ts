@@ -17,8 +17,6 @@ class RaiseAction extends BaseAction {
         const minAmount = (lastBet?.amount || 0n) + this.game.bigBlind;
         if (player.chips < minAmount) throw new Error("Player has insufficient chips to raise.");
 
-        const minAmount = (lastBet?.amount || 0n) + this.game.bigBlind;
-
         return { minAmount: minAmount, maxAmount: player.chips };
     }
 
