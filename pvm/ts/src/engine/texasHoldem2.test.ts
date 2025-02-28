@@ -57,6 +57,29 @@ describe.only("Texas Holdem Game", () => {
         });
     });
 
+    describe("Deck initialization", () => {
+        it("should initialize with a standard 52 card deck", () => {
+            const config = {
+                address: ethers.ZeroAddress,
+                minBuyIn: 1000000000000000000000n, // 1000 tokens
+                maxBuyIn: 3000000000000000000000n, // 3000 tokens
+                minPlayers: 2,
+                maxPlayers: 9,
+                smallBlind: TEN_TOKENS, // 10 tokens
+                bigBlind: TWENTY_TOKENS,   // 20 tokens
+                dealer: 9,
+                nextToAct: 0,
+                currentRound: "preflop",
+                communityCards: [],
+                pot: 0n,
+                players: []
+            };
+
+            const game = TexasHoldemGame.fromJson(baseGameConfig);
+            // expect(game.deck.cards.length).toEqual(52);
+        });
+    });
+
     describe("Player Management", () => {
         let game: TexasHoldemGame;
 

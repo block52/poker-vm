@@ -22,23 +22,44 @@ export interface IDeck {
 }
 
 export class Deck implements IDeck, IJSONModel {
-    // todo make this a stack
-    private cards: Card[] = [];
+    private cards: Card[] = []; // todo: make stake
     public hash: string = "";
     public seedHash: string;
     private top: number = 0;
 
-    constructor() {
+    private readonly SUIT_MAP = {
+        'C': SUIT.CLUBS,
+        'D': SUIT.DIAMONDS,
+        'H': SUIT.HEARTS,
+        'S': SUIT.SPADES
+    };
+    
+    private readonly RANK_MAP: { [key: number]: string } = {
+        1: 'A',
+        11: 'J',
+        12: 'Q',
+        13: 'K'
+    };
+
+    constructor(deck?: string) {
+        if (deck) {
+            const mnemonics = deck.split("-");
+            if (mnemonics.length !== 52) {
+                throw new Error("Deck must contain 52 cards.");
+            }
+
+            this.cards = [];
+
+            mnemonics.map(mnemonic => {
+                this.cards.push(this.fromString(mnemonic));
+            });
+        } else {
+            this.initStandard52();
+        }
+
         this.hash = ethers.ZeroHash;
         this.createHash();
         this.seedHash = ethers.ZeroHash;
-        this.initStandard52();
-    }
-
-    private createHash(): void {
-        const cardMnemonics = this.cards.map(card => card.mnemonic);
-        const cardsAsString = cardMnemonics.join("-");
-        this.hash = createHash("sha256").update(cardsAsString).digest("hex");
     }
 
     public shuffle(seed?: number[]): void {
@@ -65,40 +86,24 @@ export class Deck implements IDeck, IJSONModel {
     }
 
     public getCardMnemonic(suit: SUIT, rank: number): string {
-        let mnemonic = "";
-        switch (rank) {
-            case 11:
-                mnemonic += "J";
-                break;
-            case 12:
-                mnemonic += "Q";
-                break;
-            case 13:
-                mnemonic += "K";
-                break;
-            case 1:
-                mnemonic += "A";
-                break;
-            default:
-                mnemonic += rank.toString();
-        }
+        const RANK_MAP: { [key: number]: string } = {
+            1: 'A',
+            11: 'J',
+            12: 'Q',
+            13: 'K'
+        };
 
-        switch (suit) {
-            case SUIT.CLUBS:
-                mnemonic += "C";
-                break;
-            case SUIT.DIAMONDS:
-                mnemonic += "D";
-                break;
-            case SUIT.HEARTS:
-                mnemonic += "H";
-                break;
-            case SUIT.SPADES:
-                mnemonic += "S";
-                break;
-        }
+        const SUIT_MAP = {
+            [SUIT.CLUBS]: 'C',
+            [SUIT.DIAMONDS]: 'D',
+            [SUIT.HEARTS]: 'H',
+            [SUIT.SPADES]: 'S'
+        };
 
-        return mnemonic;
+        const rankStr = RANK_MAP[rank] || rank.toString();
+        const suitStr = SUIT_MAP[suit];
+
+        return rankStr + suitStr;
     }
 
     public getNext(): Card {
@@ -112,6 +117,37 @@ export class Deck implements IDeck, IJSONModel {
     public toJson(): any {
         return {
             cards: this.cards
+        };
+    }
+
+    public toString(): string {
+        return this.cards.map(card => card.mnemonic).join('-');
+    }
+
+    private createHash(): void {
+        const cardMnemonics = this.cards.map(card => card.mnemonic);
+        const cardsAsString = cardMnemonics.join("-");
+        this.hash = createHash("sha256").update(cardsAsString).digest("hex");
+    }
+
+    private fromString(mnemonics: string): Card {
+        const rank = parseInt(mnemonics.slice(0, -1));
+        const suitChar = mnemonics.slice(-1);
+
+        const SUIT_MAP = {
+            'C': SUIT.CLUBS,
+            'D': SUIT.DIAMONDS,
+            'H': SUIT.HEARTS,
+            'S': SUIT.SPADES
+        };
+
+        const suit = SUIT_MAP[suitChar as keyof typeof SUIT_MAP];
+
+        return {
+            suit,
+            rank,
+            value: 13 * (suit - 1) + (rank - 1),
+            mnemonic: this.getCardMnemonic(suit, rank)
         };
     }
 
