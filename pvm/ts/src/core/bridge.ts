@@ -23,30 +23,40 @@ export class Bridge {
     public async listenToBridge(): Promise<void> {
         const filter = this.bridgeContract.filters.Deposited();
         
-        this.bridgeContract.on(filter, async (account: string, amount: bigint, index: bigint, event: any) => {
+        this.bridgeContract.on(filter, async (...args: any[]) => {
             try {
-                console.log("\n🔍 Raw Event:", event);  // Debug the raw event first
+                console.log("\n🔍 Raw Arguments:", {
+                    length: args.length,
+                    args: args.map((arg, i) => `arg${i}: ${arg?.toString() || 'undefined'}`),
+                });
                 
-                // Generate a random hash BEFORE trying to access event.transactionHash
+                // Assuming the order is: account, amount, index, event
+                const [account, amount, index, event] = args;
+                
+                // Generate random hash
                 const txHash = ethers.hexlify(ethers.randomBytes(32));
                 
                 console.log("\n🎯 Processing Live Deposit Event:", {
-                    account,
-                    amount: amount.toString(),
-                    index: index.toString(),
+                    account: account?.toString() || 'undefined',
+                    amount: amount?.toString() || 'undefined',
+                    index: index?.toString() || 'undefined',
                     txHash,
-                    event_type: typeof event,
-                    has_tx: event?.transactionHash ? 'yes' : 'no'
+                    args_types: args.map(arg => typeof arg)
                 });
+
+                if (!account || !amount || !index) {
+                    throw new Error(`Missing required parameters: account=${!!account}, amount=${!!amount}, index=${!!index}`);
+                }
 
                 await this.onDeposit(account, amount, index, txHash);
                 console.log(`✅ Successfully processed live deposit at index ${index}`);
             } catch (error) {
                 console.error("❌ Failed to process live deposit:", error);
-                // Log the full error object for debugging
-                console.error("Full error:", JSON.stringify(error, null, 2));
+                console.error("Stack trace:", (error as Error).stack);
             }
         });
+        
+        console.log("🎧 Listening for Deposited events...");
     }
 
     public async onDeposit(receiver: string, value: bigint, index: bigint, transactionHash: string): Promise<void> {
