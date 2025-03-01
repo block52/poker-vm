@@ -25,29 +25,26 @@ export class Bridge {
         
         this.bridgeContract.on(filter, async (account: string, amount: bigint, index: bigint, event: any) => {
             try {
-                // Generate a random hash if we can't get the real one
-                const txHash = event.transactionHash || ethers.hexlify(ethers.randomBytes(32));
+                console.log("\n🔍 Raw Event:", event);  // Debug the raw event first
                 
-                console.log("\n🔍 Event Details:", {
-                    event,
-                    txHash
-                });
+                // Generate a random hash BEFORE trying to access event.transactionHash
+                const txHash = ethers.hexlify(ethers.randomBytes(32));
                 
                 console.log("\n🎯 Processing Live Deposit Event:", {
                     account,
                     amount: amount.toString(),
                     index: index.toString(),
-                    txHash
+                    txHash,
+                    event_type: typeof event,
+                    has_tx: event?.transactionHash ? 'yes' : 'no'
                 });
 
-                // onDeposit creates a MintCommand with:
-                // - index: to track deposit order
-                // - txHash: for reference (using random if real not available)
-                // - account: the depositor's address
                 await this.onDeposit(account, amount, index, txHash);
                 console.log(`✅ Successfully processed live deposit at index ${index}`);
             } catch (error) {
                 console.error("❌ Failed to process live deposit:", error);
+                // Log the full error object for debugging
+                console.error("Full error:", JSON.stringify(error, null, 2));
             }
         });
     }
