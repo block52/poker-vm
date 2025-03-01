@@ -23,25 +23,31 @@ export class Bridge {
     public async listenToBridge(): Promise<void> {
         const filter = this.bridgeContract.filters.Deposited();
         
-        this.bridgeContract.on(filter, async (...args: any[]) => {
+        this.bridgeContract.on(filter, async (log: any) => {
             try {
-                console.log("\n🔍 Raw Arguments:", {
-                    length: args.length,
-                    args: args.map((arg, i) => `arg${i}: ${arg?.toString() || 'undefined'}`),
-                });
+                console.log("\n🔍 Raw Log:", log);
                 
-                // Assuming the order is: account, amount, index, event
-                const [account, amount, index, event] = args;
+                // Parse the non-indexed parameters from the data
+                const [amount, index] = ethers.AbiCoder.defaultAbiCoder().decode(
+                    ['uint256', 'uint256'],
+                    log.data
+                );
                 
-                // Generate random hash
+                // Get account from the first topic (indexed parameter)
+                const account = log.args[0];
+                
+                // Generate random hash for now
                 const txHash = ethers.hexlify(ethers.randomBytes(32));
                 
                 console.log("\n🎯 Processing Live Deposit Event:", {
-                    account: account?.toString() || 'undefined',
-                    amount: amount?.toString() || 'undefined',
-                    index: index?.toString() || 'undefined',
+                    account: account,
+                    amount: amount.toString(),
+                    index: index.toString(),
                     txHash,
-                    args_types: args.map(arg => typeof arg)
+                    raw_log: {
+                        topics: log.topics,
+                        data: log.data
+                    }
                 });
 
                 if (!account || !amount || !index) {
