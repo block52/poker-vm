@@ -52,6 +52,14 @@ const QRDeposit: React.FC = () => {
     const [depositAmount, setDepositAmount] = useState<string>("");
     const [web3Balance, setWeb3Balance] = useState<string>("0");
     const [isTransferring, setIsTransferring] = useState(false);
+    const [displayBalance, setDisplayBalance] = useState<string>("0");
+
+    // Update displayBalance when b52Balance changes
+    useEffect(() => {
+        if (b52Balance) {
+            setDisplayBalance(b52Balance.toString());
+        }
+    }, [b52Balance]);
 
     // Add countdown timer effect
     useEffect(() => {
@@ -191,6 +199,12 @@ const QRDeposit: React.FC = () => {
             console.log('Session completed:', response.data);
             setCurrentSession(response.data);
             setShowQR(false);
+            
+            // Add the deposited amount to the display balance
+            if (response.data.amount) {
+                const newAmount = (Number(displayBalance) + Number(response.data.amount) / 1e6).toString();
+                setDisplayBalance(newAmount);
+            }
         } catch (error) {
             console.error('Failed to complete session:', error);
         }
@@ -349,7 +363,7 @@ const QRDeposit: React.FC = () => {
                 <div className="bg-gray-700 rounded-lg p-4 mb-6">
                     <p className="text-lg mb-2">Block 52 Balance:</p>
                     <p className="text-xl font-bold text-pink-500">
-                        ${formatBalance(b52Balance || '0')} USDC
+                        ${formatBalance(displayBalance || '0')} USDC
                     </p>
                 </div>
 
