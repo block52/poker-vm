@@ -21,7 +21,6 @@ export class GameManagement extends StateManager {
         const communityCards: Card[] = [];
 
         if (address === ethers.ZeroAddress) {
-            // TODO: import from the the data folder
             const json = {
                 type: "cash",
                 address: ethers.ZeroAddress,
@@ -55,16 +54,22 @@ export class GameManagement extends StateManager {
         if (schema) {
             const args = schema.schema.split(",");
 
+            const smallBlind: bigint = BigInt(args[4]);
+            const bigBlind: bigint = BigInt(args[5]);
+
+            const minBuyIn: bigint = bigBlind * 50n;
+            const maxBuyIn: bigint = bigBlind * 200n;
+
             const json = {
                 type: args[1],
                 address: address,
-                minBuyIn: 0n,
-                maxBuyIn: 0n,
+                minBuyIn: minBuyIn.toString(),
+                maxBuyIn: maxBuyIn.toString(),
                 minPlayers: args[2],
                 maxPlayers: args[3],
-                smallBlind: args[4],
-                bigBlind: args[5],
-                dealer: 0,
+                smallBlind: smallBlind.toString(),
+                bigBlind: bigBlind.toString(),
+                dealer: 9,
                 players: [],
                 communityCards: [],
                 pots: ["0"],

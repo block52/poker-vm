@@ -10,7 +10,7 @@ dotenv.config();
 
 let pk = process.env.PRIVATE_KEY || "";
 let address = "0xd5caa0c159a708c34255a58fc26a16567b66e3fb24";
-let node = process.env.NODE_URL || "https://node1.block52.xyz";
+let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 
 const createPrivateKey = async () => {
     // Generate a new ed25519 key pair
@@ -30,7 +30,7 @@ const createPrivateKey = async () => {
     console.log(publicKey.export({ type: "spki", format: "pem" }).toString());
 };
 
-const getGameState = async (): Promise<TexasHoldemGameStateDTO> => {
+const getMockGameState = async (): Promise<TexasHoldemGameStateDTO> => {
     // const rpcClient = new NodeRpcClient(node, pk);
     // const dto = await rpcClient.getGameState(address);
     // return dto;
@@ -59,6 +59,14 @@ const getGameState = async (): Promise<TexasHoldemGameStateDTO> => {
         winners: [],
         signature: ""
     };
+};
+
+const getGameState = async (address: string): Promise<TexasHoldemGameStateDTO> => {
+    const rpcClient = new NodeRpcClient(node, pk);
+    const dto = await rpcClient.getGameState(address);
+    
+    const state = dto as TexasHoldemGameStateDTO;
+    return state;
 };
 
 // Convert card number to readable format
@@ -103,7 +111,7 @@ const getPlayerPosition = (playerIndex: number, state: TexasHoldemGameStateDTO):
 }
 
 // Display game state as a table
-function displayGameState(state: TexasHoldemGameStateDTO, myPublicKey: string): void {
+const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): void => {
     // Find my player
     const myPlayer = state.players.find(p => p.address === myPublicKey);
 
@@ -225,8 +233,9 @@ const interactiveAction = async () => {
                 console.log(chalk.green("Importing key..."));
                 break;
             case "status":
-                const state = await getGameState();
+                const state = await getGameState(address);
                 displayGameState(state, address);
+                await pokerInteractiveAction();
                 break;
             case "join_game":
                 break;
@@ -248,8 +257,65 @@ const interactiveAction = async () => {
             continueSession = shouldContinue;
 
             if (!shouldContinue) {
-                console.log(chalk.yellow("Goodbye!"));
+                console.log(chalk.yellow("Good luck!"));
             }
+        }
+    }
+};
+
+type ActionChoice = {
+    action: string;
+    value: string;
+};
+
+const getLegalActions = (address: string, publicKey: string): ActionChoice[] => {
+    const actions: ActionChoice[] = [];
+
+    actions.push({ action: "Check", value: "check" });
+    actions.push({ action: "Call", value: "call" });
+    actions.push({ action: "Fold", value: "fold" });
+    actions.push({ action: "Raise", value: "raise" });
+    actions.push({ action: "All-In", value: "all-in" });
+    actions.push({ action: "Exit", value: "exit" });
+
+    return actions;
+};
+
+const pokerInteractiveAction = async () => {
+
+    const actions = await getLegalActions(address, pk);
+
+    let continueSession = true;
+    while (continueSession) {
+        const { action } = await inquirer.prompt([
+            {
+                type: "list",
+                name: "action",
+                message: "What would you like to do?",
+                choices: actions.map(a => ({ name: a.action, value: a.value }))
+            }
+        ]);
+
+        switch (action) {
+            case "check":
+                console.log(chalk.green("Checking..."));
+                break;
+            case "call":
+                console.log(chalk.green("Calling..."));
+                break;
+            case "fold":
+                console.log(chalk.green("Folding..."));
+                break;
+            case "raise":
+                console.log(chalk.green("Raising..."));
+                break;
+            case "all-in":
+                console.log(chalk.green("Going all-in..."));
+                break;
+            case "exit":
+                continueSession = false;
+                console.log(chalk.yellow("Goodbye!"));
+                break;
         }
     }
 };

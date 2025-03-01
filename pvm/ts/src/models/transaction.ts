@@ -57,7 +57,6 @@ export class Transaction implements ICryptoModel, IJSONModel {
         const signature = await signData(privateKey, _data);
 
         const hash = createHash("sha256").update(_data).digest("hex");
-        // const signature = signData(hash, privateKey);
 
         return new Transaction(to, from, value, hash, signature, timestamp, undefined, nonce, data);
     }

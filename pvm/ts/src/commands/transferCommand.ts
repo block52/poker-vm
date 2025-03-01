@@ -29,7 +29,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
 
         // todo: check nonce
         // Check if from is a game account
-        
         try {
             if (this.data && await this.isGameTransaction(this.to)) {
                 console.log(`Data: ${this.data}`);

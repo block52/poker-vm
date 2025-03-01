@@ -3,7 +3,7 @@ import { ITransactionDocument } from "../models/interfaces";
 
 const transactionSchema = new Schema<ITransactionDocument>({
   nonce: {
-    required: true,
+    required: false,
     type: String, // Using String to store BigInt
   },
   index: {
