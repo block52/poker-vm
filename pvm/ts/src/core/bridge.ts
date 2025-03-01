@@ -27,38 +27,21 @@ export class Bridge {
             try {
                 console.log("\n🔍 Raw Log:", log);
                 
-                // Parse the non-indexed parameters from the data
-                const [amount, index] = ethers.AbiCoder.defaultAbiCoder().decode(
-                    ['uint256', 'uint256'],
-                    log.data
-                );
-                
-                // Get account from the first topic (indexed parameter)
-                const account = log.args[0];
-                
-                // Generate random hash for now
-                const txHash = ethers.hexlify(ethers.randomBytes(32));
+                // The args are already decoded by ethers
+                const [account, amount, index] = log.args;
+                const txHash = log.log.transactionHash;
                 
                 console.log("\n🎯 Processing Live Deposit Event:", {
-                    account: account,
+                    account,
                     amount: amount.toString(),
                     index: index.toString(),
-                    txHash,
-                    raw_log: {
-                        topics: log.topics,
-                        data: log.data
-                    }
+                    txHash
                 });
-
-                if (!account || !amount || !index) {
-                    throw new Error(`Missing required parameters: account=${!!account}, amount=${!!amount}, index=${!!index}`);
-                }
 
                 await this.onDeposit(account, amount, index, txHash);
                 console.log(`✅ Successfully processed live deposit at index ${index}`);
             } catch (error) {
                 console.error("❌ Failed to process live deposit:", error);
-                console.error("Stack trace:", (error as Error).stack);
             }
         });
         
