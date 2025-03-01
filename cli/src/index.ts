@@ -3,7 +3,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import crypto from "crypto";
 
-import { TexasHoldemGameStateDTO, PlayerDTO, WinnerDTO, NodeRpcClient, TexasHoldemStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { TexasHoldemGameStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 
 import dotenv from "dotenv";
 dotenv.config();

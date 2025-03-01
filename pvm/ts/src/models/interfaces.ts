@@ -36,7 +36,7 @@ export interface IGameStateDocument {
 }
 
 export interface ITransactionDocument {
-    nonce?: string;
+    nonce: string;
     to: string;
     from: string;
     value: string;

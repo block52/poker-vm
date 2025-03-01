@@ -13,8 +13,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
         readonly hash: string,
         readonly signature: string,
         readonly timestamp: number,
+        readonly nonce: bigint,
         readonly index?: number,
-        readonly nonce?: bigint,
         readonly data?: string
     ) {
         // If the index is not provided, set it to 0 or look for the last index in the blockchain
@@ -97,7 +97,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
             document.signature,
             document.timestamp ? Number(document.timestamp) : 0,
             document.index ? Number(document.index) : undefined,
-            document.nonce ? BigInt(document.nonce) : undefined,
+            BigInt(document.nonce),
             document.data
         );
     }
@@ -111,7 +111,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
             signature: this.signature,
             timestamp: this.timestamp.toString(),
             index: this.index?.toString(),
-            nonce: this.nonce?.toString(),
+            nonce: this.nonce.toString(),
             data: this.data,
             block_hash: this.blockHash
         };
