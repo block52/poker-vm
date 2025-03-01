@@ -38,8 +38,9 @@ export class Bridge {
                     txHash
                 });
 
-                await this.onDeposit(account, amount, index, txHash);
-                console.log(`✅ Successfully processed live deposit at index ${index}`);
+                const adjustedIndex = index - 1n;
+                await this.onDeposit(account, amount, adjustedIndex, txHash);
+                console.log(`✅ Successfully processed live deposit at index ${adjustedIndex}`);
             } catch (error) {
                 console.error("❌ Failed to process live deposit:", error);
             }
