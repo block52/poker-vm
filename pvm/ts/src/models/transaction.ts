@@ -2,6 +2,7 @@ import { TransactionDTO } from "@bitcoinbrisbane/block52";
 import { createHash } from "crypto";
 import { signData } from "../utils/crypto";
 import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
+import { ZeroHash } from "ethers";
 
 export class Transaction implements ICryptoModel, IJSONModel {
     private _blockHash: string | undefined;
@@ -34,22 +35,23 @@ export class Transaction implements ICryptoModel, IJSONModel {
     }
 
     public verify(): boolean {
-        // const hash = this.calculateHash();
-        // return hash === this.hash;
+        if (!this.signature) {
+            return false;
+        }
 
-        // return signature === this.signature;
-        // return true; //this.signature === ZeroHash);
-
+        if (this.signature === ZeroHash) {
+            return true;
+        }
+        
+        const hash = this.calculateHash();
+        const publicKey = this.from;
+        // const verified = verifyData(publicKey, hash, this.signature);
         return true;
     }
 
     public calculateHash(): string {
         return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.nonce}`).digest("hex");
     }
-
-    // get hash(): string {
-    //     return this.calculateHash();
-    // }
 
     public static async create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Promise<Transaction> {
         const timestamp = Date.now();
