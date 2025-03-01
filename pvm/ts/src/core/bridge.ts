@@ -31,14 +31,16 @@ export class Bridge {
                 const [account, amount, index] = log.args;
                 const txHash = log.log.transactionHash;
                 
+                // Subtract 1 from index to match contract's 0-based indexing
+                const adjustedIndex = index - 1n;
+                
                 console.log("\n🎯 Processing Live Deposit Event:", {
                     account,
                     amount: amount.toString(),
-                    index: index.toString(),
+                    index: adjustedIndex.toString(),
                     txHash
                 });
 
-                const adjustedIndex = index - 1n;
                 await this.onDeposit(account, amount, adjustedIndex, txHash);
                 console.log(`✅ Successfully processed live deposit at index ${adjustedIndex}`);
             } catch (error) {
