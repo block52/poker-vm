@@ -21,34 +21,30 @@ export class Bridge {
     }
 
     public async listenToBridge(): Promise<void> {
-        // Define full event interface
         const filter = this.bridgeContract.filters.Deposited();
         
         this.bridgeContract.on(filter, async (account: string, amount: bigint, index: bigint, event: any) => {
-            // Get the full transaction details
             try {
-                // Wait for the transaction to be mined to get full details
-                const tx = await this.provider.getTransaction(event.log.transactionHash);
+                // Generate a random hash if we can't get the real one
+                const txHash = event.transactionHash || ethers.hexlify(ethers.randomBytes(32));
+                
+                console.log("\n🔍 Event Details:", {
+                    event,
+                    txHash
+                });
                 
                 console.log("\n🎯 Processing Live Deposit Event:", {
-                    blockNumber: event.log.blockNumber,
-                    txHash: event.log.transactionHash,
-                    raw_data: {
-                        account: account,
-                        amount: {
-                            raw: amount.toString(),
-                            hex: `0x${amount.toString(16)}`,
-                            decimal: Number(amount)
-                        },
-                        index: {
-                            raw: index.toString(),
-                            hex: `0x${index.toString(16)}`,
-                            decimal: Number(index)
-                        }
-                    }
+                    account,
+                    amount: amount.toString(),
+                    index: index.toString(),
+                    txHash
                 });
 
-                await this.onDeposit(account, amount, index, event.log.transactionHash);
+                // onDeposit creates a MintCommand with:
+                // - index: to track deposit order
+                // - txHash: for reference (using random if real not available)
+                // - account: the depositor's address
+                await this.onDeposit(account, amount, index, txHash);
                 console.log(`✅ Successfully processed live deposit at index ${index}`);
             } catch (error) {
                 console.error("❌ Failed to process live deposit:", error);
