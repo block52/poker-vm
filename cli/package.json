@@ -1,14 +1,34 @@
 {
-  "name": "cli",
+  "name": "b52-cli",
   "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
-  "scripts": {
-    "cli": "npx ts-node index.ts"
+  "description": "B52 Cli",
+  "main": "dist/index.js",
+  "bin": {
+    "cli": "./dist/index.js"
   },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "cli",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "@bitcoinbrisbane/block52": "^1.0.44",
+    "chalk": "^4.1.2",
+    "commander": "^9.4.1",
     "dotenv": "^16.4.7",
-    "inquirer": "^12.3.0"
+    "inquirer": "^8.2.5"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^8.2.5",
+    "@types/node": "^18.11.9",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3"
   }
 }
