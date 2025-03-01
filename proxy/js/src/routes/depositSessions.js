@@ -19,33 +19,24 @@ async function handleTokenTransfer(amount, userAddress) {
     console.log('Amount:', amount.toString());
     console.log('User Address:', userAddress);
 
-    const depositInterface = new ethers.Interface([
-        {
-            "inputs": [
-                {"internalType": "address", "name": "user", "type": "address"},
-                {"internalType": "uint256", "name": "amount", "type": "uint256"}
-            ],
-            "name": "forwardDepositUnderlying",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }
-    ]);
-
     try {
-        // USDC has 6 decimals, not 18!
+        // USDC has 6 decimals
         const amountInUnits = ethers.parseUnits(amount.toString(), 6);
         
         console.log('Attempting forwardDepositUnderlying with:');
         console.log('- User:', userAddress);
         console.log('- Amount in Units:', amountInUnits.toString());
 
+        // Create contract instance with the ABI
         const depositContract = new ethers.Contract(
             DEPOSIT_ADDRESS,
-            depositInterface,
+            [
+                "function forwardDepositUnderlying(address user, uint256 amount) external"
+            ],
             wallet
         );
 
+        // Call the function properly
         const tx = await depositContract.forwardDepositUnderlying(
             userAddress,
             amountInUnits,
