@@ -3,7 +3,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import crypto from "crypto";
 
-import { TexasHoldemGameStateDTO, PlayerDTO, WinnerDTO, NodeRpcClient, TexasHoldemStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { TexasHoldemGameStateDTO, NodeRpcClient, TexasHoldemStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -11,6 +11,7 @@ dotenv.config();
 let pk = process.env.PRIVATE_KEY || "";
 let address = "0xd5caa0c159a708c34255a58fc26a16567b66e3fb24";
 let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
+let nonce: bigint = 0n;
 
 const createPrivateKey = async () => {
     // Generate a new ed25519 key pair
@@ -29,6 +30,11 @@ const createPrivateKey = async () => {
     console.log(chalk.green("Public key:"));
     console.log(publicKey.export({ type: "spki", format: "pem" }).toString());
 };
+
+const syncNonce = async () => {
+    const rpcClient = new NodeRpcClient(node, pk);
+    const response = await rpcClient.getAccount();
+}
 
 const getMockGameState = async (): Promise<TexasHoldemGameStateDTO> => {
     // const rpcClient = new NodeRpcClient(node, pk);
@@ -59,6 +65,12 @@ const getMockGameState = async (): Promise<TexasHoldemGameStateDTO> => {
         winners: [],
         signature: ""
     };
+};
+
+const join = async (address: string): Promise<TexasHoldemGameStateDTO> => {
+    const rpcClient = new NodeRpcClient(node, pk);
+    const dto = await rpcClient.join(address);
+    return dto;
 };
 
 const getGameState = async (address: string): Promise<TexasHoldemGameStateDTO> => {
@@ -217,6 +229,7 @@ const interactiveAction = async () => {
                 message: "What would you like to do?",
                 choices: [
                     { name: "Create an account", value: "new_account" },
+                    { name: "Import a private key", value: "import_key" },
                     { name: "Join a game", value: "join_game" },
                     { name: "Status", value: "status" },
                     { name: "Exit", value: "exit" }
@@ -230,7 +243,15 @@ const interactiveAction = async () => {
                 createPrivateKey();
                 break;
             case "import_key":
-                console.log(chalk.green("Importing key..."));
+                const { privateKey } = await inquirer.prompt([
+                    {
+                        type: "input",
+                        name: "privateKey",
+                        message: "Enter your private key:"
+                    }
+                ]);
+                pk = privateKey;
+                console.log(chalk.green("Private key imported!"));
                 break;
             case "status":
                 const state = await getGameState(address);
