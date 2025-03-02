@@ -51,19 +51,19 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                         game.join2(this.from, this.amount);
                         break;
                     case "bet":
-                        //game.performAction(tx.from, PlayerActionType.BET, tx.value);
+                        game.performAction(this.from, PlayerActionType.BET, this.amount);
                         break;
                     case "call":
-                        //game.performAction(tx.from, PlayerActionType.CALL, tx.value);
+                        game.performAction(this.from, PlayerActionType.CALL);
                         break;
                     case "fold":
-                        //game.performAction(tx.from, PlayerActionType.FOLD, 0n);
+                        game.performAction(this.from, PlayerActionType.FOLD);
                         break;
                     case "check":
-                        //game.performAction(tx.from, PlayerActionType.CHECK, 0n);
+                        game.performAction(this.from, PlayerActionType.CHECK);
                         break;
                     case "raise":
-                        //game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
+                        game.performAction(this.from, PlayerActionType.RAISE, this.amount);
                         break;
                     default:
                         throw new Error("Invalid action");
