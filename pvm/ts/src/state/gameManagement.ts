@@ -24,18 +24,21 @@ export class GameManagement extends StateManager {
             const json = {
                 type: "cash",
                 address: ethers.ZeroAddress,
+                minBuyIn: "1500000000000000000000",  // 1500 * bigBlind
+                maxBuyIn: "6000000000000000000000",  // 6000 * bigBlind
+                minPlayers: 2,
+                maxPlayers: 9,
                 smallBlind: "10000000000000000000",
                 bigBlind: "30000000000000000000",
                 dealer: 0,
-                players,
-                communityCards,
+                players: [],
+                communityCards: [],
                 pots: ["0"],
                 nextToAct: 0,
                 round: "preflop",
                 winners: [],
                 signature: ethers.ZeroHash
             };
-
             return json;
         }
 
