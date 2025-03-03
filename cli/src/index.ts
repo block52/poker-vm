@@ -2,6 +2,7 @@
 import chalk from "chalk";
 import inquirer from "inquirer";
 import crypto from "crypto";
+import { Wallet } from "ethers";
 
 import { TexasHoldemGameStateDTO, NodeRpcClient, TexasHoldemStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 
@@ -33,7 +34,7 @@ const createPrivateKey = async () => {
 
 const syncNonce = async () => {
     const rpcClient = new NodeRpcClient(node, pk);
-    const response = await rpcClient.getAccount();
+    const response = await rpcClient.getAccount(address);
 }
 
 const getMockGameState = async (): Promise<TexasHoldemGameStateDTO> => {
@@ -67,10 +68,9 @@ const getMockGameState = async (): Promise<TexasHoldemGameStateDTO> => {
     };
 };
 
-const join = async (address: string): Promise<TexasHoldemGameStateDTO> => {
+const join = async (address: string): Promise<void> => {
     const rpcClient = new NodeRpcClient(node, pk);
-    const dto = await rpcClient.join(address);
-    return dto;
+    await rpcClient.playerJoin(address);
 };
 
 const getGameState = async (address: string): Promise<TexasHoldemGameStateDTO> => {
@@ -250,8 +250,21 @@ const interactiveAction = async () => {
                         message: "Enter your private key:"
                     }
                 ]);
-                pk = privateKey;
-                console.log(chalk.green("Private key imported!"));
+                try {
+                    const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
+                    console.log(chalk.yellow("Attempting to use key:", formattedKey));
+                    
+                    const wallet = new Wallet(formattedKey);
+                    pk = formattedKey;
+                    address = wallet.address;
+                    console.log(chalk.green("Private key imported successfully!"));
+                    console.log(chalk.cyan(`Address: ${address}`));
+                } catch (error: any) {
+                    console.error(chalk.red("Invalid private key format:", error.message));
+                    console.error(chalk.yellow("Debug info:"));
+                    console.error(chalk.yellow("Key length:", privateKey.length));
+                    console.error(chalk.yellow("Key:", privateKey));
+                }
                 break;
             case "status":
                 const state = await getGameState(address);
@@ -259,6 +272,8 @@ const interactiveAction = async () => {
                 await pokerInteractiveAction();
                 break;
             case "join_game":
+                console.log(chalk.yellow("Join game functionality not yet implemented"));
+                // TODO: Implement alternative way to join games
                 break;
             case "exit":
                 continueSession = false;
