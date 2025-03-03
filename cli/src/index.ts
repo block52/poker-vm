@@ -13,7 +13,7 @@ dotenv.config();
 let pk = process.env.PRIVATE_KEY || "";
 let address = "0xd5caa0c159a708c34255a58fc26a16567b66e3fb24";
 let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
-let nonce: bigint = 0n;
+let nonce: number = 0;
 
 const createPrivateKey = async () => {
     // Generate a new ed25519 key pair
@@ -36,40 +36,13 @@ const createPrivateKey = async () => {
 const syncNonce = async () => {
     const rpcClient = new NodeRpcClient(node, pk);
     const response = await rpcClient.getAccount(address);
-}
 
-const getMockGameState = async (): Promise<TexasHoldemGameStateDTO> => {
-    // const rpcClient = new NodeRpcClient(node, pk);
-    // const dto = await rpcClient.getGameState(address);
-    // return dto;
-
-    return {
-        type: "cash",
-        address: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-        smallBlind: "500000000000000000", // 0.5
-        bigBlind: "1000000000000000000", // 1.0
-        smallBlindPosition: 1,
-        bigBlindPosition: 2,
-        dealer: 0,
-        players: [
-        //   {
-        //     address: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-        //     stack: "94500000000000000000", // 94.5
-        //     holeCards: [1, 14], // 2 of Spades, 2 of Hearts
-        //     : "4500000000000000000", // 4.5 total
-        //     seatIndex: 0
-        //   },
-        ],
-        communityCards: [2, 3, 4, 5, 6], // 3, 4, 5, 6, 7
-        pots: ["4500000000000000000"], // 4.5
-        round: TexasHoldemRound.PREFLOP,
-        nextToAct: 0,
-        winners: [],
-        signature: ""
-    };
+    if (response) {
+        nonce = response?.nonce || 0;
+    }
 };
 
-const join = async (address: string): Promise<void> => {
+const join = async (address: string, amount: bigint): Promise<void> => {
     const rpcClient = new NodeRpcClient(node, pk);
     await rpcClient.playerJoin(address);
 };
@@ -77,7 +50,7 @@ const join = async (address: string): Promise<void> => {
 const getGameState = async (address: string): Promise<TexasHoldemGameStateDTO> => {
     const rpcClient = new NodeRpcClient(node, pk);
     const dto = await rpcClient.getGameState(address);
-    
+
     const state = dto as TexasHoldemGameStateDTO;
     return state;
 };
@@ -85,6 +58,11 @@ const getGameState = async (address: string): Promise<TexasHoldemGameStateDTO> =
 const getAccount = async (address: string): Promise<any> => {
     const rpcClient = new NodeRpcClient(node, pk);
     const response = await rpcClient.getAccount(address);
+
+    if (response) {
+        nonce = response?.nonce || 0;
+    }
+
     return response;
 };
 
@@ -108,7 +86,7 @@ const cardToString = (card: number): string => {
     }
 
     return `${rank}${suit}`;
-}
+};
 
 // Format chips from wei (10^18) to readable format
 const formatChips = (chipString: string): string => {
@@ -119,7 +97,7 @@ const formatChips = (chipString: string): string => {
     } catch (e) {
         return "0.00";
     }
-}
+};
 
 // Helper to determine which positions players are in
 const getPlayerPosition = (playerIndex: number, state: TexasHoldemGameStateDTO): string => {
@@ -127,7 +105,7 @@ const getPlayerPosition = (playerIndex: number, state: TexasHoldemGameStateDTO):
     if (playerIndex === state.smallBlindPosition) return "SB";
     if (playerIndex === state.bigBlindPosition) return "BB";
     return "";
-}
+};
 
 // Display game state as a table
 const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): void => {
@@ -186,7 +164,6 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
         // Format player cards - show only if it's my player or we're at showdown
         let cardsDisplay = "";
         if (isMyPlayer || state.round === "showdown") {
-
             if (player.holeCards) {
                 cardsDisplay = player.holeCards?.map(card => cardToString(card)).join(" ");
             }
@@ -222,11 +199,11 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
     }
 
     console.log(chalk.cyan("=".repeat(60)));
-}
+};
 
 const interactiveAction = async () => {
     console.log(chalk.yellow("Welcome to the interactive CLI tool!"));
-    
+
     // Check node connectivity
     console.log(chalk.yellow(`Checking for node at ${node}...`));
     try {
@@ -240,7 +217,7 @@ const interactiveAction = async () => {
     }
 
     console.log(chalk.yellow("Checking for private key in PRIVATE_KEY environment variable..."));
-    
+
     if (process.env.PRIVATE_KEY) {
         try {
             const wallet = new Wallet(process.env.PRIVATE_KEY);
@@ -286,9 +263,9 @@ const interactiveAction = async () => {
                     }
                 ]);
                 try {
-                    const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
+                    const formattedKey = privateKey.startsWith("0x") ? privateKey : `0x${privateKey}`;
                     console.log(chalk.yellow("Attempting to use key:", formattedKey));
-                    
+
                     const wallet = new Wallet(formattedKey);
                     pk = formattedKey;
                     address = wallet.address;
@@ -318,7 +295,7 @@ const interactiveAction = async () => {
             case "status":
                 try {
                     console.log(chalk.yellow("Fetching game state..."));
-                    
+
                     const { tableAddress: inputAddress } = await inquirer.prompt([
                         {
                             type: "input",
@@ -329,14 +306,16 @@ const interactiveAction = async () => {
                     ]);
 
                     const tableAddress = inputAddress.trim() ? inputAddress : ethers.ZeroAddress;
-                    console.log(chalk.yellow(
-                        tableAddress === ethers.ZeroAddress 
-                            ? "No table address provided, using default table (0x0000...0000)"
-                            : `Using table address: ${tableAddress}`
-                    ));
+                    console.log(
+                        chalk.yellow(
+                            tableAddress === ethers.ZeroAddress
+                                ? "No table address provided, using default table (0x0000...0000)"
+                                : `Using table address: ${tableAddress}`
+                        )
+                    );
 
                     const state = await getGameState(tableAddress);
-                    
+
                     // Add these lines to show raw state
                     console.log(chalk.cyan("\nRaw game state:"));
                     console.log(chalk.cyan(JSON.stringify(state, null, 2)));
@@ -363,23 +342,22 @@ const interactiveAction = async () => {
                 break;
             case "join_game":
                 try {
-                    const tableAddress = ethers.ZeroAddress;
-                    console.log(chalk.yellow(`Getting table state for ${tableAddress}...`));
-                    
-                    const gameState = await getGameState(tableAddress);
+                    console.log(chalk.yellow(`Getting table state for ${address}...`));
+
+                    const gameState = await getGameState(address);
                     console.log(chalk.cyan("Current table state:"));
                     console.log(chalk.cyan(JSON.stringify(gameState, null, 2)));
 
-                    const minBuyIn = BigInt("0.100000000000000000");  // 3.6 USDC
-                    const maxBuyIn = BigInt("6860000000000000000");  // 6.86 USDC
+                    const minBuyIn = BigInt("0.100000000000000000"); // 3.6 USDC
+                    const maxBuyIn = BigInt("6860000000000000000"); // 6.86 USDC
 
                     const { buyInAmount } = await inquirer.prompt([
                         {
                             type: "input",
                             name: "buyInAmount",
-                            message: `Enter buy-in amount in USDC (minimum: 3.6 USDC, maximum: 6.86 USDC):`,
-                            default: "3.6",
-                            validate: (input) => {
+                            message: `Enter buy-in amount in USDC (minimum: 3.0 USDC, maximum: 6.86 USDC):`,
+                            default: "3.0",
+                            validate: input => {
                                 try {
                                     const amount = ethers.parseEther(input);
                                     if (amount < minBuyIn) return `Must be at least 3.6 USDC`;
@@ -393,48 +371,11 @@ const interactiveAction = async () => {
                     ]);
 
                     const buyInWei = ethers.parseEther(buyInAmount);
-                    
-                    // Match the exact signing pattern
-                    const transferParams = {
-                        from: address,
-                        to: tableAddress,
-                        amount: buyInWei.toString(),
-                        action: "join"
-                    };
+                    console.log(chalk.yellow(`Attempting to join game with ${buyInAmount} USDC...`));
 
-                    // Create message hash exactly as in the example
-                    const message = ethers.solidityPackedKeccak256(
-                        ["address", "address", "uint256", "string"],
-                        [transferParams.from, transferParams.to, transferParams.amount, transferParams.action]
-                    );
+                    const result = await join(address, buyInWei);
 
-                    const wallet = new Wallet(pk);
-                    const signature = await wallet.signMessage(ethers.getBytes(message));
-                    const publicKey = wallet.signingKey.publicKey;
-
-                    // Create RPC call matching the example format
-                    const response = await fetch('http://localhost:3000', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            id: "1",
-                            version: "2.0",
-                            method: "transfer",
-                            params: [
-                                transferParams.from,
-                                transferParams.to,
-                                transferParams.amount,
-                                transferParams.action
-                            ],
-                            signature: signature,
-                            publicKey: publicKey
-                        })
-                    });
-
-                    console.log(chalk.green("Join request sent!"));
-                    const result = await response.json();
                     console.log(chalk.cyan("Response:"), result);
-
                 } catch (error: any) {
                     console.error(chalk.red("Failed to join game:"), error.message);
                 }
@@ -482,7 +423,6 @@ const getLegalActions = (address: string, publicKey: string): ActionChoice[] => 
 };
 
 const pokerInteractiveAction = async () => {
-
     const actions = await getLegalActions(address, pk);
 
     let continueSession = true;
