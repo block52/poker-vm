@@ -28,8 +28,8 @@ export class GameManagement extends StateManager {
                 maxBuyIn: "6000000000000000000000",  // 6000 * bigBlind
                 minPlayers: 2,
                 maxPlayers: 9,
-                smallBlind: "10000000000000000000",
-                bigBlind: "30000000000000000000",
+                smallBlind: "100000000000000000",    
+                bigBlind: "200000000000000000",    
                 dealer: 0,
                 players: [],
                 communityCards: [],
