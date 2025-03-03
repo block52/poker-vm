@@ -337,6 +337,11 @@ const interactiveAction = async () => {
 
                     const state = await getGameState(tableAddress);
                     
+                    // Add these lines to show raw state
+                    console.log(chalk.cyan("\nRaw game state:"));
+                    console.log(chalk.cyan(JSON.stringify(state, null, 2)));
+                    console.log(chalk.cyan("============================================================\n"));
+
                     if (!state) {
                         console.log(chalk.red("No active game found"));
                         console.log(chalk.yellow("Using default table state"));
@@ -349,7 +354,7 @@ const interactiveAction = async () => {
                         break;
                     }
 
-                    displayGameState(state, address); // address here is still user's address for display
+                    // displayGameState(state, address); // address here is still user's address for display
                     await pokerInteractiveAction();
                 } catch (error: any) {
                     console.error(chalk.red("Failed to fetch game state:"), error.message);
