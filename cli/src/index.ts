@@ -362,8 +362,47 @@ const interactiveAction = async () => {
                 }
                 break;
             case "join_game":
-                console.log(chalk.yellow("Join game functionality not yet implemented"));
-                // TODO: Implement alternative way to join games
+                try {
+                    // First get the game state to check blinds
+                    const tableAddress = ethers.ZeroAddress; // For now, just using default table
+                    console.log(chalk.yellow(`Getting table state for ${tableAddress}...`));
+                    
+                    const gameState = await getGameState(tableAddress);
+                    console.log(chalk.cyan("Current table state:"));
+                    console.log(chalk.cyan(JSON.stringify(gameState, null, 2)));
+
+                    const smallBlind = BigInt(gameState.smallBlind);
+                    const suggestedBuyIn = smallBlind * 100n; // Suggested buy-in of 100x small blind
+
+                    const { buyInAmount } = await inquirer.prompt([
+                        {
+                            type: "input",
+                            name: "buyInAmount",
+                            message: `Enter buy-in amount in ETH (minimum: ${ethers.formatEther(smallBlind)} ETH, suggested: ${ethers.formatEther(suggestedBuyIn)} ETH):`,
+                            default: ethers.formatEther(suggestedBuyIn)
+                        }
+                    ]);
+
+                    const buyInWei = ethers.parseEther(buyInAmount);
+                    
+                    console.log(chalk.yellow(`Joining table ${tableAddress} with ${buyInAmount} ETH...`));
+                    
+                    const rpcClient = new NodeRpcClient(node, pk);
+                    const response = await rpcClient.transfer(
+                        tableAddress,    // to: table address
+                        buyInWei.toString(),  // amount
+                        undefined,       // nonce (optional)
+                        "join"          // action
+                    );
+
+                    console.log(chalk.green("Successfully joined the game!"));
+                    console.log(chalk.cyan("Response:"));
+                    console.log(chalk.cyan(JSON.stringify(response, null, 2)));
+
+                } catch (error: any) {
+                    console.error(chalk.red("Failed to join game:"), error.message);
+                    console.log(chalk.yellow("Make sure you have enough balance and the table exists"));
+                }
                 break;
             case "exit":
                 continueSession = false;
