@@ -219,15 +219,18 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
 
 const interactiveAction = async () => {
     console.log(chalk.yellow("Welcome to the interactive CLI tool!"));
+    console.log(chalk.yellow("Checking for private key in PRIVATE_KEY environment variable..."));
     
-    // Check for existing private key and show address
-    if (pk) {
+    if (process.env.PRIVATE_KEY) {
         try {
-            const wallet = new Wallet(pk);
+            const wallet = new Wallet(process.env.PRIVATE_KEY);
+            console.log(chalk.green("✓ Found valid private key"));
             console.log(chalk.cyan(`Current active address: ${wallet.address}`));
         } catch (error) {
-            console.log(chalk.yellow("No valid private key found in environment"));
+            console.log(chalk.red("✗ Invalid private key found in PRIVATE_KEY"));
         }
+    } else {
+        console.log(chalk.yellow("✗ No private key found in PRIVATE_KEY"));
     }
 
     let continueSession = true;
