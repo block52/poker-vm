@@ -13,17 +13,21 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly mempool: Mempool;
 
     constructor(private from: string, private to: string, private amount: bigint, private data: string | null, private readonly privateKey: string) {
+        console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
         this.mempool = getMempoolInstance();
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
+        console.log(`Executing transfer command...`);
 
         const accountCommand = new AccountCommand(this.from, this.privateKey);
         const accountResponse = await accountCommand.execute();
         const fromAccount = accountResponse.data;
+        console.log(`Account balance for ${this.from}: ${fromAccount.balance}`);
 
         if (this.amount > fromAccount.balance) {
+            console.log(`Insufficient balance: required=${this.amount}, available=${fromAccount.balance}`);
             throw new Error("Insufficient balance");
         }
 
@@ -31,12 +35,16 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         // Check if from is a game account
         try {
             if (this.data && await this.isGameTransaction(this.to)) {
-                console.log(`Data: ${this.data}`);
+                console.log(`Processing game transaction: data=${this.data}, to=${this.to}`);
 
                 const json = await this.gameManagement.get(this.to);
+                console.log(`Current game state:`, json);
+
                 const game = TexasHoldemGame.fromJson(json);
+                console.log(`Game object created, processing action: ${this.data}`);
 
                 if (!game) {
+                    console.log(`No game found for address ${this.to}`);
                     // return default response
                 }
 
@@ -44,13 +52,16 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
 
                 // Cast string to PlayerActionType
                 const playerAction: PlayerActionType = this.data as PlayerActionType;
+                console.log(`Player action type: ${playerAction}`);
 
                 switch (playerAction) {
                     case "join":
-                        console.log(`Joining game...`);
+                        console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
                         game.join2(this.from, this.amount);
+                        console.log(`Join successful`);
                         break;
                     case "bet":
+                        console.log(`Player ${this.from} betting ${this.amount}...`);
                         game.performAction(this.from, PlayerActionType.BET, this.amount);
                         break;
                     case "call":
@@ -71,18 +82,22 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             }
 
             // If we haven't thrown an error, then we can create the transaction
+            console.log(`Creating transaction...`);
             const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+            console.log(`Adding transaction to mempool...`);
             await this.mempool.add(transferTx);
 
             return signResult(transferTx, this.privateKey);
         } catch (e) {
-            console.error(e);
+            console.error(`Error in transfer command:`, e);
             throw new Error("Error transferring funds");
         }
     }
 
     private async isGameTransaction(address: string): Promise<Boolean> {
+        console.log(`Checking if ${address} is a game transaction...`);
         const existingContractSchema = await contractSchemas.find({ address: address });
+        console.log(`Contract schema found:`, existingContractSchema);
         return existingContractSchema !== undefined;
     }   
 }
