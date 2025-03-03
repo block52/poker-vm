@@ -219,6 +219,19 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
 
 const interactiveAction = async () => {
     console.log(chalk.yellow("Welcome to the interactive CLI tool!"));
+    
+    // Check node connectivity
+    console.log(chalk.yellow(`Checking for node at ${node}...`));
+    try {
+        const response = await fetch(node);
+        const text = await response.text();
+        if (text.includes("PVM RPC Server")) {
+            console.log(chalk.green("✓ Node is running"));
+        }
+    } catch (error) {
+        console.log(chalk.red("✗ Cannot connect to node at", node));
+    }
+
     console.log(chalk.yellow("Checking for private key in PRIVATE_KEY environment variable..."));
     
     if (process.env.PRIVATE_KEY) {
