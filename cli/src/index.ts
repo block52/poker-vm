@@ -82,6 +82,12 @@ const getGameState = async (address: string): Promise<TexasHoldemGameStateDTO> =
     return state;
 };
 
+const getAccount = async (address: string): Promise<any> => {
+    const rpcClient = new NodeRpcClient(node, pk);
+    const response = await rpcClient.getAccount(address);
+    return response;
+};
+
 // Convert card number to readable format
 const cardToString = (card: number): string => {
     if (card === 0) return "🂠"; // Back of card for hidden cards
@@ -257,6 +263,7 @@ const interactiveAction = async () => {
                 choices: [
                     { name: "Create an account", value: "new_account" },
                     { name: "Import a private key", value: "import_key" },
+                    { name: "Get account", value: "get_account" },
                     { name: "Create a game (coming soon)", value: "create_game" },
                     { name: "Join a game", value: "join_game" },
                     { name: "Status", value: "status" },
@@ -292,6 +299,20 @@ const interactiveAction = async () => {
                     console.error(chalk.yellow("Debug info:"));
                     console.error(chalk.yellow("Key length:", privateKey.length));
                     console.error(chalk.yellow("Key:", privateKey));
+                }
+                break;
+            case "get_account":
+                try {
+                    const response = await getAccount(address);
+                    if (response) {
+                        console.log(chalk.green("Account found:"));
+                        console.log(chalk.cyan(JSON.stringify(response, null, 2)));
+                    } else {
+                        console.log(chalk.red("No account found"));
+                        console.log(chalk.yellow("Hint: You need to create or import an account first"));
+                    }
+                } catch (error: any) {
+                    console.error(chalk.red("Failed to fetch account:"), error.message);
                 }
                 break;
             case "status":
