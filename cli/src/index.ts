@@ -256,6 +256,7 @@ const interactiveAction = async () => {
                 choices: [
                     { name: "Create an account", value: "new_account" },
                     { name: "Import a private key", value: "import_key" },
+                    { name: "Create a game (coming soon)", value: "create_game" },
                     { name: "Join a game", value: "join_game" },
                     { name: "Status", value: "status" },
                     { name: "Exit", value: "exit" }
