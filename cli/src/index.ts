@@ -3,6 +3,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import crypto from "crypto";
 import { Wallet } from "ethers";
+import { ethers } from "ethers";
 
 import { TexasHoldemGameStateDTO, NodeRpcClient, TexasHoldemStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 
@@ -296,11 +297,28 @@ const interactiveAction = async () => {
             case "status":
                 try {
                     console.log(chalk.yellow("Fetching game state..."));
-                    const state = await getGameState(address);
+                    
+                    const { tableAddress: inputAddress } = await inquirer.prompt([
+                        {
+                            type: "input",
+                            name: "tableAddress",
+                            message: "Enter table address (leave empty for default table):",
+                            default: ""
+                        }
+                    ]);
+
+                    const tableAddress = inputAddress.trim() ? inputAddress : ethers.ZeroAddress;
+                    console.log(chalk.yellow(
+                        tableAddress === ethers.ZeroAddress 
+                            ? "No table address provided, using default table (0x0000...0000)"
+                            : `Using table address: ${tableAddress}`
+                    ));
+
+                    const state = await getGameState(tableAddress);
                     
                     if (!state) {
-                        console.log(chalk.red("No active game found for this address"));
-                        console.log(chalk.yellow("Hint: You need to join a game first"));
+                        console.log(chalk.red("No active game found"));
+                        console.log(chalk.yellow("Using default table state"));
                         break;
                     }
 
@@ -310,11 +328,11 @@ const interactiveAction = async () => {
                         break;
                     }
 
-                    displayGameState(state, address);
+                    displayGameState(state, address); // address here is still user's address for display
                     await pokerInteractiveAction();
                 } catch (error: any) {
                     console.error(chalk.red("Failed to fetch game state:"), error.message);
-                    console.log(chalk.yellow("Make sure you're connected to the correct node and have joined a game"));
+                    console.log(chalk.yellow("Make sure you're connected to the correct node"));
                 }
                 break;
             case "join_game":
