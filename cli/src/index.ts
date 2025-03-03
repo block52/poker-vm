@@ -363,45 +363,80 @@ const interactiveAction = async () => {
                 break;
             case "join_game":
                 try {
-                    // First get the game state to check blinds
-                    const tableAddress = ethers.ZeroAddress; // For now, just using default table
+                    const tableAddress = ethers.ZeroAddress;
                     console.log(chalk.yellow(`Getting table state for ${tableAddress}...`));
                     
                     const gameState = await getGameState(tableAddress);
                     console.log(chalk.cyan("Current table state:"));
                     console.log(chalk.cyan(JSON.stringify(gameState, null, 2)));
 
-                    const smallBlind = BigInt(gameState.smallBlind);
-                    const suggestedBuyIn = smallBlind * 100n; // Suggested buy-in of 100x small blind
+                    const minBuyIn = BigInt("0.100000000000000000");  // 3.6 USDC
+                    const maxBuyIn = BigInt("6860000000000000000");  // 6.86 USDC
 
                     const { buyInAmount } = await inquirer.prompt([
                         {
                             type: "input",
                             name: "buyInAmount",
-                            message: `Enter buy-in amount in ETH (minimum: ${ethers.formatEther(smallBlind)} ETH, suggested: ${ethers.formatEther(suggestedBuyIn)} ETH):`,
-                            default: ethers.formatEther(suggestedBuyIn)
+                            message: `Enter buy-in amount in USDC (minimum: 3.6 USDC, maximum: 6.86 USDC):`,
+                            default: "3.6",
+                            validate: (input) => {
+                                try {
+                                    const amount = ethers.parseEther(input);
+                                    if (amount < minBuyIn) return `Must be at least 3.6 USDC`;
+                                    if (amount > maxBuyIn) return `Must be at most 6.86 USDC`;
+                                    return true;
+                                } catch (error) {
+                                    return "Please enter a valid number";
+                                }
+                            }
                         }
                     ]);
 
                     const buyInWei = ethers.parseEther(buyInAmount);
                     
-                    console.log(chalk.yellow(`Joining table ${tableAddress} with ${buyInAmount} ETH...`));
-                    
-                    const rpcClient = new NodeRpcClient(node, pk);
-                    const response = await rpcClient.transfer(
-                        tableAddress,    // to: table address
-                        buyInWei.toString(),  // amount
-                        undefined,       // nonce (optional)
-                        "join"          // action
+                    // Match the exact signing pattern
+                    const transferParams = {
+                        from: address,
+                        to: tableAddress,
+                        amount: buyInWei.toString(),
+                        action: "join"
+                    };
+
+                    // Create message hash exactly as in the example
+                    const message = ethers.solidityPackedKeccak256(
+                        ["address", "address", "uint256", "string"],
+                        [transferParams.from, transferParams.to, transferParams.amount, transferParams.action]
                     );
 
-                    console.log(chalk.green("Successfully joined the game!"));
-                    console.log(chalk.cyan("Response:"));
-                    console.log(chalk.cyan(JSON.stringify(response, null, 2)));
+                    const wallet = new Wallet(pk);
+                    const signature = await wallet.signMessage(ethers.getBytes(message));
+                    const publicKey = wallet.signingKey.publicKey;
+
+                    // Create RPC call matching the example format
+                    const response = await fetch('http://localhost:3000', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: "1",
+                            version: "2.0",
+                            method: "transfer",
+                            params: [
+                                transferParams.from,
+                                transferParams.to,
+                                transferParams.amount,
+                                transferParams.action
+                            ],
+                            signature: signature,
+                            publicKey: publicKey
+                        })
+                    });
+
+                    console.log(chalk.green("Join request sent!"));
+                    const result = await response.json();
+                    console.log(chalk.cyan("Response:"), result);
 
                 } catch (error: any) {
                     console.error(chalk.red("Failed to join game:"), error.message);
-                    console.log(chalk.yellow("Make sure you have enough balance and the table exists"));
                 }
                 break;
             case "exit":
