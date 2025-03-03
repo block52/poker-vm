@@ -293,9 +293,28 @@ const interactiveAction = async () => {
                 }
                 break;
             case "status":
-                const state = await getGameState(address);
-                displayGameState(state, address);
-                await pokerInteractiveAction();
+                try {
+                    console.log(chalk.yellow("Fetching game state..."));
+                    const state = await getGameState(address);
+                    
+                    if (!state) {
+                        console.log(chalk.red("No active game found for this address"));
+                        console.log(chalk.yellow("Hint: You need to join a game first"));
+                        break;
+                    }
+
+                    if (!state.players) {
+                        console.log(chalk.red("Invalid game state received"));
+                        console.log(chalk.yellow("Game state:", JSON.stringify(state, null, 2)));
+                        break;
+                    }
+
+                    displayGameState(state, address);
+                    await pokerInteractiveAction();
+                } catch (error: any) {
+                    console.error(chalk.red("Failed to fetch game state:"), error.message);
+                    console.log(chalk.yellow("Make sure you're connected to the correct node and have joined a game"));
+                }
                 break;
             case "join_game":
                 console.log(chalk.yellow("Join game functionality not yet implemented"));
