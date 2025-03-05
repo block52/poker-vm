@@ -39,12 +39,6 @@ export class Transaction implements ICryptoModel, IJSONModel {
             return false;
         }
 
-        // const hash = this.calculateHash();
-        // return hash === this.hash;
-
-        // return signature === this.signature;
-        // return true; //this.signature === ZeroHash);
-
         if (this.signature === ZeroHash) {
             return true;
         }
