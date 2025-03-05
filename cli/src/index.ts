@@ -11,9 +11,25 @@ import dotenv from "dotenv";
 dotenv.config();
 
 let pk = process.env.PRIVATE_KEY || "";
-let address = "0xd5caa0c159a708c34255a58fc26a16567b66e3fb24";
+// Default contract address on L2
+let address = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
 let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 let nonce: number = 0;
+
+
+/**
+ * Parse command with parameters
+ * Handles input like "join 0x00" or "bet 5.5"
+ * @param input User input string
+ * @returns Object with command and params
+ */
+const parseCommand = (input: string): { command: string; params: string[] } => {
+    const parts = input.trim().split(/\s+/);
+    const command = parts[0].toLowerCase();
+    const params = parts.slice(1);
+
+    return { command, params };
+}
 
 const createPrivateKey = async () => {
     // Generate a new ed25519 key pair
@@ -44,7 +60,9 @@ const syncNonce = async () => {
 
 const join = async (address: string, amount: bigint): Promise<void> => {
     const rpcClient = new NodeRpcClient(node, pk);
-    await rpcClient.playerJoin(address);
+    await rpcClient.playerJoin(address, amount, nonce);
+
+    // console.log(chalk.green("Join response:"), response);
 };
 
 const getGameState = async (address: string): Promise<TexasHoldemGameStateDTO> => {
@@ -137,12 +155,12 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
     console.log(chalk.cyan("-".repeat(80)));
     console.log(
         chalk.cyan("Seat").padEnd(6) +
-            chalk.cyan("Position").padEnd(10) +
-            chalk.cyan("Address").padEnd(20) +
-            chalk.cyan("Chips").padEnd(12) +
-            chalk.cyan("Bet").padEnd(12) +
-            chalk.cyan("Cards").padEnd(15) +
-            chalk.cyan("Status")
+        chalk.cyan("Position").padEnd(10) +
+        chalk.cyan("Address").padEnd(20) +
+        chalk.cyan("Chips").padEnd(12) +
+        chalk.cyan("Bet").padEnd(12) +
+        chalk.cyan("Cards").padEnd(15) +
+        chalk.cyan("Status")
     );
     console.log(chalk.cyan("-".repeat(80)));
 
@@ -174,12 +192,12 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
         console.log(
             rowStyle(
                 String(player.seat).padEnd(6) +
-                    getPlayerPosition(player.seat, state).padEnd(10) +
-                    (player.address.substring(0, 6) + "...").padEnd(20) +
-                    formatChips(player.stack).padEnd(12) +
-                    // formatChips(player.bet).padEnd(12) +
-                    cardsDisplay.padEnd(15) +
-                    status
+                getPlayerPosition(player.seat, state).padEnd(10) +
+                (player.address.substring(0, 6) + "...").padEnd(20) +
+                formatChips(player.stack).padEnd(12) +
+                // formatChips(player.bet).padEnd(12) +
+                cardsDisplay.padEnd(15) +
+                status
             )
         );
     }
@@ -232,10 +250,11 @@ const interactiveAction = async () => {
 
     let continueSession = true;
     while (continueSession) {
-        const { action } = await inquirer.prompt([
+
+        const { userInput } = await inquirer.prompt([
             {
                 type: "list",
-                name: "action",
+                name: "userInput",
                 message: "What would you like to do?",
                 choices: [
                     { name: "Create an account", value: "new_account" },
@@ -249,7 +268,9 @@ const interactiveAction = async () => {
             }
         ]);
 
-        switch (action) {
+        const { command, params } = parseCommand(userInput);
+
+        switch (command) {
             case "new_account":
                 // console.log(chalk.green("Hello!"));
                 createPrivateKey();
@@ -344,9 +365,9 @@ const interactiveAction = async () => {
                 try {
                     console.log(chalk.yellow(`Getting table state for ${address}...`));
 
-                    const gameState = await getGameState(address);
-                    console.log(chalk.cyan("Current table state:"));
-                    console.log(chalk.cyan(JSON.stringify(gameState, null, 2)));
+                    // const gameState = await getGameState(address);
+                    // console.log(chalk.cyan("Current table state:"));
+                    // console.log(chalk.cyan(JSON.stringify(gameState, null, 2)));
 
                     // Table stakes
                     const minBuyIn = BigInt("1000000000000000000"); // 1 USDC

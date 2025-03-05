@@ -199,15 +199,17 @@ export class NodeRpcClient {
      * @param amount The amount to transfer
      * @returns A Promise that resolves when the request is complete
      */
-    public async transfer(to: string, amount: string, nonce?: number, data?: string): Promise<void> {
+    public async transfer(to: string, amount: string, nonce?: number, data?: string): Promise<any> {
         const from = this.getAddress();
         const signature = await this.getSignature(nonce);
 
-        await axios.post(this.url, {
+        const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
             params: [from, to, amount, nonce, data, signature]
         });
+
+        return body.result.data;
     }
 
     /**
@@ -229,45 +231,41 @@ export class NodeRpcClient {
      * Get the state of a Texas Holdem game
      * @param gameAddress The address of the game
      * @returns A Promise that resolves to a TexasHoldemState object
-        */
+    */
     public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_GAME_STATE,
             params: [gameAddress]
         });
+
         return body.result.data;
     }
 
-    public async playerJoin(gameAddress: string, nonce?: number): Promise<void> {
-        const gameCommand = {
-            method: "join"
-        };
-
+    public async playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
         const address = this.getAddress();
         const signature = await this.getSignature(nonce);
 
-        await axios.post(this.url, {
+        const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [address, gameAddress, "0", JSON.stringify(gameCommand), signature]
+            params: [address, gameAddress, amount.toString(), "join", signature]
         });
+
+        return body.result.data;
     }
 
-    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<void> {
-        const gameCommand = {
-            method: action,
-            params: [amount]
-        };
-
+    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any> {
         const signature = await this.getSignature(nonce);
         const address = this.getAddress();
 
-        await axios.post(this.url, {
+        const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [address, gameAddress, "0", JSON.stringify(gameCommand), signature]
+            params: [address, gameAddress, amount.toString(), action, signature]
         });
+
+        return body.result.data;
     }
 
     private async getSignature(nonce?: number): Promise<string> {
