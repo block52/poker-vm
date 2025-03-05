@@ -11,11 +11,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 let pk = process.env.PRIVATE_KEY || "";
+
 // Default contract address on L2
-let address = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
+let defaultTableAddress = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
 let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 let nonce: number = 0;
-
+let address = ""; // Wallet address
 
 /**
  * Parse command with parameters
@@ -58,16 +59,17 @@ const syncNonce = async () => {
     }
 };
 
-const join = async (address: string, amount: bigint): Promise<void> => {
+const join = async (tableAddress: string, amount: bigint): Promise<string> => {
     const rpcClient = new NodeRpcClient(node, pk);
-    await rpcClient.playerJoin(address, amount, nonce);
+    const response = await rpcClient.playerJoin(tableAddress, amount, nonce);
 
-    // console.log(chalk.green("Join response:"), response);
+    // console.log(chalk.green("Join response:"), response.hash);
+    return response.hash;
 };
 
-const getGameState = async (address: string): Promise<TexasHoldemGameStateDTO> => {
+const getGameState = async (tableAddress: string): Promise<TexasHoldemGameStateDTO> => {
     const rpcClient = new NodeRpcClient(node, pk);
-    const dto = await rpcClient.getGameState(address);
+    const dto = await rpcClient.getGameState(tableAddress);
 
     const state = dto as TexasHoldemGameStateDTO;
     return state;
@@ -241,6 +243,7 @@ const interactiveAction = async () => {
             const wallet = new Wallet(process.env.PRIVATE_KEY);
             console.log(chalk.green("✓ Found valid private key"));
             console.log(chalk.cyan(`Current active address: ${wallet.address}`));
+            address = wallet.address;
         } catch (error) {
             console.log(chalk.red("✗ Invalid private key found in PRIVATE_KEY"));
         }
@@ -262,7 +265,7 @@ const interactiveAction = async () => {
                     { name: "Get account", value: "get_account" },
                     { name: "Create a game (coming soon)", value: "create_game" },
                     { name: "Join a game", value: "join_game" },
-                    { name: "Status", value: "status" },
+                    { name: "Game state", value: "state" },
                     { name: "Exit", value: "exit" }
                 ]
             }
@@ -313,7 +316,7 @@ const interactiveAction = async () => {
                     console.error(chalk.red("Failed to fetch account:"), error.message);
                 }
                 break;
-            case "status":
+            case "state":
                 try {
                     console.log(chalk.yellow("Fetching game state..."));
 
@@ -322,7 +325,7 @@ const interactiveAction = async () => {
                             type: "input",
                             name: "tableAddress",
                             message: "Enter table address (leave empty for default table):",
-                            default: ""
+                            default: defaultTableAddress
                         }
                     ]);
 
@@ -336,26 +339,27 @@ const interactiveAction = async () => {
                     );
 
                     const state = await getGameState(tableAddress);
+                    displayGameState(state, address);
 
-                    // Add these lines to show raw state
-                    console.log(chalk.cyan("\nRaw game state:"));
-                    console.log(chalk.cyan(JSON.stringify(state, null, 2)));
-                    console.log(chalk.cyan("============================================================\n"));
+                    // // Add these lines to show raw state
+                    // console.log(chalk.cyan("\nRaw game state:"));
+                    // console.log(chalk.cyan(JSON.stringify(state, null, 2)));
+                    // console.log(chalk.cyan("============================================================\n"));
 
-                    if (!state) {
-                        console.log(chalk.red("No active game found"));
-                        console.log(chalk.yellow("Using default table state"));
-                        break;
-                    }
+                    // if (!state) {
+                    //     console.log(chalk.red("No active game found"));
+                    //     console.log(chalk.yellow("Using default table state"));
+                    //     break;
+                    // }
 
-                    if (!state.players) {
-                        console.log(chalk.red("Invalid game state received"));
-                        console.log(chalk.yellow("Game state:", JSON.stringify(state, null, 2)));
-                        break;
-                    }
+                    // if (!state.players) {
+                    //     console.log(chalk.red("Invalid game state received"));
+                    //     console.log(chalk.yellow("Game state:", JSON.stringify(state, null, 2)));
+                    //     break;
+                    // }
 
-                    // displayGameState(state, address); // address here is still user's address for display
-                    await pokerInteractiveAction();
+                    // // displayGameState(state, address); // address here is still user's address for display
+                    // await pokerInteractiveAction();
                 } catch (error: any) {
                     console.error(chalk.red("Failed to fetch game state:"), error.message);
                     console.log(chalk.yellow("Make sure you're connected to the correct node"));
@@ -395,9 +399,12 @@ const interactiveAction = async () => {
                     const buyInWei = ethers.parseEther(buyInAmount);
                     console.log(chalk.yellow(`Attempting to join game with ${buyInAmount} USDC...`));
 
-                    const result = await join(address, buyInWei);
-
+                    const result = await join(defaultTableAddress, buyInWei);
                     console.log(chalk.cyan("Response:"), result);
+
+                    const state = await getGameState(defaultTableAddress);
+                    displayGameState(state, address);
+
                 } catch (error: any) {
                     console.error(chalk.red("Failed to join game:"), error.message);
                 }
