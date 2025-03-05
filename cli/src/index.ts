@@ -348,20 +348,21 @@ const interactiveAction = async () => {
                     console.log(chalk.cyan("Current table state:"));
                     console.log(chalk.cyan(JSON.stringify(gameState, null, 2)));
 
-                    const minBuyIn = BigInt("0.100000000000000000"); // 3.6 USDC
-                    const maxBuyIn = BigInt("6860000000000000000"); // 6.86 USDC
+                    // Table stakes
+                    const minBuyIn = BigInt("1000000000000000000"); // 1 USDC
+                    const maxBuyIn = BigInt("5000000000000000000"); // 5 USDC
 
                     const { buyInAmount } = await inquirer.prompt([
                         {
                             type: "input",
                             name: "buyInAmount",
-                            message: `Enter buy-in amount in USDC (minimum: 3.0 USDC, maximum: 6.86 USDC):`,
-                            default: "3.0",
+                            message: `Enter buy-in amount in USDC (minimum: 1.00 USDC, maximum: 5.00 USDC):`,
+                            default: "3.0", // Default to 3 USDC
                             validate: input => {
                                 try {
                                     const amount = ethers.parseEther(input);
-                                    if (amount < minBuyIn) return `Must be at least 3.6 USDC`;
-                                    if (amount > maxBuyIn) return `Must be at most 6.86 USDC`;
+                                    if (amount < minBuyIn) return `Must be at least 1.00 USDC`;
+                                    if (amount > maxBuyIn) return `Must be at most 5.00 USDC`;
                                     return true;
                                 } catch (error) {
                                     return "Please enter a valid number";
