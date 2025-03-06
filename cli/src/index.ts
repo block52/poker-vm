@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { Wallet } from "ethers";
 import { ethers } from "ethers";
 
-import { TexasHoldemGameStateDTO, NodeRpcClient, TexasHoldemStateDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { TexasHoldemGameStateDTO, NodeRpcClient, TexasHoldemStateDTO, TexasHoldemRound, PlayerDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -170,7 +170,7 @@ const renderGameState = (state: TexasHoldemGameStateDTO, publicKey: string): voi
     console.log(chalk.cyan("-".repeat(80)));
     console.log(
         chalk.cyan("Seat".padEnd(6)) +
-            chalk.cyan("Position".padEnd(10)) +
+            // chalk.cyan("Position".padEnd(10)) +
             chalk.cyan("Address".padEnd(20)) +
             chalk.cyan("Chips".padEnd(12)) +
             chalk.cyan("Bet".padEnd(12)) +
@@ -202,10 +202,10 @@ const renderGameState = (state: TexasHoldemGameStateDTO, publicKey: string): voi
         console.log(
             rowStyle(
                 String(player.seat).padEnd(6) +
-                    getPlayerPosition(player.seat, state).padEnd(10) +
+                    // getPlayerPosition(player.seat, state).padEnd(10) +
                     (player.address.substring(0, 6) + "...").padEnd(20) +
                     formatChips(player.stack).padEnd(12) +
-                    // formatChips(player.bet).padEnd(12) +
+                    "0.00".padEnd(12) +
                     cardsDisplay.padEnd(15) +
                     player.status
             )
@@ -461,14 +461,17 @@ const getLegalActions = (address: string, publicKey: string): ActionChoice[] => 
 };
 
 const pokerInteractiveAction = async (tableAddress: string) => {
+    const client = getClient();
+
     let continueSession = true;
     while (continueSession) {
 
         const state = await getGameState(tableAddress);
-        renderGameState(state, pk);
+        renderGameState(state, address);
     
         // todo: call node to get legal actions
         const actions = getLegalActions(tableAddress, pk);
+        actions.push({ action: "Refresh", value: "refresh" });
 
         const { action } = await inquirer.prompt([
             {
@@ -482,13 +485,15 @@ const pokerInteractiveAction = async (tableAddress: string) => {
         switch (action) {
             case "check":
                 console.log(chalk.green("Checking..."));
-
+                await client.playerAction(tableAddress, PlayerActionType.CHECK, "", nonce);
                 break;
             case "call":
                 console.log(chalk.green("Calling..."));
+                await client.playerAction(tableAddress, PlayerActionType.CALL, "", nonce);
                 break;
             case "fold":
                 console.log(chalk.green("Folding..."));
+                await client.playerAction(tableAddress, PlayerActionType.FOLD, "", nonce);
                 break;
             case "raise":
                 console.log(chalk.green("Raising..."));
@@ -497,6 +502,7 @@ const pokerInteractiveAction = async (tableAddress: string) => {
                 console.log(chalk.green("Going all-in..."));
                 break;
             case "refresh":
+                // Will refresh game state anyway
                 console.log(chalk.green("Refreshing game state..."));
                 break;
             case "exit":
@@ -504,6 +510,8 @@ const pokerInteractiveAction = async (tableAddress: string) => {
                 console.log(chalk.yellow("Goodbye!"));
                 break;
         }
+
+        await syncNonce();
     }
 };
 
