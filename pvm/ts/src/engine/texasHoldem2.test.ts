@@ -134,7 +134,12 @@ describe.only("Texas Holdem Game", () => {
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
         });
 
-        it.only("should have player status set to active", () => {
+        it.only("should have correct table properties", () => {
+            expect(game.getPlayerCount()).toEqual(2);
+            expect(game.getPot()).toEqual(30000000000000000000n);
+        });
+
+        it("should have player status set to active", () => {
             const player1 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             const player2 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             expect(player1?.status).toEqual(PlayerStatus.ACTIVE);

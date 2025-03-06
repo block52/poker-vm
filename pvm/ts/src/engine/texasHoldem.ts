@@ -131,7 +131,7 @@ class TexasHoldemGame implements IPoker {
         return this._currentRound;
     }
     get pot() {
-        return this._pot;
+        return this.getPot();
     }
     get winners() {
         return this._winners;
@@ -435,6 +435,22 @@ class TexasHoldemGame implements IPoker {
         return activePlayers.length;
     }
 
+    getAllBets(): Map<string, bigint> {
+        const bets = new Map<string, bigint>();
+
+        // Get all rounds bets
+        for (const round of this._rounds.keys()) {
+            const roundBets = this.getBets(round);
+
+            for (const [playerId, amount] of roundBets) {
+                const currentTotal = bets.get(playerId) || 0n;
+                bets.set(playerId, currentTotal + amount);
+            }
+        }
+
+        return bets;
+    };
+
     getBets(round: TexasHoldemRound = this._currentRound): Map<string, bigint> {
         const bets = new Map<string, bigint>();
 
@@ -467,22 +483,16 @@ class TexasHoldemGame implements IPoker {
         return bets.get(playerId) ?? 0n;
     }
 
-    getPot(bets = this.getBets()): bigint {
+    getPot(): bigint {
         // todo: check this
+        const bets = this.getAllBets();
         let pot: bigint = 0n;
 
         for (let [key, value] of bets) {
             pot += value;
         }
 
-        return pot;
-    }
-
-    // Not sure why we need this
-    private getStartingPot(): bigint {
-        const pot: bigint = 0n;
-        // for (let stage = TexasHoldemRound.PREFLOP; stage < this._currentRound; this.setNextRound()) pot += this.getPot(this.getBets(stage));
-        return pot;
+        return pot + this._pot;
     }
 
     private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
@@ -550,8 +560,8 @@ class TexasHoldemGame implements IPoker {
     }
 
     private calculateSidePots(): void {
-        const startingPot = this.getStartingPot();
-        const numActive = this.getSeatedPlayers().filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE).length;
+        // const startingPot = this.getStartingPot();
+        // const numActive = this.getSeatedPlayers().filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE).length;
 
         // TODO: ROLL BACK
 
@@ -572,7 +582,7 @@ class TexasHoldemGame implements IPoker {
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
         this._winners = new Map<string, bigint>();
 
-        let pot: bigint = this.getStartingPot();
+        let pot: bigint = this.getPot();
         let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
         // let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
 
@@ -728,7 +738,6 @@ class TexasHoldemGame implements IPoker {
             
             const lastAction = player?.lastAction ? { ...player.lastAction, amount: player.lastAction.amount?.toString() ?? "0" } : undefined;
             const actions: LegalActionDTO[] = [];
-
             return {
                 address: player?.address ?? ethers.ZeroAddress,
                 seat: i,
@@ -746,6 +755,7 @@ class TexasHoldemGame implements IPoker {
         });
 
         const winners: WinnerDTO[] = [];
+        const pot = this.getPot();
 
         return {
             type: "cash",
@@ -757,7 +767,7 @@ class TexasHoldemGame implements IPoker {
             dealer: this._dealer,
             players: players,
             communityCards: this._communityCards.map(c => c.value),
-            pots: [this._pot.toString()],
+            pots: [pot.toString()],
             nextToAct: this._nextToAct,
             round: this._currentRound,
             winners: winners,
