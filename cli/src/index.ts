@@ -496,6 +496,9 @@ const pokerInteractiveAction = async (tableAddress: string) => {
             case "all-in":
                 console.log(chalk.green("Going all-in..."));
                 break;
+            case "refresh":
+                console.log(chalk.green("Refreshing game state..."));
+                break;
             case "exit":
                 continueSession = false;
                 console.log(chalk.yellow("Goodbye!"));
