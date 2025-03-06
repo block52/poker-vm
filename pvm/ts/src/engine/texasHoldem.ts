@@ -738,9 +738,12 @@ class TexasHoldemGame implements IPoker {
             
             const lastAction = player?.lastAction ? { ...player.lastAction, amount: player.lastAction.amount?.toString() ?? "0" } : undefined;
             const actions: LegalActionDTO[] = [];
+
+            const seat = this.getPlayerSeatNumber(player?.address ?? ethers.ZeroAddress);
+
             return {
                 address: player?.address ?? ethers.ZeroAddress,
-                seat: i,
+                seat: seat,
                 stack: player?.chips.toString() ?? "0",
                 isSmallBlind: i === this._smallBlindPosition,
                 isBigBlind: i === this._bigBlindPosition,
