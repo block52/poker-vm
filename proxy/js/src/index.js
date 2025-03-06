@@ -214,8 +214,11 @@ app.get("/table/:id", async (req, res) => {
     console.log(`Fetching table with ID: ${id}`);
 
     try {
-        const client = getClient();
-        const table = await client.getTable(id);
+        const client = new NodeRpcClient(
+            process.env.NODE_URL || "http://localhost:3000",
+            process.env.VALIDATOR_KEY || ""
+        );
+        const table = await client.getGameState(id);
 
         console.log("=== TABLE RESPONSE FROM NODE1 ===");
         console.log(JSON.stringify(table, null, 2));
