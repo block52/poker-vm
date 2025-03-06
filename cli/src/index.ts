@@ -174,7 +174,7 @@ const renderGameState = (state: TexasHoldemGameStateDTO, publicKey: string): voi
             chalk.cyan("Address".padEnd(20)) +
             chalk.cyan("Chips".padEnd(12)) +
             chalk.cyan("Bet".padEnd(12)) +
-            chalk.cyan("Cards".padEnd(15)_ +
+            chalk.cyan("Cards".padEnd(15)) +
             chalk.cyan("Status")
     );
     console.log(chalk.cyan("-".repeat(80)));
@@ -188,11 +188,6 @@ const renderGameState = (state: TexasHoldemGameStateDTO, publicKey: string): voi
 
         // Highlight current player
         const rowStyle = isNextToAct ? chalk.green : isMyPlayer ? chalk.yellow : chalk.white;
-
-        let status = "";
-        if (player.status) status = "Folded";
-        else if (player.status) status = "All-In";
-        else if (isNextToAct) status = "Action";
 
         // Format player cards - show only if it's my player or we're at showdown
         let cardsDisplay = "";
@@ -212,7 +207,7 @@ const renderGameState = (state: TexasHoldemGameStateDTO, publicKey: string): voi
                     formatChips(player.stack).padEnd(12) +
                     // formatChips(player.bet).padEnd(12) +
                     cardsDisplay.padEnd(15) +
-                    status
+                    player.status
             )
         );
     }
