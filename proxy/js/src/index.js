@@ -16,6 +16,7 @@ const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
 const Block52 = require("./clients/block52");
+const { NodeRpcClient } = require("@bitcoinbrisbane/block52");
 
 const { getUnixTime } = require("./utils/helpers");
 
@@ -287,33 +288,24 @@ app.get("/account/:id", async (req, res) => {
     console.log("Address:", req.params.id);
 
     try {
-        const client = getClient();
+        const client = new NodeRpcClient(
+            process.env.NODE_URL || "http://localhost:3000",
+            process.env.VALIDATOR_KEY || ""
+        );
         const account = await client.getAccount(req.params.id);
 
-        // If there was a node error, still return a 200 with the actual data
-        if (account.isNodeError) {
-            console.warn("Node error when fetching account:", account.error);
-            return res.json({
-                nonce: 0,
-                address: req.params.id,
-                balance: "0",
-                error: account.error
-            });
-        }
-
-        // Return the properly formatted account data
         res.json({
             nonce: account.nonce || 0,
             address: account.address,
-            balance: account.balance.toString() // Make sure balance is returned as string
+            balance: account.balance.toString()
         });
     } catch (error) {
-        console.error("Unexpected error in route handler:", error);
+        console.error("SDK Error:", error);
         res.json({
             nonce: 0,
             address: req.params.id,
             balance: "0",
-            error: "Internal server error"
+            error: "Failed to fetch account"
         });
     }
 });
