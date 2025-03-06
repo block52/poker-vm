@@ -18,6 +18,19 @@ let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.bl
 let nonce: number = 0;
 let address = ""; // Wallet address
 
+let _node: NodeRpcClient;
+
+const getClient = () => {
+
+    if (_node) {
+        return _node;
+    }
+
+    _node = new NodeRpcClient(node, pk);
+    return _node;
+};
+
+
 /**
  * Parse command with parameters
  * Handles input like "join 0x00" or "bet 5.5"
@@ -30,7 +43,7 @@ const parseCommand = (input: string): { command: string; params: string[] } => {
     const params = parts.slice(1);
 
     return { command, params };
-}
+};
 
 const createPrivateKey = async () => {
     // Generate a new ed25519 key pair
@@ -51,7 +64,7 @@ const createPrivateKey = async () => {
 };
 
 const syncNonce = async () => {
-    const rpcClient = new NodeRpcClient(node, pk);
+    const rpcClient = getClient();
     const response = await rpcClient.getAccount(address);
 
     if (response) {
@@ -60,7 +73,7 @@ const syncNonce = async () => {
 };
 
 const join = async (tableAddress: string, amount: bigint): Promise<string> => {
-    const rpcClient = new NodeRpcClient(node, pk);
+    const rpcClient = getClient();
     const response = await rpcClient.playerJoin(tableAddress, amount, nonce);
 
     // console.log(chalk.green("Join response:"), response.hash);
@@ -68,7 +81,7 @@ const join = async (tableAddress: string, amount: bigint): Promise<string> => {
 };
 
 const getGameState = async (tableAddress: string): Promise<TexasHoldemGameStateDTO> => {
-    const rpcClient = new NodeRpcClient(node, pk);
+    const rpcClient = getClient();
     const dto = await rpcClient.getGameState(tableAddress);
 
     const state = dto as TexasHoldemGameStateDTO;
@@ -76,7 +89,7 @@ const getGameState = async (tableAddress: string): Promise<TexasHoldemGameStateD
 };
 
 const getAccount = async (address: string): Promise<any> => {
-    const rpcClient = new NodeRpcClient(node, pk);
+    const rpcClient = getClient();
     const response = await rpcClient.getAccount(address);
 
     if (response) {
@@ -128,12 +141,12 @@ const getPlayerPosition = (playerIndex: number, state: TexasHoldemGameStateDTO):
 };
 
 // Display game state as a table
-const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): void => {
+const renderGameState = (state: TexasHoldemGameStateDTO, publicKey: string): void => {
     // Find my player
-    const myPlayer = state.players.find(p => p.address === myPublicKey);
+    const myPlayer = state.players.find(p => p.address === publicKey);
 
     console.log(chalk.cyan("=".repeat(60)));
-    console.log(chalk.cyan(`My Public Key: ${myPublicKey.substring(0, 8)}...${myPublicKey.substring(myPublicKey.length - 6)}`));
+    console.log(chalk.cyan(`My Public Key: ${publicKey.substring(0, 8)}...${publicKey.substring(publicKey.length - 6)}`));
     console.log(chalk.green(`My Chips: ${myPlayer ? formatChips(myPlayer.stack) : "0.00"}`));
     console.log(chalk.cyan("=".repeat(60)));
 
@@ -156,13 +169,13 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
     console.log(chalk.cyan("\nPlayers:"));
     console.log(chalk.cyan("-".repeat(80)));
     console.log(
-        chalk.cyan("Seat").padEnd(6) +
-        chalk.cyan("Position").padEnd(10) +
-        chalk.cyan("Address").padEnd(20) +
-        chalk.cyan("Chips").padEnd(12) +
-        chalk.cyan("Bet").padEnd(12) +
-        chalk.cyan("Cards").padEnd(15) +
-        chalk.cyan("Status")
+        chalk.cyan("Seat".padEnd(6)) +
+            chalk.cyan("Position".padEnd(10)) +
+            chalk.cyan("Address".padEnd(20)) +
+            chalk.cyan("Chips".padEnd(12)) +
+            chalk.cyan("Bet".padEnd(12)) +
+            chalk.cyan("Cards".padEnd(15)_ +
+            chalk.cyan("Status")
     );
     console.log(chalk.cyan("-".repeat(80)));
 
@@ -171,7 +184,7 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
 
     for (const player of sortedPlayers) {
         const isNextToAct = player.seat === state.nextToAct;
-        const isMyPlayer = player.address === myPublicKey;
+        const isMyPlayer = player.address === publicKey;
 
         // Highlight current player
         const rowStyle = isNextToAct ? chalk.green : isMyPlayer ? chalk.yellow : chalk.white;
@@ -194,12 +207,12 @@ const displayGameState = (state: TexasHoldemGameStateDTO, myPublicKey: string): 
         console.log(
             rowStyle(
                 String(player.seat).padEnd(6) +
-                getPlayerPosition(player.seat, state).padEnd(10) +
-                (player.address.substring(0, 6) + "...").padEnd(20) +
-                formatChips(player.stack).padEnd(12) +
-                // formatChips(player.bet).padEnd(12) +
-                cardsDisplay.padEnd(15) +
-                status
+                    getPlayerPosition(player.seat, state).padEnd(10) +
+                    (player.address.substring(0, 6) + "...").padEnd(20) +
+                    formatChips(player.stack).padEnd(12) +
+                    // formatChips(player.bet).padEnd(12) +
+                    cardsDisplay.padEnd(15) +
+                    status
             )
         );
     }
@@ -253,7 +266,6 @@ const interactiveAction = async () => {
 
     let continueSession = true;
     while (continueSession) {
-
         const { userInput } = await inquirer.prompt([
             {
                 type: "list",
@@ -339,7 +351,7 @@ const interactiveAction = async () => {
                     );
 
                     const state = await getGameState(tableAddress);
-                    displayGameState(state, address);
+                    renderGameState(state, address);
 
                     // // Add these lines to show raw state
                     // console.log(chalk.cyan("\nRaw game state:"));
@@ -358,7 +370,7 @@ const interactiveAction = async () => {
                     //     break;
                     // }
 
-                    // // displayGameState(state, address); // address here is still user's address for display
+                    // // renderGameState(state, address); // address here is still user's address for display
                     // await pokerInteractiveAction();
                 } catch (error: any) {
                     console.error(chalk.red("Failed to fetch game state:"), error.message);
@@ -367,7 +379,7 @@ const interactiveAction = async () => {
                 break;
             case "join_game":
                 try {
-                    console.log(chalk.yellow(`Getting table state for ${address}...`));
+                    console.log(chalk.yellow(`Getting table state for ${defaultTableAddress}...`));
 
                     // const gameState = await getGameState(address);
                     // console.log(chalk.cyan("Current table state:"));
@@ -400,11 +412,13 @@ const interactiveAction = async () => {
                     console.log(chalk.yellow(`Attempting to join game with ${buyInAmount} USDC...`));
 
                     const result = await join(defaultTableAddress, buyInWei);
-                    console.log(chalk.cyan("Response:"), result);
 
-                    const state = await getGameState(defaultTableAddress);
-                    displayGameState(state, address);
+                    if (result) {
+                        console.log(chalk.cyan("Response:"), result);
+                        await pokerInteractiveAction(defaultTableAddress);
+                    }
 
+                    
                 } catch (error: any) {
                     console.error(chalk.red("Failed to join game:"), error.message);
                 }
@@ -451,11 +465,16 @@ const getLegalActions = (address: string, publicKey: string): ActionChoice[] => 
     return actions;
 };
 
-const pokerInteractiveAction = async () => {
-    const actions = await getLegalActions(address, pk);
-
+const pokerInteractiveAction = async (tableAddress: string) => {
     let continueSession = true;
     while (continueSession) {
+
+        const state = await getGameState(tableAddress);
+        renderGameState(state, pk);
+    
+        // todo: call node to get legal actions
+        const actions = getLegalActions(tableAddress, pk);
+
         const { action } = await inquirer.prompt([
             {
                 type: "list",
@@ -468,6 +487,7 @@ const pokerInteractiveAction = async () => {
         switch (action) {
             case "check":
                 console.log(chalk.green("Checking..."));
+
                 break;
             case "call":
                 console.log(chalk.green("Calling..."));
