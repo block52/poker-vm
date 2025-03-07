@@ -6,8 +6,6 @@ import { ethers } from "ethers";
 describe("Texas Holdem Game - Comprehensive Tests", () => {
     const baseGameConfig = {
         address: ethers.ZeroAddress,
-        minBuyIn: 1000000000000000000000n, // 1000 tokens
-        maxBuyIn: 3000000000000000000000n, // 3000 tokens
         minPlayers: 2,
         maxPlayers: 9,
         smallBlind: 10000000000000000000n, // 10 tokens
@@ -20,11 +18,14 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         players: []
     };
 
+    const minBuyIn = 1000000000000000000000n; // 1000 tokens
+    const maxBuyIn = 3000000000000000000000n; // 3000 tokens
+
     describe.skip("Game State Management", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         describe("Round Progression", () => {
@@ -60,7 +61,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         describe("Seating Logic", () => {
@@ -93,7 +94,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         describe("Pot Management", () => {
@@ -127,7 +128,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         describe("Action Processing", () => {
@@ -159,7 +160,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         describe("JSON Conversion", () => {
@@ -182,7 +183,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         it("should handle invalid actions gracefully", () => {
@@ -202,7 +203,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let player2: Player;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
             
             // Create test players with sufficient chips
             player1 = new Player(

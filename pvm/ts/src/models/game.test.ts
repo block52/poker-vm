@@ -4,54 +4,9 @@ import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../engine/texasHoldem";
 
 describe.skip("Game Tests", () => {
-    // // Remove texas holdem game state, now obsolete
-    // it("should get texas holdem state as DTO", async () => {
-    //     const address = ethers.ZeroAddress;
-    //     const sb: bigint = 10n;
-    //     const bb: bigint = 30n;
-    //     const sbPosition = 1;
-    //     const bbPosition = 2;
-    //     const dealer = 0;
-    //     const players: PlayerState[] = [];
-    //     const communityCards: Card[] = [];
-    //     const pot: bigint = 0n;
-    //     const currentBet: bigint = 0n;
-    //     const round = TexasHoldemRound.PREFLOP;
-    //     const winners = undefined;
-
-    //     const texasHoldemGameState = new TexasHoldemGameState(
-    //         address,
-    //         sb,
-    //         bb,
-    //         sbPosition,
-    //         bbPosition,
-    //         dealer,
-    //         players,
-    //         communityCards,
-    //         pot,
-    //         currentBet,
-    //         round,
-    //         winners
-    //     );
-    //     const dto = texasHoldemGameState.toJson();
-
-    //     expect(dto).toEqual({
-    //         type: "cash",
-    //         address: ethers.ZeroAddress,
-    //         smallBlind: "10",
-    //         smallBlindPosition: 1,
-    //         bigBlind: "30",
-    //         bigBlindPosition: 2,
-    //         dealer: 0,
-    //         players: [],
-    //         communityCards: [],
-    //         pots: ["0"],
-    //         nextToAct: 0,
-    //         round: "preflop",
-    //         winners: [],
-    //         signature: ethers.ZeroHash
-    //     });
-    // });
+    // These need to be fetched from the contract in the future
+    const minBuyIn = 1000000000000000000n;
+    const maxBuyIn = 10000000000000000000n;
 
     it("should get texas holdem state from JSON", async () => {
         // const address = ethers.ZeroAddress;
@@ -80,7 +35,7 @@ describe.skip("Game Tests", () => {
             signature: ethers.ZeroHash
         };
 
-        const texasHoldemGameState = TexasHoldemGame.fromJson(json);
+        const texasHoldemGameState = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
         expect(texasHoldemGameState).toBeDefined();
     });
 
@@ -100,7 +55,7 @@ describe.skip("Game Tests", () => {
             signature: ethers.ZeroHash
         };
 
-        const texasHoldemGameState = TexasHoldemGame.fromJson(json);
+        const texasHoldemGameState = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
 
         expect(texasHoldemGameState).toBeDefined();
     });

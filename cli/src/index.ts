@@ -458,8 +458,24 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
     const client = getClient();
     const state = await client.getGameState(tableAddress);
 
+    if (!state) {
+        console.log(chalk.red("No active game found"));
+        return actions;
+    }
+
+    // Find my seat
+    const myPlayer = state.players.find(p => p.address === address);
+    if (!myPlayer) {
+        console.log(chalk.red("You are not seated at this table"));
+        return actions;
+    }
+
+    if (state.nextToAct !== myPlayer.seat) {
+        console.log(chalk.red("It's not your turn to act"));
+        return actions;
+    }
+
     // Check if it's my turn
-    // if (state.nextToAct 
 
     actions.push({ action: "Check", value: "check" });
     actions.push({ action: "Call", value: "call" });
@@ -467,7 +483,6 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
     actions.push({ action: "Raise", value: "raise" });
     actions.push({ action: "All-In", value: "all-in" });
     
-
     return actions;
 };
 

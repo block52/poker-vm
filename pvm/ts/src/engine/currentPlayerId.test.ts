@@ -4,8 +4,6 @@ import { ethers } from "ethers";
 describe("CurrentPlayerId Tests", () => {
     const baseGameConfig = {
         address: ethers.ZeroAddress,
-        minBuyIn: 1000000000000000000000n,
-        maxBuyIn: 3000000000000000000000n,
         minPlayers: 2,
         maxPlayers: 9,
         smallBlind: 10000000000000000000n,
@@ -18,10 +16,14 @@ describe("CurrentPlayerId Tests", () => {
         players: []
     };
 
+    // These need to be fetched from the contract in the future
+    const minBuyIn = 1000000000000000000n;
+    const maxBuyIn = 10000000000000000000n;
+
     let game: TexasHoldemGame;
 
     beforeEach(() => {
-        game = TexasHoldemGame.fromJson(baseGameConfig);
+        game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
     });
 
     it("should not break when there are no active players", () => {

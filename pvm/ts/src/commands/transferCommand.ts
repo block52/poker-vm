@@ -40,7 +40,11 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 const json = await this.gameManagement.get(this.to);
                 console.log(`Current game state:`, json);
 
-                const game = TexasHoldemGame.fromJson(json);
+                // These need to be fetched from the contract in the future
+                const minBuyIn = 1000000000000000000n;
+                const maxBuyIn = 10000000000000000000n;
+
+                const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
                 console.log(`Game object created, processing action: ${this.data}`);
 
                 if (!game) {

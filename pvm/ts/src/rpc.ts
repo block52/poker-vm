@@ -228,6 +228,10 @@ export class RPC {
                     const [address] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
                     const command = new GameStateCommand(address, validatorPrivateKey);
                     result = await command.execute();
+
+                    // Hack for now, mine these and clear mempool
+                    
+
                     break;
                 }
 

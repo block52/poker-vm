@@ -10,8 +10,6 @@ describe.only("Texas Holdem Game", () => {
 
     const baseGameConfig = {
         address: ethers.ZeroAddress,
-        minBuyIn: 1000000000000000000000n, // 1000 tokens
-        maxBuyIn: 3000000000000000000000n, // 3000 tokens
         minPlayers: 2,
         maxPlayers: 9,
         smallBlind: TEN_TOKENS, // 10 tokens
@@ -24,11 +22,14 @@ describe.only("Texas Holdem Game", () => {
         players: []
     };
 
+    const minBuyIn = 1000000000000000000000n; // 1000 tokens
+    const maxBuyIn = 3000000000000000000000n; // 3000 tokens
+
     describe("Game Initialization", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         it("should initialize with correct base properties", () => {
@@ -61,8 +62,6 @@ describe.only("Texas Holdem Game", () => {
         it("should initialize with a standard 52 card deck", () => {
             const config = {
                 address: ethers.ZeroAddress,
-                minBuyIn: 1000000000000000000000n, // 1000 tokens
-                maxBuyIn: 3000000000000000000000n, // 3000 tokens
                 minPlayers: 2,
                 maxPlayers: 9,
                 smallBlind: TEN_TOKENS, // 10 tokens
@@ -75,7 +74,7 @@ describe.only("Texas Holdem Game", () => {
                 players: []
             };
 
-            const game = TexasHoldemGame.fromJson(baseGameConfig);
+            const game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
             // expect(game.deck.cards.length).toEqual(52);
         });
     });
@@ -84,7 +83,7 @@ describe.only("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         it("should correctly add players", () => {
@@ -128,7 +127,7 @@ describe.only("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
             // Add minimum required players
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
@@ -186,7 +185,7 @@ describe.only("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
         });
@@ -230,7 +229,7 @@ describe.only("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig);
+            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
         });
 
         it("should handle invalid actions", () => {

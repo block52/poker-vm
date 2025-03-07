@@ -32,21 +32,6 @@ export class Player implements IJSONModel {
         // const holeCards = player.holeCards?.map(p => p.value);
         // const lastActionDTO = (lastAction && lastAction.amount) ? { action: lastAction.action, amount: lastAction.amount.toString() } : undefined;
         // const stack = player.chips.toString();
-
-        // this._dto = { 
-        //     address: address, 
-        //     seat: position, 
-        //     stack,
-        //     isSmallBlind, 
-        //     isBigBlind, 
-        //     isDealer, 
-        //     holeCards, 
-        //     lastAction: lastActionDTO, 
-        //     actions: [], 
-        //     status, 
-        //     timeout: 0, 
-        //     signature: ethers.ZeroHash
-        // };
     }
 
     updateStatus(status: PlayerStatus): void {

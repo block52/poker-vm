@@ -696,21 +696,19 @@ class TexasHoldemGame implements IPoker {
         this._currentRound = this.getNextRound();
     }
 
-    public static fromJson(json: any): TexasHoldemGame {
-        // todo: add all the players
-        const playerStates: PlayerState[] = json.players.map((p: any) => {
-            return {
-                address: p.id || p.address, // TODO: check this
-                seat: p.seat,
-                chips: p.chips,
-                cards: p.cards // ? holeCards : undefined
-            };
+    public static fromJson(json: any, minBuyIn: bigint, maxBuyIn: bigint): TexasHoldemGame {
+        const players = new Map<number, Player | null>();
+        
+        json.players.map((p: any) => {
+            const stack: bigint = BigInt(p.stack);
+            const player: Player = new Player(p.address, undefined, stack, undefined, p.status);
+            players.set(p.seat, player);
         });
 
         return new TexasHoldemGame(
             json.address,
-            BigInt(json.minBuyIn),
-            BigInt(json.maxBuyIn),
+            minBuyIn,
+            maxBuyIn,
             json.minPlayers as number,
             json.maxPlayers as number,
             BigInt(json.smallBlind),
@@ -720,7 +718,7 @@ class TexasHoldemGame implements IPoker {
             json.currentRound,
             json.communityCards,
             json.pots,
-            json.players
+            players
         );
     }
 
