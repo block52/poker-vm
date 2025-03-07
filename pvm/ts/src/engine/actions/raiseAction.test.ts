@@ -1,6 +1,6 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/game";
-import TexasHoldemGame from "../texasHoldem";
+import TexasHoldemGame, { GameOptions } from "../texasHoldem";
 import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
 import { Turn } from "../types";
@@ -14,18 +14,22 @@ describe("Raise Action", () => {
 
     const baseGameConfig = {
         address: ethers.ZeroAddress,
-        minBuyIn: 1000000000000000000000n, // 1000 tokens
-        maxBuyIn: 3000000000000000000000n, // 3000 tokens
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000000n, // 10 tokens
-        bigBlind: 20000000000000000000n,   // 20 tokens
         dealer: 9,
         nextToAct: 0,
         currentRound: "preflop",
         communityCards: [],
         pot: 0n,
         players: []
+    };
+
+    // These need to be fetched from the contract in the future
+    const gameOptions: GameOptions = {
+        minBuyIn: 100000000000000000n,
+        maxBuyIn: 1000000000000000000n,
+        minPlayers: 2,
+        maxPlayers: 9,
+        smallBlind: 10000000000000000n,
+        bigBlind: 20000000000000000n,
     };
 
     beforeEach(() => {
@@ -42,12 +46,7 @@ describe("Raise Action", () => {
 
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
-            1000000000000000000000n,
-            3000000000000000000000n,
-            2, // minPlayers
-            9, // maxPlayers
-            10000000000000000000n, // smallBlind
-            20000000000000000000n, // bigBlind
+            gameOptions,
             9, // dealer
             1, // nextToAct
             TexasHoldemRound.PREFLOP,
@@ -83,7 +82,7 @@ describe("Raise Action", () => {
         jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
         jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(nextPlayer);
-        
+
         // Mock addAction method on game
         game.addAction = jest.fn();
     });
@@ -107,10 +106,10 @@ describe("Raise Action", () => {
 
         it("should return correct range for a raise", () => {
             const range = action.verify(player);
-            
+
             // Min amount should be previous bet + big blind
             const expectedMinAmount = 50000000000000000000n + 20000000000000000000n; // 70 tokens
-            
+
             expect(range).toEqual({
                 minAmount: expectedMinAmount,
                 maxAmount: player.chips
@@ -120,14 +119,14 @@ describe("Raise Action", () => {
         it("should throw error if no previous bet exists", () => {
             // Mock no previous bet
             jest.spyOn(game, "getLastAction").mockReturnValue(undefined);
-            
+
             expect(() => action.verify(player)).toThrow("No previous bet to raise.");
         });
 
         it.skip("should throw error if player has insufficient chips", () => {
             // Set player chips lower than the raise amount
             player.chips = 10000000000000000000n; // 10 tokens
-            
+
             expect(() => action.verify(player)).toThrow("Player has insufficient chips to raise.");
         });
 
@@ -141,19 +140,19 @@ describe("Raise Action", () => {
                 PlayerStatus.ACTIVE
             );
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(differentPlayer);
-            
+
             expect(() => action.verify(player)).toThrow("Must be currently active player.");
         });
 
         it("should throw error if round is SHOWDOWN", () => {
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
-            
+
             expect(() => action.verify(player)).toThrow("Hand has ended.");
         });
 
         it("should throw error if player is not active", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
-            
+
             expect(() => action.verify(player)).toThrow(`Only active player can ${PlayerActionType.RAISE}.`);
         });
     });
@@ -168,7 +167,7 @@ describe("Raise Action", () => {
         it("should return player's total chips if amount exceeds chips", () => {
             const amount = 2000000000000000000000n; // 2000 tokens
             player.chips = 1000000000000000000000n; // 1000 tokens
-            
+
             const result = (action as any).getDeductAmount(player, amount);
             expect(result).toBe(player.chips);
         });
@@ -183,7 +182,7 @@ describe("Raise Action", () => {
                 amount: 50000000000000000000n  // 50 tokens
             };
             jest.spyOn(game, "getLastAction").mockReturnValue(lastBet);
-            
+
             // Mock the verify method to avoid errors during execute
             jest.spyOn(action, "verify").mockReturnValue({
                 minAmount: 70000000000000000000n, // 70 tokens
@@ -194,9 +193,9 @@ describe("Raise Action", () => {
         it("should deduct the raise amount from player chips", () => {
             const initialChips = player.chips;
             const raiseAmount = 100000000000000000000n; // 100 tokens
-            
+
             action.execute(player, raiseAmount);
-            
+
             expect(player.chips).toBe(initialChips - raiseAmount);
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
@@ -207,9 +206,9 @@ describe("Raise Action", () => {
 
         it("should set player's action to ALL_IN if raising all chips", () => {
             const raiseAmount = player.chips;
-            
+
             action.execute(player, raiseAmount);
-            
+
             expect(player.chips).toBe(0n);
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
@@ -220,20 +219,20 @@ describe("Raise Action", () => {
 
         it("should throw error if amount is less than minimum allowed", () => {
             const tooSmallAmount = 50000000000000000000n; // 50 tokens
-            
+
             expect(() => action.execute(player, tooSmallAmount)).toThrow("Amount is less than minimum allowed.");
         });
 
         it("should throw error if amount is greater than maximum allowed", () => {
             const tooLargeAmount = 2000000000000000000000n; // 2000 tokens
             player.chips = 1000000000000000000000n; // 1000 tokens
-            
+
             // Update mock to use player's chips as max
             jest.spyOn(action, "verify").mockReturnValue({
                 minAmount: 70000000000000000000n, // 70 tokens
                 maxAmount: player.chips
             });
-            
+
             expect(() => action.execute(player, tooLargeAmount)).toThrow("Amount is greater than maximum allowed.");
         });
 

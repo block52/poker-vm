@@ -1,6 +1,6 @@
 import { PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import TexasHoldemGame from "../engine/texasHoldem";
+import TexasHoldemGame, { GameOptions } from "../engine/texasHoldem";
 import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
@@ -21,10 +21,16 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             console.log("Received game state:", json);
 
             // These need to be fetched from the contract in the future
-            const minBuyIn = 1000000000000000000n;
-            const maxBuyIn = 10000000000000000000n;
+            const gameOptions: GameOptions = {
+                minBuyIn: 100000000000000000n,
+                maxBuyIn: 1000000000000000000n,
+                minPlayers: 2,
+                maxPlayers: 9,
+                smallBlind: 10000000000000000n,
+                bigBlind: 20000000000000000n,
+            };
 
-            const game = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
+            const game = TexasHoldemGame.fromJson(json, gameOptions);
             console.log("Created game object");
 
             const mempoolTransactions = this.mempool.findAll(tx => tx.to === this.address);
@@ -62,31 +68,31 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 };
             });
 
-            // HACK
-            this.mempool.purge();
+            // // HACK
+            // this.mempool.purge();
 
-            // update game state
+            // // update game state
             const state = game.toJson();
             console.log("Updated game state:", state);
 
-            const _json = {
-                address: state.address,
-                smallBlind: state.smallBlind.toString(),
-                bigBlind: state.bigBlind.toString(),
-                smallBlindPosition: state.smallBlindPosition,
-                bigBlindPosition: state.bigBlindPosition,
-                dealer: state.dealer,
-                players: state.players,
-                communityCards: state.communityCards,
-                pots: state.pots,
-                nextToAct: state.nextToAct,
-                round: state.round,
-                winners: undefined,
-                signature: ""
-            };
+            // const _json = {
+            //     address: state.address,
+            //     smallBlind: state.smallBlind.toString(),
+            //     bigBlind: state.bigBlind.toString(),
+            //     smallBlindPosition: state.smallBlindPosition,
+            //     bigBlindPosition: state.bigBlindPosition,
+            //     dealer: state.dealer,
+            //     players: state.players,
+            //     communityCards: state.communityCards,
+            //     pots: state.pots,
+            //     nextToAct: state.nextToAct,
+            //     round: state.round,
+            //     winners: undefined,
+            //     signature: ""
+            // };
 
-            await this.gameManagement.saveFromJSON(_json);
-            // END HACK
+            // await this.gameManagement.saveFromJSON(_json);
+            // // END HACK
 
             return await signResult(state, this.privateKey);
         } catch (error) {

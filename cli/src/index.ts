@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import chalk from "chalk";
-import inquirer from "inquirer";
+import inquirer, { restoreDefaultPrompts } from "inquirer";
 import crypto from "crypto";
 import { Wallet } from "ethers";
 import { ethers } from "ethers";
@@ -187,7 +187,8 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
         const isMyPlayer = player.address === publicKey;
 
         // Highlight current player
-        const rowStyle = isNextToAct ? chalk.green : isMyPlayer ? chalk.yellow : chalk.white;
+        // const rowStyle = isNextToAct ? chalk.green : isMyPlayer ? chalk.yellow : chalk.white;
+        const rowStyle = isMyPlayer ? chalk.green : chalk.white;
 
         // Format player cards - show only if it's my player or we're at showdown
         let cardsDisplay = "";
@@ -379,7 +380,18 @@ const interactiveAction = async () => {
                 try {
                     console.log(chalk.yellow(`Getting table state for ${defaultTableAddress}...`));
 
-                    // const gameState = await getGameState(address);
+                    const gameState = await getGameState(defaultTableAddress);
+                    const myPlayer = gameState.players.find(p => p.address === address);
+
+                    if (myPlayer) {
+                        console.log(chalk.green("You are already seated at this table!"));
+                        console.log(chalk.cyan("Your stack:"), formatChips(myPlayer.stack));
+
+                        renderGameState(gameState, address);
+                        await pokerInteractiveAction(defaultTableAddress);
+                        break;
+                    }
+
                     // console.log(chalk.cyan("Current table state:"));
                     // console.log(chalk.cyan(JSON.stringify(gameState, null, 2)));
 
@@ -496,7 +508,7 @@ const pokerInteractiveAction = async (tableAddress: string) => {
         renderGameState(state, address);
     
         // todo: call node to get legal actions
-        const actions = await getLegalActions(tableAddress, pk);
+        const actions = await getLegalActions(tableAddress, address);
         actions.push({ action: "Refresh", value: "refresh" });
 
         const { action } = await inquirer.prompt([

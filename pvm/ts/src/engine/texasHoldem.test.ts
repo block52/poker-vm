@@ -1,6 +1,6 @@
 import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/game";
-import TexasHoldemGame from "./texasHoldem";
+import TexasHoldemGame, { GameOptions } from "./texasHoldem";
 
 import { ethers } from "ethers";
 
@@ -8,13 +8,9 @@ describe.skip("Texas Holdem Game", () => {
     const seed = "unfold law prevent sail where ketchup oxygen now tip cream denial pool";
     const wallet = ethers.Wallet.fromPhrase(seed);
 
-    const json = {
+    const baseGameConfig = {
         address: ethers.ZeroAddress,
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000000n,
-        bigBlind: 30000000000000000000n,
-        dealer: 9,
+        dealer: 0,
         nextToAct: 1,
         currentRound: "ante",
         communityCards: [],
@@ -22,14 +18,20 @@ describe.skip("Texas Holdem Game", () => {
         players: []
     };
 
-    const minBuyIn = 1000000000000000000000n;
-    const maxBuyIn = 10000000000000000000000n;
+    const gameOptions: GameOptions = {
+        minBuyIn: 100000000000000000n,
+        maxBuyIn: 1000000000000000000n,
+        minPlayers: 2,
+        maxPlayers: 9,
+        smallBlind: 10000000000000000n,
+        bigBlind: 20000000000000000n,
+    };
 
     describe.only("Properties from constructor", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         it("should create instance of TexasHoldemGame from JSON", () => {
@@ -54,7 +56,7 @@ describe.skip("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         it("should find next seat", () => {
@@ -84,7 +86,7 @@ describe.skip("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
         });

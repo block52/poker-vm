@@ -1,5 +1,5 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import TexasHoldemGame from "./texasHoldem";
+import TexasHoldemGame, { GameOptions } from "./texasHoldem";
 import { ethers } from "ethers";
 
 describe.only("Texas Holdem Game", () => {
@@ -10,26 +10,28 @@ describe.only("Texas Holdem Game", () => {
 
     const baseGameConfig = {
         address: ethers.ZeroAddress,
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: TEN_TOKENS, // 10 tokens
-        bigBlind: TWENTY_TOKENS,   // 20 tokens
-        dealer: 9,
-        nextToAct: 0,
-        currentRound: "preflop",
+        dealer: 0,
+        nextToAct: 1,
+        currentRound: "ante",
         communityCards: [],
         pot: 0n,
         players: []
     };
 
-    const minBuyIn = 1000000000000000000000n; // 1000 tokens
-    const maxBuyIn = 3000000000000000000000n; // 3000 tokens
+    const gameOptions: GameOptions = {
+        minBuyIn: 100000000000000000n,
+        maxBuyIn: 1000000000000000000n,
+        minPlayers: 2,
+        maxPlayers: 9,
+        smallBlind: 10000000000000000n,
+        bigBlind: 20000000000000000n,
+    };
 
     describe("Game Initialization", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         it("should initialize with correct base properties", () => {
@@ -52,7 +54,7 @@ describe.only("Texas Holdem Game", () => {
             for (let i = 1; i <= 9; i++) {
                 game.join2(`0x${i}`, 1000000000000000000000n);
             }
-        
+
             console.log(" Trying to add extra player...");
             expect(() => game.join2("0x9999", 1000000000000000000000n)).toThrow("Table full.");
         });
@@ -74,7 +76,7 @@ describe.only("Texas Holdem Game", () => {
                 players: []
             };
 
-            const game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            const game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             // expect(game.deck.cards.length).toEqual(52);
         });
     });
@@ -83,7 +85,7 @@ describe.only("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         it("should correctly add players", () => {
@@ -93,7 +95,7 @@ describe.only("Texas Holdem Game", () => {
 
             const player1 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             expect(player1).toBeDefined();
-            
+
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
             expect(game.getPlayerCount()).toEqual(2);
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
@@ -117,7 +119,7 @@ describe.only("Texas Holdem Game", () => {
         it("should track player positions correctly", () => {
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
-            
+
             expect(game.getPlayerSeatNumber("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toEqual(1);
             expect(game.getPlayerSeatNumber("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toEqual(2);
         });
@@ -127,7 +129,7 @@ describe.only("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             // Add minimum required players
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
@@ -155,7 +157,7 @@ describe.only("Texas Holdem Game", () => {
         it("should automatically progress from ante to preflop when minimum players join", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
             expect(game.getPlayerCount()).toEqual(2);
-            
+
             // Verify blinds are posted
             const bets = game.getBets();
             expect(bets.get("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
@@ -164,11 +166,11 @@ describe.only("Texas Holdem Game", () => {
 
         it("should handle betting actions", () => {
             const player = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-            
+
             // // Test different actions
             // game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             // expect(game.getPlayersLastAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")?.action).toEqual(PlayerActionType.CHECK);
-            
+
             // game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, 50000000000000000000n);
             // expect(game.getPlayersLastAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")?.action).toEqual(PlayerActionType.BET);
         });
@@ -185,7 +187,7 @@ describe.only("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
         });
@@ -203,22 +205,22 @@ describe.only("Texas Holdem Game", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, TEN_TOKENS);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            
+
             // Flop
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            
+
             // Turn
             expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, FIFTY_TOKENS);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CALL);
-            
+
             // River
             expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.FOLD);
-            
+
             // Verify game state after completion
             expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
             expect(game.pot).toBeGreaterThan(0n);
@@ -229,7 +231,7 @@ describe.only("Texas Holdem Game", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         it("should handle invalid actions", () => {
@@ -248,7 +250,7 @@ describe.only("Texas Holdem Game", () => {
         it("should handle all-in scenarios", () => {
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 500000000000000000n);
-            
+
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BET, 500000000000000000n);
             expect(game.getPlayerStatus("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toEqual(PlayerStatus.ALL_IN);
         });

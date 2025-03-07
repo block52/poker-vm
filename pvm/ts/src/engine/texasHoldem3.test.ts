@@ -1,15 +1,11 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/game";
-import TexasHoldemGame from "./texasHoldem";
+import TexasHoldemGame, { GameOptions } from "./texasHoldem";
 import { ethers } from "ethers";
 
 describe("Texas Holdem Game - Comprehensive Tests", () => {
     const baseGameConfig = {
         address: ethers.ZeroAddress,
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000000n, // 10 tokens
-        bigBlind: 20000000000000000000n,   // 20 tokens
         dealer: 0,
         nextToAct: 1,
         currentRound: "ante",
@@ -18,14 +14,20 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         players: []
     };
 
-    const minBuyIn = 1000000000000000000000n; // 1000 tokens
-    const maxBuyIn = 3000000000000000000000n; // 3000 tokens
+    const gameOptions: GameOptions = {
+        minBuyIn: 100000000000000000n,
+        maxBuyIn: 1000000000000000000n,
+        minPlayers: 2,
+        maxPlayers: 9,
+        smallBlind: 10000000000000000n,
+        bigBlind: 20000000000000000n,
+    };
 
     describe.skip("Game State Management", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         describe("Round Progression", () => {
@@ -61,7 +63,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         describe("Seating Logic", () => {
@@ -94,7 +96,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         describe("Pot Management", () => {
@@ -128,7 +130,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         describe("Action Processing", () => {
@@ -160,7 +162,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         describe("JSON Conversion", () => {
@@ -183,7 +185,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
         it("should handle invalid actions gracefully", () => {
@@ -203,7 +205,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         let player2: Player;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, minBuyIn, maxBuyIn);
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             
             // Create test players with sufficient chips
             player1 = new Player(
@@ -287,51 +289,5 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
                 }
             });
         });
-
-        // describe("Round State Management", () => {
-        //     beforeEach(() => {
-        //         game.join(player1);
-        //         game.join(player2);
-        //         game.deal();
-        //     });
-
-        //     it("should track betting rounds correctly", () => {
-        //         expect(game._rounds.length).toBeGreaterThan(0);
-        //         expect(game._rounds[0].type).toBe(TexasHoldemRound.ANTE);
-        //     });
-
-        //     it("should reset appropriate state between rounds", () => {
-        //         // Make some bets
-        //         game.performAction(player1.address, PlayerActionType.BET, 100000000000000000000n);
-        //         game.performAction(player2.address, PlayerActionType.CALL);
-                
-        //         // Check pot accumulation
-        //         expect(game.pot).toBe(200000000000000000000n);
-                
-        //         // Progress to next round
-        //         game.performAction(player1.address, PlayerActionType.CHECK);
-        //         game.performAction(player2.address, PlayerActionType.CHECK);
-                
-        //         // Verify next round state
-        //         expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
-        //         expect(game._nextToAct).toBe(game.smallBlindPosition);
-        //     });
-        // });
-
-        // describe("Error Handling", () => {
-        //     it("should prevent invalid round transitions", () => {
-        //         expect(() => game.nextHand()).toThrow();
-        //     });
-
-        //     it("should handle player actions in incorrect rounds", () => {
-        //         game.join(player1);
-        //         game.join(player2);
-                
-        //         // Try to bet before dealing
-        //         expect(() => {
-        //             game.performAction(player1.address, PlayerActionType.BET, 100000000000000000000n);
-        //         }).toThrow();
-        //     });
-        // });
     });
 }); 

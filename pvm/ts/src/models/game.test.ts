@@ -1,12 +1,18 @@
 import { ethers } from "ethers";
 import { Card } from "./deck";
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import TexasHoldemGame from "../engine/texasHoldem";
+import TexasHoldemGame, { GameOptions } from "../engine/texasHoldem";
 
-describe.skip("Game Tests", () => {
+describe("Game Tests", () => {
     // These need to be fetched from the contract in the future
-    const minBuyIn = 1000000000000000000n;
-    const maxBuyIn = 10000000000000000000n;
+    const gameOptions: GameOptions = {
+        minBuyIn: 100000000000000000n,
+        maxBuyIn: 1000000000000000000n,
+        minPlayers: 2,
+        maxPlayers: 9,
+        smallBlind: 10000000000000000n,
+        bigBlind: 20000000000000000n,
+    };
 
     it("should get texas holdem state from JSON", async () => {
         // const address = ethers.ZeroAddress;
@@ -23,8 +29,6 @@ describe.skip("Game Tests", () => {
         const json = {
             type: "cash",
             address: ethers.ZeroAddress,
-            smallBlind: "10000000000000000000",
-            bigBlind: "30000000000000000000",
             dealer: 0,
             players: [],
             communityCards: [],
@@ -35,7 +39,7 @@ describe.skip("Game Tests", () => {
             signature: ethers.ZeroHash
         };
 
-        const texasHoldemGameState = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
+        const texasHoldemGameState = TexasHoldemGame.fromJson(json, gameOptions);
         expect(texasHoldemGameState).toBeDefined();
     });
 
@@ -43,8 +47,6 @@ describe.skip("Game Tests", () => {
         const json = {
             type: "cash",
             address: ethers.ZeroAddress,
-            smallBlind: "10000000000000000000",
-            bigBlind: "30000000000000000000",
             dealer: 0,
             players: [],
             communityCards: [],
@@ -55,7 +57,7 @@ describe.skip("Game Tests", () => {
             signature: ethers.ZeroHash
         };
 
-        const texasHoldemGameState = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
+        const texasHoldemGameState = TexasHoldemGame.fromJson(json, gameOptions);
 
         expect(texasHoldemGameState).toBeDefined();
     });

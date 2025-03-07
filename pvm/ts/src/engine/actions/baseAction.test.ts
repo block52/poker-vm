@@ -1,7 +1,7 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/game";
 import BaseAction from "./baseAction";
-import TexasHoldemGame from "../texasHoldem";
+import TexasHoldemGame, { GameOptions } from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
 
 // Test implementation of abstract BaseAction
@@ -32,7 +32,7 @@ describe("BaseAction", () => {
     beforeEach(() => {
         // Setup initial game state
         const playerStates = new Map<number, Player | null>();
-        
+
         // Create player with correct constructor parameters
         const initialPlayer = new Player(
             "0x123",             // address
@@ -43,14 +43,19 @@ describe("BaseAction", () => {
         );
         playerStates.set(0, initialPlayer);
 
+        // These need to be fetched from the contract in the future
+        const gameOptions: GameOptions = {
+            minBuyIn: 100000000000000000n,
+            maxBuyIn: 1000000000000000000n,
+            minPlayers: 2,
+            maxPlayers: 9,
+            smallBlind: 10000000000000000n,
+            bigBlind: 20000000000000000n,
+        };
+
         game = new TexasHoldemGame(
             "0xgame",
-            100n,         // minBuyIn
-            1000n,        // maxBuyIn
-            2,           // minPlayers
-            9,           // maxPlayers
-            10n,         // smallBlind
-            20n,         // bigBlind
+            gameOptions,
             0,           // dealer
             1,           // nextToAct
             TexasHoldemRound.PREFLOP,

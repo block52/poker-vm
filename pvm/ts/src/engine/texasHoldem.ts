@@ -29,7 +29,7 @@ type Round = {
     actions: Turn[];
 };
 
-type GameOptions = {
+export type GameOptions = {
     minBuyIn: bigint;
     maxBuyIn: bigint;
     minPlayers: number;
@@ -57,14 +57,16 @@ class TexasHoldemGame implements IPoker {
     private _lastActedSeat: number;
     private _previousActions = new Stack<Turn>();
 
+    private readonly _minBuyIn: bigint;
+    private readonly _maxBuyIn: bigint;
+    private readonly _minPlayers: number;
+    private readonly _maxPlayers: number;
+    private readonly _smallBlind: bigint;
+    private readonly _bigBlind: bigint;
+
     constructor(
         private readonly _address: string,
-        private readonly _minBuyIn: bigint,
-        private readonly _maxBuyIn: bigint,
-        private readonly _minPlayers: number,
-        private readonly _maxPlayers: number,
-        private readonly _smallBlind: bigint,
-        private readonly _bigBlind: bigint,
+        private gameOptions: GameOptions,
         private _dealer: number,
         private _nextToAct: number,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
@@ -79,11 +81,20 @@ class TexasHoldemGame implements IPoker {
 
         this._currentRound = _currentRound;
 
-        this._smallBlindPosition = _dealer + 1;
-        this._bigBlindPosition = _dealer + 2;
+        this._minBuyIn = gameOptions.minBuyIn;
+        this._maxBuyIn = gameOptions.maxBuyIn;
+        this._minPlayers = gameOptions.minPlayers;
+        this._maxPlayers = gameOptions.maxPlayers;
+        this._smallBlind = gameOptions.smallBlind;
+        this._bigBlind = gameOptions.bigBlind;
+
+        // this was is causing the 10 & 11
+        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
+        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
+
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
 
-        this._dealer = _dealer === 0 ? _maxPlayers : _dealer;
+        this._dealer = _dealer === 0 ? this._maxPlayers : _dealer;
 
         // remove this
         this._nextToAct = _nextToAct;
@@ -696,7 +707,7 @@ class TexasHoldemGame implements IPoker {
         this._currentRound = this.getNextRound();
     }
 
-    public static fromJson(json: any, minBuyIn: bigint, maxBuyIn: bigint): TexasHoldemGame {
+    public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
         
         json.players.map((p: any) => {
@@ -707,12 +718,7 @@ class TexasHoldemGame implements IPoker {
 
         return new TexasHoldemGame(
             json.address,
-            minBuyIn,
-            maxBuyIn,
-            json.minPlayers as number,
-            json.maxPlayers as number,
-            BigInt(json.smallBlind),
-            BigInt(json.bigBlind),
+            gameOptions,
             json.dealer as number,
             json.nextToAct,
             json.currentRound,

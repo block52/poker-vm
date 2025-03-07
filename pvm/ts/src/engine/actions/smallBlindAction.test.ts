@@ -1,7 +1,7 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/game";
 import SmallBlindAction from "./smallBlindAction";
-import TexasHoldemGame from "../texasHoldem";
+import TexasHoldemGame, { GameOptions } from "../texasHoldem";
 
 describe("SmallBlindAction", () => {
     let game: TexasHoldemGame;
@@ -9,11 +9,20 @@ describe("SmallBlindAction", () => {
     let action: SmallBlindAction;
     let player: Player;
 
+    const gameOptions: GameOptions = {
+        minBuyIn: 100000000000000000n,
+        maxBuyIn: 1000000000000000000n,
+        minPlayers: 2,
+        maxPlayers: 9,
+        smallBlind: 10000000000000000n,
+        bigBlind: 20000000000000000n,
+    };
+
     beforeEach(() => {
         console.log("\n=== POKER HAND SETUP ===");
         console.log("Game State: Starting new hand");
         console.log("Round: ANTE (where blinds are posted)");
-        
+
         // Setup initial game state
         const playerStates = new Map<number, Player | null>();
         const initialPlayer = new Player(
@@ -27,12 +36,7 @@ describe("SmallBlindAction", () => {
 
         game = new TexasHoldemGame(
             "0xgame",
-            10n,          // minBuyIn
-            30n,          // maxBuyIn
-            2,            // minPlayers
-            9,            // maxPlayers
-            10n,          // smallBlind
-            20n,          // bigBlind
+            gameOptions,
             0,            // dealer
             1,            // nextToAct
             TexasHoldemRound.ANTE,

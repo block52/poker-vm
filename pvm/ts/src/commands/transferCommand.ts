@@ -4,7 +4,7 @@ import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
-import TexasHoldemGame from "../engine/texasHoldem";
+import TexasHoldemGame, { GameOptions } from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
 import contractSchemas from "../schema/contractSchemas";
 
@@ -41,10 +41,16 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 console.log(`Current game state:`, json);
 
                 // These need to be fetched from the contract in the future
-                const minBuyIn = 1000000000000000000n;
-                const maxBuyIn = 10000000000000000000n;
+                const gameOptions: GameOptions = {
+                    minBuyIn: 100000000000000000n,
+                    maxBuyIn: 1000000000000000000n,
+                    minPlayers: 2,
+                    maxPlayers: 9,
+                    smallBlind: 10000000000000000n,
+                    bigBlind: 20000000000000000n,
+                };
 
-                const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, minBuyIn, maxBuyIn);
+                const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
                 console.log(`Game object created, processing action: ${this.data}`);
 
                 if (!game) {
@@ -83,15 +89,23 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                     default:
                         throw new Error("Invalid action");
                 };
+
+                const _json = game.toJson();
+                await this.gameManagement.saveFromJSON(_json);
+
+                const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+                return signResult(gameTx, this.privateKey);
+            } else {
+                console.log(`Processing regular transaction...`);
+
+                // // If we haven't thrown an error, then we can create the transaction
+                // console.log(`Creating transaction...`);
+                const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+                // console.log(`Adding transaction to mempool...`);
+                await this.mempool.add(transferTx);
+
+                return signResult(transferTx, this.privateKey);
             }
-
-            // If we haven't thrown an error, then we can create the transaction
-            console.log(`Creating transaction...`);
-            const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
-            console.log(`Adding transaction to mempool...`);
-            await this.mempool.add(transferTx);
-
-            return signResult(transferTx, this.privateKey);
         } catch (e) {
             console.error(`Error in transfer command:`, e);
             throw new Error("Error transferring funds");
@@ -103,5 +117,5 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         const existingContractSchema = await contractSchemas.find({ address: address });
         console.log(`Contract schema found:`, existingContractSchema);
         return existingContractSchema !== undefined;
-    }   
+    }
 }

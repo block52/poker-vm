@@ -273,14 +273,14 @@ export class RPC {
             switch (method) {
                 // Write methods
 
-                case RPCMethods.GET_BLOCK: {
-                    const blockHash = request.params[0] as string;
-                    const blockJSON = request.params[1] as string;
-                    const blockDTO: BlockDTO = JSON.parse(blockJSON);
-                    const command = new ReceiveMinedBlockCommand(blockHash, blockDTO, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
+                // case RPCMethods.GET_BLOCK: {
+                //     const blockHash = request.params[0] as string;
+                //     const blockJSON = request.params[1] as string;
+                //     const blockDTO: BlockDTO = JSON.parse(blockJSON);
+                //     const command = new ReceiveMinedBlockCommand(blockHash, blockDTO, validatorPrivateKey);
+                //     result = await command.execute();
+                //     break;
+                // }
 
                 case RPCMethods.MINT: {
                     if (request.params?.length !== 1) {
@@ -351,10 +351,6 @@ export class RPC {
                 default:
                     return makeErrorRPCResponse(id, "Method not found");
             }
-            // return {
-            //     id,
-            //     result: result.data.toJson()
-            // };
             return {
                 id: request.id,
                 result: {
