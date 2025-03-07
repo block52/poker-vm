@@ -1,4 +1,4 @@
-import { TexasHoldemGameStateDTO } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { Transaction } from "../models";

@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { Wallet } from "ethers";
 import { ethers } from "ethers";
 
-import { TexasHoldemGameStateDTO, NodeRpcClient, TexasHoldemStateDTO, TexasHoldemRound, PlayerDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO, NodeRpcClient, TexasHoldemRound, PlayerDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -80,12 +80,11 @@ const join = async (tableAddress: string, amount: bigint): Promise<string> => {
     return response.hash;
 };
 
-const getGameState = async (tableAddress: string): Promise<TexasHoldemGameStateDTO> => {
+const getGameState = async (tableAddress: string): Promise<TexasHoldemStateDTO> => {
     const rpcClient = getClient();
     const dto = await rpcClient.getGameState(tableAddress);
 
-    const state = dto as TexasHoldemGameStateDTO;
-    return state;
+    return dto;
 };
 
 const getAccount = async (address: string): Promise<any> => {
@@ -133,7 +132,7 @@ const formatChips = (chipString: string): string => {
 };
 
 // Helper to determine which positions players are in
-const getPlayerPositionMarker = (seat: number, state: TexasHoldemGameStateDTO): string => {
+const getPlayerPositionMarker = (seat: number, state: TexasHoldemStateDTO): string => {
     let nextToAct = seat === state.nextToAct ? " *" : "";
     if (seat === state.dealer) return `D${nextToAct}`;
     if (seat === state.smallBlindPosition) return `SB${nextToAct}`;
@@ -142,7 +141,7 @@ const getPlayerPositionMarker = (seat: number, state: TexasHoldemGameStateDTO): 
 };
 
 // Display game state as a table
-const renderGameState = (state: TexasHoldemGameStateDTO, publicKey: string): void => {
+const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void => {
     // Find my player
     const myPlayer = state.players.find(p => p.address === publicKey);
 
@@ -451,15 +450,23 @@ type ActionChoice = {
     value: string;
 };
 
-const getLegalActions = (address: string, publicKey: string): ActionChoice[] => {
+const getLegalActions = async (tableAddress: string, address: string): Promise<ActionChoice[]> => {
+
     const actions: ActionChoice[] = [];
+    actions.push({ action: "Exit", value: "exit" });
+
+    const client = getClient();
+    const state = await client.getGameState(tableAddress);
+
+    // Check if it's my turn
+    // if (state.nextToAct 
 
     actions.push({ action: "Check", value: "check" });
     actions.push({ action: "Call", value: "call" });
     actions.push({ action: "Fold", value: "fold" });
     actions.push({ action: "Raise", value: "raise" });
     actions.push({ action: "All-In", value: "all-in" });
-    actions.push({ action: "Exit", value: "exit" });
+    
 
     return actions;
 };
@@ -474,7 +481,7 @@ const pokerInteractiveAction = async (tableAddress: string) => {
         renderGameState(state, address);
     
         // todo: call node to get legal actions
-        const actions = getLegalActions(tableAddress, pk);
+        const actions = await getLegalActions(tableAddress, pk);
         actions.push({ action: "Refresh", value: "refresh" });
 
         const { action } = await inquirer.prompt([

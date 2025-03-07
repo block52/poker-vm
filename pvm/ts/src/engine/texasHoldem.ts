@@ -4,8 +4,8 @@ import {
     PlayerActionType,
     PlayerDTO,
     PlayerStatus,
-    TexasHoldemGameStateDTO,
     TexasHoldemRound,
+    TexasHoldemStateDTO,
     WinnerDTO
 } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/game";
@@ -196,7 +196,7 @@ class TexasHoldemGame implements IPoker {
 
         //ensure the seat is valid
         if (seat === -1) {
-            console.log(`Table full. Current players: ${this.getPlayerCount()}, Max players: ${this._maxPlayers}`); 
+            console.log(`Table full. Current players: ${this.getPlayerCount()}, Max players: ${this._maxPlayers}`);
             throw new Error("Table full."); // This must be thrown
         }
 
@@ -519,7 +519,7 @@ class TexasHoldemGame implements IPoker {
             // Check if seat is empty (null) or doesn't exist in the map
             if (!this._playersMap.has(seatNumber) || this._playersMap.get(seatNumber) === null) {
                 return seatNumber; // return first available seat.
-            } 
+            }
         }
 
         // If no seats available, return -1 instead of throwing error
@@ -724,9 +724,9 @@ class TexasHoldemGame implements IPoker {
         );
     }
 
-    public toJson(): TexasHoldemGameStateDTO {
+    public toJson(): TexasHoldemStateDTO {
         const players: PlayerDTO[] = Array.from(this._playersMap.values()).map((player, i) => {
-            
+
             const lastAction = player?.lastAction ? { ...player.lastAction, amount: player.lastAction.amount?.toString() ?? "0" } : undefined;
             const actions: LegalActionDTO[] = [];
 

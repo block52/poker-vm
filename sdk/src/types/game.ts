@@ -61,12 +61,8 @@ export type PlayerDTO = {
     signature: string;
 };
 
-export type TexasHoldemJoinStateDTO = {
-    type: "join";
-    players: string[];
-};
 
-export type TexasHoldemGameStateDTO = {
+export type TexasHoldemStateDTO = {
     type: "cash";
     address: string;
     smallBlind: string;
@@ -82,5 +78,3 @@ export type TexasHoldemGameStateDTO = {
     winners: WinnerDTO[];
     signature: string;
 };
-
-export type TexasHoldemStateDTO = TexasHoldemJoinStateDTO | TexasHoldemGameStateDTO;
