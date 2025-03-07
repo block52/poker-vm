@@ -22,12 +22,12 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             // These need to be fetched from the contract in the future
             const gameOptions: GameOptions = {
-                minBuyIn: 100000000000000000n,
-                maxBuyIn: 1000000000000000000n,
+                minBuyIn: 1000000000000000000n,
+                maxBuyIn: 10000000000000000000n,
                 minPlayers: 2,
                 maxPlayers: 9,
-                smallBlind: 10000000000000000n,
-                bigBlind: 20000000000000000n,
+                smallBlind: 100000000000000000n,
+                bigBlind: 200000000000000000n,
             };
 
             const game = TexasHoldemGame.fromJson(json, gameOptions);
