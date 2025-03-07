@@ -253,13 +253,8 @@ class TexasHoldemGame implements IPoker {
         // todo: do transfer
     }
 
-    getNextPlayerToAct(): Player {
+    getNextPlayerToAct(): Player | undefined {
         const player = this.findNextPlayerToAct();
-
-        if (!player) {
-            throw new Error("Player not found.");
-        }
-
         return player;
     }
 
@@ -273,7 +268,7 @@ class TexasHoldemGame implements IPoker {
         for (let i = next; i <= this._maxPlayers; i++) {
             const player = this.getPlayerAtSeat(i);
 
-            if (player && (this.getPlayerStatus(player.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player.address) === PlayerStatus.NOT_ACTED)) {
+            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
                 return player;
             }
         }
@@ -281,7 +276,7 @@ class TexasHoldemGame implements IPoker {
         for (let i = 1; i < next; i++) {
             const player = this.getPlayerAtSeat(i);
 
-            if (player && (this.getPlayerStatus(player.address) === PlayerStatus.ACTIVE || this.getPlayerStatus(player.address) === PlayerStatus.NOT_ACTED)) {
+            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
                 return player;
             }
         }
@@ -516,10 +511,6 @@ class TexasHoldemGame implements IPoker {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
     }
 
-    private nextPlayer(): void {
-        // this is find next to act
-    }
-
     findNextSeat(): number {
         const maxSeats = this._maxPlayers;
 
@@ -532,7 +523,7 @@ class TexasHoldemGame implements IPoker {
         }
 
         // If no seats available, return -1 instead of throwing error
-        //This allows `joinAtSeat` to handle full-table scenario.
+        // This allows `joinAtSeat` to handle full-table scenario.
         return -1;
     }
 
@@ -757,6 +748,9 @@ class TexasHoldemGame implements IPoker {
             };
         });
 
+        const nextPlayerToAct = this.findNextPlayerToAct();
+        const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
+
         const winners: WinnerDTO[] = [];
         const pot = this.getPot();
 
@@ -771,7 +765,7 @@ class TexasHoldemGame implements IPoker {
             players: players,
             communityCards: this._communityCards.map(c => c.value),
             pots: [pot.toString()],
-            nextToAct: this._nextToAct,
+            nextToAct: nextToAct,
             round: this._currentRound,
             winners: winners,
             signature: ethers.ZeroHash

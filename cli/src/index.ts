@@ -133,11 +133,12 @@ const formatChips = (chipString: string): string => {
 };
 
 // Helper to determine which positions players are in
-const getPlayerPosition = (playerIndex: number, state: TexasHoldemGameStateDTO): string => {
-    if (playerIndex === state.dealer) return "D";
-    if (playerIndex === state.smallBlindPosition) return "SB";
-    if (playerIndex === state.bigBlindPosition) return "BB";
-    return "";
+const getPlayerPositionMarker = (seat: number, state: TexasHoldemGameStateDTO): string => {
+    let nextToAct = seat === state.nextToAct ? " *" : "";
+    if (seat === state.dealer) return `D${nextToAct}`;
+    if (seat === state.smallBlindPosition) return `SB${nextToAct}`;
+    if (seat === state.bigBlindPosition) return `BB${nextToAct}`;
+    return nextToAct;
 };
 
 // Display game state as a table
@@ -199,9 +200,12 @@ const renderGameState = (state: TexasHoldemGameStateDTO, publicKey: string): voi
             cardsDisplay = "🂠 🂠"; // Back of cards
         }
 
+        const marker = getPlayerPositionMarker(player.seat, state);
+        const seat = `${player.seat} ${marker}`;
+
         console.log(
             rowStyle(
-                String(player.seat).padEnd(6) +
+                String(seat).padEnd(6) +
                     // getPlayerPosition(player.seat, state).padEnd(10) +
                     (player.address.substring(0, 6) + "...").padEnd(20) +
                     formatChips(player.stack).padEnd(12) +
