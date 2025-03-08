@@ -66,7 +66,11 @@ const app = express();
 // 5. Configure Middleware
 // ===================================
 // Enable CORS for all routes
-app.use(cors());
+app.use(cors({
+    origin: ['https://app.block52.xyz', 'http://localhost:3000'],
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 // Parse JSON bodies
 app.use(express.json());
 
