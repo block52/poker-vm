@@ -77,6 +77,14 @@ const Dashboard: React.FC = () => {
         setPublicKey(localKey);
     }, []);
 
+    useEffect(() => {
+        console.log('\n=== Dashboard Balance Check ===');
+        console.log('Connected Address:', address);
+        console.log('Raw B52 Balance:', b52Balance);
+        console.log('Formatted Balance:', b52Balance ? formatBalance(b52Balance) : '0');
+        console.log('============================\n');
+    }, [address, b52Balance]);
+
     const handleGameType = (type: GameType) => {
         console.log("\n=== Game Type Selected ===");
         console.log("Type:", type);
@@ -133,10 +141,16 @@ const Dashboard: React.FC = () => {
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
 
-    // Add the same format function
+    // Modify formatBalance to add logging
     const formatBalance = (rawBalance: string | number) => {
+        console.log('\n=== Format Balance Called ===');
+        console.log('Input Balance:', rawBalance);
         const value = Number(rawBalance) / 1e18;
-        return value.toFixed(2);
+        console.log('Converted Value:', value);
+        const formatted = value.toFixed(2);
+        console.log('Formatted Result:', formatted);
+        console.log('==========================\n');
+        return formatted;
     };
 
     const handleImportPrivateKey = () => {
