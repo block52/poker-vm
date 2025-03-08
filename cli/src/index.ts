@@ -10,7 +10,27 @@ import { TexasHoldemStateDTO, NodeRpcClient, TexasHoldemRound, PlayerDTO, Player
 import dotenv from "dotenv";
 dotenv.config();
 
-let pk = process.env.PRIVATE_KEY || "";
+// Get command line arguments
+const args = process.argv.slice(2);
+// Check if a private key was provided as a command-line argument
+let pk = "";
+if (args.length > 0) {
+    const potentialKey = args[0].startsWith('0x') ? args[0] : `0x${args[0]}`;
+    try {
+        // Validate the key by creating a wallet
+        const wallet = new Wallet(potentialKey);
+        pk = potentialKey;
+        console.log(chalk.green("Private key set from command line arguments"));
+        console.log(chalk.cyan(`Address: ${wallet.address}`));
+    } catch (error) {
+        console.log(chalk.yellow("Invalid private key provided as argument. Will try environment variable."));
+    }
+}
+
+// If no valid key from command line, try environment variable
+if (!pk) {
+    pk = process.env.PRIVATE_KEY || "";
+}
 
 // Default contract address on L2
 let defaultTableAddress = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
@@ -30,6 +50,15 @@ const getClient = () => {
     return _node;
 };
 
+// If we have a valid private key, set the address
+if (pk) {
+    try {
+        const wallet = new Wallet(pk);
+        address = wallet.address;
+    } catch (error) {
+        // Invalid key format - will be handled in the interactive menu
+    }
+}
 
 /**
  * Parse command with parameters
