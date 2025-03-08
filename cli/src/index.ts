@@ -246,13 +246,15 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
         const marker = getPlayerPositionMarker(player.seat, state);
         const seat = `${player.seat} ${marker}`;
 
+        const bet = player.lastAction?.amount || "0";
+
         console.log(
             rowStyle(
                 String(seat).padEnd(6) +
                 // getPlayerPosition(player.seat, state).padEnd(10) +
-                (shortenAddress(player.address)).padEnd(14) +
+                (shortenAddress(player.address)).padEnd(20) +
                 formatChips(player.stack).padEnd(12) +
-                "0.00".padEnd(12) +
+                formatChips(bet).padEnd(12) +
                 cardsDisplay.padEnd(15) +
                 player.status
             )
@@ -427,8 +429,8 @@ const interactiveAction = async () => {
                     // console.log(chalk.cyan(JSON.stringify(gameState, null, 2)));
 
                     // Table stakes
-                    const minBuyIn = BigInt("1000000000000000000"); // 1 USDC
-                    const maxBuyIn = BigInt("5000000000000000000"); // 5 USDC
+                    const minBuyIn = 1000000000000000000n; // 1 USDC
+                    const maxBuyIn = 5000000000000000000n; // 5 USDC
 
                     const { buyInAmount } = await inquirer.prompt([
                         {

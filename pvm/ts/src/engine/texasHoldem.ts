@@ -734,10 +734,17 @@ class TexasHoldemGame implements IPoker {
 
     public toJson(): TexasHoldemStateDTO {
         const players: PlayerDTO[] = Array.from(this._playersMap.values()).map((player, i) => {
+            let lastAction: ActionDTO | undefined;
+            
+            const turn = this.getPlayersLastAction(player?.address ?? ethers.ZeroAddress);
+            if (turn) {
+                lastAction = {
+                    action: turn.action,
+                    amount: (turn.amount ?? 0n).toString()
+                };
+            }
 
-            const lastAction = player?.lastAction ? { ...player.lastAction, amount: player.lastAction.amount?.toString() ?? "0" } : undefined;
             const actions: LegalActionDTO[] = [];
-
             const seat = this.getPlayerSeatNumber(player?.address ?? ethers.ZeroAddress);
 
             return {
@@ -749,7 +756,7 @@ class TexasHoldemGame implements IPoker {
                 isDealer: i === this._dealer,
                 holeCards: player?.holeCards ? [player.holeCards[0].value, player.holeCards[1].value] : undefined,
                 status: player?.status ?? PlayerStatus.SITTING_OUT,
-                lastAction,
+                lastAction: lastAction,
                 actions: actions,
                 timeout: 0,
                 signature: ethers.ZeroHash
