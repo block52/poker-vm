@@ -47,6 +47,8 @@ class TexasHoldemGame implements IPoker {
 
     private _rounds = new Map<TexasHoldemRound, Turn[]>();
     private _deck!: Deck;
+
+    private _pot: bigint;
     private _sidePots!: Map<string, bigint>;
     private _winners?: Map<string, bigint>;
 
@@ -57,6 +59,7 @@ class TexasHoldemGame implements IPoker {
     private _lastActedSeat: number;
     private _previousActions = new Stack<Turn>();
 
+    // Table options
     private readonly _minBuyIn: bigint;
     private readonly _maxBuyIn: bigint;
     private readonly _minPlayers: number;
@@ -71,7 +74,7 @@ class TexasHoldemGame implements IPoker {
         private _nextToAct: number,
         private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
         private _communityCards: Card[] = [],
-        private _pot: bigint = 0n,
+        private currentPot: bigint = 0n,
         playerStates: Map<number, Player | null>,
         deck?: string
     ) {
@@ -79,6 +82,7 @@ class TexasHoldemGame implements IPoker {
         deck ? (this._deck = new Deck(deck)) : this._deck = new Deck();
         // this._players = new FixedCircularList<Player>(this._maxPlayers, null);
 
+        this._pot = BigInt(currentPot);
         this._currentRound = _currentRound;
 
         this._minBuyIn = gameOptions.minBuyIn;

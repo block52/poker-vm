@@ -6,42 +6,48 @@ import { Wallet } from "ethers";
 import { ethers } from "ethers";
 
 import { TexasHoldemStateDTO, NodeRpcClient, TexasHoldemRound, PlayerDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
-
 import dotenv from "dotenv";
+
 dotenv.config();
-
-// Get command line arguments
-const args = process.argv.slice(2);
-// Check if a private key was provided as a command-line argument
-let pk = "";
-if (args.length > 0) {
-    const potentialKey = args[0].startsWith('0x') ? args[0] : `0x${args[0]}`;
-    try {
-        // Validate the key by creating a wallet
-        const wallet = new Wallet(potentialKey);
-        pk = potentialKey;
-        console.log(chalk.green("Private key set from command line arguments"));
-        console.log(chalk.cyan(`Address: ${wallet.address}`));
-    } catch (error) {
-        console.log(chalk.yellow("Invalid private key provided as argument. Will try environment variable."));
-    }
-}
-
-// If no valid key from command line, try environment variable
-if (!pk) {
-    pk = process.env.PRIVATE_KEY || "";
-}
 
 // Default contract address on L2
 let defaultTableAddress = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
 let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 let nonce: number = 0;
-let address = ""; // Wallet address
 
 let _node: NodeRpcClient;
 
-const getClient = () => {
+// Get command line arguments
+const args = process.argv.slice(2);
 
+// Check if a private key was provided as a command-line argument
+let pk = "";
+
+if (args.length > 0) {
+    const potentialKey = args[0].startsWith("0x") ? args[0] : `0x${args[0]}`;
+    try {
+        // Validate the key by creating a wallet
+        const wallet = new Wallet(potentialKey);
+        pk = potentialKey;
+
+        console.log(chalk.green("Private key set from command line arguments"));
+        console.log(chalk.cyan(`Address: ${wallet.address}`));
+    } catch (error) {
+        console.log(chalk.red("Invalid private key provided as argument. Will try environment variable."));
+    }
+}
+
+// If no valid key from command line, try environment variable
+if (!pk) {
+    if (process.env.PRIVATE_KEY) {
+        console.log(chalk.green("Private key set from environment variable"));
+        pk = process.env.PRIVATE_KEY;
+    } else {
+        console.log(chalk.red("No private key found in environment variable"));
+    }
+}
+
+const getClient = () => {
     if (_node) {
         return _node;
     }
@@ -50,14 +56,18 @@ const getClient = () => {
     return _node;
 };
 
-// If we have a valid private key, set the address
-if (pk) {
-    try {
-        const wallet = new Wallet(pk);
-        address = wallet.address;
-    } catch (error) {
-        // Invalid key format - will be handled in the interactive menu
+const getAddress = () => {
+    // If we have a valid private key, set the address
+    if (pk) {
+        try {
+            const wallet = new Wallet(pk);
+            return wallet.address;
+        } catch (error) {
+            // Invalid key format - will be handled in the interactive menu
+        }
     }
+
+    throw new Error("No valid private key found");
 }
 
 /**
@@ -92,7 +102,7 @@ const createPrivateKey = async () => {
     console.log(publicKey.export({ type: "spki", format: "pem" }).toString());
 };
 
-const syncNonce = async () => {
+const syncNonce = async (address: string) => {
     const rpcClient = getClient();
     const response = await rpcClient.getAccount(address);
 
@@ -169,6 +179,10 @@ const getPlayerPositionMarker = (seat: number, state: TexasHoldemStateDTO): stri
     return nextToAct;
 };
 
+const shortenAddress = (address: string): string => {
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+};
+
 // Display game state as a table
 const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void => {
     // Find my player
@@ -199,12 +213,12 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
     console.log(chalk.cyan("-".repeat(80)));
     console.log(
         chalk.cyan("Seat".padEnd(6)) +
-            // chalk.cyan("Position".padEnd(10)) +
-            chalk.cyan("Address".padEnd(20)) +
-            chalk.cyan("Chips".padEnd(12)) +
-            chalk.cyan("Bet".padEnd(12)) +
-            chalk.cyan("Cards".padEnd(15)) +
-            chalk.cyan("Status")
+        // chalk.cyan("Position".padEnd(10)) +
+        chalk.cyan("Address".padEnd(20)) +
+        chalk.cyan("Chips".padEnd(12)) +
+        chalk.cyan("Bet".padEnd(12)) +
+        chalk.cyan("Cards".padEnd(15)) +
+        chalk.cyan("Status")
     );
     console.log(chalk.cyan("-".repeat(80)));
 
@@ -212,7 +226,7 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
     const sortedPlayers = [...state.players].sort((a, b) => a.seat - b.seat);
 
     for (const player of sortedPlayers) {
-        const isNextToAct = player.seat === state.nextToAct;
+        // const isNextToAct = player.seat === state.nextToAct;
         const isMyPlayer = player.address === publicKey;
 
         // Highlight current player
@@ -235,12 +249,12 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
         console.log(
             rowStyle(
                 String(seat).padEnd(6) +
-                    // getPlayerPosition(player.seat, state).padEnd(10) +
-                    (player.address.substring(0, 6) + "...").padEnd(20) +
-                    formatChips(player.stack).padEnd(12) +
-                    "0.00".padEnd(12) +
-                    cardsDisplay.padEnd(15) +
-                    player.status
+                // getPlayerPosition(player.seat, state).padEnd(10) +
+                (shortenAddress(player.address)).padEnd(14) +
+                formatChips(player.stack).padEnd(12) +
+                "0.00".padEnd(12) +
+                cardsDisplay.padEnd(15) +
+                player.status
             )
         );
     }
@@ -278,19 +292,7 @@ const interactiveAction = async () => {
     }
 
     console.log(chalk.yellow("Checking for private key in PRIVATE_KEY environment variable..."));
-
-    if (process.env.PRIVATE_KEY) {
-        try {
-            const wallet = new Wallet(process.env.PRIVATE_KEY);
-            console.log(chalk.green("✓ Found valid private key"));
-            console.log(chalk.cyan(`Current active address: ${wallet.address}`));
-            address = wallet.address;
-        } catch (error) {
-            console.log(chalk.red("✗ Invalid private key found in PRIVATE_KEY"));
-        }
-    } else {
-        console.log(chalk.yellow("✗ No private key found in PRIVATE_KEY"));
-    }
+    let address = getAddress();
 
     let continueSession = true;
     while (continueSession) {
@@ -417,7 +419,7 @@ const interactiveAction = async () => {
                         console.log(chalk.cyan("Your stack:"), formatChips(myPlayer.stack));
 
                         renderGameState(gameState, address);
-                        await pokerInteractiveAction(defaultTableAddress);
+                        await pokerInteractiveAction(defaultTableAddress, address);
                         break;
                     }
 
@@ -454,10 +456,8 @@ const interactiveAction = async () => {
 
                     if (result) {
                         console.log(chalk.cyan("Response:"), result);
-                        await pokerInteractiveAction(defaultTableAddress);
+                        await pokerInteractiveAction(defaultTableAddress, address);
                     }
-
-                    
                 } catch (error: any) {
                     console.error(chalk.red("Failed to join game:"), error.message);
                 }
@@ -492,7 +492,6 @@ type ActionChoice = {
 };
 
 const getLegalActions = async (tableAddress: string, address: string): Promise<ActionChoice[]> => {
-
     const actions: ActionChoice[] = [];
     actions.push({ action: "Exit", value: "exit" });
 
@@ -523,19 +522,18 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
     actions.push({ action: "Fold", value: "fold" });
     actions.push({ action: "Raise", value: "raise" });
     actions.push({ action: "All-In", value: "all-in" });
-    
+
     return actions;
 };
 
-const pokerInteractiveAction = async (tableAddress: string) => {
+const pokerInteractiveAction = async (tableAddress: string, address: string) => {
     const client = getClient();
 
     let continueSession = true;
     while (continueSession) {
-
         const state = await getGameState(tableAddress);
         renderGameState(state, address);
-    
+
         // todo: call node to get legal actions
         const actions = await getLegalActions(tableAddress, address);
         actions.push({ action: "Refresh", value: "refresh" });
@@ -578,7 +576,7 @@ const pokerInteractiveAction = async (tableAddress: string) => {
                 break;
         }
 
-        await syncNonce();
+        await syncNonce(address);
     }
 };
 

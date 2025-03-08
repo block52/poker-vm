@@ -1,4 +1,4 @@
-import { AccountManagement } from "./accountManagement";
+import { AccountManagement, getAccountManagementInstance } from "./accountManagement";
 import { Account } from "../models/account";
 import Accounts from "../schema/accounts";
 import { Transaction } from "../models/transaction";
@@ -29,6 +29,8 @@ describe("AccountManagement", () => {
     beforeEach(() => {
         // Clear all mocks before each test
         jest.clearAllMocks();
+
+        // Create a new instance for each test
         accountManagement = new AccountManagement();
     });
 
@@ -59,8 +61,19 @@ describe("AccountManagement", () => {
                 address: mockAddress,
                 balance: mockBalance
             };
-            (Accounts.findOne as jest.Mock).mockResolvedValueOnce(mockAccountDoc);
-            jest.spyOn(Account, "fromDocument").mockReturnValue(new Account(mockAddress, BigInt(mockBalance)));
+            const mockAccount = new Account(mockAddress, BigInt(mockBalance));
+
+            (Accounts.findOne as jest.Mock)
+                .mockResolvedValueOnce(mockAccountDoc) // First call in _getAccount
+                .mockResolvedValueOnce(mockAccountDoc); // Second call in getAccount
+
+            jest.spyOn(Account, "create").mockReturnValue({
+                address: mockAddress,
+                balance: BigInt(mockBalance),
+                toDocument: jest.fn()
+            } as any);
+
+            jest.spyOn(Account, "fromDocument").mockReturnValue(mockAccount);
 
             // Act
             const result = await accountManagement.createAccount(mockPrivateKey);
@@ -106,7 +119,8 @@ describe("AccountManagement", () => {
     describe("incrementBalance", () => {
         it("should throw error for negative amount", async () => {
             // Act & Assert
-            await expect(accountManagement.incrementBalance(mockAddress, -1n)).rejects.toThrow("Balance must be positive");
+            await expect(accountManagement.incrementBalance(mockAddress, -1n))
+                .rejects.toThrow("Balance must be positive");
         });
 
         it("should create new account with balance if not exists", async () => {
@@ -120,7 +134,8 @@ describe("AccountManagement", () => {
             // Assert
             expect(Accounts.create).toHaveBeenCalledWith({
                 address: mockAddress,
-                balance: amount.toString()
+                balance: amount.toString(),
+                nonce: 0
             });
         });
 
@@ -128,6 +143,8 @@ describe("AccountManagement", () => {
             // Arrange
             const existingBalance = "500";
             const incrementAmount = 100n;
+            const newBalance = BigInt(existingBalance) + incrementAmount;
+
             (Accounts.findOne as jest.Mock).mockResolvedValueOnce({
                 address: mockAddress,
                 balance: existingBalance
@@ -139,7 +156,7 @@ describe("AccountManagement", () => {
             // Assert
             expect(Accounts.updateOne).toHaveBeenCalledWith(
                 { address: mockAddress },
-                { $inc: { balance: (BigInt(existingBalance) + incrementAmount).toString() } }
+                { $set: { balance: newBalance.toString() } }
             );
         });
 
@@ -156,18 +173,62 @@ describe("AccountManagement", () => {
     describe("decrementBalance", () => {
         it("should throw error for negative amount", async () => {
             // Act & Assert
-            await expect(accountManagement.decrementBalance(mockAddress, -1n)).rejects.toThrow("Balance must be positive");
+            await expect(accountManagement.decrementBalance(mockAddress, -1n))
+                .rejects.toThrow("Balance must be positive");
+        });
+
+        it("should throw error if account not found", async () => {
+            // Arrange
+            (Accounts.findOne as jest.Mock).mockResolvedValueOnce(null);
+
+            // Act & Assert
+            await expect(accountManagement.decrementBalance(mockAddress, 100n))
+                .rejects.toThrow("Account not found");
+        });
+
+        it("should throw error if insufficient funds", async () => {
+            // Arrange
+            const balance = "50";
+            const amount = 100n;
+
+            (Accounts.findOne as jest.Mock).mockResolvedValueOnce({
+                address: mockAddress,
+                balance: balance
+            });
+
+            // Act & Assert
+            await expect(accountManagement.decrementBalance(mockAddress, amount))
+                .rejects.toThrow("Insufficient funds");
         });
 
         it("should decrement balance correctly", async () => {
             // Arrange
+            const balance = "500";
             const amount = 100n;
+            const newBalance = BigInt(balance) - amount;
+
+            (Accounts.findOne as jest.Mock).mockResolvedValueOnce({
+                address: mockAddress,
+                balance: balance
+            });
 
             // Act
             await accountManagement.decrementBalance(mockAddress, amount);
 
             // Assert
-            expect(Accounts.updateOne).toHaveBeenCalledWith({ address: mockAddress }, { $inc: { balance: (-amount).toString() } });
+            expect(Accounts.updateOne).toHaveBeenCalledWith(
+                { address: mockAddress },
+                { $set: { balance: newBalance.toString() } }
+            );
+        });
+
+        it("should skip operations for bridge address", async () => {
+            // Act
+            await accountManagement.decrementBalance(CONTRACT_ADDRESSES.bridgeAddress, 100n);
+
+            // Assert
+            expect(Accounts.findOne).not.toHaveBeenCalled();
+            expect(Accounts.updateOne).not.toHaveBeenCalled();
         });
     });
 
@@ -176,29 +237,39 @@ describe("AccountManagement", () => {
             // Arrange
             const mockTx = {
                 from: "sender-address",
-                to: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                to: "receiver-address",
                 value: 100n
             } as Transaction;
+
+            // Mock the methods to prevent actual calls
+            jest.spyOn(accountManagement, 'decrementBalance').mockImplementation(async () => { });
+            jest.spyOn(accountManagement, 'incrementBalance').mockImplementation(async () => { });
 
             // Act
             await accountManagement.applyTransaction(mockTx);
 
             // Assert
-            expect(Accounts.updateOne).toHaveBeenCalledTimes(2); // Once for sender, once for receiver
+            expect(accountManagement.decrementBalance).toHaveBeenCalledWith(mockTx.from, mockTx.value);
+            expect(accountManagement.incrementBalance).toHaveBeenCalledWith(mockTx.to, mockTx.value);
         });
 
         it("should handle transaction without sender", async () => {
             // Arrange
             const mockTx = {
-                to: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                to: "receiver-address",
                 value: 100n
             } as Transaction;
+
+            // Mock the methods to prevent actual calls
+            jest.spyOn(accountManagement, 'decrementBalance').mockImplementation(async () => { });
+            jest.spyOn(accountManagement, 'incrementBalance').mockImplementation(async () => { });
 
             // Act
             await accountManagement.applyTransaction(mockTx);
 
             // Assert
-            expect(Accounts.updateOne).toHaveBeenCalledTimes(1); // Only for receiver
+            expect(accountManagement.decrementBalance).not.toHaveBeenCalled();
+            expect(accountManagement.incrementBalance).toHaveBeenCalledWith(mockTx.to, mockTx.value);
         });
 
         it("should handle transaction without receiver", async () => {
@@ -208,11 +279,16 @@ describe("AccountManagement", () => {
                 value: 100n
             } as Transaction;
 
+            // Mock the methods to prevent actual calls
+            jest.spyOn(accountManagement, 'decrementBalance').mockImplementation(async () => { });
+            jest.spyOn(accountManagement, 'incrementBalance').mockImplementation(async () => { });
+
             // Act
             await accountManagement.applyTransaction(mockTx);
 
             // Assert
-            expect(Accounts.updateOne).toHaveBeenCalledTimes(1); // Only for sender
+            expect(accountManagement.decrementBalance).toHaveBeenCalledWith(mockTx.from, mockTx.value);
+            expect(accountManagement.incrementBalance).not.toHaveBeenCalled();
         });
     });
 
@@ -224,20 +300,22 @@ describe("AccountManagement", () => {
                 { from: "sender2", to: "receiver2", value: 200n }
             ] as Transaction[];
 
+            // Mock applyTransaction to prevent actual calls
+            jest.spyOn(accountManagement, 'applyTransaction').mockImplementation(async () => { });
+
             // Act
             await accountManagement.applyTransactions(mockTxs);
 
             // Assert
-            expect(Accounts.updateOne).toHaveBeenCalledTimes(4); // Two updates per transaction
+            expect(accountManagement.applyTransaction).toHaveBeenCalledTimes(2);
+            expect(accountManagement.applyTransaction).toHaveBeenCalledWith(mockTxs[0]);
+            expect(accountManagement.applyTransaction).toHaveBeenCalledWith(mockTxs[1]);
         });
     });
 
     describe("getAccountManagementInstance", () => {
         it("should return singleton instance", () => {
-            // Arrange
-            const { getAccountManagementInstance } = require("./accountManagement");
-
-            // Act
+            // Arrange & Act
             const instance1 = getAccountManagementInstance();
             const instance2 = getAccountManagementInstance();
 
