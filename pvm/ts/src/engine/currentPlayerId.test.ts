@@ -21,10 +21,6 @@ describe("CurrentPlayerId Tests", () => {
         bigBlind: 20000000000000000n,
     };
 
-    // These need to be fetched from the contract in the future
-    const minBuyIn = 1000000000000000000n;
-    const maxBuyIn = 10000000000000000000n;
-
     let game: TexasHoldemGame;
 
     beforeEach(() => {

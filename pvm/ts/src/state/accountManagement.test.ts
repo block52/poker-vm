@@ -18,11 +18,11 @@ jest.mock("./stateManager", () => ({
     }))
 }));
 
-describe.skip("AccountManagement", () => {
+describe("AccountManagement", () => {
     let accountManagement: AccountManagement;
 
     // Test data
-    const mockAddress = "0x123...";
+    const mockAddress = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
     const mockPrivateKey = "private-key";
     const mockBalance = "1000";
 
@@ -176,7 +176,7 @@ describe.skip("AccountManagement", () => {
             // Arrange
             const mockTx = {
                 from: "sender-address",
-                to: "receiver-address",
+                to: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 value: 100n
             } as Transaction;
 
@@ -190,7 +190,7 @@ describe.skip("AccountManagement", () => {
         it("should handle transaction without sender", async () => {
             // Arrange
             const mockTx = {
-                to: "receiver-address",
+                to: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 value: 100n
             } as Transaction;
 
