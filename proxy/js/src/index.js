@@ -260,6 +260,7 @@ app.post("/table/:tableId/join", async (req, res) => {
             signature,
             publicKey
             // todo: add "signature" of rpc call to be processeed by the node
+            
         };
 
         console.log("=== FORMATTED RPC CALL ===");
