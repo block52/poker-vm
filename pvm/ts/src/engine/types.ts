@@ -5,6 +5,7 @@ import { Card } from "../models/deck";
 export interface IAction {
     type: PlayerActionType;
     verify(player: Player): Range | undefined;
+    execute(player: Player, amount?: bigint): void;
 }
 
 export interface IPoker {

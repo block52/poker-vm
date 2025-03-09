@@ -23,6 +23,7 @@ import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
 import { ethers } from "ethers";
 import { Stack } from "../core/datastructures/stack";
 import { FixedCircularList } from "../core/datastructures/linkedList";
+import RaiseAction from "./actions/raiseAction";
 
 type Round = {
     type: TexasHoldemRound;
@@ -97,7 +98,6 @@ class TexasHoldemGame implements IPoker {
         this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
 
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
-
         this._dealer = _dealer === 0 ? this._maxPlayers : _dealer;
 
         // remove this
@@ -112,10 +112,13 @@ class TexasHoldemGame implements IPoker {
         })(this);
 
         this._actions = [
+            new SmallBlindAction(this, this._update),
+            new BigBlindAction(this, this._update),
             new FoldAction(this, this._update),
             new CheckAction(this, this._update),
             new BetAction(this, this._update),
-            new CallAction(this, this._update)
+            new CallAction(this, this._update),
+            new RaiseAction(this, this._update)
         ];
     }
 
@@ -209,7 +212,7 @@ class TexasHoldemGame implements IPoker {
             throw new Error("Player already joined.");
         }
 
-        //ensure the seat is valid
+        // ensure the seat is valid
         if (seat === -1) {
             console.log(`Table full. Current players: ${this.getPlayerCount()}, Max players: ${this._maxPlayers}`);
             throw new Error("Table full."); // This must be thrown
@@ -300,7 +303,13 @@ class TexasHoldemGame implements IPoker {
     }
 
     // Should be get valid players actions
-    getValidActions(address: string): LegalAction[] {
+    getLegalActions(address: string): LegalActionDTO[] {
+        const player = this.getPlayer(address);
+
+        if (this.getPlayerStatus(address) !== PlayerStatus.ACTIVE) {
+            return [];
+        }
+
         const verifyAction = (action: BaseAction) => {
             try {
                 const range = action.verify(player);
@@ -310,8 +319,8 @@ class TexasHoldemGame implements IPoker {
             }
         };
 
-        const player = this.getPlayer(address);
-        return this._actions.map(verifyAction).filter(a => a) as LegalAction[];
+        const actions = this._actions.map(verifyAction).filter(a => a) as LegalActionDTO[];
+        return actions;
     }
 
     getLastAction(): Turn | undefined {
@@ -734,9 +743,27 @@ class TexasHoldemGame implements IPoker {
 
     public toJson(): TexasHoldemStateDTO {
         const players: PlayerDTO[] = Array.from(this._playersMap.values()).map((player, i) => {
+
+            if (!player) {
+                return {
+                    address: ethers.ZeroAddress,
+                    seat: i,
+                    stack: "0",
+                    isSmallBlind: false,
+                    isBigBlind: false,
+                    isDealer: false,
+                    holeCards: undefined,
+                    status: PlayerStatus.SITTING_OUT,
+                    lastAction: undefined,
+                    actions: [],
+                    timeout: 0,
+                    signature: ethers.ZeroHash
+                };
+            }
+
             let lastAction: ActionDTO | undefined;
             
-            const turn = this.getPlayersLastAction(player?.address ?? ethers.ZeroAddress);
+            const turn = this.getPlayersLastAction(player.address);
             if (turn) {
                 lastAction = {
                     action: turn.action,
@@ -744,20 +771,20 @@ class TexasHoldemGame implements IPoker {
                 };
             }
 
-            const actions: LegalActionDTO[] = [];
-            const seat = this.getPlayerSeatNumber(player?.address ?? ethers.ZeroAddress);
+            const legalActions: LegalActionDTO[] = this.getLegalActions(player.address);
+            const seat = this.getPlayerSeatNumber(player.address);
 
             return {
-                address: player?.address ?? ethers.ZeroAddress,
+                address: player.address,
                 seat: seat,
-                stack: player?.chips.toString() ?? "0",
+                stack: player.chips.toString(),
                 isSmallBlind: i === this._smallBlindPosition,
                 isBigBlind: i === this._bigBlindPosition,
                 isDealer: i === this._dealer,
                 holeCards: player?.holeCards ? [player.holeCards[0].value, player.holeCards[1].value] : undefined,
-                status: player?.status ?? PlayerStatus.SITTING_OUT,
+                status: player.status,
                 lastAction: lastAction,
-                actions: actions,
+                actions: legalActions,
                 timeout: 0,
                 signature: ethers.ZeroHash
             };

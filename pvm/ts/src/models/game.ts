@@ -15,8 +15,6 @@ export class Player implements IJSONModel {
 
     get id(): string { return this.address; }
 
-    // get address(): string { return this.address; }
-
     constructor(
         readonly address: string,
         lastAction: Turn | undefined,

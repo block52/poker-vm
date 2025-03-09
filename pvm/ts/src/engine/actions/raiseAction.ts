@@ -1,9 +1,9 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/game";
 import BaseAction from "./baseAction";
-import { Range } from "../types";
+import { IAction, Range } from "../types";
 
-class RaiseAction extends BaseAction {
+class RaiseAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
         return PlayerActionType.RAISE;
     }
