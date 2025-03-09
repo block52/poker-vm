@@ -227,34 +227,37 @@ class TexasHoldemGame implements IPoker {
         //     return;
         // }
 
-        // Auto join the first player
-        if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.PREFLOP) {
-            // post small blind
-            new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
+        const autoPostBlinds = false;
+        if (autoPostBlinds) {
+            // Auto join the first player
+            if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.PREFLOP) {
+                // post small blind
+                new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
 
-            // This is the last player to act
-            this._lastActedSeat = seat;
+                // This is the last player to act
+                this._lastActedSeat = seat;
 
-            // Add to bets to preflop round
-            const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind };
+                // Add to bets to preflop round
+                const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind };
 
-            player.addAction(turn);
-            player.updateStatus(PlayerStatus.ACTIVE);
-        }
+                player.addAction(turn);
+                player.updateStatus(PlayerStatus.ACTIVE);
+            }
 
-        // Auto join the second player
-        if (this.getPlayerCount() === 2 && this.currentRound === TexasHoldemRound.PREFLOP) {
-            // post big blind
-            new BigBlindAction(this, this._update).execute(player, this._bigBlind);
+            // Auto join the second player
+            if (this.getPlayerCount() === 2 && this.currentRound === TexasHoldemRound.PREFLOP) {
+                // post big blind
+                new BigBlindAction(this, this._update).execute(player, this._bigBlind);
 
-            // This is the last player to act
-            this._lastActedSeat = seat;
+                // This is the last player to act
+                this._lastActedSeat = seat;
 
-            // Add to bets to pre-flop round
-            const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._bigBlind };
+                // Add to bets to pre-flop round
+                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._bigBlind };
 
-            player.addAction(turn);
-            player.updateStatus(PlayerStatus.ACTIVE);
+                player.addAction(turn);
+                player.updateStatus(PlayerStatus.ACTIVE);
+            }
         }
 
         // Check if we haven't dealt
@@ -363,7 +366,13 @@ class TexasHoldemGame implements IPoker {
 
         // TODO: ROLL BACK TO FUNCTIONALITY
         switch (action) {
-            // todo: bb, sb, ante
+            // todo: ante
+            case PlayerActionType.SMALL_BLIND:
+                const smallBlind = new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
+                break;
+            case PlayerActionType.BIG_BLIND:
+                const bigBlind = new BigBlindAction(this, this._update).execute(player, this._bigBlind);
+                break;
             case PlayerActionType.FOLD:
                 player.updateStatus(PlayerStatus.FOLDED);
                 const fold = new FoldAction(this, this._update).execute(player);
