@@ -3,6 +3,7 @@ import { Player } from "../../models/game";
 import BaseAction from "./baseAction";
 import TexasHoldemGame, { GameOptions } from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
+import { ethers } from "ethers";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -35,7 +36,7 @@ describe("BaseAction", () => {
 
         // Create player with correct constructor parameters
         const initialPlayer = new Player(
-            "0x123",             // address
+            "0x980b8D8A16f5891F41871d878a479d81Da52334c",             // address
             undefined,           // lastAction
             1000n,              // chips
             undefined,          // holeCards
@@ -54,7 +55,7 @@ describe("BaseAction", () => {
         };
 
         game = new TexasHoldemGame(
-            "0xgame",
+            ethers.ZeroAddress,
             gameOptions,
             0,           // dealer
             1,           // nextToAct
@@ -73,7 +74,7 @@ describe("BaseAction", () => {
 
         action = new TestAction(game, updateMock);
         player = new Player(
-            "0x123",
+            "0x980b8D8A16f5891F41871d878a479d81Da52334c",
             undefined,
             1000n,
             undefined,
@@ -94,7 +95,7 @@ describe("BaseAction", () => {
 
                 rounds.forEach(round => {
                     jest.spyOn(game, "currentRound", "get").mockReturnValue(round);
-                    jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x123");
+                    jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
                     jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
                     expect(() => action.verify(player)).not.toThrow();
@@ -114,14 +115,14 @@ describe("BaseAction", () => {
             });
 
             it("should throw error if player is not active", () => {
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x123");
+                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
                 jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
                 expect(() => action.verify(player)).toThrow("Only active player can check.");
             });
 
             it("should allow verification for active player on their turn", () => {
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x123");
+                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
                 jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
                 expect(() => action.verify(player)).not.toThrow();
@@ -132,7 +133,7 @@ describe("BaseAction", () => {
     describe("execute", () => {
         beforeEach(() => {
             // Setup for successful verification
-            jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x123");
+            jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
             jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         });
@@ -163,7 +164,7 @@ describe("BaseAction", () => {
             it("should throw error if player has insufficient chips", () => {
                 action.shouldReturnRange = true;
                 const poorPlayer = new Player(
-                    "0x123",
+                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                     undefined,
                     5n,
                     undefined,
@@ -183,7 +184,7 @@ describe("BaseAction", () => {
             it("should handle all-in scenario", () => {
                 action.shouldReturnRange = true;
                 const allInPlayer = new Player(
-                    "0x123",
+                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                     undefined,
                     50n,
                     undefined,
@@ -202,7 +203,7 @@ describe("BaseAction", () => {
                 action.execute(player, 50n);
 
                 expect(addedActions[0]).toEqual({
-                    playerId: "0x123",
+                    playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                     action: PlayerActionType.CHECK,
                     amount: 50n
                 });
@@ -213,7 +214,7 @@ describe("BaseAction", () => {
                 action.execute(player, 0n);
 
                 expect(addedActions[0]).toEqual({
-                    playerId: "0x123",
+                    playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                     action: PlayerActionType.CHECK,
                     amount: 0n
                 });
@@ -233,7 +234,7 @@ describe("BaseAction", () => {
 
     describe("round-specific behavior", () => {
         beforeEach(() => {
-            jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x123");
+            jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         });
 
@@ -262,7 +263,7 @@ describe("BaseAction", () => {
         describe("betting sequence validation", () => {
             it("should handle all-in situations correctly", () => {
                 const shortStackPlayer = new Player(
-                    "0x123",
+                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                     undefined,
                     25n,
                     undefined,
@@ -290,7 +291,7 @@ describe("BaseAction", () => {
             });
 
             it("should check if player is active", () => {
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x123");
+                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
                 jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
                 expect(() => action.verify(player)).toThrow("Only active player can check.");
@@ -300,7 +301,7 @@ describe("BaseAction", () => {
         describe("execute function", () => {
             beforeEach(() => {
                 // Setup for successful verification
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x123");
+                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
                 jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
             });
@@ -318,7 +319,7 @@ describe("BaseAction", () => {
             it("should check if player has sufficient chips", () => {
                 action.shouldReturnRange = true;
                 const poorPlayer = new Player(
-                    "0x123",
+                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                     undefined,
                     5n,
                     undefined,
@@ -337,7 +338,7 @@ describe("BaseAction", () => {
             it("should convert to ALL_IN when player uses all chips", () => {
                 action.shouldReturnRange = true;
                 const allInPlayer = new Player(
-                    "0x123",
+                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                     undefined,
                     50n,
                     undefined,
