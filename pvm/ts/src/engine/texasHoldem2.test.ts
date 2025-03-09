@@ -176,7 +176,7 @@ describe.only("Texas Holdem Game", () => {
         });
 
         it("should validate legal actions", () => {
-            const legalActions = game.getValidActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            const legalActions = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             expect(legalActions).toContainEqual(expect.objectContaining({
                 action: PlayerActionType.CHECK
             }));
