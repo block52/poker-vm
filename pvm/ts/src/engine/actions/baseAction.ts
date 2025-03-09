@@ -12,12 +12,12 @@ abstract class BaseAction {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
             throw new Error("Hand has ended.");
 
-        const nextPlayerAddress = this.game.getNextPlayerToAct()?.address;
-        if (nextPlayerAddress !== player.address)
-            throw new Error("Must be currently active player.");
+        // const nextPlayerAddress = this.game.getNextPlayerToAct()?.address;
+        // if (nextPlayerAddress !== player.address)
+        //     throw new Error("Must be currently active player.");
 
-        if (this.game.getPlayerStatus(player.address) !== PlayerStatus.ACTIVE)
-            throw new Error(`Only active player can ${this.type}.`);
+        // if (this.game.getPlayerStatus(player.address) !== PlayerStatus.ACTIVE )
+        //     throw new Error(`Only active player can ${this.type}.`);
 
         return undefined;
     }
