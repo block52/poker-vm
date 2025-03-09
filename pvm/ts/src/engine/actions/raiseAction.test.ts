@@ -12,16 +12,6 @@ describe("Raise Action", () => {
     let player: Player;
     let nextPlayer: Player;
 
-    const baseGameConfig = {
-        address: ethers.ZeroAddress,
-        dealer: 9,
-        nextToAct: 0,
-        currentRound: "preflop",
-        communityCards: [],
-        pot: 0n,
-        players: []
-    };
-
     // These need to be fetched from the contract in the future
     const gameOptions: GameOptions = {
         minBuyIn: 100000000000000000n,
