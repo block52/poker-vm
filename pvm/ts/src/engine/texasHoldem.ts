@@ -310,12 +310,16 @@ class TexasHoldemGame implements IPoker {
             return [];
         }
 
-        const verifyAction = (action: BaseAction) => {
+        const verifyAction = (action: BaseAction): LegalActionDTO | undefined => {
             try {
                 const range = action.verify(player);
-                return { action: action.type, ...(range ? { minAmount: range.minAmount, maxAmount: range.maxAmount } : {}) };
+                return {
+                    action: action.type,
+                    min: range ? range.minAmount.toString() : "0",
+                    max: range ? range.maxAmount.toString() : "0"
+                }
             } catch {
-                return null;
+                return undefined;
             }
         };
 
@@ -722,7 +726,7 @@ class TexasHoldemGame implements IPoker {
 
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
-        
+
         json.players.map((p: any) => {
             const stack: bigint = BigInt(p.stack);
             const player: Player = new Player(p.address, undefined, stack, undefined, p.status);
@@ -762,7 +766,7 @@ class TexasHoldemGame implements IPoker {
             }
 
             let lastAction: ActionDTO | undefined;
-            
+
             const turn = this.getPlayersLastAction(player.address);
             if (turn) {
                 lastAction = {
