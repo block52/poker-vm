@@ -563,6 +563,18 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
                 console.log(chalk.green("Checking..."));
                 await client.playerAction(tableAddress, PlayerActionType.CHECK, "", nonce);
                 break;
+            case "smallblind":
+                console.log(chalk.green("Posting small blind..."));
+                await client.playerAction(tableAddress, PlayerActionType.SMALL_BLIND, "", nonce);
+                break;
+            case "bigblind":
+                console.log(chalk.green("Posting big blind..."));
+                await client.playerAction(tableAddress, PlayerActionType.BIG_BLIND, "", nonce);
+                break;
+            case "bet":
+                console.log(chalk.green("Betting..."));
+                await client.playerAction(tableAddress, PlayerActionType.BET, "", nonce);
+                break;
             case "call":
                 console.log(chalk.green("Calling..."));
                 await client.playerAction(tableAddress, PlayerActionType.CALL, "", nonce);
