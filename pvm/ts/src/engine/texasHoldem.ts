@@ -220,6 +220,9 @@ class TexasHoldemGame implements IPoker {
 
         console.log(`Player ${player.address} joined at seat ${seat}`);
         this._playersMap.set(seat, player);
+        
+        // TODO: Need to consider the work flow here, but make active for now
+        player.updateStatus(PlayerStatus.ACTIVE);
 
         // if (player.chips < this._minBuyIn) {
         //     // throw new Error("Player does not have enough chips to join.");

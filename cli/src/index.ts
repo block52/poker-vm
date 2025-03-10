@@ -512,27 +512,32 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
         return actions;
     }
 
-    if (state.nextToAct !== myPlayer.seat) {
-        console.log(chalk.red("It's not your turn to act"));
-        return actions;
+    // if (state.nextToAct !== myPlayer.seat) {
+    //     console.log(chalk.red("It's not your turn to act"));
+    //     return actions;
+    // }
+
+    // if (state.round === TexasHoldemRound.PREFLOP) {
+    //     if (state.smallBlindPosition === myPlayer.seat) {
+    //         actions.push({ action: "Post Small Blind", value: "smallblind" });
+    //     }
+
+    //     if (state.bigBlindPosition === myPlayer.seat) {
+    //         actions.push({ action: "Post Big Blind", value: "bigblind" });
+    //     }
+    // }
+
+    for (const legalAction of myPlayer.actions) {
+        const action = legalAction.action;
+        actions.push({ action, value: legalAction.action });
     }
 
-    if (state.round === TexasHoldemRound.PREFLOP) {
-        if (state.smallBlindPosition === myPlayer.seat) {
-            actions.push({ action: "Post Small Blind", value: "smallblind" });
-        }
-
-        if (state.bigBlindPosition === myPlayer.seat) {
-            actions.push({ action: "Post Big Blind", value: "bigblind" });
-        }
-    }
-
-    // Check if it's my turn
-    actions.push({ action: "Check", value: "check" });
-    actions.push({ action: "Call", value: "call" });
-    actions.push({ action: "Fold", value: "fold" });
-    actions.push({ action: "Raise", value: "raise" });
-    actions.push({ action: "All-In", value: "all-in" });
+    // // Check if it's my turn
+    // actions.push({ action: "Check", value: "check" });
+    // actions.push({ action: "Call", value: "call" });
+    // actions.push({ action: "Fold", value: "fold" });
+    // actions.push({ action: "Raise", value: "raise" });
+    // actions.push({ action: "All-In", value: "all-in" });
 
     return actions;
 };
