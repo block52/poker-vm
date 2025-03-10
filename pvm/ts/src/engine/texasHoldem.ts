@@ -261,9 +261,11 @@ class TexasHoldemGame implements IPoker {
         }
 
         // Check if we haven't dealt
-        if (this.getPlayerCount() === this._minPlayers && this.currentRound === TexasHoldemRound.PREFLOP) {
-            this.shuffle();
-            this.deal();
+        if (autoPostBlinds) {
+            if (this.getPlayerCount() === this._minPlayers && this.currentRound === TexasHoldemRound.PREFLOP) {
+                this.shuffle();
+                this.deal();
+            }
         }
     }
 
@@ -308,10 +310,6 @@ class TexasHoldemGame implements IPoker {
     // Should be get valid players actions
     getLegalActions(address: string): LegalActionDTO[] {
         const player = this.getPlayer(address);
-
-        if (this.getPlayerStatus(address) !== PlayerStatus.ACTIVE) {
-            return [];
-        }
 
         const verifyAction = (action: BaseAction): LegalActionDTO | undefined => {
             try {
