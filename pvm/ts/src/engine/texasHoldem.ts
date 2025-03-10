@@ -325,6 +325,11 @@ class TexasHoldemGame implements IPoker {
         };
 
         const actions = this._actions.map(verifyAction).filter(a => a) as LegalActionDTO[];
+
+        // if _previousActions contains small blind post, remove from actions
+
+        // if _previousActions contains big blind post, remove from actions
+
         return actions;
     }
 
@@ -805,8 +810,8 @@ class TexasHoldemGame implements IPoker {
             };
         });
 
-        // const nextPlayerToAct = this.findNextPlayerToAct();
-        // const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
+        const nextPlayerToAct = this.findNextPlayerToAct();
+        const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
 
         const winners: WinnerDTO[] = [];
         const pot = this.getPot();
@@ -822,7 +827,7 @@ class TexasHoldemGame implements IPoker {
             players: players,
             communityCards: this._communityCards.map(c => c.value),
             pots: [pot.toString()],
-            nextToAct: this._lastActedSeat, // TODO: CHANGE PROPERTY NAME
+            nextToAct: nextToAct, // Show the caller the next player to act, but save the last to act
             round: this._currentRound,
             winners: winners,
             signature: ethers.ZeroHash
