@@ -234,14 +234,14 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
         const rowStyle = isMyPlayer ? chalk.green : chalk.white;
 
         // Format player cards - show only if it's my player or we're at showdown
-        let cardsDisplay = "";
+        let cardsDisplay = player?.holeCards ? "🂠 🂠" : "";
         if (isMyPlayer || state.round === "showdown") {
             if (player.holeCards) {
                 cardsDisplay = player.holeCards?.map(card => cardToString(card)).join(" ");
             }
-        } else {
-            cardsDisplay = "🂠 🂠"; // Back of cards
-        }
+        } // else {
+        //     cardsDisplay = "🂠 🂠"; // Back of cards
+        // }
 
         const marker = getPlayerPositionMarker(player.seat, state);
         const seat = `${player.seat} ${marker}`;
@@ -568,11 +568,11 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
                 console.log(chalk.green("Checking..."));
                 await client.playerAction(tableAddress, PlayerActionType.CHECK, "", nonce);
                 break;
-            case "smallblind":
+            case "post small blind":
                 console.log(chalk.green("Posting small blind..."));
                 await client.playerAction(tableAddress, PlayerActionType.SMALL_BLIND, "", nonce);
                 break;
-            case "bigblind":
+            case "post big blind":
                 console.log(chalk.green("Posting big blind..."));
                 await client.playerAction(tableAddress, PlayerActionType.BIG_BLIND, "", nonce);
                 break;
