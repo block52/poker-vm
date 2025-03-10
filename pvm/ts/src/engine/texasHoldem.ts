@@ -99,9 +99,6 @@ class TexasHoldemGame implements IPoker {
 
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
         this._dealer = _dealer === 0 ? this._maxPlayers : _dealer;
-
-        // remove this
-        this._nextToAct = _nextToAct;
         this._lastActedSeat = _nextToAct; // Need to recalculate this
 
         this._update = new (class implements IUpdate {
@@ -808,8 +805,8 @@ class TexasHoldemGame implements IPoker {
             };
         });
 
-        const nextPlayerToAct = this.findNextPlayerToAct();
-        const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
+        // const nextPlayerToAct = this.findNextPlayerToAct();
+        // const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
 
         const winners: WinnerDTO[] = [];
         const pot = this.getPot();
@@ -825,7 +822,7 @@ class TexasHoldemGame implements IPoker {
             players: players,
             communityCards: this._communityCards.map(c => c.value),
             pots: [pot.toString()],
-            nextToAct: nextToAct,
+            nextToAct: this._lastActedSeat, // TODO: CHANGE PROPERTY NAME
             round: this._currentRound,
             winners: winners,
             signature: ethers.ZeroHash
