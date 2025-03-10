@@ -62,21 +62,8 @@ describe.only("Texas Holdem Game", () => {
 
     describe("Deck initialization", () => {
         it("should initialize with a standard 52 card deck", () => {
-            const config = {
-                address: ethers.ZeroAddress,
-                minPlayers: 2,
-                maxPlayers: 9,
-                smallBlind: TEN_TOKENS, // 10 tokens
-                bigBlind: TWENTY_TOKENS,   // 20 tokens
-                dealer: 9,
-                nextToAct: 0,
-                currentRound: "preflop",
-                communityCards: [],
-                pot: 0n,
-                players: []
-            };
-
             const game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+            expect(game).toBeDefined();
             // expect(game.deck.cards.length).toEqual(52);
         });
     });
@@ -133,6 +120,8 @@ describe.only("Texas Holdem Game", () => {
             // Add minimum required players
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000000n);
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000000n);
+
+            // no blind have been posted yet
         });
 
         it.only("should have correct table properties", () => {
@@ -148,6 +137,7 @@ describe.only("Texas Holdem Game", () => {
         });
 
         it("should have deducted ante from players", () => {
+            // Tom todo here:  post blinds and check if they are deducted from players
             const player1 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             const player2 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             expect(player1?.chips).toEqual(990000000000000000000n);

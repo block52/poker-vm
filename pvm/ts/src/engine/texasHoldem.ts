@@ -360,6 +360,10 @@ class TexasHoldemGame implements IPoker {
         }
 
         const player = this.getPlayer(address);
+
+        // Check if player is allowed to act
+        // todo: check if player is allowed to act
+
         player.addAction({ playerId: address, action, amount });
 
         const seat = this.getPlayerSeatNumber(address);
