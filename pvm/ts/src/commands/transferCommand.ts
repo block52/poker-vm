@@ -40,14 +40,14 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 const json = await this.gameManagement.get(this.to);
                 console.log(`Current game state:`, json);
 
-                // These need to be fetched from the contract in the future
+                // TODO: These need to be fetched from the contract in the future
                 const gameOptions: GameOptions = {
-                    minBuyIn: 100000000000000000n,
-                    maxBuyIn: 1000000000000000000n,
+                    minBuyIn: 1000000000000000000n,
+                    maxBuyIn: 10000000000000000000n,
                     minPlayers: 2,
                     maxPlayers: 9,
-                    smallBlind: 10000000000000000n,
-                    bigBlind: 20000000000000000n,
+                    smallBlind: 100000000000000000n,
+                    bigBlind: 200000000000000000n,
                 };
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
@@ -70,11 +70,13 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                         game.join2(this.from, this.amount);
                         console.log(`Join successful`);
                         break;
-                    case "smallblind":
+                    case "post small blind":
+                        game.performAction(this.from, PlayerActionType.SMALL_BLIND, this.amount);
                         //todo
                         break;
-                    case "bigblind":
+                    case "post big blind":
                         //todo
+                        game.performAction(this.from, PlayerActionType.BIG_BLIND, this.amount);
                         break;
                     case "bet":
                         console.log(`Player ${this.from} betting ${this.amount}...`);
