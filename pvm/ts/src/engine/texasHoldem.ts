@@ -184,7 +184,7 @@ class TexasHoldemGame implements IPoker {
         players.forEach(p => {
             // todo: get share secret
             const cards = this._deck.deal(2) as [Card, Card];
-            // p.holeCards = cards;
+            p.holeCards = cards;
         });
     }
 
