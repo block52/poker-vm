@@ -21,10 +21,10 @@ class SmallBlindAction extends BaseAction implements IAction {
 
         const actions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
 
-        // Filter for big blind action
-        const bigBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);
-        if (!bigBlindAction) {
-            throw new Error("Big blind player must bet the big blind amount.");
+        // Check if small blind has already been posted
+        const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);
+        if (smallBlindAction) {
+            throw new Error("Small blind has already been posted.");
         }
 
         return { minAmount: this.game.smallBlind, maxAmount: this.game.smallBlind };
