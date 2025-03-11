@@ -341,6 +341,14 @@ class TexasHoldemGame implements IPoker {
 
         // if _previousActions contains big blind post, remove from actions
 
+        // todo: wire this up after playerId has been added to the actionDTO
+        // To access it, you would use methods like peek() or toArray():
+        // const lastAction = this._previousActions.peek();
+        // { playerId: '0x...', action: 'SMALL_BLIND', amount: 1000000000000000000n }
+
+        // const allActions = this._previousActions.toArray();
+        // [{ playerId: '0x...', action: 'SMALL_BLIND', amount: 1000000000000000000n }]
+
         return actions;
     }
 
