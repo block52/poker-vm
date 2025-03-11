@@ -47,6 +47,9 @@ class TexasHoldemGame implements IPoker {
     // private readonly _players: FixedCircularList<Player>;
 
     private _rounds = new Map<TexasHoldemRound, Turn[]>();
+    private _lastActedSeat: number;
+    private _previousActions = new Stack<Turn>();
+
     private _deck!: Deck;
 
     private _pot: bigint;
@@ -56,9 +59,6 @@ class TexasHoldemGame implements IPoker {
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
-
-    private _lastActedSeat: number;
-    private _previousActions = new Stack<Turn>();
 
     // Table options
     private readonly _minBuyIn: bigint;
@@ -76,7 +76,7 @@ class TexasHoldemGame implements IPoker {
         private previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
         private _communityCards: Card[] = [],
-        private currentPot: bigint = 0n,
+        private currentPot: bigint = 0n, // this can be removed
         playerStates: Map<number, Player | null>,
         deck?: string
     ) {
@@ -619,7 +619,7 @@ class TexasHoldemGame implements IPoker {
             pot += value;
         }
 
-        return pot + this._pot;
+        return pot;
     }
 
     private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
@@ -731,7 +731,7 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    private hasRoundEnded(): boolean {
+    hasRoundEnded(): boolean {
         const players = this.getSeatedPlayers();
 
         // Only consider players who are active and not all-in

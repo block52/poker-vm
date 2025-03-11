@@ -12,7 +12,7 @@ describe.only("Texas Holdem Game", () => {
         address: ethers.ZeroAddress,
         dealer: 0,
         nextToAct: 1,
-        currentRound: "ante",
+        currentRound: "preflop",
         communityCards: [],
         pot: 0n,
         players: []
@@ -38,7 +38,6 @@ describe.only("Texas Holdem Game", () => {
             expect(game.bigBlind).toEqual(20000000000000000000n);
             expect(game.smallBlind).toEqual(10000000000000000000n);
             expect(game.dealerPosition).toEqual(9);
-            // expect(game.currentPlayerId).toEqual(ethers.ZeroAddress);
             expect(game.getPlayerCount()).toEqual(0);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
             expect(game.pot).toEqual(0n);
@@ -126,7 +125,6 @@ describe.only("Texas Holdem Game", () => {
 
         it.only("should have correct table properties", () => {
             expect(game.getPlayerCount()).toEqual(2);
-            expect(game.getPot()).toEqual(30000000000000000000n);
         });
 
         it("should have player status set to active", () => {
@@ -136,12 +134,15 @@ describe.only("Texas Holdem Game", () => {
             expect(player2?.status).toEqual(PlayerStatus.ACTIVE);
         });
 
-        it("should have deducted ante from players", () => {
-            // Tom todo here:  post blinds and check if they are deducted from players
+        it.only("should have deducted blinds from players", () => {
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, TEN_TOKENS);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, TWENTY_TOKENS);
+
             const player1 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             const player2 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             expect(player1?.chips).toEqual(990000000000000000000n);
             expect(player2?.chips).toEqual(980000000000000000000n);
+            expect(game.pot).toEqual(30000000000000000000n);
         });
 
         it("should automatically progress from ante to preflop when minimum players join", () => {
