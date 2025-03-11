@@ -29,12 +29,13 @@ export enum TexasHoldemRound {
     SHOWDOWN = "showdown"
 }
 
-/// This is the type of the last action of a player
+// This is the type of the last action of a player
 export type ActionDTO = {
     playerId: string,
     seat: number,
     action: PlayerActionType;
     amount: string;
+    round: TexasHoldemRound;
 };
 
 export type LegalActionDTO = {

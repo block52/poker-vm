@@ -527,7 +527,7 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
     //     }
     // }
 
-    for (const legalAction of myPlayer.actions) {
+    for (const legalAction of myPlayer.legalActions) {
         const action = legalAction.action;
         actions.push({ action, value: legalAction.action });
     }

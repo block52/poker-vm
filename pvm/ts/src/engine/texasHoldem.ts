@@ -73,6 +73,7 @@ class TexasHoldemGame implements IPoker {
         private gameOptions: GameOptions,
         private _dealer: number,
         private _nextToAct: number,
+        private previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
         private _communityCards: Card[] = [],
         private currentPot: bigint = 0n,
@@ -100,6 +101,16 @@ class TexasHoldemGame implements IPoker {
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
         this._dealer = _dealer === 0 ? this._maxPlayers : _dealer;
         this._lastActedSeat = _nextToAct; // Need to recalculate this
+
+        for (const action of previousActions) {
+            const turn = {
+                playerId: action.playerId,
+                action: action.action,
+                amount: BigInt(action.amount)
+            };
+
+            this.addAction(turn, action.round);
+        }
 
         this._update = new (class implements IUpdate {
             constructor(public game: TexasHoldemGame) { }
