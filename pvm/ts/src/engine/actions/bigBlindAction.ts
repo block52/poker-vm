@@ -11,23 +11,26 @@ class BigBlindAction extends BaseAction {
     verify(_player: Player): Range {
         // Can only bet the big blind amount when preflop
         if (this.game.currentRound !== TexasHoldemRound.PREFLOP) {
-            throw new Error("Can only bet small blind amount when preflop.");
+            throw new Error("Can only post big blind when preflop.");
         }
 
         const seat = this.game.getPlayerSeatNumber(_player.address);
         if (seat !== this.game.bigBlindPosition) {
-            throw new Error("Only the big blind player can bet the big blind amount.");
+            throw new Error("Only the big blind player can post the big blind.");
         }
 
         const actions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
-        // if (actions.length !== 1) {
-        //     throw new Error("Big blind player must be the first to act.");
-        // }
+        
+        // Check if small blind has been posted first
+        const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);
+        if (!smallBlindAction) {
+            throw new Error("Small blind must be posted before big blind.");
+        }
 
-        // Filter for big blind action
+        // Check if big blind has already been posted
         const bigBlindAction = actions.find(a => a.action === PlayerActionType.BIG_BLIND);
-        if (!bigBlindAction) {
-            throw new Error("Big blind player must bet the big blind amount.");
+        if (bigBlindAction) {
+            throw new Error("Big blind has already been posted.");
         }
 
         return { minAmount: this.game.bigBlind, maxAmount: this.game.bigBlind };
