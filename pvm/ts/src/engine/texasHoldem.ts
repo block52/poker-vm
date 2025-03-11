@@ -360,6 +360,16 @@ class TexasHoldemGame implements IPoker {
         return undefined;
     }
 
+    private turnAsActionDTO(turn: Turn, round: TexasHoldemRound): ActionDTO {
+        return {
+            playerId: turn.playerId,
+            seat: this.getPlayerSeatNumber(turn.playerId),
+            action: turn.action,
+            amount: turn.amount ? turn.amount.toString() : "",
+            round: round
+        };
+    }
+
     performAction(address: string, action: PlayerActionType, amount?: bigint): void {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
@@ -765,6 +775,7 @@ class TexasHoldemGame implements IPoker {
             gameOptions,
             json.dealer as number,
             json.nextToAct,
+            json.previousActions,
             json.currentRound,
             json.communityCards,
             json.pots,
@@ -801,7 +812,8 @@ class TexasHoldemGame implements IPoker {
                     playerId: turn.playerId,
                     seat: i,
                     action: turn.action,
-                    amount: (turn.amount ?? 0n).toString()
+                    amount: (turn.amount ?? 0n).toString(),
+                    round: this._currentRound // todo: check this, it should be the current round but not always
                 };
             }
 
@@ -832,13 +844,14 @@ class TexasHoldemGame implements IPoker {
         const previousActions: ActionDTO[] = [];
 
         for (let i = 0; i < previousTurns.length; i++) {
-            const turn = previousTurns[i];
+            const turn: Turn = previousTurns[i];
             const seat = this.getPlayerSeatNumber(turn.playerId);
             const action: ActionDTO = {
                 playerId: turn.playerId,
                 seat: seat,
                 action: turn.action,
-                amount: turn.amount ? turn.amount.toString() : ""
+                amount: turn.amount ? turn.amount.toString() : "",
+                round: this._currentRound // this is wrong
             };
 
             previousActions.push(action);

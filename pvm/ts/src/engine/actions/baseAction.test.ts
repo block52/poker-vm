@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/game";
 import BaseAction from "./baseAction";
 import TexasHoldemGame, { GameOptions } from "../texasHoldem";
@@ -54,11 +54,14 @@ describe("BaseAction", () => {
             bigBlind: 20000000000000000n,
         };
 
+        const previousActions: ActionDTO[] = [];
+
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
             0,           // dealer
             1,           // nextToAct
+            previousActions,
             TexasHoldemRound.PREFLOP,
             [],          // communityCards
             0n,          // pot

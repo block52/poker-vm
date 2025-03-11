@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/game";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame, { GameOptions } from "../texasHoldem";
@@ -19,6 +19,8 @@ describe("SmallBlindAction", () => {
         bigBlind: 20000000000000000n
     };
 
+    const previousActions: ActionDTO[] = [];
+
     beforeEach(() => {
         // Setup initial game state
         const playerStates = new Map<number, Player | null>();
@@ -36,6 +38,7 @@ describe("SmallBlindAction", () => {
             gameOptions,
             0, // dealer
             1, // nextToAct
+            previousActions, // previousActions
             TexasHoldemRound.PREFLOP, // Changed from ANTE to PREFLOP to match new implementation
             [], // communityCards
             0n, // pot
@@ -73,10 +76,10 @@ describe("SmallBlindAction", () => {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
-            
+
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-            
+
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
@@ -95,7 +98,7 @@ describe("SmallBlindAction", () => {
         it("should throw error if not in PREFLOP round", () => {
             // Override the current round mock to be FLOP instead of PREFLOP
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
-            
+
             expect(() => action.verify(player)).toThrow("Can only bet small blind amount when preflop.");
         });
     });
@@ -114,10 +117,10 @@ describe("SmallBlindAction", () => {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
-            
+
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-            
+
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         });

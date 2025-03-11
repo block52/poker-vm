@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/game";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame, { GameOptions } from "../texasHoldem";
@@ -19,6 +19,8 @@ describe("BigBlindAction", () => {
         bigBlind: 20000000000000000n
     };
 
+    const previousActions: ActionDTO[] = [];
+
     beforeEach(() => {
         // Setup initial game state
         const playerStates = new Map<number, Player | null>();
@@ -36,6 +38,7 @@ describe("BigBlindAction", () => {
             gameOptions,
             0, // dealer
             1, // nextToAct
+            previousActions, // previousActions
             TexasHoldemRound.PREFLOP,
             [], // communityCards
             0n, // pot
