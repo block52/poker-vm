@@ -228,7 +228,7 @@ class TexasHoldemGame implements IPoker {
 
         console.log(`Player ${player.address} joined at seat ${seat}`);
         this._playersMap.set(seat, player);
-        
+
         // TODO: Need to consider the work flow here, but make active for now
         player.updateStatus(PlayerStatus.ACTIVE);
 
@@ -353,6 +353,21 @@ class TexasHoldemGame implements IPoker {
 
         const actions = this._actions.map(verifyAction).filter(a => a) as LegalActionDTO[];
 
+        // Has the small blind posted?
+        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
+        const hasSmallBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
+
+        if (!hasSmallBlindPosted) {
+
+        }
+
+        // Has the big blind posted?
+        const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
+
+        if (!hasBigBlindPosted) {
+            
+        }
+
         // if _previousActions contains small blind post, remove from actions
 
         // if _previousActions contains big blind post, remove from actions
@@ -464,6 +479,34 @@ class TexasHoldemGame implements IPoker {
             // Create a new array with this turn as the first element
             this._rounds.set(round, [turn]);
         }
+    }
+
+    getActionDTOs(): ActionDTO[] {
+        const actions: ActionDTO[] = [];
+
+        for (const [round, turns] of this._rounds) {
+            for (const turn of turns) {
+                actions.push(this.turnAsActionDTO(turn, round));
+            }
+        }
+
+        return actions;
+    }
+
+    getActionsForRound(round: TexasHoldemRound): ActionDTO[] {
+        const actions: ActionDTO[] = [];
+
+        const turns = this._rounds.get(round);
+
+        if (!turns) {
+            return actions;
+        }
+
+        for (const turn of turns) {
+            actions.push(this.turnAsActionDTO(turn, round));
+        }
+
+        return actions;
     }
 
     getPlayer(address: string): Player {
@@ -880,7 +923,7 @@ class TexasHoldemGame implements IPoker {
 
             previousActions.push(action);
         }
-        
+
         const winners: WinnerDTO[] = [];
         const pot = this.getPot();
 

@@ -19,6 +19,17 @@ class BigBlindAction extends BaseAction {
             throw new Error("Only the big blind player can bet the big blind amount.");
         }
 
+        const actions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
+        // if (actions.length !== 1) {
+        //     throw new Error("Big blind player must be the first to act.");
+        // }
+
+        // Filter for big blind action
+        const bigBlindAction = actions.find(a => a.action === PlayerActionType.BIG_BLIND);
+        if (!bigBlindAction) {
+            throw new Error("Big blind player must bet the big blind amount.");
+        }
+
         return { minAmount: this.game.bigBlind, maxAmount: this.game.bigBlind };
     }
 
