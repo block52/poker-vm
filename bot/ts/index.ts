@@ -1,4 +1,4 @@
-import { NodeRpcClient, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { NodeRpcClient, PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { Wallet } from "ethers";
 import chalk from "chalk";
 import dotenv from "dotenv";
@@ -227,6 +227,37 @@ async function joinGame(client: NodeRpcClient, wallet: Wallet): Promise<boolean>
     }
 }
 
+// Add this helper function to handle small blind posting
+async function postSmallBlind(client: NodeRpcClient, state: TexasHoldemStateDTO, wallet: Wallet) {
+    console.log(chalk.yellow("\nChecking if we need to post small blind..."));
+    
+    const myPlayer = state.players.find(p => p.address === wallet.address);
+    if (!myPlayer) return;
+
+    // Check if we're in the small blind position and it's our turn
+    if (myPlayer.seat === state.smallBlindPosition && 
+        state.nextToAct === myPlayer.seat &&
+        myPlayer.actions.some(a => a.action === PlayerActionType.SMALL_BLIND)) {
+        
+        console.log(chalk.yellow("Posting small blind..."));
+        try {
+            await client.playerAction(
+                TABLE_ADDRESS,
+                PlayerActionType.SMALL_BLIND,
+                state.smallBlind,  // Use the small blind amount from game state
+                nonce
+            );
+            console.log(chalk.green("Successfully posted small blind!"));
+            nonce++;
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error(chalk.red("Failed to post small blind:", error.message));
+            }
+        }
+    }
+}
+
+// Modify the main loop to include small blind posting
 async function main() {
     // Check node connection
     const nodeRunning = await checkNodeConnection();
@@ -247,6 +278,7 @@ async function main() {
     await checkAccount(client, wallet.address);
 
     let hasJoined = false;
+    let hasPostedSmallBlind = false;
 
     // Continuous monitoring loop
     console.log(chalk.yellow("\nStarting continuous monitoring (checking every 10 seconds)..."));
@@ -257,13 +289,16 @@ async function main() {
         try {
             const state = await checkGameState(client);
             
-            // Check if table is empty and we haven't joined yet
             if (!hasJoined) {
                 const myPlayer = state.players.find(p => p.address === wallet.address);
                 if (myPlayer) {
                     console.log(chalk.green(`\nYou are seated at seat ${myPlayer.seat}`));
                     console.log(chalk.green(`Your stack: ${formatChips(myPlayer.stack)} USDC`));
                     hasJoined = true;
+                    
+                    // Wait 5 seconds after joining before posting small blind
+                    console.log(chalk.yellow("Waiting 5 seconds before posting small blind..."));
+                    await new Promise(resolve => setTimeout(resolve, 5000));
                 } else if (state.players.length === 0) {
                     console.log(chalk.yellow("\nTable is empty!"));
                     hasJoined = await joinGame(client, wallet);
@@ -271,12 +306,23 @@ async function main() {
                     console.log(chalk.yellow("\nTable has players but you're not seated."));
                     hasJoined = await joinGame(client, wallet);
                 }
+            } else if (!hasPostedSmallBlind) {
+                // Try to post small blind if we haven't yet
+                await postSmallBlind(client, state, wallet);
+                
+                // Check if we successfully posted the small blind
+                const updatedState = await checkGameState(client);
+                const myPlayer = updatedState.players.find(p => p.address === wallet.address);
+                if (myPlayer?.lastAction?.action === PlayerActionType.SMALL_BLIND) {
+                    hasPostedSmallBlind = true;
+                    console.log(chalk.green("Small blind posted successfully!"));
+                }
             }
         } catch (error) {
-            console.error(chalk.red("Error checking game state:"), error);
+            console.error(chalk.red("Error in main loop:"), error);
         }
 
-        // Wait 10 seconds before next check
+        // Wait before next check
         await new Promise(resolve => setTimeout(resolve, 10000));
     }
 }
