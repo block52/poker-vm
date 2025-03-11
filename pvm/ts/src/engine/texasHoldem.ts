@@ -619,7 +619,8 @@ class TexasHoldemGame implements IPoker {
             pot += value;
         }
 
-        return pot + this._pot;
+        // return pot + this._pot;
+        return pot;
     }
 
     private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
