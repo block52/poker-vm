@@ -31,6 +31,8 @@ export enum TexasHoldemRound {
 
 /// This is the type of the last action of a player
 export type ActionDTO = {
+    playerId: string,
+    seat: number,
     action: PlayerActionType;
     amount: string;
 };
@@ -56,7 +58,8 @@ export type PlayerDTO = {
     holeCards: number[] | undefined;
     status: PlayerStatus;
     lastAction: ActionDTO | undefined;
-    actions: LegalActionDTO[];
+    legalActions: LegalActionDTO[];
+    sumOfBets: string;
     timeout: number;
     signature: string;
 };
@@ -74,6 +77,7 @@ export type TexasHoldemStateDTO = {
     communityCards: number[];
     pots: string[];
     nextToAct: number;
+    previousActions: ActionDTO[];
     round: TexasHoldemRound;
     winners: WinnerDTO[];
     signature: string;

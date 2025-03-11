@@ -768,14 +768,15 @@ class TexasHoldemGame implements IPoker {
                 return {
                     address: ethers.ZeroAddress,
                     seat: i,
-                    stack: "0",
+                    stack: "",
                     isSmallBlind: false,
                     isBigBlind: false,
                     isDealer: false,
                     holeCards: undefined,
                     status: PlayerStatus.SITTING_OUT,
                     lastAction: undefined,
-                    actions: [],
+                    legalActions: [],
+                    sumOfBets: "",
                     timeout: 0,
                     signature: ethers.ZeroHash
                 };
@@ -786,6 +787,8 @@ class TexasHoldemGame implements IPoker {
             const turn = this.getPlayersLastAction(player.address);
             if (turn) {
                 lastAction = {
+                    playerId: turn.playerId,
+                    seat: i,
                     action: turn.action,
                     amount: (turn.amount ?? 0n).toString()
                 };
@@ -804,7 +807,8 @@ class TexasHoldemGame implements IPoker {
                 holeCards: player?.holeCards ? [player.holeCards[0].value, player.holeCards[1].value] : undefined,
                 status: player.status,
                 lastAction: lastAction,
-                actions: legalActions,
+                legalActions: legalActions,
+                sumOfBets: this.getPlayerTotalBets(player.address).toString(),
                 timeout: 0,
                 signature: ethers.ZeroHash
             };
@@ -813,6 +817,22 @@ class TexasHoldemGame implements IPoker {
         const nextPlayerToAct = this.findNextPlayerToAct();
         const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
 
+        const previousTurns: Turn[] = this._previousActions.toArray();
+        const previousActions: ActionDTO[] = [];
+
+        for (let i = 0; i < previousTurns.length; i++) {
+            const turn = previousTurns[i];
+            const seat = this.getPlayerSeatNumber(turn.playerId);
+            const action: ActionDTO = {
+                playerId: turn.playerId,
+                seat: seat,
+                action: turn.action,
+                amount: turn.amount ? turn.amount.toString() : ""
+            };
+
+            previousActions.push(action);
+        }
+        
         const winners: WinnerDTO[] = [];
         const pot = this.getPot();
 
@@ -828,6 +848,7 @@ class TexasHoldemGame implements IPoker {
             communityCards: this._communityCards.map(c => c.value),
             pots: [pot.toString()],
             nextToAct: nextToAct, // Show the caller the next player to act, but save the last to act
+            previousActions: previousActions,
             round: this._currentRound,
             winners: winners,
             signature: ethers.ZeroHash
