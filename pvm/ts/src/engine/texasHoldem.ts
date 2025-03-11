@@ -619,6 +619,7 @@ class TexasHoldemGame implements IPoker {
             pot += value;
         }
 
+        // return pot + this._pot;
         return pot;
     }
 
