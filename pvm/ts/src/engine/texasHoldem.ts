@@ -72,7 +72,7 @@ class TexasHoldemGame implements IPoker {
         private readonly _address: string,
         private gameOptions: GameOptions,
         private _dealer: number,
-        private _nextToAct: number,
+        private _lastToAct: number,
         private previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
         private _communityCards: Card[] = [],
@@ -100,7 +100,7 @@ class TexasHoldemGame implements IPoker {
 
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
         this._dealer = _dealer === 0 ? this._maxPlayers : _dealer;
-        this._lastActedSeat = _nextToAct; // Need to recalculate this
+        this._lastActedSeat = _lastToAct; // Need to recalculate this
 
         for (const action of previousActions) {
             const turn = {
@@ -293,6 +293,22 @@ class TexasHoldemGame implements IPoker {
     }
 
     private findNextPlayerToAct(): Player | undefined {
+
+        // Has the small blind posted?
+        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
+        const hasSmallBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
+
+        if (!hasSmallBlindPosted) {
+            return this.getPlayerAtSeat(this._smallBlindPosition);
+        }
+
+        // Has the big blind posted?
+        const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
+
+        if (!hasBigBlindPosted) {
+            return this.getPlayerAtSeat(this._bigBlindPosition);
+        }
+
         let next = this._lastActedSeat + 1;
 
         if (next === this._maxPlayers) {
@@ -774,7 +790,7 @@ class TexasHoldemGame implements IPoker {
             json.address,
             gameOptions,
             json.dealer as number,
-            json.nextToAct,
+            json.lastToAct as number,
             json.previousActions,
             json.currentRound,
             json.communityCards,
@@ -871,6 +887,7 @@ class TexasHoldemGame implements IPoker {
             players: players,
             communityCards: this._communityCards.map(c => c.value),
             pots: [pot.toString()],
+            lastToAct: this._lastActedSeat,
             nextToAct: nextToAct, // Show the caller the next player to act, but save the last to act
             previousActions: previousActions,
             round: this._currentRound,

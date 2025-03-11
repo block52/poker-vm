@@ -77,6 +77,7 @@ export type TexasHoldemStateDTO = {
     players: PlayerDTO[];
     communityCards: number[];
     pots: string[];
+    lastToAct: number;
     nextToAct: number;
     previousActions: ActionDTO[];
     round: TexasHoldemRound;
