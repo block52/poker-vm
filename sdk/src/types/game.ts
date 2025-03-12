@@ -76,6 +76,7 @@ export type TexasHoldemStateDTO = {
     dealer: number;
     players: PlayerDTO[];
     communityCards: number[];
+    deck: string; // Assume this will be encrypted
     pots: string[];
     lastToAct: number;
     nextToAct: number;

@@ -930,6 +930,8 @@ class TexasHoldemGame implements IPoker {
         const winners: WinnerDTO[] = [];
         const pot = this.getPot();
 
+        const deckAsString = this._deck.toString();
+
         return {
             type: "cash",
             address: this._address,
@@ -940,6 +942,7 @@ class TexasHoldemGame implements IPoker {
             dealer: this._dealer,
             players: players,
             communityCards: this._communityCards.map(c => c.value),
+            deck: deckAsString,
             pots: [pot.toString()],
             lastToAct: this._lastActedSeat,
             nextToAct: nextToAct, // Show the caller the next player to act, but save the last to act
