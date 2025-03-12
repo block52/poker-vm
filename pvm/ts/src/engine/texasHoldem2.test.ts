@@ -122,13 +122,13 @@ describe.only("Texas Holdem Game", () => {
 
         it("should return false when no blinds have been posted", () => {
             // No actions taken, preflop round shouldn't end
-            expect(game.hasRoundEnded()).toBe(false);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
         it("should return false after small blind but no big blind", () => {
             // Only small blind posted
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
-            expect(game.hasRoundEnded()).toBe(false);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
         it("should return false after both blinds but no additional actions", () => {
@@ -137,7 +137,7 @@ describe.only("Texas Holdem Game", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
             
             // Round shouldn't end because first player (small blind) needs to act again
-            expect(game.hasRoundEnded()).toBe(false);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
         it("should return false when small blind calls but big blind hasn't acted after", () => {
@@ -149,7 +149,7 @@ describe.only("Texas Holdem Game", () => {
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 10000000000000000n);
             
             // Big blind still needs to act (check or raise)
-            expect(game.hasRoundEnded()).toBe(false);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
         it("should return true when all players have acted and matched highest bet in preflop", () => {
@@ -164,7 +164,7 @@ describe.only("Texas Holdem Game", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
             
             // Round should end
-            expect(game.hasRoundEnded()).toBe(true);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
 
         it("should return false when a player raises and others haven't responded", () => {
@@ -176,7 +176,7 @@ describe.only("Texas Holdem Game", () => {
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, 50000000000000000n);
             
             // Big blind hasn't responded to the raise
-            expect(game.hasRoundEnded()).toBe(false);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
         it("should return true when all players fold except one", () => {
@@ -188,7 +188,7 @@ describe.only("Texas Holdem Game", () => {
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.FOLD);
             
             // Only one player left active - round should end
-            expect(game.hasRoundEnded()).toBe(true);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
 
         it("should handle three player scenarios correctly", () => {
@@ -209,13 +209,13 @@ describe.only("Texas Holdem Game", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BET, 20000000000000000n);
             
             // Round shouldn't end yet - player 3 needs to respond to raise
-            expect(game.hasRoundEnded()).toBe(false);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
             
             // Player 3 calls the raise
             game.performAction("0x3333333333333333333333333333333333333333", PlayerActionType.CALL, 20000000000000000n);
             
             // Now round should end - all active players have acted and matched highest bet
-            expect(game.hasRoundEnded()).toBe(true);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
 
         it("should track actions from previous rounds separately", () => {
@@ -231,19 +231,19 @@ describe.only("Texas Holdem Game", () => {
             gameAsAny._currentRound = TexasHoldemRound.FLOP;
             
             // At start of new round, no actions taken yet
-            expect(game.hasRoundEnded()).toBe(false);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
             
             // Both players check in flop
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             
             // One player checked but other hasn't - round shouldn't end
-            expect(game.hasRoundEnded()).toBe(false);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
             
             // Other player checks
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
             
             // Now round should end - all players checked
-            expect(game.hasRoundEnded()).toBe(true);
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
     });
 
