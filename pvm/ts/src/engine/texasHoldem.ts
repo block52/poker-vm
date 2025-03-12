@@ -461,7 +461,7 @@ class TexasHoldemGame implements IPoker {
 
         this._lastActedSeat = seat;
 
-        if (this.hasRoundEnded() === true) {
+        if (this.hasRoundEnded(this._currentRound) === true) {
             this.nextRound();
         }
     }
@@ -732,7 +732,7 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    hasRoundEnded(): boolean {
+    hasRoundEnded(round: TexasHoldemRound): boolean {
         const players = this.getSeatedPlayers();
 
         // Only consider players who are active and not all-in
@@ -746,11 +746,11 @@ class TexasHoldemGame implements IPoker {
             return true;
         }
 
-        const largestBet = this.getLargestBet(this._currentRound);
+        const largestBet = this.getLargestBet(round);
 
         // Check that all remaining active players have acted and matched the highest bet
         for (const player of activePlayers) {
-            const actions = this.getPlayerActions(player, this._currentRound);
+            const actions = this.getPlayerActions(player, round);
 
             // If a player hasn't acted yet, round is not over
             if (actions.length === 0) {
@@ -838,6 +838,7 @@ class TexasHoldemGame implements IPoker {
             players.set(p.seat, player);
         });
 
+
         return new TexasHoldemGame(
             json.address,
             gameOptions,
@@ -847,7 +848,8 @@ class TexasHoldemGame implements IPoker {
             json.currentRound,
             json.communityCards,
             json.pots,
-            players
+            players,
+            json.deck
         );
     }
 

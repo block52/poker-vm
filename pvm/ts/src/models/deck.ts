@@ -23,8 +23,8 @@ export interface IDeck {
 
 export class Deck implements IDeck, IJSONModel {
     private cards: Card[] = []; // todo: make stake
-    public hash: string = "";
-    public seedHash: string;
+    public readonly hash: string = "";
+    public readonly seedHash: string;
     private top: number = 0;
 
     private readonly SUIT_MAP = {
