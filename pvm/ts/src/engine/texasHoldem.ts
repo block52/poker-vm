@@ -219,12 +219,6 @@ class TexasHoldemGame implements IPoker {
     }
 
     join(player: Player) {
-        if (this.exists(player.address)) {
-            // throw new Error("Player already joined.");
-            console.log("Player already joined.");
-            return;
-        }
-
         const seat = this.findNextSeat();
         this.joinAtSeat(player, seat);
     }
@@ -238,7 +232,6 @@ class TexasHoldemGame implements IPoker {
     joinAtSeat(player: Player, seat: number) {
         // Check if the player is already in the game
         if (this.exists(player.address)) {
-            console.log("Player already joined.");
             throw new Error("Player already joined.");
         }
 
