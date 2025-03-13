@@ -946,6 +946,8 @@ class TexasHoldemGame implements IPoker {
 
         const deckAsString = this._deck.toString();
 
+        const communityCards : string[] = this._communityCards.map(c => c.mnemonic);
+
         return {
             type: "cash",
             address: this._address,
@@ -955,7 +957,7 @@ class TexasHoldemGame implements IPoker {
             bigBlindPosition: this._bigBlindPosition,
             dealer: this._dealer,
             players: players,
-            communityCards: this._communityCards.map(c => c.value),
+            communityCards: communityCards,
             deck: deckAsString,
             pots: [pot.toString()],
             lastToAct: this._lastActedSeat,

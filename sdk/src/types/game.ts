@@ -56,7 +56,7 @@ export type PlayerDTO = {
     isSmallBlind: boolean,
     isBigBlind: boolean,
     isDealer: boolean,
-    holeCards: number[] | undefined;
+    holeCards: string[] | undefined;
     status: PlayerStatus;
     lastAction: ActionDTO | undefined;
     legalActions: LegalActionDTO[];
@@ -64,7 +64,6 @@ export type PlayerDTO = {
     timeout: number;
     signature: string;
 };
-
 
 export type TexasHoldemStateDTO = {
     type: "cash";
@@ -75,7 +74,7 @@ export type TexasHoldemStateDTO = {
     bigBlindPosition: number;
     dealer: number;
     players: PlayerDTO[];
-    communityCards: number[];
+    communityCards: string[];
     deck: string; // Assume this will be encrypted
     pots: string[];
     lastToAct: number;

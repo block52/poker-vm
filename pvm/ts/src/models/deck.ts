@@ -51,7 +51,7 @@ export class Deck implements IDeck, IJSONModel {
             this.cards = [];
 
             mnemonics.map(mnemonic => {
-                this.cards.push(this.fromString(mnemonic));
+                this.cards.push(Deck.fromString(mnemonic));
             });
         } else {
             this.initStandard52();
@@ -185,7 +185,7 @@ export class Deck implements IDeck, IJSONModel {
         this.hash = createHash("sha256").update(cardsAsString).digest("hex");
     }
 
-    private fromString(mnemonic: string): Card {
+    public static fromString(mnemonic: string): Card {
         const match = mnemonic.match(/^([AJQKajqk]|[0-9]+)([CDHS])$/i);
 
         if (!match) {
