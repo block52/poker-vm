@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode, useEffect, useState } from
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from '../config/constants';
-import { ethers } from "ethers";
+import { getPublicKey } from '../utils/accountUtils';
 
 interface TableContextType {
   tableData: any;
@@ -42,10 +42,19 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const baseUrl = window.location.hostname === 'app.block52.xyz' 
             ? 'https://proxy.block52.xyz'
             : PROXY_URL;
+
+            console.log('Using baseUrl:', baseUrl);
+            console.log('Using tableId:', tableId);
             
           const response = await axios.get(`${baseUrl}/table/${tableId}`);
           console.log('Table response:', response.data);
-          setTableData(response.data);
+          
+          // Make sure we're setting the data in the correct format
+          // The API returns data directly, not nested in a 'data' property
+          setTableData({
+            data: response.data,
+            publicKey: userPublicKey
+          });
         } catch (err) {
           console.error('Error fetching table data:', err);
           setError(err instanceof Error ? err : new Error('Failed to fetch table data'));
@@ -57,34 +66,36 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Initial fetch
       fetchTableData();
   
-      // Set up 5-second polling
-      const interval = setInterval(fetchTableData, 20000);
+      // Set up polling - changed to 5 seconds for more frequent updates
+      const interval = setInterval(fetchTableData, 10000);
   
       // Cleanup
       return () => {
         console.log('TableProvider unmounted');
         clearInterval(interval);
       };
-    }, [tableId]);
+    }, [tableId, userPublicKey]); // Added userPublicKey as a dependency
 
-
+    // Update public key calculation using the utility
     useEffect(() => {
-      const calculatePublicKey = async () => {
-          const privateKey = localStorage.getItem('user_eth_private_key');
-          if (privateKey) {
-              try {
-                  const wallet = new ethers.Wallet(privateKey);
-                  const publicKey = wallet.signingKey.publicKey;
-                  setUserPublicKey(publicKey);
-                  console.log('Calculated Public Key:', publicKey);
-              } catch (error) {
-                  console.error('Error calculating public key:', error);
-              }
-          }
-      };
+        const calculatePublicKey = () => {
+            const privateKey = localStorage.getItem('user_eth_private_key');
+            if (privateKey) {
+                try {
+                    const publicKey = getPublicKey(privateKey);
+                    setUserPublicKey(publicKey);
+                    
+                    // Don't update tableData here - this creates a circular dependency
+                    // Instead, just set the public key
+                    console.log('Calculated Public Key:', publicKey);
+                } catch (error) {
+                    console.error('Error calculating public key:', error);
+                }
+            }
+        };
 
-      calculatePublicKey();
-  }, []);
+        calculatePublicKey();
+    }, []); // Only run once on mount, not when tableData changes
   
     const refreshNonce = async (address: string) => {
         try {
@@ -114,7 +125,15 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
   
     return (
-      <TableContext.Provider value={{ tableData, setTableData, isLoading, error, nonce, refreshNonce, userPublicKey }}>
+      <TableContext.Provider value={{ 
+          tableData: tableData ? { ...tableData, publicKey: userPublicKey } : null,
+          setTableData, 
+          isLoading, 
+          error, 
+          nonce, 
+          refreshNonce, 
+          userPublicKey
+      }}>
         {children}
       </TableContext.Provider>
     );
