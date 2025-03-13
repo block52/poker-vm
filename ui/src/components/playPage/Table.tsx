@@ -22,12 +22,11 @@ import { toDollarFromString } from "../../utils/numberUtils";
 import useUserBySeat from "../../hooks/useUserBySeat";
 import axios from "axios";
 import { ethers } from "ethers";
-import { useAccount } from 'wagmi';
-import { PROXY_URL } from '../../config/constants';
+import { useAccount } from "wagmi";
+import { PROXY_URL } from "../../config/constants";
 import { useTableContext } from "../../context/TableContext";
-import { FaCopy } from 'react-icons/fa';
-
-
+import { FaCopy } from "react-icons/fa";
+import { getUserTableStatus } from "../../utils/accountUtils";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -61,21 +60,21 @@ const useTableData = () => {
     const emptyState = {
         isLoading: false,
         error: null,
-        tableDataType: 'cash',
-        tableDataAddress: '',
-        tableDataSmallBlind: '0',
-        tableDataBigBlind: '0',
+        tableDataType: "cash",
+        tableDataAddress: "",
+        tableDataSmallBlind: "0",
+        tableDataBigBlind: "0",
         tableDataSmallBlindPosition: 0,
         tableDataBigBlindPosition: 0,
         tableDataDealer: 0,
         tableDataPlayers: [],
         tableDataCommunityCards: [],
-        tableDataDeck: '',
-        tableDataPots: ['0'],
+        tableDataDeck: "",
+        tableDataPots: ["0"],
         tableDataNextToAct: -1,
-        tableDataRound: 'preflop',
+        tableDataRound: "preflop",
         tableDataWinners: [],
-        tableDataSignature: '',
+        tableDataSignature: ""
     };
 
     if (isLoading) {
@@ -87,7 +86,7 @@ const useTableData = () => {
     }
 
     const data = tableData?.data;
-    if (!data || data.type !== 'cash') {
+    if (!data || data.type !== "cash") {
         return emptyState;
     }
 
@@ -96,19 +95,19 @@ const useTableData = () => {
         error: null,
         tableDataType: data.type,
         tableDataAddress: data.address,
-        tableDataSmallBlind: `${Number(ethers.formatUnits(data.smallBlind || '0', 18))}`,
-        tableDataBigBlind: `${Number(ethers.formatUnits(data.bigBlind || '0', 18))}`,
+        tableDataSmallBlind: `${Number(ethers.formatUnits(data.smallBlind || "0", 18))}`,
+        tableDataBigBlind: `${Number(ethers.formatUnits(data.bigBlind || "0", 18))}`,
         tableDataSmallBlindPosition: data.smallBlindPosition,
         tableDataBigBlindPosition: data.bigBlindPosition,
         tableDataDealer: data.dealer,
         tableDataPlayers: data.players || [],
         tableDataCommunityCards: data.communityCards || [],
-        tableDataDeck: data.deck || '',
-        tableDataPots: data.pots || ['0'],
+        tableDataDeck: data.deck || "",
+        tableDataPots: data.pots || ["0"],
         tableDataNextToAct: data.nextToAct ?? -1,
-        tableDataRound: data.round || 'preflop',
+        tableDataRound: data.round || "preflop",
         tableDataWinners: data.winners || [],
-        tableDataSignature: data.signature || '',
+        tableDataSignature: data.signature || ""
     };
 };
 
@@ -118,48 +117,77 @@ const formatWeiToUSD = (weiAmount: string | number): string => {
         // Convert from Wei (18 decimals) to standard units
         const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
         // Format to 2 decimal places and add commas
-        return usdValue.toLocaleString('en-US', {
+        return usdValue.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
     } catch (error) {
-        console.error('Error formatting Wei amount:', error);
-        return '0.00';
+        console.error("Error formatting Wei amount:", error);
+        return "0.00";
     }
 };
+
+// Define a type for the user status
+type UserTableStatus = {
+    isInTable: boolean;
+    isPlayerTurn: boolean;
+    seat: any;
+    stack: any;
+    status: any;
+    availableActions: any;
+    canPostSmallBlind: any;
+    canPostBigBlind: any;
+    canCheck: any;
+    canCall: any;
+    canBet: any;
+    canRaise: any;
+    canFold: any;
+    betLimits: any;
+    raiseLimits: any;
+    callAmount: any;
+    smallBlindAmount: any;
+    bigBlindAmount: any;
+} | null;
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
     const { tableData } = useTableContext();
+    const [userStatus, setUserStatus] = useState<UserTableStatus>(null);
 
     // Add the new hook usage here with prefixed names
     const tableDataValues = useTableData();
-    
+
+    useEffect(() => {
+        if (tableDataValues) {
+            const status = getUserTableStatus(tableDataValues);
+            console.log("User Status:", status);
+            setUserStatus(status);
+        }
+    }, [tableDataValues]);
+
     // Only log when tableData changes, not on every render
     useEffect(() => {
-        console.log('Destructured Table Data:', tableDataValues);
+        console.log("Destructured Table Data:", tableDataValues);
     }, [tableDataValues]);
 
     // Define activePlayers only once
-    const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) =>
-        player.address !== "0x0000000000000000000000000000000000000000"
-    ) ?? [];
+    const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
 
     useEffect(() => {
-        console.log('Active Players:', activePlayers);
+        console.log("Active Players:", activePlayers);
         // If there are active players, set their positions
         if (activePlayers.length > 0) {
             // Player in seat 0
             if (activePlayers.find((p: any) => p.seat === 0)) {
                 const player0 = activePlayers.find((p: any) => p.seat === 0);
-                console.log('Player 0:', player0);
+                console.log("Player 0:", player0);
             }
 
             // Player in seat 1
             if (activePlayers.find((p: any) => p.seat === 1)) {
                 const player1 = activePlayers.find((p: any) => p.seat === 1);
-                console.log('Player 1:', player1);
+                console.log("Player 1:", player1);
             }
         }
     }, [activePlayers]);
@@ -173,18 +201,14 @@ const Table = () => {
     const {
         seat, // todo
         pots, // todo
-        communityCards, // todo
+        communityCards // todo
     } = context;
 
     // Handle loading state
 
-
-
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
-
-
 
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
@@ -295,8 +319,6 @@ const Table = () => {
         navigate("/");
     };
 
-
-
     // Add null check before logging
     if (!context || !context.gamePlayers) {
         console.log("Context or gamePlayers not ready yet");
@@ -307,6 +329,10 @@ const Table = () => {
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         // You could add a toast notification here if you want
+    };
+
+    const handlePlayerAction = (action: string, amount: string) => {
+        console.log(`Player action: ${action}, Amount: ${amount}`);
     };
 
     return (
@@ -326,11 +352,7 @@ const Table = () => {
                     {/* Middle Section - Add Wallet Info */}
                     <div className="flex flex-col items-center text-white text-sm">
                         <div>Table Address: {id ? id : "Invalid Table"}</div>
-                        {tableData && (
-                            <div>
-                                Table Type: {tableData.data?.type}
-                            </div>
-                        )}
+                        {tableData && <div>Table Type: {tableData.data?.type}</div>}
                     </div>
 
                     {/* Right Section - Updated with icon and compact layout */}
@@ -343,19 +365,19 @@ const Table = () => {
                                     <div className="flex items-center gap-1 text-gray-300">
                                         <span className="opacity-75">Account:</span>
                                         <span className="font-mono text-[10px]">
-                                            {`${localStorage.getItem('user_eth_public_key')?.slice(0, 6)}...${localStorage.getItem('user_eth_public_key')?.slice(-4)}`}
+                                            {`${localStorage.getItem("user_eth_public_key")?.slice(0, 6)}...${localStorage.getItem("user_eth_public_key")?.slice(-4)}`}
                                         </span>
-                                        <FaCopy 
+                                        <FaCopy
                                             className="ml-1 cursor-pointer hover:text-green-400 transition-colors duration-200"
                                             size={12}
-                                            onClick={() => copyToClipboard(localStorage.getItem('user_eth_public_key') || '')}
+                                            onClick={() => copyToClipboard(localStorage.getItem("user_eth_public_key") || "")}
                                             title="Copy full address"
                                         />
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
                                         <span className="opacity-75">Balance:</span>
                                         <span className="font-medium text-green-400">
-                                            ${balance ? formatWeiToUSD(balance) : '0.00'}
+                                            ${balance ? formatWeiToUSD(balance) : "0.00"}
                                             <span className="text-[10px] ml-1 text-gray-400">USDC</span>
                                         </span>
                                     </div>
@@ -364,11 +386,11 @@ const Table = () => {
                         </div>
 
                         <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
-                            <RiMoneyDollarCircleLine 
-                                color="#f0f0f0" 
-                                size={25} 
+                            <RiMoneyDollarCircleLine
+                                color="#f0f0f0"
+                                size={25}
                                 onClick={() => navigate("/deposit")}
-                                className="hover:text-green-400 transition-colors duration-200" 
+                                className="hover:text-green-400 transition-colors duration-200"
                             />
                         </div>
                     </div>
@@ -414,39 +436,47 @@ const Table = () => {
                                             {/* //! Table */}
                                             <div className="px-4 h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
                                                 <span className="text-[#dbd3d3] mr-2">
-                                                    Total Pot: {tableDataValues.tableDataPots?.[0] === "0" ? "0.00" : 
-                                                        tableDataValues.tableDataPots?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0).toFixed(2)}
+                                                    Total Pot:{" "}
+                                                    {tableDataValues.tableDataPots?.[0] === "0"
+                                                        ? "0.00"
+                                                        : tableDataValues.tableDataPots
+                                                              ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
+                                                              .toFixed(2)}
                                                 </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">
-                                                    Round: <span className="font-semibold text-yellow-400 ml-1">{tableDataValues.tableDataRound || 'Round Data Not Available'}</span>
+                                                    Round:{" "}
+                                                    <span className="font-semibold text-yellow-400 ml-1">
+                                                        {tableDataValues.tableDataRound || "Round Data Not Available"}
+                                                    </span>
                                                 </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">
-                                                    Main Pot: {tableDataValues.tableDataPots?.[0] === "0" ? "0.00" : 
-                                                        Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || '0', 18)).toFixed(2)}
+                                                    Main Pot:{" "}
+                                                    {tableDataValues.tableDataPots?.[0] === "0"
+                                                        ? "0.00"
+                                                        : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2)}
                                                 </span>
                                             </div>
                                             <div className="flex gap-2 mt-8">
-                                                {tableDataValues.tableDataRound === "preflop" ? (
-                                                    // Show face-down cards in preflop
-                                                    Array(5).fill(null).map((_, index) => (
-                                                        <div key={index} className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]" />
-                                                    ))
-                                                ) : (
-                                                    // Show actual cards for other rounds
-                                                    (tableDataValues.tableDataCommunityCards || []).map((card: any, index: number) => (
-                                                        <div key={index} className="card animate-fall">
-                                                            <OppositePlayerCards
-                                                                frontSrc={`/cards/${card}.svg`}
-                                                                backSrc="/cards/Back.svg"
-                                                                flipped={true}
-                                                            />
-                                                        </div>
-                                                    ))
-                                                )}
+                                                {tableDataValues.tableDataRound === "preflop"
+                                                    ? // Show face-down cards in preflop
+                                                      Array(5)
+                                                          .fill(null)
+                                                          .map((_, index) => (
+                                                              <div
+                                                                  key={index}
+                                                                  className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
+                                                              />
+                                                          ))
+                                                    : // Show actual cards for other rounds
+                                                      (tableDataValues.tableDataCommunityCards || []).map((card: any, index: number) => (
+                                                          <div key={index} className="card animate-fall">
+                                                              <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped={true} />
+                                                          </div>
+                                                      ))}
                                             </div>
                                             {/*//! CHIP */}
                                             {chipPositionArray.map((position, index) => (
@@ -496,6 +526,15 @@ const Table = () => {
                                     >
                                         <Dealer />
                                     </div>
+
+                                    {userStatus && userStatus.canPostSmallBlind && (
+                                        <button
+                                            onClick={() => handlePlayerAction("post small blind", userStatus.smallBlindAmount)}
+                                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                        >
+                                            Post Small Blind (${ethers.formatUnits(userStatus.smallBlindAmount, 18)})
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -510,8 +549,9 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
-                        }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
+                        openSidebar ? "w-[300px]" : "w-0"
+                    }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
@@ -523,9 +563,7 @@ const Table = () => {
             </div>
             {/* Add a message for empty table if needed */}
             {activePlayers.length === 0 && (
-                <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">
-                    Waiting for players to join...
-                </div>
+                <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">Waiting for players to join...</div>
             )}
         </div>
     );
