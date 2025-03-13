@@ -16,6 +16,7 @@ import BigBlindAction from "./actions/bigBlindAction";
 import CallAction from "./actions/callAction";
 import CheckAction from "./actions/checkAction";
 import FoldAction from "./actions/foldAction";
+import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
@@ -23,7 +24,8 @@ import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
 import { ethers } from "ethers";
 import { Stack } from "../core/datastructures/stack";
 import { FixedCircularList } from "../core/datastructures/linkedList";
-import RaiseAction from "./actions/raiseAction";
+
+import crypto from "crypto";
 
 type Round = {
     type: TexasHoldemRound;
@@ -68,6 +70,8 @@ class TexasHoldemGame implements IPoker {
     private readonly _smallBlind: bigint;
     private readonly _bigBlind: bigint;
 
+    private seed: number[] = [];
+
     constructor(
         private readonly _address: string,
         private gameOptions: GameOptions,
@@ -81,7 +85,20 @@ class TexasHoldemGame implements IPoker {
         deck?: string
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
-        deck ? (this._deck = new Deck(deck)) : this._deck = new Deck();
+
+        if (deck) {
+            this._deck = new Deck(deck);
+        } else {
+            this._deck = new Deck();
+
+            // Create a seed number for the deck
+            // this.seed = Array.from({ length: 52 }, () => crypto.randomInt(0, 1000000));
+            this.seed = Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
+
+            // Shuffle the deck
+            this._deck.shuffle(this.seed);
+        };
+
         // this._players = new FixedCircularList<Player>(this._maxPlayers, null);
 
         this._pot = BigInt(currentPot);
