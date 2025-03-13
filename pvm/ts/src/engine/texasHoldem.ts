@@ -955,7 +955,6 @@ class TexasHoldemGame implements IPoker {
         // const communityCards : string[] = this._communityCards.map(c => c.mnemonic);
         const communityCards: string[] = [];
         for (let i = 0; i < this._communityCards.length; i++) {
-            console.log(this._communityCards[i].mnemonic);
             communityCards.push(this._communityCards[i].mnemonic);
         }
 
