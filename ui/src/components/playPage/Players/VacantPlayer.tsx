@@ -78,6 +78,10 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     };
 
     const handleJoinClick = React.useCallback(async () => {
+        console.log("\n=== JOIN CLICK DETECTED ===");
+        console.log("Can join?", isNextAvailableSeat && !isUserAlreadyPlaying);
+        console.log("Seat Index:", index);
+        console.log("Table ID:", tableId);
         if (!isNextAvailableSeat || isUserAlreadyPlaying) return;
         
         console.log("\n=== JOIN ATTEMPT ===");
@@ -100,7 +104,10 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     }, [isNextAvailableSeat, isUserAlreadyPlaying, tableId, localTableData]);
 
     const handleJoinTable = async (buyInWei: string) => {
-        if (!userAddress || !privateKey) return;
+        if (!userAddress || !privateKey) {
+            console.error("Missing user address or private key");
+            return;
+        }
 
         try {
             await refreshNonce(userAddress);
@@ -167,7 +174,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
                       ? isFirstPlayer
                           ? `Click to Join ($${smallBlindDisplay})`
                           : `Click to Join ($${bigBlindDisplay})`
-                      : ""}
+                      : "Click to Join"}
             </div>
             {/* Position indicator */}
             {getPositionName(index) && (
