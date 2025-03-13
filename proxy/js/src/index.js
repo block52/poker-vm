@@ -16,7 +16,7 @@ const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
 const Block52 = require("./clients/block52");
-const { NodeRpcClient } = require("@bitcoinbrisbane/block52");
+const { NodeRpcClient, RPCMethods } = require("@bitcoinbrisbane/block52");
 
 const { getUnixTime } = require("./utils/helpers");
 
@@ -67,7 +67,7 @@ const app = express();
 // ===================================
 // Enable CORS for all routes
 app.use(cors({
-    origin: ['https://app.block52.xyz', 'http://localhost:3000'],
+    origin: ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -246,32 +246,21 @@ app.post("/table/:tableId/join", async (req, res) => {
     console.log("Request body:", req.body);
     console.log("Route params:", req.params);
 
-    const { address, buyInAmount, seat, signature, publicKey } = req.body;
-    const { tableId } = req.params;
-
     try {
-        // Format the RPC call structure
+        // Format the RPC call to match the SDK client structure
         const rpcCall = {
             id: "1",
-            version: "2.0",
-            method: "transfer",
-            params: [
-                address, // Player's address
-                tableId, // Table address
-                buyInAmount, // Buy in amount
-                "join"
-            ],
-            signature,
-            publicKey
-            // todo: add "signature" of rpc call to be processeed by the node
-            
+            method: RPCMethods.TRANSFER,
+            params: [ req.body.userAddress, req.body.tableId, req.body.buyInAmount, "join", req.body.signature]  
         };
 
         console.log("=== FORMATTED RPC CALL ===");
         console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to node1
-        const response = await axios.post("https://node1.block52.xyz", rpcCall, {
+        const response = await axios.post(process.env.NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
