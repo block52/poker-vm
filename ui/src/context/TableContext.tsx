@@ -67,7 +67,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       fetchTableData();
   
       // Set up polling - changed to 5 seconds for more frequent updates
-      const interval = setInterval(fetchTableData, 10000);
+      const interval = setInterval(fetchTableData, 20000);
   
       // Cleanup
       return () => {
