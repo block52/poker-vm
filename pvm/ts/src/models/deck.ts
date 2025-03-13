@@ -85,27 +85,6 @@ export class Deck implements IDeck, IJSONModel {
         this.createHash();
     }
 
-    // public getCardMnemonic(suit: SUIT, rank: number): string {
-    //     const RANK_MAP: { [key: number]: string } = {
-    //         1: "A",
-    //         11: "J",
-    //         12: "Q",
-    //         13: "K"
-    //     };
-
-    //     const SUIT_MAP = {
-    //         [SUIT.CLUBS]: "C",
-    //         [SUIT.DIAMONDS]: "D",
-    //         [SUIT.HEARTS]: "H",
-    //         [SUIT.SPADES]: "S"
-    //     };
-
-    //     const rankStr = RANK_MAP[rank] || rank.toString();
-    //     const suitStr = SUIT_MAP[suit];
-
-    //     return rankStr + suitStr;
-    // }
-
     public getCardMnemonic(suit: SUIT, rank: number): string {
         // Make sure we're working with a number
         const rankNum = Number(rank);
@@ -160,11 +139,9 @@ export class Deck implements IDeck, IJSONModel {
 
         for (let i = 0; i < this.cards.length; i++) {
             const card = this.cards[i];
-            console.log(`Card ${i}: rank=${card.rank}, suit=${card.suit}, value=${card.value}, mnemonic=${card.mnemonic}`);
 
             // Try to regenerate the mnemonic to see if there's a difference
             const regeneratedMnemonic = this.getCardMnemonic(card.suit, card.rank);
-            console.log(`Regenerated mnemonic: ${regeneratedMnemonic}`);
 
             if (card.mnemonic !== regeneratedMnemonic) {
                 console.log(`MISMATCH: stored=${card.mnemonic}, regenerated=${regeneratedMnemonic}`);
@@ -174,8 +151,6 @@ export class Deck implements IDeck, IJSONModel {
         }
 
         const result = mnemonics.join("-");
-        console.log(`Final toString result: ${result.substring(0, 50)}...`);
-
         return result;
     }
 
