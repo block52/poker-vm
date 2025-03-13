@@ -111,6 +111,40 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
         return -1;
     }, [isUserAlreadyPlaying, localTableData?.data?.players, index]);
 
+    // Check if this seat is vacant (not occupied by any player)
+    const isSeatVacant = React.useMemo(() => {
+        if (!localTableData?.data?.players) {
+            return true; // If no player data, assume seat is vacant
+        }
+        
+        // Check if any player occupies this seat
+        const isOccupied = localTableData.data.players.some((player: any) => 
+            player.seat === index && 
+            player.address && 
+            player.address !== "0x0000000000000000000000000000000000000000"
+        );
+        
+        console.log(`VacantPlayer ${index} - isSeatVacant:`, !isOccupied);
+        return !isOccupied;
+    }, [localTableData?.data?.players, index]);
+
+    // Check if this seat is available to join
+    // Allow joining at any vacant seat
+    const canJoinThisSeat = React.useMemo(() => {
+        // User can join if:
+        // 1. The seat is vacant
+        // 2. The user is not already playing
+        const result = isSeatVacant && !isUserAlreadyPlaying;
+        
+        console.log(`VacantPlayer ${index} - canJoinThisSeat:`, {
+            isSeatVacant,
+            isUserAlreadyPlaying,
+            result
+        });
+        
+        return result;
+    }, [isSeatVacant, isUserAlreadyPlaying]);
+
     const isNextAvailableSeat = index === nextAvailableSeat;
     console.log(`VacantPlayer ${index} - isNextAvailableSeat:`, isNextAvailableSeat, {
         index,
@@ -142,6 +176,11 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
     // Helper function to get position name
     const getPositionName = (index: number) => {
+        // Use the actual positions from table data instead of calculating
+        const smallBlindPosition = localTableData?.data?.smallBlindPosition;
+        const bigBlindPosition = localTableData?.data?.bigBlindPosition;
+        const dealerPosition = localTableData?.data?.dealer;
+        
         if (index === dealerPosition) return "Dealer (D)";
         if (index === smallBlindPosition) return "Small Blind (SB)";
         if (index === bigBlindPosition) return "Big Blind (BB)";
@@ -150,19 +189,14 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
     const handleJoinClick = React.useCallback(async () => {
         console.log("\n=== JOIN CLICK DETECTED ===");
-        console.log("Can join?", isNextAvailableSeat && !isUserAlreadyPlaying);
-        console.log("isNextAvailableSeat:", isNextAvailableSeat);
+        console.log("Can join?", canJoinThisSeat);
+        console.log("isSeatVacant:", isSeatVacant);
         console.log("isUserAlreadyPlaying:", isUserAlreadyPlaying);
         console.log("Seat Index:", index);
         console.log("Table ID:", tableId);
         
-        if (!isNextAvailableSeat) {
-            console.log("Cannot join: not the next available seat");
-            return;
-        }
-        
-        if (isUserAlreadyPlaying) {
-            console.log("Cannot join: user is already playing");
+        if (!canJoinThisSeat) {
+            console.log("Cannot join: either seat is taken or user is already playing");
             return;
         }
         
@@ -183,7 +217,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
         }
 
         handleJoinTable(buyInWei);
-    }, [isNextAvailableSeat, isUserAlreadyPlaying, tableId, localTableData, index]);
+    }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index]);
 
     const handleJoinTable = async (buyInWei: string) => {
         if (!userAddress || !privateKey) {
@@ -195,11 +229,39 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             await refreshNonce(userAddress);
             const currentNonce = nonce?.toString() || "0";
 
+            // Get user balance
+            const userBalance = localStorage.getItem("user_balance") || "0";
+            console.log("User balance:", userBalance);
+            
             // Convert buyInWei to proper format
-            const minBuyIn = localTableData?.data?.minBuyIn || "10000000000000000000"; // Default 10 ETH
+            const minBuyIn = localTableData?.data?.minBuyIn || "4000000000000000000"; // Default to 4 USDC (20x big blind)
             console.log("=== MIN BUY IN ===");
             console.log(minBuyIn);
-            const buyInAmount = minBuyIn;
+            
+            // Use a buy-in amount that's within the user's balance
+            // If minBuyIn is specified, use that, otherwise use 40% of user's balance or 20x big blind
+            let buyInAmount;
+            const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC
+            const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
+            
+            if (BigInt(userBalance) < BigInt(minBuyIn)) {
+                // If user doesn't have enough for min buy-in, use 80% of their balance
+                buyInAmount = (BigInt(userBalance) * BigInt(80) / BigInt(100)).toString();
+                console.log(`User balance too low for min buy-in. Using 80% of balance: ${buyInAmount}`);
+            } else {
+                // Use min buy-in or 20x big blind, whichever is higher
+                buyInAmount = BigInt(minBuyIn) > BigInt(twentyBigBlinds) 
+                    ? minBuyIn 
+                    : twentyBigBlinds;
+                
+                // Make sure buy-in doesn't exceed user balance
+                if (BigInt(buyInAmount) > BigInt(userBalance)) {
+                    buyInAmount = (BigInt(userBalance) * BigInt(80) / BigInt(100)).toString();
+                    console.log(`Adjusted buy-in to 80% of balance: ${buyInAmount}`);
+                }
+            }
+            
+            console.log("Final buy-in amount:", buyInAmount);
 
             const signature = await getSignature(
                 privateKey,
@@ -212,13 +274,12 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
             const requestData = {
                 id: "1",
-                
-                method: "transfer", // Changed to match the proxy endpoint
+                method: "transfer",
                 userAddress,
                 tableId,
                 buyInAmount,
                 signature,
-                publicKey: userPublicKey // Using the user's address as public key
+                publicKey: userPublicKey
             };
 
             console.log("Sending join request:", requestData);
@@ -242,26 +303,31 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
         <div
             onClick={() => {
                 console.log("VacantPlayer clicked at index:", index);
-                console.log("isNextAvailableSeat:", isNextAvailableSeat);
+                console.log("canJoinThisSeat:", canJoinThisSeat);
                 console.log("isUserAlreadyPlaying:", isUserAlreadyPlaying);
                 handleJoinClick();
             }}
             className={`absolute flex flex-col justify-center text-gray-600 w-[175px] h-[170px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 ${
-                isNextAvailableSeat && !isUserAlreadyPlaying ? "hover:cursor-pointer" : "cursor-default"
+                canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"
             }`}
             style={{ left, top }}
         >
-            <div className={`flex justify-center gap-4 mb-2 ${isNextAvailableSeat && !isUserAlreadyPlaying ? "hover:cursor-pointer" : "cursor-default"}`}>
+            <div className={`flex justify-center gap-4 mb-2 ${canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"}`}>
                 <FaRegUserCircle color="#f0f0f0" className="w-10 h-10" />
             </div>
             <div className="text-white text-center">
+                {/* Add seat number for clarity */}
+                <div className="text-xs mb-1">Seat {index}</div>
+                
                 {isUserAlreadyPlaying
                     ? "Already playing"
-                    : isNextAvailableSeat
-                      ? isFirstPlayer
-                          ? `Click to Join ($${smallBlindDisplay})`
-                          : `Click to Join ($${bigBlindDisplay})`
-                      : "Click to Join"}
+                    : canJoinThisSeat
+                      ? index === localTableData?.data?.bigBlindPosition
+                          ? `Click to Join ($${bigBlindDisplay})`
+                          : index === localTableData?.data?.smallBlindPosition
+                            ? `Click to Join ($${smallBlindDisplay})`
+                            : `Click to Join`
+                      : "Seat Taken"}
             </div>
             {/* Position indicator */}
             {getPositionName(index) && (
