@@ -69,6 +69,7 @@ class TexasHoldemGame implements IPoker {
     private readonly _bigBlind: bigint;
 
     private seed: number[] = [];
+    private readonly _communityCards: Card[] = [];
 
     constructor(
         private readonly _address: string,
@@ -77,7 +78,7 @@ class TexasHoldemGame implements IPoker {
         private _lastToAct: number,
         private previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
-        private _communityCards: Card[] = [],
+        private communityCards: string[],
         private currentPot: bigint = 0n, // todo: this can be removed
         playerStates: Map<number, Player | null>,
         deck?: string
@@ -96,6 +97,12 @@ class TexasHoldemGame implements IPoker {
             // Shuffle the deck
             this._deck.shuffle(this.seed);
         };
+
+        // TODO: Make this a map
+        for (let i = 0; i < communityCards.length; i++) {
+            const card: Card = Deck.fromString(communityCards[i]);
+            this._communityCards.push(card);
+        }
 
         // this._players = new FixedCircularList<Player>(this._maxPlayers, null);
 
@@ -911,7 +918,7 @@ class TexasHoldemGame implements IPoker {
                 isSmallBlind: i === this._smallBlindPosition,
                 isBigBlind: i === this._bigBlindPosition,
                 isDealer: i === this._dealer,
-                holeCards: player?.holeCards ? [player.holeCards[0].value, player.holeCards[1].value] : undefined,
+                holeCards: player?.holeCards ? [player.holeCards[0].mnemonic, player.holeCards[1].mnemonic] : undefined,
                 status: player.status,
                 lastAction: lastAction,
                 legalActions: legalActions,
@@ -945,8 +952,12 @@ class TexasHoldemGame implements IPoker {
         const pot = this.getPot();
 
         const deckAsString = this._deck.toString();
-
-        const communityCards : string[] = this._communityCards.map(c => c.mnemonic);
+        // const communityCards : string[] = this._communityCards.map(c => c.mnemonic);
+        const communityCards: string[] = [];
+        for (let i = 0; i < this._communityCards.length; i++) {
+            console.log(this._communityCards[i].mnemonic);
+            communityCards.push(this._communityCards[i].mnemonic);
+        }
 
         return {
             type: "cash",
