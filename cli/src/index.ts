@@ -137,22 +137,57 @@ const getAccount = async (address: string): Promise<any> => {
     return response;
 };
 
+// // Convert card number to readable format
+// const cardToString = (card: number): string => {
+//     if (card === 0) return "🂠"; // Back of card for hidden cards
+
+//     const suits = ["♠", "♥", "♦", "♣"];
+//     const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+
+//     // Card numbers are 1-indexed, with 1-13 being spades, 14-26 being hearts, etc.
+//     const suitIndex = Math.floor((card - 1) / 13);
+//     const rankIndex = (card - 1) % 13;
+
+//     const suit = suits[suitIndex] || "?";
+//     const rank = ranks[rankIndex] || "?";
+
+//     // Color hearts and diamonds in red
+//     if (suitIndex === 1 || suitIndex === 2) {
+//         return chalk.red(`${rank}${suit}`);
+//     }
+
+//     return `${rank}${suit}`;
+// };
+
 // Convert card number to readable format
-const cardToString = (card: number): string => {
-    if (card === 0) return "🂠"; // Back of card for hidden cards
+const renderCard = (mnemonic: string): string => {
+    if (!mnemonic) return "🂠"; // Back of card for hidden cards
 
-    const suits = ["♠", "♥", "♦", "♣"];
-    const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    // const suits = ["♠", "♥", "♦", "♣"];
+    // const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 
-    // Card numbers are 1-indexed, with 1-13 being spades, 14-26 being hearts, etc.
-    const suitIndex = Math.floor((card - 1) / 13);
-    const rankIndex = (card - 1) % 13;
+    const match = mnemonic.match(/^([AJQKajqk]|[0-9]+)([CDHS])$/i);
 
-    const suit = suits[suitIndex] || "?";
-    const rank = ranks[rankIndex] || "?";
+    if (!match) {
+        throw new Error(`Invalid card mnemonic: ${mnemonic}`);
+    }
+
+    const rank = match[1].toUpperCase();
+    const suitChar = match[2].toUpperCase();
+
+    // Convert suit character to SUIT enum
+    let suit = "";
+    switch (suitChar) {
+        case "C": suit = "♣"; break;
+        case "D": suit = "♦"; break;
+        case "H": suit = "♥"; break;
+        case "S": suit = "♠"; break;
+        default:
+            throw new Error(`Invalid suit character: ${suitChar}`);
+    }
 
     // Color hearts and diamonds in red
-    if (suitIndex === 1 || suitIndex === 2) {
+    if (suit === "♦" || suit === "♥") {
         return chalk.red(`${rank}${suit}`);
     }
 
@@ -201,7 +236,7 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
     if (state.communityCards.length === 0) {
         communityCardsStr += "No cards yet";
     } else {
-        communityCardsStr += state.communityCards.map(card => cardToString(card)).join(" ");
+        communityCardsStr += state.communityCards.map(card => renderCard(card)).join(" ");
     }
     console.log(chalk.white(communityCardsStr));
 
@@ -237,7 +272,7 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
         let cardsDisplay = player?.holeCards ? "🂠 🂠" : "";
         if (isMyPlayer || state.round === "showdown") {
             if (player.holeCards) {
-                cardsDisplay = player.holeCards?.map(card => cardToString(card)).join(" ");
+                cardsDisplay = player.holeCards?.map(card => renderCard(card)).join(" ");
             }
         } // else {
         //     cardsDisplay = "🂠 🂠"; // Back of cards

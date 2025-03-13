@@ -19,8 +19,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.49",
-    "axios": "^1.8.1",
+    "@bitcoinbrisbane/block52": "1.0.54",
+    "axios": "^1.8.3",
     "chalk": "^4.1.2",
     "commander": "^9.4.1",
     "dotenv": "^16.4.7",
