@@ -17,13 +17,5 @@
       "outFiles": ["${workspaceFolder}/pvm/ts/dist/**/*.js"],
       "skipFiles": ["<node_internals>/**"]
     },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Program",
-      "program": "${workspaceFolder}/helloworld.ts",
-      "preLaunchTask": "tsc: build - tsconfig.json",
-      "outFiles": ["${workspaceFolder}/out/**/*.js"]
-    }
   ]
 }

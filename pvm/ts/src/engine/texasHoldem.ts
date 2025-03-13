@@ -25,8 +25,6 @@ import { ethers } from "ethers";
 import { Stack } from "../core/datastructures/stack";
 import { FixedCircularList } from "../core/datastructures/linkedList";
 
-import crypto from "crypto";
-
 type Round = {
     type: TexasHoldemRound;
     actions: Turn[];
@@ -80,7 +78,7 @@ class TexasHoldemGame implements IPoker {
         private previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
         private _communityCards: Card[] = [],
-        private currentPot: bigint = 0n, // this can be removed
+        private currentPot: bigint = 0n, // todo: this can be removed
         playerStates: Map<number, Player | null>,
         deck?: string
     ) {
@@ -855,14 +853,13 @@ class TexasHoldemGame implements IPoker {
             players.set(p.seat, player);
         });
 
-
         return new TexasHoldemGame(
             json.address,
             gameOptions,
             json.dealer as number,
             json.lastToAct as number,
             json.previousActions,
-            json.currentRound,
+            json.round, // todo: this should be the "currentround"
             json.communityCards,
             json.pots,
             players,
