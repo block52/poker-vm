@@ -81,7 +81,9 @@ class TexasHoldemGame implements IPoker {
         private communityCards: string[],
         private currentPot: bigint = 0n, // todo: this can be removed
         playerStates: Map<number, Player | null>,
-        deck?: string
+        deck?: string,
+        private key?: string,
+        private publicKey?: string
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
 

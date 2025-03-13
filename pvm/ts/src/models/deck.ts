@@ -19,13 +19,17 @@ import { IJSONModel } from "./interfaces";
 export interface IDeck {
     shuffle(seed?: number[]): void;
     getNext(): Card;
+    getEncryptedDeck(): string;
 }
 
 export class Deck implements IDeck, IJSONModel {
-    private cards: Card[] = []; // todo: make stake
+    private cards: Card[] = [];
     public hash: string = "";
     public seedHash: string;
     private top: number = 0;
+    private readonly userPublicKey: string;
+    private readonly ourPrivateKey: string;
+    private encryptedDeck: string = "";
 
     private readonly SUIT_MAP = {
         C: SUIT.CLUBS,
@@ -41,7 +45,11 @@ export class Deck implements IDeck, IJSONModel {
         13: "K"
     };
 
-    constructor(deck?: string) {
+    constructor(userPublicKey: string, ourPrivateKey: string, deck?: string) {
+        // Store keys for encryption/decryption
+        this.userPublicKey = userPublicKey;
+        this.ourPrivateKey = ourPrivateKey;
+
         if (deck) {
             const mnemonics = deck.split("-");
             if (mnemonics.length !== 52) {
@@ -60,6 +68,31 @@ export class Deck implements IDeck, IJSONModel {
         this.hash = ethers.ZeroHash;
         this.createHash();
         this.seedHash = ethers.ZeroHash;
+        
+        // Encrypt the deck after initialization
+        this.encryptDeck();
+    }
+
+    private async encryptDeck(): void {
+        // Convert the deck to a string representation
+        const deckString = this.toString();
+        
+        // Create a wallet instance from our private key
+        const wallet = new ethers.Wallet(this.ourPrivateKey);
+        
+        // Encrypt the deck string using the user's public key
+        // This creates a payload that only the user's private key can decrypt
+        this.encryptedDeck = await ethers.encryptKeystoreJson(deckString, this.userPublicKey);
+    }
+
+    public getEncryptedDeck(): string {
+        return this.encryptedDeck;
+    }
+
+    // Method to decrypt the deck (for testing/validation purposes)
+    public static decryptDeck(encryptedDeck: string, privateKey: string): string {
+        const wallet = new ethers.Wallet(privateKey);
+        return ethers.decryptKeystore(encryptedDeck, wallet.privateKey);
     }
 
     public shuffle(seed?: number[]): void {
@@ -83,6 +116,9 @@ export class Deck implements IDeck, IJSONModel {
 
         // Explicitly update hash after shuffling
         this.createHash();
+        
+        // Re-encrypt the deck after shuffling
+        this.encryptDeck();
     }
 
     public getCardMnemonic(suit: SUIT, rank: number): string {
@@ -124,29 +160,16 @@ export class Deck implements IDeck, IJSONModel {
 
     public toJson(): any {
         return {
-            cards: this.cards
+            cards: this.cards,
+            encryptedDeck: this.encryptedDeck
         };
     }
-
-    // public toString(): string {
-    //     return this.cards.map(card => card.mnemonic).join("-");
-    // }
 
     public toString(): string {
         const mnemonics: string[] = [];
 
-        console.log(`toString called. Total cards: ${this.cards.length}`);
-
         for (let i = 0; i < this.cards.length; i++) {
             const card = this.cards[i];
-
-            // Try to regenerate the mnemonic to see if there's a difference
-            const regeneratedMnemonic = this.getCardMnemonic(card.suit, card.rank);
-
-            if (card.mnemonic !== regeneratedMnemonic) {
-                console.log(`MISMATCH: stored=${card.mnemonic}, regenerated=${regeneratedMnemonic}`);
-            }
-
             mnemonics.push(card.mnemonic);
         }
 
@@ -203,7 +226,6 @@ export class Deck implements IDeck, IJSONModel {
         this.cards = []; // Clear existing cards
         for (let suit = SUIT.CLUBS; suit <= SUIT.SPADES; suit++) {
             for (let rank = 1; rank <= 13; rank++) {
-                // Changed from 2-14 to 1-13
                 this.cards.push({
                     suit: suit,
                     rank: rank,
