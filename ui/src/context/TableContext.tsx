@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode, useEffect, useState } from
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from '../config/constants';
-import { getPublicKey } from '../utils/accountUtils';
+import { getPublicKey, isUserPlaying } from '../utils/accountUtils';
 
 interface TableContextType {
   tableData: any;
@@ -12,19 +12,21 @@ interface TableContextType {
   nonce: number | null;
   refreshNonce: (address: string) => Promise<void>;
   userPublicKey: string | null;
+  isCurrentUserPlaying: boolean;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
 
 export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { id: tableId } = useParams<{ id: string }>();
-    console.log('Params in TableProvider:', useParams());
+
     
     const [tableData, setTableData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const [nonce, setNonce] = useState<number | null>(null);
     const [userPublicKey, setUserPublicKey] = useState<string | null>(null);
+    const [isCurrentUserPlaying, setIsCurrentUserPlaying] = useState<boolean>(false);
 
   
     useEffect(() => {
@@ -53,7 +55,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           // The API returns data directly, not nested in a 'data' property
           setTableData({
             data: response.data,
-            publicKey: userPublicKey
+            // publicKey: userPublicKey
           });
         } catch (err) {
           console.error('Error fetching table data:', err);
@@ -67,7 +69,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       fetchTableData();
   
       // Set up polling - changed to 5 seconds for more frequent updates
-      const interval = setInterval(fetchTableData, 20000);
+      const interval = setInterval(fetchTableData, 2000000);
   
       // Cleanup
       return () => {
@@ -124,6 +126,13 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, []);
   
+    // Add a new useEffect to update isCurrentUserPlaying when tableData changes
+    useEffect(() => {
+        if (tableData && tableData.data) {
+            setIsCurrentUserPlaying(isUserPlaying(tableData.data));
+        }
+    }, [tableData]);
+  
     return (
       <TableContext.Provider value={{ 
           tableData: tableData ? { ...tableData, publicKey: userPublicKey } : null,
@@ -132,7 +141,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           error, 
           nonce, 
           refreshNonce, 
-          userPublicKey
+          userPublicKey,
+          isCurrentUserPlaying
       }}>
         {children}
       </TableContext.Provider>

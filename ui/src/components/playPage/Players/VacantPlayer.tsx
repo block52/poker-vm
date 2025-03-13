@@ -25,32 +25,97 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     const privateKey = localStorage.getItem("user_eth_private_key");
     const wallet = new ethers.Wallet(privateKey!);
 
+     // Debug logs for initial state
+     console.log(`VacantPlayer ${index} initial state:`, {
+        userAddress,
+        hasTableData: !!tableData,
+        hasLocalTableData: !!localTableData,
+        tableId
+    });
+
     // Update local table data with debounce
     useEffect(() => {
         const timer = setTimeout(() => {
             setLocalTableData(tableData);
+            console.log(`VacantPlayer ${index} updated localTableData:`, {
+                hasData: !!tableData,
+                players: tableData?.data?.players?.map((p: any) => ({
+                    address: p.address,
+                    seat: p.seat
+                }))
+            });
         }, 1000); // 1 second debounce
 
         return () => clearTimeout(timer);
-    }, [tableData]);
+    }, [tableData, index]);
 
     // First, check if user is already playing
-    const isUserAlreadyPlaying = React.useMemo(() => 
-        localTableData?.data?.players?.some((player: any) => player.address === userAddress) || false
-    , [localTableData?.data?.players, userAddress]);
+    // First, check if user is already playing
+    const isUserAlreadyPlaying = React.useMemo(() => {
+        if (!userAddress) {
+            console.log(`VacantPlayer ${index} - No user address found`);
+            return false;
+        }
+        
+        if (!localTableData?.data?.players) {
+            console.log(`VacantPlayer ${index} - No players data found`);
+            return false;
+        }
+        
+        // Log each player for comparison
+        localTableData.data.players.forEach((player: any, idx: number) => {
+            console.log(`Player ${idx} comparison:`, {
+                playerAddress: player.address,
+                userAddress: userAddress,
+                isMatch: player.address?.toLowerCase() === userAddress?.toLowerCase(),
+                playerSeat: player.seat
+            });
+        });
+        
+        const result = localTableData.data.players.some((player: any) => 
+            player.address?.toLowerCase() === userAddress?.toLowerCase()
+        );
+        
+        console.log(`VacantPlayer ${index} - isUserAlreadyPlaying:`, result);
+        return result;
+    }, [localTableData?.data?.players, userAddress, index]);
 
     // Calculate next available seat
     const nextAvailableSeat = React.useMemo(() => {
-        if (isUserAlreadyPlaying) return -1;
-        if (!localTableData?.data?.players || localTableData.data.players.length === 0) {
-            return index;
+        if (isUserAlreadyPlaying) {
+            console.log(`VacantPlayer ${index} - User already playing, no available seat`);
+            return -1;
         }
-        return localTableData.data.players.findIndex((player: any) => 
-            player.address === "0x0000000000000000000000000000000000000000"
-        );
+        
+        // Get occupied seats
+        const occupiedSeats = new Set();
+        if (localTableData?.data?.players) {
+            localTableData.data.players.forEach((player: any) => {
+                if (player.address && player.address !== "0x0000000000000000000000000000000000000000") {
+                    occupiedSeats.add(player.seat);
+                }
+            });
+        }
+        
+        console.log(`VacantPlayer ${index} - Occupied seats:`, Array.from(occupiedSeats));
+        
+        // Find the first available seat (0-8)
+        for (let i = 0; i < 9; i++) {
+            if (!occupiedSeats.has(i)) {
+                console.log(`VacantPlayer ${index} - First available seat:`, i);
+                return i;
+            }
+        }
+        
+        console.log(`VacantPlayer ${index} - No available seats found`);
+        return -1;
     }, [isUserAlreadyPlaying, localTableData?.data?.players, index]);
 
     const isNextAvailableSeat = index === nextAvailableSeat;
+    console.log(`VacantPlayer ${index} - isNextAvailableSeat:`, isNextAvailableSeat, {
+        index,
+        nextAvailableSeat
+    });
 
     // Check if this is the first player
     const isFirstPlayer =
@@ -64,10 +129,16 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
     // Get dealer position from table data
     const dealerPosition = localTableData?.data?.dealer || 0;
+    console.log(`VacantPlayer ${index} - Dealer position:`, dealerPosition);
 
     // Calculate small blind and big blind positions
     const smallBlindPosition = (dealerPosition + 1) % 9; // Assuming 9 max seats
     const bigBlindPosition = (dealerPosition + 2) % 9;
+    console.log(`VacantPlayer ${index} - Blind positions:`, {
+        dealer: dealerPosition,
+        smallBlind: smallBlindPosition,
+        bigBlind: bigBlindPosition
+    });
 
     // Helper function to get position name
     const getPositionName = (index: number) => {
@@ -80,9 +151,20 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     const handleJoinClick = React.useCallback(async () => {
         console.log("\n=== JOIN CLICK DETECTED ===");
         console.log("Can join?", isNextAvailableSeat && !isUserAlreadyPlaying);
+        console.log("isNextAvailableSeat:", isNextAvailableSeat);
+        console.log("isUserAlreadyPlaying:", isUserAlreadyPlaying);
         console.log("Seat Index:", index);
         console.log("Table ID:", tableId);
-        if (!isNextAvailableSeat || isUserAlreadyPlaying) return;
+        
+        if (!isNextAvailableSeat) {
+            console.log("Cannot join: not the next available seat");
+            return;
+        }
+        
+        if (isUserAlreadyPlaying) {
+            console.log("Cannot join: user is already playing");
+            return;
+        }
         
         console.log("\n=== JOIN ATTEMPT ===");
         console.log("Seat Index:", index);
@@ -101,7 +183,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
         }
 
         handleJoinTable(buyInWei);
-    }, [isNextAvailableSeat, isUserAlreadyPlaying, tableId, localTableData]);
+    }, [isNextAvailableSeat, isUserAlreadyPlaying, tableId, localTableData, index]);
 
     const handleJoinTable = async (buyInWei: string) => {
         if (!userAddress || !privateKey) {
@@ -158,7 +240,12 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
     return (
         <div
-            onClick={handleJoinClick}
+            onClick={() => {
+                console.log("VacantPlayer clicked at index:", index);
+                console.log("isNextAvailableSeat:", isNextAvailableSeat);
+                console.log("isUserAlreadyPlaying:", isUserAlreadyPlaying);
+                handleJoinClick();
+            }}
             className={`absolute flex flex-col justify-center text-gray-600 w-[175px] h-[170px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 ${
                 isNextAvailableSeat && !isUserAlreadyPlaying ? "hover:cursor-pointer" : "cursor-default"
             }`}

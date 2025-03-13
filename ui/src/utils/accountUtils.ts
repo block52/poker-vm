@@ -48,7 +48,7 @@ export const getPublicKey = (privateKey: string): string => {
  */
 export const getUserTableStatus = (tableData: any) => {
     if (!tableData) return null;
-    console.log("Table Data userstatus:", tableData);
+    // console.log("Table Data userstatus:", tableData);
     
     const userAddress = localStorage.getItem('user_eth_public_key');
     if (!userAddress) return null;
@@ -57,7 +57,7 @@ export const getUserTableStatus = (tableData: any) => {
     const player = tableData?.tableDataPlayers?.find((p: any) => 
         p.address.toLowerCase() === userAddress.toLowerCase()
     );
-    console.log("Player:", player);
+    // console.log("Player:", player);
     
     if (!player) return null;
     
@@ -105,4 +105,21 @@ export const getUserTableStatus = (tableData: any) => {
         smallBlindAmount: getActionLimits("post small blind")?.min || "0",
         bigBlindAmount: getActionLimits("post big blind")?.min || "0"
     };
+}; 
+
+/**
+ * Check if the current user is playing at the table
+ * @param tableData The table data from context
+ * @returns Boolean indicating if the user is playing
+ */
+export const isUserPlaying = (tableData: any): boolean => {
+    if (!tableData || !tableData.players) return false;
+    
+    const userAddress = localStorage.getItem('user_eth_public_key');
+    if (!userAddress) return false;
+    
+    // Check if the user's address is in the players array
+    return tableData.players.some((player: any) => 
+        player.address.toLowerCase() === userAddress.toLowerCase()
+    );
 }; 

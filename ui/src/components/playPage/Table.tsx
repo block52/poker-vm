@@ -27,6 +27,7 @@ import { PROXY_URL } from "../../config/constants";
 import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
 import { getUserTableStatus } from "../../utils/accountUtils";
+import React from "react";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -127,49 +128,41 @@ const formatWeiToUSD = (weiAmount: string | number): string => {
     }
 };
 
-// Define a type for the user status
-type UserTableStatus = {
-    isInTable: boolean;
-    isPlayerTurn: boolean;
-    seat: any;
-    stack: any;
-    status: any;
-    availableActions: any;
-    canPostSmallBlind: any;
-    canPostBigBlind: any;
-    canCheck: any;
-    canCall: any;
-    canBet: any;
-    canRaise: any;
-    canFold: any;
-    betLimits: any;
-    raiseLimits: any;
-    callAmount: any;
-    smallBlindAmount: any;
-    bigBlindAmount: any;
-} | null;
+
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
     const { tableData } = useTableContext();
-    const [userStatus, setUserStatus] = useState<UserTableStatus>(null);
+    
+    // Keep the existing variable
+    const currentUserAddress = localStorage.getItem("user_eth_public_key");
+    console.log("Current user address from localStorage:", currentUserAddress);
+
+    // Create a different variable for comparison purposes
+    const userWalletAddress = React.useMemo(() => {
+        return currentUserAddress ? currentUserAddress.toLowerCase() : null;
+    }, [currentUserAddress]);
 
     // Add the new hook usage here with prefixed names
     const tableDataValues = useTableData();
+    
+    // Find the current user's seat using the new variable
+    const currentUserSeat = React.useMemo(() => {
+        if (!userWalletAddress || !tableDataValues.tableDataPlayers) return -1;
+        
+        const playerIndex = tableDataValues.tableDataPlayers.findIndex(
+            (player: any) => player.address?.toLowerCase() === userWalletAddress
+        );
+        
+        return playerIndex >= 0 ? playerIndex : -1;
+    }, [userWalletAddress, tableDataValues.tableDataPlayers]);
 
-    useEffect(() => {
-        if (tableDataValues) {
-            const status = getUserTableStatus(tableDataValues);
-            console.log("User Status:", status);
-            setUserStatus(status);
-        }
-    }, [tableDataValues]);
-
-    // Only log when tableData changes, not on every render
-    useEffect(() => {
-        console.log("Destructured Table Data:", tableDataValues);
-    }, [tableDataValues]);
+    // // Only log when tableData changes, not on every render
+    // useEffect(() => {
+    //     console.log("Destructured Table Data:", tableDataValues);
+    //     console.log("Current User Seat:", currentUserSeat);
+    // }, [tableDataValues, currentUserSeat]);
 
     // Define activePlayers only once
     const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
@@ -224,12 +217,10 @@ const Table = () => {
 
     const navigate = useNavigate();
 
-    const { account, balance, isLoading: walletLoading } = useUserWallet();
+    const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
 
-    const [block52Balance, setBlock52Balance] = useState<string>("");
 
-    // Replace the wagmiStore state with direct wagmi hooks
-    const { address, connector } = useAccount();
+
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -329,10 +320,6 @@ const Table = () => {
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         // You could add a toast notification here if you want
-    };
-
-    const handlePlayerAction = (action: string, amount: string) => {
-        console.log(`Player action: ${action}, Amount: ${amount}`);
     };
 
     return (
@@ -488,33 +475,77 @@ const Table = () => {
                                                     }}
                                                     className="absolute"
                                                 >
-                                                    <Chip amount={Number(pots[index])} />
+                                                    <Chip amount={Number(tableDataValues.tableDataPots[index])} />
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                    {playerPositionArray.map((position, index) => (
-                                        <div key={index} className="z-[10]">
-                                            {!activePlayers.find((p: any) => p.seat === index) ? (
-                                                <VacantPlayer index={index} left={position.left} top={position.top} />
-                                            ) : (
-                                                <OppositePlayer
-                                                    index={index}
-                                                    currentIndex={currentIndex}
-                                                    setStartIndex={(index: number) => setStartIndex(index)}
-                                                    left={position.left}
-                                                    top={position.top}
-                                                    color={position.color}
-                                                    status={tableDataValues.tableDataPlayers?.[index]?.status}
-                                                    isCardVisible={isCardVisible}
-                                                    setCardVisible={setCardVisible}
-                                                />
-                                            )}
-                                            <div>
-                                                <TurnAnimation left={position.left} top={position.top} index={index} />
+                                    {playerPositionArray.map((position, positionIndex) => {
+                                        // Find the player at this seat position
+                                        const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex);
+                                        
+                                        // Check if this player is the current user
+                                        const isCurrentUser = playerAtThisSeat && 
+                                            playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
+                                        
+                                        // More detailed logging
+                                        if (playerAtThisSeat) {
+                                            console.log(`Seat ${positionIndex} detailed comparison:`, {
+                                                playerAddress: playerAtThisSeat.address,
+                                                playerAddressLower: playerAtThisSeat.address?.toLowerCase(),
+                                                currentUserAddress: userWalletAddress,
+                                                currentUserAddressLower: userWalletAddress?.toLowerCase(),
+                                                isMatch: isCurrentUser,
+                                                exactCompare: playerAtThisSeat.address === userWalletAddress,
+                                                lowerCompare: playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase()
+                                            });
+                                        }
+                                        
+                                        const componentToRender = !playerAtThisSeat ? (
+                                            // No player at this seat - show vacant player
+                                            <VacantPlayer index={positionIndex} left={position.left} top={position.top} />
+                                        ) : isCurrentUser ? (
+                                            // This is the current user's position - use Player component
+                                            <Player
+                                                index={positionIndex}
+                                                currentIndex={currentIndex}
+                                                left={position.left}
+                                                top={position.top}
+                                                color={position.color}
+                                                status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
+                                            />
+                                        ) : (
+                                            // This is another player's position - use OppositePlayer component
+                                            <OppositePlayer
+                                                index={positionIndex}
+                                                currentIndex={currentIndex}
+                                                setStartIndex={(index: number) => setStartIndex(index)}
+                                                left={position.left}
+                                                top={position.top}
+                                                color={position.color}
+                                                status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
+                                                isCardVisible={isCardVisible}
+                                                setCardVisible={setCardVisible}
+                                            />
+                                        );
+
+                                        console.log(`Rendering component for seat ${positionIndex}:`, {
+                                            isVacant: !playerAtThisSeat,
+                                            isCurrentUser,
+                                            componentType: !playerAtThisSeat ? 'VacantPlayer' : 
+                                                           isCurrentUser ? 'Player' : 'OppositePlayer',
+                                            currentUserAddress: userWalletAddress
+                                        });
+                                        
+                                        return (
+                                            <div key={positionIndex} className="z-[10]">
+                                                {componentToRender}
+                                                <div>
+                                                    <TurnAnimation left={position.left} top={position.top} index={positionIndex} />
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                     {/*//! Dealer */}
                                     <div
                                         style={{
@@ -527,20 +558,19 @@ const Table = () => {
                                         <Dealer />
                                     </div>
 
-                                    {userStatus && userStatus.canPostSmallBlind && (
-                                        <button
-                                            onClick={() => handlePlayerAction("post small blind", userStatus.smallBlindAmount)}
-                                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                        >
-                                            Post Small Blind (${ethers.formatUnits(userStatus.smallBlindAmount, 18)})
-                                        </button>
-                                    )}
+                                   
                                 </div>
                             </div>
+
+                            
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
                             {data && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{data.hand_strength}</span>}
                         </div>
+
+                       
+
+                    
                     </div>
                     {/*//! FOOTER */}
                     <div className="mb-[0] w-full h-[190px] bottom-0 bg-custom-footer top-5 text-center z-[0] flex justify-center">
@@ -564,6 +594,12 @@ const Table = () => {
             {/* Add a message for empty table if needed */}
             {activePlayers.length === 0 && (
                 <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">Waiting for players to join...</div>
+            )}
+            {/* Add a message for the current user's seat */}
+            {currentUserSeat >= 0 && (
+                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
+                    You are seated at position {currentUserSeat + 1}
+                </div>
             )}
         </div>
     );

@@ -70,6 +70,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ id, label, left, top, color, on
                     </div>
                 </div>
             </div>
+            Player Card
         </div>
     );
 };

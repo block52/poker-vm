@@ -5,6 +5,31 @@ import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import useUserBySeat from "../hooks/useUserBySeat";
 import axios from "axios";
+import { useTableContext } from "../context/TableContext";
+import { getUserTableStatus } from "../utils/accountUtils";
+import { ethers } from "ethers";
+
+// Define a type for the user status
+type UserTableStatus = {
+    isInTable: boolean;
+    isPlayerTurn: boolean;
+    seat: any;
+    stack: any;
+    status: any;
+    availableActions: any;
+    canPostSmallBlind: any;
+    canPostBigBlind: any;
+    canCheck: any;
+    canCall: any;
+    canBet: any;
+    canRaise: any;
+    canFold: any;
+    betLimits: any;
+    raiseLimits: any;
+    callAmount: any;
+    smallBlindAmount: any;
+    bigBlindAmount: any;
+} | null;
 
 const PokerActionPanel: React.FC = () => {
     const { setPlayerAction, seat, totalPot, nextToAct, gamePlayers } = usePlayerContext();
@@ -16,6 +41,9 @@ const PokerActionPanel: React.FC = () => {
     const [isRaiseAction, setIsRaiseAction] = useState(false);
     const [balance, setBalance] = useState(0);
     const { data } = useUserBySeat(publicKey || "", seat);
+
+    const { tableData } = useTableContext();
+    const [userStatus, setUserStatus] = useState<UserTableStatus>(null);
 
     // Get current player's possible actions
     const currentPlayerActions = gamePlayers?.find(p => p.seat === nextToAct)?.actions || [];
@@ -34,6 +62,14 @@ const PokerActionPanel: React.FC = () => {
 
     // Update the find action for call amount
     const callAmount = currentPlayerActions.find(a => a.action === PlayerActionType.CALL)?.min;
+
+    useEffect(() => {
+        if (tableData) {
+            const status = getUserTableStatus(tableData);
+            console.log("User Status:", status);
+            setUserStatus(status);
+        }
+    }, [tableData]);
 
     useEffect(() => {
         if (data) {
@@ -57,14 +93,14 @@ const PokerActionPanel: React.FC = () => {
     }, [publicKey, seat]);
 
     useEffect(() => {
-        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
+        const localKey = localStorage.getItem("user_eth_public_key");
         if (!localKey) return setPublicKey(undefined);
 
         setPublicKey(localKey);
     }, [publicKey]);
 
     const handleRaiseChange = (newAmount: number) => {
-        setRaiseAmount(newAmount);  
+        setRaiseAmount(newAmount);
     };
 
     // Action handlers with TODOs for API integration
@@ -123,18 +159,50 @@ const PokerActionPanel: React.FC = () => {
         setPlayerAction(PlayerActionType.BET);
     };
 
-    if(!data) {
-        return <></>
+    const handlePlayerAction = (action: string, amount: string) => {
+        console.log(`Player action: ${action}, Amount: ${amount}`);
+    };
+
+    if (!data) {
+        return <></>;
     }
 
     return (
         <div className="flex justify-center rounded-lg h-full text-white z-[0]">
             {/* Action Buttons */}
+
             {/* <div className="left-0 absolute">
                 <CheckboxList />
             </div> */}
             {/* <ChipPurchase /> */}
             <div className="flex flex-col w-[600px] space-y-6 mb-2 justify-center rounded-lg">
+                {/* Player Action Buttons Container - Centered in the middle */}
+                <div className="flex justify-center items-center mb-2">
+                    {userStatus && userStatus.canPostSmallBlind && (
+                        <button
+                            onClick={() => handlePlayerAction("post small blind", userStatus.smallBlindAmount)}
+                            className="bg-[#2c7873] hover:bg-[#1e5954] text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors duration-200 border border-[#3a9188] flex items-center"
+                        >
+                            <span className="mr-1">Post Small Blind</span>
+                            <span className="bg-[#1a4542] px-2 py-1 rounded text-green-300 text-sm">
+                                ${Number(ethers.formatUnits(userStatus.smallBlindAmount, 18)).toFixed(2)}
+                            </span>
+                        </button>
+                    )}
+
+                    {userStatus && userStatus.canPostBigBlind && (
+                        <button
+                            onClick={() => handlePlayerAction("post big blind", userStatus.bigBlindAmount)}
+                            className="bg-[#2c7873] hover:bg-[#1e5954] text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors duration-200 border border-[#3a9188] ml-3 flex items-center"
+                        >
+                            <span className="mr-1">Post Big Blind</span>
+                            <span className="bg-[#1a4542] px-2 py-1 rounded text-green-300 text-sm">
+                                ${Number(ethers.formatUnits(userStatus.bigBlindAmount, 18)).toFixed(2)}
+                            </span>
+                        </button>
+                    )}
+                </div>
+
                 <div className="flex justify-between gap-2">
                     {canFold && (
                         <button
@@ -209,7 +277,7 @@ const PokerActionPanel: React.FC = () => {
                         +
                     </button>
                 </div>
-
+                
                 {/* Additional Options */}
                 <div className="flex justify-between gap-2">
                     <button

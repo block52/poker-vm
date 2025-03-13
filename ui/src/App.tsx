@@ -42,7 +42,7 @@ createAppKit({
 })
 
 function App() {
-    console.log('App component rendering');
+
     const { account, balance, isLoading } = useUserWallet();
     
     return (

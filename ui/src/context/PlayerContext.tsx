@@ -59,7 +59,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     React.useEffect(() => {
-        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
+        const localKey = localStorage.getItem("user_eth_public_key");
         if (!localKey) return setPublicKey(undefined);
 
         setPublicKey(localKey);
