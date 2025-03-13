@@ -1,13 +1,15 @@
 import * as React from "react";
+import { memo, useEffect, useState } from "react";
 import { FaRegUserCircle } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { usePlayerContext } from "../../../context/usePlayerContext";
 import { PROXY_URL } from "../../../config/constants";
 import axios from "axios";
 import { useAccount } from "wagmi";
-import { useState } from "react";
 import { ethers } from "ethers";
 import { useTableContext } from "../../../context/TableContext";
+import { NodeRpcClient } from "@bitcoinbrisbane/block52";
+import { getSignature, getPublicKey } from '../../../utils/accountUtils';
 
 type VacantPlayerProps = {
     left?: string; // Front side image source
@@ -15,42 +17,53 @@ type VacantPlayerProps = {
     index: number;
 };
 
-const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
-    console.log("VacantPlayer", left, top, index);
-    const { id: tableId } = useParams();
+const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) => {
     const { tableData, setTableData, nonce, refreshNonce, userPublicKey } = useTableContext();
+    const [localTableData, setLocalTableData] = useState(tableData);
+    const { id: tableId } = useParams();
     const userAddress = localStorage.getItem("user_eth_public_key");
     const privateKey = localStorage.getItem("user_eth_private_key");
     const wallet = new ethers.Wallet(privateKey!);
 
+    // Update local table data with debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setLocalTableData(tableData);
+        }, 1000); // 1 second debounce
+
+        return () => clearTimeout(timer);
+    }, [tableData]);
+
     // First, check if user is already playing
-    const isUserAlreadyPlaying = tableData?.data?.players?.some((player: any) => player.address === userAddress) || false;
+    const isUserAlreadyPlaying = React.useMemo(() => 
+        localTableData?.data?.players?.some((player: any) => player.address === userAddress) || false
+    , [localTableData?.data?.players, userAddress]);
 
-    // Then use getNextAvailableSeat
-    const getNextAvailableSeat = () => {
+    // Calculate next available seat
+    const nextAvailableSeat = React.useMemo(() => {
         if (isUserAlreadyPlaying) return -1;
-        // If players array is empty, any seat is available
-        if (!tableData?.data?.players || tableData.data.players.length === 0) {
-            return index; // Allow clicking any seat
+        if (!localTableData?.data?.players || localTableData.data.players.length === 0) {
+            return index;
         }
-        return tableData.data.players.findIndex((player: any) => player.address === "0x0000000000000000000000000000000000000000");
-    };
+        return localTableData.data.players.findIndex((player: any) => 
+            player.address === "0x0000000000000000000000000000000000000000"
+        );
+    }, [isUserAlreadyPlaying, localTableData?.data?.players, index]);
 
-    const nextAvailableSeat = getNextAvailableSeat();
     const isNextAvailableSeat = index === nextAvailableSeat;
 
     // Check if this is the first player
     const isFirstPlayer =
-        !tableData?.data?.players?.length || tableData.data.players.every((player: any) => player.address === "0x0000000000000000000000000000000000000000");
+        !localTableData?.data?.players?.length || localTableData.data.players.every((player: any) => player.address === "0x0000000000000000000000000000000000000000");
 
     // Get blind values from table data
-    const smallBlindWei = tableData?.data?.smallBlind || "0";
-    const bigBlindWei = tableData?.data?.bigBlind || "0";
+    const smallBlindWei = localTableData?.data?.smallBlind || "0";
+    const bigBlindWei = localTableData?.data?.bigBlind || "0";
     const smallBlindDisplay = ethers.formatUnits(smallBlindWei, 18);
     const bigBlindDisplay = ethers.formatUnits(bigBlindWei, 18);
 
     // Get dealer position from table data
-    const dealerPosition = tableData?.data?.dealer || 0;
+    const dealerPosition = localTableData?.data?.dealer || 0;
 
     // Calculate small blind and big blind positions
     const smallBlindPosition = (dealerPosition + 1) % 9; // Assuming 9 max seats
@@ -64,82 +77,81 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
         return "";
     };
 
-    const handleJoinClick = () => {
-        console.log("checking we can see the publick key from the table context", userPublicKey);
-        if (isFirstPlayer) {
-            handleJoinTable(smallBlindWei);
-        } else {
-            handleJoinTable(bigBlindWei);
+    const handleJoinClick = React.useCallback(async () => {
+        if (!isNextAvailableSeat || isUserAlreadyPlaying) return;
+        
+        console.log("\n=== JOIN ATTEMPT ===");
+        console.log("Seat Index:", index);
+        console.log("Table ID:", tableId);
+        
+        const isFirstPlayer = !localTableData?.data?.players?.length || 
+            localTableData.data.players.every((player: any) => 
+                player.address === "0x0000000000000000000000000000000000000000"
+            );
+
+        const buyInWei = isFirstPlayer ? localTableData?.data?.smallBlind : localTableData?.data?.bigBlind;
+        
+        if (!buyInWei) {
+            console.error("No valid buy-in amount");
+            return;
         }
-    };
+
+        handleJoinTable(buyInWei);
+    }, [isNextAvailableSeat, isUserAlreadyPlaying, tableId, localTableData]);
 
     const handleJoinTable = async (buyInWei: string) => {
         if (!userAddress || !privateKey) return;
 
         try {
-            // Get fresh nonce before joining
             await refreshNonce(userAddress);
+            const currentNonce = nonce?.toString() || "0";
 
-            // Create wallet from private key
-            const wallet = new ethers.Wallet(privateKey);
+            // Convert buyInWei to proper format
+            const minBuyIn = localTableData?.data?.minBuyIn || "10000000000000000000"; // Default 10 ETH
+            console.log("=== MIN BUY IN ===");
+            console.log(minBuyIn);
+            const buyInAmount = minBuyIn;
 
-            // Build message components with nonce
-            const from = userAddress;
-            const to = tableId;
-            const amount = buyInWei;
-            const action = "join";
-            const currentNonce = nonce?.toString();
-
-            // Create and sign message with nonce
-            const message = `${from}${to}${amount}${action}${currentNonce}`;
-            const signature = await wallet.signMessage(message);
-            const publicKey = await wallet.getAddress();
+            const signature = await getSignature(
+                privateKey,
+                currentNonce,
+                userAddress,
+                tableId,
+                buyInAmount,
+                "join"
+            );
 
             const requestData = {
                 id: "1",
-                version: "2.0",
-                method: "transfer",
-                params: [from, to, amount, action],
+                
+                method: "transfer", // Changed to match the proxy endpoint
+                userAddress,
+                tableId,
+                buyInAmount,
                 signature,
-                publicKey,
-                nonce: currentNonce
+                publicKey: userPublicKey // Using the user's address as public key
             };
 
-            console.log("Current table state:", tableData);
             console.log("Sending join request:", requestData);
-
             const response = await axios.post(`${PROXY_URL}/table/${tableId}/join`, requestData);
             console.log("Join response:", response.data);
 
-            if (response.data && response.data.tableDataPlayers?.length > 0) {
-                const updatedTableData = {
-                    data: {
-                        type: response.data.tableDataType || tableData.data.type,
-                        address: response.data.tableDataAddress || tableData.data.address,
-                        smallBlind: response.data.tableDataSmallBlind || tableData.data.smallBlind,
-                        bigBlind: response.data.tableDataBigBlind || tableData.data.bigBlind,
-                        dealer: response.data.tableDataDealer,
-                        players: response.data.tableDataPlayers,
-                        communityCards: response.data.tableDataCommunityCards,
-                        pots: response.data.tableDataPots,
-                        nextToAct: response.data.tableDataNextToAct,
-                        round: response.data.tableDataRound || tableData.data.round,
-                        winners: response.data.tableDataWinners,
-                        signature: response.data.tableDataSignature
-                    }
-                };
-
-                console.log("Updating table with:", updatedTableData);
-                setTableData(updatedTableData);
+            if (response.data?.result?.data) {
+                setTableData(response.data.result.data);
             }
         } catch (error) {
             console.error("Error joining table:", error);
         }
     };
 
+    // Only log position once during mount
+    useEffect(() => {
+        console.log("VacantPlayer mounted at position:", { left, top, index });
+    }, []);
+
     return (
         <div
-            onClick={() => isNextAvailableSeat && !isUserAlreadyPlaying && handleJoinClick()}
+            onClick={handleJoinClick}
             className={`absolute flex flex-col justify-center text-gray-600 w-[175px] h-[170px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 ${
                 isNextAvailableSeat && !isUserAlreadyPlaying ? "hover:cursor-pointer" : "cursor-default"
             }`}
@@ -165,6 +177,13 @@ const VacantPlayer: React.FC<VacantPlayerProps> = ({ left, top, index }) => {
             )}
         </div>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison for memo
+    return prevProps.left === nextProps.left && 
+           prevProps.top === nextProps.top && 
+           prevProps.index === nextProps.index;
+});
+
+VacantPlayer.displayName = "VacantPlayer";
 
 export default VacantPlayer;
