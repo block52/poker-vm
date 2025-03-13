@@ -10,7 +10,7 @@ import Player from "./Players/Player";
 import Dealer from "./common/Dealer";
 import Chip from "./common/Chip";
 import { usePlayerContext } from "../../context/usePlayerContext";
-import { PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerStatus, TexasHoldemGameStateDTO, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
@@ -55,22 +55,58 @@ const calculateZoom = () => {
 };
 
 const useTableData = () => {
-    const { tableData } = useTableContext();
+    const { tableData, isLoading, error } = useTableContext();
 
-    // Only access data if tableData exists and has a data property
-    const data = tableData?.data || {};
+    // Default empty state
+    const emptyState = {
+        isLoading: false,
+        error: null,
+        tableDataType: 'cash',
+        tableDataAddress: '',
+        tableDataSmallBlind: '0',
+        tableDataBigBlind: '0',
+        tableDataSmallBlindPosition: 0,
+        tableDataBigBlindPosition: 0,
+        tableDataDealer: 0,
+        tableDataPlayers: [],
+        tableDataCommunityCards: [],
+        tableDataDeck: '',
+        tableDataPots: ['0'],
+        tableDataNextToAct: -1,
+        tableDataRound: 'preflop',
+        tableDataWinners: [],
+        tableDataSignature: '',
+    };
+
+    if (isLoading) {
+        return { ...emptyState, isLoading: true };
+    }
+
+    if (error) {
+        return { ...emptyState, error };
+    }
+
+    const data = tableData?.data;
+    if (!data || data.type !== 'cash') {
+        return emptyState;
+    }
 
     return {
-        tableDataType: data.type || '',
-        tableDataAddress: data.address || '',
+        isLoading: false,
+        error: null,
+        tableDataType: data.type,
+        tableDataAddress: data.address,
         tableDataSmallBlind: `${Number(ethers.formatUnits(data.smallBlind || '0', 18))}`,
         tableDataBigBlind: `${Number(ethers.formatUnits(data.bigBlind || '0', 18))}`,
-        tableDataDealer: data.dealer || 0,
+        tableDataSmallBlindPosition: data.smallBlindPosition,
+        tableDataBigBlindPosition: data.bigBlindPosition,
+        tableDataDealer: data.dealer,
         tableDataPlayers: data.players || [],
         tableDataCommunityCards: data.communityCards || [],
+        tableDataDeck: data.deck || '',
         tableDataPots: data.pots || ['0'],
-        tableDataNextToAct: data.nextToAct || 0,
-        tableDataRound: data.round || '',
+        tableDataNextToAct: data.nextToAct ?? -1,
+        tableDataRound: data.round || 'preflop',
         tableDataWinners: data.winners || [],
         tableDataSignature: data.signature || '',
     };
@@ -98,38 +134,35 @@ const Table = () => {
     const { tableData } = useTableContext();
 
     // Add the new hook usage here with prefixed names
-    const {
-        tableDataType,
-        tableDataAddress,
-        tableDataSmallBlind,
-        tableDataBigBlind,
-        tableDataDealer,
-        tableDataPlayers,
-        tableDataCommunityCards,
-        tableDataPots,
-        tableDataNextToAct,
-        tableDataRound,
-        tableDataWinners,
-        tableDataSignature
-    } = useTableData();
+    const tableDataValues = useTableData();
+    
+    // Only log when tableData changes, not on every render
+    useEffect(() => {
+        console.log('Destructured Table Data:', tableDataValues);
+    }, [tableDataValues]);
 
-    // Add console logs for debugging
+    // Define activePlayers only once
+    const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) =>
+        player.address !== "0x0000000000000000000000000000000000000000"
+    ) ?? [];
 
-    // console.log('Table Context Data:', tableData);
-    console.log('Destructured Table Data:', {
-        tableDataType,
-        tableDataAddress,
-        tableDataSmallBlind,
-        tableDataBigBlind,
-        tableDataDealer,
-        tableDataPlayers,
-        tableDataCommunityCards,
-        tableDataPots,
-        tableDataNextToAct,
-        tableDataRound,
-        tableDataWinners,
-        tableDataSignature
-    });
+    useEffect(() => {
+        console.log('Active Players:', activePlayers);
+        // If there are active players, set their positions
+        if (activePlayers.length > 0) {
+            // Player in seat 0
+            if (activePlayers.find((p: any) => p.seat === 0)) {
+                const player0 = activePlayers.find((p: any) => p.seat === 0);
+                console.log('Player 0:', player0);
+            }
+
+            // Player in seat 1
+            if (activePlayers.find((p: any) => p.seat === 1)) {
+                const player1 = activePlayers.find((p: any) => p.seat === 1);
+                console.log('Player 1:', player1);
+            }
+        }
+    }, [activePlayers]);
 
     // Early return if no id
     if (!id) {
@@ -173,31 +206,6 @@ const Table = () => {
 
     // Replace the wagmiStore state with direct wagmi hooks
     const { address, connector } = useAccount();
-
-    // Add this after the useTableData destructuring
-    const activePlayers = tableDataPlayers.filter((player: any) =>
-        player.address !== "0x0000000000000000000000000000000000000000"
-    );
-
-    useEffect(() => {
-        console.log('Active Players:', activePlayers);
-        // If there are active players, set their positions
-        if (activePlayers.length > 0) {
-            // Player in seat 0
-            if (activePlayers.find((p: any) => p.seat === 0)) {
-                const player0 = activePlayers.find((p: any) => p.seat === 0);
-                console.log('Player 0:', player0);
-                // You can use this data to update the player position 0
-            }
-
-            // Player in seat 1
-            if (activePlayers.find((p: any) => p.seat === 1)) {
-                const player1 = activePlayers.find((p: any) => p.seat === 1);
-                console.log('Player 1:', player1);
-                // You can use this data to update the player position 1
-            }
-        }
-    }, [tableDataPlayers]);
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -369,9 +377,9 @@ const Table = () => {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
                     {/* Left Section */}
                     <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">${`${tableDataSmallBlind}/$${tableDataBigBlind}`}</span>
+                        <span className="px-2 rounded text-[12px]">${`${tableDataValues.tableDataSmallBlind}/$${tableDataValues.tableDataBigBlind}`}</span>
                         <span className="ml-2 text-[12px]">
-                            Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableDataType}</span>
+                            Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableDataValues.tableDataType}</span>
                         </span>
                     </div>
 
@@ -405,63 +413,39 @@ const Table = () => {
                                         <div className="z-[20] relative flex flex-col w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
                                             <div className="px-4 h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
-                                                <span className="text-[#dbd3d3] mr-2">Total Pot: {tableDataPots}</span>
+                                                <span className="text-[#dbd3d3] mr-2">
+                                                    Total Pot: {tableDataValues.tableDataPots?.[0] === "0" ? "0.00" : 
+                                                        tableDataValues.tableDataPots?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0).toFixed(2)}
+                                                </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">
-                                                    Round: <span className="font-semibold text-yellow-400 ml-1">{tableDataRound}</span>
+                                                    Round: <span className="font-semibold text-yellow-400 ml-1">{tableDataValues.tableDataRound || 'Round Data Not Available'}</span>
                                                 </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">
-                                                    Main Pot: {tableDataPots[0] === "0"
-                                                        ? Number(tableDataSmallBlind) + Number(tableDataBigBlind)
-                                                        : tableDataPots[0]}
+                                                    Main Pot: {tableDataValues.tableDataPots?.[0] === "0" ? "0.00" : 
+                                                        Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || '0', 18)).toFixed(2)}
                                                 </span>
                                             </div>
                                             <div className="flex gap-2 mt-8">
-                                                <div className="card animate-fall delay-200">
-                                                    <OppositePlayerCards
-                                                        frontSrc={`/cards/${communityCards[0]}.svg`}
-                                                        backSrc="/cards/Back.svg"
-                                                        flipped={flipped1}
-                                                    />
-                                                </div>
-                                                <div className="card animate-fall delay-400">
-                                                    <OppositePlayerCards
-                                                        frontSrc={`/cards/${communityCards[1]}.svg`}
-                                                        backSrc="/cards/Back.svg"
-                                                        flipped={flipped2}
-                                                    />
-                                                </div>
-                                                <div className="card animate-fall delay-600">
-                                                    <OppositePlayerCards
-                                                        frontSrc={`/cards/${communityCards[2]}.svg`}
-                                                        backSrc="/cards/Back.svg"
-                                                        flipped={flipped3}
-                                                    />
-                                                </div>
-                                                {openOneMore ? (
-                                                    <div className="card animate-fall delay-600">
-                                                        <OppositePlayerCards
-                                                            frontSrc={`/cards/${communityCards[3]}.svg`}
-                                                            backSrc="/cards/Back.svg"
-                                                            flipped={flipped3}
-                                                        />
-                                                    </div>
+                                                {tableDataValues.tableDataRound === "preflop" ? (
+                                                    // Show face-down cards in preflop
+                                                    Array(5).fill(null).map((_, index) => (
+                                                        <div key={index} className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]" />
+                                                    ))
                                                 ) : (
-                                                    <div className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"></div>
-                                                )}
-                                                {openTwoMore ? (
-                                                    <div className="card animate-fall delay-600">
-                                                        <OppositePlayerCards
-                                                            frontSrc={`/cards/${communityCards[4]}.svg`}
-                                                            backSrc="/cards/Back.svg"
-                                                            flipped={flipped3}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"></div>
+                                                    // Show actual cards for other rounds
+                                                    (tableDataValues.tableDataCommunityCards || []).map((card: any, index: number) => (
+                                                        <div key={index} className="card animate-fall">
+                                                            <OppositePlayerCards
+                                                                frontSrc={`/cards/${card}.svg`}
+                                                                backSrc="/cards/Back.svg"
+                                                                flipped={true}
+                                                            />
+                                                        </div>
+                                                    ))
                                                 )}
                                             </div>
                                             {/*//! CHIP */}
@@ -491,7 +475,7 @@ const Table = () => {
                                                     left={position.left}
                                                     top={position.top}
                                                     color={position.color}
-                                                    status={tableDataPlayers[index]?.status}
+                                                    status={tableDataValues.tableDataPlayers?.[index]?.status}
                                                     isCardVisible={isCardVisible}
                                                     setCardVisible={setCardVisible}
                                                 />
