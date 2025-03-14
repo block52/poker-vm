@@ -353,7 +353,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
                     <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-xl font-bold mb-4 text-white">Buy In</h2>
                         <p className="mb-4 text-gray-300">
-                            Enter the amount you want to buy in with (in ETH):
+                            Enter the amount you want to buy in with (in USDC):
                         </p>
                         
                         <div className="mb-4">
