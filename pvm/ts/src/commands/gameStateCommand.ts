@@ -24,9 +24,6 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 ContractSchema.getGameOptions(this.address)
             ]);
 
-            // const json = await this.gameManagement.get(this.address);
-            // const gameOptions: GameOptions = await ContractSchema.getGameOptions(this.address);
-
             const game = TexasHoldemGame.fromJson(json, gameOptions);
             console.log("Created game object");
 
