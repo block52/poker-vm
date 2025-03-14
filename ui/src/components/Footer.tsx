@@ -256,9 +256,20 @@ const PokerActionPanel: React.FC = () => {
         }
     };
 
-    // In your component where you decide whether to show the small blind button
-    const shouldShowSmallBlindButton = isPlayerTurnToPostBlind(tableData, userAddress || "", 'small');
-    const shouldShowBigBlindButton = isPlayerTurnToPostBlind(tableData, userAddress || "", 'big');
+    // Make sure we're passing the actual table data object, not the wrapper
+    const actualTableData = tableData?.data;
+    
+    // Use our helper functions to determine if blind buttons should be shown
+    const shouldShowSmallBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", 'small');
+    const shouldShowBigBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", 'big');
+    
+    // Add debug logging to see what's happening
+    console.log("Blind button visibility:", {
+        userAddress,
+        shouldShowSmallBlindButton,
+        shouldShowBigBlindButton,
+        tableData: actualTableData
+    });
 
     if (!data) {
         return <></>;
