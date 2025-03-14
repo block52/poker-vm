@@ -10,6 +10,7 @@ import { ethers } from "ethers";
 import { useTableContext } from "../../../context/TableContext";
 import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { getSignature, getPublicKey } from '../../../utils/accountUtils';
+import useUserWallet from "../../../hooks/useUserWallet";
 
 type VacantPlayerProps = {
     left?: string; // Front side image source
@@ -25,8 +26,15 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     const privateKey = localStorage.getItem("user_eth_private_key");
     const wallet = new ethers.Wallet(privateKey!);
 
-     // Debug logs for initial state
-     console.log(`VacantPlayer ${index} initial state:`, {
+    const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
+
+    // Add state for buy-in modal
+    const [showBuyInModal, setShowBuyInModal] = useState(false);
+    const [buyInAmount, setBuyInAmount] = useState("");
+    const [buyInError, setBuyInError] = useState("");
+
+    // Debug logs for initial state
+    console.log(`VacantPlayer ${index} initial state:`, {
         userAddress,
         hasTableData: !!tableData,
         hasLocalTableData: !!localTableData,
@@ -200,24 +208,40 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             return;
         }
         
-        console.log("\n=== JOIN ATTEMPT ===");
-        console.log("Seat Index:", index);
-        console.log("Table ID:", tableId);
+        // Instead of joining immediately, show the buy-in modal
+        setShowBuyInModal(true);
         
-        const isFirstPlayer = !localTableData?.data?.players?.length || 
-            localTableData.data.players.every((player: any) => 
-                player.address === "0x0000000000000000000000000000000000000000"
-            );
-
-        const buyInWei = isFirstPlayer ? localTableData?.data?.smallBlind : localTableData?.data?.bigBlind;
+        // Set default buy-in amount (20x big blind)
+        const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC
+        const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
+        const defaultBuyIn = ethers.formatUnits(twentyBigBlinds, 18);
+        setBuyInAmount(defaultBuyIn);
         
-        if (!buyInWei) {
-            console.error("No valid buy-in amount");
+    }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index]);
+    
+    // Function to handle the actual join after user confirms buy-in amount
+    const handleConfirmBuyIn = async () => {
+        if (!buyInAmount || parseFloat(buyInAmount) <= 0) {
+            setBuyInError("Please enter a valid buy-in amount");
             return;
         }
-
-        handleJoinTable(buyInWei);
-    }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index]);
+        
+        try {
+            // Convert ETH to Wei
+            const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
+            console.log("Buy-in amount in Wei:", buyInWei);
+            
+            // Close the modal
+            setShowBuyInModal(false);
+            setBuyInError("");
+            
+            // Call the join table function with the specified amount
+            await handleJoinTable(buyInWei);
+        } catch (error) {
+            console.error("Error converting buy-in amount:", error);
+            setBuyInError("Invalid buy-in amount");
+        }
+    };
 
     const handleJoinTable = async (buyInWei: string) => {
         if (!userAddress || !privateKey) {
@@ -229,36 +253,27 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             await refreshNonce(userAddress);
             const currentNonce = nonce?.toString() || "0";
 
-            // Get user balance
-            const userBalance = localStorage.getItem("user_balance") || "0";
-            console.log("User balance:", userBalance);
+            console.log("User balance:", balance);
             
-            // Convert buyInWei to proper format
-            const minBuyIn = localTableData?.data?.minBuyIn || "4000000000000000000"; // Default to 4 USDC (20x big blind)
-            console.log("=== MIN BUY IN ===");
-            console.log(minBuyIn);
-            
-            // Use a buy-in amount that's within the user's balance
-            // If minBuyIn is specified, use that, otherwise use 40% of user's balance or 20x big blind
-            let buyInAmount;
-            const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC
+            // Get minimum buy-in from table data with proper fallback
+            const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
             const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
+            const minBuyIn = localTableData?.data?.minBuyIn || twentyBigBlinds; // Default to 20x big blind
             
-            if (BigInt(userBalance) < BigInt(minBuyIn)) {
-                // If user doesn't have enough for min buy-in, use 80% of their balance
-                buyInAmount = (BigInt(userBalance) * BigInt(80) / BigInt(100)).toString();
-                console.log(`User balance too low for min buy-in. Using 80% of balance: ${buyInAmount}`);
-            } else {
-                // Use min buy-in or 20x big blind, whichever is higher
-                buyInAmount = BigInt(minBuyIn) > BigInt(twentyBigBlinds) 
-                    ? minBuyIn 
-                    : twentyBigBlinds;
-                
-                // Make sure buy-in doesn't exceed user balance
-                if (BigInt(buyInAmount) > BigInt(userBalance)) {
-                    buyInAmount = (BigInt(userBalance) * BigInt(80) / BigInt(100)).toString();
-                    console.log(`Adjusted buy-in to 80% of balance: ${buyInAmount}`);
-                }
+            console.log("=== MIN BUY IN ===");
+            console.log("minBuyIn:", minBuyIn);
+            console.log("bigBlindValue:", bigBlindValue);
+            console.log("twentyBigBlinds:", twentyBigBlinds);
+            
+            // Use the user's input amount directly
+            let buyInAmount = buyInWei;
+            
+            // Check if user's input exceeds their balance
+            if (balance && BigInt(buyInWei) > BigInt(balance)) {
+                console.log(`User input (${buyInWei}) exceeds balance (${balance})`);
+                setShowBuyInModal(true);
+                setBuyInError(`Amount exceeds your balance of ${ethers.formatUnits(balance, 18)} USDC`);
+                return;
             }
             
             console.log("Final buy-in amount:", buyInAmount);
@@ -291,6 +306,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             }
         } catch (error) {
             console.error("Error joining table:", error);
+            // Show error to user
+            setShowBuyInModal(true);
+            setBuyInError("Failed to join table. Please try again.");
         }
     };
 
@@ -301,16 +319,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
     return (
         <div
-            onClick={() => {
-                console.log("VacantPlayer clicked at index:", index);
-                console.log("canJoinThisSeat:", canJoinThisSeat);
-                console.log("isUserAlreadyPlaying:", isUserAlreadyPlaying);
-                handleJoinClick();
-            }}
-            className={`absolute flex flex-col justify-center text-gray-600 w-[175px] h-[170px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 ${
-                canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"
-            }`}
+            className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`}
             style={{ left, top }}
+            onClick={canJoinThisSeat ? handleJoinClick : undefined}
         >
             <div className={`flex justify-center gap-4 mb-2 ${canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"}`}>
                 <FaRegUserCircle color="#f0f0f0" className="w-10 h-10" />
@@ -333,6 +344,52 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             {getPositionName(index) && (
                 <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
                     <div className="px-2 py-1 bg-gray-800/80 rounded-md text-xs text-white">{getPositionName(index)}</div>
+                </div>
+            )}
+            
+            {/* Buy-in Modal */}
+            {showBuyInModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96">
+                        <h2 className="text-xl font-bold mb-4 text-white">Buy In</h2>
+                        <p className="mb-4 text-gray-300">
+                            Enter the amount you want to buy in with (in ETH):
+                        </p>
+                        
+                        <div className="mb-4">
+                            <label className="block text-gray-300 mb-2">Amount:</label>
+                            <input
+                                type="number"
+                                value={buyInAmount}
+                                onChange={(e) => setBuyInAmount(e.target.value)}
+                                className="w-full p-2 bg-gray-700 text-white rounded"
+                                placeholder="e.g., 4.0"
+                                step="0.1"
+                                min="0.1"
+                            />
+                            {buyInError && (
+                                <p className="text-red-500 mt-1">{buyInError}</p>
+                            )}
+                        </div>
+                        
+                        <div className="flex justify-end space-x-4">
+                            <button
+                                onClick={() => {
+                                    setShowBuyInModal(false);
+                                    setBuyInError("");
+                                }}
+                                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmBuyIn}
+                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
