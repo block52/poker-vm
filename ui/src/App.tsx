@@ -16,7 +16,7 @@ import useUserWallet from "./hooks/useUserWallet";
 import QRDeposit from './components/QRDeposit';
 import { PROXY_URL } from "./config/constants";
 import { TableProvider } from './context/TableContext';
-import { PlayerProvider } from './context/PlayerContext';
+
 
 
 console.log('PROXY_URL in App:', PROXY_URL); // Debug log
