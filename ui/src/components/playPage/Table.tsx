@@ -133,7 +133,7 @@ const formatWeiToUSD = (weiAmount: string | number): string => {
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
-    const { tableData, nextToActInfo, currentRound, totalPot } = useTableContext();
+    const { tableData, nextToActInfo, currentRound, totalPot, playerLegalActions, isPlayerTurn } = useTableContext();
     
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
@@ -322,6 +322,12 @@ const Table = () => {
         // You could add a toast notification here if you want
     };
 
+    // Add this function to check if the game is still in progress
+    const isGameInProgress = () => {
+        const activePlayers = tableData?.data?.players?.filter(p => 
+            p.status !== 'folded' && p.status !== 'sitting-out');
+        return activePlayers && activePlayers.length > 1;
+    };
 
     return (
         <div className="h-screen">
@@ -636,15 +642,21 @@ const Table = () => {
                 </div>
             )}
             {/* Add an indicator for whose turn it is */}
-            {nextToActInfo && (
+            {nextToActInfo && isGameInProgress() && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
-                    {nextToActInfo.isCurrentUserTurn ? (
+                    {nextToActInfo.isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
                         <span className="text-green-400 font-bold">Your turn to act!</span>
                     ) : (
                         <span>Waiting for {nextToActInfo.seat === 1 ? "Small Blind" : 
                               nextToActInfo.seat === 2 ? "Big Blind" : 
                               `player at position ${nextToActInfo.seat + 1}`} to act</span>
                     )}
+                </div>
+            )}
+            {/* Show a message when the hand is over */}
+            {tableData?.data?.players && !isGameInProgress() && activePlayers.length > 0 && (
+                <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
+                    <span>Hand complete - waiting for next hand</span>
                 </div>
             )}
         </div>

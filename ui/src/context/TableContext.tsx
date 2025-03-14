@@ -172,8 +172,13 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     useEffect(() => {
         if (tableData && tableData.data) {
             const userAddress = localStorage.getItem('user_eth_public_key');
-            setPlayerLegalActions(getPlayersLegalActions(tableData.data, userAddress));
-            setIsPlayerTurn(isPlayersTurn(tableData.data, userAddress));
+            if (userAddress) {
+                setPlayerLegalActions(getPlayersLegalActions(tableData.data, userAddress));
+                setIsPlayerTurn(isPlayersTurn(tableData.data, userAddress));
+            } else {
+                setPlayerLegalActions(null);
+                setIsPlayerTurn(false);
+            }
         }
     }, [tableData]);
   
