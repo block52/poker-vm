@@ -173,10 +173,10 @@ class Block52 {
         }
     }
 
-     /**
-     * Get all available tables
-     * @returns {Promise<Array>} List of tables
-     */
+    /**
+    * Get all available tables
+    * @returns {Promise<Array>} List of tables
+    */
     async getTables() {
         try {
             const rpc_request = {
@@ -200,10 +200,10 @@ class Block52 {
         }
     }
 
-     // ===================================
+    // ===================================
     // 6. Player Methods
     // ===================================
-    
+
     /**
      * Get player information
      * @param {string} tableId - Table ID

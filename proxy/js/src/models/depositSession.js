@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const depositSessionSchema = new mongoose.Schema({
     userAddress: {
@@ -21,8 +21,8 @@ const depositSessionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'COMPLETED', 'EXPIRED'],
-        default: 'PENDING'
+        enum: ["PENDING", "COMPLETED", "EXPIRED"],
+        default: "PENDING"
     },
     amount: {
         type: Number,
@@ -30,4 +30,4 @@ const depositSessionSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('DepositSession', depositSessionSchema); 
+module.exports = mongoose.model("DepositSession", depositSessionSchema);

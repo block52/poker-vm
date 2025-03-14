@@ -39,16 +39,16 @@ const getClient = () => {
     if (clientType === "mock") {
         console.log("Using mock client");
         const seed = process.env.SEED;
-        clientInstance = new Mocks(seed);
-    } else if (clientType === "block52") {
+        return clientInstance = new Mocks(seed);
+    } 
+    
+    if (clientType === "block52") {
         const node_url = process.env.NODE_URL || "https://node1.block52.xyz/";
         console.log("Using Block52 client with node URL:", node_url);
-        clientInstance = new Block52(node_url);
-    } else {
-        throw new Error("Client type not found");
+        return clientInstance = new Block52(node_url);
     }
-
-    return clientInstance;
+    
+    throw new Error("Client type not found");
 };
 
 // Initialize the client once at startup
