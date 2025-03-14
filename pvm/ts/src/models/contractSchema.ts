@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { IContractSchemaDocument, IJSONModel } from "./interfaces";
-import { ethers } from "ethers";
+import { GameOptions } from "../engine/texasHoldem";
+import contractSchemas from "../schema/contractSchemas";
 
 export class ContractSchema implements IJSONModel {
     private readonly _address: string;
@@ -19,7 +20,7 @@ export class ContractSchema implements IJSONModel {
         this._schema = jsonSchema;
 
         // If a hash is provided, check that it matches the calculated hash.
-        const calculatedHash = ContractSchema.makeHash(jsonSchema);
+        const calculatedHash = ContractSchema.createHash(jsonSchema);
         if (hash && hash !== calculatedHash) {
             throw new Error("Hash mismatch");
         }
@@ -31,7 +32,7 @@ export class ContractSchema implements IJSONModel {
         this._schema = jsonSchema;
     }
 
-    public static makeHash(jsonSchema: any): string {
+    public static createHash(jsonSchema: any): string {
         return createHash("SHA256")
             .update(JSON.stringify(jsonSchema))
             .digest("hex");
@@ -67,6 +68,15 @@ export class ContractSchema implements IJSONModel {
         );
     }
 
+    public static async getGameOptions(address: string): Promise<GameOptions> {
+        const options = await ContractSchema.getGameOptions(address);
+        if (options) {
+            return options;
+        }
+
+        throw new Error("Game not found");
+    };
+
     public get hash(): string {
         return this._hash;
     }
@@ -76,7 +86,6 @@ export class ContractSchema implements IJSONModel {
     }
 
     public get address(): string {
-        // return this.calculateAddress(this._hash);
         return this._address;
     }
 
