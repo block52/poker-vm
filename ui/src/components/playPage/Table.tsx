@@ -17,10 +17,9 @@ import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
-import useTableType from "../../hooks/useTableType";
-import { toDollarFromString } from "../../utils/numberUtils";
+
 import useUserBySeat from "../../hooks/useUserBySeat";
-import axios from "axios";
+
 import { ethers } from "ethers";
 import { useAccount } from "wagmi";
 import { PROXY_URL } from "../../config/constants";
@@ -28,6 +27,7 @@ import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
 import { getUserTableStatus } from "../../utils/accountUtils";
 import React from "react";
+import { getDealerPosition, getBigBlindPosition, getSmallBlindPosition } from '../../utils/tableUtils';
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -133,7 +133,7 @@ const formatWeiToUSD = (weiAmount: string | number): string => {
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
-    const { tableData } = useTableContext();
+    const { tableData, nextToActInfo, currentRound, totalPot } = useTableContext();
     
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
@@ -322,6 +322,7 @@ const Table = () => {
         // You could add a toast notification here if you want
     };
 
+
     return (
         <div className="h-screen">
             {/*//! HEADER */}
@@ -466,7 +467,7 @@ const Table = () => {
                                                       ))}
                                             </div>
                                             {/*//! CHIP */}
-                                            {chipPositionArray.map((position, index) => (
+                                            {/* {chipPositionArray.map((position, index) => (
                                                 <div
                                                     key={`key-${index}`}
                                                     style={{
@@ -477,7 +478,7 @@ const Table = () => {
                                                 >
                                                     <Chip amount={Number(tableDataValues.tableDataPots[index])} />
                                                 </div>
-                                            ))}
+                                            ))} */}
                                         </div>
                                     </div>
                                     {playerPositionArray.map((position, positionIndex) => {
@@ -547,18 +548,51 @@ const Table = () => {
                                         );
                                     })}
                                     {/*//! Dealer */}
-                                    <div
-                                        style={{
-                                            top: dealerPositionArray[dealerIndex]?.top,
-                                            left: dealerPositionArray[dealerIndex]?.left,
-                                            transition: "top 1s ease, left 1s ease"
-                                        }}
-                                        className="absolute"
-                                    >
-                                        <Dealer />
-                                    </div>
-
-                                   
+                                    {tableData && tableData.data && (
+                                        <>
+                                            {/* Dealer Button */}
+                                            {tableData.data.dealer !== undefined && tableData.data.dealer !== null && (
+                                                <div 
+                                                    className="absolute z-10 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    style={{
+                                                        left: getDealerPosition(tableData.data, playerPosition).left,
+                                                        top: getDealerPosition(tableData.data, playerPosition).top,
+                                                        transform: 'none'
+                                                    }}
+                                                >
+                                                    D
+                                                </div>
+                                            )}
+                                            
+                                            {/* Small Blind Indicator */}
+                                            {tableData.data.smallBlindPosition !== undefined && tableData.data.smallBlindPosition !== null && (
+                                                <div 
+                                                    className="absolute z-10 bg-blue-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    style={{
+                                                        left: getSmallBlindPosition(tableData.data, playerPosition).left,
+                                                        top: getSmallBlindPosition(tableData.data, playerPosition).top,
+                                                        transform: 'none'
+                                                    }}
+                                                >
+                                                    SB
+                                                </div>
+                                            )}
+                                            
+                                            {/* Big Blind Indicator */}
+                                            {tableData && tableData.data && tableData.data.bigBlindPosition !== undefined && (
+                                                <div 
+                                                    className="absolute z-10 bg-red-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    style={{
+                                                        left: getBigBlindPosition(tableData.data, playerPosition).left,
+                                                        top: getBigBlindPosition(tableData.data, playerPosition).top,
+                                                        transform: 'none'
+                                                    }}
+                                                >
+                                                    BB
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -599,6 +633,18 @@ const Table = () => {
             {currentUserSeat >= 0 && (
                 <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
                     You are seated at position {currentUserSeat + 1}
+                </div>
+            )}
+            {/* Add an indicator for whose turn it is */}
+            {nextToActInfo && (
+                <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
+                    {nextToActInfo.isCurrentUserTurn ? (
+                        <span className="text-green-400 font-bold">Your turn to act!</span>
+                    ) : (
+                        <span>Waiting for {nextToActInfo.seat === 1 ? "Small Blind" : 
+                              nextToActInfo.seat === 2 ? "Big Blind" : 
+                              `player at position ${nextToActInfo.seat + 1}`} to act</span>
+                    )}
                 </div>
             )}
         </div>

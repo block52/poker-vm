@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from '../config/constants';
 import { getPublicKey, isUserPlaying } from '../utils/accountUtils';
+import { whoIsNextToAct, getCurrentRound, getTotalPot, getPositionName } from '../utils/tableUtils';
+import { getPlayersLegalActions, isPlayersTurn } from '../utils/playerUtils';
 
 interface TableContextType {
   tableData: any;
@@ -13,6 +15,17 @@ interface TableContextType {
   refreshNonce: (address: string) => Promise<void>;
   userPublicKey: string | null;
   isCurrentUserPlaying: boolean;
+  nextToActInfo: {
+    seat: number;
+    player: any;
+    isCurrentUserTurn: boolean;
+    availableActions: any[];
+    timeRemaining: number;
+  } | null;
+  currentRound: string;
+  totalPot: string;
+  playerLegalActions: any[] | null;
+  isPlayerTurn: boolean;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -27,7 +40,29 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [nonce, setNonce] = useState<number | null>(null);
     const [userPublicKey, setUserPublicKey] = useState<string | null>(null);
     const [isCurrentUserPlaying, setIsCurrentUserPlaying] = useState<boolean>(false);
+    const [nextToActInfo, setNextToActInfo] = useState<any>(null);
+    const [currentRound, setCurrentRound] = useState<string>('');
+    const [totalPot, setTotalPot] = useState<string>('0');
+    const [playerLegalActions, setPlayerLegalActions] = useState<any[] | null>(null);
+    const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false);
 
+    // Calculate who is next to act whenever tableData changes
+    useEffect(() => {
+        if (tableData && tableData.data) {
+            // Special case: if dealer position is 9, treat it as 0 for UI purposes
+            if (tableData.data.dealer === 9) {
+                tableData.data.dealer = 0;
+            }
+            
+            // Use the utility function to determine who is next to act
+            const nextToActData = whoIsNextToAct(tableData.data);
+            setNextToActInfo(nextToActData);
+            
+            // Update other table information
+            setCurrentRound(getCurrentRound(tableData.data));
+            setTotalPot(getTotalPot(tableData.data));
+        }
+    }, [tableData]);
   
     useEffect(() => {
       console.log('TableProvider mounted with ID:', tableId);
@@ -133,6 +168,15 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, [tableData]);
   
+    // Add a new useEffect to update player legal actions when tableData changes
+    useEffect(() => {
+        if (tableData && tableData.data) {
+            const userAddress = localStorage.getItem('user_eth_public_key');
+            setPlayerLegalActions(getPlayersLegalActions(tableData.data, userAddress));
+            setIsPlayerTurn(isPlayersTurn(tableData.data, userAddress));
+        }
+    }, [tableData]);
+  
     return (
       <TableContext.Provider value={{ 
           tableData: tableData ? { ...tableData, publicKey: userPublicKey } : null,
@@ -142,7 +186,12 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           nonce, 
           refreshNonce, 
           userPublicKey,
-          isCurrentUserPlaying
+          isCurrentUserPlaying,
+          nextToActInfo,
+          currentRound,
+          totalPot,
+          playerLegalActions,
+          isPlayerTurn
       }}>
         {children}
       </TableContext.Provider>
