@@ -232,13 +232,9 @@ const PokerActionPanel: React.FC = () => {
     const handleCheck = () => {
         console.log("Checking");
         
-        // Check if this is the small blind player in preflop round
-        const isSmallBlindInPreflop = 
-            tableData?.data?.round === "preflop" && 
-            tableData?.data?.smallBlindPosition === userSeat && 
-            userPlayer?.sumOfBets === tableData?.data?.smallBlind;
+    
         
-        if (isSmallBlindInPreflop) {
+        // iisSmallBlindInPreflop) 
             console.log("Small blind player in preflop - converting check to call");
             // Calculate the difference between big blind and small blind
             const smallBlindAmount = tableData?.data?.smallBlind || "0";
@@ -249,18 +245,23 @@ const PokerActionPanel: React.FC = () => {
             
             console.log("Calling with difference amount:", diffAmount.toString());
             setPlayerAction(PlayerActionType.CALL, diffAmount.toString());
-        } else {
-            // Regular check action
-            setPlayerAction(PlayerActionType.CHECK, "100000000000000000");
-            // waht shoudl we say here?
-            console.log("You can't check here");
-        }
+        //  else 
+        //     // Regular check action
+        //     setPlayerAction(PlayerActionType.CHECK, "100000000000000000");
+        //     // waht shoudl we say here?
+        //     console.log("You can't check here");
+        // }
     };
 
     const handleCall = () => {
         console.log("Calling");
-        if (callAmount) {
-            setPlayerAction(PlayerActionType.CALL, callAmount.toString());
+        if (callAction) {
+            // Use the callAction.min value directly from the action object
+            // This ensures we're using the exact value expected by the contract
+            console.log("Calling with amount:", callAction.min);
+            setPlayerAction(PlayerActionType.CALL, callAction.min.toString());
+        } else {
+            console.error("Call action not available");
         }
     };
 
@@ -279,17 +280,23 @@ const PokerActionPanel: React.FC = () => {
         setIsRaiseAction(true);
     };
 
-    const submitBet = () => {
+    const submitRaise = () => {
         if (raiseAmount > 0) {
-            setPlayerAction(PlayerActionType.BET, raiseAmount.toString());
-            setIsBetAction(false);
+            // Convert the raiseAmount (which is in ETH) back to wei for the contract
+            const raiseAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+            console.log("Raising with amount (wei):", raiseAmountWei);
+            setPlayerAction(PlayerActionType.RAISE, raiseAmountWei);
+            setIsRaiseAction(false);
         }
     };
 
-    const submitRaise = () => {
+    const submitBet = () => {
         if (raiseAmount > 0) {
-            setPlayerAction(PlayerActionType.RAISE, raiseAmount.toString());
-            setIsRaiseAction(false);
+            // Convert the raiseAmount (which is in ETH) back to wei for the contract
+            const betAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+            console.log("Betting with amount (wei):", betAmountWei);
+            setPlayerAction(PlayerActionType.BET, betAmountWei);
+            setIsBetAction(false);
         }
     };
 
@@ -338,8 +345,9 @@ const PokerActionPanel: React.FC = () => {
     const gameInProgress = activePlayers && activePlayers.length > 1;
 
     // Only show action buttons if it's the player's turn, they have legal actions, the game is in progress,
-    // AND there's no big blind to post (prioritize blind posting)
-    const showActionButtons = isPlayerTurn && hasLegalActions && gameInProgress && !shouldShowBigBlindButton;
+    // AND there's no big blind or small blind to post (prioritize blind posting)
+    const showActionButtons = isPlayerTurn && hasLegalActions && gameInProgress && 
+        !shouldShowBigBlindButton && !shouldShowSmallBlindButton;
 
     // Add this function to handle big blind posting
     const emergencyPostBigBlind = () => {
