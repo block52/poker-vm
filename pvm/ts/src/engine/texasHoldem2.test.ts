@@ -56,6 +56,14 @@ describe.only("Texas Holdem Game", () => {
 
             expect(() => game.join2("0x9999", TEN_TOKENS)).toThrow("Table full.");
         });
+
+        it("should not be able to join more than once", () => {
+            expect(game.findNextSeat()).toEqual(1);
+            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
+            expect(() => {
+                game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
+            }).toThrow("Player already joined.");
+        });
     });
 
     describe("Deck initialization", () => {
@@ -124,7 +132,7 @@ describe.only("Texas Holdem Game", () => {
             // In a new game, the small blind position should act first
             const nextPlayer = game.getNextPlayerToAct();
             expect(nextPlayer?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-            
+
             // Attempt to act with the wrong player (big blind) should throw an error
             expect(() => {
                 game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND);
@@ -136,11 +144,11 @@ describe.only("Texas Holdem Game", () => {
             expect(() => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             }).not.toThrow();
-            
+
             // Now big blind should be next to act
             const nextPlayer = game.getNextPlayerToAct();
             expect(nextPlayer?.address).toEqual("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-            
+
             // Big blind should be able to act now
             expect(() => {
                 game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
@@ -151,71 +159,71 @@ describe.only("Texas Holdem Game", () => {
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // After blinds are posted, small blind acts first in preflop
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-            
+
             // Attempting to act with big blind should throw error
             expect(() => {
                 game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
             }).toThrow("Not players turn.");
-            
+
             // Small blind should be able to act
             expect(() => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 10000000000000000n);
             }).not.toThrow();
-            
+
             // Now big blind should be next
             expect(game.getNextPlayerToAct()?.address).toEqual("0x980b8D8A16f5891F41871d878a479d81Da52334c");
         });
-        
+
         it("should enforce turn order with multiple players", () => {
             // Add a third player
             game.join2("0x3333333333333333333333333333333333333333", TEN_TOKENS);
-            
+
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // Player 3 should act next
             expect(game.getNextPlayerToAct()?.address).toEqual("0x3333333333333333333333333333333333333333");
-            
+
             // Trying to act with small blind or big blind should fail
             expect(() => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
             }).toThrow("Not players turn.");
-            
+
             expect(() => {
                 game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
             }).toThrow("Not players turn.");
-            
+
             // Player 3 should be able to act
             expect(() => {
                 game.performAction("0x3333333333333333333333333333333333333333", PlayerActionType.CALL, 20000000000000000n);
             }).not.toThrow();
-            
+
             // After player 3, small blind should be next
             expect(game.getNextPlayerToAct()?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
         });
-        
+
         it("should skip folded players when determining next turn", () => {
             // Add a third player
             game.join2("0x3333333333333333333333333333333333333333", TEN_TOKENS);
-            
+
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // Player 3 folds
             game.performAction("0x3333333333333333333333333333333333333333", PlayerActionType.FOLD);
-            
+
             // Next should be small blind, not player 3 again
             expect(game.getNextPlayerToAct()?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-            
+
             // Small blind acts
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 10000000000000000n);
-            
+
             // Big blind should be next, not player 3
             expect(game.getNextPlayerToAct()?.address).toEqual("0x980b8D8A16f5891F41871d878a479d81Da52334c");
         });
@@ -246,7 +254,7 @@ describe.only("Texas Holdem Game", () => {
             // Both blinds posted, but no player actions yet
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // Round shouldn't end because first player (small blind) needs to act again
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
@@ -255,10 +263,10 @@ describe.only("Texas Holdem Game", () => {
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // Small blind calls the difference (brings total to BIG_BLIND amount)
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 10000000000000000n);
-            
+
             // Big blind still needs to act (check or raise)
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
@@ -267,13 +275,13 @@ describe.only("Texas Holdem Game", () => {
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // Small blind calls (total bet now matches big blind)
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 10000000000000000n);
-            
+
             // Big blind checks (all players have acted and matched highest bet)
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            
+
             // Round should end
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
@@ -282,10 +290,10 @@ describe.only("Texas Holdem Game", () => {
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // Small blind raises instead of calling
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BET, 50000000000000000n);
-            
+
             // Big blind hasn't responded to the raise
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
@@ -294,10 +302,10 @@ describe.only("Texas Holdem Game", () => {
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // Small blind folds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.FOLD);
-            
+
             // Only one player left active - round should end
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
@@ -305,26 +313,26 @@ describe.only("Texas Holdem Game", () => {
         it.skip("should handle three player scenarios correctly", () => {
             // Add a third player
             game.join2("0x3333333333333333333333333333333333333333", TEN_TOKENS);
-            
+
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-            
+
             // Third player calls
             game.performAction("0x3333333333333333333333333333333333333333", PlayerActionType.CALL, 20000000000000000n);
-            
+
             // Small blind folds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.FOLD);
-            
+
             // Big blind raises
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BET, 20000000000000000n);
-            
+
             // Round shouldn't end yet - player 3 needs to respond to raise
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
-            
+
             // Player 3 calls the raise
             game.performAction("0x3333333333333333333333333333333333333333", PlayerActionType.CALL, 20000000000000000n);
-            
+
             // Now round should end - all active players have acted and matched highest bet
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
@@ -335,24 +343,24 @@ describe.only("Texas Holdem Game", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 10000000000000000n);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            
+
             // Force round to FLOP (normally would happen automatically)
             // This is a workaround since we can't easily access the private setNextRound method
             const gameAsAny = game as any;
             gameAsAny._currentRound = TexasHoldemRound.FLOP;
-            
+
             // At start of new round, no actions taken yet
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
-            
+
             // Both players check in flop
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
-            
+
             // One player checked but other hasn't - round shouldn't end
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
-            
+
             // Other player checks
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            
+
             // Now round should end - all players checked
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
