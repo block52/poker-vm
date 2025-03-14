@@ -4,6 +4,7 @@ import axios from "axios";
 import { PROXY_URL } from '../config/constants';
 import { getPublicKey, isUserPlaying } from '../utils/accountUtils';
 import { whoIsNextToAct, getCurrentRound, getTotalPot, getPositionName } from '../utils/tableUtils';
+import { getPlayersLegalActions, isPlayersTurn } from '../utils/playerUtils';
 
 interface TableContextType {
   tableData: any;
@@ -23,6 +24,8 @@ interface TableContextType {
   } | null;
   currentRound: string;
   totalPot: string;
+  playerLegalActions: any[] | null;
+  isPlayerTurn: boolean;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -40,6 +43,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [nextToActInfo, setNextToActInfo] = useState<any>(null);
     const [currentRound, setCurrentRound] = useState<string>('');
     const [totalPot, setTotalPot] = useState<string>('0');
+    const [playerLegalActions, setPlayerLegalActions] = useState<any[] | null>(null);
+    const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false);
 
     // Calculate who is next to act whenever tableData changes
     useEffect(() => {
@@ -163,6 +168,15 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, [tableData]);
   
+    // Add a new useEffect to update player legal actions when tableData changes
+    useEffect(() => {
+        if (tableData && tableData.data) {
+            const userAddress = localStorage.getItem('user_eth_public_key');
+            setPlayerLegalActions(getPlayersLegalActions(tableData.data, userAddress));
+            setIsPlayerTurn(isPlayersTurn(tableData.data, userAddress));
+        }
+    }, [tableData]);
+  
     return (
       <TableContext.Provider value={{ 
           tableData: tableData ? { ...tableData, publicKey: userPublicKey } : null,
@@ -175,7 +189,9 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           isCurrentUserPlaying,
           nextToActInfo,
           currentRound,
-          totalPot
+          totalPot,
+          playerLegalActions,
+          isPlayerTurn
       }}>
         {children}
       </TableContext.Provider>

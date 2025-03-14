@@ -32,7 +32,7 @@ type UserTableStatus = {
 } | null;
 
 const PokerActionPanel: React.FC = () => {
-    const { tableData } = useTableContext();
+    const { tableData, playerLegalActions, isPlayerTurn } = useTableContext();
     const [publicKey, setPublicKey] = useState<string>();
     const [raiseAmount, setRaiseAmount] = useState(0);
     const [isBetAction, setIsBetAction] = useState(false);
@@ -141,6 +141,16 @@ const PokerActionPanel: React.FC = () => {
 
         setPublicKey(localKey);
     }, [publicKey]);
+
+    // Log the player's legal actions
+    useEffect(() => {
+        console.log("Footer - Player's legal actions:", {
+            actions: playerLegalActions,
+            isPlayerTurn,
+            nextToAct: tableData?.nextToAct,
+            userSeat
+        });
+    }, [playerLegalActions, isPlayerTurn, tableData, userSeat]);
 
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
