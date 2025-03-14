@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import * as React from "react";
 import { useTableContext } from "../context/TableContext";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
+
 
 import axios from "axios";
 import { getUserTableStatus } from "../utils/accountUtils";
@@ -54,20 +54,28 @@ const PokerActionPanel: React.FC = () => {
     const currentPlayer = tableData?.players?.find((p: any) => p.seat === nextToAct);
     const currentPlayerActions = currentPlayer?.legalActions || [];
 
-    // Check if each action is available
-    const canFold = currentPlayerActions.some((a: any) => a.action === PlayerActionType.FOLD);
-    const canCall = currentPlayerActions.some((a: any) => a.action === PlayerActionType.CALL);
-    const canRaise = currentPlayerActions.some((a: any) => a.action === PlayerActionType.RAISE);
-    const canCheck = currentPlayerActions.some((a: any) => a.action === PlayerActionType.CHECK);
-    const canBet = currentPlayerActions.some((a: any) => a.action === PlayerActionType.BET);
+    // Check if each action is available based on playerLegalActions
+    const canFold = playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD);
+    const canCall = playerLegalActions?.some((a: any) => a.action === PlayerActionType.CALL);
+    const canRaise = playerLegalActions?.some((a: any) => a.action === PlayerActionType.RAISE);
+    const canCheck = playerLegalActions?.some((a: any) => a.action === PlayerActionType.CHECK);
+    const canBet = playerLegalActions?.some((a: any) => a.action === PlayerActionType.BET);
 
-    // Get min/max for raise if available
-    const raiseAction = currentPlayerActions.find((a: any) => a.action === PlayerActionType.RAISE);
-    const minRaise = raiseAction?.min;
-    const maxRaise = raiseAction?.max;
+    // Get min/max values for bet and raise
+    const betAction = playerLegalActions?.find((a: any) => a.action === PlayerActionType.BET);
+    const raiseAction = playerLegalActions?.find((a: any) => a.action === PlayerActionType.RAISE);
+    const callAction = playerLegalActions?.find((a: any) => a.action === PlayerActionType.CALL);
 
-    // Update the find action for call amount
-    const callAmount = currentPlayerActions.find((a: any) => a.action === PlayerActionType.CALL)?.min;
+    // Convert values to ETH for display
+    const minBet = betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0;
+    const maxBet = betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0;
+    const minRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0;
+    const maxRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0;
+    const callAmount = callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0;
+
+    // Get total pot for percentage calculations
+    const totalPot = tableData?.data?.pots?.reduce((sum: number, pot: string) => 
+        sum + Number(ethers.formatUnits(pot, 18)), 0) || 0;
 
     useEffect(() => {
         if (tableData) {
@@ -214,7 +222,7 @@ const PokerActionPanel: React.FC = () => {
     const handleCall = () => {
         console.log("Calling");
         if (callAmount) {
-            setPlayerAction(PlayerActionType.CALL, callAmount);
+            setPlayerAction(PlayerActionType.CALL, callAmount.toString());
         }
     };
 
@@ -265,15 +273,9 @@ const PokerActionPanel: React.FC = () => {
  
 
     return (
-        <div className="flex justify-center rounded-lg h-full text-white z-[0]">
-            {/* Action Buttons */}
-
-            {/* <div className="left-0 absolute">
-                <CheckboxList />
-            </div> */}
-            {/* <ChipPurchase /> */}
+        <div className="fixed bottom-0 left-0 right-0 bg-custom-header text-white p-4 flex justify-center items-center">
             <div className="flex flex-col w-[600px] space-y-6 mb-2 justify-center rounded-lg">
-                {/* Player Action Buttons Container - Centered in the middle */}
+                {/* Player Action Buttons Container */}
                 <div className="flex justify-center items-center mb-2">
                     {shouldShowSmallBlindButton && (
                         <button
@@ -303,7 +305,7 @@ const PokerActionPanel: React.FC = () => {
                 <div className="flex justify-between gap-2">
                     {canFold && (
                         <button
-                            disabled={userSeat != nextToAct}
+                            disabled={!isPlayerTurn}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={handleFold}
                         >
@@ -312,7 +314,7 @@ const PokerActionPanel: React.FC = () => {
                     )}
                     {canCheck && (
                         <button
-                            disabled={userSeat != nextToAct}
+                            disabled={!isPlayerTurn}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={handleCheck}
                         >
@@ -321,98 +323,104 @@ const PokerActionPanel: React.FC = () => {
                     )}
                     {canCall && (
                         <button
-                            disabled={userSeat != nextToAct}
+                            disabled={!isPlayerTurn}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={handleCall}
                         >
-                            CALL {callAmount}
+                            CALL ${callAmount.toFixed(2)}
                         </button>
                     )}
                     {canRaise && (
                         <button
-                            disabled={userSeat != nextToAct}
+                            disabled={!isPlayerTurn}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={handleRaise}
                         >
-                            RAISE {raiseAmount}
+                            RAISE ${raiseAmount.toFixed(2)}
                         </button>
                     )}
                     {canBet && (
                         <button
-                            disabled={userSeat != nextToAct}
+                            disabled={!isPlayerTurn}
                             className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
                             onClick={handleBet}
                         >
-                            BET
+                            BET ${raiseAmount.toFixed(2)}
                         </button>
                     )}
                 </div>
 
-                {/* Slider and Controls */}
-                <div className="flex items-center space-x-4">
-                    <button
-                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg  border-[1px] border-gray-400"
-                        onClick={() => handleRaiseChange(Math.max(raiseAmount - 1, 0))}
-                        disabled={userSeat != nextToAct}
-                    >
-                        -
-                    </button>
-                    <input
-                        type="range"
-                        min="0"
-                        max={balance}
-                        value={raiseAmount}
-                        onChange={e => handleRaiseChange(Number(e.target.value))}
-                        className="flex-1"
-                        disabled={userSeat != nextToAct}
-                    />
-                    <button
-                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg  border-[1px] border-gray-400"
-                        onClick={() => handleRaiseChange(raiseAmount + 1)}
-                        disabled={userSeat != nextToAct}
-                    >
-                        +
-                    </button>
-                </div>
+                {/* Only show slider and betting options if player can bet or raise */}
+                {(canBet || canRaise) && (
+                    <>
+                        {/* Slider and Controls */}
+                        <div className="flex items-center space-x-4">
+                            <button
+                                className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg border-[1px] border-gray-400"
+                                onClick={() => handleRaiseChange(Math.max(raiseAmount - 0.1, canBet ? minBet : minRaise))}
+                                disabled={!isPlayerTurn}
+                            >
+                                -
+                            </button>
+                            <input
+                                type="range"
+                                min={canBet ? minBet : minRaise}
+                                max={canBet ? maxBet : maxRaise}
+                                step={0.1}
+                                value={raiseAmount}
+                                onChange={e => handleRaiseChange(Number(e.target.value))}
+                                className="flex-1"
+                                disabled={!isPlayerTurn}
+                            />
+                            <button
+                                className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg border-[1px] border-gray-400"
+                                onClick={() => handleRaiseChange(Math.min(raiseAmount + 0.1, canBet ? maxBet : maxRaise))}
+                                disabled={!isPlayerTurn}
+                            >
+                                +
+                            </button>
+                        </div>
 
-                {/* Additional Options */}
-                <div className="flex justify-between gap-2">
-                    <button
-                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount(tableData.totalPot / 4)}
-                        disabled={userSeat != nextToAct}
-                    >
-                        1 / 4 Pot
-                    </button>
-                    <button
-                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount(tableData.totalPot / 2)}
-                        disabled={userSeat != nextToAct}
-                    >
-                        1 / 2 Pot
-                    </button>
-                    <button
-                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount((tableData.totalPot / 4) * 3)}
-                        disabled={userSeat != nextToAct}
-                    >
-                        3 / 4 Pot
-                    </button>
-                    <button
-                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount(tableData.totalPot)}
-                        disabled={userSeat != nextToAct}
-                    >
-                        Pot
-                    </button>
-                    <button
-                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
-                        onClick={() => setRaiseAmount(+balance)}
-                        disabled={userSeat != nextToAct}
-                    >
-                        ALL-IN
-                    </button>
-                </div>
+                        {/* Additional Options */}
+                        <div className="flex justify-between gap-2">
+                            <button
+                                className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                onClick={() => setRaiseAmount(Math.max(totalPot / 4, canBet ? minBet : minRaise))}
+                                disabled={!isPlayerTurn}
+                            >
+                                1/4 Pot
+                            </button>
+                            <button
+                                className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                onClick={() => setRaiseAmount(Math.max(totalPot / 2, canBet ? minBet : minRaise))}
+                                disabled={!isPlayerTurn}
+                            >
+                                1/2 Pot
+                            </button>
+                            <button
+                                className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                onClick={() => setRaiseAmount(Math.max((totalPot / 4) * 3, canBet ? minBet : minRaise))}
+                                disabled={!isPlayerTurn}
+                            >
+                                3/4 Pot
+                            </button>
+                            <button
+                                className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                onClick={() => setRaiseAmount(Math.max(totalPot, canBet ? minBet : minRaise))}
+                                disabled={!isPlayerTurn}
+                            >
+                                Pot
+                            </button>
+                            <button
+                                className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                onClick={() => setRaiseAmount(canBet ? maxBet : maxRaise)}
+                                disabled={!isPlayerTurn}
+                            >
+                                ALL-IN
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
