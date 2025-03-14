@@ -116,7 +116,7 @@ export const getDealerPosition = (tableData: any, playerPosition: any): { left: 
   
   // Offset the indicator slightly from the player position
   return {
-    left: `${left + 30}px`,
+    left: `${left + 100}px`,
     top: `${top - 30}px`
   };
 };

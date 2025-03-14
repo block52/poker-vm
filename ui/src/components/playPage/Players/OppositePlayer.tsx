@@ -91,7 +91,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({
                         )}
                     </div>
                     <div className="absolute top-[0%] w-full">
-                        <Badge count={index + 1} value={stackValueDollars} color={color} />
+                        <Badge count={index} value={stackValueDollars} color={color} />
                     </div>
                 </div>
             </div>

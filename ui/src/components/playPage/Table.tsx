@@ -17,10 +17,9 @@ import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
-import useTableType from "../../hooks/useTableType";
-import { toDollarFromString } from "../../utils/numberUtils";
+
 import useUserBySeat from "../../hooks/useUserBySeat";
-import axios from "axios";
+
 import { ethers } from "ethers";
 import { useAccount } from "wagmi";
 import { PROXY_URL } from "../../config/constants";
@@ -468,7 +467,7 @@ const Table = () => {
                                                       ))}
                                             </div>
                                             {/*//! CHIP */}
-                                            {chipPositionArray.map((position, index) => (
+                                            {/* {chipPositionArray.map((position, index) => (
                                                 <div
                                                     key={`key-${index}`}
                                                     style={{
@@ -479,7 +478,7 @@ const Table = () => {
                                                 >
                                                     <Chip amount={Number(tableDataValues.tableDataPots[index])} />
                                                 </div>
-                                            ))}
+                                            ))} */}
                                         </div>
                                     </div>
                                     {playerPositionArray.map((position, positionIndex) => {
