@@ -66,11 +66,13 @@ const app = express();
 // 5. Configure Middleware
 // ===================================
 // Enable CORS for all routes
-app.use(cors({
-    origin: ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
-    methods: ['GET', 'POST'],
-    credentials: true
-}));
+app.use(
+    cors({
+        origin: ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+        methods: ["GET", "POST"],
+        credentials: true
+    })
+);
 // Parse JSON bodies
 app.use(express.json());
 
@@ -101,10 +103,6 @@ app.get("/", (req, res) => {
 
 // Mount feature-specific routes
 app.use("/deposit-sessions", depositSessionsRouter);
-
-
-
-
 
 // ===================================
 // 9. Generic RPC endpoint
@@ -166,13 +164,6 @@ app.post("/rpc", async (req, res) => {
     }
 });
 
-
-
-
-
-
-
-
 // ===================================
 // 10. Game lobby-related endpoints
 // ===================================
@@ -218,10 +209,7 @@ app.get("/table/:id", async (req, res) => {
     console.log(`Fetching table with ID: ${id}`);
 
     try {
-        const client = new NodeRpcClient(
-            process.env.NODE_URL || "http://localhost:3000",
-            process.env.VALIDATOR_KEY || ""
-        );
+        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
         const table = await client.getGameState(id);
 
         console.log("=== TABLE RESPONSE FROM NODE1 ===");
@@ -244,14 +232,18 @@ app.get("/table/:id", async (req, res) => {
 app.post("/table/:tableId/join", async (req, res) => {
     console.log("=== JOIN TABLE REQUEST ===");
     console.log("Request body:", req.body);
-    console.log("Route params:", req.params);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("Buy in amount on join:", req.body.buyInAmount);
 
     try {
         // Format the RPC call to match the SDK client structure
         const rpcCall = {
             id: "1",
             method: RPCMethods.TRANSFER,
-            params: [ req.body.userAddress, req.body.tableId, req.body.buyInAmount, "join", req.body.signature]  
+            params: [req.body.userAddress, req.body.tableId, req.body.buyInAmount, "join"],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
         };
 
         console.log("=== FORMATTED RPC CALL ===");
@@ -278,6 +270,52 @@ app.post("/table/:tableId/join", async (req, res) => {
 });
 
 // ===================================
+// Player action endpoint
+// ===================================
+app.post("/table/:tableId/playeraction", async (req, res) => {
+    console.log("=== PLAYER ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("Route params:", req.params);
+
+    try {
+        // Format the RPC call to match the SDK client structure
+        const rpcCall = {
+            id: "1",
+            method: RPCMethods.TRANSFER,
+            params: [
+                req.body.userAddress, // player address
+                req.params.tableId, // table address
+                req.body.amount, // amount
+                req.body.action, // action (check, call, raise, fold)
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to node1
+        const response = await axios.post(process.env.NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE1 RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to perform player action", details: error.message });
+    }
+});
+
+// ===================================
 // 13. Account-related endpoints
 // ===================================
 app.get("/account/:id", async (req, res) => {
@@ -285,10 +323,7 @@ app.get("/account/:id", async (req, res) => {
     console.log("Address:", req.params.id);
 
     try {
-        const client = new NodeRpcClient(
-            process.env.NODE_URL || "http://localhost:3000",
-            process.env.VALIDATOR_KEY || ""
-        );
+        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
         const account = await client.getAccount(req.params.id);
 
         res.json({
