@@ -3,7 +3,7 @@ import * as React from "react";
 import { useTableContext } from "../context/TableContext";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
-import useUserBySeat from "../hooks/useUserBySeat";
+
 import axios from "axios";
 import { getUserTableStatus } from "../utils/accountUtils";
 import { isPlayerTurnToPostBlind } from "../utils/tableUtils";
@@ -46,7 +46,7 @@ const PokerActionPanel: React.FC = () => {
     const userPlayer = tableData?.players?.find((player: any) => player.address?.toLowerCase() === userAddress);
     const userSeat = userPlayer?.seat;
 
-    const { data } = useUserBySeat(publicKey || "", userSeat);
+    // const { data } = useUserBySeat(publicKey || "", userSeat);
     const [userStatus, setUserStatus] = useState<UserTableStatus>(null);
 
     // Get current player's possible actions
@@ -114,26 +114,7 @@ const PokerActionPanel: React.FC = () => {
         }
     }, [tableData]);
 
-    useEffect(() => {
-        if (data) {
-            setBalance(data.stack);
 
-            for (const item of data.actions) {
-                if (item.action === PlayerActionType.BET) {
-                    setIsBetAction(true);
-                }
-                if (item.action === PlayerActionType.CHECK) {
-                    setIsCheckAction(true);
-                }
-                if (item.action === PlayerActionType.CALL) {
-                    setIsCallAction(true);
-                }
-                if (item.action === PlayerActionType.RAISE) {
-                    setIsRaiseAction(true);
-                }
-            }
-        }
-    }, [publicKey, userSeat]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -281,9 +262,7 @@ const PokerActionPanel: React.FC = () => {
         tableData: actualTableData
     });
 
-    if (!data) {
-        return <></>;
-    }
+ 
 
     return (
         <div className="flex justify-center rounded-lg h-full text-white z-[0]">
