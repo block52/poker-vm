@@ -324,7 +324,7 @@ const Table = () => {
 
     // Add this function to check if the game is still in progress
     const isGameInProgress = () => {
-        const activePlayers = tableData?.data?.players?.filter(p => 
+        const activePlayers = tableData?.data?.players?.filter((p: any) => 
             p.status !== 'folded' && p.status !== 'sitting-out');
         return activePlayers && activePlayers.length > 1;
     };

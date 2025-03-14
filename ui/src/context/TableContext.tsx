@@ -104,7 +104,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       fetchTableData();
   
       // Set up polling - changed to 5 seconds for more frequent updates
-      const interval = setInterval(fetchTableData, 2000000);
+      const interval = setInterval(fetchTableData, 5000);
   
       // Cleanup
       return () => {
@@ -156,7 +156,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const address = localStorage.getItem('user_eth_public_key');
         if (address) {
             refreshNonce(address);
-            const interval = setInterval(() => refreshNonce(address), 30000); // Every 30 seconds
+            const interval = setInterval(() => refreshNonce(address), 10000); // Every 1 seconds
             return () => clearInterval(interval);
         }
     }, []);
