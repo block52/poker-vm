@@ -47,11 +47,12 @@ interface PositionArray {
 }
 
 const calculateZoom = () => {
-    const baseWidth = 1800;
-    const baseHeight = 950;
-    const scaleWidth = window.innerWidth / baseWidth; // Scale relative to viewport width
-    const scaleHeight = window.innerHeight / baseHeight; // Scale relative to viewport height
-    return Math.min(scaleWidth, scaleHeight);
+    const baseWidth = 1600;
+    const baseHeight = 850;
+    const scaleWidth = window.innerWidth / baseWidth;
+    const scaleHeight = window.innerHeight / baseHeight;
+    const calculatedScale = Math.min(scaleWidth, scaleHeight);
+    return Math.max(calculatedScale, 0.7);
 };
 
 const useTableData = () => {
@@ -330,9 +331,9 @@ const Table = () => {
     };
 
     return (
-        <div className="h-screen">
+        <div className="h-screen flex flex-col">
             {/*//! HEADER */}
-            <div>
+            <div className="flex-shrink-0">
                 <div className="w-[100vw] h-[65px] bottom-0 bg-[#404040] top-5 text-center flex items-center justify-between border-gray-400 px-4 z-0">
                     <div className="flex items-center space-x-2">
                         {/* <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
@@ -412,21 +413,21 @@ const Table = () => {
             </div>
 
             {/*//! BODY */}
-            <div className="flex w-full h-[calc(100%-90px)]">
+            <div className="flex w-full flex-grow overflow-hidden">
                 {/*//! TABLE + FOOTER */}
                 <div
-                    className={`flex-grow flex flex-col justify-between transition-all duration-250`}
+                    className={`flex-grow flex flex-col justify-between transition-all duration-250 overflow-hidden`}
                     style={{
                         transition: "margin 0.3s ease"
                     }}
                 >
                     {/*//! TABLE */}
-                    <div className="flex flex-col align-center justify-center h-[calc(100%-190px)] z-[100]">
-                        <div className="zoom-container h-[400px] w-[800px] m-[auto]" style={{ zoom }}>
-                            <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative z-0">
-                                <div className="w-[800px] h-[400px] relative text-center block z-[-2] transform translate-y-[30px]">
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-280px)] z-[100]">
+                        <div className="zoom-container h-[450px] w-[900px] m-[auto]" style={{ zoom }}>
+                            <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
+                                <div className="w-[900px] h-[450px] relative text-center block transform translate-y-[30px]">
                                     <div className="h-full flex align-center justify-center">
-                                        <div className="z-[20] relative flex flex-col w-[800px] h-[300px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
+                                        <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[2px] border-[#c9c9c985] rounded-full items-center justify-center shadow-[0_7px_13px_rgba(0,0,0,0.3)]">
                                             {/* //! Table */}
                                             <div className="px-4 h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
                                                 <span className="text-[#dbd3d3] mr-2">
@@ -487,72 +488,74 @@ const Table = () => {
                                             ))} */}
                                         </div>
                                     </div>
-                                    {playerPositionArray.map((position, positionIndex) => {
-                                        // Find the player at this seat position
-                                        const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex);
-                                        
-                                        // Check if this player is the current user
-                                        const isCurrentUser = playerAtThisSeat && 
-                                            playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
-                                        
-                                        // More detailed logging
-                                        if (playerAtThisSeat) {
-                                            console.log(`Seat ${positionIndex} detailed comparison:`, {
-                                                playerAddress: playerAtThisSeat.address,
-                                                playerAddressLower: playerAtThisSeat.address?.toLowerCase(),
-                                                currentUserAddress: userWalletAddress,
-                                                currentUserAddressLower: userWalletAddress?.toLowerCase(),
-                                                isMatch: isCurrentUser,
-                                                exactCompare: playerAtThisSeat.address === userWalletAddress,
-                                                lowerCompare: playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase()
-                                            });
-                                        }
-                                        
-                                        const componentToRender = !playerAtThisSeat ? (
-                                            // No player at this seat - show vacant player
-                                            <VacantPlayer index={positionIndex} left={position.left} top={position.top} />
-                                        ) : isCurrentUser ? (
-                                            // This is the current user's position - use Player component
-                                            <Player
-                                                index={positionIndex}
-                                                currentIndex={currentIndex}
-                                                left={position.left}
-                                                top={position.top}
-                                                color={position.color}
-                                                status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
-                                            />
-                                        ) : (
-                                            // This is another player's position - use OppositePlayer component
-                                            <OppositePlayer
-                                                index={positionIndex}
-                                                currentIndex={currentIndex}
-                                                setStartIndex={(index: number) => setStartIndex(index)}
-                                                left={position.left}
-                                                top={position.top}
-                                                color={position.color}
-                                                status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
-                                                isCardVisible={isCardVisible}
-                                                setCardVisible={setCardVisible}
-                                            />
-                                        );
+                                    <div className="absolute inset-0 z-30">
+                                        {playerPositionArray.map((position, positionIndex) => {
+                                            // Find the player at this seat position
+                                            const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex);
+                                            
+                                            // Check if this player is the current user
+                                            const isCurrentUser = playerAtThisSeat && 
+                                                playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
+                                            
+                                            // More detailed logging
+                                            if (playerAtThisSeat) {
+                                                console.log(`Seat ${positionIndex} detailed comparison:`, {
+                                                    playerAddress: playerAtThisSeat.address,
+                                                    playerAddressLower: playerAtThisSeat.address?.toLowerCase(),
+                                                    currentUserAddress: userWalletAddress,
+                                                    currentUserAddressLower: userWalletAddress?.toLowerCase(),
+                                                    isMatch: isCurrentUser,
+                                                    exactCompare: playerAtThisSeat.address === userWalletAddress,
+                                                    lowerCompare: playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase()
+                                                });
+                                            }
+                                            
+                                            const componentToRender = !playerAtThisSeat ? (
+                                                // No player at this seat - show vacant player
+                                                <VacantPlayer index={positionIndex} left={position.left} top={position.top} />
+                                            ) : isCurrentUser ? (
+                                                // This is the current user's position - use Player component
+                                                <Player
+                                                    index={positionIndex}
+                                                    currentIndex={currentIndex}
+                                                    left={position.left}
+                                                    top={position.top}
+                                                    color={position.color}
+                                                    status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
+                                                />
+                                            ) : (
+                                                // This is another player's position - use OppositePlayer component
+                                                <OppositePlayer
+                                                    index={positionIndex}
+                                                    currentIndex={currentIndex}
+                                                    setStartIndex={(index: number) => setStartIndex(index)}
+                                                    left={position.left}
+                                                    top={position.top}
+                                                    color={position.color}
+                                                    status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
+                                                    isCardVisible={isCardVisible}
+                                                    setCardVisible={setCardVisible}
+                                                />
+                                            );
 
-                                        console.log(`Rendering component for seat ${positionIndex}:`, {
-                                            isVacant: !playerAtThisSeat,
-                                            isCurrentUser,
-                                            componentType: !playerAtThisSeat ? 'VacantPlayer' : 
-                                                           isCurrentUser ? 'Player' : 'OppositePlayer',
-                                            currentUserAddress: userWalletAddress
-                                        });
-                                        
-                                        return (
-                                            <div key={positionIndex} className="z-[10]">
-                                                {componentToRender}
-                                                <div>
-                                                    <TurnAnimation left={position.left} top={position.top} index={positionIndex} />
+                                            console.log(`Rendering component for seat ${positionIndex}:`, {
+                                                isVacant: !playerAtThisSeat,
+                                                isCurrentUser,
+                                                componentType: !playerAtThisSeat ? 'VacantPlayer' : 
+                                                               isCurrentUser ? 'Player' : 'OppositePlayer',
+                                                currentUserAddress: userWalletAddress
+                                            });
+                                            
+                                            return (
+                                                <div key={positionIndex} className="z-[10]">
+                                                    {componentToRender}
+                                                    <div>
+                                                        <TurnAnimation left={position.left} top={position.top} index={positionIndex} />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                     {/*//! Dealer */}
                                     {tableData && tableData.data && (
                                         <>
@@ -601,19 +604,13 @@ const Table = () => {
                                     )}
                                 </div>
                             </div>
-
-                            
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
                             {data && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{data.hand_strength}</span>}
                         </div>
-
-                       
-
-                    
                     </div>
                     {/*//! FOOTER */}
-                    <div className="mb-[0] w-full h-[190px] bottom-0 bg-custom-footer top-5 text-center z-[0] flex justify-center">
+                    <div className="flex-shrink-0 w-full h-[190px] bg-custom-footer text-center z-[0] flex justify-center">
                         <PokerActionPanel />
                     </div>
                 </div>

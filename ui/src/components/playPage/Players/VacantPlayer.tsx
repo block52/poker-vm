@@ -324,11 +324,10 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             onClick={canJoinThisSeat ? handleJoinClick : undefined}
         >
             <div className={`flex justify-center gap-4 mb-2 ${canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"}`}>
-                <FaRegUserCircle color="#f0f0f0" className="w-10 h-10" />
+                <FaRegUserCircle color="#f0f0f0" className="w-12 h-12" />
             </div>
             <div className="text-white text-center">
-                {/* Add seat number for clarity */}
-                <div className="text-xs mb-1">Seat {index}</div>
+                <div className="text-sm mb-1">Seat {index}</div>
                 
                 {isUserAlreadyPlaying
                     ? "Already playing"
