@@ -220,8 +220,65 @@ const Table = () => {
 
     const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
 
+    const [dealerButtonPosition, setDealerButtonPosition] = useState({ left: '0px', top: '0px' });
+    const [isDealerButtonVisible, setIsDealerButtonVisible] = useState(false);
 
 
+    const [smallBlindPosition, setSmallBlindPosition] = useState({ left: '0px', top: '0px' });
+    const [isSmallBlindVisible, setIsSmallBlindVisible] = useState(false);
+    const [bigBlindPosition, setBigBlindPosition] = useState({ left: '0px', top: '0px' });
+    const [isBigBlindVisible, setIsBigBlindVisible] = useState(false);
+
+    useEffect(() => {
+        if (tableData?.data) {
+            try {
+                // Handle dealer button
+                if (tableData.data.dealer !== undefined && tableData.data.dealer !== null) {
+                    const dealerSeat = tableData.data.dealer === 9 ? 0 : tableData.data.dealer;
+                    const dealerPos = dealerPosition.nine[dealerSeat];
+                    
+                    if (dealerPos) {
+                        // Just set the original position
+                        setDealerButtonPosition({
+                            left: dealerPos.left,
+                            top: dealerPos.top
+                        });
+                        setIsDealerButtonVisible(true);
+                    }
+                }
+                
+                // Handle small blind button
+                if (tableData.data.smallBlindPosition !== undefined && tableData.data.smallBlindPosition !== null) {
+                    const sbSeat = tableData.data.smallBlindPosition === 9 ? 0 : tableData.data.smallBlindPosition;
+                    const sbPos = dealerPosition.nine[sbSeat]; // Using same position array
+                    
+                    if (sbPos) {
+                        setSmallBlindPosition({
+                            left: sbPos.left,
+                            top: sbPos.top
+                        });
+                        setIsSmallBlindVisible(true);
+                    }
+                }
+                
+                // Handle big blind button
+                if (tableData.data.bigBlindPosition !== undefined && tableData.data.bigBlindPosition !== null) {
+                    const bbSeat = tableData.data.bigBlindPosition === 9 ? 0 : tableData.data.bigBlindPosition;
+                    const bbPos = dealerPosition.nine[bbSeat]; // Using same position array
+                    
+                    if (bbPos) {
+                        setBigBlindPosition({
+                            left: bbPos.left,
+                            top: bbPos.top
+                        });
+                        setIsBigBlindVisible(true);
+                    }
+                }
+            } catch (error) {
+                console.error("Error setting position indicators:", error);
+            }
+        }
+    }, [tableData?.data?.address]); // Only update when table changes
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -329,6 +386,19 @@ const Table = () => {
             p.status !== 'folded' && p.status !== 'sitting-out');
         return activePlayers && activePlayers.length > 1;
     };
+
+    // Add this check early in your component
+    if (tableDataValues.isLoading) {
+        return <div className="h-screen flex items-center justify-center text-white">Loading table data...</div>;
+    }
+
+    if (tableDataValues.error) {
+        return <div className="h-screen flex items-center justify-center text-white">Error: {tableDataValues.error.message}</div>;
+    }
+
+    if (!tableDataValues.tableDataPlayers || !tableDataValues.tableDataCommunityCards) {
+        return <div className="h-screen flex items-center justify-center text-white">Waiting for table data...</div>;
+    }
 
     return (
         <div className="h-screen flex flex-col">
@@ -557,50 +627,41 @@ const Table = () => {
                                         })}
                                     </div>
                                     {/*//! Dealer */}
-                                    {tableData && tableData.data && (
-                                        <>
-                                            {/* Dealer Button */}
-                                            {tableData.data.dealer !== undefined && tableData.data.dealer !== null && (
-                                                <div 
-                                                    className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                                    style={{
-                                                        left: getDealerPosition(tableData.data, playerPosition).left,
-                                                        top: getDealerPosition(tableData.data, playerPosition).top,
-                                                        transform: 'none'
-                                                    }}
-                                                >
-                                                    D
-                                                </div>
-                                            )}
-                                            
-                                            {/* Small Blind Indicator */}
-                                            {tableData.data.smallBlindPosition !== undefined && tableData.data.smallBlindPosition !== null && (
-                                                <div 
-                                                    className="absolute z-50 bg-blue-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                                    style={{
-                                                        left: getSmallBlindPosition(tableData.data, playerPosition).left,
-                                                        top: getSmallBlindPosition(tableData.data, playerPosition).top,
-                                                        transform: 'none'
-                                                    }}
-                                                >
-                                                    SB
-                                                </div>
-                                            )}
-                                            
-                                            {/* Big Blind Indicator */}
-                                            {tableData && tableData.data && tableData.data.bigBlindPosition !== undefined && (
-                                                <div 
-                                                    className="absolute z-50 bg-red-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                                    style={{
-                                                        left: getBigBlindPosition(tableData.data, playerPosition).left,
-                                                        top: getBigBlindPosition(tableData.data, playerPosition).top,
-                                                        transform: 'none'
-                                                    }}
-                                                >
-                                                    BB
-                                                </div>
-                                            )}
-                                        </>
+                                    {isDealerButtonVisible && (
+                                        <div 
+                                            className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                            style={{
+                                                left: `calc(${dealerButtonPosition.left} + 200px)`,
+                                                top: dealerButtonPosition.top,
+                                                transform: 'none'
+                                            }}
+                                        >
+                                            D
+                                        </div>
+                                    )}
+                                    {isSmallBlindVisible && (
+                                        <div 
+                                            className="absolute z-50 bg-blue-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                            style={{
+                                                left: smallBlindPosition.left,
+                                                top: smallBlindPosition.top,
+                                                transform: 'none'
+                                            }}
+                                        >
+                                            SB
+                                        </div>
+                                    )}
+                                    {isBigBlindVisible && (
+                                        <div 
+                                            className="absolute z-50 bg-red-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                            style={{
+                                                left: bigBlindPosition.left,
+                                                top: bigBlindPosition.top,
+                                                transform: 'none'
+                                            }}
+                                        >
+                                            BB
+                                        </div>
                                     )}
                                 </div>
                             </div>
