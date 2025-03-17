@@ -303,6 +303,18 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
             if (response.data?.result?.data) {
                 setTableData(response.data.result.data);
+                
+                // Wait for backend to process the join, then fetch fresh data
+                setTimeout(async () => {
+                    try {
+                        console.log("Fetching fresh table data after join...");
+                        const freshDataResponse = await axios.get(`${PROXY_URL}/table/${tableId}`);
+                        console.log("Fresh table data received:", freshDataResponse.data);
+                        setTableData({ data: freshDataResponse.data });
+                    } catch (refreshError) {
+                        console.error("Error refreshing table data:", refreshError);
+                    }
+                }, 1500); // Wait 1.5 seconds before refreshing
             }
         } catch (error) {
             console.error("Error joining table:", error);
