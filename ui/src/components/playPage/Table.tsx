@@ -562,7 +562,7 @@ const Table = () => {
                                             {/* Dealer Button */}
                                             {tableData.data.dealer !== undefined && tableData.data.dealer !== null && (
                                                 <div 
-                                                    className="absolute z-10 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
                                                     style={{
                                                         left: getDealerPosition(tableData.data, playerPosition).left,
                                                         top: getDealerPosition(tableData.data, playerPosition).top,
@@ -576,7 +576,7 @@ const Table = () => {
                                             {/* Small Blind Indicator */}
                                             {tableData.data.smallBlindPosition !== undefined && tableData.data.smallBlindPosition !== null && (
                                                 <div 
-                                                    className="absolute z-10 bg-blue-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    className="absolute z-50 bg-blue-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
                                                     style={{
                                                         left: getSmallBlindPosition(tableData.data, playerPosition).left,
                                                         top: getSmallBlindPosition(tableData.data, playerPosition).top,
@@ -590,7 +590,7 @@ const Table = () => {
                                             {/* Big Blind Indicator */}
                                             {tableData && tableData.data && tableData.data.bigBlindPosition !== undefined && (
                                                 <div 
-                                                    className="absolute z-10 bg-red-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    className="absolute z-50 bg-red-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
                                                     style={{
                                                         left: getBigBlindPosition(tableData.data, playerPosition).left,
                                                         top: getBigBlindPosition(tableData.data, playerPosition).top,
