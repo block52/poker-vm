@@ -1,14 +1,12 @@
 import { StateManager } from "./stateManager";
 import GameState from "../schema/gameState";
 import { ethers } from "ethers";
-import { Card } from "../models/deck";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IJSONModel } from "../models/interfaces";
-import contractSchemas from "../schema/contractSchemas";
-import { PlayerState } from "../engine/types";
+import { ContractSchema } from "../models/contractSchema";
+import { GameOptions } from "../engine/texasHoldem";
 
 export class GameManagement extends StateManager {
-    // private static _game: Map<string, TexasHoldemGame> = new Map<string, TexasHoldemGame>();
     private readonly mempool: Mempool;
 
     constructor() {
@@ -17,31 +15,6 @@ export class GameManagement extends StateManager {
     }
 
     async get(address: string): Promise<any> {
-        const players: PlayerState[] = [];
-        const communityCards: Card[] = [];
-
-        if (address === ethers.ZeroAddress) {
-            const json = {
-                type: "cash",
-                address: ethers.ZeroAddress,
-                minBuyIn: "150000000000000000000",  // 1500 * bigBlind
-                maxBuyIn: "6000000000000000000000",  // 6000 * bigBlind
-                minPlayers: 2,
-                maxPlayers: 9,
-                smallBlind: "100000000000000000",    
-                bigBlind: "200000000000000000",    
-                dealer: 0,
-                players: [],
-                communityCards: [],
-                pots: ["0"],
-                nextToAct: 0,
-                round: "preflop",
-                winners: [],
-                signature: ethers.ZeroHash
-            };
-            return json;
-        }
-
         const gameState = await GameState.findOne({
             address
         });
@@ -52,31 +25,24 @@ export class GameManagement extends StateManager {
             return state;
         }
 
-        const schema = await contractSchemas.findOne({ address: address });
+        // Do defaults for the game contract
+        const gameOptions: GameOptions = await ContractSchema.getGameOptions(address);
 
-        if (schema) {
-            const args = schema.schema.split(",");
-
-            const smallBlind: bigint = BigInt(args[4]);
-            const bigBlind: bigint = BigInt(args[5]);
-
-            const minBuyIn: bigint = bigBlind * 50n;
-            const maxBuyIn: bigint = bigBlind * 200n;
-
+        if (gameOptions) {
             const json = {
-                type: args[1],
+                type: "cash",
                 address: address,
-                minBuyIn: minBuyIn.toString(),
-                maxBuyIn: maxBuyIn.toString(),
-                minPlayers: args[2],
-                maxPlayers: args[3],
-                smallBlind: smallBlind.toString(),
-                bigBlind: bigBlind.toString(),
-                dealer: 9,
+                minBuyIn: gameOptions.minBuyIn.toString(),
+                maxBuyIn: gameOptions.maxBuyIn.toString(),
+                minPlayers: gameOptions.minPlayers,
+                maxPlayers: gameOptions.maxPlayers,
+                smallBlind: gameOptions.smallBlind.toString(),
+                bigBlind: gameOptions.bigBlind.toString(),
+                dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
                 players: [],
                 communityCards: [],
                 pots: ["0"],
-                nextToAct: 0,
+                nextToAct: -1,
                 round: "preflop",
                 winners: [],
                 signature: ethers.ZeroHash

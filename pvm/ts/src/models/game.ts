@@ -44,7 +44,6 @@ export class Player implements IJSONModel {
     };
 
     public toJson(): PlayerDTO { 
-        // return this._dto; 
         return {} as PlayerDTO;
     }
 }
