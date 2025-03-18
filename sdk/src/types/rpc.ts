@@ -22,6 +22,7 @@ export enum RPCMethods {
     BURN = "burn",
     CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
+    DEAL = "deal",
     GET_ACCOUNT = "get_account",
     GET_BALANCE = "get_balance",
     GET_BLOCK = "get_block",
@@ -44,7 +45,7 @@ export enum RPCMethods {
     SHUTDOWN = "shutdown",
     START = "start",
     STOP = "stop",
-    TRANSFER = "transfer"
+    TRANSFER = "transfer",
 }
 
 export type RPCRequestParams = {
@@ -52,6 +53,7 @@ export type RPCRequestParams = {
     [RPCMethods.BURN]: [string, string, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
+    [RPCMethods.DEAL]: [string, string]; // [gameAddress, seed]
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
     [RPCMethods.GET_BALANCE]: [string]; // [address]
     [RPCMethods.GET_BLOCK_BY_HASH]: [string]; // [hash]

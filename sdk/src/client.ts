@@ -283,4 +283,25 @@ export class NodeRpcClient {
         const signature = await this.wallet.signMessage(nonce.toString());
         return signature;
     }
+
+    /**
+     * Deal cards in a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param seed Optional seed for shuffling
+     * @returns A Promise that resolves to the transaction
+     */
+    public async deal(gameAddress: string, seed: string = ""): Promise<any> {
+        const address = this.getAddress();
+        const signature = await this.getSignature();
+
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.DEAL,
+            params: [gameAddress, seed],
+            data: address,  // Pass the player's address in the data field
+            signature: signature
+        });
+
+        return body.result.data;
+    }
 }
