@@ -626,7 +626,7 @@ app.get("/websocket-test", (req, res) => {
 // ===================================
 // 14. Start Server
 // ===================================
-server.listen(port, () => {
+server.listen(port, "0.0.0.0", () => {
     console.log(`
     ====================================
     🚀 Server is running

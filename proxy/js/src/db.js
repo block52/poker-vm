@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-const FALLBACK_URI = "mongodb://localhost:27017/payments";
+const FALLBACK_URI = "mongodb://mongodb:27017/payments";
 
 const connectDB = async () => {
     try {
