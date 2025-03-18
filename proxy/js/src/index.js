@@ -28,7 +28,7 @@ const http = require("http");
 // 2. Load Environment Configuration
 // ===================================
 dotenv.config();
-const clientType = process.env.CLIENT_TYPE || "block52";
+const clientType = "block52";
 const port = process.env.PORT || 8080;
 
 // ===================================
