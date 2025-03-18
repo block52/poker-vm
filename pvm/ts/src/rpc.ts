@@ -38,6 +38,7 @@ import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
 import * as ethers from "ethers";
+import { getAccountFromPublicKey } from "./utils/crypto";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -354,37 +355,10 @@ export class RPC {
                     const [gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.DEAL];
                     
                     // Extract player address from the request's public key
-                    let playerAddress = "0x0"; // Default value
+                    let playerAddress = ethers.ZeroAddress; // Default value
                     
                     if (request.publicKey) {
                         try {
-                            // Function to derive Ethereum address from public key
-                            function getAccountFromPublicKey(publicKey: string): string {
-                                try {
-                                    // Make sure the public key is properly formatted
-                                    // If it doesn't start with 0x, add it
-                                    if (!publicKey.startsWith('0x')) {
-                                        publicKey = '0x' + publicKey;
-                                    }
-                                    
-                                    // Remove '0x04' prefix if present (for uncompressed keys)
-                                    // Uncompressed public keys start with 0x04
-                                    if (publicKey.startsWith('0x04')) {
-                                        publicKey = '0x' + publicKey.substring(4);
-                                    }
-                                    
-                                    // Derive the Ethereum address from the public key
-                                    const publicKeyBytes = ethers.getBytes(publicKey);
-                                    const hash = ethers.keccak256(publicKeyBytes);
-                                    const address = '0x' + hash.substring(26); // Take last 20 bytes (40 chars)
-                                    
-                                    return address;
-                                } catch (error) {
-                                    console.error("Error deriving address from public key:", error);
-                                    return "0x0";
-                                }
-                            }
-                            
                             playerAddress = getAccountFromPublicKey(request.publicKey);
                             console.log(`Derived player address from public key: ${playerAddress}`);
                         } catch (error) {
@@ -399,8 +373,7 @@ export class RPC {
                     result = await command.execute();
                     break;
                 }
-                
-
+            
                 default:
                     return makeErrorRPCResponse(id, "Method not found");
             }
