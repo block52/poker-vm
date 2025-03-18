@@ -1,11 +1,8 @@
-const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config");
-const fs = require('fs');
-const path = require('path');
-const archiver = require('archiver');
+const archiver = require("archiver");
 
-const swaggerSetup = (app) => {
+const swaggerSetup = app => {
     const swaggerUiOptions = {
         customSiteTitle: "Block52 API Documentation",
         customfavIcon: "https://block52.xyz/favicon.ico",
@@ -86,7 +83,7 @@ const swaggerSetup = (app) => {
                         url: {
                             raw: `{{baseUrl}}${path}`,
                             host: ["{{baseUrl}}"],
-                            path: path.split('/').filter(p => p)
+                            path: path.split("/").filter(p => p)
                         }
                     }
                 });
@@ -107,17 +104,17 @@ const swaggerSetup = (app) => {
         };
 
         // Create zip file
-        const archive = archiver('zip');
-        
-        res.attachment('block52-postman.zip');
+        const archive = archiver("zip");
+
+        res.attachment("block52-postman.zip");
         archive.pipe(res);
 
         // Add collection and environment files to zip
-        archive.append(JSON.stringify(postmanCollection, null, 2), { name: 'Block52.postman_collection.json' });
-        archive.append(JSON.stringify(environment, null, 2), { name: 'Block52.postman_environment.json' });
+        archive.append(JSON.stringify(postmanCollection, null, 2), { name: "Block52.postman_collection.json" });
+        archive.append(JSON.stringify(environment, null, 2), { name: "Block52.postman_environment.json" });
 
         archive.finalize();
     });
 };
 
-module.exports = swaggerSetup; 
+module.exports = swaggerSetup;
