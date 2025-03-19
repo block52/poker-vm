@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { computeAddress, ethers } from "ethers";
 import { createVerify } from "crypto";
 
 export const verifySignature = (publicKey: string, message: string, signature: string): boolean => {
@@ -60,10 +60,34 @@ export const hexToPem = (hexKey: string): string => {
     return `-----BEGIN ${keyType}-----\n${formattedKey}\n-----END ${keyType}-----`;
 };
 
+export const getAccountFromPublicKey = (publicKey: string): string => {
+    try {
+        // Make sure the public key is properly formatted
+        // If it doesn't start with 0x, add it
+        if (!publicKey.startsWith('0x')) {
+            publicKey = '0x' + publicKey;
+        }
+        
+        // Remove '0x04' prefix if present (for uncompressed keys)
+        // Uncompressed public keys start with 0x04
+        if (publicKey.startsWith('0x04')) {
+            publicKey = '0x' + publicKey.substring(4);
+        }
+        
+        // Derive the Ethereum address from the public key
+        return computeAddress(publicKey);
+    } catch (error) {
+        console.error("Error deriving address from public key:", error);
+        return ethers.ZeroAddress;
+    }
+}
+
+
 export default {
     recoverPublicKey,
     verifySignature,
     signData,
     castPemToHex,
-    hexToPem
+    hexToPem,
+    getAccountFromPublicKey
 };

@@ -95,7 +95,9 @@ class TexasHoldemGame implements IPoker {
             this.seed = Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
 
             // Shuffle the deck
+            console.log("About to shuffle deck with seed array:", this.seed);
             this._deck.shuffle(this.seed);
+            console.log("Deck shuffled successfully");
         };
 
         // TODO: Make this a map
@@ -200,7 +202,7 @@ class TexasHoldemGame implements IPoker {
         return count;
     }
 
-    private shuffle(seed: number[] = []): void {
+    shuffle(seed: number[] = []): void {
         this._deck.shuffle(seed);
     }
 
@@ -216,6 +218,10 @@ class TexasHoldemGame implements IPoker {
             const cards = this._deck.deal(2) as [Card, Card];
             p.holeCards = cards;
         });
+
+        console.log("About to deal cards");
+        this.shuffle();
+        console.log("Cards dealt successfully");
     }
 
     join(player: Player) {

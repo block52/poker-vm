@@ -9,6 +9,7 @@ import {
     BurnCommand,
     CreateAccountCommand,
     CreateContractSchemaCommand,
+    DealCommand,
     GameStateCommand,
     GetAllContractSchemasCommand,
     GetBlocksCommand,
@@ -36,6 +37,8 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
+import * as ethers from "ethers";
+import { getAccountFromPublicKey } from "./utils/crypto";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -348,6 +351,29 @@ export class RPC {
                     break;
                 }
 
+                case RPCMethods.DEAL: {
+                    const [gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.DEAL];
+                    
+                    // Extract player address from the request's public key
+                    let playerAddress = ethers.ZeroAddress; // Default value
+                    
+                    if (request.publicKey) {
+                        try {
+                            playerAddress = getAccountFromPublicKey(request.publicKey);
+                            console.log(`Derived player address from public key: ${playerAddress}`);
+                        } catch (error) {
+                            console.error("Failed to derive address from public key:", error);
+                        }
+                    } else if (request.data) {
+                        // Fallback to using data field if available
+                        playerAddress = request.data;
+                    }
+                    
+                    const command = new DealCommand(gameAddress, playerAddress, seed, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+            
                 default:
                     return makeErrorRPCResponse(id, "Method not found");
             }

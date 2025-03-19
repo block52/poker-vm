@@ -24,7 +24,8 @@ export const WRITE_METHODS = [
     RPCMethods.MINE,
     RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.MINT,
-    RPCMethods.TRANSFER
+    RPCMethods.TRANSFER,
+    RPCMethods.DEAL
 ];
 
 export const CONTROL_METHODS = [RPCMethods.PURGE, RPCMethods.START, RPCMethods.STOP, RPCMethods.SHUTDOWN];

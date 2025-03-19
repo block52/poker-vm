@@ -57,6 +57,10 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                     case "raise":
                         game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
                         break;
+                    case "deal":
+                        console.log(`Processing deal action from ${tx.from}`);
+                        game.deal();
+                        break;
                     default:
                         throw new Error("Invalid action");
                 };
