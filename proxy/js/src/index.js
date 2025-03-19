@@ -622,6 +622,57 @@ app.get('/websocket-test', (req, res) => {
 });
 
 // ===================================
+// Deal cards endpoint
+// ===================================
+app.post("/table/:tableId/deal", async (req, res) => {
+    console.log("=== DEAL CARDS REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("Route params:", req.params);
+
+    try {
+        // Format the RPC call to match the SDK client structure
+        const rpcCall = {
+            id: "1",
+            version: "2.0",
+            method: "deal",
+            params: [
+                req.params.tableId,                // table address
+                req.body.seed || "randomseed123",  // random seed (use provided or default) todo: this should be the seed from the game
+                req.body.publicKey                 // public key
+            ],
+            signature: req.body.signature
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to node1
+        const response = await axios.post(process.env.NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE1 RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+        
+        // Also broadcast this update to WebSocket clients
+        if (tableSubscriptions.has(req.params.tableId)) {
+            console.log(`Broadcasting table update after deal to ${tableSubscriptions.get(req.params.tableId).size} WebSocket clients`);
+            await broadcastTableUpdate(req.params.tableId);
+        }
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to deal cards", details: error.message });
+    }
+});
+
+// ===================================
 // 14. Start Server
 // ===================================
 server.listen(port, () => {
