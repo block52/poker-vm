@@ -298,7 +298,7 @@ export class NodeRpcClient {
             id: this.getRequestId(),
             method: RPCMethods.DEAL,
             params: [gameAddress, seed, publicKey],
-            data: address,  // Pass the player's address in the data field
+            data: "",  // todo; work out what we will use data for
             signature: signature
         });
 
