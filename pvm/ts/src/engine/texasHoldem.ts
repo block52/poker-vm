@@ -660,7 +660,7 @@ class TexasHoldemGame implements IPoker {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.status === PlayerStatus.ACTIVE);
     }
 
-    private getSeatedPlayers(): Player[] {
+    getSeatedPlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
     }
 
@@ -854,7 +854,21 @@ class TexasHoldemGame implements IPoker {
 
         json.players.map((p: any) => {
             const stack: bigint = BigInt(p.stack);
-            const player: Player = new Player(p.address, undefined, stack, undefined, p.status);
+            
+            // Create hole cards if they exist in the JSON
+            let holeCards: [Card, Card] | undefined = undefined;
+            if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
+                try {
+                    // Use Deck.fromString to create Card objects
+                    const card1 = Deck.fromString(p.holeCards[0]);
+                    const card2 = Deck.fromString(p.holeCards[1]);
+                    holeCards = [card1, card2] as [Card, Card];
+                } catch (e) {
+                    console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                }
+            }
+            
+            const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
             players.set(p.seat, player);
         });
 
@@ -916,7 +930,7 @@ class TexasHoldemGame implements IPoker {
                 isSmallBlind: i === this._smallBlindPosition,
                 isBigBlind: i === this._bigBlindPosition,
                 isDealer: i === this._dealer,
-                holeCards: player?.holeCards ? [player.holeCards[0].mnemonic, player.holeCards[1].mnemonic] : undefined,
+                holeCards: player?.holeCards ? player.holeCards.map(card => card.mnemonic) : undefined,
                 status: player.status,
                 lastAction: lastAction,
                 legalActions: legalActions,
