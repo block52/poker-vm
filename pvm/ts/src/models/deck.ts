@@ -1,20 +1,7 @@
-export enum SUIT {
-    CLUBS = 1,
-    DIAMONDS = 2,
-    HEARTS = 3,
-    SPADES = 4
-}
-
-export type Card = {
-    suit: SUIT;
-    rank: number;
-    value: number;
-    mnemonic: string;
-};
-
 import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { IJSONModel } from "./interfaces";
+import { Card, SUIT } from "@bitcoinbrisbane/block52";
 
 export interface IDeck {
     shuffle(seed?: number[]): void;
@@ -26,20 +13,6 @@ export class Deck implements IDeck, IJSONModel {
     public hash: string = "";
     public seedHash: string;
     private top: number = 0;
-
-    private readonly SUIT_MAP = {
-        C: SUIT.CLUBS,
-        D: SUIT.DIAMONDS,
-        H: SUIT.HEARTS,
-        S: SUIT.SPADES
-    };
-
-    private readonly RANK_MAP: { [key: number]: string } = {
-        1: "A",
-        11: "J",
-        12: "Q",
-        13: "K"
-    };
 
     constructor(deck?: string) {
         if (deck) {
@@ -111,7 +84,7 @@ export class Deck implements IDeck, IJSONModel {
         // Get the suit string
         const suitStr = suitMap[suit];
 
-        return rankStr + suitStr;
+        return `${rankStr}${suitStr}`;
     }
 
     public getNext(): Card {

@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import { playerPosition, chipPosition, dealerPosition } from "../../utils/PositionArray";
-import { IoMenuSharp } from "react-icons/io5";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
-import Dealer from "./common/Dealer";
-import Chip from "./common/Chip";
 import { usePlayerContext } from "../../context/usePlayerContext";
-import { PlayerStatus, TexasHoldemGameStateDTO, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
@@ -21,14 +17,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import useUserBySeat from "../../hooks/useUserBySeat";
 
 import { ethers } from "ethers";
-import { useAccount } from "wagmi";
-import { PROXY_URL } from "../../config/constants";
 import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
-import { getUserTableStatus } from "../../utils/accountUtils";
 import React from "react";
-import { getDealerPosition, getBigBlindPosition, getSmallBlindPosition } from "../../utils/tableUtils";
-import axios from "axios";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets

@@ -1,4 +1,5 @@
-import { Deck, SUIT, Card } from "./deck";
+import { Deck } from "./deck";
+import { Card, SUIT } from "@bitcoinbrisbane/block52";
 
 describe("Deck", () => {
     let deck: Deck;
