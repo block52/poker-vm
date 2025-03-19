@@ -27,7 +27,8 @@ import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
 import { getUserTableStatus } from "../../utils/accountUtils";
 import React from "react";
-import { getDealerPosition, getBigBlindPosition, getSmallBlindPosition } from '../../utils/tableUtils';
+import { getDealerPosition, getBigBlindPosition, getSmallBlindPosition } from "../../utils/tableUtils";
+import axios from "axios";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -129,13 +130,11 @@ const formatWeiToUSD = (weiAmount: string | number): string => {
     }
 };
 
-
-
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const context = usePlayerContext();
-    const { tableData, nextToActInfo, currentRound, totalPot, playerLegalActions, isPlayerTurn } = useTableContext();
-    
+    const { tableData, nextToActInfo, currentRound, totalPot, playerLegalActions, isPlayerTurn, dealTable } = useTableContext();
+
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
     console.log("Current user address from localStorage:", currentUserAddress);
@@ -147,15 +146,13 @@ const Table = () => {
 
     // Add the new hook usage here with prefixed names
     const tableDataValues = useTableData();
-    
+
     // Find the current user's seat using the new variable
     const currentUserSeat = React.useMemo(() => {
         if (!userWalletAddress || !tableDataValues.tableDataPlayers) return -1;
-        
-        const playerIndex = tableDataValues.tableDataPlayers.findIndex(
-            (player: any) => player.address?.toLowerCase() === userWalletAddress
-        );
-        
+
+        const playerIndex = tableDataValues.tableDataPlayers.findIndex((player: any) => player.address?.toLowerCase() === userWalletAddress);
+
         return playerIndex >= 0 ? playerIndex : -1;
     }, [userWalletAddress, tableDataValues.tableDataPlayers]);
 
@@ -220,14 +217,15 @@ const Table = () => {
 
     const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
 
-    const [dealerButtonPosition, setDealerButtonPosition] = useState({ left: '0px', top: '0px' });
+    const [dealerButtonPosition, setDealerButtonPosition] = useState({ left: "0px", top: "0px" });
     const [isDealerButtonVisible, setIsDealerButtonVisible] = useState(false);
 
-
-    const [smallBlindPosition, setSmallBlindPosition] = useState({ left: '0px', top: '0px' });
+    const [smallBlindPosition, setSmallBlindPosition] = useState({ left: "0px", top: "0px" });
     const [isSmallBlindVisible, setIsSmallBlindVisible] = useState(false);
-    const [bigBlindPosition, setBigBlindPosition] = useState({ left: '0px', top: '0px' });
+    const [bigBlindPosition, setBigBlindPosition] = useState({ left: "0px", top: "0px" });
     const [isBigBlindVisible, setIsBigBlindVisible] = useState(false);
+
+    const [canDeal, setCanDeal] = useState(false);
 
     useEffect(() => {
         if (tableData?.data) {
@@ -236,7 +234,7 @@ const Table = () => {
                 if (tableData.data.dealer !== undefined && tableData.data.dealer !== null) {
                     const dealerSeat = tableData.data.dealer === 9 ? 0 : tableData.data.dealer;
                     const dealerPos = dealerPosition.nine[dealerSeat];
-                    
+
                     if (dealerPos) {
                         // Just set the original position
                         setDealerButtonPosition({
@@ -246,12 +244,12 @@ const Table = () => {
                         setIsDealerButtonVisible(true);
                     }
                 }
-                
+
                 // Handle small blind button
                 if (tableData.data.smallBlindPosition !== undefined && tableData.data.smallBlindPosition !== null) {
                     const sbSeat = tableData.data.smallBlindPosition === 9 ? 0 : tableData.data.smallBlindPosition;
                     const sbPos = dealerPosition.nine[sbSeat]; // Using same position array
-                    
+
                     if (sbPos) {
                         setSmallBlindPosition({
                             left: sbPos.left,
@@ -260,12 +258,12 @@ const Table = () => {
                         setIsSmallBlindVisible(true);
                     }
                 }
-                
+
                 // Handle big blind button
                 if (tableData.data.bigBlindPosition !== undefined && tableData.data.bigBlindPosition !== null) {
                     const bbSeat = tableData.data.bigBlindPosition === 9 ? 0 : tableData.data.bigBlindPosition;
                     const bbPos = dealerPosition.nine[bbSeat]; // Using same position array
-                    
+
                     if (bbPos) {
                         setBigBlindPosition({
                             left: bbPos.left,
@@ -360,6 +358,36 @@ const Table = () => {
         }
     }, [tableSize]);
 
+    useEffect(() => {
+        if (tableData?.data) {
+            // Check if there are at least 2 players
+            const hasEnoughPlayers = tableData.data.players && tableData.data.players.length >= 2;
+
+            // Check if blinds have been posted
+            const blindsPosted =
+                tableData.data.previousActions &&
+                tableData.data.previousActions.some((action: any) => action.action === "post small blind") &&
+                tableData.data.previousActions.some((action: any) => action.action === "post big blind");
+
+            // Check if we're in preflop round with no community cards yet
+            const isPreflop = tableData.data.round === "preflop";
+            const noCardsDealt = !tableData.data.communityCards || tableData.data.communityCards.length === 0;
+
+            // Show deal button if all conditions are met
+            setCanDeal(hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt);
+
+            console.log("Deal button visibility check:", {
+                hasEnoughPlayers,
+                blindsPosted,
+                isPreflop,
+                noCardsDealt,
+                canDeal: hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt
+            });
+        } else {
+            setCanDeal(false);
+        }
+    }, [tableData]);
+
     const onCloseSideBar = () => {
         setOpenSidebar(!openSidebar);
     };
@@ -382,8 +410,7 @@ const Table = () => {
 
     // Add this function to check if the game is still in progress
     const isGameInProgress = () => {
-        const activePlayers = tableData?.data?.players?.filter((p: any) => 
-            p.status !== 'folded' && p.status !== 'sitting-out');
+        const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
         return activePlayers && activePlayers.length > 1;
     };
 
@@ -400,8 +427,14 @@ const Table = () => {
         return <div className="h-screen flex items-center justify-center text-white">Waiting for table data...</div>;
     }
 
+    // Use the context function instead of implementing it here
+    const handleDeal = () => {
+        console.log("Deal button clicked");
+        dealTable();
+    };
+
     return (
-        <div className="h-screen flex flex-col">
+        <div className="relative h-screen w-full overflow-hidden">
             {/*//! HEADER */}
             <div className="flex-shrink-0">
                 <div className="w-[100vw] h-[65px] bottom-0 bg-[#404040] top-5 text-center flex items-center justify-between border-gray-400 px-4 z-0">
@@ -562,11 +595,10 @@ const Table = () => {
                                         {playerPositionArray.map((position, positionIndex) => {
                                             // Find the player at this seat position
                                             const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex);
-                                            
+
                                             // Check if this player is the current user
-                                            const isCurrentUser = playerAtThisSeat && 
-                                                playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
-                                            
+                                            const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
+
                                             // More detailed logging
                                             if (playerAtThisSeat) {
                                                 console.log(`Seat ${positionIndex} detailed comparison:`, {
@@ -579,7 +611,7 @@ const Table = () => {
                                                     lowerCompare: playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase()
                                                 });
                                             }
-                                            
+
                                             const componentToRender = !playerAtThisSeat ? (
                                                 // No player at this seat - show vacant player
                                                 <VacantPlayer index={positionIndex} left={position.left} top={position.top} />
@@ -611,11 +643,10 @@ const Table = () => {
                                             console.log(`Rendering component for seat ${positionIndex}:`, {
                                                 isVacant: !playerAtThisSeat,
                                                 isCurrentUser,
-                                                componentType: !playerAtThisSeat ? 'VacantPlayer' : 
-                                                               isCurrentUser ? 'Player' : 'OppositePlayer',
+                                                componentType: !playerAtThisSeat ? "VacantPlayer" : isCurrentUser ? "Player" : "OppositePlayer",
                                                 currentUserAddress: userWalletAddress
                                             });
-                                            
+
                                             return (
                                                 <div key={positionIndex} className="z-[10]">
                                                     {componentToRender}
@@ -628,36 +659,36 @@ const Table = () => {
                                     </div>
                                     {/*//! Dealer */}
                                     {isDealerButtonVisible && (
-                                        <div 
+                                        <div
                                             className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
                                             style={{
                                                 left: `calc(${dealerButtonPosition.left} + 200px)`,
                                                 top: dealerButtonPosition.top,
-                                                transform: 'none'
+                                                transform: "none"
                                             }}
                                         >
                                             D
                                         </div>
                                     )}
                                     {isSmallBlindVisible && (
-                                        <div 
+                                        <div
                                             className="absolute z-50 bg-blue-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
                                             style={{
                                                 left: smallBlindPosition.left,
                                                 top: smallBlindPosition.top,
-                                                transform: 'none'
+                                                transform: "none"
                                             }}
                                         >
                                             SB
                                         </div>
                                     )}
                                     {isBigBlindVisible && (
-                                        <div 
+                                        <div
                                             className="absolute z-50 bg-red-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
                                             style={{
                                                 left: bigBlindPosition.left,
                                                 top: bigBlindPosition.top,
-                                                transform: 'none'
+                                                transform: "none"
                                             }}
                                         >
                                             BB
@@ -670,10 +701,36 @@ const Table = () => {
                             {data && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{data.hand_strength}</span>}
                         </div>
                     </div>
+                   
                     {/*//! FOOTER */}
                     <div className="flex-shrink-0 w-full h-[190px] bg-custom-footer text-center z-[0] flex justify-center">
                         <PokerActionPanel />
                     </div>
+
+
+                     {/* DEAL BUTTON */}
+                     {canDeal && (
+                        <div className="absolute bottom-[300px] left-1/2 transform -translate-x-1/2 z-[9999]">
+                            <button
+                                onClick={handleDeal}
+                                className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                                text-white font-bold py-3 px-8 rounded-lg shadow-lg 
+                                border-2 border-[#3a9188] transition-all duration-300 
+                                flex items-center justify-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                    />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                DEAL
+                            </button>
+                        </div>
+                    )}
                 </div>
                 {/*//! SIDEBAR */}
                 <div
@@ -689,15 +746,14 @@ const Table = () => {
                     </div>
                 </div>
             </div>
+
             {/* Add a message for empty table if needed */}
             {activePlayers.length === 0 && (
                 <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">Waiting for players to join...</div>
             )}
             {/* Add a message for the current user's seat */}
             {currentUserSeat >= 0 && (
-                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
-                    You are seated at position {currentUserSeat + 1}
-                </div>
+                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">You are seated at position {currentUserSeat + 1}</div>
             )}
             {/* Add an indicator for whose turn it is */}
             {nextToActInfo && isGameInProgress() && (
@@ -705,9 +761,11 @@ const Table = () => {
                     {nextToActInfo.isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
                         <span className="text-green-400 font-bold">Your turn to act!</span>
                     ) : (
-                        <span>Waiting for {nextToActInfo.seat === 1 ? "Small Blind" : 
-                              nextToActInfo.seat === 2 ? "Big Blind" : 
-                              `player at position ${nextToActInfo.seat + 1}`} to act</span>
+                        <span>
+                            Waiting for{" "}
+                            {nextToActInfo.seat === 1 ? "Small Blind" : nextToActInfo.seat === 2 ? "Big Blind" : `player at position ${nextToActInfo.seat + 1}`}{" "}
+                            to act
+                        </span>
                     )}
                 </div>
             )}

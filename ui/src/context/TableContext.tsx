@@ -26,6 +26,7 @@ interface TableContextType {
   totalPot: string;
   playerLegalActions: any[] | null;
   isPlayerTurn: boolean;
+  dealTable: () => Promise<void>;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -337,6 +338,27 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [tableData]);
 
+  // Add the deal function
+  const dealTable = async () => {
+    if (!tableId) {
+      console.error("No table ID available");
+      return;
+    }
+    
+    try {
+      console.log("Dealing cards for table:", tableId);
+      
+      const response = await axios.post(`${PROXY_URL}/table/${tableId}/deal`);
+      console.log("Deal response:", response.data);
+      
+      if (response.data?.result?.data) {
+        setTableData({ data: response.data.result.data });
+      }
+    } catch (error) {
+      console.error("Error dealing cards:", error);
+    }
+  };
+
   return (
     <TableContext.Provider value={{ 
       tableData: tableData ? { ...tableData, publicKey: userPublicKey } : null,
@@ -351,7 +373,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       currentRound,
       totalPot,
       playerLegalActions,
-      isPlayerTurn
+      isPlayerTurn,
+      dealTable
     }}>
       {children}
     </TableContext.Provider>
