@@ -352,14 +352,14 @@ export class RPC {
                 }
 
                 case RPCMethods.DEAL: {
-                    const [gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.DEAL];
+                    const [gameAddress, seed, publicKey] = request.params as RPCRequestParams[RPCMethods.DEAL];
                     
                     // Extract player address from the request's public key
                     let playerAddress = ethers.ZeroAddress; // Default value
                     
-                    if (request.publicKey) {
+                    if (publicKey) {
                         try {
-                            playerAddress = getAccountFromPublicKey(request.publicKey);
+                            playerAddress = getAccountFromPublicKey(publicKey);
                             console.log(`Derived player address from public key: ${playerAddress}`);
                         } catch (error) {
                             console.error("Failed to derive address from public key:", error);
