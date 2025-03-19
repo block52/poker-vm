@@ -70,8 +70,35 @@ export class DealCommand implements ICommand<ISignedResponse<any>> {
                 // Deal the cards
                 game.deal(seedArray);
                 
+                // Debug: Check if hole cards exist in memory
+                const players = game.getSeatedPlayers();
+                console.log("Players after dealing cards:");
+                players.forEach(p => {
+                    console.log(`Player ${p.address} cards: ${p.holeCards ? p.holeCards.map(c => c.toString()).join(', ') : 'undefined'}`);
+                });
+                
                 // Save the updated game state
                 const updatedJson = game.toJson();
+                
+                // Debug: Check if hole cards are in the JSON
+                console.log("Player hole cards in JSON:");
+                updatedJson.players.forEach(p => {
+                    console.log(`Player ${p.address} cards in JSON: ${p.holeCards ? JSON.stringify(p.holeCards) : 'undefined'}`);
+                });
+                
+                // If hole cards are missing in the JSON, add them manually
+                if (players.some(p => p.holeCards) && updatedJson.players.some(p => !p.holeCards)) {
+                    console.log("Hole cards missing in JSON, adding them manually");
+                    players.forEach((player, i) => {
+                        if (player.holeCards) {
+                            const jsonPlayer = updatedJson.players.find(p => p.address === player.address);
+                            if (jsonPlayer) {
+                                jsonPlayer.holeCards = player.holeCards.map(card => card.toString());
+                            }
+                        }
+                    });
+                }
+                
                 await this.gameManagement.saveFromJSON(updatedJson);
 
                 // Create a transaction record for this action
