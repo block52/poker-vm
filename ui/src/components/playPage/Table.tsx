@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import { playerPosition, chipPosition, dealerPosition } from "../../utils/PositionArray";
-import { IoMenuSharp } from "react-icons/io5";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
-import Dealer from "./common/Dealer";
-import Chip from "./common/Chip";
 import { usePlayerContext } from "../../context/usePlayerContext";
-import { PlayerStatus, TexasHoldemGameStateDTO, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
@@ -21,14 +17,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import useUserBySeat from "../../hooks/useUserBySeat";
 
 import { ethers } from "ethers";
-import { useAccount } from "wagmi";
-import { PROXY_URL } from "../../config/constants";
 import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
-import { getUserTableStatus } from "../../utils/accountUtils";
 import React from "react";
-import { getDealerPosition, getBigBlindPosition, getSmallBlindPosition } from "../../utils/tableUtils";
-import axios from "axios";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -226,6 +217,22 @@ const Table = () => {
     const [isBigBlindVisible, setIsBigBlindVisible] = useState(false);
 
     const [canDeal, setCanDeal] = useState(false);
+
+    // Add state for mouse position
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    
+    // Add effect to track mouse movement
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            // Calculate mouse position as percentage of window
+            const x = (e.clientX / window.innerWidth) * 100;
+            const y = (e.clientY / window.innerHeight) * 100;
+            setMousePosition({ x, y });
+        };
+        
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
 
     useEffect(() => {
         if (tableData?.data) {
@@ -435,6 +442,21 @@ const Table = () => {
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
+            {/* Add the keyframe animation */}
+            <style>{`
+                @keyframes gradient {
+                    0% {
+                        background-position: 0% 50%;
+                    }
+                    50% {
+                        background-position: 100% 50%;
+                    }
+                    100% {
+                        background-position: 0% 50%;
+                    }
+                }
+            `}</style>
+            
             {/*//! HEADER */}
             <div className="flex-shrink-0">
                 <div className="w-[100vw] h-[65px] bottom-0 bg-[#404040] top-5 text-center flex items-center justify-between border-gray-400 px-4 z-0">
@@ -525,8 +547,44 @@ const Table = () => {
                     }}
                 >
                     {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-280px)] z-[100]">
-                        <div className="zoom-container h-[450px] w-[900px] m-[auto]" style={{ zoom }}>
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-280px)] z-[100] relative">
+                        {/* Base gradient background */}
+                        <div 
+                            className="absolute inset-0 z-0"
+                            style={{
+                                background: `
+                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(42, 72, 65, 0.9) 0%, transparent 60%),
+                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 65, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 100% 0%, rgba(61, 89, 80, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 47, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 71, 0.7) 0%, transparent 50%)
+                                `,
+                                filter: 'blur(60px)',
+                                transition: 'background 0.3s ease-out'
+                            }}
+                        />
+                        
+                        {/* Animated overlay */}
+                        <div 
+                            className="absolute inset-0 z-0"
+                            style={{
+                                background: `
+                                    repeating-linear-gradient(
+                                        ${45 + (mousePosition.x / 10)}deg,
+                                        rgba(42, 72, 65, 0.1) 0%,
+                                        rgba(61, 89, 80, 0.1) 25%,
+                                        rgba(30, 52, 47, 0.1) 50%,
+                                        rgba(50, 79, 71, 0.1) 75%,
+                                        rgba(42, 72, 65, 0.1) 100%
+                                    )
+                                `,
+                                backgroundSize: '400% 400%',
+                                animation: 'gradient 15s ease infinite',
+                                transition: 'background 0.5s ease'
+                            }}
+                        />
+                        
+                        <div className="zoom-container h-[450px] w-[900px] m-[auto] relative z-10">
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
                                 <div className="w-[900px] h-[450px] relative text-center block transform translate-y-[30px]">
                                     <div className="h-full flex align-center justify-center">

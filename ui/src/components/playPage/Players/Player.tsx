@@ -1,7 +1,7 @@
 import * as React from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
-import { usePlayerContext } from "../../../context/usePlayerContext";
+
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { BigUnit } from "bigunit";
 import { useTableContext } from "../../../context/TableContext";
@@ -44,7 +44,8 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     const stackValueDollars = formatWeiToDollars(playerData.stack);
     
     // Get hole cards if available
-    const holeCards = playerData.holeCards || ['Back', 'Back'];
+    const holeCards = playerData.holeCards;
+    
 
     return (
         <div
@@ -59,10 +60,15 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
             }}
         >
             <div className="flex justify-center gap-1">
-                <img src={`/cards/${holeCards[0]}.svg`} width={60} height={80} />
-                <img src={`/cards/${holeCards[1]}.svg`} width={60} height={80} />
-                {/* <HandCard frontSrc={`/cards/1A.svg`} backSrc="/cards/Back.svg" flipped={flipped1} />
-                <HandCard frontSrc={`/cards/1C.svg`} backSrc="/cards/Back.svg" flipped={flipped2} /> */}
+                {playerData.holeCards && playerData.holeCards.length === 2 ? (
+                    <>
+                        <img src={`/cards/${playerData.holeCards[0]}.svg`} width={60} height={80} />
+                        <img src={`/cards/${playerData.holeCards[1]}.svg`} width={60} height={80} />
+                    </>
+                ) : (
+                    // Render nothing when no cards have been dealt yet
+                    <div className="w-[120px] h-[80px]"></div>
+                )}
             </div>
             <div className="relative flex flex-col justify-end mt-[-6px] mx-1s">
                 <div

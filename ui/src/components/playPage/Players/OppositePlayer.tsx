@@ -72,8 +72,14 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({
                 }}
             >
                 <div className="flex justify-center gap-1">
-                    <img src={`/cards/Back.svg`} alt="Opposite Player Card" className="w-[35%] h-[auto]" />
-                    <img src={`/cards/Back.svg`} alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                    {playerData.holeCards && playerData.holeCards.length === 2 ? (
+                        <>
+                            <img src="/cards/Back.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                            <img src="/cards/Back.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                        </>
+                    ) : (
+                        <div className="w-[120px] h-[80px]"></div>
+                    )}
                 </div>
                 <div className="relative flex flex-col justify-end mt-[-6px] mx-1">
                     <div

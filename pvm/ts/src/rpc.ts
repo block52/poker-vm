@@ -1,6 +1,5 @@
 import { ZeroHash } from "ethers";
-
-import { BlockDTO, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import {
     AccountCommand,
@@ -233,7 +232,7 @@ export class RPC {
                     result = await command.execute();
 
                     // Hack for now, mine these and clear mempool
-                    
+
 
                     break;
                 }
@@ -353,10 +352,10 @@ export class RPC {
 
                 case RPCMethods.DEAL: {
                     const [gameAddress, seed, publicKey] = request.params as RPCRequestParams[RPCMethods.DEAL];
-                    
+
                     // Extract player address from the request's public key
                     let playerAddress = ethers.ZeroAddress; // Default value
-                    
+
                     if (publicKey) {
                         try {
                             playerAddress = getAccountFromPublicKey(publicKey);
@@ -368,12 +367,12 @@ export class RPC {
                         // Fallback to using data field if available
                         playerAddress = request.data;
                     }
-                    
+
                     const command = new DealCommand(gameAddress, playerAddress, seed, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
-            
+
                 default:
                     return makeErrorRPCResponse(id, "Method not found");
             }
