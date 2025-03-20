@@ -10,6 +10,7 @@ export interface IDeck {
 
 export class Deck implements IDeck, IJSONModel {
     private cards: Card[] = []; // todo: make stake
+    private dealt: Card[] = [];
     public hash: string = "";
     public seedHash: string;
     private top: number = 0;
@@ -92,6 +93,7 @@ export class Deck implements IDeck, IJSONModel {
     }
 
     public deal(amount: number): Card[] {
+        this.top += amount;
         return Array.from({ length: amount }, () => this.getNext());
     }
 
