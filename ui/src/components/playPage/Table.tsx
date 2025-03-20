@@ -547,7 +547,7 @@ const Table = () => {
                     }}
                 >
                     {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-280px)] z-[0] relative">
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Base gradient background */}
                         <div 
                             className="absolute inset-0 z-0"
