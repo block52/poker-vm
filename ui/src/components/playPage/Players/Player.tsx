@@ -85,7 +85,7 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
                     )}
                 </div>
                 <div className="absolute top-[0%] w-full">
-                    <Badge count={index} value={stackValueDollars} color={color} />
+                    <Badge count={index} value={Number(stackValueDollars)} color={color} />
                 </div>
             </div>
         </div>
