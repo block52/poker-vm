@@ -24,11 +24,7 @@ import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
 import { ethers } from "ethers";
 import { Stack } from "../core/datastructures/stack";
 import { FixedCircularList } from "../core/datastructures/linkedList";
-
-type Round = {
-    type: TexasHoldemRound;
-    actions: Turn[];
-};
+import DealAction from "./actions/dealAction";
 
 export type GameOptions = {
     minBuyIn: bigint;
@@ -144,6 +140,7 @@ class TexasHoldemGame implements IPoker {
         })(this);
 
         this._actions = [
+            new DealAction(this, this._update),
             new SmallBlindAction(this, this._update),
             new BigBlindAction(this, this._update),
             new FoldAction(this, this._update),
