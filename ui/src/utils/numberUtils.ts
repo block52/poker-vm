@@ -36,21 +36,39 @@ export const formatUSDC = (amount: string): string => {
 }
 
 // New function to format Wei values (18 decimals) to dollars
-export const formatWeiToDollars = (weiAmount: string | bigint): number => {
+// export const formatWeiToDollars = (weiAmount: string | bigint): number => {
+//     try {
+//         // Convert from Wei (18 decimals) to standard units
+//         const etherValue = ethers.formatUnits(weiAmount.toString(), 18);
+        
+//         // Parse to number and format to 2 decimal places
+//         const dollarValue = parseFloat(etherValue);
+        
+//         // Format with commas for thousands and fixed 2 decimal places
+//         return dollarValue;
+//     } catch (error) {
+//         console.error("Error formatting Wei amount:", error);
+//         return 0;
+//     }
+// }
+
+
+// Update the formatting function to ensure two decimal places
+export const formatWeiToDollars = (weiAmount: string | bigint): string => {
     try {
-        // Convert from Wei (18 decimals) to standard units
-        const etherValue = ethers.formatUnits(weiAmount.toString(), 18);
-        
-        // Parse to number and format to 2 decimal places
-        const dollarValue = parseFloat(etherValue);
-        
-        // Format with commas for thousands and fixed 2 decimal places
-        return dollarValue;
+      // Convert from Wei (18 decimals) to standard units
+      const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
+      
+      // Format to always show 2 decimal places
+      return usdValue.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
     } catch (error) {
-        console.error("Error formatting Wei amount:", error);
-        return 0;
+      console.error("Error formatting Wei amount:", error);
+      return "0.00";
     }
-}
+  };
 
 // Simplified version without commas if needed
 export const formatWeiToSimpleDollars = (weiAmount: string | bigint): string => {

@@ -20,6 +20,7 @@ import { ethers } from "ethers";
 import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
+import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -56,8 +57,8 @@ const useTableData = () => {
         error: null,
         tableDataType: "cash",
         tableDataAddress: "",
-        tableDataSmallBlind: "0",
-        tableDataBigBlind: "0",
+        tableDataSmallBlind: "0.00",
+        tableDataBigBlind: "0.00",
         tableDataSmallBlindPosition: 0,
         tableDataBigBlindPosition: 0,
         tableDataDealer: 0,
@@ -89,8 +90,8 @@ const useTableData = () => {
         error: null,
         tableDataType: data.type,
         tableDataAddress: data.address,
-        tableDataSmallBlind: `${Number(ethers.formatUnits(data.smallBlind || "0", 18))}`,
-        tableDataBigBlind: `${Number(ethers.formatUnits(data.bigBlind || "0", 18))}`,
+        tableDataSmallBlind: formatWeiToSimpleDollars(data.smallBlind),
+        tableDataBigBlind: formatWeiToSimpleDollars(data.bigBlind),
         tableDataSmallBlindPosition: data.smallBlindPosition,
         tableDataBigBlindPosition: data.bigBlindPosition,
         tableDataDealer: data.dealer,
@@ -519,7 +520,9 @@ const Table = () => {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
                     {/* Left Section */}
                     <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">${`${tableDataValues.tableDataSmallBlind}/$${tableDataValues.tableDataBigBlind}`}</span>
+                        <span className="px-2 rounded text-[12px]">
+                            ${tableDataValues.tableDataSmallBlind}/${tableDataValues.tableDataBigBlind}
+                        </span>
                         <span className="ml-2 text-[12px]">
                             Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableDataValues.tableDataType}</span>
                         </span>
