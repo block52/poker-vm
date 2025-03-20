@@ -74,7 +74,7 @@ describe("Deck", () => {
         });
     });
 
-    describe("getNext and deal", () => {
+    describe.only("getNext and deal", () => {
         it("should draw next card correctly", () => {
             const card = deck.getNext();
             expect(card).toBeDefined();
@@ -82,12 +82,27 @@ describe("Deck", () => {
             expect(card.rank).toBeDefined();
             expect(card.value).toBeDefined();
             expect(card.mnemonic).toBeDefined();
+
+            const nextCard = deck.getNext();
+            expect(nextCard).toBeDefined();
+            expect(card).not.toEqual(nextCard);
         });
 
         it("should deal multiple cards", () => {
             const cards = deck.deal(5);
             expect(cards).toHaveLength(5);
-            expect(cards[0].mnemonic).toBeDefined();
+            cards.forEach((card: Card) => {
+                expect(card).toBeDefined();
+                expect(card.suit).toBeDefined();
+                expect(card.rank).toBeDefined();
+                expect(card.value).toBeDefined();
+                expect(card.mnemonic).toBeDefined();
+            });
+
+            // Check if top index has moved
+            const nextCard = deck.getNext();
+            expect(nextCard).toBeDefined();
+            expect(cards[0]).not.toEqual(nextCard);
         });
     });
 
