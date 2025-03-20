@@ -339,17 +339,19 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
                 <FaRegUserCircle color="#f0f0f0" className="w-12 h-12" />
             </div>
             <div className="text-white text-center">
-                <div className="text-sm mb-1">Seat {index}</div>
+                <div className="text-sm mb-1 whitespace-nowrap">Seat {index}</div>
                 
-                {isUserAlreadyPlaying
-                    ? "Already playing"
-                    : canJoinThisSeat
-                      ? index === localTableData?.data?.bigBlindPosition
-                          ? `Click to Join ($${bigBlindDisplay})`
-                          : index === localTableData?.data?.smallBlindPosition
-                            ? `Click to Join ($${smallBlindDisplay})`
-                            : `Click to Join`
-                      : "Seat Taken"}
+                <div className="whitespace-nowrap">
+                    {isUserAlreadyPlaying
+                        ? "Already playing"
+                        : canJoinThisSeat
+                            ? index === localTableData?.data?.bigBlindPosition
+                                ? `Click to Join ($${bigBlindDisplay})`
+                                : index === localTableData?.data?.smallBlindPosition
+                                    ? `Click to Join ($${smallBlindDisplay})`
+                                    : `Click to Join`
+                            : "Seat Taken"}
+                </div>
             </div>
             {/* Position indicator */}
             {getPositionName(index) && (
