@@ -13,6 +13,7 @@ import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useNavigate, useParams } from "react-router-dom";
+import { IoMenuSharp } from "react-icons/io5";
 
 import useUserBySeat from "../../hooks/useUserBySeat";
 
@@ -221,7 +222,7 @@ const Table = () => {
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    
+
     // Add effect to track mouse movement
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -230,9 +231,9 @@ const Table = () => {
             const y = (e.clientY / window.innerHeight) * 100;
             setMousePosition({ x, y });
         };
-        
-        window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
     }, []);
 
     useEffect(() => {
@@ -457,14 +458,14 @@ const Table = () => {
                     }
                 }
             `}</style>
-            
+
             {/*//! HEADER */}
             <div className="flex-shrink-0">
                 <div className="w-[100vw] h-[65px] bottom-0 bg-[#404040] top-5 text-center flex items-center justify-between border-gray-400 px-4 z-0">
                     <div className="flex items-center space-x-2">
-                        {/* <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
-                            <IoMenuSharp size={20} />
-                        </div> */}
+                        <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
+                            <IoMenuSharp size={20} /> 
+                        </div>
                         <span className="text-white text-sm font-medium text-[20px] cursor-pointer" onClick={() => navigate("/")}>
                             Lobby
                         </span>
@@ -517,10 +518,33 @@ const Table = () => {
                     </div>
                 </div>
 
-                <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[25px]">
+                {/* SUB HEADER */}
+                <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg">
+                    {/* Animated background overlay */}
+                    <div
+                        className="absolute inset-0 z-0 opacity-30"
+                        style={{
+                            background:
+                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
+                            backgroundSize: "200% 100%",
+                            animation: "shimmer 3s infinite linear"
+                        }}
+                    />
+
+                    {/* Bottom edge shadow */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-50"></div>
+
+                    {/* Add the keyframe animation */}
+                    <style>{`
+                        @keyframes shimmer {
+                            0% { background-position: 0% 0; }
+                            100% { background-position: 200% 0; }
+                        }
+                    `}</style>
+
                     {/* Left Section */}
-                    <div className="flex items-center">
-                        <span className="px-2 rounded text-[12px]">
+                    <div className="flex items-center z-10">
+                        <span className="px-2 py-1 rounded bg-gradient-to-r from-green-900 to-green-800 shadow-inner text-[12px] border border-green-700">
                             ${tableDataValues.tableDataSmallBlind}/${tableDataValues.tableDataBigBlind}
                         </span>
                         <span className="ml-2 text-[12px]">
@@ -529,12 +553,21 @@ const Table = () => {
                     </div>
 
                     {/* Right Section */}
-                    <div className="flex items-center">
-                        <span className="text-sm cursor-pointer" onClick={onCloseSideBar}>
+                    <div className="flex items-center z-10">
+                        <span className="text-sm cursor-pointer hover:text-green-400 transition-colors duration-200" onClick={onCloseSideBar}>
                             {openSidebar ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
                         </span>
-                        <button className="ml-2 px-3 rounded" onClick={onGoToDashboard}>
-                            X
+                        <button
+                            className="ml-2 px-3 py-1 rounded-md bg-gradient-to-r from-red-800 to-red-700 hover:from-red-700 hover:to-red-600 
+                            text-white font-medium text-xs shadow-md border border-red-900 hover:border-red-800 
+                            transition-all duration-200 flex items-center justify-center transform hover:scale-105"
+                            onClick={onGoToDashboard}
+                            title="Return to Lobby"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Exit
                         </button>
                     </div>
                 </div>
@@ -552,7 +585,7 @@ const Table = () => {
                     {/*//! TABLE */}
                     <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Base gradient background */}
-                        <div 
+                        <div
                             className="absolute inset-0 z-0"
                             style={{
                                 background: `
@@ -562,18 +595,18 @@ const Table = () => {
                                     radial-gradient(circle at 0% 100%, rgba(30, 52, 47, 0.7) 0%, transparent 50%),
                                     radial-gradient(circle at 100% 100%, rgba(50, 79, 71, 0.7) 0%, transparent 50%)
                                 `,
-                                filter: 'blur(60px)',
-                                transition: 'background 0.3s ease-out'
+                                filter: "blur(60px)",
+                                transition: "background 0.3s ease-out"
                             }}
                         />
-                        
+
                         {/* Animated overlay */}
-                        <div 
+                        <div
                             className="absolute inset-0 z-0"
                             style={{
                                 background: `
                                     repeating-linear-gradient(
-                                        ${45 + (mousePosition.x / 10)}deg,
+                                        ${45 + mousePosition.x / 10}deg,
                                         rgba(42, 72, 65, 0.1) 0%,
                                         rgba(61, 89, 80, 0.1) 25%,
                                         rgba(30, 52, 47, 0.1) 50%,
@@ -581,12 +614,12 @@ const Table = () => {
                                         rgba(42, 72, 65, 0.1) 100%
                                     )
                                 `,
-                                backgroundSize: '400% 400%',
-                                animation: 'gradient 15s ease infinite',
-                                transition: 'background 0.5s ease'
+                                backgroundSize: "400% 400%",
+                                animation: "gradient 15s ease infinite",
+                                transition: "background 0.5s ease"
                             }}
                         />
-                        
+
                         <div className="zoom-container h-[450px] w-[900px] m-[auto] relative z-10">
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
                                 <div className="w-[900px] h-[450px] relative text-center block transform translate-y-[30px]">
@@ -762,15 +795,14 @@ const Table = () => {
                             {data && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{data.hand_strength}</span>}
                         </div>
                     </div>
-                   
+
                     {/*//! FOOTER */}
                     <div className="flex-shrink-0 w-full h-[190px] bg-custom-footer text-center z-[10] flex justify-center">
                         <PokerActionPanel />
                     </div>
 
-
-                     {/* DEAL BUTTON */}
-                     {canDeal && (
+                    {/* DEAL BUTTON */}
+                    {canDeal && (
                         <div className="absolute bottom-[300px] left-1/2 transform -translate-x-1/2 z-[9999]">
                             <button
                                 onClick={handleDeal}
