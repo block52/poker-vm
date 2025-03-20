@@ -459,46 +459,57 @@ const Table = () => {
                 }
             `}</style>
 
-            {/*//! HEADER */}
+            {/*//! HEADER - CASINO STYLE */}
             <div className="flex-shrink-0">
-                <div className="w-[100vw] h-[65px] bottom-0 bg-[#404040] top-5 text-center flex items-center justify-between border-gray-400 px-4 z-0">
-                    <div className="flex items-center space-x-2">
-                        <div className="flex items-center justify-center w-10 h-10 bg-white rounded-full border-r border-white">
-                            <IoMenuSharp size={20} /> 
+                <div className="w-[100vw] h-[65px] bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-center flex items-center justify-between px-4 z-10 relative overflow-hidden border-b-2 border-[#3a546d]">
+                    {/* Subtle animated background */}
+                    <div className="absolute inset-0 z-0">
+                        {/* Bottom edge glow */}
+                        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#64ffda] to-transparent opacity-50"></div>
+                    </div>
+                    
+                    {/* Left Section - Lobby button */}
+                    <div className="flex items-center space-x-3 z-10">
+                        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#64ffda] transition-all duration-300" onClick={() => navigate("/")}>
+                            <IoMenuSharp size={20} className="text-[#64ffda]" /> 
                         </div>
-                        <span className="text-white text-sm font-medium text-[20px] cursor-pointer" onClick={() => navigate("/")}>
+                        <span className="text-white font-medium text-[20px] cursor-pointer hover:text-[#64ffda] transition-colors duration-300" onClick={() => navigate("/")}>
                             Lobby
                         </span>
                     </div>
 
-                    {/* Middle Section - Add Wallet Info */}
-                    <div className="flex flex-col items-center text-white text-sm">
-                        <div>Table Address: {id ? id : "Invalid Table"}</div>
-                        {tableData && <div>Table Type: {tableData.data?.type}</div>}
+                    {/* Middle Section - Table info */}
+                    <div className="flex flex-col items-center text-white z-10">
+                        <div className="bg-[#0f172a80] px-4 py-1 rounded-lg border border-[#3a546d] shadow-inner">
+                            <span className="text-[#64ffda] mr-2 text-sm">♠️</span>
+                            <span>Table: {id}</span>
+                            <span className="text-[#64ffda] mx-2 text-sm">♦️</span>
+                            {/* <span>{tableData && tableData.data?.type}</span> */}
+                        </div>
                     </div>
 
-                    {/* Right Section - Updated with icon and compact layout */}
-                    <div className="flex items-center">
-                        <div className="flex flex-col items-end justify-center text-white text-[11px] mr-2">
+                    {/* Right Section - Wallet info */}
+                    <div className="flex items-center z-10">
+                        <div className="flex flex-col items-end justify-center text-white mr-3">
                             {walletLoading ? (
                                 <span>Loading...</span>
                             ) : (
                                 <>
                                     <div className="flex items-center gap-1 text-gray-300">
-                                        <span className="opacity-75">Account:</span>
-                                        <span className="font-mono text-[10px]">
+                                        <span className="opacity-75 text-[11px]">Account:</span>
+                                        <span className="font-mono text-[10px] text-[#64ffda]">
                                             {`${localStorage.getItem("user_eth_public_key")?.slice(0, 6)}...${localStorage.getItem("user_eth_public_key")?.slice(-4)}`}
                                         </span>
                                         <FaCopy
-                                            className="ml-1 cursor-pointer hover:text-green-400 transition-colors duration-200"
+                                            className="ml-1 cursor-pointer text-gray-400 hover:text-[#64ffda] transition-colors duration-200"
                                             size={12}
                                             onClick={() => copyToClipboard(localStorage.getItem("user_eth_public_key") || "")}
                                             title="Copy full address"
                                         />
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
-                                        <span className="opacity-75">Balance:</span>
-                                        <span className="font-medium text-green-400">
+                                        <span className="opacity-75 text-[11px]">Balance:</span>
+                                        <span className="font-medium text-[#64ffda] text-[12px]">
                                             ${balance ? formatWeiToUSD(balance) : "0.00"}
                                             <span className="text-[10px] ml-1 text-gray-400">USDC</span>
                                         </span>
@@ -507,12 +518,11 @@ const Table = () => {
                             )}
                         </div>
 
-                        <div className="flex items-center justify-center w-10 h-10 cursor-pointer">
+                        <div className="flex items-center justify-center w-10 h-10 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#64ffda] transition-all duration-300">
                             <RiMoneyDollarCircleLine
-                                color="#f0f0f0"
-                                size={25}
+                                className="text-[#64ffda] hover:scale-110 transition-transform duration-200"
+                                size={22}
                                 onClick={() => navigate("/deposit")}
-                                className="hover:text-green-400 transition-colors duration-200"
                             />
                         </div>
                     </div>
