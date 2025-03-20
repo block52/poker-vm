@@ -393,19 +393,26 @@ const PokerActionPanel: React.FC = () => {
     }, [tableData, shouldShowBigBlindButton]);
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-custom-header text-white p-4 flex justify-center items-center">
-            <div className="flex flex-col w-[600px] space-y-6 mb-2 justify-center rounded-lg">
-               
-
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-4 pb-6 flex justify-center items-center border-t-2 border-[#3a546d] relative">
+            {/* Animated light effects */}
+            <div className="absolute inset-0 z-0 overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#64ffda] to-transparent opacity-70"></div>
+                <div className="absolute top-[10%] left-[1%] w-[1px] h-[80%] bg-[#64ffda] opacity-20 animate-pulse"></div>
+                <div className="absolute top-[10%] right-[1%] w-[1px] h-[80%] bg-[#64ffda] opacity-20 animate-pulse" style={{animationDelay: '0.7s'}}></div>
+            </div>
+            
+            <div className="flex flex-col w-[600px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Player Action Buttons Container */}
-                <div className="flex justify-center items-center mb-2">
+                <div className="flex justify-center items-center">
                     {shouldShowSmallBlindButton && (
                         <button
                             onClick={handlePostSmallBlind}
-                            className="bg-[#2c7873] hover:bg-[#1e5954] text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors duration-200 border border-[#3a9188] flex items-center"
+                            className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                            text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
+                            border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105"
                         >
                             <span className="mr-1">Post Small Blind</span>
-                            <span className="bg-[#1a4542] px-2 py-1 rounded text-green-300 text-sm">
+                            <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
                                 ${Number(ethers.formatUnits(userStatus?.smallBlindAmount || "0", 18)).toFixed(2)}
                             </span>
                         </button>
@@ -414,10 +421,12 @@ const PokerActionPanel: React.FC = () => {
                     {shouldShowBigBlindButton && (
                         <button
                             onClick={handlePostBigBlind}
-                            className="bg-[#2c7873] hover:bg-[#1e5954] text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors duration-200 border border-[#3a9188] flex items-center"
+                            className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                            text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
+                            border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105"
                         >
                             <span className="mr-1">Post Big Blind</span>
-                            <span className="bg-[#1a4542] px-2 py-1 rounded text-green-300 text-sm">
+                            <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
                                 ${Number(ethers.formatUnits(userStatus?.bigBlindAmount || "0", 18)).toFixed(2)}
                             </span>
                         </button>
@@ -430,7 +439,9 @@ const PokerActionPanel: React.FC = () => {
                         <div className="flex justify-between gap-2">
                             {canFold && (
                                 <button
-                                    className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                    className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
+                                    px-4 py-2 rounded-lg w-full border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
+                                    transition-all duration-200 font-medium transform hover:scale-105"
                                     onClick={handleFold}
                                 >
                                     FOLD
@@ -438,7 +449,9 @@ const PokerActionPanel: React.FC = () => {
                             )}
                             {canCheck && (
                                 <button
-                                    className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                    className="cursor-pointer bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] hover:from-[#1e40af] hover:to-[#2563eb]
+                                    px-4 py-2 rounded-lg w-full border border-[#1e3a8a] hover:border-[#3b82f6] shadow-md
+                                    transition-all duration-200 font-medium transform hover:scale-105"
                                     onClick={handleCheck}
                                 >
                                     CHECK
@@ -446,26 +459,32 @@ const PokerActionPanel: React.FC = () => {
                             )}
                             {canCall && (
                                 <button
-                                    className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                    className="cursor-pointer bg-gradient-to-r from-[#065f46] to-[#047857] hover:from-[#047857] hover:to-[#059669]
+                                    px-4 py-2 rounded-lg w-full border border-[#065f46] hover:border-[#10b981] shadow-md
+                                    transition-all duration-200 font-medium transform hover:scale-105"
                                     onClick={handleCall}
                                 >
-                                    CALL ${callAmount.toFixed(2)}
+                                    CALL <span className="text-[#64ffda]">${callAmount.toFixed(2)}</span>
                                 </button>
                             )}
                             {canRaise && (
                                 <button
-                                    className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                    className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                    transition-all duration-200 font-medium transform hover:scale-105"
                                     onClick={handleRaise}
                                 >
-                                    RAISE ${raiseAmount.toFixed(2)}
+                                    RAISE <span className="text-[#64ffda]">${raiseAmount.toFixed(2)}</span>
                                 </button>
                             )}
                             {canBet && (
                                 <button
-                                    className="cursor-pointer bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-4 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                    className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                    transition-all duration-200 font-medium transform hover:scale-105"
                                     onClick={handleBet}
                                 >
-                                    BET ${raiseAmount.toFixed(2)}
+                                    BET <span className="text-[#64ffda]">${raiseAmount.toFixed(2)}</span>
                                 </button>
                             )}
                         </div>
@@ -474,9 +493,11 @@ const PokerActionPanel: React.FC = () => {
                         {(canBet || canRaise) && (
                             <>
                                 {/* Slider and Controls */}
-                                <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-4 bg-[#0f172a40] p-2 rounded-lg border border-[#3a546d]">
                                     <button
-                                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg border-[1px] border-gray-400"
+                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                        py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
+                                        transition-all duration-200"
                                         onClick={() => handleRaiseChange(Math.max(raiseAmount - 0.1, canBet ? minBet : minRaise))}
                                         disabled={!isPlayerTurn}
                                     >
@@ -489,11 +510,13 @@ const PokerActionPanel: React.FC = () => {
                                         step={0.1}
                                         value={raiseAmount}
                                         onChange={e => handleRaiseChange(Number(e.target.value))}
-                                        className="flex-1"
+                                        className="flex-1 accent-[#64ffda]"
                                         disabled={!isPlayerTurn}
                                     />
                                     <button
-                                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] py-1 px-4 rounded-lg border-[1px] border-gray-400"
+                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                        py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
+                                        transition-all duration-200"
                                         onClick={() => handleRaiseChange(Math.min(raiseAmount + 0.1, canBet ? maxBet : maxRaise))}
                                         disabled={!isPlayerTurn}
                                     >
@@ -502,37 +525,47 @@ const PokerActionPanel: React.FC = () => {
                                 </div>
 
                                 {/* Additional Options */}
-                                <div className="flex justify-between gap-2">
+                                <div className="flex justify-between gap-2 mb-1">
                                     <button
-                                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                        px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
+                                        transition-all duration-200 text-xs transform hover:scale-105"
                                         onClick={() => setRaiseAmount(Math.max(totalPot / 4, canBet ? minBet : minRaise))}
                                         disabled={!isPlayerTurn}
                                     >
                                         1/4 Pot
                                     </button>
                                     <button
-                                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                        px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
+                                        transition-all duration-200 text-xs transform hover:scale-105"
                                         onClick={() => setRaiseAmount(Math.max(totalPot / 2, canBet ? minBet : minRaise))}
                                         disabled={!isPlayerTurn}
                                     >
                                         1/2 Pot
                                     </button>
                                     <button
-                                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                        px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
+                                        transition-all duration-200 text-xs transform hover:scale-105"
                                         onClick={() => setRaiseAmount(Math.max((totalPot / 4) * 3, canBet ? minBet : minRaise))}
                                         disabled={!isPlayerTurn}
                                     >
                                         3/4 Pot
                                     </button>
                                     <button
-                                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                        px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
+                                        transition-all duration-200 text-xs transform hover:scale-105"
                                         onClick={() => setRaiseAmount(Math.max(totalPot, canBet ? minBet : minRaise))}
                                         disabled={!isPlayerTurn}
                                     >
                                         Pot
                                     </button>
                                     <button
-                                        className="bg-[#0c0c0c80] hover:bg-[#0c0c0c] px-2 py-2 rounded-lg w-full border-[1px] border-gray-400"
+                                        className="bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                        px-2 py-1.5 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                        transition-all duration-200 text-xs font-medium transform hover:scale-105"
                                         onClick={() => setRaiseAmount(canBet ? maxBet : maxRaise)}
                                         disabled={!isPlayerTurn}
                                     >
