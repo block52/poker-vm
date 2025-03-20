@@ -547,7 +547,7 @@ const Table = () => {
                     }}
                 >
                     {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-280px)] z-[100] relative">
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-280px)] z-[0] relative">
                         {/* Base gradient background */}
                         <div 
                             className="absolute inset-0 z-0"
@@ -761,7 +761,7 @@ const Table = () => {
                     </div>
                    
                     {/*//! FOOTER */}
-                    <div className="flex-shrink-0 w-full h-[190px] bg-custom-footer text-center z-[0] flex justify-center">
+                    <div className="flex-shrink-0 w-full h-[190px] bg-custom-footer text-center z-[10] flex justify-center">
                         <PokerActionPanel />
                     </div>
 
