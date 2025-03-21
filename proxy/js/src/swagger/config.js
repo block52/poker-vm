@@ -10,10 +10,8 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: process.env.NODE_ENV === 'production' 
-                    ? "https://proxy.block52.xyz"
-                    : "http://localhost:8080",
-                description: process.env.NODE_ENV === 'production' ? "Production server" : "Local development"
+                url: process.env.NODE_ENV === "production" ? "https://proxy.block52.xyz" : "http://localhost:8080",
+                description: process.env.NODE_ENV === "production" ? "Production server" : "Local development"
             }
         ],
         paths: {
@@ -22,7 +20,7 @@ const swaggerOptions = {
                     tags: ["Health"],
                     summary: "Health check endpoint",
                     responses: {
-                        "200": {
+                        200: {
                             description: "Server is running"
                         }
                     }
@@ -32,15 +30,17 @@ const swaggerOptions = {
                 get: {
                     tags: ["Account"],
                     summary: "Get account information",
-                    parameters: [{
-                        name: "id",
-                        in: "path",
-                        required: true,
-                        schema: { type: "string" },
-                        description: "Account address"
-                    }],
+                    parameters: [
+                        {
+                            name: "id",
+                            in: "path",
+                            required: true,
+                            schema: { type: "string" },
+                            description: "Account address"
+                        }
+                    ],
                     responses: {
-                        "200": {
+                        200: {
                             description: "Account details",
                             content: {
                                 "application/json": {
@@ -60,7 +60,7 @@ const swaggerOptions = {
                     tags: ["System"],
                     summary: "Get current server time",
                     responses: {
-                        "200": {
+                        200: {
                             description: "Current Unix timestamp",
                             content: {
                                 "application/json": {
@@ -78,7 +78,7 @@ const swaggerOptions = {
                     tags: ["Tables"],
                     summary: "Get all available tables",
                     responses: {
-                        "200": {
+                        200: {
                             description: "List of tables",
                             content: {
                                 "application/json": {
@@ -93,15 +93,17 @@ const swaggerOptions = {
                 get: {
                     tags: ["Tables"],
                     summary: "Get specific table information",
-                    parameters: [{
-                        name: "id",
-                        in: "path",
-                        required: true,
-                        schema: { type: "string" },
-                        description: "Table ID"
-                    }],
+                    parameters: [
+                        {
+                            name: "id",
+                            in: "path",
+                            required: true,
+                            schema: { type: "string" },
+                            description: "Table ID"
+                        }
+                    ],
                     responses: {
-                        "200": {
+                        200: {
                             description: "Table details"
                         }
                     }
@@ -128,7 +130,7 @@ const swaggerOptions = {
                         }
                     ],
                     responses: {
-                        "200": {
+                        200: {
                             description: "Player details"
                         }
                     }
@@ -138,15 +140,17 @@ const swaggerOptions = {
                 get: {
                     tags: ["Account"],
                     summary: "Get account nonce",
-                    parameters: [{
-                        name: "address",
-                        in: "path",
-                        required: true,
-                        schema: { type: "string" },
-                        description: "Ethereum address"
-                    }],
+                    parameters: [
+                        {
+                            name: "address",
+                            in: "path",
+                            required: true,
+                            schema: { type: "string" },
+                            description: "Ethereum address"
+                        }
+                    ],
                     responses: {
-                        "200": {
+                        200: {
                             description: "Account nonce and timestamp",
                             content: {
                                 "application/json": {
@@ -170,7 +174,7 @@ const swaggerOptions = {
                                 }
                             }
                         },
-                        "500": {
+                        500: {
                             description: "Error getting nonce",
                             content: {
                                 "application/json": {
@@ -195,13 +199,15 @@ const swaggerOptions = {
                 post: {
                     tags: ["Tables"],
                     summary: "Join a table",
-                    parameters: [{
-                        name: "tableId",
-                        in: "path",
-                        required: true,
-                        schema: { type: "string" },
-                        description: "Table ID"
-                    }],
+                    parameters: [
+                        {
+                            name: "tableId",
+                            in: "path",
+                            required: true,
+                            schema: { type: "string" },
+                            description: "Table ID"
+                        }
+                    ],
                     requestBody: {
                         required: true,
                         content: {
@@ -229,7 +235,7 @@ const swaggerOptions = {
                         }
                     },
                     responses: {
-                        "200": {
+                        200: {
                             description: "Successfully joined table"
                         }
                     }
@@ -237,9 +243,9 @@ const swaggerOptions = {
             }
         }
     },
-    apis: ['./src/routes/*.js', './src/swagger/routes/*.js']
+    apis: ["./src/routes/*.js", "./src/swagger/routes/*.js"]
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
-module.exports = swaggerSpec; 
+module.exports = swaggerSpec;
