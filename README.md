@@ -2,9 +2,13 @@
 
 The Layer 2 poker game virtual machine.
 
+# CVM
 
+The CVM is a virtual card game machine that runs on the Block52 network. It is responsible for executing the card game logic.
 
+# PVM
 
+The PVM is a virtual poker game machine that runs inside the CVM. It is responsible for executing the poker game logic.
 
 # Block52 Proxy Server
 
