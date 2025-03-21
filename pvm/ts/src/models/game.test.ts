@@ -1,6 +1,5 @@
 import { ethers } from "ethers";
-import { Card } from "./deck";
-import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { Card } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame, { GameOptions } from "../engine/texasHoldem";
 
 describe("Game Tests", () => {
