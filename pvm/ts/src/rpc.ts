@@ -12,7 +12,6 @@ import {
     GameStateCommand,
     GetAllContractSchemasCommand,
     GetBlocksCommand,
-    GetContractSchemaCommand,
     GetNodesCommand,
     GetTransactionCommand,
     GetTransactionsCommand,
@@ -22,7 +21,6 @@ import {
     MineCommand,
     MintCommand,
     PurgeMempoolCommand,
-    ReceiveMinedBlockCommand,
     ReceiveMinedBlockHashCommand,
     SharedSecretCommand,
     ShutdownCommand,
@@ -30,7 +28,6 @@ import {
     StopServerCommand,
     TransferCommand
 } from "./commands";
-
 
 import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
