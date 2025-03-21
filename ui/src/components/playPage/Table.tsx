@@ -647,14 +647,6 @@ const Table = () => {
                                                 </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
-                                                <span className="text-[#dbd3d3] mr-2 flex items-center whitespace-nowrap">
-                                                    Round:{" "}
-                                                    <span className="font-semibold text-yellow-400 ml-1">
-                                                        {tableDataValues.tableDataRound || "Round Data Not Available"}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                            <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
                                                 <span className="text-[#dbd3d3] mr-2">
                                                     Main Pot:{" "}
                                                     {tableDataValues.tableDataPots?.[0] === "0"
