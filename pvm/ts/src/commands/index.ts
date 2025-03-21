@@ -8,6 +8,7 @@ import { RandomCommand } from "./randomCommand";
 import { ResponseCommand } from "./responseCommand";
 import { TransferCommand } from "./transferCommand";
 import { DealCommand } from "./dealCommand";
+import { DeployContractCommand } from "./deployContractCommand";
 
 import { BlockCommand, BlockCommandParams } from "./blockCommand";
 import { BurnCommand } from "./burnCommand";
@@ -36,6 +37,7 @@ export {
     ChallengeCommand,
     GetTransactionsCommand,
     DealCommand,
+    DeployContractCommand,
     MeCommand,
     MintCommand,
     RandomCommand,

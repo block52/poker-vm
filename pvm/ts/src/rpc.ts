@@ -9,6 +9,7 @@ import {
     CreateAccountCommand,
     CreateContractSchemaCommand,
     DealCommand,
+    DeployContractCommand,
     GameStateCommand,
     GetAllContractSchemasCommand,
     GetBlocksCommand,
@@ -35,6 +36,7 @@ import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
 import * as ethers from "ethers";
 import { getAccountFromPublicKey } from "./utils/crypto";
+import { GameOptions } from "./engine/texasHoldem";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -230,7 +232,6 @@ export class RPC {
 
                     // Hack for now, mine these and clear mempool
 
-
                     break;
                 }
 
@@ -333,20 +334,6 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.MINE: {
-                    const command = new MineCommand(validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
-
-                case RPCMethods.MINED_BLOCK_HASH: {
-                    const blockHash = request.params[0] as string;
-                    const nodeUrl = request.params[1] as string;
-                    const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
-
                 case RPCMethods.DEAL: {
                     const [gameAddress, seed, publicKey] = request.params as RPCRequestParams[RPCMethods.DEAL];
 
@@ -366,6 +353,38 @@ export class RPC {
                     }
 
                     const command = new DealCommand(gameAddress, playerAddress, seed, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.DEPLOY_CONTRACT: {
+                    const [nonce, owner, data] = request.params as RPCRequestParams[RPCMethods.DEPLOY_CONTRACT];
+                    const params = data.split("-");
+
+                    const gameOptions : GameOptions =  {
+                        minBuyIn: BigInt(params[0]),
+                        maxBuyIn: BigInt(params[1]),
+                        minPlayers: parseInt(params[2]),
+                        maxPlayers: parseInt(params[3]),
+                        smallBlind: BigInt(params[4]),
+                        bigBlind: BigInt(params[5])
+                    };
+
+                    const command = new DeployContractCommand(BigInt(nonce), owner, gameOptions, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.MINE: {
+                    const command = new MineCommand(validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.MINED_BLOCK_HASH: {
+                    const blockHash = request.params[0] as string;
+                    const nodeUrl = request.params[1] as string;
+                    const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

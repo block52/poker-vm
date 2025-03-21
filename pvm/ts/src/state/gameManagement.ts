@@ -55,7 +55,7 @@ export class GameManagement extends StateManager {
         throw new Error("Game not found");
     }
 
-    async deploy(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {
+    async create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {
         const digest = `${owner}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
         const hash = crypto.createHash("sha256").update(digest).digest("hex");
 
