@@ -5,6 +5,7 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IJSONModel } from "../models/interfaces";
 import { ContractSchema } from "../models/contractSchema";
 import { GameOptions } from "../engine/texasHoldem";
+import crypto from "crypto";
 
 export class GameManagement extends StateManager {
     private readonly mempool: Mempool;
@@ -52,6 +53,36 @@ export class GameManagement extends StateManager {
         }
 
         throw new Error("Game not found");
+    }
+
+    async deploy(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {
+        const digest = `${owner}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
+        const hash = crypto.createHash("sha256").update(digest).digest("hex");
+
+        const game = new GameState({
+            address: hash,
+            state: {
+                type: "cash",
+                address: hash,
+                minBuyIn: gameOptions.minBuyIn.toString(),
+                maxBuyIn: gameOptions.maxBuyIn.toString(),
+                minPlayers: gameOptions.minPlayers,
+                maxPlayers: gameOptions.maxPlayers,
+                smallBlind: gameOptions.smallBlind.toString(),
+                bigBlind: gameOptions.bigBlind.toString(),
+                dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
+                players: [],
+                communityCards: [],
+                pots: ["0"],
+                nextToAct: -1,
+                round: "preflop",
+                winners: [],
+                signature: ethers.ZeroHash
+            }
+        });
+
+        await game.save();
+        return hash;
     }
 
     async save(state: IJSONModel): Promise<void> {
