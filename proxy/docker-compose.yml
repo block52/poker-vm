@@ -1,0 +1,58 @@
+services:
+  mongo:
+    image: mongo
+    container_name: block52-payments
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: payments
+      # No auth for now
+      # MONGO_INITDB_ROOT_USERNAME: root
+      # MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+
+  # Node.js Express application
+  api:
+    build:
+      context: ./js
+      dockerfile: Dockerfile
+    container_name: block52-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NODE_URL=https://node1.block52.xyz
+      - PORT=8080
+      - MONGO_URI=mongodb://mongo:27017/payments
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+    volumes:
+      - ./js:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # Nginx reverse proxy
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: block52-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:
+
+# networks:
+#   block52-network:
+#     driver: bridge

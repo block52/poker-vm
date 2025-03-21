@@ -21,14 +21,14 @@ const { NodeRpcClient, RPCMethods } = require("@bitcoinbrisbane/block52");
 const { getUnixTime } = require("./utils/helpers");
 
 // Add WebSocket support
-const WebSocket = require('ws');
-const http = require('http');
+const WebSocket = require("ws");
+const http = require("http");
 
 // ===================================
 // 2. Load Environment Configuration
 // ===================================
 dotenv.config();
-const clientType = process.env.CLIENT_TYPE || "block52";
+const clientType = "block52";
 const port = process.env.PORT || 8080;
 
 // ===================================
@@ -40,18 +40,12 @@ const getClient = () => {
         return clientInstance;
     }
 
-    if (clientType === "mock") {
-        console.log("Using mock client");
-        const seed = process.env.SEED;
-        return clientInstance = new Mocks(seed);
-    } 
-    
     if (clientType === "block52") {
         const node_url = process.env.NODE_URL || "https://node1.block52.xyz/";
         console.log("Using Block52 client with node URL:", node_url);
-        return clientInstance = new Block52(node_url);
+        return (clientInstance = new Block52(node_url));
     }
-    
+
     throw new Error("Client type not found");
 };
 
@@ -210,154 +204,192 @@ app.get("/table/:id/player/:seat", (req, res) => {
 const server = http.createServer(app);
 
 // Create WebSocket server with proper CORS handling
-const wss = new WebSocket.Server({ 
-  server,
-  path: '/ws',
-  // Add proper verification for CORS
-  verifyClient: (info) => {
-    const origin = info.origin || info.req.headers.origin;
-    const allowedOrigins = ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080"];
-    
-    if (allowedOrigins.includes(origin)) {
-      console.log(`Accepted WebSocket connection from origin: ${origin}`);
-      return true;
+const wss = new WebSocket.Server({
+    server,
+    path: "/ws",
+    // Add proper verification for CORS
+    verifyClient: info => {
+        const origin = info.origin || info.req.headers.origin;
+        const allowedOrigins = ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080"];
+
+        if (allowedOrigins.includes(origin)) {
+            console.log(`Accepted WebSocket connection from origin: ${origin}`);
+            return true;
+        }
+
+        console.log(`Rejected WebSocket connection from origin: ${origin}`);
+        return false;
     }
-    
-    console.log(`Rejected WebSocket connection from origin: ${origin}`);
-    return false;
-  }
 });
 
 // Add more detailed error logging
-wss.on('error', (error) => {
-  console.error('WebSocket server error:', error);
+wss.on("error", error => {
+    console.error("WebSocket server error:", error);
 });
 
 // Keep track of table subscriptions
 const tableSubscriptions = new Map();
 
-// Function to send table state to a specific client
-async function sendTableState(tableId, ws) {
-  try {
-    console.log(`Fetching table state for ${tableId} to send via WebSocket`);
+// Add a simple cache for table state
+const tableStateCache = new Map();
+const TABLE_CACHE_TTL = 2000; // 2 seconds
+
+// Function to get table state with caching
+async function getTableStateWithCache(tableId) {
+    const now = Date.now();
+    const cachedData = tableStateCache.get(tableId);
+    
+    if (cachedData && (now - cachedData.timestamp < TABLE_CACHE_TTL)) {
+        console.log(`Using cached table state for ${tableId}`);
+        return cachedData.data;
+    }
+    
+    console.log(`Cache miss for table ${tableId}, fetching fresh data`);
     const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
     const table = await client.getGameState(tableId);
     
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        type: 'tableUpdate',
-        data: table
-      }));
-      console.log(`Sent table state for ${tableId} via WebSocket`);
-    } else {
-      console.log(`WebSocket not open, skipping table state send for ${tableId}`);
+    tableStateCache.set(tableId, {
+        data: table,
+        timestamp: now
+    });
+    
+    return table;
+}
+
+// Update the sendTableState function to use caching
+async function sendTableState(tableId, ws) {
+    try {
+        console.log(`Fetching table state for ${tableId} to send via WebSocket`);
+        const table = await getTableStateWithCache(tableId);
+
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(
+                JSON.stringify({
+                    type: "tableUpdate",
+                    data: table
+                })
+            );
+            console.log(`Sent table state for ${tableId} via WebSocket`);
+        } else {
+            console.log(`WebSocket not open, skipping table state send for ${tableId}`);
+        }
+    } catch (error) {
+        console.error("Error fetching table state for WebSocket:", error);
     }
-  } catch (error) {
-    console.error("Error fetching table state for WebSocket:", error);
-  }
 }
 
 // WebSocket connection handler - simplified for debugging
-wss.on('connection', (ws, req) => {
-  console.log('WebSocket client connected from', req.socket.remoteAddress);
-  console.log('WebSocket connection headers:', req.headers);
-  
-  // Send a welcome message immediately
-  try {
-    ws.send(JSON.stringify({
-      type: 'welcome',
-      message: 'Connected to WebSocket server'
-    }));
-    console.log('Sent welcome message');
-  } catch (error) {
-    console.error('Error sending welcome message:', error);
-  }
-  
-  let subscribedTableId = null;
-  
-  // Handle messages from clients
-  ws.on('message', (message) => {
-    try {
-      console.log('Raw message received:', message.toString());
-      const data = JSON.parse(message.toString());
-      console.log('WebSocket message received:', data);
-      
-      // Handle subscription requests
-      if (data.type === 'subscribe' && data.tableId) {
-        subscribedTableId = data.tableId;
-        console.log(`Client subscribed to table: ${subscribedTableId}`);
-        
-        // Add this connection to the table's subscription list
-        if (!tableSubscriptions.has(subscribedTableId)) {
-          tableSubscriptions.set(subscribedTableId, new Set());
-        }
-        tableSubscriptions.get(subscribedTableId).add(ws);
-        
-        // Send confirmation to client
-        ws.send(JSON.stringify({
-          type: 'subscribed',
-          tableId: subscribedTableId
-        }));
-        
-        // Send initial table state
-        sendTableState(subscribedTableId, ws);
-      }
-    } catch (error) {
-      console.error('Error processing WebSocket message:', error);
-    }
-  });
+wss.on("connection", (ws, req) => {
+    // Add isAlive property initialization
+    ws.isAlive = true;
+    
+    // When receiving a pong, mark the connection as alive
+    ws.on('pong', () => {
+        ws.isAlive = true;
+    });
+    
+    console.log("WebSocket client connected from", req.socket.remoteAddress);
+    console.log("WebSocket connection headers:", req.headers);
 
-  // Handle disconnection
-  ws.on('close', (code, reason) => {
-    console.log('WebSocket client disconnected with code:', code, 'reason:', reason || 'No reason provided');
-    if (subscribedTableId && tableSubscriptions.has(subscribedTableId)) {
-      tableSubscriptions.get(subscribedTableId).delete(ws);
-      
-      // Clean up empty subscription sets
-      if (tableSubscriptions.get(subscribedTableId).size === 0) {
-        tableSubscriptions.delete(subscribedTableId);
-      }
+    // Send a welcome message immediately
+    try {
+        ws.send(
+            JSON.stringify({
+                type: "welcome",
+                message: "Connected to WebSocket server"
+            })
+        );
+        console.log("Sent welcome message");
+    } catch (error) {
+        console.error("Error sending welcome message:", error);
     }
-  });
-  
-  // Handle errors
-  ws.on('error', (error) => {
-    console.error('WebSocket connection error:', error);
-  });
+
+    let subscribedTableId = null;
+
+    // Handle messages from clients
+    ws.on("message", message => {
+        try {
+            console.log("Raw message received:", message.toString());
+            const data = JSON.parse(message.toString());
+            console.log("WebSocket message received:", data);
+
+            // Handle subscription requests
+            if (data.type === "subscribe" && data.tableId) {
+                subscribedTableId = data.tableId;
+                console.log(`Client subscribed to table: ${subscribedTableId}`);
+
+                // Add this connection to the table's subscription list
+                if (!tableSubscriptions.has(subscribedTableId)) {
+                    tableSubscriptions.set(subscribedTableId, new Set());
+                }
+                tableSubscriptions.get(subscribedTableId).add(ws);
+
+                // Send confirmation to client
+                ws.send(
+                    JSON.stringify({
+                        type: "subscribed",
+                        tableId: subscribedTableId
+                    })
+                );
+
+                // Send initial table state
+                sendTableState(subscribedTableId, ws);
+            }
+        } catch (error) {
+            console.error("Error processing WebSocket message:", error);
+        }
+    });
+
+    // Handle disconnection
+    ws.on("close", (code, reason) => {
+        console.log("WebSocket client disconnected with code:", code, "reason:", reason || "No reason provided");
+        if (subscribedTableId && tableSubscriptions.has(subscribedTableId)) {
+            tableSubscriptions.get(subscribedTableId).delete(ws);
+
+            // Clean up empty subscription sets
+            if (tableSubscriptions.get(subscribedTableId).size === 0) {
+                tableSubscriptions.delete(subscribedTableId);
+            }
+        }
+    });
+
+    // Handle errors
+    ws.on("error", error => {
+        console.error("WebSocket connection error:", error);
+    });
 });
 
-// Heartbeat interval to keep connections alive
+// Modify the heartbeat interval to use the isAlive property correctly
 const interval = setInterval(function ping() {
-  wss.clients.forEach(function each(ws) {
-    if (ws.isAlive === false) {
-      console.log('Terminating inactive WebSocket connection');
-      return ws.terminate();
-    }
-    
-    ws.isAlive = false;
-    ws.ping();
-  });
+    wss.clients.forEach(function each(ws) {
+        if (ws.isAlive === false) {
+            console.log("Terminating inactive WebSocket connection");
+            return ws.terminate();
+        }
+
+        ws.isAlive = false;
+        ws.ping();
+    });
 }, 30000);
 
 // Clean up interval on server close
-wss.on('close', function close() {
-  clearInterval(interval);
+wss.on("close", function close() {
+    clearInterval(interval);
 });
 
-// Function to broadcast table updates to all subscribed clients
+// Update broadcastTableUpdate to use caching
 async function broadcastTableUpdate(tableId) {
     if (!tableSubscriptions.has(tableId)) return;
-    
+
     try {
-        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
-        const table = await client.getGameState(tableId);
-        
+        const table = await getTableStateWithCache(tableId);
+
         const subscribers = tableSubscriptions.get(tableId);
         const message = JSON.stringify({
-            type: 'tableUpdate',
+            type: "tableUpdate",
             data: table
         });
-        
+
         for (const client of subscribers) {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(message);
@@ -368,50 +400,57 @@ async function broadcastTableUpdate(tableId) {
     }
 }
 
+// Add a debounce utility
+const debounce = (func, delay) => {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+};
+
+// Create a debounced version of broadcastTableUpdate
+const debouncedBroadcastTableUpdate = debounce(broadcastTableUpdate, 500);
+
 // Modify the existing table endpoint to also broadcast updates
 app.get("/table/:id", async (req, res) => {
-  console.log("=== TABLE REQUEST ===");
-  console.log("Route params:", req.params);
+    console.log("=== TABLE REQUEST ===");
+    console.log("Route params:", req.params);
 
-  const id = req.params.id;
-  console.log(`Fetching table with ID: ${id}`);
+    const id = req.params.id;
+    console.log(`Fetching table with ID: ${id}`);
 
-  try {
-    const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
-    const table = await client.getGameState(id);
+    try {
+        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
+        const table = await client.getGameState(id);
 
-    res.send(table);
-    
-    // Also broadcast this update to WebSocket clients
-    if (tableSubscriptions.has(id)) {
-      console.log(`Broadcasting table update to ${tableSubscriptions.get(id).size} WebSocket clients`);
-      for (const client of tableSubscriptions.get(id)) {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'tableUpdate',
-            data: table
-          }));
+        res.send(table);
+
+        // Use debounced broadcast
+        if (tableSubscriptions.has(id)) {
+            console.log(`Scheduling debounced broadcast to ${tableSubscriptions.get(id).size} WebSocket clients`);
+            debouncedBroadcastTableUpdate(id);
         }
-      }
+    } catch (error) {
+        console.error("=== TABLE ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({
+            error: "Failed to fetch table",
+            details: error.message
+        });
     }
-  } catch (error) {
-    console.error("=== TABLE ERROR ===");
-    console.error("Error details:", error);
-    res.status(500).json({
-      error: "Failed to fetch table",
-      details: error.message
-    });
-  }
 });
 
 // Add a new endpoint to trigger table updates (can be called by the game server when state changes)
 app.post("/notify-table-update/:id", async (req, res) => {
     const tableId = req.params.id;
     console.log(`Received update notification for table: ${tableId}`);
-    
+
     // Broadcast the update to all subscribed clients
     await broadcastTableUpdate(tableId);
-    
+
     res.status(200).json({ success: true });
 });
 
@@ -475,7 +514,7 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
                 req.body.userAddress, // player address
                 req.params.tableId, // table address
                 req.body.amount, // amount
-                req.body.action, // action (check, call, raise, fold)
+                req.body.action // action (check, call, raise, fold)
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
@@ -574,8 +613,8 @@ app.get("/nonce/:address", async (req, res) => {
 });
 
 // Add a test endpoint to check WebSocket functionality
-app.get('/websocket-test', (req, res) => {
-  res.send(`
+app.get("/websocket-test", (req, res) => {
+    res.send(`
     <!DOCTYPE html>
     <html>
     <head>
@@ -590,7 +629,7 @@ app.get('/websocket-test', (req, res) => {
         const messages = document.getElementById('messages');
         
         // Create WebSocket connection
-        const socket = new WebSocket('${req.protocol === 'https' ? 'wss' : 'ws'}://${req.headers.host}/ws');
+        const socket = new WebSocket('${req.protocol === "https" ? "wss" : "ws"}://${req.headers.host}/ws');
         
         // Connection opened
         socket.addEventListener('open', (event) => {
@@ -675,7 +714,7 @@ app.post("/table/:tableId/deal", async (req, res) => {
 // ===================================
 // 14. Start Server
 // ===================================
-server.listen(port, () => {
+server.listen(port, "0.0.0.0", () => {
     console.log(`
     ====================================
     🚀 Server is running

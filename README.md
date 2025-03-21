@@ -2,95 +2,60 @@
 
 The Layer 2 poker game virtual machine.
 
-## Proxy API
+# CVM
 
-The proxy API is a simple REST API that allows the poker game to interact with the blockchain.
+The CVM is a virtual card game machine that runs on the Block52 network. It is responsible for executing the card game logic.
 
-### Get Account
+# PVM
 
-GET `/account/<address>`
+The PVM is a virtual poker game machine that runs inside the CVM. It is responsible for executing the poker game logic.
 
-```json
-{
-    "index": "0x0000000000000000000000000000000000000000",
-    "address": "0xa79E6e9eF859956b948d1d310c979f22d6534b29",
-    "privateKey": "0xf6890e9f1cdbf542d68978d5bc69b667a8ce5580c21a11fb24de7a5acb463211",
-    "path": "m/44'/60'/0'/0/0",
-    "balance": "100.0"
-}
-```
+# Block52 Proxy Server
 
-### Get Account Balance
+This repository contains the Block52 proxy server that handles API requests and communicates with the Block52 node.
 
-GET `/account/<address>/balance`
+## Getting Started
 
-```json
-{
-    "balance": "100.0"
-}
-```
+### Prerequisites
 
-### Get Account Nonce
+- Docker and Docker Compose installed on your machine
+- Git
 
-GET `/account/<address>/nonce`
+### Setup and Running
 
-```json
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-org/block52-proxy.git
+   cd block52-proxy
+   ```
 
-```
+2. Start the services:
+   ```
+   docker-compose up
+   ```
 
-## Game API
+3. The services will be available at:
+   - API: http://localhost:8080
+   - API Documentation: http://localhost:8080/docs
+   - MongoDB: localhost:27017
 
-The game API is a simple REST API that allows the poker game to interact with the blockchain.
+### Development
 
-### Get Tables
+The API service is configured with volume mapping, so any changes you make to the code will be reflected immediately without needing to rebuild the container.
 
-GET `/tables`
+To run only specific services:
 
-```json
-[
-    {
-        "type": "cash",
-        "address": "0x0000000000000000000000000000000000000000",
-        "smallBlind": "500000000000000000",
-        "bigBlind": "1000000000000000000",
-        "dealer": 1,
-        "players": [],
-        "communityCards": [],
-        "pots": [
-            "50000000000000000000",
-            "10000000000000000000"
-        ],
-        "nextToAct": 1,
-        "round": "PREFLOP",
-        "winners": [],
-        "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
-    }
-]
-```
 
-### Get Table
 
-GET `/table/<address>`
 
-```json
-{
-    "type": "cash",
-    "address": "0x0000000000000000000000000000000000000000",
-    "smallBlind": "500000000000000000",
-    "bigBlind": "1000000000000000000",
-    "dealer": 1,
-    "players": [],
-    "communityCards": [],
-    "pots": [
-        "50000000000000000000",
-        "10000000000000000000"
-    ],
-    "nextToAct": 1,
-    "round": "PREFLOP",
-    "winners": [],
-    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
-}
-```
+
+
+
+
+
+
+
+
 
 # SDK
 
