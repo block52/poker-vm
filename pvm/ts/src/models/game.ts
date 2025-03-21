@@ -1,6 +1,5 @@
-import { PlayerStatus, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerStatus, PlayerDTO, Card } from "@bitcoinbrisbane/block52";
 import { IJSONModel } from "./interfaces";
-import { Card } from "./deck";
 import { Turn } from "../engine/types";
 import { Stack } from "../core/datastructures/stack";
 
