@@ -6,10 +6,11 @@ import {
     PlayerStatus,
     TexasHoldemRound,
     TexasHoldemStateDTO,
-    WinnerDTO
+    WinnerDTO,
+    Card
 } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/game";
-import { Card, Deck } from "../models/deck";
+import { Deck } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
 import BigBlindAction from "./actions/bigBlindAction";
