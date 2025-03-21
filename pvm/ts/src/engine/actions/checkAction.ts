@@ -7,8 +7,13 @@ class CheckAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CHECK }
 
     verify(player: Player): Range | undefined {
+        const lastAction = this.game.getLastAction();
+        const seat = this.game.getPlayerSeatNumber(player.address);
 
-        // Check if s
+        if (this.game.smallBlindPosition === seat) {
+            if (lastAction?.amount === this.game.smallBlind)
+                throw new Error("Cannot check");
+        }
 
         super.verify(player);
         return undefined
