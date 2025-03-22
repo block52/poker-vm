@@ -229,7 +229,7 @@ describe.only("Texas Holdem Game", () => {
         });
     });
 
-    describe.only("hasRoundEnded function tests", () => {
+    describe("hasRoundEnded function tests", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
@@ -385,6 +385,7 @@ describe.only("Texas Holdem Game", () => {
         it("should have player status set to active", () => {
             const player1 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             const player2 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+
             expect(player1?.status).toEqual(PlayerStatus.ACTIVE);
             expect(player2?.status).toEqual(PlayerStatus.ACTIVE);
         });
@@ -395,6 +396,7 @@ describe.only("Texas Holdem Game", () => {
 
             const player1 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             const player2 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+
             expect(player1?.chips).toEqual(9990000000000000000n);
             expect(player2?.chips).toEqual(9980000000000000000n);
             expect(game.pot).toEqual(30000000000000000n);
@@ -405,20 +407,88 @@ describe.only("Texas Holdem Game", () => {
             expect(game.getPlayerCount()).toEqual(2);
         });
 
-        it.only("should validate legal actions after blinds", () => {
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
-
+        it("should have legal moves for players to post small blind", () => {
             const legalActions = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+
             expect(legalActions).toContainEqual(expect.objectContaining({
-                action: PlayerActionType.DEAL
+                action: PlayerActionType.SMALL_BLIND
+            }));
+
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.FOLD
             }));
         });
 
-        it("should validate legal actions", () => {
-            const legalActions = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+        it.skip("should have legal moves for players to post big blind", () => {
+            const legalActions = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+
             expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.BIG_BLIND
+            }));
+
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.FOLD
+            }));
+        });
+
+        it("should validate legal actions after blinds", () => {
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
+
+            const legalActions1 = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+
+            expect(legalActions1.length).toEqual(5);
+            expect(legalActions1).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.DEAL
+            }));
+
+            expect(legalActions1).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.FOLD
+            }));
+
+            expect(legalActions1).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.CALL,
+                min: "10000000000000000",
+                max: "10000000000000000"
+            }));
+
+            expect(legalActions1).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.CALL
+            }));
+
+            let legalActions2 = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+            expect(legalActions2).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.DEAL
+            }));
+
+            expect(legalActions2).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.FOLD
+            }));
+
+            expect(legalActions2).toContainEqual(expect.objectContaining({
                 action: PlayerActionType.CHECK
+            }));
+
+            expect(legalActions2).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.RAISE
+            }));
+
+            // Now call from the small blind
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 10000000000000000n);
+
+            // Now big blind should have different legal actions
+            // Check, raise, fold
+            legalActions2 = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+            expect(legalActions2).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.FOLD
+            }));
+
+            expect(legalActions2).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.CHECK
+            }));
+
+            expect(legalActions2).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.RAISE
             }));
         });
     });
