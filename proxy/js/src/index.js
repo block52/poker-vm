@@ -230,37 +230,12 @@ wss.on("error", error => {
 // Keep track of table subscriptions
 const tableSubscriptions = new Map();
 
-// Add a simple cache for table state
-const tableStateCache = new Map();
-const TABLE_CACHE_TTL = 2000; // 2 seconds
-
-// Function to get table state with caching
-async function getTableStateWithCache(tableId) {
-    const now = Date.now();
-    const cachedData = tableStateCache.get(tableId);
-    
-    if (cachedData && (now - cachedData.timestamp < TABLE_CACHE_TTL)) {
-        console.log(`Using cached table state for ${tableId}`);
-        return cachedData.data;
-    }
-    
-    console.log(`Cache miss for table ${tableId}, fetching fresh data`);
-    const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
-    const table = await client.getGameState(tableId);
-    
-    tableStateCache.set(tableId, {
-        data: table,
-        timestamp: now
-    });
-    
-    return table;
-}
-
-// Update the sendTableState function to use caching
+// Function to send table state to a specific client
 async function sendTableState(tableId, ws) {
     try {
         console.log(`Fetching table state for ${tableId} to send via WebSocket`);
-        const table = await getTableStateWithCache(tableId);
+        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000");
+        const table = await client.getGameState(tableId);
 
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(
@@ -280,14 +255,6 @@ async function sendTableState(tableId, ws) {
 
 // WebSocket connection handler - simplified for debugging
 wss.on("connection", (ws, req) => {
-    // Add isAlive property initialization
-    ws.isAlive = true;
-    
-    // When receiving a pong, mark the connection as alive
-    ws.on('pong', () => {
-        ws.isAlive = true;
-    });
-    
     console.log("WebSocket client connected from", req.socket.remoteAddress);
     console.log("WebSocket connection headers:", req.headers);
 
@@ -359,7 +326,7 @@ wss.on("connection", (ws, req) => {
     });
 });
 
-// Modify the heartbeat interval to use the isAlive property correctly
+// Heartbeat interval to keep connections alive
 const interval = setInterval(function ping() {
     wss.clients.forEach(function each(ws) {
         if (ws.isAlive === false) {
@@ -377,12 +344,13 @@ wss.on("close", function close() {
     clearInterval(interval);
 });
 
-// Update broadcastTableUpdate to use caching
+// Function to broadcast table updates to all subscribed clients
 async function broadcastTableUpdate(tableId) {
     if (!tableSubscriptions.has(tableId)) return;
 
     try {
-        const table = await getTableStateWithCache(tableId);
+        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
+        const table = await client.getGameState(tableId);
 
         const subscribers = tableSubscriptions.get(tableId);
         const message = JSON.stringify({
@@ -400,20 +368,6 @@ async function broadcastTableUpdate(tableId) {
     }
 }
 
-// Add a debounce utility
-const debounce = (func, delay) => {
-    let timeoutId;
-    return function(...args) {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-            func.apply(this, args);
-        }, delay);
-    };
-};
-
-// Create a debounced version of broadcastTableUpdate
-const debouncedBroadcastTableUpdate = debounce(broadcastTableUpdate, 500);
-
 // Modify the existing table endpoint to also broadcast updates
 app.get("/table/:id", async (req, res) => {
     console.log("=== TABLE REQUEST ===");
@@ -428,10 +382,19 @@ app.get("/table/:id", async (req, res) => {
 
         res.send(table);
 
-        // Use debounced broadcast
+        // Also broadcast this update to WebSocket clients
         if (tableSubscriptions.has(id)) {
-            console.log(`Scheduling debounced broadcast to ${tableSubscriptions.get(id).size} WebSocket clients`);
-            debouncedBroadcastTableUpdate(id);
+            console.log(`Broadcasting table update to ${tableSubscriptions.get(id).size} WebSocket clients`);
+            for (const client of tableSubscriptions.get(id)) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(
+                        JSON.stringify({
+                            type: "tableUpdate",
+                            data: table
+                        })
+                    );
+                }
+            }
         }
     } catch (error) {
         console.error("=== TABLE ERROR ===");
