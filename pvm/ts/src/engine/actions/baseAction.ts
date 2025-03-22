@@ -52,6 +52,33 @@ abstract class BaseAction {
     protected getDeductAmount(_player: Player, amount?: bigint): bigint {
         return amount ? amount : 0n;
     }
+
+    // Get the largest bet in the current round
+    protected getLargestBet(): bigint {
+        let amount = 0n;
+        const roundBets = this.game.getBets(this.game.currentRound);
+
+        roundBets.forEach((bet) => {
+            if (bet > amount) {
+                amount = bet;
+            }
+        });
+
+        return amount;
+    }
+
+    protected getSumBets(playerId: string): bigint {
+        let totalBet = 0n;
+
+        const roundBets = this.game.getBets(this.game.currentRound);
+
+        // If the player made a bet in this round, add it to the total
+        if (roundBets.has(playerId)) {
+            totalBet += roundBets.get(playerId) || 0n;
+        }
+
+        return totalBet;
+    }
 }
 
 export default BaseAction;

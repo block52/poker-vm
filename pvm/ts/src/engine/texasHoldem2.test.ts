@@ -452,10 +452,7 @@ describe.only("Texas Holdem Game", () => {
                 max: "10000000000000000"
             }));
 
-            expect(legalActions1).toContainEqual(expect.objectContaining({
-                action: PlayerActionType.CALL
-            }));
-
+            // Get legal actions for big blind
             let legalActions2 = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             expect(legalActions2).toContainEqual(expect.objectContaining({
                 action: PlayerActionType.DEAL

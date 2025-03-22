@@ -281,7 +281,7 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
         const marker = getPlayerPositionMarker(player.seat, state);
         const seat = `${player.seat} ${marker}`;
 
-        const bet = player.lastAction?.amount || "0";
+        const bet = player?.sumOfBets || "0"; //.lastAction?.amount || "0";
 
         console.log(
             rowStyle(

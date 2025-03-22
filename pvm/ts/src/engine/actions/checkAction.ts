@@ -27,33 +27,6 @@ class CheckAction extends BaseAction implements IAction {
         super.verify(player);
         return undefined
     }
-
-    // Get the largest bet in the current round
-    private getLargestBet(): bigint {
-        let amount = 0n;
-        const roundBets = this.game.getBets(this.game.currentRound);
-
-        roundBets.forEach((bet) => {
-            if (bet > amount) {
-                amount = bet;
-            }
-        });
-
-        return amount;
-    }
-
-    private getSumBets(playerId: string): bigint {
-        let totalBet = 0n;
-
-        const roundBets = this.game.getBets(this.game.currentRound);
-
-        // If the player made a bet in this round, add it to the total
-        if (roundBets.has(playerId)) {
-            totalBet += roundBets.get(playerId) || 0n;
-        }
-
-        return totalBet;
-    }
 }
 
 export default CheckAction;
