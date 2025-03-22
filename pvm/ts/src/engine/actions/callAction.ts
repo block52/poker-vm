@@ -49,19 +49,6 @@ class CallAction extends BaseAction implements IAction {
         // not the minimum bet.
         return (lastAction?.amount || this.game.bigBlind) - sumBets;
     }
-
-    private getSumBets(playerId: string): bigint {
-        let totalBet = 0n;
-
-        const roundBets = this.game.getBets(this.game.currentRound);
-
-        // If the player made a bet in this round, add it to the total
-        if (roundBets.has(playerId)) {
-            totalBet += roundBets.get(playerId) || 0n;
-        }
-
-        return totalBet;
-    }
 }
 
 export default CallAction;
