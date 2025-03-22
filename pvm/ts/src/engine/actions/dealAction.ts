@@ -1,5 +1,5 @@
 import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { Player } from "../../models/game";
+import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
 
@@ -23,7 +23,7 @@ class DealAction extends BaseAction implements IAction {
         if (actions.length !== 2) {
             throw new Error("Not all players have posted their blinds or action has already started.");
         }
-        
+
         // Check if small blind has been posted first
         const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);
         if (!smallBlindAction) {

@@ -9,7 +9,7 @@ import {
     WinnerDTO,
     Card
 } from "@bitcoinbrisbane/block52";
-import { Player } from "../models/game";
+import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 import BaseAction from "./actions/baseAction";
 import BetAction from "./actions/betAction";
@@ -384,7 +384,7 @@ class TexasHoldemGame implements IPoker {
         const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
 
         if (!hasBigBlindPosted) {
-            
+
         }
 
         // if _previousActions contains small blind post, remove from actions
@@ -852,7 +852,7 @@ class TexasHoldemGame implements IPoker {
 
         json.players.map((p: any) => {
             const stack: bigint = BigInt(p.stack);
-            
+
             // Create hole cards if they exist in the JSON
             let holeCards: [Card, Card] | undefined = undefined;
             if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
@@ -865,7 +865,7 @@ class TexasHoldemGame implements IPoker {
                     console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
                 }
             }
-            
+
             const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
             players.set(p.seat, player);
         });

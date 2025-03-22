@@ -1,5 +1,5 @@
 import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { Player } from "../../models/game";
+import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame, { GameOptions } from "../texasHoldem";
 import { ethers } from "ethers";
@@ -76,10 +76,10 @@ describe("FoldAction", () => {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
-            
+
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-            
+
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         });
@@ -95,21 +95,21 @@ describe("FoldAction", () => {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334d"
             };
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(differentPlayer as any);
-            
+
             expect(() => action.verify(player)).toThrow("Must be currently active player.");
         });
 
         it.skip("should throw error if player is not active", () => {
             // Mock player status as FOLDED
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
-            
+
             expect(() => action.verify(player)).toThrow("Only active player can fold.");
         });
 
         it("should throw error if game is in showdown", () => {
             // Mock game in showdown state
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
-            
+
             expect(() => action.verify(player)).toThrow("Hand has ended.");
         });
     });
@@ -121,13 +121,13 @@ describe("FoldAction", () => {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
-            
+
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-            
+
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
-            
+
             // Mock game's addAction method
             game.addAction = jest.fn();
         });
@@ -140,7 +140,7 @@ describe("FoldAction", () => {
 
         it("should add FOLD action with 0 amount", () => {
             action.execute(player);
-            
+
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
                 action: PlayerActionType.FOLD,

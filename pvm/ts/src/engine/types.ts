@@ -1,5 +1,5 @@
 import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound, Card } from "@bitcoinbrisbane/block52";
-import { Player } from "../models/game";
+import { Player } from "../models/player";
 // import { Card } from "../models/deck";
 
 export interface IAction {

@@ -1,25 +1,47 @@
+import { PlayerStatus, PlayerDTO, Card } from "@bitcoinbrisbane/block52";
+import { IJSONModel } from "./interfaces";
+import { Turn } from "../engine/types";
+import { Stack } from "../core/datastructures/stack";
 
-// export class Player {
-//     constructor(
-//         private readonly _address: string,
-//         public chips: bigint,
-//         public holeCards?: [Card, Card]
-//     ) { }
+export class Player implements IJSONModel {
+    chips: bigint = 0n;
+    holeCards: [Card, Card] | undefined;
+    lastAction: Turn | undefined;
+    status: PlayerStatus = PlayerStatus.ACTIVE;
 
-//     get id(): string { return this._address; }
+    private _previousActions: Stack<Turn> = new Stack<Turn>();
 
-//     getPlayerState(game: TexasHoldemGame, position: number): PlayerState {
-//         // console.log("getPlayerState", this.id, position);
-//         // console.log("getPlayerState bb", game.bigBlindPosition);
+    get id(): string { return this.address; }
 
-//         const isSmallBlind = game.smallBlindPosition === position;
-//         const isBigBlind = game.bigBlindPosition === position;
-//         const isDealer = game.dealerPosition === position;
-        
-//         const lastMove = game.getLastAction(this.id);
-//         const validMoves = game.getValidActions(this.id);
+    constructor(
+        readonly address: string,
+        lastAction: Turn | undefined,
+        chips: bigint,
+        holeCards: [Card, Card] | undefined,
+        status: PlayerStatus
+    ) {
+        this.chips = chips;
+        this.holeCards = holeCards;
+        this.lastAction = lastAction;
+        this.status = status;
+    }
 
-//         // const actions = validMoves.map(m => ({ action: m.action, min: m.minAmount.toString(), max: m.maxAmount.toString() }));
-//         return new PlayerState(this, isSmallBlind, isBigBlind, isDealer, lastMove, position, PlayerStatus.ACTIVE, validMoves);
-//     }
-// }
+    updateStatus(status: PlayerStatus): void {
+        this.status = status;
+    }
+
+    addAction(action: Turn): void {
+        this._previousActions.push(action);
+
+        // Could peek at the top of the stack to get the last action.
+        this.lastAction = action;
+    };
+
+    previousActions(): Turn[] {
+        return this._previousActions.toArray();
+    }
+
+    public toJson(): PlayerDTO { 
+        return {} as PlayerDTO;
+    }
+}

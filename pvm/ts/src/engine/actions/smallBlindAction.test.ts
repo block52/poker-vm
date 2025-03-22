@@ -1,5 +1,5 @@
 import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { Player } from "../../models/game";
+import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame, { GameOptions } from "../texasHoldem";
 import { ethers } from "ethers";

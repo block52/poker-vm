@@ -1,6 +1,6 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import CallAction from "./callAction";
-import { Player } from "../../models/game";
+import { Player } from "../../models/player";
 import { IUpdate } from "../types";
 
 // Mock dependencies
