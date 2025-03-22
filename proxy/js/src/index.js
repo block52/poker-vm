@@ -234,7 +234,16 @@ const tableSubscriptions = new Map();
 async function sendTableState(tableId, ws) {
     try {
         console.log(`Fetching table state for ${tableId} to send via WebSocket`);
-        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000");
+        
+        // Use the existing client instance instead of creating a new one
+        const client = getClient();
+        
+        // Or if you need to use NodeRpcClient specifically, add proper error handling:
+        // const client = new NodeRpcClient(
+        //     process.env.NODE_URL || "https://node1.block52.xyz/", 
+        //     process.env.VALIDATOR_KEY || ""
+        // );
+        
         const table = await client.getGameState(tableId);
 
         if (ws.readyState === WebSocket.OPEN) {
@@ -250,6 +259,14 @@ async function sendTableState(tableId, ws) {
         }
     } catch (error) {
         console.error("Error fetching table state for WebSocket:", error);
+        
+        // Send an error message to the client so they know to fall back to polling
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: "error",
+                message: "Failed to fetch table state"
+            }));
+        }
     }
 }
 
