@@ -1,5 +1,5 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { Player } from "../models/game";
+import { Player } from "../models/player";
 import TexasHoldemGame, { GameOptions } from "./texasHoldem";
 import { ethers } from "ethers";
 
@@ -206,16 +206,16 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            
+
             // Create test players with sufficient chips
             player1 = new Player(
-                "0x1111111111111111111111111111111111111111", 
+                "0x1111111111111111111111111111111111111111",
                 undefined,
                 2000000000000000000000n, // 2000 tokens
                 undefined,
                 PlayerStatus.ACTIVE
             );
-            
+
             player2 = new Player(
                 "0x2222222222222222222222222222222222222222",
                 undefined,
@@ -252,18 +252,18 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
 
             it("should follow correct round order", () => {
                 expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
-                
+
                 // Simulate betting actions to progress rounds
                 game.performAction(player1.address, PlayerActionType.CALL);
                 game.performAction(player2.address, PlayerActionType.CHECK);
-                
+
                 expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
                 // expect(game.communityCards.length).toBe(3);
 
                 // More betting actions
                 game.performAction(player1.address, PlayerActionType.CHECK);
                 game.performAction(player2.address, PlayerActionType.CHECK);
-                
+
                 expect(game.currentRound).toBe(TexasHoldemRound.TURN);
                 // expect(game.communityCards.length).toBe(4);
             });
@@ -280,7 +280,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
                 for (const stage of roundProgression) {
                     expect(game.currentRound).toBe(stage.round);
                     // expect(game._communityCards.length).toBe(stage.cards);
-                    
+
                     // Progress to next round
                     if (stage.round !== TexasHoldemRound.SHOWDOWN) {
                         game.performAction(player1.address, PlayerActionType.CHECK);

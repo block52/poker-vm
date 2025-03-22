@@ -1,5 +1,5 @@
 import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { Player } from "../../models/game";
+import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import TexasHoldemGame, { GameOptions } from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";

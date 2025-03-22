@@ -1,5 +1,5 @@
 import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { Player } from "../../models/game";
+import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { Range } from "../types";
 
@@ -20,7 +20,7 @@ class BigBlindAction extends BaseAction {
         }
 
         const actions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
-        
+
         // Check if small blind has been posted first
         const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);
         if (!smallBlindAction) {

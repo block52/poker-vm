@@ -1,5 +1,5 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { Player } from "../../models/game";
+import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
 
@@ -7,13 +7,9 @@ class CheckAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CHECK }
 
     verify(player: Player): Range | undefined {
-        const lastAction = this.game.getLastAction();
-        const seat = this.game.getPlayerSeatNumber(player.address);
-
-        if (this.game.smallBlindPosition === seat) {
-            if (lastAction?.amount === this.game.smallBlind)
-                throw new Error("Cannot check");
-        }
+        // Can never check if you havent matched the largest bet of the round
+        const largestBet = this.getLargestBet();
+        // const playerBet = player.
 
         super.verify(player);
         return undefined
