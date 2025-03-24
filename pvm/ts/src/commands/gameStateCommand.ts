@@ -66,7 +66,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 };
             });
 
-            // // update game state
+            // update game state
             const state = game.toJson();
             console.log("Updated game state:", state);
 

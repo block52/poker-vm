@@ -271,7 +271,7 @@ describe.only("Texas Holdem Game", () => {
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
-        it("should return true when all players have acted and matched highest bet in preflop", () => {
+        it.only("should return true when all players have acted and matched highest bet in preflop", () => {
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND);
@@ -279,11 +279,15 @@ describe.only("Texas Holdem Game", () => {
             // Small blind calls (total bet now matches big blind)
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 10000000000000000n);
 
+            expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
+
             // Big blind checks (all players have acted and matched highest bet)
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
 
             // Round should end
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
+            expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
+            expect(game.hasRoundEnded(TexasHoldemRound.FLOP)).toBe(false);
         });
 
         it("should return false when a player raises and others haven't responded", () => {

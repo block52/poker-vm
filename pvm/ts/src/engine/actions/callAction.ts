@@ -37,7 +37,8 @@ class CallAction extends BaseAction implements IAction {
             player.chips -= deductAmount;
         }
 
-        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount });
+        const round = this.game.currentRound;
+        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount }, round);
     }
 
     protected getDeductAmount(player: Player): bigint {
