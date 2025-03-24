@@ -7,7 +7,7 @@ class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CALL }
 
     verify(player: Player): Range | undefined {
-        const lastAction = this.game.getLastAction();
+        const lastAction = this.game.getLastRoundAction();
 
         if (!lastAction)
             throw new Error("No previous action to call.");
@@ -42,7 +42,7 @@ class CallAction extends BaseAction implements IAction {
     }
 
     protected getDeductAmount(player: Player): bigint {
-        const lastAction = this.game.getLastAction();
+        const lastAction = this.game.getLastRoundAction();
         const sumBets = this.getSumBets(player.address);
 
         // default to big blind if no previous action.

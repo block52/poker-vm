@@ -11,7 +11,7 @@ class RaiseAction extends BaseAction implements IAction {
     verify(player: Player): Range | undefined {
         super.verify(player);
 
-        const lastBet = this.game.getLastAction();
+        const lastBet = this.game.getLastRoundAction();
         if (!lastBet) throw new Error("No previous bet to raise.");
 
         const largestBet = this.getLargestBet();

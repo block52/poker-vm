@@ -36,6 +36,9 @@ export type GameOptions = {
     bigBlind: bigint;
 };
 
+
+type TurnWithRound = Turn & { round: TexasHoldemRound };
+
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
 
@@ -45,7 +48,7 @@ class TexasHoldemGame implements IPoker {
 
     private _rounds = new Map<TexasHoldemRound, Turn[]>();
     private _lastActedSeat: number;
-    private _previousActions = new Stack<Turn>();
+    // private _previousActions = new Stack<TurnWithRound>();
 
     private _deck!: Deck;
 
@@ -402,8 +405,15 @@ class TexasHoldemGame implements IPoker {
         return actions;
     }
 
-    getLastAction(): Turn | undefined {
-        return this._previousActions.peek();
+    getLastRoundAction(): Turn | undefined {
+        const round = this._currentRound; // or previous round?
+        const actions = this._rounds.get(round);
+
+        if (!actions || actions.length === 0) {
+            return undefined;
+        }
+
+        return actions.at(-1);
     }
 
     // Should be get last players action
@@ -416,16 +426,6 @@ class TexasHoldemGame implements IPoker {
         if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD };
 
         return undefined;
-    }
-
-    private turnAsActionDTO(turn: Turn, round: TexasHoldemRound): ActionDTO {
-        return {
-            playerId: turn.playerId,
-            seat: this.getPlayerSeatNumber(turn.playerId),
-            action: turn.action,
-            amount: turn.amount ? turn.amount.toString() : "",
-            round: round
-        };
     }
 
     performAction(address: string, action: PlayerActionType, amount?: bigint): void {
@@ -485,27 +485,47 @@ class TexasHoldemGame implements IPoker {
     }
 
     addAction(turn: Turn, round: TexasHoldemRound): void {
-        this._previousActions.push(turn);
-
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
             // Get the existing actions array
             const actions = this._rounds.get(round)!;
             // Push the new turn to it
             actions.push(turn);
+            console.log("Added action to existing round");
+            console.log(actions);
+
+            this._rounds.set(round, actions);
         } else {
             // Create a new array with this turn as the first element
             this._rounds.set(round, [turn]);
         }
+
+        console.log("Added action to round");
+        console.log(this._rounds);
     }
 
     getActionDTOs(): ActionDTO[] {
         const actions: ActionDTO[] = [];
 
         for (const [round, turns] of this._rounds) {
+
             for (const turn of turns) {
-                actions.push(this.turnAsActionDTO(turn, round));
+                const action: ActionDTO = {
+                    playerId: turn.playerId,
+                    seat: this.getPlayerSeatNumber(turn.playerId),
+                    action: turn.action,
+                    amount: turn.amount ? turn.amount.toString() : "",
+                    round
+                };
+
+                actions.push(action);
             }
+
+            // const roundActions: ActionDTO[] = this.getActionsForRound(round);
+
+            // for (const action of roundActions) {
+            //     actions.push(action);
+            // }
         }
 
         return actions;
@@ -513,7 +533,6 @@ class TexasHoldemGame implements IPoker {
 
     getActionsForRound(round: TexasHoldemRound): ActionDTO[] {
         const actions: ActionDTO[] = [];
-
         const turns = this._rounds.get(round);
 
         if (!turns) {
@@ -521,7 +540,15 @@ class TexasHoldemGame implements IPoker {
         }
 
         for (const turn of turns) {
-            actions.push(this.turnAsActionDTO(turn, round));
+            const action: ActionDTO = {
+                playerId: turn.playerId,
+                seat: this.getPlayerSeatNumber(turn.playerId),
+                action: turn.action,
+                amount: turn.amount ? turn.amount.toString() : "",
+                round
+            };
+
+            actions.push(action);
         }
 
         return actions;
@@ -941,23 +968,9 @@ class TexasHoldemGame implements IPoker {
         const nextPlayerToAct = this.findNextPlayerToAct();
         const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
 
-        const previousTurns: Turn[] = this._previousActions.toArray();
-        const previousActions: ActionDTO[] = [];
+        // Iterate through each previous round and get each turn / action
 
-        for (let i = 0; i < previousTurns.length; i++) {
-            const turn: Turn = previousTurns[i];
-            const seat = this.getPlayerSeatNumber(turn.playerId);
-            const action: ActionDTO = {
-                playerId: turn.playerId,
-                seat: seat,
-                action: turn.action,
-                amount: turn.amount ? turn.amount.toString() : "",
-                round: this._currentRound // this is wrong
-            };
-
-            previousActions.push(action);
-        }
-
+        const previousActions: ActionDTO[] = this.getActionDTOs();
         const winners: WinnerDTO[] = [];
         const pot = this.getPot();
 

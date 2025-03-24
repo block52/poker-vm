@@ -108,7 +108,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             } else {
                 console.log(`Processing regular transaction...`);
 
-                // // If we haven't thrown an error, then we can create the transaction
+                // If we haven't thrown an error, then we can create the transaction
                 // console.log(`Creating transaction...`);
                 const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
                 // console.log(`Adding transaction to mempool...`);
