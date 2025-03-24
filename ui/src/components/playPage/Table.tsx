@@ -21,6 +21,16 @@ import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 
+// Enable this to see verbose logging
+const DEBUG_MODE = false;
+
+// Helper function that only logs when DEBUG_MODE is true
+const debugLog = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
+
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
 //* PREFLOP - Players get their hole cards, betting round
@@ -128,14 +138,14 @@ const Table = () => {
 
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
-    console.log("Current user address from localStorage:", currentUserAddress);
+    debugLog("Current user address from localStorage:", currentUserAddress);
 
     // Create a different variable for comparison purposes
     const userWalletAddress = React.useMemo(() => {
         return currentUserAddress ? currentUserAddress.toLowerCase() : null;
     }, [currentUserAddress]);
 
-    // Add the new hook usage here with prefixed names
+    // Add the new hook usage here with prefixed names - directly at top level, not inside useMemo
     const tableDataValues = useTableData();
     
     // Replace useUserBySeat with getUserBySeat from context
@@ -151,19 +161,21 @@ const Table = () => {
     const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
 
     useEffect(() => {
-        console.log("Active Players:", activePlayers);
+        if (!DEBUG_MODE) return; // Skip logging if not in debug mode
+        
+        debugLog("Active Players:", activePlayers);
         // If there are active players, set their positions
         if (activePlayers.length > 0) {
             // Player in seat 0
             if (activePlayers.find((p: any) => p.seat === 0)) {
                 const player0 = activePlayers.find((p: any) => p.seat === 0);
-                console.log("Player 0:", player0);
+                debugLog("Player 0:", player0);
             }
 
             // Player in seat 1
             if (activePlayers.find((p: any) => p.seat === 1)) {
                 const player1 = activePlayers.find((p: any) => p.seat === 1);
-                console.log("Player 1:", player1);
+                debugLog("Player 1:", player1);
             }
         }
     }, [activePlayers]);
@@ -274,7 +286,7 @@ const Table = () => {
                 console.error("Error setting position indicators:", error);
             }
         }
-    }, [tableData?.data?.address]); // Only update when table changes
+    }, [tableData?.data?.address, tableData?.data?.dealer, tableData?.data?.smallBlindPosition, tableData?.data?.bigBlindPosition]); // Only update when important positions change
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -372,13 +384,15 @@ const Table = () => {
             // Show deal button if all conditions are met
             setCanDeal(hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt);
 
-            console.log("Deal button visibility check:", {
-                hasEnoughPlayers,
-                blindsPosted,
-                isPreflop,
-                noCardsDealt,
-                canDeal: hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt
-            });
+            if (DEBUG_MODE) {
+                debugLog("Deal button visibility check:", {
+                    hasEnoughPlayers,
+                    blindsPosted,
+                    isPreflop,
+                    noCardsDealt,
+                    canDeal: hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt
+                });
+            }
         } else {
             setCanDeal(false);
         }
@@ -515,8 +529,7 @@ const Table = () => {
                     <div
                         className="absolute inset-0 z-0 opacity-30"
                         style={{
-                            background:
-                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
+                            backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
                             backgroundSize: "200% 100%",
                             animation: "shimmer 3s infinite linear"
                         }}
@@ -575,19 +588,13 @@ const Table = () => {
                 >
                     {/*//! TABLE */}
                     <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
-                        {/* Base gradient background */}
+                        {/* Animated background overlay */}
                         <div
-                            className="absolute inset-0 z-0"
+                            className="absolute inset-0 z-0 opacity-30"
                             style={{
-                                background: `
-                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(42, 72, 65, 0.9) 0%, transparent 60%),
-                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 65, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 0%, rgba(61, 89, 80, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 47, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 71, 0.7) 0%, transparent 50%)
-                                `,
-                                filter: "blur(60px)",
-                                transition: "background 0.3s ease-out"
+                                backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
+                                backgroundSize: "200% 100%",
+                                animation: "shimmer 3s infinite linear"
                             }}
                         />
 
@@ -595,7 +602,7 @@ const Table = () => {
                         <div
                             className="absolute inset-0 z-0"
                             style={{
-                                background: `
+                                backgroundImage: `
                                     repeating-linear-gradient(
                                         ${45 + mousePosition.x / 10}deg,
                                         rgba(42, 72, 65, 0.1) 0%,
@@ -608,6 +615,22 @@ const Table = () => {
                                 backgroundSize: "400% 400%",
                                 animation: "gradient 15s ease infinite",
                                 transition: "background 0.5s ease"
+                            }}
+                        />
+
+                        {/* Base gradient background */}
+                        <div
+                            className="absolute inset-0 z-0"
+                            style={{
+                                backgroundImage: `
+                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(42, 72, 65, 0.9) 0%, transparent 60%),
+                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 65, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 100% 0%, rgba(61, 89, 80, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 47, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 71, 0.7) 0%, transparent 50%)
+                                `,
+                                filter: "blur(60px)",
+                                transition: "all 0.3s ease-out"
                             }}
                         />
 
@@ -676,9 +699,9 @@ const Table = () => {
                                             // Check if this player is the current user
                                             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
 
-                                            // More detailed logging
-                                            if (playerAtThisSeat) {
-                                                console.log(`Seat ${positionIndex} detailed comparison:`, {
+                                            // More detailed logging only in DEBUG_MODE
+                                            if (DEBUG_MODE && playerAtThisSeat) {
+                                                debugLog(`Seat ${positionIndex} detailed comparison:`, {
                                                     playerAddress: playerAtThisSeat.address,
                                                     playerAddressLower: playerAtThisSeat.address?.toLowerCase(),
                                                     currentUserAddress: userWalletAddress,
@@ -689,40 +712,41 @@ const Table = () => {
                                                 });
                                             }
 
+                                            const componentProps = {
+                                                index: positionIndex,
+                                                currentIndex: currentIndex,
+                                                left: position.left,
+                                                top: position.top,
+                                                color: position.color,
+                                                status: tableDataValues.tableDataPlayers?.[positionIndex]?.status
+                                            };
+
                                             const componentToRender = !playerAtThisSeat ? (
                                                 // No player at this seat - show vacant player
                                                 <VacantPlayer index={positionIndex} left={position.left} top={position.top} />
                                             ) : isCurrentUser ? (
                                                 // This is the current user's position - use Player component
                                                 <Player
-                                                    index={positionIndex}
-                                                    currentIndex={currentIndex}
-                                                    left={position.left}
-                                                    top={position.top}
-                                                    color={position.color}
-                                                    status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
+                                                    {...componentProps}
                                                 />
                                             ) : (
                                                 // This is another player's position - use OppositePlayer component
                                                 <OppositePlayer
-                                                    index={positionIndex}
-                                                    currentIndex={currentIndex}
+                                                    {...componentProps}
                                                     setStartIndex={(index: number) => setStartIndex(index)}
-                                                    left={position.left}
-                                                    top={position.top}
-                                                    color={position.color}
-                                                    status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
                                                     isCardVisible={isCardVisible}
                                                     setCardVisible={setCardVisible}
                                                 />
                                             );
 
-                                            console.log(`Rendering component for seat ${positionIndex}:`, {
-                                                isVacant: !playerAtThisSeat,
-                                                isCurrentUser,
-                                                componentType: !playerAtThisSeat ? "VacantPlayer" : isCurrentUser ? "Player" : "OppositePlayer",
-                                                currentUserAddress: userWalletAddress
-                                            });
+                                            if (DEBUG_MODE) {
+                                                debugLog(`Rendering component for seat ${positionIndex}:`, {
+                                                    isVacant: !playerAtThisSeat,
+                                                    isCurrentUser,
+                                                    componentType: !playerAtThisSeat ? "VacantPlayer" : isCurrentUser ? "Player" : "OppositePlayer",
+                                                    currentUserAddress: userWalletAddress
+                                                });
+                                            }
 
                                             return (
                                                 <div key={positionIndex} className="z-[10]">

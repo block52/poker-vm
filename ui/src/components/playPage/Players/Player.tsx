@@ -6,6 +6,17 @@ import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { BigUnit } from "bigunit";
 import { useTableContext } from "../../../context/TableContext";
 import { formatWeiToDollars } from "../../../utils/numberUtils"; 
+import { ethers } from "ethers";
+
+// Enable this to see verbose logging
+const DEBUG_MODE = false;
+
+// Helper function that only logs when DEBUG_MODE is true
+const debugLog = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
 
 type PlayerProps = {
     left?: string; // Front side image source
@@ -19,7 +30,7 @@ type PlayerProps = {
 const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     const { tableData } = useTableContext();
 
-    console.log("Player renderd with these props:", { left, top, index, color, status });
+    debugLog("Player rendered with these props:", { left, top, index, color, status });
     
     // // Add debugging
     // React.useEffect(() => {
@@ -34,14 +45,14 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     }, [tableData, index]);
     
     if (!playerData) {
-        console.log("Player component has no player data for seat", index);
+        debugLog("Player component has no player data for seat", index);
         return <></>;
     }
     
-    // Format stack value
-    const stackValue = playerData.stack ? BigUnit.from(playerData.stack, 18).toNumber() : 0;
-
-    const stackValueDollars = formatWeiToDollars(playerData.stack);
+    // Format stack value with ethers.js (more accurate for large numbers)
+    const stackValue = playerData.stack ? Number(ethers.formatUnits(playerData.stack, 18)) : 0;
+    // Format for display with 2 decimal places
+    const formattedStackValue = stackValue.toFixed(2);
     
     // Get hole cards if available
     const holeCards = playerData.holeCards;
@@ -85,7 +96,7 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
                     )}
                 </div>
                 <div className="absolute top-[0%] w-full">
-                    <Badge count={index} value={Number(stackValueDollars)} color={color} />
+                    <Badge count={index} value={stackValue} color={color} />
                 </div>
             </div>
         </div>

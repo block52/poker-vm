@@ -6,6 +6,17 @@ import PlayerCard from "./PlayerCard";
 import { BigUnit } from "bigunit";
 import { useTableContext } from "../../../context/TableContext";
 import { formatWeiToDollars } from "../../../utils/numberUtils";
+import { ethers } from "ethers";
+
+// Enable this to see verbose logging
+const DEBUG_MODE = false;
+
+// Helper function that only logs when DEBUG_MODE is true
+const debugLog = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
 
 type OppositePlayerProps = {
     left?: string;
@@ -32,31 +43,32 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({
     
     // Add more detailed debugging
     React.useEffect(() => {
-        console.log("OppositePlayer component rendering for seat:", index);
+        debugLog("OppositePlayer component rendering for seat:", index);
         // console.log("OppositePlayer tableData:", tableData);
     }, [index, tableData]);
     
     // Get player data directly from the table data
     const playerData = React.useMemo(() => {
         if (!tableData?.data?.players) {
-            console.log("No players data in tableData for seat", index);
+            debugLog("No players data in tableData for seat", index);
             return null;
         }
         const player = tableData.data.players.find((p: any) => p.seat === index);
-        console.log("Found player data for seat", index, ":", player);
+        debugLog("Found player data for seat", index, ":", player);
         return player;
     }, [tableData, index]);
     
     if (!playerData) {
-        console.log("OppositePlayer component has no player data for seat", index);
+        debugLog("OppositePlayer component has no player data for seat", index);
         return <></>;
     }
     
     // Format stack value
-    const stackValue = playerData.stack ? BigUnit.from(playerData.stack, 18).toNumber() : 0;
-    const stackValueDollars = formatWeiToDollars(playerData.stack);
+    const stackValue = playerData.stack ? Number(ethers.formatUnits(playerData.stack, 18)) : 0;
+    // Format for display with 2 decimal places
+    const formattedStackValue = stackValue.toFixed(2);
     
-    console.log("Rendering OppositePlayer UI for seat", index, "with stack", stackValue);
+    debugLog("Rendering OppositePlayer UI for seat", index, "with stack", playerData.stack);
     
     return (
         <>
@@ -97,7 +109,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({
                         )}
                     </div>
                     <div className="absolute top-[0%] w-full">
-                        <Badge count={index} value={stackValueDollars} color={color} />
+                        <Badge count={index} value={stackValue} color={color} />
                     </div>
                 </div>
             </div>

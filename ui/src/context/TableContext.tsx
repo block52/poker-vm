@@ -8,6 +8,16 @@ import { getPlayersLegalActions, isPlayersTurn } from '../utils/playerUtils';
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet";  // this is the browser wallet todo rename to useBrowserWallet
 
+// Enable this to see verbose logging
+const DEBUG_MODE = false;
+
+// Helper function that only logs when DEBUG_MODE is true
+const debugLog = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
+
 interface TableContextType {
   tableData: any;
   isLoading: boolean;
@@ -50,10 +60,22 @@ interface TableContextType {
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
 
-// Define WebSocket URL based on the proxy URL
+// Define WebSocket URL based on the proxy URL with safer parsing
 const getWebSocketUrl = () => {
-  const proxyUrl = new URL(PROXY_URL);
-  return `${proxyUrl.protocol === 'https:' ? 'wss:' : 'ws:'}//${proxyUrl.host}/ws`;
+  try {
+    // First try using the PROXY_URL
+    const proxyUrl = new URL(PROXY_URL);
+    return `${proxyUrl.protocol === 'https:' ? 'wss:' : 'ws:'}//${proxyUrl.host}/ws`;
+  } catch (error) {
+    // Fallback if PROXY_URL is invalid
+    console.warn("Invalid PROXY_URL, falling back to default WebSocket URL");
+    const hostname = window.location.hostname;
+    if (hostname === 'app.block52.xyz') {
+      return 'wss://proxy.block52.xyz/ws';
+    } else {
+      return `ws://${hostname}:8080/ws`;
+    }
+  }
 };
 
 export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -81,6 +103,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Add state for user data by seat
   const [userDataBySeat, setUserDataBySeat] = useState<Record<number, any>>({});
   const [currentUserSeat, setCurrentUserSeat] = useState<number>(-1);
+  // Track WebSocket connection status
+  const [wsConnected, setWsConnected] = useState<boolean>(false);
   
   const { b52 } = useUserWallet();
 
@@ -145,10 +169,10 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       return response.data;
     } catch (error) {
-      console.error(`Error fetching user data for seat ${seat}:`, error);
+      if (DEBUG_MODE) console.error(`Error fetching user data for seat ${seat}:`, error);
       return null;
     }
-  }, [tableId, tableData?.data?.players]);
+  }, [tableId, tableData?.data?.players, userDataBySeat]);
 
   // Helper function to get user data by seat (from cache or fetch if needed)
   const getUserBySeat = useCallback((seat: number) => {
@@ -167,11 +191,11 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (!tableId) return;
     
-    console.log('Setting up WebSocket connection for table:', tableId);
+    debugLog('Setting up WebSocket connection for table:', tableId);
     
     // Close any existing connection
     if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
-      console.log('Closing existing WebSocket connection');
+      debugLog('Closing existing WebSocket connection');
       wsRef.current.close();
     }
     
@@ -182,14 +206,17 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     const connectWebSocket = () => {
       try {
+        // Get WebSocket URL with fallback
         const wsUrl = getWebSocketUrl();
-        console.log(`Connecting to WebSocket URL (attempt ${reconnectAttempts + 1}):`, wsUrl);
+        debugLog(`Connecting to WebSocket URL (attempt ${reconnectAttempts + 1}):`, wsUrl);
         
+        // Create the WebSocket with error handling
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
         
         ws.onopen = () => {
-          console.log('WebSocket connection established');
+          debugLog('WebSocket connection established');
+          setWsConnected(true);
           reconnectAttempts = 0; // Reset reconnect attempts on successful connection
           
           // Subscribe to table updates
@@ -197,13 +224,12 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             type: 'subscribe',
             tableId: tableId
           });
-          console.log('Sending subscription message:', subscribeMessage);
+          debugLog('Sending subscription message:', subscribeMessage);
           ws.send(subscribeMessage);
           
           // Send a ping every 30 seconds to keep the connection alive
           const pingInterval = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
-              console.log('Sending ping to keep WebSocket alive');
               ws.send(JSON.stringify({ type: 'ping' }));
             } else {
               clearInterval(pingInterval);
@@ -213,16 +239,16 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         ws.onmessage = (event) => {
           try {
-            console.log('WebSocket message received:', event.data);
+            if (DEBUG_MODE) debugLog('WebSocket message received:', event.data);
             const data = JSON.parse(event.data);
             
             if (data.type === 'welcome') {
-              console.log('Received welcome message from server');
+              debugLog('Received welcome message from server');
             } else if (data.type === 'tableUpdate') {
-              console.log('Received table update via WebSocket');
+              debugLog('Received table update via WebSocket');
               
               if (data.data) {
-                console.log('Setting table data from WebSocket update');
+                debugLog('Setting table data from WebSocket update');
                 
                 // Ensure all critical properties are present
                 const tableState = data.data;
@@ -236,9 +262,9 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 setIsLoading(false);
               }
             } else if (data.type === 'subscribed') {
-              console.log('Successfully subscribed to table updates');
+              debugLog('Successfully subscribed to table updates');
             } else if (data.type === 'pong') {
-              console.log('Received pong from server');
+              debugLog('Received pong from server');
             }
           } catch (error) {
             console.error('Error processing WebSocket message:', error);
@@ -247,34 +273,36 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         ws.onerror = (error) => {
           console.error('WebSocket error:', error);
+          setWsConnected(false);
         };
         
         ws.onclose = (event) => {
-          console.log('WebSocket connection closed:', event.code, event.reason);
+          debugLog('WebSocket connection closed:', event.code, event.reason);
+          setWsConnected(false);
           
           // Attempt to reconnect unless we're unmounting
           if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
             reconnectAttempts++;
-            console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${RECONNECT_DELAY}ms`);
+            debugLog(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${RECONNECT_DELAY}ms`);
             
             reconnectTimer = setTimeout(() => {
               connectWebSocket();
             }, RECONNECT_DELAY);
           } else {
-            console.log('Maximum reconnect attempts reached, falling back to polling');
-            setUsePolling(false);
+            console.log('Maximum WebSocket reconnect attempts reached, falling back to polling');
+            setUsePolling(true);
           }
         };
       } catch (error) {
         console.error('Error creating WebSocket:', error);
-        setUsePolling(false);
+        setUsePolling(true);
       }
     };
     
     connectWebSocket();
     
     return () => {
-      console.log('Cleaning up WebSocket connection');
+      debugLog('Cleaning up WebSocket connection');
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
       }
@@ -282,14 +310,15 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         wsRef.current.close();
         wsRef.current = null;
       }
+      setWsConnected(false);
     };
   }, [tableId]);
 
   // Polling fallback - optimized to reduce unnecessary updates
   useEffect(() => {
-    if (!tableId || !usePolling) return;
+    if (!tableId || (!usePolling && wsConnected)) return;
     
-    console.log('Using polling fallback for table data');
+    debugLog(`Using ${wsConnected ? 'backup' : 'primary'} polling for table data`);
     
     let isFirstLoad = true;
     let lastUpdateTimestamp = 0;
@@ -301,16 +330,21 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
       
-      console.log('Polling: fetching data for table ID:', tableId);
+      debugLog('Polling: fetching data for table ID:', tableId);
       
       try {
         const baseUrl = window.location.hostname === 'app.block52.xyz' 
           ? 'https://proxy.block52.xyz'
           : PROXY_URL;
 
-        console.log('Using baseUrl:', baseUrl);
+        debugLog('Using baseUrl:', baseUrl);
         
         const response = await axios.get(`${baseUrl}/table/${tableId}`);
+        
+        if (!response.data) {
+          console.error('Polling received empty data');
+          return;
+        }
         
         // Only update if critical data has changed
         setTableData((prevData: any) => {
@@ -331,8 +365,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                                   JSON.stringify(prevData.data.players);
           const hasNextToActChanged = response.data.nextToAct !== prevData.data.nextToAct;
           const hasRoundChanged = response.data.round !== prevData.data.round;
-          const hasBoardChanged = JSON.stringify(response.data.board) !== 
-                                 JSON.stringify(prevData.data.board);
+          const hasBoardChanged = JSON.stringify(response.data.board || response.data.communityCards) !== 
+                                 JSON.stringify(prevData.data.board || prevData.data.communityCards);
           const hasPotChanged = JSON.stringify(response.data.pots) !== 
                                    JSON.stringify(prevData.data.pots);
           
@@ -340,12 +374,12 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                                      hasRoundChanged || hasBoardChanged || hasPotChanged;
           
           if (hasImportantChanges) {
-            console.log('Polling detected changes, updating table data');
+            debugLog('Polling detected changes, updating table data');
             lastUpdateTimestamp = now;
             return { data: response.data };
           }
           
-          console.log('Polling detected no changes, keeping current state');
+          debugLog('Polling detected no changes, keeping current state');
           return prevData;
         });
       } catch (err) {
@@ -356,14 +390,17 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Initial fetch
     fetchTableData();
 
-    // Set up polling with longer interval (3000ms -> 5000ms)
-    const interval = setInterval(fetchTableData, 5000);
+    // Set up polling with longer interval when WebSocket is connected
+    const interval = setInterval(
+      fetchTableData, 
+      wsConnected ? 10000 : 5000  // Slower polling when WS is connected
+    );
 
     // Cleanup
     return () => {
       clearInterval(interval);
     };
-  }, [tableId, usePolling]);
+  }, [tableId, usePolling, wsConnected]);
 
   // Update public key calculation
   useEffect(() => {
@@ -373,7 +410,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         try {
           const publicKey = getPublicKey(privateKey);
           setUserPublicKey(publicKey);
-          console.log('Calculated Public Key:', publicKey);
+          debugLog('Calculated Public Key:', publicKey);
         } catch (error) {
           console.error('Error calculating public key:', error);
         }
@@ -387,9 +424,13 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const refreshNonce = useCallback(async (address: string) => {
     try {
       const response = await axios.get(`${PROXY_URL}/nonce/${address}`);
-      console.log('Nonce Data:', response.data.result.data.nonce);
-      setNonce(response.data.result.data.nonce);
-      return response.data.result.data.nonce;
+      debugLog('Nonce Data:', response.data.result.data.nonce);
+      
+      if (response.data?.result?.data?.nonce !== undefined) {
+        setNonce(response.data.result.data.nonce);
+        return response.data.result.data.nonce;
+      }
+      return null;
     } catch (error) {
       console.error('Error fetching nonce:', error);
       return null;
@@ -443,10 +484,10 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     
     try {
-      console.log("Dealing cards for table:", tableId);
+      debugLog("Dealing cards for table:", tableId);
       
       const response = await axios.post(`${PROXY_URL}/table/${tableId}/deal`);
-      console.log("Deal response:", response.data);
+      debugLog("Deal response:", response.data);
       
       if (response.data?.result?.data) {
         setTableData({ data: response.data.result.data });
