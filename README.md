@@ -45,16 +45,44 @@ The API service is configured with volume mapping, so any changes you make to th
 
 To run only specific services:
 
+## Running PVM Locally
 
+To run the PVM locally for development and testing:
 
+1. Navigate to the PVM directory:
+   ```
+   cd pvm/ts
+   ```
 
+2. Start the local MongoDB instance using the local Docker Compose file:
+   ```
+   docker-compose -f docker-compose.local.yml up -d
+   ```
 
+3. Connect to the local MongoDB database:
+   - **Connection string**: `mongodb://localhost:27019/local_pvm`
+   - **For GUI tools** (like DataGrip, MongoDB Compass):
+     - Host: `localhost`
+     - Port: `27019`
+     - Database: `local_pvm`
+     - Authentication: None (or as configured)
 
+4. Start the PVM application:
+   ```
+   yarn run dev
+   ```
+   
+5. The local PVM will be available at:
+   - API: http://localhost:3000
 
+6. To stop the local MongoDB instance:
+   ```
+   docker-compose -f docker-compose.local.yml down
+   ```
 
+## Running in Production
 
-
-
+*[Production deployment instructions and connection to Block52 network will be added in the future]*
 
 
 # SDK
