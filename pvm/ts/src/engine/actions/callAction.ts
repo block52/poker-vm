@@ -21,9 +21,12 @@ class CallAction extends BaseAction implements IAction {
         if (deductAmount === 0n)
             throw new Error("Player has already met maximum so can check instead.");
 
+        // Safety check to ensure we never have negative amounts
+        if (deductAmount < 0n)
+            deductAmount = 0n;
+
         if (player.chips < deductAmount)
             deductAmount = player.chips;
-
 
         return { minAmount: deductAmount, maxAmount: deductAmount };
     }
@@ -44,11 +47,15 @@ class CallAction extends BaseAction implements IAction {
     protected getDeductAmount(player: Player): bigint {
         const lastAction = this.game.getLastRoundAction();
         const sumBets = this.getSumBets(player.address);
-
-        // default to big blind if no previous action.
-        // Note: this could fail in some edge cases where the big blind is
-        // not the minimum bet.
-        return (lastAction?.amount || this.game.bigBlind) - sumBets;
+        const amountToCall = lastAction?.amount || this.game.bigBlind;
+        
+        // If player has already bet the same or more than needed to call, return 0
+        if (sumBets >= amountToCall) {
+            return 0n;
+        }
+        
+        // Otherwise return the difference needed to call
+        return amountToCall - sumBets;
     }
 }
 
