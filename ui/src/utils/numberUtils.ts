@@ -80,3 +80,19 @@ export const formatWeiToSimpleDollars = (weiAmount: string | bigint): string => 
         return "0.00";
     }
 }
+
+
+export const formatWeiToUSD = (weiAmount: string | number): string => {
+    try {
+        // Convert from Wei (18 decimals) to standard units
+        const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
+        // Format to 2 decimal places and add commas
+        return usdValue.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    } catch (error) {
+        console.error("Error formatting Wei amount:", error);
+        return "0.00";
+    }
+};
