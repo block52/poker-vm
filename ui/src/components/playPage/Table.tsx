@@ -15,8 +15,6 @@ import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wa
 import { useNavigate, useParams } from "react-router-dom";
 import { IoMenuSharp } from "react-icons/io5";
 
-import useUserBySeat from "../../hooks/useUserBySeat";
-
 import { ethers } from "ethers";
 import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
@@ -123,7 +121,9 @@ const Table = () => {
         tableSize,
         openOneMore,
         openTwoMore,
-        showThreeCards 
+        showThreeCards,
+        getUserBySeat,
+        currentUserSeat 
     } = useTableContext();
 
     // Keep the existing variable
@@ -137,21 +137,15 @@ const Table = () => {
 
     // Add the new hook usage here with prefixed names
     const tableDataValues = useTableData();
-
-    // Find the current user's seat using the new variable
-    const currentUserSeat = React.useMemo(() => {
-        if (!userWalletAddress || !tableDataValues.tableDataPlayers) return -1;
-
-        const playerIndex = tableDataValues.tableDataPlayers.findIndex((player: any) => player.address?.toLowerCase() === userWalletAddress);
-
-        return playerIndex >= 0 ? playerIndex : -1;
-    }, [userWalletAddress, tableDataValues.tableDataPlayers]);
-
-    // // Only log when tableData changes, not on every render
-    // useEffect(() => {
-    //     console.log("Destructured Table Data:", tableDataValues);
-    //     console.log("Current User Seat:", currentUserSeat);
-    // }, [tableDataValues, currentUserSeat]);
+    
+    // Replace useUserBySeat with getUserBySeat from context
+    // Get the user data for the current seat from context instead of hook
+    const userData = React.useMemo(() => {
+        if (currentUserSeat >= 0) {
+            return getUserBySeat(currentUserSeat);
+        }
+        return null;
+    }, [currentUserSeat, getUserBySeat]);
 
     // Define activePlayers only once
     const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
@@ -201,12 +195,6 @@ const Table = () => {
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
     
-    // Update useUserBySeat to use the table address and current user's seat
-    const { data: userData } = useUserBySeat(
-        tableDataValues.tableDataAddress || "", 
-        currentUserSeat >= 0 ? currentUserSeat : seat
-    );
-
     const navigate = useNavigate();
 
     const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.

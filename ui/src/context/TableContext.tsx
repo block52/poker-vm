@@ -42,6 +42,10 @@ interface TableContextType {
   raise: (amount: number) => void;
   bet: (amount: number) => void;
   setPlayerAction: (action: PlayerActionType, amount?: number) => void;
+  // New user data by seat
+  getUserBySeat: (seat: number) => any;
+  currentUserSeat: number;
+  userDataBySeat: Record<number, any>;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -74,7 +78,17 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [openOneMore, setOpenOneMore] = useState<boolean>(false);
   const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
   const [showThreeCards, setShowThreeCards] = useState<boolean>(false);
+  // Add state for user data by seat
+  const [userDataBySeat, setUserDataBySeat] = useState<Record<number, any>>({});
+  const [currentUserSeat, setCurrentUserSeat] = useState<number>(-1);
+  
   const { b52 } = useUserWallet();
+
+  // Helper to get user address from storage once
+  const userWalletAddress = React.useMemo(() => {
+    const address = localStorage.getItem("user_eth_public_key");
+    return address ? address.toLowerCase() : null;
+  }, []);
 
   // Calculate who is next to act whenever tableData changes
   useEffect(() => {
@@ -91,8 +105,63 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Update other table information
       setCurrentRound(getCurrentRound(tableData.data));
       setTotalPot(getTotalPot(tableData.data));
+
+      // Update current user's seat when table data changes
+      if (userWalletAddress && tableData.data.players) {
+        const playerIndex = tableData.data.players.findIndex(
+          (player: any) => player.address?.toLowerCase() === userWalletAddress
+        );
+        setCurrentUserSeat(playerIndex >= 0 ? playerIndex : -1);
+      }
     }
-  }, [tableData]);
+  }, [tableData, userWalletAddress]);
+
+  // Fetch user data by seat when needed
+  const fetchUserBySeat = useCallback(async (seat: number) => {
+    if (!tableId || seat < 0 || !tableData?.data?.players?.[seat]) return null;
+    
+    try {
+      // Check if we already have cached data and it's not stale
+      const cachedData = userDataBySeat[seat];
+      const isStale = !cachedData || 
+                     (cachedData.lastFetched && 
+                      Date.now() - cachedData.lastFetched > 30000); // Refresh every 30 seconds
+      
+      // If we have non-stale data, use it
+      if (cachedData && !isStale) {
+        return cachedData.data;
+      }
+      
+      const response = await axios.get(`${PROXY_URL}/table/${tableId}/player/${seat}`);
+      
+      // Update the cache with new data and timestamp
+      setUserDataBySeat(prev => ({
+        ...prev,
+        [seat]: { 
+          data: response.data,
+          lastFetched: Date.now()
+        }
+      }));
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching user data for seat ${seat}:`, error);
+      return null;
+    }
+  }, [tableId, tableData?.data?.players]);
+
+  // Helper function to get user data by seat (from cache or fetch if needed)
+  const getUserBySeat = useCallback((seat: number) => {
+    const cachedData = userDataBySeat[seat];
+    
+    // If we don't have data or it's stale, trigger a fetch
+    if (!cachedData || 
+        (cachedData.lastFetched && Date.now() - cachedData.lastFetched > 30000)) {
+      fetchUserBySeat(seat);
+    }
+    
+    return cachedData?.data || null;
+  }, [userDataBySeat, fetchUserBySeat]);
 
   // WebSocket connection setup with reconnection logic
   useEffect(() => {
@@ -151,7 +220,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               console.log('Received welcome message from server');
             } else if (data.type === 'tableUpdate') {
               console.log('Received table update via WebSocket');
-              console.log('Table update data structure:', JSON.stringify(data, null, 2));
               
               if (data.data) {
                 console.log('Setting table data from WebSocket update');
@@ -159,25 +227,11 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 // Ensure all critical properties are present
                 const tableState = data.data;
                 
-                // Log specific properties we're concerned about
-                console.log('Table state properties:', {
-                  address: tableState.address,
-                  smallBlind: tableState.smallBlind,
-                  bigBlind: tableState.bigBlind,
-                  smallBlindPosition: tableState.smallBlindPosition,
-                  bigBlindPosition: tableState.bigBlindPosition,
-                  dealer: tableState.dealer,
-                  players: tableState.players?.length,
-                  round: tableState.round,
-                  nextToAct: tableState.nextToAct
-                });
-                
                 // Make sure we're setting the data in the exact format expected by components
                 const formattedData = {
                   data: tableState
                 };
                 
-                console.log('Formatted table data:', JSON.stringify(formattedData, null, 2));
                 setTableData(formattedData);
                 setIsLoading(false);
               }
@@ -231,13 +285,22 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [tableId]);
 
-  // Polling fallback
+  // Polling fallback - optimized to reduce unnecessary updates
   useEffect(() => {
     if (!tableId || !usePolling) return;
     
     console.log('Using polling fallback for table data');
     
+    let isFirstLoad = true;
+    let lastUpdateTimestamp = 0;
+    
     const fetchTableData = async () => {
+      // Add debounce - only fetch if it's been at least 2 seconds since last update
+      const now = Date.now();
+      if (!isFirstLoad && now - lastUpdateTimestamp < 2000) {
+        return;
+      }
+      
       console.log('Polling: fetching data for table ID:', tableId);
       
       try {
@@ -251,7 +314,11 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         // Only update if critical data has changed
         setTableData((prevData: any) => {
-          if (!prevData || !prevData.data) return { data: response.data };
+          if (!prevData || !prevData.data || isFirstLoad) {
+            isFirstLoad = false;
+            lastUpdateTimestamp = now;
+            return { data: response.data };
+          }
           
           // Special case: normalize dealer position
           // If dealer position is 9 in the response, treat it as 0 for consistency
@@ -269,13 +336,12 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const hasPotChanged = JSON.stringify(response.data.pots) !== 
                                    JSON.stringify(prevData.data.pots);
           
-          // Specifically exclude dealer position from triggering updates
-          // unless other important state has changed
           const hasImportantChanges = hasPlayerChanges || hasNextToActChanged || 
                                      hasRoundChanged || hasBoardChanged || hasPotChanged;
           
           if (hasImportantChanges) {
             console.log('Polling detected changes, updating table data');
+            lastUpdateTimestamp = now;
             return { data: response.data };
           }
           
@@ -290,8 +356,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Initial fetch
     fetchTableData();
 
-    // Set up polling
-    const interval = setInterval(fetchTableData, 3000);
+    // Set up polling with longer interval (3000ms -> 5000ms)
+    const interval = setInterval(fetchTableData, 5000);
 
     // Cleanup
     return () => {
@@ -317,8 +383,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     calculatePublicKey();
   }, []);
 
-  // Refresh nonce periodically
-  const refreshNonce = async (address: string) => {
+  // Refresh nonce with debounce
+  const refreshNonce = useCallback(async (address: string) => {
     try {
       const response = await axios.get(`${PROXY_URL}/nonce/${address}`);
       console.log('Nonce Data:', response.data.result.data.nonce);
@@ -328,16 +394,18 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.error('Error fetching nonce:', error);
       return null;
     }
-  };
+  }, []);
 
+  // Optimize nonce refresh - less frequent polling
   useEffect(() => {
     const address = localStorage.getItem('user_eth_public_key');
     if (address) {
       refreshNonce(address);
-      const interval = setInterval(() => refreshNonce(address), 10000);
+      // Reduce frequency from 10s to 15s - still fast enough for gameplay
+      const interval = setInterval(() => refreshNonce(address), 15000);
       return () => clearInterval(interval);
     }
-  }, []);
+  }, [refreshNonce]);
 
   // Update isCurrentUserPlaying when tableData changes
   useEffect(() => {
@@ -359,6 +427,13 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
   }, [tableData]);
+
+  // When the user has joined a table, fetch their seat data
+  useEffect(() => {
+    if (currentUserSeat >= 0 && tableId) {
+      fetchUserBySeat(currentUserSeat);
+    }
+  }, [currentUserSeat, tableId, fetchUserBySeat]);
 
   // Add the deal function
   const dealTable = async () => {
@@ -472,7 +547,11 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       call,
       raise,
       bet,
-      setPlayerAction
+      setPlayerAction,
+      // New user data functionality
+      getUserBySeat,
+      currentUserSeat,
+      userDataBySeat
     }}>
       {children}
     </TableContext.Provider>
