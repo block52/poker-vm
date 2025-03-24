@@ -1,42 +1,38 @@
-import { useEffect, useState } from "react";
-import * as React from "react";
-import { usePlayerContext } from "../../../context/usePlayerContext";
-import { PlayerStatus } from "@bitcoinbrisbane/block52"
+import React from "react";
+import { useTableContext } from "../../../context/TableContext";
 
-type TurnAnimationProps = {
-    top?: string; // CSS top position
-    left?: string; // CSS left position
-    index: number; // Index of the player
-};
+interface TurnAnimationProps {
+    left?: string;
+    top?: string;
+    index: number;
+}
 
 const TurnAnimation: React.FC<TurnAnimationProps> = ({ left, top, index }) => {
-    const { players } = usePlayerContext();
-    const [isThinking, setIsThinking] = useState(false);
+    const { tableData } = useTableContext();
+    
+    // Use tableData.data.players instead of players from PlayerContext
+    const players = tableData?.data?.players || [];
+    
+    // Only show the turn animation for the player who's next to act
+    const isNextToAct = tableData?.data?.nextToAct === index;
 
-    const currentPlayer = players[index];
-
-    useEffect(() => {
-        if (currentPlayer.status === PlayerStatus.ACTIVE) {
-            setIsThinking(true);
-        } else {
-            setIsThinking(false);
-        }
-    }, [currentPlayer.status, index]); // React to changes in players or index
-
-    // Only show the animation if the player is thinking
-    if (!isThinking) return null;
-
+    if (!isNextToAct) return null;
+    
     return (
-        <img
-            src="/cards/PlayerAnimation.svg"
-            alt="Thinking Animation"
-            className="absolute mt-[35px] transform -translate-x-1/2 -translate-y-1/2 z-[-1]"
+        <div
+            className="hidden opacity-0 animate-pulse"
             style={{
-                left: left || "50%",
-                top: top || "50%",
-                transition: "top 1s ease, left 1s ease"
+                position: "absolute",
+                left: left,
+                top: top,
+                width: "100px",
+                height: "100px",
+                backgroundColor: "#3498db",
+                borderRadius: "50%",
+                boxShadow: "0 0 10px 5px #2980b9",
+                transition: "all 0.3s ease"
             }}
-        />
+        ></div>
     );
 };
 

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { PROXY_URL } from "../config/constants";
 
 interface UseUserSeatResult {
     data: any;
@@ -9,7 +10,7 @@ interface UseUserSeatResult {
 }
 
 const useUserBySeat = (address: string, seat: number): UseUserSeatResult => {
-    const [userData, setUserData] = useState<any>();
+    const [userData, setUserData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
@@ -20,17 +21,19 @@ const useUserBySeat = (address: string, seat: number): UseUserSeatResult => {
         setError(null);
 
         try {
-            const mock_url = "https://orca-app-k9l4d.ondigitalocean.app";
-            const url = process.env.REACT_APP_PROXY_URL || "https://proxy.block52.xyz";
-            const response = await axios.get(`${mock_url}/table/${address}/player/${seat}`);
+            console.log(`Fetching user data for table: ${address}, seat: ${seat}`);
+            const response = await axios.get(`${PROXY_URL}/table/${address}/player/${seat}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            // console.log(response.data)
+            
+            console.log('User data by seat:', response.data);
             setUserData(response.data);
         } catch (err) {
+            console.error('Error fetching user data by seat:', err);
             setError(err instanceof Error ? err : new Error("An error occurred"));
+            setUserData(null); // Reset data on error
         } finally {
             setIsLoading(false);
         }
@@ -44,7 +47,7 @@ const useUserBySeat = (address: string, seat: number): UseUserSeatResult => {
         data: userData,
         isLoading,
         error,
-        refetch: fetchType // Correctly assign the fetch function
+        refetch: fetchType
     };
 };
 

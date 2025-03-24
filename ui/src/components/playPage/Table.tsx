@@ -6,7 +6,7 @@ import OppositePlayerCards from "./Card/OppositePlayerCards";
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
-import { usePlayerContext } from "../../context/usePlayerContext";
+// import { usePlayerContext } from "../../context/usePlayerContext";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
@@ -112,8 +112,19 @@ const useTableData = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const context = usePlayerContext();
-    const { tableData, nextToActInfo, currentRound, totalPot, playerLegalActions, isPlayerTurn, dealTable } = useTableContext();
+    const { 
+        tableData, 
+        nextToActInfo, 
+        currentRound, 
+        totalPot, 
+        playerLegalActions, 
+        isPlayerTurn, 
+        dealTable, 
+        tableSize,
+        openOneMore,
+        openTwoMore,
+        showThreeCards 
+    } = useTableContext();
 
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
@@ -168,12 +179,10 @@ const Table = () => {
         return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
     }
 
-    // Destructure context including loading and error states
-    const {
-        seat, // todo
-        pots, // todo
-        communityCards // todo
-    } = context;
+    // Add any variables we need
+    const [seat, setSeat] = useState<number>(0);
+    // Add dealerIndex state here at the top with other state hooks
+    const [dealerIndex, setDealerIndex] = useState<number>(0);
 
     // Handle loading state
 
@@ -191,7 +200,12 @@ const Table = () => {
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
-    const { data } = useUserBySeat(id, seat);
+    
+    // Update useUserBySeat to use the table address and current user's seat
+    const { data: userData } = useUserBySeat(
+        tableDataValues.tableDataAddress || "", 
+        currentUserSeat >= 0 ? currentUserSeat : seat
+    );
 
     const navigate = useNavigate();
 
@@ -297,8 +311,6 @@ const Table = () => {
         }, 1200);
     }
 
-    const { players, dealerIndex, tableSize, openOneMore, openTwoMore, showThreeCards } = usePlayerContext();
-
     useEffect(() => {
         if (showThreeCards) {
             threeCardsTable();
@@ -391,12 +403,6 @@ const Table = () => {
     const onGoToDashboard = () => {
         navigate("/");
     };
-
-    // Add null check before logging
-    if (!context || !context.gamePlayers) {
-        console.log("Context or gamePlayers not ready yet");
-        return null; // or return a loading state
-    }
 
     // Add this helper function for copying to clipboard
     const copyToClipboard = (text: string) => {
@@ -781,7 +787,7 @@ const Table = () => {
                             </div>
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
-                            {data && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{data.hand_strength}</span>}
+                            {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>}
                         </div>
                     </div>
 

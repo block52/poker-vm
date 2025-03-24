@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
-import { usePlayerContext } from "../../../context/usePlayerContext";
+import { useTableContext } from "../../../context/TableContext";
 import { PlayerStatus } from "@bitcoinbrisbane/block52"
 
 type ProgressBarProps = {
@@ -9,9 +9,11 @@ type ProgressBarProps = {
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
     const [progress, setProgress] = useState(0);
-    const { players } = usePlayerContext();
-
-    const currentPlayer = players[index];
+    const { tableData } = useTableContext();
+    
+    // Get players from tableData instead of PlayerContext
+    const players = tableData?.data?.players || [];
+    const currentPlayer = players[index] || { status: PlayerStatus.NOT_ACTED };
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
@@ -35,7 +37,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
         };
     }, [currentPlayer.status]);
 
-    if (players[index].status === PlayerStatus.ACTIVE) {
+    if (currentPlayer.status === PlayerStatus.ACTIVE) {
         return (
             <div className={"animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2"}>
                 <span className="ml-2 text-white text-sm w-[15px]">{30 - progress}</span>

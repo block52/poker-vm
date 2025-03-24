@@ -53,9 +53,7 @@ function App() {
                         <Routes>
                             <Route path="/table/:id" element={
                                 <TableProvider>
-                                
-                                        <Table />
-                              
+                                    <Table />
                                 </TableProvider>
                             } />
                             <Route path="/deposit" element={<Deposit />} />

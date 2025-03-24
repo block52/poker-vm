@@ -2,7 +2,6 @@ import * as React from "react";
 import { memo, useEffect, useState } from "react";
 import { FaRegUserCircle } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
-import { usePlayerContext } from "../../../context/usePlayerContext";
 import { PROXY_URL } from "../../../config/constants";
 import axios from "axios";
 import { useAccount } from "wagmi";

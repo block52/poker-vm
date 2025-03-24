@@ -5,6 +5,8 @@ import { PROXY_URL } from '../config/constants';
 import { getPublicKey, isUserPlaying } from '../utils/accountUtils';
 import { whoIsNextToAct, getCurrentRound, getTotalPot, getPositionName } from '../utils/tableUtils';
 import { getPlayersLegalActions, isPlayersTurn } from '../utils/playerUtils';
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import useUserWallet from "../hooks/useUserWallet";  // this is the browser wallet todo rename to useBrowserWallet
 
 interface TableContextType {
   tableData: any;
@@ -27,6 +29,19 @@ interface TableContextType {
   playerLegalActions: any[] | null;
   isPlayerTurn: boolean;
   dealTable: () => Promise<void>;
+  tableSize: number;
+  tableType: string;
+  roundType: string;
+  openOneMore: boolean;
+  openTwoMore: boolean;
+  showThreeCards: boolean;
+  performAction: (gameAddress: string, action: PlayerActionType, amount?: string, nonce?: number) => void;
+  fold: () => void;
+  check: () => void;
+  call: () => void;
+  raise: (amount: number) => void;
+  bet: (amount: number) => void;
+  setPlayerAction: (action: PlayerActionType, amount?: number) => void;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -53,6 +68,13 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [playerLegalActions, setPlayerLegalActions] = useState<any[] | null>(null);
   const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false);
   const [usePolling, setUsePolling] = useState<boolean>(true);
+  const [tableSize, setTableSize] = useState<number>(9);
+  const [tableType, setTableType] = useState<string>("");
+  const [roundType, setRoundType] = useState<string>("");
+  const [openOneMore, setOpenOneMore] = useState<boolean>(false);
+  const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
+  const [showThreeCards, setShowThreeCards] = useState<boolean>(false);
+  const { b52 } = useUserWallet();
 
   // Calculate who is next to act whenever tableData changes
   useEffect(() => {
@@ -359,6 +381,69 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Add these functions from PlayerContext
+  const performAction = useCallback(
+    (gameAddress: string, action: PlayerActionType, amount?: string, nonce?: number) => {
+      b52?.playerAction(gameAddress, action, amount ?? "", nonce);
+    },
+    [b52]
+  );
+
+  const fold = useCallback(() => {
+    if (tableId && nonce !== null) {
+      performAction(tableId, PlayerActionType.FOLD, undefined, nonce);
+    }
+  }, [tableId, nonce, performAction]);
+
+  const check = useCallback(() => {
+    if (tableId && nonce !== null) {
+      performAction(tableId, PlayerActionType.CHECK, undefined, nonce);
+    }
+  }, [tableId, nonce, performAction]);
+
+  const call = useCallback(() => {
+    if (tableId && nonce !== null) {
+      performAction(tableId, PlayerActionType.CALL, undefined, nonce);
+    }
+  }, [tableId, nonce, performAction]);
+
+  const raise = useCallback((amount: number) => {
+    if (tableId && nonce !== null) {
+      performAction(tableId, PlayerActionType.RAISE, amount.toString(), nonce);
+    }
+  }, [tableId, nonce, performAction]);
+
+  const bet = useCallback((amount: number) => {
+    if (tableId && nonce !== null) {
+      performAction(tableId, PlayerActionType.BET, amount.toString(), nonce);
+    }
+  }, [tableId, nonce, performAction]);
+
+  const setPlayerAction = useCallback((action: PlayerActionType, amount?: number) => {
+    if (action === PlayerActionType.FOLD) {
+      fold();
+    } else if (action === PlayerActionType.CHECK) {
+      check();
+    } else if (action === PlayerActionType.CALL) {
+      call();
+    } else if (action === PlayerActionType.RAISE && amount !== undefined) {
+      raise(amount);
+    } else if (action === PlayerActionType.BET && amount !== undefined) {
+      bet(amount);
+    }
+  }, [fold, check, call, raise, bet]);
+
+  // Update table type and round info when table data changes
+  useEffect(() => {
+    if (tableData && tableData.data) {
+      // Set table type if available in data
+      setTableType(tableData.data.type || "No Limit Hold'em");
+      
+      // Set round type from the current round
+      setRoundType(getCurrentRound(tableData.data));
+    }
+  }, [tableData]);
+
   return (
     <TableContext.Provider value={{ 
       tableData: tableData ? { ...tableData, publicKey: userPublicKey } : null,
@@ -374,7 +459,20 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       totalPot,
       playerLegalActions,
       isPlayerTurn,
-      dealTable
+      dealTable,
+      tableSize,
+      tableType,
+      roundType,
+      openOneMore,
+      openTwoMore,
+      showThreeCards,
+      performAction,
+      fold,
+      check,
+      call,
+      raise,
+      bet,
+      setPlayerAction
     }}>
       {children}
     </TableContext.Provider>
