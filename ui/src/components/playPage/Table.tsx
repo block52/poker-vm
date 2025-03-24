@@ -15,13 +15,21 @@ import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wa
 import { useNavigate, useParams } from "react-router-dom";
 import { IoMenuSharp } from "react-icons/io5";
 
-import useUserBySeat from "../../hooks/useUserBySeat";
-
 import { ethers } from "ethers";
 import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
+
+// Enable this to see verbose logging
+const DEBUG_MODE = false;
+
+// Helper function that only logs when DEBUG_MODE is true
+const debugLog = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -119,57 +127,54 @@ const Table = () => {
         totalPot, 
         playerLegalActions, 
         isPlayerTurn, 
-        dealTable, 
         tableSize,
         openOneMore,
         openTwoMore,
-        showThreeCards 
+        showThreeCards,
+        getUserBySeat,
+        currentUserSeat 
     } = useTableContext();
 
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
-    console.log("Current user address from localStorage:", currentUserAddress);
+    debugLog("Current user address from localStorage:", currentUserAddress);
 
     // Create a different variable for comparison purposes
     const userWalletAddress = React.useMemo(() => {
         return currentUserAddress ? currentUserAddress.toLowerCase() : null;
     }, [currentUserAddress]);
 
-    // Add the new hook usage here with prefixed names
+    // Add the new hook usage here with prefixed names - directly at top level, not inside useMemo
     const tableDataValues = useTableData();
-
-    // Find the current user's seat using the new variable
-    const currentUserSeat = React.useMemo(() => {
-        if (!userWalletAddress || !tableDataValues.tableDataPlayers) return -1;
-
-        const playerIndex = tableDataValues.tableDataPlayers.findIndex((player: any) => player.address?.toLowerCase() === userWalletAddress);
-
-        return playerIndex >= 0 ? playerIndex : -1;
-    }, [userWalletAddress, tableDataValues.tableDataPlayers]);
-
-    // // Only log when tableData changes, not on every render
-    // useEffect(() => {
-    //     console.log("Destructured Table Data:", tableDataValues);
-    //     console.log("Current User Seat:", currentUserSeat);
-    // }, [tableDataValues, currentUserSeat]);
+    
+    // Replace useUserBySeat with getUserBySeat from context
+    // Get the user data for the current seat from context instead of hook
+    const userData = React.useMemo(() => {
+        if (currentUserSeat >= 0) {
+            return getUserBySeat(currentUserSeat);
+        }
+        return null;
+    }, [currentUserSeat, getUserBySeat]);
 
     // Define activePlayers only once
     const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
 
     useEffect(() => {
-        console.log("Active Players:", activePlayers);
+        if (!DEBUG_MODE) return; // Skip logging if not in debug mode
+        
+        debugLog("Active Players:", activePlayers);
         // If there are active players, set their positions
         if (activePlayers.length > 0) {
             // Player in seat 0
             if (activePlayers.find((p: any) => p.seat === 0)) {
                 const player0 = activePlayers.find((p: any) => p.seat === 0);
-                console.log("Player 0:", player0);
+                debugLog("Player 0:", player0);
             }
 
             // Player in seat 1
             if (activePlayers.find((p: any) => p.seat === 1)) {
                 const player1 = activePlayers.find((p: any) => p.seat === 1);
-                console.log("Player 1:", player1);
+                debugLog("Player 1:", player1);
             }
         }
     }, [activePlayers]);
@@ -201,12 +206,6 @@ const Table = () => {
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
     
-    // Update useUserBySeat to use the table address and current user's seat
-    const { data: userData } = useUserBySeat(
-        tableDataValues.tableDataAddress || "", 
-        currentUserSeat >= 0 ? currentUserSeat : seat
-    );
-
     const navigate = useNavigate();
 
     const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
@@ -218,8 +217,6 @@ const Table = () => {
     const [isSmallBlindVisible, setIsSmallBlindVisible] = useState(false);
     const [bigBlindPosition, setBigBlindPosition] = useState({ left: "0px", top: "0px" });
     const [isBigBlindVisible, setIsBigBlindVisible] = useState(false);
-
-    const [canDeal, setCanDeal] = useState(false);
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -286,7 +283,7 @@ const Table = () => {
                 console.error("Error setting position indicators:", error);
             }
         }
-    }, [tableData?.data?.address]); // Only update when table changes
+    }, [tableData?.data?.address, tableData?.data?.dealer, tableData?.data?.smallBlindPosition, tableData?.data?.bigBlindPosition]); // Only update when important positions change
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -366,36 +363,6 @@ const Table = () => {
         }
     }, [tableSize]);
 
-    useEffect(() => {
-        if (tableData?.data) {
-            // Check if there are at least 2 players
-            const hasEnoughPlayers = tableData.data.players && tableData.data.players.length >= 2;
-
-            // Check if blinds have been posted
-            const blindsPosted =
-                tableData.data.previousActions &&
-                tableData.data.previousActions.some((action: any) => action.action === "post small blind") &&
-                tableData.data.previousActions.some((action: any) => action.action === "post big blind");
-
-            // Check if we're in preflop round with no community cards yet
-            const isPreflop = tableData.data.round === "preflop";
-            const noCardsDealt = !tableData.data.communityCards || tableData.data.communityCards.length === 0;
-
-            // Show deal button if all conditions are met
-            setCanDeal(hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt);
-
-            console.log("Deal button visibility check:", {
-                hasEnoughPlayers,
-                blindsPosted,
-                isPreflop,
-                noCardsDealt,
-                canDeal: hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt
-            });
-        } else {
-            setCanDeal(false);
-        }
-    }, [tableData]);
-
     const onCloseSideBar = () => {
         setOpenSidebar(!openSidebar);
     };
@@ -428,12 +395,6 @@ const Table = () => {
     if (!tableDataValues.tableDataPlayers || !tableDataValues.tableDataCommunityCards) {
         return <div className="h-screen flex items-center justify-center text-white">Waiting for table data...</div>;
     }
-
-    // Use the context function instead of implementing it here
-    const handleDeal = () => {
-        console.log("Deal button clicked");
-        dealTable();
-    };
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
@@ -527,8 +488,7 @@ const Table = () => {
                     <div
                         className="absolute inset-0 z-0 opacity-30"
                         style={{
-                            background:
-                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
+                            backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
                             backgroundSize: "200% 100%",
                             animation: "shimmer 3s infinite linear"
                         }}
@@ -587,19 +547,13 @@ const Table = () => {
                 >
                     {/*//! TABLE */}
                     <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
-                        {/* Base gradient background */}
+                        {/* Animated background overlay */}
                         <div
-                            className="absolute inset-0 z-0"
+                            className="absolute inset-0 z-0 opacity-30"
                             style={{
-                                background: `
-                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(42, 72, 65, 0.9) 0%, transparent 60%),
-                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 65, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 0%, rgba(61, 89, 80, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 47, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 71, 0.7) 0%, transparent 50%)
-                                `,
-                                filter: "blur(60px)",
-                                transition: "background 0.3s ease-out"
+                                backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
+                                backgroundSize: "200% 100%",
+                                animation: "shimmer 3s infinite linear"
                             }}
                         />
 
@@ -607,7 +561,7 @@ const Table = () => {
                         <div
                             className="absolute inset-0 z-0"
                             style={{
-                                background: `
+                                backgroundImage: `
                                     repeating-linear-gradient(
                                         ${45 + mousePosition.x / 10}deg,
                                         rgba(42, 72, 65, 0.1) 0%,
@@ -620,6 +574,22 @@ const Table = () => {
                                 backgroundSize: "400% 400%",
                                 animation: "gradient 15s ease infinite",
                                 transition: "background 0.5s ease"
+                            }}
+                        />
+
+                        {/* Base gradient background */}
+                        <div
+                            className="absolute inset-0 z-0"
+                            style={{
+                                backgroundImage: `
+                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(42, 72, 65, 0.9) 0%, transparent 60%),
+                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 65, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 100% 0%, rgba(61, 89, 80, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 47, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 71, 0.7) 0%, transparent 50%)
+                                `,
+                                filter: "blur(60px)",
+                                transition: "all 0.3s ease-out"
                             }}
                         />
 
@@ -688,9 +658,9 @@ const Table = () => {
                                             // Check if this player is the current user
                                             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
 
-                                            // More detailed logging
-                                            if (playerAtThisSeat) {
-                                                console.log(`Seat ${positionIndex} detailed comparison:`, {
+                                            // More detailed logging only in DEBUG_MODE
+                                            if (DEBUG_MODE && playerAtThisSeat) {
+                                                debugLog(`Seat ${positionIndex} detailed comparison:`, {
                                                     playerAddress: playerAtThisSeat.address,
                                                     playerAddressLower: playerAtThisSeat.address?.toLowerCase(),
                                                     currentUserAddress: userWalletAddress,
@@ -701,40 +671,41 @@ const Table = () => {
                                                 });
                                             }
 
+                                            const componentProps = {
+                                                index: positionIndex,
+                                                currentIndex: currentIndex,
+                                                left: position.left,
+                                                top: position.top,
+                                                color: position.color,
+                                                status: tableDataValues.tableDataPlayers?.[positionIndex]?.status
+                                            };
+
                                             const componentToRender = !playerAtThisSeat ? (
                                                 // No player at this seat - show vacant player
                                                 <VacantPlayer index={positionIndex} left={position.left} top={position.top} />
                                             ) : isCurrentUser ? (
                                                 // This is the current user's position - use Player component
                                                 <Player
-                                                    index={positionIndex}
-                                                    currentIndex={currentIndex}
-                                                    left={position.left}
-                                                    top={position.top}
-                                                    color={position.color}
-                                                    status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
+                                                    {...componentProps}
                                                 />
                                             ) : (
                                                 // This is another player's position - use OppositePlayer component
                                                 <OppositePlayer
-                                                    index={positionIndex}
-                                                    currentIndex={currentIndex}
+                                                    {...componentProps}
                                                     setStartIndex={(index: number) => setStartIndex(index)}
-                                                    left={position.left}
-                                                    top={position.top}
-                                                    color={position.color}
-                                                    status={tableDataValues.tableDataPlayers?.[positionIndex]?.status}
                                                     isCardVisible={isCardVisible}
                                                     setCardVisible={setCardVisible}
                                                 />
                                             );
 
-                                            console.log(`Rendering component for seat ${positionIndex}:`, {
-                                                isVacant: !playerAtThisSeat,
-                                                isCurrentUser,
-                                                componentType: !playerAtThisSeat ? "VacantPlayer" : isCurrentUser ? "Player" : "OppositePlayer",
-                                                currentUserAddress: userWalletAddress
-                                            });
+                                            if (DEBUG_MODE) {
+                                                debugLog(`Rendering component for seat ${positionIndex}:`, {
+                                                    isVacant: !playerAtThisSeat,
+                                                    isCurrentUser,
+                                                    componentType: !playerAtThisSeat ? "VacantPlayer" : isCurrentUser ? "Player" : "OppositePlayer",
+                                                    currentUserAddress: userWalletAddress
+                                                });
+                                            }
 
                                             return (
                                                 <div key={positionIndex} className="z-[10]">
@@ -795,30 +766,6 @@ const Table = () => {
                     <div className="flex-shrink-0 w-full h-[190px] bg-custom-footer text-center z-[10] flex justify-center">
                         <PokerActionPanel />
                     </div>
-
-                    {/* DEAL BUTTON */}
-                    {canDeal && (
-                        <div className="absolute bottom-[300px] left-1/2 transform -translate-x-1/2 z-[9999]">
-                            <button
-                                onClick={handleDeal}
-                                className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                text-white font-bold py-3 px-8 rounded-lg shadow-lg 
-                                border-2 border-[#3a9188] transition-all duration-300 
-                                flex items-center justify-center gap-2"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                                    />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                DEAL
-                            </button>
-                        </div>
-                    )}
                 </div>
                 {/*//! SIDEBAR */}
                 <div

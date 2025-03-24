@@ -11,6 +11,16 @@ import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { getSignature, getPublicKey } from '../../../utils/accountUtils';
 import useUserWallet from "../../../hooks/useUserWallet";
 
+// Enable this to see verbose logging
+const DEBUG_MODE = false;
+
+// Helper function that only logs when DEBUG_MODE is true
+const debugLog = (...args: any[]) => {
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
+};
+
 type VacantPlayerProps = {
     left?: string; // Front side image source
     top?: string; // Back side image source
@@ -33,7 +43,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     const [buyInError, setBuyInError] = useState("");
 
     // Debug logs for initial state
-    console.log(`VacantPlayer ${index} initial state:`, {
+    debugLog(`VacantPlayer ${index} initial state:`, {
         userAddress,
         hasTableData: !!tableData,
         hasLocalTableData: !!localTableData,
@@ -44,7 +54,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     useEffect(() => {
         const timer = setTimeout(() => {
             setLocalTableData(tableData);
-            console.log(`VacantPlayer ${index} updated localTableData:`, {
+            debugLog(`VacantPlayer ${index} updated localTableData:`, {
                 hasData: !!tableData,
                 players: tableData?.data?.players?.map((p: any) => ({
                     address: p.address,
@@ -60,18 +70,18 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     // First, check if user is already playing
     const isUserAlreadyPlaying = React.useMemo(() => {
         if (!userAddress) {
-            console.log(`VacantPlayer ${index} - No user address found`);
+            debugLog(`VacantPlayer ${index} - No user address found`);
             return false;
         }
         
         if (!localTableData?.data?.players) {
-            console.log(`VacantPlayer ${index} - No players data found`);
+            debugLog(`VacantPlayer ${index} - No players data found`);
             return false;
         }
         
         // Log each player for comparison
         localTableData.data.players.forEach((player: any, idx: number) => {
-            console.log(`Player ${idx} comparison:`, {
+            debugLog(`Player ${idx} comparison:`, {
                 playerAddress: player.address,
                 userAddress: userAddress,
                 isMatch: player.address?.toLowerCase() === userAddress?.toLowerCase(),
@@ -83,14 +93,14 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             player.address?.toLowerCase() === userAddress?.toLowerCase()
         );
         
-        console.log(`VacantPlayer ${index} - isUserAlreadyPlaying:`, result);
+        debugLog(`VacantPlayer ${index} - isUserAlreadyPlaying:`, result);
         return result;
     }, [localTableData?.data?.players, userAddress, index]);
 
     // Calculate next available seat
     const nextAvailableSeat = React.useMemo(() => {
         if (isUserAlreadyPlaying) {
-            console.log(`VacantPlayer ${index} - User already playing, no available seat`);
+            debugLog(`VacantPlayer ${index} - User already playing, no available seat`);
             return -1;
         }
         
@@ -104,17 +114,17 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             });
         }
         
-        console.log(`VacantPlayer ${index} - Occupied seats:`, Array.from(occupiedSeats));
+        debugLog(`VacantPlayer ${index} - Occupied seats:`, Array.from(occupiedSeats));
         
         // Find the first available seat (0-8)
         for (let i = 0; i < 9; i++) {
             if (!occupiedSeats.has(i)) {
-                console.log(`VacantPlayer ${index} - First available seat:`, i);
+                debugLog(`VacantPlayer ${index} - First available seat:`, i);
                 return i;
             }
         }
         
-        console.log(`VacantPlayer ${index} - No available seats found`);
+        debugLog(`VacantPlayer ${index} - No available seats found`);
         return -1;
     }, [isUserAlreadyPlaying, localTableData?.data?.players, index]);
 
@@ -131,7 +141,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             player.address !== "0x0000000000000000000000000000000000000000"
         );
         
-        console.log(`VacantPlayer ${index} - isSeatVacant:`, !isOccupied);
+        debugLog(`VacantPlayer ${index} - isSeatVacant:`, !isOccupied);
         return !isOccupied;
     }, [localTableData?.data?.players, index]);
 
@@ -143,7 +153,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
         // 2. The user is not already playing
         const result = isSeatVacant && !isUserAlreadyPlaying;
         
-        console.log(`VacantPlayer ${index} - canJoinThisSeat:`, {
+        debugLog(`VacantPlayer ${index} - canJoinThisSeat:`, {
             isSeatVacant,
             isUserAlreadyPlaying,
             result
@@ -153,7 +163,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     }, [isSeatVacant, isUserAlreadyPlaying]);
 
     const isNextAvailableSeat = index === nextAvailableSeat;
-    console.log(`VacantPlayer ${index} - isNextAvailableSeat:`, isNextAvailableSeat, {
+    debugLog(`VacantPlayer ${index} - isNextAvailableSeat:`, isNextAvailableSeat, {
         index,
         nextAvailableSeat
     });
@@ -170,12 +180,12 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
     // Get dealer position from table data
     const dealerPosition = localTableData?.data?.dealer || 0;
-    console.log(`VacantPlayer ${index} - Dealer position:`, dealerPosition);
+    debugLog(`VacantPlayer ${index} - Dealer position:`, dealerPosition);
 
     // Calculate small blind and big blind positions
     const smallBlindPosition = (dealerPosition + 1) % 9; // Assuming 9 max seats
     const bigBlindPosition = (dealerPosition + 2) % 9;
-    console.log(`VacantPlayer ${index} - Blind positions:`, {
+    debugLog(`VacantPlayer ${index} - Blind positions:`, {
         dealer: dealerPosition,
         smallBlind: smallBlindPosition,
         bigBlind: bigBlindPosition
@@ -195,15 +205,15 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
     };
 
     const handleJoinClick = React.useCallback(async () => {
-        console.log("\n=== JOIN CLICK DETECTED ===");
-        console.log("Can join?", canJoinThisSeat);
-        console.log("isSeatVacant:", isSeatVacant);
-        console.log("isUserAlreadyPlaying:", isUserAlreadyPlaying);
-        console.log("Seat Index:", index);
-        console.log("Table ID:", tableId);
+        debugLog("\n=== JOIN CLICK DETECTED ===");
+        debugLog("Can join?", canJoinThisSeat);
+        debugLog("isSeatVacant:", isSeatVacant);
+        debugLog("isUserAlreadyPlaying:", isUserAlreadyPlaying);
+        debugLog("Seat Index:", index);
+        debugLog("Table ID:", tableId);
         
         if (!canJoinThisSeat) {
-            console.log("Cannot join: either seat is taken or user is already playing");
+            debugLog("Cannot join: either seat is taken or user is already playing");
             return;
         }
         
@@ -228,7 +238,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
         try {
             // Convert ETH to Wei
             const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
-            console.log("Buy-in amount in Wei:", buyInWei);
+            debugLog("Buy-in amount in Wei:", buyInWei);
             
             // Close the modal
             setShowBuyInModal(false);
@@ -252,30 +262,30 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
             await refreshNonce(userAddress);
             const currentNonce = nonce?.toString() || "0";
 
-            console.log("User balance:", balance);
+            debugLog("User balance:", balance);
             
             // Get minimum buy-in from table data with proper fallback
             const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
             const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
             const minBuyIn = localTableData?.data?.minBuyIn || twentyBigBlinds; // Default to 20x big blind
             
-            console.log("=== MIN BUY IN ===");
-            console.log("minBuyIn:", minBuyIn);
-            console.log("bigBlindValue:", bigBlindValue);
-            console.log("twentyBigBlinds:", twentyBigBlinds);
+            debugLog("=== MIN BUY IN ===");
+            debugLog("minBuyIn:", minBuyIn);
+            debugLog("bigBlindValue:", bigBlindValue);
+            debugLog("twentyBigBlinds:", twentyBigBlinds);
             
             // Use the user's input amount directly
             let buyInAmount = buyInWei;
             
             // Check if user's input exceeds their balance
             if (balance && BigInt(buyInWei) > BigInt(balance)) {
-                console.log(`User input (${buyInWei}) exceeds balance (${balance})`);
+                debugLog(`User input (${buyInWei}) exceeds balance (${balance})`);
                 setShowBuyInModal(true);
                 setBuyInError(`Amount exceeds your balance of ${ethers.formatUnits(balance, 18)} USDC`);
                 return;
             }
             
-            console.log("Final buy-in amount:", buyInAmount);
+            debugLog("Final buy-in amount:", buyInAmount);
 
             const signature = await getSignature(
                 privateKey,
@@ -296,9 +306,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
                 publicKey: userPublicKey
             };
 
-            console.log("Sending join request:", requestData);
+            debugLog("Sending join request:", requestData);
             const response = await axios.post(`${PROXY_URL}/table/${tableId}/join`, requestData);
-            console.log("Join response:", response.data);
+            debugLog("Join response:", response.data);
 
             if (response.data?.result?.data) {
                 setTableData(response.data.result.data);
@@ -306,9 +316,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
                 // Wait for backend to process the join, then fetch fresh data
                 setTimeout(async () => {
                     try {
-                        console.log("Fetching fresh table data after join...");
+                        debugLog("Fetching fresh table data after join...");
                         const freshDataResponse = await axios.get(`${PROXY_URL}/table/${tableId}`);
-                        console.log("Fresh table data received:", freshDataResponse.data);
+                        debugLog("Fresh table data received:", freshDataResponse.data);
                         setTableData({ data: freshDataResponse.data });
                     } catch (refreshError) {
                         console.error("Error refreshing table data:", refreshError);
@@ -325,7 +335,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
 
     // Only log position once during mount
     useEffect(() => {
-        console.log("VacantPlayer mounted at position:", { left, top, index });
+        debugLog("VacantPlayer mounted at position:", { left, top, index });
     }, []);
 
     return (
