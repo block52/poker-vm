@@ -52,6 +52,16 @@ export class DealCommand implements ICommand<ISignedResponse<any>> {
                     throw new Error("Game not found");
                 }
 
+                // Check if cards have already been dealt
+                const anyPlayerHasCards = game.getSeatedPlayers().some(p => p.holeCards !== undefined);
+                if (anyPlayerHasCards) {
+                    console.log("Cards have already been dealt for this hand");
+                    return signResult({ 
+                        success: false, 
+                        message: "Cards have already been dealt for this hand" 
+                    }, this.privateKey);
+                }
+
                 // Convert the seed string to a number array for shuffling
                 // If seed is provided, use it to create a deterministic shuffle
                 let seedArray: number[] = [];
@@ -64,11 +74,19 @@ export class DealCommand implements ICommand<ISignedResponse<any>> {
                     });
                 }
 
-                // Shuffle the deck with the seed
-                game.shuffle(seedArray);
-                
-                // Deal the cards
-                game.deal(seedArray);
+                try {
+                    // Shuffle the deck with the seed
+                    game.shuffle(seedArray);
+                    
+                    // Deal the cards
+                    game.deal(seedArray);
+                } catch (error: any) {
+                    console.error("Error dealing cards:", error);
+                    return signResult({ 
+                        success: false, 
+                        message: `Failed to deal cards: ${error.message}` 
+                    }, this.privateKey);
+                }
                 
                 // Debug: Check if hole cards exist in memory
                 const players = game.getSeatedPlayers();

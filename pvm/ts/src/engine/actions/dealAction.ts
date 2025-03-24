@@ -8,7 +8,7 @@ class DealAction extends BaseAction implements IAction {
         return PlayerActionType.DEAL;
     }
 
-    verify(_player: Player): Range {
+    verify(player: Player): Range {
         // Can only bet the big blind amount when preflop
         if (this.game.currentRound !== TexasHoldemRound.PREFLOP) {
             throw new Error("Can only deal when preflop.");
@@ -36,7 +36,29 @@ class DealAction extends BaseAction implements IAction {
             throw new Error("Big blind must be posted before we can deal.");
         }
 
+        // Verify it's the small blind player's turn to act (in 2-player games, action begins with the SB player)
+        const playerSeat = this.game.getPlayerSeatNumber(player.address);
+        if (playerSeat !== this.game.smallBlindPosition) {
+            throw new Error("Only the player in the small blind position can deal after blinds are posted.");
+        }
+
+        // Also verify this player is the next to act
+        const nextToAct = this.game.getNextPlayerToAct();
+        if (!nextToAct || nextToAct.address !== player.address) {
+            throw new Error("It's not your turn to act.");
+        }
+
         return { minAmount: 0n, maxAmount: 0n };
+    }
+
+    execute(player: Player): void {
+        // The verification should have already been done
+        // The actual dealing of cards happens in the game class
+        // Record the deal action
+        this.update.addAction({
+            playerId: player.address,
+            action: PlayerActionType.DEAL
+        });
     }
 }
 
