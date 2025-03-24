@@ -127,7 +127,6 @@ const Table = () => {
         totalPot, 
         playerLegalActions, 
         isPlayerTurn, 
-        dealTable, 
         tableSize,
         openOneMore,
         openTwoMore,
@@ -218,8 +217,6 @@ const Table = () => {
     const [isSmallBlindVisible, setIsSmallBlindVisible] = useState(false);
     const [bigBlindPosition, setBigBlindPosition] = useState({ left: "0px", top: "0px" });
     const [isBigBlindVisible, setIsBigBlindVisible] = useState(false);
-
-    const [canDeal, setCanDeal] = useState(false);
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -366,38 +363,6 @@ const Table = () => {
         }
     }, [tableSize]);
 
-    useEffect(() => {
-        if (tableData?.data) {
-            // Check if there are at least 2 players
-            const hasEnoughPlayers = tableData.data.players && tableData.data.players.length >= 2;
-
-            // Check if blinds have been posted
-            const blindsPosted =
-                tableData.data.previousActions &&
-                tableData.data.previousActions.some((action: any) => action.action === "post small blind") &&
-                tableData.data.previousActions.some((action: any) => action.action === "post big blind");
-
-            // Check if we're in preflop round with no community cards yet
-            const isPreflop = tableData.data.round === "preflop";
-            const noCardsDealt = !tableData.data.communityCards || tableData.data.communityCards.length === 0;
-
-            // Show deal button if all conditions are met
-            setCanDeal(hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt);
-
-            if (DEBUG_MODE) {
-                debugLog("Deal button visibility check:", {
-                    hasEnoughPlayers,
-                    blindsPosted,
-                    isPreflop,
-                    noCardsDealt,
-                    canDeal: hasEnoughPlayers && blindsPosted && isPreflop && noCardsDealt
-                });
-            }
-        } else {
-            setCanDeal(false);
-        }
-    }, [tableData]);
-
     const onCloseSideBar = () => {
         setOpenSidebar(!openSidebar);
     };
@@ -430,12 +395,6 @@ const Table = () => {
     if (!tableDataValues.tableDataPlayers || !tableDataValues.tableDataCommunityCards) {
         return <div className="h-screen flex items-center justify-center text-white">Waiting for table data...</div>;
     }
-
-    // Use the context function instead of implementing it here
-    const handleDeal = () => {
-        console.log("Deal button clicked");
-        dealTable();
-    };
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
@@ -807,30 +766,6 @@ const Table = () => {
                     <div className="flex-shrink-0 w-full h-[190px] bg-custom-footer text-center z-[10] flex justify-center">
                         <PokerActionPanel />
                     </div>
-
-                    {/* DEAL BUTTON */}
-                    {canDeal && (
-                        <div className="absolute bottom-[300px] left-1/2 transform -translate-x-1/2 z-[9999]">
-                            <button
-                                onClick={handleDeal}
-                                className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                text-white font-bold py-3 px-8 rounded-lg shadow-lg 
-                                border-2 border-[#3a9188] transition-all duration-300 
-                                flex items-center justify-center gap-2"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                                    />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                DEAL
-                            </button>
-                        </div>
-                    )}
                 </div>
                 {/*//! SIDEBAR */}
                 <div

@@ -39,6 +39,7 @@ interface TableContextType {
   playerLegalActions: any[] | null;
   isPlayerTurn: boolean;
   dealTable: () => Promise<void>;
+  canDeal: boolean;
   tableSize: number;
   tableType: string;
   roundType: string;
@@ -105,6 +106,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [currentUserSeat, setCurrentUserSeat] = useState<number>(-1);
   // Track WebSocket connection status
   const [wsConnected, setWsConnected] = useState<boolean>(false);
+  const [canDeal, setCanDeal] = useState<boolean>(false);
   
   const { b52 } = useUserWallet();
 
@@ -560,6 +562,32 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [tableData]);
 
+  // Add effect to determine if dealing is allowed
+  useEffect(() => {
+    if (tableData?.data) {
+      // Check if any active player has the "deal" action in their legal actions
+      const anyPlayerCanDeal = tableData.data.players?.some((player: any) => {
+        return player.legalActions?.some((action: any) => action.action === "deal");
+      }) || false;
+
+      // Update canDeal state based on the presence of the deal action
+      setCanDeal(anyPlayerCanDeal);
+
+      if (DEBUG_MODE) {
+        debugLog("Deal button visibility check:", {
+          anyPlayerCanDeal,
+          players: tableData.data.players?.map((p: any) => ({
+            seat: p.seat,
+            address: p.address,
+            legalActions: p.legalActions
+          }))
+        });
+      }
+    } else {
+      setCanDeal(false);
+    }
+  }, [tableData]);
+
   return (
     <TableContext.Provider value={{ 
       tableData: tableData ? { ...tableData, publicKey: userPublicKey } : null,
@@ -576,6 +604,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       playerLegalActions,
       isPlayerTurn,
       dealTable,
+      canDeal,
       tableSize,
       tableType,
       roundType,

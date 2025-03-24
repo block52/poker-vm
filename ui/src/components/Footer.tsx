@@ -32,7 +32,7 @@ type UserTableStatus = {
 } | null;
 
 const PokerActionPanel: React.FC = () => {
-    const { tableData, playerLegalActions, isPlayerTurn } = useTableContext();
+    const { tableData, playerLegalActions, isPlayerTurn, canDeal, dealTable } = useTableContext();
     const [publicKey, setPublicKey] = useState<string>();
     const [raiseAmount, setRaiseAmount] = useState(0);
     const [isBetAction, setIsBetAction] = useState(false);
@@ -43,8 +43,14 @@ const PokerActionPanel: React.FC = () => {
 
     // Get user's seat from localStorage or tableData
     const userAddress = localStorage.getItem("user_eth_public_key")
-    const userPlayer = tableData?.players?.find((player: any) => player.address?.toLowerCase() === userAddress);
+    const userPlayer = tableData?.data?.players?.find((player: any) => player.address?.toLowerCase() === userAddress?.toLowerCase());
     const userSeat = userPlayer?.seat;
+    
+    // Check if current user has the deal action
+    const currentUserCanDeal = userPlayer?.legalActions?.some((action: any) => action.action === "deal") || false;
+    
+    // Only show deal button if global canDeal is true AND current user has the deal action
+    const shouldShowDealButton = canDeal && currentUserCanDeal;
 
     // const { data } = useUserBySeat(publicKey || "", userSeat);
     const [userStatus, setUserStatus] = useState<UserTableStatus>(null);
@@ -392,6 +398,12 @@ const PokerActionPanel: React.FC = () => {
         };
     }, [tableData, shouldShowBigBlindButton]);
 
+    // Add a handler for the deal button
+    const handleDeal = () => {
+        console.log("Deal button clicked");
+        dealTable();
+    };
+
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-4 pb-6 flex justify-center items-center border-t-2 border-[#3a546d] relative">
             {/* Animated light effects */}
@@ -402,6 +414,30 @@ const PokerActionPanel: React.FC = () => {
             </div>
             
             <div className="flex flex-col w-[600px] space-y-3 justify-center rounded-lg relative z-10">
+                {/* Deal Button - Show above other buttons when available */}
+                {shouldShowDealButton && (
+                    <div className="flex justify-center mb-3">
+                        <button
+                            onClick={handleDeal}
+                            className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                            text-white font-bold py-3 px-8 rounded-lg shadow-lg 
+                            border-2 border-[#3a9188] transition-all duration-300 
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            DEAL
+                        </button>
+                    </div>
+                )}
+
                 {/* Player Action Buttons Container */}
                 <div className="flex justify-center items-center">
                     {shouldShowSmallBlindButton && (
