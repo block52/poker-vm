@@ -95,11 +95,11 @@ export class Server {
 
         await this.syncDeposits();
 
-        console.log("Polling...");
+        // console.log("Polling...");
         const intervalId = setInterval(async () => {
             if (!this._started) {
                 clearInterval(intervalId);
-                console.log("Polling stopped");
+                // console.log("Polling stopped");
                 return;
             }
 
@@ -117,7 +117,7 @@ export class Server {
 
     public async mine() {
         if (!this.isValidator) {
-            console.log("Not a validator, skipping mine");
+            // console.log("Not a validator, skipping mine");
             return;
         }
 
@@ -134,7 +134,7 @@ export class Server {
                 throw new Error("No block mined");
             }
 
-            console.log(`Block mined: ${block.hash}`);
+            // console.log(`Block mined: ${block.hash}`);
 
             // Broadcast the block hash to the network
             const me = await this.me();
@@ -144,7 +144,7 @@ export class Server {
             );
 
             for (const node of nodes) {
-                console.log(`Broadcasting block hash to ${node.url}`);
+                // console.log(`Broadcasting block hash to ${node.url}`);
                 try {
                     const client = new NodeRpcClient(node.url, this.privateKey);
                     const blockDTO: BlockDTO = block.toJson();
@@ -155,12 +155,12 @@ export class Server {
                 }
             }
         } else {
-            console.log(`I ${this.publicKey} am not a validator, looking for ${validatorAddress}. Waiting for next block...`);
+            // console.log(`I ${this.publicKey} am not a validator, looking for ${validatorAddress}. Waiting for next block...`);
         }
     }
 
     private async loadNodes() {
-        console.log("Loading boot nodes...");
+        // console.log("Loading boot nodes...");
         let count = 0;
         if (this._nodes.size === 0) {
             const me: Node = await this.me();
@@ -174,11 +174,11 @@ export class Server {
                 count++;
             }
         }
-        console.log(`Found ${count} nodes`);
+        // console.log(`Found ${count} nodes`);
     }
 
     private async syncMempool() {
-        console.log("Syncing mempool...");
+        // console.log("Syncing mempool...");
         const mempool = getMempoolInstance();
     
         for (const [url, node] of this._nodes) {
@@ -238,25 +238,25 @@ export class Server {
     }
 
     private async purgeMempool() {
-        console.log("Purging mempool...");
+        // console.log("Purging mempool...");
         const mempool = getMempoolInstance();
         await mempool.purge();
     }
 
     private async syncDeposits() {
         // if (!this.isValidator) {
-        //     console.log("Not a validator, skipping deposit sync");
+            console.log("Not a validator, skipping deposit sync");
         //     return;
         // }
 
-        console.log("Syncing deposits...");
+        // console.log("Syncing deposits...");
 
         // Check if the last deposit sync was more than 1 hour ago
         const now = new Date();
         const diff = now.getTime() - this._lastDepositSync.getTime();
 
         if (diff < 3600000) {
-            console.log("Last deposit sync was less than 1 hour ago, skipping deposit sync");
+            // console.log("Last deposit sync was less than 1 hour ago, skipping deposit sync");
             return;
         }
 
@@ -273,7 +273,7 @@ export class Server {
     }
 
     private async resyncBlockchain() {
-        console.log("Resyncing blockchain...");
+        // console.log("Resyncing blockchain...");
         const blockchain = getBlockchainInstance();
         await blockchain.reset();
         await this.syncBlockchain();
@@ -283,7 +283,7 @@ export class Server {
         this._syncing = true;
 
         if (this._nodes.size === 0) {
-            console.log("No nodes to sync with");
+            // console.log("No nodes to sync with");
             this._syncing = false;
             this._synced = true;
             return;
