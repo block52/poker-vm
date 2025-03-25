@@ -68,6 +68,39 @@ const getAddress = () => {
     }
 
     throw new Error("No valid private key found");
+};
+
+const getPublicKeyDetails = (privateKey: string): string => {
+    try {
+
+        // Create wallet from private key
+        const wallet = new ethers.Wallet(privateKey);
+
+        // Get the different components
+        const publicKey = wallet.signingKey.publicKey;      // Full public key (65 bytes)
+        const compressedPublicKey = wallet.signingKey.compressedPublicKey;  // Compressed public key (33 bytes)
+        const address = wallet.address;      // Ethereum address (20 bytes)
+
+        return publicKey;
+
+        // console.log("\nKey Details:");
+        // console.log("------------");
+        // console.log("Private Key:", privateKey);
+        // console.log("\nPublic Key (uncompressed):", publicKey);
+        // console.log("Public Key Length:", ethers.getBytes(publicKey).length, "bytes");
+        // console.log("\nPublic Key (compressed):", compressedPublicKey);
+        // console.log("Compressed Public Key Length:", ethers.getBytes(compressedPublicKey).length, "bytes");
+        // console.log("\nEthereum Address:", address);
+        // console.log("Address Length:", ethers.getBytes(address).length, "bytes");
+
+        // console.log("\nRelationship:");
+        // console.log("-------------");
+        // console.log("1. Private Key → Public Key: Generated using elliptic curve cryptography");
+        // console.log("2. Public Key → Address: Keccak256 hash of public key, take last 20 bytes");
+    } catch (error) {
+        console.error("Error:", error);
+        throw new Error("Invalid private key");
+    }
 }
 
 /**
@@ -614,7 +647,11 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
                 break;
             case "deal":
                 console.log(chalk.green("Deal..."));
-                await client.playerAction(tableAddress, PlayerActionType.DEAL, "", nonce);
+
+                // use native crypto functions to generate a seed
+                const seed = crypto.randomBytes(32).toString("hex");
+                const publicKey = getPublicKeyDetails(pk);
+                await client.deal(tableAddress, seed, publicKey)
                 break;
             case "fold":
                 console.log(chalk.green("Folding..."));
