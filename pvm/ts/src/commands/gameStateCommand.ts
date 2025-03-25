@@ -59,7 +59,12 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                         break;
                     case "deal":
                         console.log(`Processing deal action from ${tx.from}`);
-                        game.deal();
+                        try {
+                            game.deal();
+                        } catch (error) {
+                            console.error("Error dealing cards:", error);
+                            // Don't rethrow the error - continue processing other actions
+                        }
                         break;
                     default:
                         throw new Error("Invalid action");

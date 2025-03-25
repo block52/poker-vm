@@ -294,27 +294,29 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
     const sortedPlayers = [...state.players].sort((a, b) => a.seat - b.seat);
 
     for (const player of sortedPlayers) {
-        // const isNextToAct = player.seat === state.nextToAct;
         const isMyPlayer = player.address === publicKey;
+        const isNextPlayer = player.seat === state.nextToAct;
 
-        // Highlight current player
-        // const rowStyle = isNextToAct ? chalk.green : isMyPlayer ? chalk.yellow : chalk.white;
-        const rowStyle = isMyPlayer ? chalk.green : chalk.white;
+        // Highlight my player in green, next to act with an asterisk
+        const rowStyle = isMyPlayer ? chalk.green : (isNextPlayer ? chalk.yellow : chalk.white);
 
         // Format player cards - show only if it's my player or we're at showdown
-        let cardsDisplay = player?.holeCards ? "🂠 🂠" : "";
-        if (isMyPlayer || state.round === "showdown") {
-            if (player.holeCards) {
-                cardsDisplay = player.holeCards?.map(card => renderCard(card)).join(" ");
+        let cardsDisplay = "";
+        if (player.holeCards) {
+            if (isMyPlayer || state.round === "showdown") {
+                // Show actual cards if they're mine or we're at showdown
+                cardsDisplay = player.holeCards.map(card => renderCard(card)).join(" ");
+            } else {
+                // Otherwise show back of cards
+                cardsDisplay = "🂠 🂠";
             }
-        } // else {
-        //     cardsDisplay = "🂠 🂠"; // Back of cards
-        // }
+        }
+
 
         const marker = getPlayerPositionMarker(player.seat, state);
         const seat = `${player.seat} ${marker}`;
 
-        const bet = player?.sumOfBets || "0"; //.lastAction?.amount || "0";
+        const bet = player?.sumOfBets || "0";
 
         console.log(
             rowStyle(
