@@ -18,6 +18,7 @@ class RaiseAction extends BaseAction implements IAction {
         if (largestBet === 0n) throw new Error("Cannot raise when there's been no action.");
         
         const sumBets = this.getSumBets(player.address);
+        if (largestBet === sumBets) throw new Error("Player must bet not raise.");
 
         const minAmount = (lastBet?.amount || 0n) + this.game.bigBlind;
         if (player.chips < minAmount) throw new Error("Player has insufficient chips to raise.");
