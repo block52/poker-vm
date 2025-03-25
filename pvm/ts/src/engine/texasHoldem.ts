@@ -544,13 +544,6 @@ class TexasHoldemGame implements IPoker {
     }
 
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
-        // Also track the round information with the turn
-        const turnWithRound = {
-            ...turn,
-            round: round // Store the round with the turn
-        };
-        
-        this._previousActions.push(turn);
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
