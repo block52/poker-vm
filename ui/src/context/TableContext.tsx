@@ -61,30 +61,11 @@ interface TableContextType {
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
 
-// Comment out the WebSocket URL function
-/*
-const getWebSocketUrl = () => {
-  try {
-    // First try using the PROXY_URL
-    const proxyUrl = new URL(PROXY_URL);
-    return `${proxyUrl.protocol === 'https:' ? 'wss:' : 'ws:'}//${proxyUrl.host}/ws`;
-  } catch (error) {
-    // Fallback if PROXY_URL is invalid
-    console.warn("Invalid PROXY_URL, falling back to default WebSocket URL");
-    const hostname = window.location.hostname;
-    if (hostname === 'app.block52.xyz') {
-      return 'wss://proxy.block52.xyz/ws';
-    } else {
-      return `ws://${hostname}:8080/ws`;
-    }
-  }
-};
-*/
+
 
 export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { id: tableId } = useParams<{ id: string }>();
-  // Comment out WebSocket reference
-  // const wsRef = useRef<WebSocket | null>(null);
+
   
   const [tableData, setTableData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,8 +78,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [totalPot, setTotalPot] = useState<string>('0');
   const [playerLegalActions, setPlayerLegalActions] = useState<any[] | null>(null);
   const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false);
-  // Force usePolling to always be true
-  // const [usePolling, setUsePolling] = useState<boolean>(true);
+
   const [tableSize, setTableSize] = useState<number>(9);
   const [tableType, setTableType] = useState<string>("");
   const [roundType, setRoundType] = useState<string>("");
@@ -108,8 +88,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Add state for user data by seat
   const [userDataBySeat, setUserDataBySeat] = useState<Record<number, any>>({});
   const [currentUserSeat, setCurrentUserSeat] = useState<number>(-1);
-  // Comment out WebSocket connection status
-  // const [wsConnected, setWsConnected] = useState<boolean>(false);
+
   const [canDeal, setCanDeal] = useState<boolean>(false);
   
   const { b52 } = useUserWallet();
@@ -193,135 +172,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return cachedData?.data || null;
   }, [userDataBySeat, fetchUserBySeat]);
 
-  // Comment out WebSocket connection setup
-  /*
-  // WebSocket connection setup with reconnection logic
-  useEffect(() => {
-    if (!tableId) return;
-    
-    debugLog('Setting up WebSocket connection for table:', tableId);
-    
-    // Close any existing connection
-    if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
-      debugLog('Closing existing WebSocket connection');
-      wsRef.current.close();
-    }
-    
-    let reconnectTimer: NodeJS.Timeout | null = null;
-    let reconnectAttempts = 0;
-    const MAX_RECONNECT_ATTEMPTS = 5;
-    const RECONNECT_DELAY = 2000; // 2 seconds
-    
-    const connectWebSocket = () => {
-      try {
-        // Get WebSocket URL with fallback
-        const wsUrl = getWebSocketUrl();
-        debugLog(`Connecting to WebSocket URL (attempt ${reconnectAttempts + 1}):`, wsUrl);
-        
-        // Create the WebSocket with error handling
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
-        
-        ws.onopen = () => {
-          debugLog('WebSocket connection established');
-          setWsConnected(true);
-          reconnectAttempts = 0; // Reset reconnect attempts on successful connection
-          
-          // Subscribe to table updates
-          const subscribeMessage = JSON.stringify({
-            type: 'subscribe',
-            tableId: tableId
-          });
-          debugLog('Sending subscription message:', subscribeMessage);
-          ws.send(subscribeMessage);
-          
-          // Send a ping every 30 seconds to keep the connection alive
-          const pingInterval = setInterval(() => {
-            if (ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({ type: 'ping' }));
-            } else {
-              clearInterval(pingInterval);
-            }
-          }, 30000);
-        };
-        
-        ws.onmessage = (event) => {
-          try {
-            if (DEBUG_MODE) debugLog('WebSocket message received:', event.data);
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'welcome') {
-              debugLog('Received welcome message from server');
-            } else if (data.type === 'tableUpdate') {
-              debugLog('Received table update via WebSocket');
-              
-              if (data.data) {
-                debugLog('Setting table data from WebSocket update');
-                
-                // Ensure all critical properties are present
-                const tableState = data.data;
-                
-                // Make sure we're setting the data in the exact format expected by components
-                const formattedData = {
-                  data: tableState
-                };
-                
-                setTableData(formattedData);
-                setIsLoading(false);
-              }
-            } else if (data.type === 'subscribed') {
-              debugLog('Successfully subscribed to table updates');
-            } else if (data.type === 'pong') {
-              debugLog('Received pong from server');
-            }
-          } catch (error) {
-            console.error('Error processing WebSocket message:', error);
-          }
-        };
-        
-        ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          setWsConnected(false);
-        };
-        
-        ws.onclose = (event) => {
-          debugLog('WebSocket connection closed:', event.code, event.reason);
-          setWsConnected(false);
-          
-          // Attempt to reconnect unless we're unmounting
-          if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-            reconnectAttempts++;
-            debugLog(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${RECONNECT_DELAY}ms`);
-            
-            reconnectTimer = setTimeout(() => {
-              connectWebSocket();
-            }, RECONNECT_DELAY);
-          } else {
-            console.log('Maximum WebSocket reconnect attempts reached, falling back to polling');
-            setUsePolling(true);
-          }
-        };
-      } catch (error) {
-        console.error('Error creating WebSocket:', error);
-        setUsePolling(true);
-      }
-    };
-    
-    connectWebSocket();
-    
-    return () => {
-      debugLog('Cleaning up WebSocket connection');
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-      }
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-      setWsConnected(false);
-    };
-  }, [tableId]);
-  */
+  
 
   // Update polling logic to run regardless of WebSocket status
   useEffect(() => {
@@ -335,7 +186,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const fetchTableData = async () => {
       // Add debounce - only fetch if it's been at least 2 seconds since last update
       const now = Date.now();
-      if (!isFirstLoad && now - lastUpdateTimestamp < 2000) {
+      if (!isFirstLoad && now - lastUpdateTimestamp < 20000) {
         return;
       }
       
