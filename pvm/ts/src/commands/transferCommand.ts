@@ -70,6 +70,14 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                         game.join2(this.from, this.amount);
                         console.log(`Join successful`);
                         break;
+                    case "leave":
+                        console.log(`Player ${this.from} leaving game...`);
+                        const stack = game.leave(this.from);
+                        if (stack !== this.amount) {
+                            throw new Error("Leave amount doesn't match player's stack");
+                        }
+                        console.log(`Leave successful, returning ${stack} chips`);
+                        break;
                     case "post small blind":
                         game.performAction(this.from, PlayerActionType.SMALL_BLIND, this.amount);
                         //todo
