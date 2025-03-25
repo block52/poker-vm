@@ -342,6 +342,7 @@ const interactiveAction = async () => {
                 message: "What would you like to do?",
                 choices: [
                     { name: "Join a game", value: "join_game" },
+                    { name: "Leave game", value: "leave_game" },
                     { name: "Create an account", value: "new_account" },
                     { name: "Import a private key", value: "import_key" },
                     { name: "Get account", value: "get_account" },
@@ -501,6 +502,28 @@ const interactiveAction = async () => {
                     console.error(chalk.red("Failed to join game:"), error.message);
                 }
                 break;
+            case "leave_game":
+                try {
+                    console.log(chalk.yellow(`Getting table state for ${defaultTableAddress}...`));
+                    const gameState = await getGameState(defaultTableAddress);
+                    const myPlayer = gameState.players.find(p => p.address === address);
+
+                    if (!myPlayer) {
+                        console.log(chalk.red("You are not seated at this table!"));
+                        break;
+                    }
+
+                    console.log(chalk.yellow(`Attempting to leave game...`));
+                    const result = await leave(defaultTableAddress);
+                    
+                    if (result) {
+                        console.log(chalk.green("Successfully left the game"));
+                        console.log(chalk.cyan("Response:"), result);
+                    }
+                } catch (error: any) {
+                    console.error(chalk.red("Failed to leave game:"), error.message);
+                }
+                break;
             case "exit":
                 continueSession = false;
                 console.log(chalk.yellow("Goodbye!"));
@@ -640,6 +663,24 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
 
         await syncNonce(address);
     }
+};
+
+const leave = async (tableAddress: string): Promise<string> => {
+    const rpcClient = getClient();
+    
+    // First get the game state to check player's stack
+    const state = await getGameState(tableAddress);
+    const address = getAddress();
+    const player = state.players.find(p => p.address === address);
+    
+    if (!player) {
+        throw new Error("Player not found at table");
+    }
+    
+    const stack = BigInt(player.stack);
+    const response = await rpcClient.playerLeave(tableAddress, stack, nonce);
+    
+    return response.hash;
 };
 
 interactiveAction();
