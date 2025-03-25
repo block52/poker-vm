@@ -16,7 +16,7 @@ export class ReceiveMinedBlockCommand implements ISignedCommand<string> {
     }
 
     public async execute(): Promise<ISignedResponse<string>> {
-        console.log(`Received mined block hash: ${this.blockHash}`);
+        // console.log(`Received mined block hash: ${this.blockHash}`);
 
         if (await this.blockchainManagement.getBlockByHash(this.blockHash)) {
             console.log(`Block already in blockchain: ${this.blockHash}`);
@@ -24,7 +24,7 @@ export class ReceiveMinedBlockCommand implements ISignedCommand<string> {
         }
 
         const block: Block = Block.fromJson(this.blockDTO);
-        console.log(`Block: ${JSON.stringify(block)}`);
+        // console.log(`Block: ${JSON.stringify(block)}`);
         await this.blockchainManagement.addBlock(block);
 
         return signResult(this.blockHash, this.privateKey);
