@@ -95,9 +95,9 @@ class TexasHoldemGame implements IPoker {
             this.seed = Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
 
             // Shuffle the deck
-            console.log("About to shuffle deck with seed array:", this.seed);
+            // console.log("About to shuffle deck with seed array:", this.seed);
             this._deck.shuffle(this.seed);
-            console.log("Deck shuffled successfully");
+            // console.log("Deck shuffled successfully");
         };
 
         // TODO: Make this a map
@@ -538,7 +538,26 @@ class TexasHoldemGame implements IPoker {
                 break;
             case PlayerActionType.BET:
                 if (!amount) throw new Error("Amount must be provided for bet.");
-                const bet = new BetAction(this, this._update).execute(player, amount);
+                // Check if we're in a post-flop round before executing bet
+                if (this._currentRound !== TexasHoldemRound.PREFLOP || this._communityCards.length > 0) {
+                    // We're past preflop, directly execute bet without trying to deal cards
+                    const bet = new BetAction(this, this._update).execute(player, amount);
+                } else {
+                    // We're in preflop, check if cards have been dealt
+                    const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
+                    const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
+                    const anyPlayerHasCards = Array.from(this._playersMap.values())
+                        .some(p => p !== null && p.holeCards !== undefined);
+                        
+                    // Only try to deal if cards haven't been dealt yet
+                    if (!hasDealt && !anyPlayerHasCards) {
+                        // Deal cards before executing bet
+                        this.deal();
+                    }
+                    
+                    // Now execute the bet action
+                    const bet = new BetAction(this, this._update).execute(player, amount);
+                }
                 break;
             case PlayerActionType.CALL:
                 const call = new CallAction(this, this._update).execute(player);
