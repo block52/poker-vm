@@ -68,6 +68,39 @@ const getAddress = () => {
     }
 
     throw new Error("No valid private key found");
+};
+
+const getPublicKeyDetails = (privateKey: string): string => {
+    try {
+
+        // Create wallet from private key
+        const wallet = new ethers.Wallet(privateKey);
+
+        // Get the different components
+        const publicKey = wallet.signingKey.publicKey;      // Full public key (65 bytes)
+        const compressedPublicKey = wallet.signingKey.compressedPublicKey;  // Compressed public key (33 bytes)
+        const address = wallet.address;      // Ethereum address (20 bytes)
+
+        return publicKey;
+
+        // console.log("\nKey Details:");
+        // console.log("------------");
+        // console.log("Private Key:", privateKey);
+        // console.log("\nPublic Key (uncompressed):", publicKey);
+        // console.log("Public Key Length:", ethers.getBytes(publicKey).length, "bytes");
+        // console.log("\nPublic Key (compressed):", compressedPublicKey);
+        // console.log("Compressed Public Key Length:", ethers.getBytes(compressedPublicKey).length, "bytes");
+        // console.log("\nEthereum Address:", address);
+        // console.log("Address Length:", ethers.getBytes(address).length, "bytes");
+
+        // console.log("\nRelationship:");
+        // console.log("-------------");
+        // console.log("1. Private Key → Public Key: Generated using elliptic curve cryptography");
+        // console.log("2. Public Key → Address: Keccak256 hash of public key, take last 20 bytes");
+    } catch (error) {
+        console.error("Error:", error);
+        throw new Error("Invalid private key");
+    }
 }
 
 /**
@@ -261,27 +294,29 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
     const sortedPlayers = [...state.players].sort((a, b) => a.seat - b.seat);
 
     for (const player of sortedPlayers) {
-        // const isNextToAct = player.seat === state.nextToAct;
         const isMyPlayer = player.address === publicKey;
+        const isNextPlayer = player.seat === state.nextToAct;
 
-        // Highlight current player
-        // const rowStyle = isNextToAct ? chalk.green : isMyPlayer ? chalk.yellow : chalk.white;
-        const rowStyle = isMyPlayer ? chalk.green : chalk.white;
+        // Highlight my player in green, next to act with an asterisk
+        const rowStyle = isMyPlayer ? chalk.green : (isNextPlayer ? chalk.yellow : chalk.white);
 
         // Format player cards - show only if it's my player or we're at showdown
-        let cardsDisplay = player?.holeCards ? "🂠 🂠" : "";
-        if (isMyPlayer || state.round === "showdown") {
-            if (player.holeCards) {
-                cardsDisplay = player.holeCards?.map(card => renderCard(card)).join(" ");
+        let cardsDisplay = "";
+        if (player.holeCards) {
+            if (isMyPlayer || state.round === "showdown") {
+                // Show actual cards if they're mine or we're at showdown
+                cardsDisplay = player.holeCards.map(card => renderCard(card)).join(" ");
+            } else {
+                // Otherwise show back of cards
+                cardsDisplay = "🂠 🂠";
             }
-        } // else {
-        //     cardsDisplay = "🂠 🂠"; // Back of cards
-        // }
+        }
+
 
         const marker = getPlayerPositionMarker(player.seat, state);
         const seat = `${player.seat} ${marker}`;
 
-        const bet = player?.sumOfBets || "0"; //.lastAction?.amount || "0";
+        const bet = player?.sumOfBets || "0";
 
         console.log(
             rowStyle(
@@ -339,11 +374,12 @@ const interactiveAction = async () => {
                 name: "userInput",
                 message: "What would you like to do?",
                 choices: [
+                    { name: "Join a game", value: "join_game" },
+                    { name: "Leave game", value: "leave_game" },
                     { name: "Create an account", value: "new_account" },
                     { name: "Import a private key", value: "import_key" },
                     { name: "Get account", value: "get_account" },
                     { name: "Create a game (coming soon)", value: "create_game" },
-                    { name: "Join a game", value: "join_game" },
                     { name: "Game state", value: "state" },
                     { name: "Exit", value: "exit" }
                 ]
@@ -499,6 +535,28 @@ const interactiveAction = async () => {
                     console.error(chalk.red("Failed to join game:"), error.message);
                 }
                 break;
+            case "leave_game":
+                try {
+                    console.log(chalk.yellow(`Getting table state for ${defaultTableAddress}...`));
+                    const gameState = await getGameState(defaultTableAddress);
+                    const myPlayer = gameState.players.find(p => p.address === address);
+
+                    if (!myPlayer) {
+                        console.log(chalk.red("You are not seated at this table!"));
+                        break;
+                    }
+
+                    console.log(chalk.yellow(`Attempting to leave game...`));
+                    const result = await leave(defaultTableAddress);
+                    
+                    if (result) {
+                        console.log(chalk.green("Successfully left the game"));
+                        console.log(chalk.cyan("Response:"), result);
+                    }
+                } catch (error: any) {
+                    console.error(chalk.red("Failed to leave game:"), error.message);
+                }
+                break;
             case "exit":
                 continueSession = false;
                 console.log(chalk.yellow("Goodbye!"));
@@ -567,13 +625,6 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
         actions.push({ action, value: legalAction.action });
     }
 
-    // // Check if it's my turn
-    // actions.push({ action: "Check", value: "check" });
-    // actions.push({ action: "Call", value: "call" });
-    // actions.push({ action: "Fold", value: "fold" });
-    // actions.push({ action: "Raise", value: "raise" });
-    // actions.push({ action: "All-In", value: "all-in" });
-
     return actions;
 };
 
@@ -619,6 +670,14 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
                 console.log(chalk.green("Calling..."));
                 await client.playerAction(tableAddress, PlayerActionType.CALL, "", nonce);
                 break;
+            case "deal":
+                console.log(chalk.green("Deal..."));
+
+                // use native crypto functions to generate a seed
+                const seed = crypto.randomBytes(32).toString("hex");
+                const publicKey = getPublicKeyDetails(pk);
+                await client.deal(tableAddress, seed, publicKey)
+                break;
             case "fold":
                 console.log(chalk.green("Folding..."));
                 await client.playerAction(tableAddress, PlayerActionType.FOLD, "", nonce);
@@ -641,6 +700,24 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
 
         await syncNonce(address);
     }
+};
+
+const leave = async (tableAddress: string): Promise<string> => {
+    const rpcClient = getClient();
+    
+    // First get the game state to check player's stack
+    const state = await getGameState(tableAddress);
+    const address = getAddress();
+    const player = state.players.find(p => p.address === address);
+    
+    if (!player) {
+        throw new Error("Player not found at table");
+    }
+    
+    const stack = BigInt(player.stack);
+    const response = await rpcClient.playerLeave(tableAddress, stack, nonce);
+    
+    return response.hash;
 };
 
 interactiveAction();
