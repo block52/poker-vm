@@ -94,7 +94,7 @@ describe("Raise Action", () => {
                 action: PlayerActionType.BET,
                 amount: 50000000000000000000n  // 50 tokens
             };
-            jest.spyOn(game, "getLastAction").mockReturnValue(lastBet);
+            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
         });
 
         it("should return correct range for a raise", () => {
@@ -111,7 +111,7 @@ describe("Raise Action", () => {
 
         it("should throw error if no previous bet exists", () => {
             // Mock no previous bet
-            jest.spyOn(game, "getLastAction").mockReturnValue(undefined);
+            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(undefined);
 
             expect(() => action.verify(player)).toThrow("No previous bet to raise.");
         });
@@ -174,7 +174,7 @@ describe("Raise Action", () => {
                 action: PlayerActionType.BET,
                 amount: 50000000000000000000n  // 50 tokens
             };
-            jest.spyOn(game, "getLastAction").mockReturnValue(lastBet);
+            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
 
             // Mock the verify method to avoid errors during execute
             jest.spyOn(action, "verify").mockReturnValue({
