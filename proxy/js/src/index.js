@@ -143,7 +143,7 @@ app.post("/rpc", async (req, res) => {
         }
         */
 
-        const response = await axios.post("https://node1.block52.xyz", req.body, {
+        const response = await axios.post(process.env.NODE_URL, req.body, {
             headers: {
                 "Content-Type": "application/json"
             }
