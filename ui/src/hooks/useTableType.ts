@@ -22,7 +22,7 @@ const useTableType = (address: string): UseTableTypeResult => {
 
         try {
             const url = PROXY_URL;
-            const response = await axios.get(`${url}/table/${address}`);
+            const response = await axios.get(`${url}/get_game_state/${address}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
