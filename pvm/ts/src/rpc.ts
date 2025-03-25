@@ -40,7 +40,7 @@ import { GameOptions } from "./engine/texasHoldem";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
-        console.log(request);
+        // console.log(request);
         if (!request) {
             throw new Error("Null request");
         }
@@ -267,6 +267,7 @@ export class RPC {
     static async handleWriteMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
         const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
+        console.log("handleWriteMethod", method, request);
 
         let result: ISignedResponse<any | null>;
         try {
