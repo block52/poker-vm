@@ -325,11 +325,23 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
-    leave(address: string) {
-        const player = this.getPlayerSeatNumber(address);
-        this._playersMap.set(player, null);
-
-        // todo: do transfer
+    leave(address: string): bigint {
+        const player = this.getPlayer(address);
+        const seat = this.getPlayerSeatNumber(address);
+        
+        // Check if player has folded
+        if (player.status !== PlayerStatus.FOLDED && player.status !== PlayerStatus.SITTING_OUT) {
+            throw new Error("Player must fold before leaving the table");
+        }
+        
+        // Get their current stack before removing them
+        const currentStack = player.chips;
+        
+        // Remove player from seat
+        this._playersMap.set(seat, null);
+        
+        // Return their stack amount
+        return currentStack;
     }
 
     getNextPlayerToAct(): Player | undefined {
