@@ -13,7 +13,7 @@ export interface IPoker {
     join(player: Player): void;
     joinAtSeat(player: Player, seat: number): void;
     leave(address: string): void;
-    getLastAction(): Turn | undefined;
+    getLastRoundAction(): Turn | undefined;
     performAction(address: string, action: PlayerActionType, amount?: bigint): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;
 }

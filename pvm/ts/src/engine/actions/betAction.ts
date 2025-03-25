@@ -14,7 +14,7 @@ class BetAction extends BaseAction {
         const largestBet = this.getLargestBet();
         const sumBets = this.getSumBets(player.address);
 
-        if (largestBet > sumBets) {
+        if (largestBet > sumBets && (largestBet !== 0n && sumBets !== 0n)) {
             throw new Error("Player must call or raise.");
         }
 

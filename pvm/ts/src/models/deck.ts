@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { IJSONModel } from "./interfaces";
 import { Card, SUIT } from "@bitcoinbrisbane/block52";
+import e from "express";
 
 export interface IDeck {
     shuffle(seed?: number[]): void;
@@ -10,7 +11,6 @@ export interface IDeck {
 
 export class Deck implements IDeck, IJSONModel {
     private cards: Card[] = []; // todo: make stake
-    private dealt: Card[] = [];
     public hash: string = "";
     public seedHash: string;
     private top: number = 0;
@@ -24,9 +24,18 @@ export class Deck implements IDeck, IJSONModel {
 
             this.cards = [];
 
-            mnemonics.map(mnemonic => {
-                this.cards.push(Deck.fromString(mnemonic));
-            });
+            for (let i = 0; i < mnemonics.length; i++) {
+                if (mnemonics[i].startsWith("[") && mnemonics[i].endsWith("]")) {
+                    mnemonics[i] = mnemonics[i].substring(1, mnemonics[i].length - 1);
+                    this.top = i;
+                }
+
+                this.cards.push(Deck.fromString(mnemonics[i]));
+            }
+
+            // mnemonics.map(mnemonic => {
+            //     this.cards.push(Deck.fromString(mnemonic));
+            // });
         } else {
             this.initStandard52();
         }
@@ -103,10 +112,6 @@ export class Deck implements IDeck, IJSONModel {
         };
     }
 
-    // public toString(): string {
-    //     return this.cards.map(card => card.mnemonic).join("-");
-    // }
-
     public toString(): string {
         const mnemonics: string[] = [];
 
@@ -122,7 +127,12 @@ export class Deck implements IDeck, IJSONModel {
                 console.log(`MISMATCH: stored=${card.mnemonic}, regenerated=${regeneratedMnemonic}`);
             }
 
-            mnemonics.push(card.mnemonic);
+            if (i === this.top) {
+                mnemonics.push(`[${card.mnemonic}]`);
+            }
+            else {
+                mnemonics.push(card.mnemonic);
+            }
         }
 
         const result = mnemonics.join("-");

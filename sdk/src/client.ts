@@ -268,6 +268,19 @@ export class NodeRpcClient {
         return body.result.data;
     }
 
+    public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
+        const address = this.getAddress();
+        const signature = await this.getSignature(nonce);
+
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.TRANSFER,
+            params: [gameAddress, address, amount.toString(), "leave", signature]
+        });
+
+        return body.result.data;
+    }
+
     private async getSignature(nonce?: number): Promise<string> {
         if (!this.wallet) {
             throw new Error("Cannot transfer funds without a private key");
