@@ -317,7 +317,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
                 setTimeout(async () => {
                     try {
                         debugLog("Fetching fresh table data after join...");
-                        const freshDataResponse = await axios.get(`${PROXY_URL}/table/${tableId}`);
+                        const freshDataResponse = await axios.get(`${PROXY_URL}/get_game_state/${tableId}`);
                         debugLog("Fresh table data received:", freshDataResponse.data);
                         setTableData({ data: freshDataResponse.data });
                     } catch (refreshError) {
