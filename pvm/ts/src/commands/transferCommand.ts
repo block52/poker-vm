@@ -89,8 +89,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                     case "bet":
                         console.log(`Player ${this.from} betting ${this.amount}...`);
                         game.performAction(this.from, PlayerActionType.BET, this.amount);
-                        // Hack
-                        game.deal();
                         break;
                     case "call":
                         game.performAction(this.from, PlayerActionType.CALL);
