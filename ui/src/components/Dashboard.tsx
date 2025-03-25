@@ -36,10 +36,10 @@ const Dashboard: React.FC = () => {
 
     // Add logging to fetch games
     const fetchGames = async () => {
-        console.log("\n=== Fetching Games from Proxy ===");
+        // console.log("\n=== Fetching Games from Proxy ===");
         try {
             const response = await axios.get(`${PROXY_URL}/games`);
-            console.log("Games Response:", response.data);
+            // console.log("Games Response:", response.data);
             
             // Map the response to our game types
             const games = response.data.map((game: any) => ({
@@ -52,7 +52,7 @@ const Dashboard: React.FC = () => {
                 maxBuy: game.max
             }));
             
-            console.log("Processed Games:", games);
+            // console.log("Processed Games:", games);
             setGames(games);
         } catch (error) {
             console.error("Error fetching games:", error);
@@ -60,29 +60,29 @@ const Dashboard: React.FC = () => {
     };
 
     useEffect(() => {
-        console.log("Dashboard mounted, fetching games...");
+        //  console.log("Dashboard mounted, fetching games...");
         fetchGames();
     }, []);
 
     useEffect(() => {
-        console.log("\n=== Dashboard Mounted ===");
-        console.log("Connected Wallet:", address);
-        console.log("Balance:", b52Balance);
-        console.log("======================\n");
+        // console.log("\n=== Dashboard Mounted ===");
+        // console.log("Connected Wallet:", address);
+        // console.log("Balance:", b52Balance);
+        // console.log("======================\n");
 
         const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
-        console.log("Local Storage Key:", localKey);
+        // console.log("Local Storage Key:", localKey);
         if (!localKey) return setPublicKey(undefined);
 
         setPublicKey(localKey);
     }, []);
 
     useEffect(() => {
-        console.log('\n=== Dashboard Balance Check ===');
-        console.log('Connected Address:', address);
-        console.log('Raw B52 Balance:', b52Balance);
-        console.log('Formatted Balance:', b52Balance ? formatBalance(b52Balance) : '0');
-        console.log('============================\n');
+        // console.log('\n=== Dashboard Balance Check ===');
+        // console.log('Connected Address:', address);
+        // console.log('Raw B52 Balance:', b52Balance);
+        // console.log('Formatted Balance:', b52Balance ? formatBalance(b52Balance) : '0');
+        // console.log('============================\n');
     }, [address, b52Balance]);
 
     const handleGameType = (type: GameType) => {
