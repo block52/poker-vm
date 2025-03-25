@@ -187,19 +187,43 @@ app.get("/games", (req, res) => {
 // 11. Table-related endpoints
 // ===================================
 app.get("/tables", async (req, res) => {
-    const client = getClient();
-    const table = await client.getTables();
+   
+   
 
-    res.send(table);
+    res.send("todo: you need to wire this up");
 });
 
-app.get("/table/:id/player/:seat", (req, res) => {
-    const client = getClient();
-    const id = req.params.id;
-    const seat = req.params.seat;
-    const player = client.getPlayer(id, seat);
+app.get("/table/:id/player/:seat", async (req, res) => {
+    try {
+        const id = req.params.id;
+        const seat = req.params.seat;
 
-    res.send(player);
+        
+        
+        const rpc_request = {
+            jsonrpc: "2.0",
+            method: "get_player",
+            params: [id, seat],
+            id: Math.floor(Math.random() * 10000) // Simple request ID for the time being
+        };
+
+        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz/", rpc_request, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = response.data;
+
+        if (data.error) {
+            return res.send(null);
+        }
+
+        res.send(data.result);
+    } catch (error) {
+        console.error('Error fetching player:', error);
+        res.send(null);
+    }
 });
 
 // Create HTTP server instead of directly using app.listen
@@ -547,24 +571,48 @@ app.get("/nonce/:address", async (req, res) => {
     console.log("Address:", req.params.address);
 
     try {
-        const client = getClient();
-        const account = await client.getAccount(req.params.address);
+        // Format the RPC call according to the specified structure
+        const rpcCall = {
+            id: "1",
+            method: "get_account",
+            version: "2.0",
+            params: [req.params.address]
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        // Extract the account data from the response
+        const accountData = response.data.result.data;
+        const signature = response.data.result.signature;
 
         // Clean response with no duplicates
-        const response = {
+        const formattedResponse = {
             result: {
                 data: {
-                    address: req.params.address,
-                    balance: account.balance?.toString() || "0",
-                    nonce: account.nonce || 0
+                    address: accountData.address,
+                    balance: accountData.balance || "0",
+                    nonce: accountData.nonce || 0
                 },
-                signature: account.signature
+                signature: signature
             },
             timestamp: getUnixTime()
         };
 
-        console.log("Clean nonce response:", response);
-        res.json(response);
+        console.log("Clean nonce response:", formattedResponse);
+        res.json(formattedResponse);
     } catch (error) {
         console.error("Error getting nonce:", error);
         res.status(500).json({
