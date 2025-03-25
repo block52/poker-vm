@@ -277,10 +277,8 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
                 // Otherwise show back of cards
                 cardsDisplay = "🂠 🂠";
             }
-        } else {
-            // No cards dealt yet
-            cardsDisplay = "";
         }
+
 
         const marker = getPlayerPositionMarker(player.seat, state);
         const seat = `${player.seat} ${marker}`;
