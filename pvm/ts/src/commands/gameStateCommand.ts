@@ -73,7 +73,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             // update game state
             const state = game.toJson();
-            console.log("Updated game state:", state);
+            // console.log("Updated game state:", state);
 
             return await signResult(state, this.privateKey);
         } catch (error) {
