@@ -81,7 +81,7 @@ const Deposit: React.FC = () => {
 
     useEffect(() => {
         if (address) {
-            axios.get(`https://proxy.block52.xyz/account/${address}`)
+            axios.get(`https://proxy.block52.xyz/get_account/${address}`)
                 .then(response => {
                     setBlock52Balance(response.data.balance);
                     console.log("Block52 Account Data:", response.data);

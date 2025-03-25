@@ -22,7 +22,7 @@ const useBalance = (address: string): UseBalanceResult => {
 
         try {
             const url = PROXY_URL;
-            const response = await axios.get(`${url}/account/${address}`);
+            const response = await axios.get(`${url}/get_account/${address}`);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);

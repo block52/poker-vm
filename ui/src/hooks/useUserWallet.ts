@@ -31,15 +31,24 @@ const useUserWallet = (): UserWalletResult => {
 
         try {
             const url = PROXY_URL; 
-            const response = await axios.get(`${url}/account/${account}`);
+            const response = await axios.get(`${url}/get_account/${account}`);
+            console.log("=== BALANCE RESPONSE ===", response.data);
+            console.log(response.data);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            setBalance(response.data.balance);
+            if (response.data?.result?.data?.balance) {
+                setBalance(response.data.result.data.balance);
+            } else {
+                console.error("Balance not found in response:", response.data);
+                setBalance("0");
+            }
         } catch (err) {
+            console.error("Error fetching balance:", err);
             setError(err instanceof Error ? err : new Error("An error occurred"));
+            setBalance("0");
         } finally {
             setIsLoading(false);
         }
