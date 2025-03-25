@@ -335,7 +335,8 @@ export class RPC {
                 }
 
                 case RPCMethods.DEAL: {
-                    const [gameAddress, seed, publicKey] = request.params as RPCRequestParams[RPCMethods.DEAL];
+                    const [gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.DEAL];
+                    const publicKey = request.data as string;
 
                     // Extract player address from the request's public key
                     let playerAddress = ethers.ZeroAddress; // Default value
@@ -352,8 +353,19 @@ export class RPC {
                         playerAddress = request.data;
                     }
 
-                    const command = new DealCommand(gameAddress, playerAddress, seed, validatorPrivateKey);
-                    result = await command.execute();
+                    try {
+                        const command = new DealCommand(gameAddress, playerAddress, seed, validatorPrivateKey);
+                        result = await command.execute();
+                        
+                        // Check if the result indicates an error but wasn't thrown as an exception
+                        if (result && result.data && result.data.success === false) {
+                            console.warn("Deal command returned failure:", result.data.message);
+                            // We still return the result, but log the warning
+                        }
+                    } catch (error: any) {
+                        console.error("Deal command failed:", error);
+                        return makeErrorRPCResponse(id, `Deal operation failed: ${error.message || "Unknown error"}`);
+                    }
                     break;
                 }
 
