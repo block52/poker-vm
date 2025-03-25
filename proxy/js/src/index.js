@@ -403,6 +403,9 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
     console.log("Request headers:", req.headers);
 
     try {
+        // Log the expected signed message format for debugging
+        console.log(`Expected signature format: ${req.body.action}${req.body.amount}${req.params.tableId}${req.body.timestamp}`);
+        
         // Log the action and amount in detail
         console.log(`Player ${req.body.userAddress} is attempting to perform action: ${req.body.action}`);
         console.log(`Action amount: ${req.body.amount} (${ethers.formatUnits(req.body.amount || "0", 18)} ETH)`);
@@ -412,13 +415,14 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
             id: "1",
             method: RPCMethods.TRANSFER,
             params: [
-                req.body.userAddress, // player address
-                req.params.tableId, // table address
-                req.body.amount, // amount
-                req.body.action // action (check, call, raise, fold)
+                req.body.userAddress,
+                req.params.tableId,
+                req.body.amount,
+                req.body.action
             ],
             signature: req.body.signature,
-            publicKey: req.body.publicKey || req.body.userAddress // Use publicKey from body or fallback to userAddress
+            publicKey: req.body.publicKey || req.body.userAddress,
+            timestamp: req.body.timestamp  // Include timestamp if needed
         };
 
         console.log("=== FORMATTED RPC CALL ===");
