@@ -5,13 +5,13 @@
  * @returns Array of legal actions or null if player not found
  */
 export const getPlayersLegalActions = (tableData: any, playerAddress?: string): any[] | null => {
-    console.log("getPlayersLegalActions called with:", { 
-        hasTableData: !!tableData,
-        playerAddress 
-    });
+    // console.log("getPlayersLegalActions called with:", { 
+    //     hasTableData: !!tableData,
+    //     playerAddress 
+    // });
     
     if (!tableData || !tableData.players || !playerAddress) {
-        console.log("Missing required data for getPlayersLegalActions");
+        // console.log("Missing required data for getPlayersLegalActions");
         return null;
     }
     
@@ -21,11 +21,11 @@ export const getPlayersLegalActions = (tableData: any, playerAddress?: string): 
     );
     
     if (!player) {
-        console.log("Player not found in table data:", playerAddress);
+        // console.log("Player not found in table data:", playerAddress);
         return null;
     }
     
-    console.log("Found player legal actions:", player.legalActions);
+    // console.log("Found player legal actions:", player.legalActions);
     return player.legalActions || [];
 };
 

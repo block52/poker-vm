@@ -32,8 +32,8 @@ const useUserWallet = (): UserWalletResult => {
         try {
             const url = PROXY_URL; 
             const response = await axios.get(`${url}/get_account/${account}`);
-            console.log("=== BALANCE RESPONSE ===", response.data);
-            console.log(response.data);
+            // console.log("=== BALANCE RESPONSE ===", response.data);
+            // console.log(response.data);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);

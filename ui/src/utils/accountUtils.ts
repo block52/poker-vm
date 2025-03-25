@@ -47,53 +47,53 @@ export const getPublicKey = (privateKey: string): string => {
  * @returns Object with user's seat, available actions, and other relevant data
  */
 export const getUserTableStatus = (tableData: any) => {
-    console.log("getUserTableStatus called with tableData:", tableData);
+    // console.log("getUserTableStatus called with tableData:", tableData);    
     
     if (!tableData) {
-        console.log("tableData is null or undefined, returning null");
+        // console.log("tableData is null or undefined, returning null");
         return null;
     }
     
     // Extract the actual table data from the nested structure
     const actualTableData = tableData.data || tableData;
-    console.log("Extracted actual table data:", actualTableData);
+    // console.log("Extracted actual table data:", actualTableData);
     
     const userAddress = localStorage.getItem('user_eth_public_key');
-    console.log("User address from localStorage:", userAddress);
+    // console.log("User address from localStorage:", userAddress);
     
     if (!userAddress) {
-        console.log("No user address found in localStorage, returning null");
+        // console.log("No user address found in localStorage, returning null");
         return null;
     }
     
     // Check the structure of tableData to find players
-    console.log("actualTableData structure:", Object.keys(actualTableData));
-    console.log("actualTableData.players:", actualTableData.players);
+    // console.log("actualTableData structure:", Object.keys(actualTableData));
+    // console.log("actualTableData.players:", actualTableData.players);
     
     // Try to find player in different possible locations
     const playersArray = actualTableData.players || [];
-    console.log("Using players array:", playersArray);
+    // console.log("Using players array:", playersArray);
     
     // Find the player in the table
     const player = playersArray.find((p: any) => 
         p.address?.toLowerCase() === userAddress.toLowerCase()
     );
-    console.log("Found player:", player);
+    // console.log("Found player:", player);
     
     if (!player) {
-        console.log("Player not found in table data, returning null");
+        // console.log("Player not found in table data, returning null");
         return null;
     }
     
     // Check if it's the player's turn
     const nextToAct = actualTableData.nextToAct;
-    console.log("Next to act seat:", nextToAct);
+    // console.log("Next to act seat:", nextToAct);
     const isPlayerTurn = nextToAct === player.seat;
-    console.log("Is player's turn:", isPlayerTurn);
+    // console.log("Is player's turn:", isPlayerTurn);
     
     // Get available actions
     const availableActions = player.legalActions || [];
-    console.log("Available actions:", availableActions);
+    // console.log("Available actions:", availableActions);
     
     // Check for specific actions
     const canPostSmallBlind = availableActions.some((a: any) => a.action === "post small blind");
@@ -106,7 +106,7 @@ export const getUserTableStatus = (tableData: any) => {
     
     // Check if player is in small blind position
     const isSmallBlindPosition = actualTableData.smallBlindPosition === player.seat;
-    console.log("Is small blind position:", isSmallBlindPosition);
+    // console.log("Is small blind position:", isSmallBlindPosition);
     
     // Get action limits if available
     const getActionLimits = (actionType: string) => {
@@ -139,7 +139,7 @@ export const getUserTableStatus = (tableData: any) => {
         isSmallBlindPosition
     };
     
-    console.log("Returning user status:", result);
+    // console.log("Returning user status:", result);
     return result;
 }; 
 

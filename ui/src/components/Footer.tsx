@@ -85,20 +85,20 @@ const PokerActionPanel: React.FC = () => {
 
     useEffect(() => {
         if (tableData) {
-            console.log("Table Data:asdfasd", tableData);
+            // console.log("Table Data:asdfasd", tableData);   
             const status = getUserTableStatus(tableData);
-            console.log("User Status:", status);
+            // console.log("User Status:", status);
             setUserStatus(status);
 
             // Check if it's the current user's turn directly from tableData
             const nextToActPlayer = tableData.players?.find((player: any) => player.seat === tableData.nextToAct);
 
             if (nextToActPlayer && nextToActPlayer.address?.toLowerCase() === userAddress) {
-                console.log("It's your turn to act!");
+                // console.log("It's your turn to act!");
 
                 // Check if this is a small blind posting situation
                 const isSmallBlindPosition = tableData.smallBlindPosition === nextToActPlayer.seat;
-                console.log("Is small blind position:", isSmallBlindPosition);
+                // console.log("Is small blind position:", isSmallBlindPosition);
 
                 // Set minimal user status if needed
                 if (!status) {
@@ -139,12 +139,12 @@ const PokerActionPanel: React.FC = () => {
 
     // Log the player's legal actions
     useEffect(() => {
-        console.log("Footer - Player's legal actions:", {
-            actions: playerLegalActions,
-            isPlayerTurn,
-            nextToAct: tableData?.nextToAct,
-            userSeat
-        });
+        // console.log("Footer - Player's legal actions:", {
+        //     actions: playerLegalActions,
+        //     isPlayerTurn,
+        //     nextToAct: tableData?.nextToAct,
+        //     userSeat
+        // });
     }, [playerLegalActions, isPlayerTurn, tableData, userSeat]);
 
     const handleRaiseChange = (newAmount: number) => {
@@ -155,7 +155,7 @@ const PokerActionPanel: React.FC = () => {
     const setPlayerAction = async (action: PlayerActionType, amount: string) => {
         console.log("Setting player action:", action, amount);
         if (!userAddress || !tableData?.data?.address) {
-            console.error("Missing user address or table ID");
+            console.error("Missing user address or table ID", { userAddress, tableId: tableData?.data?.address });
             return;
         }
 
@@ -175,23 +175,34 @@ const PokerActionPanel: React.FC = () => {
             // Create the message to sign (format: action + amount + tableId + timestamp)
             const timestamp = Math.floor(Date.now() / 1000).toString();
             const tableId = tableData.data.address;
-            const message = `${action}${amount}${tableId}${timestamp}`;
+            
+            // Ensure action is properly formatted and consistent with API expectations
+            // Convert 'bet' to 'bet' as expected by the API
+            const formattedAction = action.toLowerCase();
+            
+            const message = `${formattedAction}${amount}${tableId}${timestamp}`;
 
             // Sign the message
             const signature = await wallet.signMessage(message);
 
             console.log("Message signed:", message);
             console.log("Signature:", signature);
+            
+            // Debug log for the entire payload we're about to send
+            const payload = {
+                userAddress,
+                action: formattedAction,
+                amount,
+                signature,
+                publicKey: userAddress, // Add publicKey which is needed by the API
+                timestamp
+            };
+            
+            console.log("Full API payload:", JSON.stringify(payload, null, 2));
 
             // Send the action to the backend
             const proxyUrl = import.meta.env.VITE_PROXY_URL || "http://localhost:8080";
-            const response = await axios.post(`${proxyUrl}/table/${tableId}/playeraction`, {
-                userAddress,
-                action,
-                amount,
-                signature,
-                timestamp
-            });
+            const response = await axios.post(`${proxyUrl}/table/${tableId}/playeraction`, payload);
 
             console.log("Player action response:", response.data);
 
@@ -200,8 +211,13 @@ const PokerActionPanel: React.FC = () => {
             setIsCallAction(false);
             setIsCheckAction(false);
             setIsRaiseAction(false);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error executing player action:", error);
+            // Show the detailed error
+            if (error.response) {
+                console.error("Error response data:", error.response.data);
+                console.error("Error response status:", error.response.status);
+            }
         }
     };
 
@@ -277,8 +293,17 @@ const PokerActionPanel: React.FC = () => {
     };
 
     const handleBet = () => {
-        console.log("Betting");
+        console.log("Betting button clicked");
+        // Log the bet limits from the legal actions
+        console.log("Bet legal action:", betAction);
+        console.log("Min bet:", minBet, "Max bet:", maxBet);
+        
+        // Set initial bet amount to minimum
+        setRaiseAmount(minBet);
         setIsBetAction(true);
+        
+        // Show the bet input modal/section
+        console.log("Showing bet input section");
     };
 
     const handleRaise = () => {
@@ -297,12 +322,34 @@ const PokerActionPanel: React.FC = () => {
     };
 
     const submitBet = () => {
+        console.log("Submit bet clicked with amount:", raiseAmount);
+        
         if (raiseAmount > 0) {
+            // Check if bet amount is within allowed limits
+            if (raiseAmount < minBet) {
+                console.error(`Bet amount ${raiseAmount} is less than minimum ${minBet}`);
+                // Set to minimum
+                setRaiseAmount(minBet);
+                return;
+            }
+            
+            if (raiseAmount > maxBet) {
+                console.error(`Bet amount ${raiseAmount} is more than maximum ${maxBet}`);
+                // Set to maximum
+                setRaiseAmount(maxBet);
+                return;
+            }
+            
             // Convert the raiseAmount (which is in ETH) back to wei for the contract
             const betAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+            console.log("Betting with amount (ETH):", raiseAmount);
             console.log("Betting with amount (wei):", betAmountWei);
+            
+            // Call the action with the bet amount in wei
             setPlayerAction(PlayerActionType.BET, betAmountWei);
             setIsBetAction(false);
+        } else {
+            console.error("Cannot bet with zero amount");
         }
     };
 
@@ -314,25 +361,25 @@ const PokerActionPanel: React.FC = () => {
     const shouldShowBigBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", 'big');
     
     // Add debug logging to see what's happening
-    console.log("Blind button visibility:", {
-        userAddress,
-        shouldShowSmallBlindButton,
-        shouldShowBigBlindButton,
-        tableData: actualTableData
-    });
+        // console.log("Blind button visibility:", {
+        //     userAddress,
+        //     shouldShowSmallBlindButton,
+        //     shouldShowBigBlindButton,
+        //     tableData: actualTableData
+        // });
 
     // Add a more robust check for whether it's actually the player's turn
     useEffect(() => {
         // Log detailed information about the current game state
-        console.log("Detailed game state check:", {
-            tableData,
-            playerLegalActions,
-            isPlayerTurn,
-            activePlayers: tableData?.data?.players?.filter((p: any) => 
-                p.status !== 'folded' && p.status !== 'sitting-out'),
-            userAddress,
-            nextToAct: tableData?.data?.nextToAct
-        });
+        // console.log("Detailed game state check:", {
+        //     tableData,
+        //     playerLegalActions,
+        //     isPlayerTurn,
+        //     activePlayers: tableData?.data?.players?.filter((p: any) => 
+        //         p.status !== 'folded' && p.status !== 'sitting-out'),
+        //     userAddress,
+        //     nextToAct: tableData?.data?.nextToAct
+        // });
         
         // If there are no legal actions or all players except one have folded,
         // we shouldn't show action buttons even if isPlayerTurn is true
@@ -357,7 +404,7 @@ const PokerActionPanel: React.FC = () => {
 
     // Add this function to handle big blind posting
     const emergencyPostBigBlind = () => {
-        console.log("Emergency Big Blind function called");
+        // console.log("Emergency Big Blind function called");
         
         if (!tableData || !tableData.data) {
             console.error("No table data available");
@@ -365,7 +412,7 @@ const PokerActionPanel: React.FC = () => {
         }
         
         const bigBlindAmount = tableData.data.bigBlind || "0";
-        console.log("Big blind amount:", bigBlindAmount);
+        // console.log("Big blind amount:", bigBlindAmount);
         
         // Call the action handler directly
         setPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
@@ -384,7 +431,7 @@ const PokerActionPanel: React.FC = () => {
                 }
                 
                 const bigBlindAmount = tableData.data.bigBlind || "0";
-                console.log("Big blind amount:", bigBlindAmount);
+                // console.log("Big blind amount:", bigBlindAmount);
                 
                 // Call the action handler directly
                 setPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
@@ -400,7 +447,7 @@ const PokerActionPanel: React.FC = () => {
 
     // Add a handler for the deal button
     const handleDeal = () => {
-        console.log("Deal button clicked");
+        // console.log("Deal button clicked");
         dealTable();
     };
 
@@ -514,14 +561,36 @@ const PokerActionPanel: React.FC = () => {
                                 </button>
                             )}
                             {canBet && (
-                                <button
-                                    className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                    transition-all duration-200 font-medium transform hover:scale-105"
-                                    onClick={handleBet}
-                                >
-                                    BET <span className="text-[#64ffda]">${raiseAmount.toFixed(2)}</span>
-                                </button>
+                                <>
+                                    {isBetAction ? (
+                                        <div className="flex flex-col gap-2 w-full">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-gray-300">Bet Amount: ${raiseAmount.toFixed(2)}</span>
+                                                <button
+                                                    className="cursor-pointer bg-gradient-to-r from-[#065f46] to-[#047857] hover:from-[#047857] hover:to-[#059669]
+                                                    px-4 py-2 rounded-lg border border-[#065f46] hover:border-[#10b981] shadow-md
+                                                    transition-all duration-200 font-medium transform hover:scale-105"
+                                                    onClick={submitBet}
+                                                >
+                                                    CONFIRM BET
+                                                </button>
+                                            </div>
+                                            <div className="flex justify-between text-xs text-gray-400">
+                                                <span>Min: ${minBet.toFixed(2)}</span>
+                                                <span>Max: ${maxBet.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                            px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                            transition-all duration-200 font-medium transform hover:scale-105"
+                                            onClick={handleBet}
+                                        >
+                                            BET <span className="text-[#64ffda]">${minBet.toFixed(2)}</span>
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
 

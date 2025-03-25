@@ -232,12 +232,12 @@ export const hasPostedBlind = (tableData: any, playerAddress: string, blindType:
   const hasPostedInLastAction = player?.lastAction?.action === (blindType === 'small' ? 'post small blind' : 'post big blind');
   
   // Log for debugging
-  console.log(`hasPosted${blindType === 'small' ? 'Small' : 'Big'}Blind check for ${normalizedAddress}:`, {
-    hasPosted,
-    hasPostedInLastAction,
-    previousActions: tableData.previousActions,
-    playerLastAction: player?.lastAction
-  });
+  // console.log(`hasPosted${blindType === 'small' ? 'Small' : 'Big'}Blind check for ${normalizedAddress}:`, {
+  //   hasPosted,
+  //   hasPostedInLastAction,
+  //   previousActions: tableData.previousActions,
+  //   playerLastAction: player?.lastAction
+  // });
   
   return hasPosted || hasPostedInLastAction;
 };
@@ -250,7 +250,7 @@ export const hasPostedBlind = (tableData: any, playerAddress: string, blindType:
  * @returns Boolean indicating if it's the player's turn to post the specified blind
  */
 export const isPlayerTurnToPostBlind = (tableData: any, playerAddress: string, blindType: 'small' | 'big'): boolean => {
-    console.log("tableData", tableData);
+    // console.log("tableData", tableData);
   if (!tableData || !playerAddress) return false;
   
   // Normalize the player address for comparison
@@ -277,13 +277,13 @@ export const isPlayerTurnToPostBlind = (tableData: any, playerAddress: string, b
   );
   
   // Log for debugging
-  console.log(`isPlayerTurnToPost${blindType === 'small' ? 'Small' : 'Big'}Blind check for ${normalizedAddress}:`, {
-    isInBlindPosition,
-    isPlayerTurn,
-    alreadyPosted,
-    canPostBlind,
-    legalActions: player.legalActions
-  });
+  // console.log(`isPlayerTurnToPost${blindType === 'small' ? 'Small' : 'Big'}Blind check for ${normalizedAddress}:`, {
+  //   isInBlindPosition,
+  //   isPlayerTurn,
+  //   alreadyPosted,
+  //   canPostBlind,
+  //   legalActions: player.legalActions
+  // });
   
   // It's the player's turn to post a blind if they're in position, it's their turn, 
   // they haven't posted yet, and they have the legal action to do so
