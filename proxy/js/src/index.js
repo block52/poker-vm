@@ -354,11 +354,11 @@ const server = http.createServer(app);
 // 12. Join table endpoint
 // ===================================
 app.post("/table/:tableId/join", async (req, res) => {
-    console.log("=== JOIN TABLE REQUEST ===");
-    console.log("Request body:", req.body);
-    console.log("   signature:", req.body.signature);
-    console.log("   publicKey:", req.body.publicKey);
-    console.log("Buy in amount on join:", req.body.buyInAmount);
+    // console.log("=== JOIN TABLE REQUEST ===");
+    // console.log("Request body:", req.body);
+    // console.log("   signature:", req.body.signature);
+    // console.log("   publicKey:", req.body.publicKey);
+    // console.log("Buy in amount on join:", req.body.buyInAmount);
 
     try {
         // Format the RPC call to match the SDK client structure
@@ -370,10 +370,10 @@ app.post("/table/:tableId/join", async (req, res) => {
             publicKey: req.body.publicKey
         };
 
-        console.log("=== FORMATTED RPC CALL ===");
-        console.log(JSON.stringify(rpcCall, null, 2));
-        console.log("=== NODE_URL ===");
-        console.log(process.env.NODE_URL);
+        // console.log("=== FORMATTED RPC CALL ===");
+        // console.log(JSON.stringify(rpcCall, null, 2));
+        // console.log("=== NODE_URL ===");
+        // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to node1
         const response = await axios.post(process.env.NODE_URL, rpcCall, {
@@ -382,13 +382,13 @@ app.post("/table/:tableId/join", async (req, res) => {
             }
         });
 
-        console.log("=== NODE1 RESPONSE ===");
-        console.log(response.data);
+        // console.log("=== NODE1 RESPONSE ===");
+        // console.log(response.data);
 
         res.json(response.data);
     } catch (error) {
-        console.error("=== ERROR ===");
-        console.error("Error details:", error);
+        // console.error("=== ERROR ===");
+        // console.error("Error details:", error);
         res.status(500).json({ error: "Failed to join table", details: error.message });
     }
 });
@@ -398,10 +398,15 @@ app.post("/table/:tableId/join", async (req, res) => {
 // ===================================
 app.post("/table/:tableId/playeraction", async (req, res) => {
     console.log("=== PLAYER ACTION REQUEST ===");
-    console.log("Request body:", req.body);
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
     console.log("Route params:", req.params);
+    console.log("Request headers:", req.headers);
 
     try {
+        // Log the action and amount in detail
+        console.log(`Player ${req.body.userAddress} is attempting to perform action: ${req.body.action}`);
+        console.log(`Action amount: ${req.body.amount} (${ethers.formatUnits(req.body.amount || "0", 18)} ETH)`);
+        
         // Format the RPC call to match the SDK client structure
         const rpcCall = {
             id: "1",
@@ -413,7 +418,7 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
                 req.body.action // action (check, call, raise, fold)
             ],
             signature: req.body.signature,
-            publicKey: req.body.publicKey
+            publicKey: req.body.publicKey || req.body.userAddress // Use publicKey from body or fallback to userAddress
         };
 
         console.log("=== FORMATTED RPC CALL ===");
@@ -422,6 +427,7 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
         console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to node1
+        console.log("Sending request to node...");
         const response = await axios.post(process.env.NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
@@ -429,12 +435,19 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
         });
 
         console.log("=== NODE1 RESPONSE ===");
-        console.log(response.data);
+        console.log(JSON.stringify(response.data, null, 2));
 
         res.json(response.data);
     } catch (error) {
         console.error("=== ERROR ===");
         console.error("Error details:", error);
+        
+        // Log more detailed error information
+        if (error.response) {
+            console.error("Error response data:", error.response.data);
+            console.error("Error response status:", error.response.status);
+        }
+        
         res.status(500).json({ error: "Failed to perform player action", details: error.message });
     }
 });
@@ -443,8 +456,8 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
 // 13. Account-related endpoints
 // ===================================
 app.get("/get_account/:accountId", async (req, res) => {
-    console.log("=== GET ACCOUNT REQUEST ===");
-    console.log("Account ID:", req.params.accountId);
+    // console.log("=== GET ACCOUNT REQUEST ===");
+    // console.log("Account ID:", req.params.accountId);
 
     try {
         // Format the RPC call according to the specified structure
@@ -455,10 +468,10 @@ app.get("/get_account/:accountId", async (req, res) => {
             params: [req.params.accountId]
         };
 
-        console.log("=== FORMATTED RPC CALL ===");
-        console.log(JSON.stringify(rpcCall, null, 2));
-        console.log("=== NODE_URL ===");
-        console.log(process.env.NODE_URL);
+        // console.log("=== FORMATTED RPC CALL ===");
+        // console.log(JSON.stringify(rpcCall, null, 2));
+        // console.log("=== NODE_URL ===");
+        // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
         const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
@@ -467,13 +480,13 @@ app.get("/get_account/:accountId", async (req, res) => {
             }
         });
 
-        console.log("=== NODE RESPONSE ===");
-        console.log(response.data);
+        // console.log("=== NODE RESPONSE ===");
+        // console.log(response.data);
 
         res.json(response.data);
     } catch (error) {
-        console.error("=== ERROR ===");
-        console.error("Error details:", error);
+        // console.error("=== ERROR ===");
+        // console.error("Error details:", error);
         res.status(500).json({ 
             error: "Failed to get account", 
             details: error.message 
@@ -492,8 +505,8 @@ app.get("/time", (req, res) => {
 });
 
 app.get("/nonce/:address", async (req, res) => {
-    console.log("\n=== Nonce Request ===");
-    console.log("Address:", req.params.address);
+    // console.log("\n=== Nonce Request ===");
+    // console.log("Address:", req.params.address);
 
     try {
         // Format the RPC call according to the specified structure
@@ -504,10 +517,10 @@ app.get("/nonce/:address", async (req, res) => {
             params: [req.params.address]
         };
 
-        console.log("=== FORMATTED RPC CALL ===");
-        console.log(JSON.stringify(rpcCall, null, 2));
-        console.log("=== NODE_URL ===");
-        console.log(process.env.NODE_URL);
+        // console.log("=== FORMATTED RPC CALL ===");
+        // console.log(JSON.stringify(rpcCall, null, 2));
+        // console.log("=== NODE_URL ===");
+        // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
         const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
@@ -516,8 +529,8 @@ app.get("/nonce/:address", async (req, res) => {
             }
         });
 
-        console.log("=== NODE RESPONSE ===");
-        console.log(response.data);
+        // console.log("=== NODE RESPONSE ===");
+        // console.log(response.data);
 
         // Extract the account data from the response
         const accountData = response.data.result.data;
@@ -536,7 +549,7 @@ app.get("/nonce/:address", async (req, res) => {
             timestamp: getUnixTime()
         };
 
-        console.log("Clean nonce response:", formattedResponse);
+        // console.log("Clean nonce response:", formattedResponse);
         res.json(formattedResponse);
     } catch (error) {
         console.error("Error getting nonce:", error);
@@ -599,9 +612,9 @@ app.get("/websocket-test", (req, res) => {
 // Deal cards endpoint
 // ===================================
 app.post("/table/:tableId/deal", async (req, res) => {
-    console.log("=== DEAL CARDS REQUEST ===");
-    console.log("Request body:", req.body);
-    console.log("Route params:", req.params);
+    // console.log("=== DEAL CARDS REQUEST ===");
+    // console.log("Request body:", req.body);
+    // console.log("Route params:", req.params);
 
     try {
         // Format the RPC call to match the SDK client structure
@@ -617,10 +630,10 @@ app.post("/table/:tableId/deal", async (req, res) => {
             signature: req.body.signature
         };
 
-        console.log("=== FORMATTED RPC CALL ===");
-        console.log(JSON.stringify(rpcCall, null, 2));
-        console.log("=== NODE_URL ===");
-        console.log(process.env.NODE_URL);
+        // console.log("=== FORMATTED RPC CALL ===");
+        // console.log(JSON.stringify(rpcCall, null, 2));
+        // console.log("=== NODE_URL ===");
+        // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to node1
         const response = await axios.post(process.env.NODE_URL, rpcCall, {
@@ -629,8 +642,8 @@ app.post("/table/:tableId/deal", async (req, res) => {
             }
         });
 
-        console.log("=== NODE1 RESPONSE ===");
-        console.log(response.data);
+        // console.log("=== NODE1 RESPONSE ===");
+        // console.log(response.data);
 
         res.json(response.data);
         
@@ -640,8 +653,8 @@ app.post("/table/:tableId/deal", async (req, res) => {
         //     await broadcastTableUpdate(req.params.tableId);
         // }
     } catch (error) {
-        console.error("=== ERROR ===");
-        console.error("Error details:", error);
+        // console.error("=== ERROR ===");
+        // console.error("Error details:", error);
         res.status(500).json({ error: "Failed to deal cards", details: error.message });
     }
 });
@@ -650,8 +663,8 @@ app.post("/table/:tableId/deal", async (req, res) => {
 // New endpoint for get_game_state
 // ===================================
 app.get("/get_game_state/:tableId", async (req, res) => {
-    console.log("=== GET GAME STATE REQUEST ===");
-    console.log("Table ID:", req.params.tableId);
+    // console.log("=== GET GAME STATE REQUEST ===");
+    // console.log("Table ID:", req.params.tableId);
 
     try {
         // Format the RPC call according to the specified structure
@@ -662,10 +675,10 @@ app.get("/get_game_state/:tableId", async (req, res) => {
             params: [req.params.tableId]
         };
 
-        console.log("=== FORMATTED RPC CALL ===");
-        console.log(JSON.stringify(rpcCall, null, 2));
-        console.log("=== NODE_URL ===");
-        console.log(process.env.NODE_URL);
+        // console.log("=== FORMATTED RPC CALL ===");
+        // console.log(JSON.stringify(rpcCall, null, 2));
+        // console.log("=== NODE_URL ===");
+        // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
         const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
@@ -674,13 +687,13 @@ app.get("/get_game_state/:tableId", async (req, res) => {
             }
         });
 
-        console.log("=== NODE RESPONSE ===");
-        console.log(response.data.result);
+        // console.log("=== NODE RESPONSE ===");
+        // console.log(response.data.result);
 
         res.json(response.data.result);
     } catch (error) {
-        console.error("=== ERROR ===");
-        console.error("Error details:", error);
+        // console.error("=== ERROR ===");
+        // console.error("Error details:", error);
         res.status(500).json({ 
             error: "Failed to get game state", 
             details: error.message 
@@ -697,22 +710,22 @@ app.get("/get_game_state/:tableId", async (req, res) => {
 // 14. Start Server
 // ===================================
 server.listen(port, "0.0.0.0", () => {
-    console.log(`
-    ====================================
-    🚀 Server is running
-    📡 Port: ${port}
+    // console.log(`
+    // ====================================
+    // 🚀 Server is running
+    // 📡 Port: ${port}
 
-    🌍 URL: http://localhost:${port}
-    📚 Docs: http://localhost:${port}/docs
-    ====================================
-    `);
+    // 🌍 URL: http://localhost:${port}
+    // 📚 Docs: http://localhost:${port}/docs
+    // ====================================
+    // `);
 });
 
 // ===================================
 // 15. Handle Process Events
 // ===================================
 process.on("SIGTERM", () => {
-    console.log("SIGTERM signal received: closing HTTP server");
+    // console.log("SIGTERM signal received: closing HTTP server");
     // Perform cleanup here
     process.exit(0);
 });
