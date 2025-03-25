@@ -37,7 +37,7 @@ export class BlockchainManagement extends StateManager {
         const newBlock = new Blocks(blockDoc);
         await newBlock.save();
 
-        console.log(`Block saved with ${block.transactions.length} transactions`);
+        // console.log(`Block saved with ${block.transactions.length} transactions`);
     }
 
     public getGenesisBlock(): Block {
