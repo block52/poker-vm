@@ -15,7 +15,7 @@ const connectDB = require("./db");
 const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
-const Block52 = require("./clients/block52");
+
 const { NodeRpcClient, RPCMethods } = require("@bitcoinbrisbane/block52");
 
 const { getUnixTime } = require("./utils/helpers");
@@ -28,32 +28,17 @@ const http = require("http");
 // 2. Load Environment Configuration
 // ===================================
 dotenv.config();
-const clientType = "block52";
+
 const port = process.env.PORT || 8080;
 
 // ===================================
 // 3. Initialize Client (Singleton)
 // ===================================
 let clientInstance = null;
-const getClient = () => {
-    if (clientInstance) {
-        return clientInstance;
-    }
 
-    if (clientType === "block52") {
-        const node_url = process.env.NODE_URL || "https://node1.block52.xyz/";
-        console.log("Using Block52 client with node URL:", node_url);
-        return (clientInstance = new Block52(node_url));
-    }
 
-    throw new Error("Client type not found");
-};
 
-// Initialize the client once at startup
-getClient();
 
-// Add this debug log
-console.log(`Configured client: ${clientType}, NODE_URL: ${process.env.NODE_URL || "using default"}`);
 
 // ===================================
 // 4. Initialize Express Application
@@ -103,67 +88,7 @@ app.get("/", (req, res) => {
 // Mount feature-specific routes
 app.use("/deposit-sessions", depositSessionsRouter);
 
-// ===================================
-// 9. Generic RPC endpoint
-// ===================================
-app.get("/rpc", async (req, res) => {
-    console.log("=== RPC REQUEST ===");
-    console.log("Request body:", req.body);
 
-    try {
-        /* Example RPC call for joining a table:
-        {
-            "id": "1",
-            "version": "2.0",
-            "method": "transfer",
-            "params": [
-                "0x123...789",  // Player's address
-                "0xabc...def",  // Table address
-                "1000000000",   // Buy in amount
-                "join"
-            ],
-            "signature": "0xf65ac7f...",  // Player's signature
-            "publicKey": "0x789...def"    // Player's public key
-        }
-
-        // Example RPC call for creating a table:
-        {
-            "method": "create_contract_schema",
-            "version": "2.0",
-            "id": "1",
-            "params": [
-                "texas-holdem", 
-                "cash", 
-                "no-limit", 
-                "2", 
-                "9", 
-                "1000000000000000000000", 
-                "300000000000000000000"
-            ]
-        }
-        */
-       console.log("=== RPC REQUEST ===");
-       console.log(req.body);
-
-        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", req.body, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        console.log("=== NODE1 RESPONSE ===");
-        console.log(response.data);
-
-        res.json(response.data);
-    } catch (error) {
-        console.error("=== RPC ERROR ===");
-        console.error("Error details:", error);
-        res.status(500).json({
-            error: "RPC call failed",
-            details: error.message
-        });
-    }
-});
 
 // ===================================
 // 10. Game lobby-related endpoints
@@ -776,7 +701,7 @@ server.listen(port, "0.0.0.0", () => {
     ====================================
     🚀 Server is running
     📡 Port: ${port}
-    🔑 Client: ${clientType}
+
     🌍 URL: http://localhost:${port}
     📚 Docs: http://localhost:${port}/docs
     ====================================
