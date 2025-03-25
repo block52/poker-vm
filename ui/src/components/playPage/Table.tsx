@@ -26,9 +26,9 @@ const DEBUG_MODE = false;
 
 // Helper function that only logs when DEBUG_MODE is true
 const debugLog = (...args: any[]) => {
-  if (DEBUG_MODE) {
-    console.log(...args);
-  }
+    if (DEBUG_MODE) {
+        console.log(...args);
+    }
 };
 
 //* Here's the typical sequence of a poker hand:
@@ -51,10 +51,14 @@ interface PositionArray {
 const calculateZoom = () => {
     const baseWidth = 1600;
     const baseHeight = 850;
+    const headerFooterHeight = 180;
+
+    const availableHeight = window.innerHeight - headerFooterHeight;
     const scaleWidth = window.innerWidth / baseWidth;
-    const scaleHeight = window.innerHeight / baseHeight;
+    const scaleHeight = availableHeight / baseHeight;
+
     const calculatedScale = Math.min(scaleWidth, scaleHeight);
-    return Math.max(calculatedScale, 0.7);
+    return Math.min(calculatedScale, 2); // Cap at 2x
 };
 
 const useTableData = () => {
@@ -120,19 +124,19 @@ const useTableData = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const { 
-        tableData, 
-        nextToActInfo, 
-        currentRound, 
-        totalPot, 
-        playerLegalActions, 
-        isPlayerTurn, 
+    const {
+        tableData,
+        nextToActInfo,
+        currentRound,
+        totalPot,
+        playerLegalActions,
+        isPlayerTurn,
         tableSize,
         openOneMore,
         openTwoMore,
         showThreeCards,
         getUserBySeat,
-        currentUserSeat 
+        currentUserSeat
     } = useTableContext();
 
     // Keep the existing variable
@@ -146,7 +150,7 @@ const Table = () => {
 
     // Add the new hook usage here with prefixed names - directly at top level, not inside useMemo
     const tableDataValues = useTableData();
-    
+
     // Replace useUserBySeat with getUserBySeat from context
     // Get the user data for the current seat from context instead of hook
     const userData = React.useMemo(() => {
@@ -161,7 +165,7 @@ const Table = () => {
 
     useEffect(() => {
         if (!DEBUG_MODE) return; // Skip logging if not in debug mode
-        
+
         debugLog("Active Players:", activePlayers);
         // If there are active players, set their positions
         if (activePlayers.length > 0) {
@@ -205,7 +209,7 @@ const Table = () => {
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
-    
+
     const navigate = useNavigate();
 
     const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
@@ -421,11 +425,11 @@ const Table = () => {
                         {/* Bottom edge glow */}
                         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#64ffda] to-transparent opacity-50"></div>
                     </div>
-                    
+
                     {/* Left Section - Lobby button */}
                     <div className="flex items-center space-x-3 z-10">
                         <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#64ffda] transition-all duration-300" onClick={() => navigate("/")}>
-                            <IoMenuSharp size={20} className="text-[#64ffda]" /> 
+                            <IoMenuSharp size={20} className="text-[#64ffda]" />
                         </div>
                         <span className="text-white font-medium text-[20px] cursor-pointer hover:text-[#64ffda] transition-colors duration-300" onClick={() => navigate("/")}>
                             Lobby
@@ -593,7 +597,19 @@ const Table = () => {
                             }}
                         />
 
-                        <div className="zoom-container h-[450px] w-[900px] m-[auto] relative z-10">
+                        <div className="zoom-wrapper"
+                            style={{
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                transform: `translate(-50%, -50%) scale(${zoom})`,
+                                transformOrigin: "center center",
+                                width: "1600px",
+                                height: "850px",
+                                maxWidth: "100vw",
+                                maxHeight: "calc(100vh - 180px)", // leave room for header/footer
+                                overflow: "visible", // ensure nothing is cut off
+                            }}>
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
                                 <div className="w-[900px] h-[450px] relative text-center block transform translate-y-[30px]">
                                     <div className="h-full flex align-center justify-center">
@@ -605,8 +621,8 @@ const Table = () => {
                                                     {tableDataValues.tableDataPots?.[0] === "0"
                                                         ? "0.00"
                                                         : tableDataValues.tableDataPots
-                                                              ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
-                                                              .toFixed(2)}
+                                                            ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
+                                                            .toFixed(2)}
                                                 </span>
                                             </div>
                                             <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
@@ -620,20 +636,20 @@ const Table = () => {
                                             <div className="flex gap-2 mt-8">
                                                 {tableDataValues.tableDataRound === "preflop"
                                                     ? // Show face-down cards in preflop
-                                                      Array(5)
-                                                          .fill(null)
-                                                          .map((_, index) => (
-                                                              <div
-                                                                  key={index}
-                                                                  className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
-                                                              />
-                                                          ))
+                                                    Array(5)
+                                                        .fill(null)
+                                                        .map((_, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
+                                                            />
+                                                        ))
                                                     : // Show actual cards for other rounds
-                                                      (tableDataValues.tableDataCommunityCards || []).map((card: any, index: number) => (
-                                                          <div key={index} className="card animate-fall">
-                                                              <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped={true} />
-                                                          </div>
-                                                      ))}
+                                                    (tableDataValues.tableDataCommunityCards || []).map((card: any, index: number) => (
+                                                        <div key={index} className="card animate-fall">
+                                                            <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped={true} />
+                                                        </div>
+                                                    ))}
                                             </div>
                                             {/*//! CHIP */}
                                             {/* {chipPositionArray.map((position, index) => (
@@ -769,9 +785,8 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
-                        openSidebar ? "w-[300px]" : "w-0"
-                    }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
+                        }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
