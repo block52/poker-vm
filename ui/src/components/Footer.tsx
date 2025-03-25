@@ -152,7 +152,7 @@ const PokerActionPanel: React.FC = () => {
     };
 
     // Player action function to handle all game actions
-    const setPlayerAction = async (action: PlayerActionType, amount: string) => {
+    const handleSetPlayerAction = async (action: PlayerActionType, amount: string) => {
         console.log("Setting player action:", action, amount);
         if (!userAddress || !tableData?.data?.address) {
             console.error("Missing user address or table ID", { userAddress, tableId: tableData?.data?.address });
@@ -172,7 +172,7 @@ const PokerActionPanel: React.FC = () => {
             // Create a wallet instance to sign the message
             const wallet = new ethers.Wallet(privateKey);
 
-            // Create the message to sign (format: action + amount + tableId + timestamp)
+            // Create the message to sign - Add delimiters for clarity and reliability
             const timestamp = Math.floor(Date.now() / 1000).toString();
             const tableId = tableData.data.address;
             
@@ -180,7 +180,7 @@ const PokerActionPanel: React.FC = () => {
             // Convert 'bet' to 'bet' as expected by the API
             const formattedAction = action.toLowerCase();
             
-            const message = `${formattedAction}${amount}${tableId}${timestamp}`;
+            const message = `${formattedAction}:${amount}:${tableId}:${timestamp}`;
 
             // Sign the message
             const signature = await wallet.signMessage(message);
@@ -206,6 +206,13 @@ const PokerActionPanel: React.FC = () => {
 
             console.log("Player action response:", response.data);
 
+            // Check if there is an error in the response
+            if (response.data.error) {
+                console.error(`Action error: ${response.data.error}`);
+                // You could also display this error to the user via a toast notification
+                alert(`Action failed: ${response.data.error}`);
+            }
+
             // Reset UI states after action
             setIsBetAction(false);
             setIsCallAction(false);
@@ -213,10 +220,18 @@ const PokerActionPanel: React.FC = () => {
             setIsRaiseAction(false);
         } catch (error: any) {
             console.error("Error executing player action:", error);
+            // Log the error stack trace for debugging
+            console.error("Error stack:", error.stack);
+            
             // Show the detailed error
             if (error.response) {
                 console.error("Error response data:", error.response.data);
                 console.error("Error response status:", error.response.status);
+                // Display a more detailed error message to the user
+                alert(`Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+            } else {
+                // Generic error message
+                alert(`Error executing action: ${error.message}`);
             }
         }
     };
@@ -225,7 +240,7 @@ const PokerActionPanel: React.FC = () => {
     const handlePostSmallBlind = () => {
         console.log("Posting small blind");
         if (userStatus?.smallBlindAmount) {
-            setPlayerAction(PlayerActionType.SMALL_BLIND, userStatus.smallBlindAmount);
+            handleSetPlayerAction(PlayerActionType.SMALL_BLIND, userStatus.smallBlindAmount);
         }
     };
 
@@ -245,7 +260,7 @@ const PokerActionPanel: React.FC = () => {
             console.log("Sending big blind action with amount:", bigBlindAmountString);
             
             // Call the action with explicit string conversion
-            setPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmountString);
+            handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmountString);
         } else {
             console.error("Missing big blind amount in userStatus");
         }
@@ -266,7 +281,7 @@ const PokerActionPanel: React.FC = () => {
             const diffAmount = BigInt(bigBlindAmount) - BigInt(smallBlindAmount);
             
             console.log("Calling with difference amount:", diffAmount.toString());
-            setPlayerAction(PlayerActionType.CALL, diffAmount.toString());
+            handleSetPlayerAction(PlayerActionType.CALL, diffAmount.toString());
         //  else 
         //     // Regular check action
         //     setPlayerAction(PlayerActionType.CHECK, "100000000000000000");
@@ -281,7 +296,7 @@ const PokerActionPanel: React.FC = () => {
             // Use the callAction.min value directly from the action object
             // This ensures we're using the exact value expected by the contract
             console.log("Calling with amount:", callAction.min);
-            setPlayerAction(PlayerActionType.CALL, callAction.min.toString());
+            handleSetPlayerAction(PlayerActionType.CALL, callAction.min.toString());
         } else {
             console.error("Call action not available");
         }
@@ -289,7 +304,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleFold = () => {
         console.log("Folding");
-        setPlayerAction(PlayerActionType.FOLD, "0");
+        handleSetPlayerAction(PlayerActionType.FOLD, "0");
     };
 
     const handleBet = () => {
@@ -316,7 +331,7 @@ const PokerActionPanel: React.FC = () => {
             // Convert the raiseAmount (which is in ETH) back to wei for the contract
             const raiseAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
             console.log("Raising with amount (wei):", raiseAmountWei);
-            setPlayerAction(PlayerActionType.RAISE, raiseAmountWei);
+            handleSetPlayerAction(PlayerActionType.RAISE, raiseAmountWei);
             setIsRaiseAction(false);
         }
     };
@@ -346,7 +361,7 @@ const PokerActionPanel: React.FC = () => {
             console.log("Betting with amount (wei):", betAmountWei);
             
             // Call the action with the bet amount in wei
-            setPlayerAction(PlayerActionType.BET, betAmountWei);
+            handleSetPlayerAction(PlayerActionType.BET, betAmountWei);
             setIsBetAction(false);
         } else {
             console.error("Cannot bet with zero amount");
@@ -415,7 +430,7 @@ const PokerActionPanel: React.FC = () => {
         // console.log("Big blind amount:", bigBlindAmount);
         
         // Call the action handler directly
-        setPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
+        handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
     };
 
     // Add this at the top of your component
@@ -434,7 +449,7 @@ const PokerActionPanel: React.FC = () => {
                 // console.log("Big blind amount:", bigBlindAmount);
                 
                 // Call the action handler directly
-                setPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
+                handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
             }
         };
 
@@ -551,14 +566,36 @@ const PokerActionPanel: React.FC = () => {
                                 </button>
                             )}
                             {canRaise && (
-                                <button
-                                    className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                    transition-all duration-200 font-medium transform hover:scale-105"
-                                    onClick={handleRaise}
-                                >
-                                    RAISE <span className="text-[#64ffda]">${raiseAmount.toFixed(2)}</span>
-                                </button>
+                                <>
+                                    {isRaiseAction ? (
+                                        <div className="flex flex-col gap-2 w-full">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-gray-300">Raise Amount: ${raiseAmount.toFixed(2)}</span>
+                                                <button
+                                                    className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                                    px-4 py-2 rounded-lg border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                                    transition-all duration-200 font-medium transform hover:scale-105"
+                                                    onClick={submitRaise}
+                                                >
+                                                    CONFIRM RAISE
+                                                </button>
+                                            </div>
+                                            <div className="flex justify-between text-xs text-gray-400">
+                                                <span>Min: ${minRaise.toFixed(2)}</span>
+                                                <span>Max: ${maxRaise.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                            px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                            transition-all duration-200 font-medium transform hover:scale-105"
+                                            onClick={handleRaise}
+                                        >
+                                            RAISE <span className="text-[#64ffda]">${minRaise.toFixed(2)}</span>
+                                        </button>
+                                    )}
+                                </>
                             )}
                             {canBet && (
                                 <>
