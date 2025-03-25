@@ -61,7 +61,8 @@ interface TableContextType {
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
 
-// Define WebSocket URL based on the proxy URL with safer parsing
+// Comment out the WebSocket URL function
+/*
 const getWebSocketUrl = () => {
   try {
     // First try using the PROXY_URL
@@ -78,10 +79,12 @@ const getWebSocketUrl = () => {
     }
   }
 };
+*/
 
 export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { id: tableId } = useParams<{ id: string }>();
-  const wsRef = useRef<WebSocket | null>(null);
+  // Comment out WebSocket reference
+  // const wsRef = useRef<WebSocket | null>(null);
   
   const [tableData, setTableData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,7 +97,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [totalPot, setTotalPot] = useState<string>('0');
   const [playerLegalActions, setPlayerLegalActions] = useState<any[] | null>(null);
   const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false);
-  const [usePolling, setUsePolling] = useState<boolean>(true);
+  // Force usePolling to always be true
+  // const [usePolling, setUsePolling] = useState<boolean>(true);
   const [tableSize, setTableSize] = useState<number>(9);
   const [tableType, setTableType] = useState<string>("");
   const [roundType, setRoundType] = useState<string>("");
@@ -104,8 +108,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Add state for user data by seat
   const [userDataBySeat, setUserDataBySeat] = useState<Record<number, any>>({});
   const [currentUserSeat, setCurrentUserSeat] = useState<number>(-1);
-  // Track WebSocket connection status
-  const [wsConnected, setWsConnected] = useState<boolean>(false);
+  // Comment out WebSocket connection status
+  // const [wsConnected, setWsConnected] = useState<boolean>(false);
   const [canDeal, setCanDeal] = useState<boolean>(false);
   
   const { b52 } = useUserWallet();
@@ -189,6 +193,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return cachedData?.data || null;
   }, [userDataBySeat, fetchUserBySeat]);
 
+  // Comment out WebSocket connection setup
+  /*
   // WebSocket connection setup with reconnection logic
   useEffect(() => {
     if (!tableId) return;
@@ -315,12 +321,13 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setWsConnected(false);
     };
   }, [tableId]);
+  */
 
-  // Polling fallback - optimized to reduce unnecessary updates
+  // Update polling logic to run regardless of WebSocket status
   useEffect(() => {
-    if (!tableId || (!usePolling && wsConnected)) return;
+    if (!tableId) return;
     
-    debugLog(`Using ${wsConnected ? 'backup' : 'primary'} polling for table data`);
+    debugLog('Using polling for table data');
     
     let isFirstLoad = true;
     let lastUpdateTimestamp = 0;
@@ -341,35 +348,57 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         debugLog('Using baseUrl:', baseUrl);
         
-        const response = await axios.get(`${baseUrl}/table/${tableId}`);
+        const response = await axios.get(`${baseUrl}/get_game_state/${tableId}`);
         
         if (!response.data) {
           console.error('Polling received empty data');
           return;
         }
         
+        // Fix the data structure to match what the components expect
+        debugLog('Response data structure:', JSON.stringify(response.data).substring(0, 100) + '...');
+        
+        // More explicit data validation and structure handling
+        if (!response.data.data && !response.data.type) {
+          console.error('Unexpected API response structure', response.data);
+          return;
+        }
+
+        // Determine if the data is directly in response.data or in response.data.data
+        const tableState = response.data.data || response.data;
+        debugLog('Extracted table state structure:', {
+          hasType: !!tableState.type,
+          hasPlayers: !!tableState.players,
+          hasAddress: !!tableState.address
+        });
+        
         // Only update if critical data has changed
         setTableData((prevData: any) => {
           if (!prevData || !prevData.data || isFirstLoad) {
             isFirstLoad = false;
             lastUpdateTimestamp = now;
-            return { data: response.data };
+            
+            // Ensure we always have a consistent structure with data property
+            const formattedData = response.data.data ? response.data : { data: response.data };
+            debugLog('Setting initial table data with structure:', Object.keys(formattedData));
+            setIsLoading(false); // Make sure to set loading to false here
+            return formattedData;
           }
           
           // Special case: normalize dealer position
           // If dealer position is 9 in the response, treat it as 0 for consistency
-          if (response.data.dealer === 9) {
-            response.data.dealer = 0;
+          if (tableState.dealer === 9) {
+            tableState.dealer = 0;
           }
           
           // Check if any critical game state has changed
-          const hasPlayerChanges = JSON.stringify(response.data.players) !== 
+          const hasPlayerChanges = JSON.stringify(tableState.players) !== 
                                   JSON.stringify(prevData.data.players);
-          const hasNextToActChanged = response.data.nextToAct !== prevData.data.nextToAct;
-          const hasRoundChanged = response.data.round !== prevData.data.round;
-          const hasBoardChanged = JSON.stringify(response.data.board || response.data.communityCards) !== 
+          const hasNextToActChanged = tableState.nextToAct !== prevData.data.nextToAct;
+          const hasRoundChanged = tableState.round !== prevData.data.round;
+          const hasBoardChanged = JSON.stringify(tableState.board || tableState.communityCards) !== 
                                  JSON.stringify(prevData.data.board || prevData.data.communityCards);
-          const hasPotChanged = JSON.stringify(response.data.pots) !== 
+          const hasPotChanged = JSON.stringify(tableState.pots) !== 
                                    JSON.stringify(prevData.data.pots);
           
           const hasImportantChanges = hasPlayerChanges || hasNextToActChanged || 
@@ -378,7 +407,11 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (hasImportantChanges) {
             debugLog('Polling detected changes, updating table data');
             lastUpdateTimestamp = now;
-            return { data: response.data };
+            
+            // Ensure we always have a consistent structure with data property
+            const formattedData = response.data.data ? response.data : { data: response.data };
+            setIsLoading(false); // Make sure to set loading to false here
+            return formattedData;
           }
           
           debugLog('Polling detected no changes, keeping current state');
@@ -386,23 +419,23 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       } catch (err) {
         console.error('Error fetching table data:', err);
+        // Set error state so UI can show appropriate message
+        setError(err instanceof Error ? err : new Error('Unknown error fetching table data'));
+        setIsLoading(false);
       }
     };
 
     // Initial fetch
     fetchTableData();
 
-    // Set up polling with longer interval when WebSocket is connected
-    const interval = setInterval(
-      fetchTableData, 
-      wsConnected ? 10000 : 5000  // Slower polling when WS is connected
-    );
+    // Set up polling every 5 seconds
+    const interval = setInterval(fetchTableData, 5000);
 
     // Cleanup
     return () => {
       clearInterval(interval);
     };
-  }, [tableId, usePolling, wsConnected]);
+  }, [tableId]);
 
   // Update public key calculation
   useEffect(() => {
