@@ -313,6 +313,12 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       debugLog('Nonce Data:', response.data.result.data.nonce);
       
       if (response.data?.result?.data?.nonce !== undefined) {
+        console.log('🔄 Nonce updated:', {
+          previous: nonce,
+          new: response.data.result.data.nonce,
+          address,
+          timestamp: new Date().toISOString()
+        });
         setNonce(response.data.result.data.nonce);
         return response.data.result.data.nonce;
       }
@@ -321,15 +327,19 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.error('Error fetching nonce:', error);
       return null;
     }
-  }, []);
+  }, [nonce]);
 
   // Optimize nonce refresh - less frequent polling
   useEffect(() => {
     const address = localStorage.getItem('user_eth_public_key');
     if (address) {
+      console.log('✅ Initial nonce refresh for address:', address);
       refreshNonce(address);
       // Reduce frequency from 10s to 15s - still fast enough for gameplay
-      const interval = setInterval(() => refreshNonce(address), 15000);
+      const interval = setInterval(() => {
+        console.log('🔄 Scheduled nonce refresh for address:', address);
+        refreshNonce(address);
+      }, 15000);
       return () => clearInterval(interval);
     }
   }, [refreshNonce]);
@@ -385,10 +395,24 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Add these functions from PlayerContext
   const performAction = useCallback(
-    (gameAddress: string, action: PlayerActionType, amount?: string, nonce?: number) => {
+    async (gameAddress: string, action: PlayerActionType, amount?: string, nonce?: number) => {
+      console.log('🎮 Performing action with nonce:', {
+        action,
+        amount,
+        nonce,
+        gameAddress
+      });
       b52?.playerAction(gameAddress, action, amount ?? "", nonce);
+      
+      // Wait a moment for the action to be processed
+      setTimeout(async () => {
+        const address = localStorage.getItem('user_eth_public_key');
+        if (address) {
+          await refreshNonce(address);
+        }
+      }, 1000);
     },
-    [b52]
+    [b52, refreshNonce]
   );
 
   const fold = useCallback(() => {
