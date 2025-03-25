@@ -16,6 +16,7 @@ import BetAction from "./actions/betAction";
 import BigBlindAction from "./actions/bigBlindAction";
 import CallAction from "./actions/callAction";
 import CheckAction from "./actions/checkAction";
+import DealAction from "./actions/dealAction";
 import FoldAction from "./actions/foldAction";
 import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
@@ -25,7 +26,6 @@ import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
 import { ethers } from "ethers";
 import { Stack } from "../core/datastructures/stack";
 import { FixedCircularList } from "../core/datastructures/linkedList";
-import DealAction from "./actions/dealAction";
 
 export type GameOptions = {
     minBuyIn: bigint;

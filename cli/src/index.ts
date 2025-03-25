@@ -339,11 +339,11 @@ const interactiveAction = async () => {
                 name: "userInput",
                 message: "What would you like to do?",
                 choices: [
+                    { name: "Join a game", value: "join_game" },
                     { name: "Create an account", value: "new_account" },
                     { name: "Import a private key", value: "import_key" },
                     { name: "Get account", value: "get_account" },
                     { name: "Create a game (coming soon)", value: "create_game" },
-                    { name: "Join a game", value: "join_game" },
                     { name: "Game state", value: "state" },
                     { name: "Exit", value: "exit" }
                 ]
@@ -567,13 +567,6 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
         actions.push({ action, value: legalAction.action });
     }
 
-    // // Check if it's my turn
-    // actions.push({ action: "Check", value: "check" });
-    // actions.push({ action: "Call", value: "call" });
-    // actions.push({ action: "Fold", value: "fold" });
-    // actions.push({ action: "Raise", value: "raise" });
-    // actions.push({ action: "All-In", value: "all-in" });
-
     return actions;
 };
 
@@ -618,6 +611,10 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
             case "call":
                 console.log(chalk.green("Calling..."));
                 await client.playerAction(tableAddress, PlayerActionType.CALL, "", nonce);
+                break;
+            case "deal":
+                console.log(chalk.green("Deal..."));
+                await client.playerAction(tableAddress, PlayerActionType.DEAL, "", nonce);
                 break;
             case "fold":
                 console.log(chalk.green("Folding..."));
