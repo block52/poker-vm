@@ -389,56 +389,17 @@ const server = http.createServer(app);
 //     }
 // }
 
-// Modify the existing table endpoint to also broadcast updates
-app.get("/table/:id", async (req, res) => {
-    console.log("=== TABLE REQUEST ===");
-    console.log("Route params:", req.params);
-
-    const id = req.params.id;
-    console.log(`Fetching table with ID: ${id}`);
-
-    try {
-        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
-        const table = await client.getGameState(id);
-        console.log("=== TABLE STATE ===");
-        console.log(table);
-
-        res.send(table);
-
-        // // Also broadcast this update to WebSocket clients
-        // if (tableSubscriptions.has(id)) {
-        //     console.log(`Broadcasting table update to ${tableSubscriptions.get(id).size} WebSocket clients`);
-        //     for (const client of tableSubscriptions.get(id)) {
-        //         if (client.readyState === WebSocket.OPEN) {
-        //             client.send(
-        //                 JSON.stringify({
-        //                     type: "tableUpdate",
-        //                     data: table
-        //                 })
-        //             );
-        //         }
-        //     }
-        // }
-    } catch (error) {
-        console.error("=== TABLE ERROR ===");
-        console.error("Error details:", error);
-        res.status(500).json({
-            error: "Failed to fetch table",
-            details: error.message
-        });
-    }
-});
 
 // Add a new endpoint to trigger table updates (can be called by the game server when state changes)
-app.post("/notify-table-update/:id", async (req, res) => {
-    const tableId = req.params.id;
-    console.log(`Received update notification for table: ${tableId}`);
+// app.post("/notify-table-update/:id", async (req, res) => {
+//     const tableId = req.params.id;
+//     console.log(`Received update notification for table: ${tableId}`);
 
-    // Broadcast the update to all subscribed clients
-    await broadcastTableUpdate(tableId);
+//     // Broadcast the update to all subscribed clients
+//     await broadcastTableUpdate(tableId);
 
-    res.status(200).json({ success: true });
-});
+//     res.status(200).json({ success: true });
+// });
 
 // ===================================
 // 12. Join table endpoint
@@ -532,26 +493,41 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
 // ===================================
 // 13. Account-related endpoints
 // ===================================
-app.get("/account/:id", async (req, res) => {
-    console.log("\n=== Account Request ===");
-    console.log("Address:", req.params.id);
+app.get("/get_account/:accountId", async (req, res) => {
+    console.log("=== GET ACCOUNT REQUEST ===");
+    console.log("Account ID:", req.params.accountId);
 
     try {
-        const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
-        const account = await client.getAccount(req.params.id);
+        // Format the RPC call according to the specified structure
+        const rpcCall = {
+            id: "1",
+            method: "get_account",
+            version: "2.0",
+            params: [req.params.accountId]
+        };
 
-        res.json({
-            nonce: account.nonce || 0,
-            address: account.address,
-            balance: account.balance.toString()
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
     } catch (error) {
-        console.error("SDK Error:", error);
-        res.json({
-            nonce: 0,
-            address: req.params.id,
-            balance: "0",
-            error: "Failed to fetch account"
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ 
+            error: "Failed to get account", 
+            details: error.message 
         });
     }
 });
@@ -685,11 +661,11 @@ app.post("/table/:tableId/deal", async (req, res) => {
 
         res.json(response.data);
         
-        // Also broadcast this update to WebSocket clients
-        if (tableSubscriptions.has(req.params.tableId)) {
-            console.log(`Broadcasting table update after deal to ${tableSubscriptions.get(req.params.tableId).size} WebSocket clients`);
-            await broadcastTableUpdate(req.params.tableId);
-        }
+        // // Also broadcast this update to WebSocket clients
+        // if (tableSubscriptions.has(req.params.tableId)) {
+        //     console.log(`Broadcasting table update after deal to ${tableSubscriptions.get(req.params.tableId).size} WebSocket clients`);
+        //     await broadcastTableUpdate(req.params.tableId);
+        // }
     } catch (error) {
         console.error("=== ERROR ===");
         console.error("Error details:", error);
@@ -742,44 +718,7 @@ app.get("/get_game_state/:tableId", async (req, res) => {
 // ===================================
 // New endpoint for get_account
 // ===================================
-app.get("/get_account/:accountId", async (req, res) => {
-    console.log("=== GET ACCOUNT REQUEST ===");
-    console.log("Account ID:", req.params.accountId);
 
-    try {
-        // Format the RPC call according to the specified structure
-        const rpcCall = {
-            id: "1",
-            method: "get_account",
-            version: "2.0",
-            params: [req.params.accountId]
-        };
-
-        console.log("=== FORMATTED RPC CALL ===");
-        console.log(JSON.stringify(rpcCall, null, 2));
-        console.log("=== NODE_URL ===");
-        console.log(process.env.NODE_URL);
-
-        // Make the actual RPC call to the node
-        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        console.log("=== NODE RESPONSE ===");
-        console.log(response.data);
-
-        res.json(response.data);
-    } catch (error) {
-        console.error("=== ERROR ===");
-        console.error("Error details:", error);
-        res.status(500).json({ 
-            error: "Failed to get account", 
-            details: error.message 
-        });
-    }
-});
 
 // ===================================
 // 14. Start Server
