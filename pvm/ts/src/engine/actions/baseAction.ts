@@ -59,12 +59,15 @@ abstract class BaseAction {
         let amount = 0n;
         const roundBets = this.game.getBets(this.game.currentRound);
 
+        console.log(`getLargestBet for round ${this.game.currentRound} - bets:`, Array.from(roundBets.entries()));
+
         roundBets.forEach((bet) => {
             if (bet > amount) {
                 amount = bet;
             }
         });
 
+        console.log(`Largest bet for round ${this.game.currentRound}: ${amount}`);
         return amount;
     }
 
@@ -72,12 +75,14 @@ abstract class BaseAction {
         let totalBet = 0n;
 
         const roundBets = this.game.getBets(this.game.currentRound);
+        console.log(`getSumBets for player ${playerId} in round ${this.game.currentRound} - bets:`, Array.from(roundBets.entries()));
 
         // If the player made a bet in this round, add it to the total
         if (roundBets.has(playerId)) {
             totalBet += roundBets.get(playerId) || 0n;
         }
 
+        console.log(`Total bets for player ${playerId} in round ${this.game.currentRound}: ${totalBet}`);
         return totalBet;
     }
 }
