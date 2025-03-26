@@ -61,7 +61,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 // Replay tx from mempool
 
                 // Cast string to PlayerActionType
-                const playerAction: PlayerActionType = this.data as PlayerActionType;
+                const playerAction = this.data;
                 console.log(`Player action type: ${playerAction}`);
 
                 switch (playerAction) {
@@ -80,10 +80,8 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                         break;
                     case "post small blind":
                         game.performAction(this.from, PlayerActionType.SMALL_BLIND, this.amount);
-                        //todo
                         break;
                     case "post big blind":
-                        //todo
                         game.performAction(this.from, PlayerActionType.BIG_BLIND, this.amount);
                         break;
                     case "bet":
@@ -100,10 +98,12 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                         game.performAction(this.from, PlayerActionType.CHECK);
                         break;
                     case "raise":
-                        game.performAction(this.from, PlayerActionType.RAISE, this.amount);
+                        console.log(`Player ${this.from} raising to ${this.amount}...`);
+                        // Ensure amount is converted to bigint for the RAISE action
+                        game.performAction(this.from, PlayerActionType.RAISE, BigInt(this.amount.toString()));
                         break;
                     default:
-                        throw new Error("Invalid action");
+                        throw new Error(`Invalid action: ${playerAction}`);
                 };
 
                 const _json = game.toJson();

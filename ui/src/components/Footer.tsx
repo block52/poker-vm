@@ -187,8 +187,29 @@ const PokerActionPanel: React.FC = () => {
             const tableId = tableData.data.address;
             
             // Ensure action is properly formatted and consistent with API expectations
-            // Convert 'bet' to 'bet' as expected by the API
-            const formattedAction = action.toLowerCase();
+            // Convert action to lowercase string as expected by the API
+            let formattedAction = '';
+            
+            // Handle the action format based on the type
+            if (typeof action === 'string') {
+                formattedAction = action.toLowerCase();
+            } else if (typeof action === 'number') {
+                // If it's a numeric enum, map it to the expected string
+                switch(action) {
+                    case PlayerActionType.FOLD: formattedAction = 'fold'; break;
+                    case PlayerActionType.CHECK: formattedAction = 'check'; break;
+                    case PlayerActionType.CALL: formattedAction = 'call'; break;
+                    case PlayerActionType.BET: formattedAction = 'bet'; break;
+                    case PlayerActionType.RAISE: formattedAction = 'raise'; break;
+                    case PlayerActionType.SMALL_BLIND: formattedAction = 'post small blind'; break;
+                    case PlayerActionType.BIG_BLIND: formattedAction = 'post big blind'; break;
+                    default: formattedAction = (action as any).toString().toLowerCase();
+                }
+            } else {
+                formattedAction = (action as any).toString().toLowerCase();
+            }
+            
+            console.log(`Formatted action: ${formattedAction}`);
             
             const message = `${formattedAction}:${amount}:${tableId}:${timestamp}`;
 
@@ -314,6 +335,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleRaise = () => {
         console.log("Raising");
+        setRaiseAmount(minRaise);
         setIsRaiseAction(true);
     };
 
@@ -322,7 +344,22 @@ const PokerActionPanel: React.FC = () => {
             // Convert the raiseAmount (which is in ETH) back to wei for the contract
             const raiseAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
             console.log("Raising with amount (wei):", raiseAmountWei);
-            handleSetPlayerAction(PlayerActionType.RAISE, raiseAmountWei);
+            console.log("PlayerActionType.RAISE:", PlayerActionType.RAISE);
+            
+            // Check if the raise amount meets the minimum
+            if (raiseAmount < minRaise) {
+                console.error(`Raise amount ${raiseAmount} is less than minimum ${minRaise}`);
+                // Force to minimum
+                const minRaiseWei = ethers.parseUnits(minRaise.toString(), 18).toString();
+                console.log("Using minimum raise amount (wei):", minRaiseWei);
+                
+                // Handle the raise action, passing the string 'raise' explicitly
+                handleSetPlayerAction("raise" as any, minRaiseWei);
+            } else {
+                // Handle the raise action, passing the string 'raise' explicitly
+                handleSetPlayerAction("raise" as any, raiseAmountWei);
+            }
+            
             setIsRaiseAction(false);
         }
     };
@@ -607,7 +644,7 @@ const PokerActionPanel: React.FC = () => {
                                             transition-all duration-200 font-medium transform hover:scale-105"
                                             onClick={handleRaise}
                                         >
-                                            RAISE <span className="text-[#64ffda]">${minRaise.toFixed(2)}</span>
+                                            RAISE 
                                         </button>
                                     )}
                                 </>

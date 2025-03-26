@@ -40,8 +40,8 @@ const doSign = () => {
     });
 
     // // Log the private and public keys in text format
-    console.log("Private Key (PEM):\n", privateKey);
-    console.log("Public Key (PEM):\n", publicKey);
+    // console.log("Private Key (PEM):\n", privateKey);
+    // console.log("Public Key (PEM):\n", publicKey);
 };
 
 
