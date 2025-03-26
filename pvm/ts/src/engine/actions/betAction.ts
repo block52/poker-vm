@@ -9,11 +9,17 @@ class BetAction extends BaseAction {
     }
 
     verify(player: Player): Range | undefined {
-        // Can never check if you haven't matched the largest bet of the round
+        // Can never bet if you haven't matched the largest bet of the round
         const largestBet = this.getLargestBet();
         const sumBets = this.getSumBets(player.address);
+        
+        // Add debug logging to help diagnose the issue
+        console.log(`BetAction verify - Player: ${player.address}, largestBet: ${largestBet}, sumBets: ${sumBets}, round: ${this.game.currentRound}`);
 
-        if (largestBet > sumBets && (largestBet !== 0n && sumBets !== 0n)) {
+        // Fix the condition to properly handle round transitions
+        // Only check this if there are actual bets in the current round
+        if (largestBet > sumBets && largestBet > 0n) {
+            console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${sumBets}`);
             throw new Error("Player must call or raise.");
         }
 
@@ -27,6 +33,7 @@ class BetAction extends BaseAction {
             // If all bets are equal and we're beyond the blind postings (2+ players acted),
             // then we should not allow betting - only checking or raising
             if (allBetsEqual && roundBets.size >= 2 && largestBet === this.game.bigBlind) {
+                console.log("Cannot bet after call in preflop - use check or raise instead.");
                 throw new Error("Cannot bet after call in preflop - use check or raise instead.");
             }
         }
