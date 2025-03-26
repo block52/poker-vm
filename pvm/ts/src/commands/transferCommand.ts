@@ -70,14 +70,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                         game.join2(this.from, this.amount);
                         console.log(`Join successful`);
                         break;
-                    case "leave":
-                        console.log(`Player ${this.from} leaving game...`);
-                        const stack = game.leave(this.from);
-                        if (stack !== this.amount) {
-                            throw new Error("Leave amount doesn't match player's stack");
-                        }
-                        console.log(`Leave successful, returning ${stack} chips`);
-                        break;
                     case "post small blind":
                         game.performAction(this.from, PlayerActionType.SMALL_BLIND, this.amount);
                         break;
@@ -111,17 +103,50 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
                 return signResult(gameTx, this.privateKey);
-            } else {
-                console.log(`Processing regular transaction...`);
+            } 
+            
+            if (await this.isGameTransaction(this.from)) {
+                const json = await this.gameManagement.get(this.from);
+                console.log(`Current game state:`, json);
 
-                // If we haven't thrown an error, then we can create the transaction
-                // console.log(`Creating transaction...`);
-                const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
-                // console.log(`Adding transaction to mempool...`);
-                await this.mempool.add(transferTx);
+                // TODO: These need to be fetched from the contract in the future
+                const gameOptions: GameOptions = {
+                    minBuyIn: 1000000000000000000n,
+                    maxBuyIn: 10000000000000000000n,
+                    minPlayers: 2,
+                    maxPlayers: 9,
+                    smallBlind: 100000000000000000n,
+                    bigBlind: 200000000000000000n,
+                };
 
-                return signResult(transferTx, this.privateKey);
+                const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
+                console.log(`Game object created, processing action: ${this.data}`);
+                
+                // Assume player is leaving the game
+                console.log(`Player ${this.from} leaving game...`);
+                const stack = game.leave(this.from);
+                if (stack !== this.amount) {
+                    throw new Error("Leave amount doesn't match player's stack");
+                }
+                console.log(`Leave successful, returning ${stack} chips`);
+                
+                const _json = game.toJson();
+                await this.gameManagement.saveFromJSON(_json);
+
+                const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, this.data ?? "");
+                return signResult(gameTx, this.privateKey);
             }
+
+            console.log(`Processing regular transaction...`);
+
+            // If we haven't thrown an error, then we can create the transaction
+            // console.log(`Creating transaction...`);
+            const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+            // console.log(`Adding transaction to mempool...`);
+            await this.mempool.add(transferTx);
+
+            return signResult(transferTx, this.privateKey);
+
         } catch (e) {
             console.error(`Error in transfer command:`, e);
             throw new Error("Error transferring funds");
