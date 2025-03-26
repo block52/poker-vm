@@ -24,8 +24,6 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
 import { ethers } from "ethers";
-import { Stack } from "../core/datastructures/stack";
-import { FixedCircularList } from "../core/datastructures/linkedList";
 
 export type GameOptions = {
     minBuyIn: bigint;
@@ -770,7 +768,6 @@ class TexasHoldemGame implements IPoker {
             pot += value;
         }
 
-        // return pot + this._pot;
         return pot;
     }
 
@@ -857,8 +854,16 @@ class TexasHoldemGame implements IPoker {
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
         this._winners = new Map<string, bigint>();
 
-        let pot: bigint = this.getPot();
-        let winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
+        const pot: bigint = this.getPot();
+        const winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
+
+        for (const player of active) {
+            if (winningHands.includes(hands.get(player.id))) {
+                player.chips += pot / winningHands.length;
+                this._winners.set(player.id, pot / winningHands.length);
+            }
+        }
+
         // let winningPlayers = this._players.filter(p => winningHands.includes(hands.get(p.id)));
 
         // while (orderedPots.length) {
@@ -873,10 +878,10 @@ class TexasHoldemGame implements IPoker {
 
         // winningPlayers.forEach(p => update(p, pot / winningPlayers.length, this._winners!));
 
-        function update(player: Player, portion: bigint, winners: Map<string, bigint>) {
-            // player.chips += portion;
-            // winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
-        }
+        // function update(player: Player, portion: bigint, winners: Map<string, bigint>) {
+        //     // player.chips += portion;
+        //     // winners.set(player.id, (winners.get(player.id) ?? 0) + portion);
+        // }
 
         function toPokerSolverMnemonic(card: Card) {
             return card.mnemonic.replace("10", "T");
