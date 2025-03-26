@@ -61,6 +61,9 @@ const PokerActionPanel: React.FC = () => {
     
     // Only show deal button if global canDeal is true AND current user has the deal action
     const shouldShowDealButton = canDeal && currentUserCanDeal;
+    
+    // New flag to determine whether to hide other action buttons when deal is available
+    const hideOtherButtons = shouldShowDealButton;
 
     // const { data } = useUserBySeat(publicKey || "", userSeat);
     const [userStatus, setUserStatus] = useState<UserTableStatus>(null);
@@ -543,233 +546,238 @@ const PokerActionPanel: React.FC = () => {
                     </div>
                 )}
 
-                {/* Player Action Buttons Container */}
-                <div className="flex justify-center items-center gap-2">
-                    {showSmallBlindButton && userPlayer?.status !== "folded" && (
-                        <button
-                            onClick={handlePostSmallBlind}
-                            className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                            text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
-                            border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
-                        >
-                            <span className="mr-1">Post Small Blind</span>
-                            <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
-                                ${Number(ethers.formatUnits(userStatus?.smallBlindAmount || "0", 18)).toFixed(2)}
-                            </span>
-                        </button>
-                    )}
-
-                    {showBigBlindButton && userPlayer?.status !== "folded" && (
-                        <button
-                            onClick={handlePostBigBlind}
-                            className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                            text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
-                            border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
-                        >
-                            <span className="mr-1">Post Big Blind</span>
-                            <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
-                                ${Number(ethers.formatUnits(userStatus?.bigBlindAmount || "0", 18)).toFixed(2)}
-                            </span>
-                        </button>
-                    )}
-                    
-                    {/* Only show fold button if player hasn't folded yet */}
-                    {canFoldAnytime && (
-                        <button
-                            className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
-                            px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
-                            transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
-                            onClick={handleFold}
-                        >
-                            FOLD
-                        </button>
-                    )}
-                    
-                    {/* Show a message if the player has folded */}
-                    {userPlayer?.status === "folded" && (
-                        <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">
-                            You have folded this hand
-                        </div>
-                    )}
-                </div>
-
-                {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
-                {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
+                {/* Only show other buttons if deal button is not showing */}
+                {!hideOtherButtons && (
                     <>
-                        <div className="flex justify-between gap-2">
-                            {canCheck && (
+                        {/* Player Action Buttons Container */}
+                        <div className="flex justify-center items-center gap-2">
+                            {showSmallBlindButton && userPlayer?.status !== "folded" && (
                                 <button
-                                    className="cursor-pointer bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] hover:from-[#1e40af] hover:to-[#2563eb]
-                                    px-4 py-2 rounded-lg w-full border border-[#1e3a8a] hover:border-[#3b82f6] shadow-md
-                                    transition-all duration-200 font-medium transform hover:scale-105"
-                                    onClick={handleCheck}
+                                    onClick={handlePostSmallBlind}
+                                    className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                                    text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
+                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
                                 >
-                                    CHECK
+                                    <span className="mr-1">Post Small Blind</span>
+                                    <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
+                                        ${Number(ethers.formatUnits(userStatus?.smallBlindAmount || "0", 18)).toFixed(2)}
+                                    </span>
                                 </button>
                             )}
-                            {canCall && (
+
+                            {showBigBlindButton && userPlayer?.status !== "folded" && (
                                 <button
-                                    className="cursor-pointer bg-gradient-to-r from-[#065f46] to-[#047857] hover:from-[#047857] hover:to-[#059669]
-                                    px-4 py-2 rounded-lg w-full border border-[#065f46] hover:border-[#10b981] shadow-md
-                                    transition-all duration-200 font-medium transform hover:scale-105"
-                                    onClick={handleCall}
+                                    onClick={handlePostBigBlind}
+                                    className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                                    text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
+                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
                                 >
-                                    CALL <span className="text-[#64ffda]">${callAmount.toFixed(2)}</span>
+                                    <span className="mr-1">Post Big Blind</span>
+                                    <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
+                                        ${Number(ethers.formatUnits(userStatus?.bigBlindAmount || "0", 18)).toFixed(2)}
+                                    </span>
                                 </button>
                             )}
-                            {canRaise && (
-                                <>
-                                    {isRaiseAction ? (
-                                        <div className="flex flex-col gap-2 w-full">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-gray-300">Raise Amount: ${raiseAmount.toFixed(2)}</span>
+                            
+                            {/* Only show fold button if player hasn't folded yet */}
+                            {canFoldAnytime && (
+                                <button
+                                    className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
+                                    px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
+                                    transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
+                                    onClick={handleFold}
+                                >
+                                    FOLD
+                                </button>
+                            )}
+                            
+                            {/* Show a message if the player has folded */}
+                            {userPlayer?.status === "folded" && (
+                                <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">
+                                    You have folded this hand
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
+                        {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
+                            <>
+                                <div className="flex justify-between gap-2">
+                                    {canCheck && (
+                                        <button
+                                            className="cursor-pointer bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] hover:from-[#1e40af] hover:to-[#2563eb]
+                                            px-4 py-2 rounded-lg w-full border border-[#1e3a8a] hover:border-[#3b82f6] shadow-md
+                                            transition-all duration-200 font-medium transform hover:scale-105"
+                                            onClick={handleCheck}
+                                        >
+                                            CHECK
+                                        </button>
+                                    )}
+                                    {canCall && (
+                                        <button
+                                            className="cursor-pointer bg-gradient-to-r from-[#065f46] to-[#047857] hover:from-[#047857] hover:to-[#059669]
+                                            px-4 py-2 rounded-lg w-full border border-[#065f46] hover:border-[#10b981] shadow-md
+                                            transition-all duration-200 font-medium transform hover:scale-105"
+                                            onClick={handleCall}
+                                        >
+                                            CALL <span className="text-[#64ffda]">${callAmount.toFixed(2)}</span>
+                                        </button>
+                                    )}
+                                    {canRaise && (
+                                        <>
+                                            {isRaiseAction ? (
+                                                <div className="flex flex-col gap-2 w-full">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-300">Raise Amount: ${raiseAmount.toFixed(2)}</span>
+                                                        <button
+                                                            className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                                            px-4 py-2 rounded-lg border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                                            transition-all duration-200 font-medium transform hover:scale-105"
+                                                            onClick={submitRaise}
+                                                        >
+                                                            CONFIRM RAISE
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs text-gray-400">
+                                                        <span>Min: ${minRaise.toFixed(2)}</span>
+                                                        <span>Max: ${maxRaise.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
                                                 <button
                                                     className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                                    px-4 py-2 rounded-lg border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                                    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
                                                     transition-all duration-200 font-medium transform hover:scale-105"
-                                                    onClick={submitRaise}
+                                                    onClick={handleRaise}
                                                 >
-                                                    CONFIRM RAISE
+                                                    RAISE 
                                                 </button>
-                                            </div>
-                                            <div className="flex justify-between text-xs text-gray-400">
-                                                <span>Min: ${minRaise.toFixed(2)}</span>
-                                                <span>Max: ${maxRaise.toFixed(2)}</span>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                            px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                            transition-all duration-200 font-medium transform hover:scale-105"
-                                            onClick={handleRaise}
-                                        >
-                                            RAISE 
-                                        </button>
+                                            )}
+                                        </>
                                     )}
-                                </>
-                            )}
-                            {canBet && (
-                                <>
-                                    {isBetAction ? (
-                                        <div className="flex flex-col gap-2 w-full">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-gray-300">Bet Amount: ${raiseAmount.toFixed(2)}</span>
+                                    {canBet && (
+                                        <>
+                                            {isBetAction ? (
+                                                <div className="flex flex-col gap-2 w-full">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-300">Bet Amount: ${raiseAmount.toFixed(2)}</span>
+                                                        <button
+                                                            className="cursor-pointer bg-gradient-to-r from-[#065f46] to-[#047857] hover:from-[#047857] hover:to-[#059669]
+                                                            px-4 py-2 rounded-lg border border-[#065f46] hover:border-[#10b981] shadow-md
+                                                            transition-all duration-200 font-medium transform hover:scale-105"
+                                                            onClick={submitBet}
+                                                        >
+                                                            CONFIRM BET
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs text-gray-400">
+                                                        <span>Min: ${minBet.toFixed(2)}</span>
+                                                        <span>Max: ${maxBet.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
                                                 <button
-                                                    className="cursor-pointer bg-gradient-to-r from-[#065f46] to-[#047857] hover:from-[#047857] hover:to-[#059669]
-                                                    px-4 py-2 rounded-lg border border-[#065f46] hover:border-[#10b981] shadow-md
+                                                    className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                                    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
                                                     transition-all duration-200 font-medium transform hover:scale-105"
-                                                    onClick={submitBet}
+                                                    onClick={handleBet}
                                                 >
-                                                    CONFIRM BET
+                                                    BET <span className="text-[#64ffda]">${minBet.toFixed(2)}</span>
                                                 </button>
-                                            </div>
-                                            <div className="flex justify-between text-xs text-gray-400">
-                                                <span>Min: ${minBet.toFixed(2)}</span>
-                                                <span>Max: ${maxBet.toFixed(2)}</span>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                            px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                            transition-all duration-200 font-medium transform hover:scale-105"
-                                            onClick={handleBet}
-                                        >
-                                            BET <span className="text-[#64ffda]">${minBet.toFixed(2)}</span>
-                                        </button>
+                                            )}
+                                        </>
                                     )}
-                                </>
-                            )}
-                        </div>
-
-                        {/* Only show slider and betting options if player can bet or raise */}
-                        {(canBet || canRaise) && (
-                            <>
-                                {/* Slider and Controls */}
-                                <div className="flex items-center space-x-4 bg-[#0f172a40] p-2 rounded-lg border border-[#3a546d]">
-                                    <button
-                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                        py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
-                                        transition-all duration-200"
-                                        onClick={() => handleRaiseChange(Math.max(raiseAmount - 0.1, canBet ? minBet : minRaise))}
-                                        disabled={!isPlayerTurn}
-                                    >
-                                        -
-                                    </button>
-                                    <input
-                                        type="range"
-                                        min={canBet ? minBet : minRaise}
-                                        max={canBet ? maxBet : maxRaise}
-                                        step={0.1}
-                                        value={raiseAmount}
-                                        onChange={e => handleRaiseChange(Number(e.target.value))}
-                                        className="flex-1 accent-[#64ffda]"
-                                        disabled={!isPlayerTurn}
-                                    />
-                                    <button
-                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                        py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
-                                        transition-all duration-200"
-                                        onClick={() => handleRaiseChange(Math.min(raiseAmount + 0.1, canBet ? maxBet : maxRaise))}
-                                        disabled={!isPlayerTurn}
-                                    >
-                                        +
-                                    </button>
                                 </div>
 
-                                {/* Additional Options */}
-                                <div className="flex justify-between gap-2 mb-1">
-                                    <button
-                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                        px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
-                                        transition-all duration-200 text-xs transform hover:scale-105"
-                                        onClick={() => setRaiseAmount(Math.max(totalPot / 4, canBet ? minBet : minRaise))}
-                                        disabled={!isPlayerTurn}
-                                    >
-                                        1/4 Pot
-                                    </button>
-                                    <button
-                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                        px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
-                                        transition-all duration-200 text-xs transform hover:scale-105"
-                                        onClick={() => setRaiseAmount(Math.max(totalPot / 2, canBet ? minBet : minRaise))}
-                                        disabled={!isPlayerTurn}
-                                    >
-                                        1/2 Pot
-                                    </button>
-                                    <button
-                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                        px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
-                                        transition-all duration-200 text-xs transform hover:scale-105"
-                                        onClick={() => setRaiseAmount(Math.max((totalPot / 4) * 3, canBet ? minBet : minRaise))}
-                                        disabled={!isPlayerTurn}
-                                    >
-                                        3/4 Pot
-                                    </button>
-                                    <button
-                                        className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                        px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
-                                        transition-all duration-200 text-xs transform hover:scale-105"
-                                        onClick={() => setRaiseAmount(Math.max(totalPot, canBet ? minBet : minRaise))}
-                                        disabled={!isPlayerTurn}
-                                    >
-                                        Pot
-                                    </button>
-                                    <button
-                                        className="bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                        px-2 py-1.5 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                        transition-all duration-200 text-xs font-medium transform hover:scale-105"
-                                        onClick={() => setRaiseAmount(canBet ? maxBet : maxRaise)}
-                                        disabled={!isPlayerTurn}
-                                    >
-                                        ALL-IN
-                                    </button>
-                                </div>
+                                {/* Only show slider and betting options if player can bet or raise */}
+                                {(canBet || canRaise) && (
+                                    <>
+                                        {/* Slider and Controls */}
+                                        <div className="flex items-center space-x-4 bg-[#0f172a40] p-2 rounded-lg border border-[#3a546d]">
+                                            <button
+                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                                py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
+                                                transition-all duration-200"
+                                                onClick={() => handleRaiseChange(Math.max(raiseAmount - 0.1, canBet ? minBet : minRaise))}
+                                                disabled={!isPlayerTurn}
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="range"
+                                                min={canBet ? minBet : minRaise}
+                                                max={canBet ? maxBet : maxRaise}
+                                                step={0.1}
+                                                value={raiseAmount}
+                                                onChange={e => handleRaiseChange(Number(e.target.value))}
+                                                className="flex-1 accent-[#64ffda]"
+                                                disabled={!isPlayerTurn}
+                                            />
+                                            <button
+                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                                py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
+                                                transition-all duration-200"
+                                                onClick={() => handleRaiseChange(Math.min(raiseAmount + 0.1, canBet ? maxBet : maxRaise))}
+                                                disabled={!isPlayerTurn}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+
+                                        {/* Additional Options */}
+                                        <div className="flex justify-between gap-2 mb-1">
+                                            <button
+                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
+                                                transition-all duration-200 text-xs transform hover:scale-105"
+                                                onClick={() => setRaiseAmount(Math.max(totalPot / 4, canBet ? minBet : minRaise))}
+                                                disabled={!isPlayerTurn}
+                                            >
+                                                1/4 Pot
+                                            </button>
+                                            <button
+                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
+                                                transition-all duration-200 text-xs transform hover:scale-105"
+                                                onClick={() => setRaiseAmount(Math.max(totalPot / 2, canBet ? minBet : minRaise))}
+                                                disabled={!isPlayerTurn}
+                                            >
+                                                1/2 Pot
+                                            </button>
+                                            <button
+                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
+                                                transition-all duration-200 text-xs transform hover:scale-105"
+                                                onClick={() => setRaiseAmount(Math.max((totalPot / 4) * 3, canBet ? minBet : minRaise))}
+                                                disabled={!isPlayerTurn}
+                                            >
+                                                3/4 Pot
+                                            </button>
+                                            <button
+                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
+                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
+                                                transition-all duration-200 text-xs transform hover:scale-105"
+                                                onClick={() => setRaiseAmount(Math.max(totalPot, canBet ? minBet : minRaise))}
+                                                disabled={!isPlayerTurn}
+                                            >
+                                                Pot
+                                            </button>
+                                            <button
+                                                className="bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+                                                px-2 py-1.5 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+                                                transition-all duration-200 text-xs font-medium transform hover:scale-105"
+                                                onClick={() => setRaiseAmount(canBet ? maxBet : maxRaise)}
+                                                disabled={!isPlayerTurn}
+                                            >
+                                                ALL-IN
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </>
-                        )}
+                        ) : null}
                     </>
-                ) : null}
+                )}
             </div>
         </div>
     );
