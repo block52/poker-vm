@@ -14,7 +14,7 @@ class BetAction extends BaseAction {
         const sumBets = this.getSumBets(player.address);
         
         // Add debug logging to help diagnose the issue
-        console.log(`BetAction verify - Player: ${player.address}, largestBet: ${largestBet}, sumBets: ${sumBets}, round: ${this.game.currentRound}`);
+        // console.log(`BetAction verify - Player: ${player.address}, largestBet: ${largestBet}, sumBets: ${sumBets}, round: ${this.game.currentRound}`);
 
         // Fix the condition to properly handle round transitions
         // Only check this if there are actual bets in the current round
