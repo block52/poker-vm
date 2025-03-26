@@ -422,8 +422,19 @@ class TexasHoldemGame implements IPoker {
         const player = this.getPlayer(address);
         const nextToAct = this.getNextPlayerToAct();
         
-        // If it's not this player's turn, they shouldn't have any legal actions
+        // Check if player is active
+        const isActive = player.status === PlayerStatus.ACTIVE;
+        
+        // If it's not this player's turn, they can only fold if they are active
         if (nextToAct && nextToAct.address !== player.address) {
+            // Even if it's not their turn, active players can fold
+            if (isActive) {
+                return [{
+                    action: PlayerActionType.FOLD,
+                    min: "0",
+                    max: "0"
+                }];
+            }
             return [];
         }
 
@@ -493,7 +504,12 @@ class TexasHoldemGame implements IPoker {
 
         const player = this.getPlayer(address);
         const nextToAct = this.getNextPlayerToAct();
-        if (nextToAct !== player) {
+        
+        // Allow folding even if it's not the player's turn
+        if (action === PlayerActionType.FOLD) {
+            // No status checks - allow any player to fold
+        } else if (nextToAct !== player) {
+            // For all other actions, it must be the player's turn
             throw new Error("Not player's turn.");
         }
 
@@ -530,7 +546,7 @@ class TexasHoldemGame implements IPoker {
                 }
                 break;
             case PlayerActionType.FOLD:
-                player.updateStatus(PlayerStatus.FOLDED);
+                // Don't update player status before executing fold
                 const fold = new FoldAction(this, this._update).execute(player);
                 break;
             case PlayerActionType.CHECK:
