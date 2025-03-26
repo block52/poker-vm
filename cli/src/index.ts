@@ -588,8 +588,6 @@ type ActionChoice = {
 
 const getLegalActions = async (tableAddress: string, address: string): Promise<ActionChoice[]> => {
     const actions: ActionChoice[] = [];
-    actions.push({ action: "Exit", value: "exit" });
-
     const client = getClient();
     const state = await client.getGameState(tableAddress);
 
@@ -640,6 +638,7 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
         const actions = await getLegalActions(tableAddress, address);
         actions.push({ action: "Refresh", value: "refresh" });
         actions.push({ action: "Leave", value: "leave_game" });
+        actions.push({ action: "Exit", value: "exit" });
 
         const { action } = await inquirer.prompt([
             {
