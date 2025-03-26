@@ -198,9 +198,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(({ left, top, index }) =>
         const bigBlindPosition = localTableData?.data?.bigBlindPosition;
         const dealerPosition = localTableData?.data?.dealer;
         
-        if (index === dealerPosition) return "Dealer (D)";
-        if (index === smallBlindPosition) return "Small Blind (SB)";
-        if (index === bigBlindPosition) return "Big Blind (BB)";
+        // if (index === dealerPosition) return "Dealer (D)";
+        // if (index === smallBlindPosition) return "Small Blind (SB)";
+        // if (index === bigBlindPosition) return "Big Blind (BB)";
         return "";
     };
 
