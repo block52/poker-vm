@@ -860,11 +860,15 @@ class TexasHoldemGame implements IPoker {
 
         const pot: bigint = this.getPot();
         const winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
+        
+        // Convert winningHands.length to BigInt to avoid type mismatch
+        const winnersCount = BigInt(winningHands.length);
 
         for (const player of active) {
             if (winningHands.includes(hands.get(player.id))) {
-                player.chips += pot / winningHands.length;
-                this._winners.set(player.id, pot / winningHands.length);
+                // Use BigInt division with the converted count
+                player.chips += pot / winnersCount;
+                this._winners.set(player.id, pot / winnersCount);
             }
         }
 
