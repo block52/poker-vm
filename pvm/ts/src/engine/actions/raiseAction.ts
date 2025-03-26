@@ -26,6 +26,32 @@ class RaiseAction extends BaseAction implements IAction {
         return { minAmount: minAmount, maxAmount: player.chips };
     }
 
+    execute(player: Player, amount: bigint): void {
+        // First verify the action
+        const range = this.verify(player);
+        
+        // Check if the amount is valid
+        if (!range) throw new Error("Invalid raise action.");
+        if (amount < range.minAmount) throw new Error(`Raise amount ${amount} is less than minimum ${range.minAmount}.`);
+        if (amount > range.maxAmount) throw new Error(`Raise amount ${amount} is more than maximum ${range.maxAmount}.`);
+        
+        // Calculate how much more the player needs to add to the pot
+        const currentBet = this.getSumBets(player.address);
+        const toAdd = amount - currentBet;
+        
+        // Ensure player has enough chips
+        if (toAdd > player.chips) {
+            throw new Error(`Player only has ${player.chips} chips, cannot deduct ${toAdd}.`);
+        }
+        
+        // Deduct from player's stack directly
+        player.chips -= toAdd;
+        
+        // Add the action to the game
+        const round = this.game.currentRound;
+        this.game.addAction({ playerId: player.address, action: PlayerActionType.RAISE, amount }, round);
+    }
+
     protected getDeductAmount(player: Player, amount: bigint): bigint {
         return player.chips < amount ? player.chips : amount;
     }

@@ -578,6 +578,10 @@ class TexasHoldemGame implements IPoker {
             case PlayerActionType.CALL:
                 const call = new CallAction(this, this._update).execute(player);
                 break;
+            case PlayerActionType.RAISE:
+                if (!amount) throw new Error("Amount must be provided for raise.");
+                const raise = new RaiseAction(this, this._update).execute(player, amount);
+                break;
             default:
                 // do we need to roll back last acted seat?
                 throw new Error("Invalid action.");
