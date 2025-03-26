@@ -393,10 +393,17 @@ const PokerActionPanel: React.FC = () => {
         p.status !== 'folded' && p.status !== 'sitting-out');
     const gameInProgress = activePlayers && activePlayers.length > 1;
 
-    // Only show action buttons if it's the player's turn, they have legal actions, the game is in progress,
-    // AND there's no big blind or small blind to post (prioritize blind posting)
-    const showActionButtons = isPlayerTurn && hasLegalActions && gameInProgress && 
-        !shouldShowBigBlindButton && !shouldShowSmallBlindButton;
+    // Always show fold button regardless of other conditions if the player has legal actions
+    const canFoldAnytime = playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD) && 
+                           userPlayer?.status !== "folded";
+
+    // Only show other action buttons if it's the player's turn, they have legal actions, 
+    // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
+    const showActionButtons = isPlayerTurn && hasLegalActions && gameInProgress;
+
+    // Show blinds buttons when needed
+    const showSmallBlindButton = shouldShowSmallBlindButton;
+    const showBigBlindButton = shouldShowBigBlindButton;
 
     // Add this function to handle big blind posting
     const emergencyPostBigBlind = () => {
@@ -482,13 +489,13 @@ const PokerActionPanel: React.FC = () => {
                 )}
 
                 {/* Player Action Buttons Container */}
-                <div className="flex justify-center items-center">
-                    {shouldShowSmallBlindButton && (
+                <div className="flex justify-center items-center gap-2">
+                    {showSmallBlindButton && userPlayer?.status !== "folded" && (
                         <button
                             onClick={handlePostSmallBlind}
                             className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
                             text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
-                            border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105"
+                            border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
                         >
                             <span className="mr-1">Post Small Blind</span>
                             <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
@@ -497,12 +504,12 @@ const PokerActionPanel: React.FC = () => {
                         </button>
                     )}
 
-                    {shouldShowBigBlindButton && (
+                    {showBigBlindButton && userPlayer?.status !== "folded" && (
                         <button
                             onClick={handlePostBigBlind}
                             className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
                             text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
-                            border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105"
+                            border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
                         >
                             <span className="mr-1">Post Big Blind</span>
                             <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
@@ -510,22 +517,31 @@ const PokerActionPanel: React.FC = () => {
                             </span>
                         </button>
                     )}
+                    
+                    {/* Only show fold button if player hasn't folded yet */}
+                    {canFoldAnytime && userPlayer?.status !== "folded" && (
+                        <button
+                            className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
+                            px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
+                            transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
+                            onClick={handleFold}
+                        >
+                            FOLD
+                        </button>
+                    )}
+                    
+                    {/* Show a message if the player has folded */}
+                    {userPlayer?.status === "folded" && (
+                        <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">
+                            You have folded this hand
+                        </div>
+                    )}
                 </div>
 
-                {/* Only show action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
-                {showActionButtons ? (
+                {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
+                {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
                     <>
                         <div className="flex justify-between gap-2">
-                            {canFold && (
-                                <button
-                                    className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
-                                    px-4 py-2 rounded-lg w-full border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
-                                    transition-all duration-200 font-medium transform hover:scale-105"
-                                    onClick={handleFold}
-                                >
-                                    FOLD
-                                </button>
-                            )}
                             {canCheck && (
                                 <button
                                     className="cursor-pointer bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] hover:from-[#1e40af] hover:to-[#2563eb]
