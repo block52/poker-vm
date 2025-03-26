@@ -639,6 +639,7 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
         // todo: call node to get legal actions
         const actions = await getLegalActions(tableAddress, address);
         actions.push({ action: "Refresh", value: "refresh" });
+        actions.push({ action: "Leave", value: "leave_game" });
 
         const { action } = await inquirer.prompt([
             {
@@ -688,6 +689,11 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
             case "all-in":
                 console.log(chalk.green("Going all-in..."));
                 break;
+            case "leave_game":
+                console.log(chalk.green("Leaving game..."));
+                await leave(tableAddress);
+                continueSession = false;
+                break;
             case "refresh":
                 // Will refresh game state anyway
                 console.log(chalk.green("Refreshing game state..."));
@@ -716,8 +722,9 @@ const leave = async (tableAddress: string): Promise<string> => {
     
     const stack = BigInt(player.stack);
     const response = await rpcClient.playerLeave(tableAddress, stack, nonce);
+    console.log(chalk.green("Leave response:"), response);
     
-    return response.hash;
+    return response?.hash;
 };
 
 interactiveAction();
