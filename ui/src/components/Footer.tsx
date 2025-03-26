@@ -41,10 +41,20 @@ const PokerActionPanel: React.FC = () => {
     const [isRaiseAction, setIsRaiseAction] = useState(false);
     const [balance, setBalance] = useState(0);
 
+    // Debugging for fold button
+    // console.log("=== FOOTER COMPONENT DEBUG ===");
+    // console.log("Player legal actions:", playerLegalActions);
+    // console.log("Is player turn:", isPlayerTurn);
+    
     // Get user's seat from localStorage or tableData
     const userAddress = localStorage.getItem("user_eth_public_key")
     const userPlayer = tableData?.data?.players?.find((player: any) => player.address?.toLowerCase() === userAddress?.toLowerCase());
     const userSeat = userPlayer?.seat;
+    // console.log("User player:", userPlayer);
+    
+    // Check if fold action exists in legal actions
+    const hasFoldAction = playerLegalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
+    // console.log("Has fold action:", hasFoldAction);
     
     // Check if current user has the deal action
     const currentUserCanDeal = userPlayer?.legalActions?.some((action: any) => action.action === "deal") || false;
@@ -394,8 +404,16 @@ const PokerActionPanel: React.FC = () => {
     const gameInProgress = activePlayers && activePlayers.length > 1;
 
     // Always show fold button regardless of other conditions if the player has legal actions
-    const canFoldAnytime = playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD) && 
-                           userPlayer?.status !== "folded";
+    const canFoldAnytime = playerLegalActions?.some((a: any) => 
+      a.action === PlayerActionType.FOLD || a.action === "fold"
+    ) && userPlayer?.status !== "folded";
+    
+    console.log("canFoldAnytime calculation:", {
+      playerLegalActions,
+      hasFoldAction: playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold"),
+      playerNotFolded: userPlayer?.status !== "folded",
+      result: canFoldAnytime
+    });
 
     // Only show other action buttons if it's the player's turn, they have legal actions, 
     // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
@@ -519,7 +537,7 @@ const PokerActionPanel: React.FC = () => {
                     )}
                     
                     {/* Only show fold button if player hasn't folded yet */}
-                    {canFoldAnytime && userPlayer?.status !== "folded" && (
+                    {canFoldAnytime && (
                         <button
                             className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
                             px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md

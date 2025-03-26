@@ -25,8 +25,19 @@ export const getPlayersLegalActions = (tableData: any, playerAddress?: string): 
         return null;
     }
     
-    // console.log("Found player legal actions:", player.legalActions);
-    return player.legalActions || [];
+    // Check if the player is active and not already folded
+    const isPlayerActive = player.status === "active" || player.status === undefined;
+    
+    // Start with the player's existing legal actions
+    let actions = player.legalActions || [];
+    
+    // Ensure fold action is available for all active players
+    if (isPlayerActive && !actions.some((a: any) => a.action === "fold")) {
+        // Add fold as a legal action if it's not already there
+        actions = [...actions, { action: "fold", min: "0", max: "0" }];
+    }
+    
+    return actions;
 };
 
 /**

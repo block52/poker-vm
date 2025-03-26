@@ -355,9 +355,23 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (tableData && tableData.data) {
       const userAddress = localStorage.getItem('user_eth_public_key');
+      console.log("=== TABLE CONTEXT DEBUG ===");
+      console.log("User address from localStorage:", userAddress);
+      console.log("Next to act seat:", tableData.data.nextToAct);
+      
+      const currentPlayer = tableData.data.players?.find((p: any) => 
+        p.address?.toLowerCase() === userAddress?.toLowerCase()
+      );
+      console.log("Current player data:", currentPlayer);
+      
       if (userAddress) {
-        setPlayerLegalActions(getPlayersLegalActions(tableData.data, userAddress));
-        setIsPlayerTurn(isPlayersTurn(tableData.data, userAddress));
+        const actions = getPlayersLegalActions(tableData.data, userAddress);
+        console.log("Legal actions from utility:", actions);
+        setPlayerLegalActions(actions);
+        
+        const isTurn = isPlayersTurn(tableData.data, userAddress);
+        console.log("Is player's turn:", isTurn);
+        setIsPlayerTurn(isTurn);
       } else {
         setPlayerLegalActions(null);
         setIsPlayerTurn(false);
