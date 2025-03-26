@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as React from "react";
 import { useTableContext } from "../context/TableContext";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PROXY_URL } from "../../config/constants";
 
 
 import axios from "axios";
@@ -235,8 +236,8 @@ const PokerActionPanel: React.FC = () => {
             console.log("Full API payload:", JSON.stringify(payload, null, 2));
 
             // Send the action to the backend
-            const proxyUrl = import.meta.env.VITE_PROXY_URL || "http://localhost:8080";
-            const response = await axios.post(`${proxyUrl}/table/${tableId}/playeraction`, payload);
+    
+            const response = await axios.post(`${PROXY_URL}/table/${tableId}/playeraction`, payload);
 
             console.log("Player action response:", response.data);
 
