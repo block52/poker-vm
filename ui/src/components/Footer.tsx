@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import * as React from "react";
 import { useTableContext } from "../context/TableContext";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { PROXY_URL } from "../../config/constants";
+import { PROXY_URL } from "../config/constants";
 
 
 import axios from "axios";
