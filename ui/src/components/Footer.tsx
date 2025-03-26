@@ -268,26 +268,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleCheck = () => {
         console.log("Checking");
-        
-    
-        
-        // iisSmallBlindInPreflop) 
-            console.log("Small blind player in preflop - converting check to call");
-            // Calculate the difference between big blind and small blind
-            const smallBlindAmount = tableData?.data?.smallBlind || "0";
-            const bigBlindAmount = tableData?.data?.bigBlind || "0";
-            
-            // Calculate difference to call (big blind - small blind)
-            const diffAmount = BigInt(bigBlindAmount) - BigInt(smallBlindAmount);
-            
-            console.log("Calling with difference amount:", diffAmount.toString());
-            handleSetPlayerAction(PlayerActionType.CALL, diffAmount.toString());
-        //  else 
-        //     // Regular check action
-        //     setPlayerAction(PlayerActionType.CHECK, "100000000000000000");
-        //     // waht shoudl we say here?
-        //     console.log("You can't check here");
-        // }
+        handleSetPlayerAction(PlayerActionType.CHECK, "0");
     };
 
     const handleCall = () => {
