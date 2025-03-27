@@ -867,8 +867,9 @@ class TexasHoldemGame implements IPoker {
         for (const player of active) {
             if (winningHands.includes(hands.get(player.id))) {
                 // Use BigInt division with the converted count
-                player.chips += pot / winnersCount;
-                this._winners.set(player.id, pot / winnersCount);
+                const winAmount = pot / winnersCount;
+                player.chips += winAmount;
+                this._winners.set(player.address, winAmount);
             }
         }
 
@@ -1130,11 +1131,25 @@ class TexasHoldemGame implements IPoker {
 
         const nextPlayerToAct = this.findNextPlayerToAct();
         const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
-        // Iterate through each previous round and get each turn / action
-
-
+        
         const previousActions: ActionDTO[] = this.getActionDTOs();
         const winners: WinnerDTO[] = [];
+        
+        // If we're in showdown and winners haven't been calculated yet, calculate them now
+        if (this._currentRound === TexasHoldemRound.SHOWDOWN && (!this._winners || this._winners.size === 0)) {
+            this.calculateWinner();
+        }
+        
+        // Populate winners array from _winners Map if in showdown
+        if (this._currentRound === TexasHoldemRound.SHOWDOWN && this._winners) {
+            for (const [address, amount] of this._winners.entries()) {
+                winners.push({
+                    address: address,
+                    amount: Number(amount)
+                });
+            }
+        }
+        
         const pot = this.getPot();
 
         const deckAsString = this._deck.toString();
