@@ -136,7 +136,8 @@ const Table = () => {
         openTwoMore,
         showThreeCards,
         getUserBySeat,
-        currentUserSeat
+        currentUserSeat,
+        leave
     } = useTableContext();
 
     // Keep the existing variable
@@ -355,8 +356,17 @@ const Table = () => {
             return;
         }
         
-        // If they've folded or aren't in the game, allow navigation
-        navigate("/");
+        // If they've folded or aren't in the game, call leave function and then navigate
+        if (currentUserPlayer) {
+            leave(); // Call the leave function from TableContext
+            // Small delay to allow leave action to be processed
+            setTimeout(() => {
+                navigate("/");
+            }, 500);
+        } else {
+            // If not in game at all, just navigate
+            navigate("/");
+        }
     };
 
     // Add this helper function for copying to clipboard
