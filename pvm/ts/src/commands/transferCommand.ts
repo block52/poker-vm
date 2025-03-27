@@ -26,7 +26,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         const fromAccount = accountResponse.data;
         console.log(`Account balance for ${this.from}: ${fromAccount.balance}`);
 
-        if (this.amount > fromAccount.balance) {
+        if (this.amount > fromAccount.balance && !await this.isGameTransaction(this.from)) {
             console.log(`Insufficient balance: required=${this.amount}, available=${fromAccount.balance}`);
             throw new Error("Insufficient balance");
         }
@@ -123,8 +123,8 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 console.log(`Game object created, processing action: ${this.data}`);
                 
                 // Assume player is leaving the game
-                console.log(`Player ${this.from} leaving game...`);
-                const stack = game.leave(this.from);
+                console.log(`Player ${this.to} leaving game...`);
+                const stack = game.leave(this.to);
                 if (stack !== this.amount) {
                     throw new Error("Leave amount doesn't match player's stack");
                 }
@@ -155,8 +155,12 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
 
     private async isGameTransaction(address: string): Promise<Boolean> {
         console.log(`Checking if ${address} is a game transaction...`);
-        const existingContractSchema = await contractSchemas.find({ address: address });
+        const existingContractSchema = await contractSchemas.findOne({ address: address });
+
         console.log(`Contract schema found:`, existingContractSchema);
-        return existingContractSchema !== undefined;
+        const found: Boolean = existingContractSchema !== null;
+
+        console.log(`Is game transaction: ${found}`);
+        return found;
     }
 }
