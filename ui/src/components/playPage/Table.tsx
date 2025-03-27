@@ -606,7 +606,7 @@ const Table = () => {
                                                     src={block52Logo}
                                                     alt="Block52 Logo"
                                                     style={{
-                                                        width: "400px", // You can tweak this — it's now relative to the table
+                                                        width: "300px", // You can tweak this — it's now relative to the table
                                                         opacity: 0.3,
                                                         objectFit: "contain"
                                                     }}
