@@ -340,6 +340,22 @@ const Table = () => {
     };
 
     const onGoToDashboard = () => {
+        // Find the current user's player data
+        const currentUserPlayer = tableDataValues.tableDataPlayers?.find(
+            (p: any) => p.address?.toLowerCase() === userWalletAddress
+        );
+        
+        // Check if the player exists and has not folded
+        if (currentUserPlayer && 
+            currentUserPlayer.status !== "folded" && 
+            currentUserPlayer.status !== "sitting-out") {
+            
+            // Alert the user they need to fold first
+            alert("You must fold your hand before leaving the table.");
+            return;
+        }
+        
+        // If they've folded or aren't in the game, allow navigation
         navigate("/");
     };
 
