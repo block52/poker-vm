@@ -10,6 +10,7 @@ import Player from "./Players/Player";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
+import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
 import { useNavigate, useParams } from "react-router-dom";
@@ -121,7 +122,6 @@ const useTableData = () => {
 
 // Helper function to format Wei to USD with commas
 
-
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const {
@@ -216,7 +216,6 @@ const Table = () => {
 
     const [dealerButtonPosition, setDealerButtonPosition] = useState({ left: "0px", top: "0px" });
     const [isDealerButtonVisible, setIsDealerButtonVisible] = useState(false);
-
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -396,10 +395,16 @@ const Table = () => {
 
                     {/* Left Section - Lobby button */}
                     <div className="flex items-center space-x-3 z-10">
-                        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#64ffda] transition-all duration-300" onClick={() => navigate("/")}>
+                        <div
+                            className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#64ffda] transition-all duration-300"
+                            onClick={() => navigate("/")}
+                        >
                             <IoMenuSharp size={20} className="text-[#64ffda]" />
                         </div>
-                        <span className="text-white font-medium text-[20px] cursor-pointer hover:text-[#64ffda] transition-colors duration-300" onClick={() => navigate("/")}>
+                        <span
+                            className="text-white font-medium text-[20px] cursor-pointer hover:text-[#64ffda] transition-colors duration-300"
+                            onClick={() => navigate("/")}
+                        >
                             Lobby
                         </span>
                     </div>
@@ -424,7 +429,9 @@ const Table = () => {
                                     <div className="flex items-center gap-1 text-gray-300">
                                         <span className="opacity-75 text-[11px]">Account:</span>
                                         <span className="font-mono text-[10px] text-[#64ffda]">
-                                            {`${localStorage.getItem("user_eth_public_key")?.slice(0, 6)}...${localStorage.getItem("user_eth_public_key")?.slice(-4)}`}
+                                            {`${localStorage.getItem("user_eth_public_key")?.slice(0, 6)}...${localStorage
+                                                .getItem("user_eth_public_key")
+                                                ?.slice(-4)}`}
                                         </span>
                                         <FaCopy
                                             className="ml-1 cursor-pointer text-gray-400 hover:text-[#64ffda] transition-colors duration-200"
@@ -460,7 +467,8 @@ const Table = () => {
                     <div
                         className="absolute inset-0 z-0 opacity-30"
                         style={{
-                            backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
+                            backgroundImage:
+                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
                             backgroundSize: "200% 100%",
                             animation: "shimmer 3s infinite linear"
                         }}
@@ -523,7 +531,8 @@ const Table = () => {
                         <div
                             className="absolute inset-0 z-0 opacity-30"
                             style={{
-                                backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
+                                backgroundImage:
+                                    "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
                                 backgroundSize: "200% 100%",
                                 animation: "shimmer 3s infinite linear"
                             }}
@@ -565,7 +574,8 @@ const Table = () => {
                             }}
                         />
 
-                        <div className="zoom-wrapper"
+                        <div
+                            className="zoom-wrapper"
                             style={{
                                 position: "absolute",
                                 top: "50%",
@@ -576,49 +586,94 @@ const Table = () => {
                                 height: "850px",
                                 maxWidth: "100vw",
                                 maxHeight: "calc(100vh - 180px)", // leave room for header/footer
-                                overflow: "visible", // ensure nothing is cut off
-                            }}>
+                                overflow: "visible" // ensure nothing is cut off
+                            }}
+                        >
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
                                 <div className="w-[900px] h-[450px] relative text-center block transform translate-y-[30px]">
                                     <div className="h-full flex align-center justify-center">
-                                        <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-5 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center shadow-[0_7px_15px_rgba(0,0,0,0.6)]">
+                                        <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center shadow-[0_7px_15px_rgba(0,0,0,0.6)]">
                                             {/* //! Table */}
-                                            <div className="px-4 h-[25px] rounded-full bg-[#00000054] flex align-center justify-center">
-                                                <span className="text-[#dbd3d3] mr-2">
-                                                    Total Pot:{" "}
-                                                    {tableDataValues.tableDataPots?.[0] === "0"
-                                                        ? "0.00"
-                                                        : tableDataValues.tableDataPots
-                                                            ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
-                                                            .toFixed(2)}
-                                                </span>
+                                            <div
+                                                className="absolute z-0 pointer-events-none"
+                                                style={{
+                                                    bottom: "15px", // Inside the table bounds
+                                                    left: "50%",
+                                                    transform: "translate(-50%, 30%)"
+                                                }}
+                                            >
+                                                <img
+                                                    src={placeholderLogo}
+                                                    alt="Placeholder Logo"
+                                                    style={{
+                                                        width: "300px", // You can tweak this — it's now relative to the table
+                                                        opacity: 0.3,
+                                                        objectFit: "contain"
+                                                    }}
+                                                />
                                             </div>
-                                            <div className="px-4 h-[21px] rounded-full bg-[#00000054] flex align-center justify-center mt-2">
-                                                <span className="text-[#dbd3d3] mr-2">
-                                                    Main Pot:{" "}
-                                                    {tableDataValues.tableDataPots?.[0] === "0"
-                                                        ? "0.00"
-                                                        : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2)}
-                                                </span>
+                                            <div className="flex flex-col items-center justify-center -mt-20">
+                                                <div
+                                                    style={{
+                                                        fontSize: "15px",
+                                                        backgroundColor: "rgba(0,0,0,0.25)",
+                                                        borderRadius: "9999px",
+                                                        color: "rgb(255, 255, 255)",
+                                                        padding: "3px 8px"
+                                                    }}
+                                                >
+                                                    Total Pot:
+                                                    <span style={{ fontWeight: "700px" }}>
+                                                        {" "}
+                                                        {tableDataValues.tableDataPots?.[0] === "0"
+                                                            ? "0.00"
+                                                            : tableDataValues.tableDataPots
+                                                                  ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
+                                                                  .toFixed(2)}
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    style={{
+                                                        fontSize: "13px",
+                                                        backgroundColor: "rgba(0,0,0,0.25)",
+                                                        borderRadius: "9999px",
+                                                        color: "rgb(255, 255, 255)",
+                                                        padding: "3px 8px",
+                                                        marginTop: "4px"
+                                                    }}
+                                                >
+                                                    Main Pot:
+                                                    <span style={{ fontWeight: "700px" }}>
+                                                        {" "}
+                                                        {tableDataValues.tableDataPots?.[0] === "0"
+                                                            ? "0.00"
+                                                            : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2)}
+                                                    </span>
+                                                </div>
+                                                <div className="flex gap-2 mt-8">
+                                                    {tableDataValues.tableDataRound === "preflop"
+                                                        ? // Show face-down cards in preflop
+                                                          Array(5)
+                                                              .fill(null)
+                                                              .map((_, index) => (
+                                                                  <div
+                                                                      key={index}
+                                                                      className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
+                                                                  />
+                                                              ))
+                                                        : // Show actual cards for other rounds
+                                                          (tableDataValues.tableDataCommunityCards || []).map((card: any, index: number) => (
+                                                              <div key={index} className="card animate-fall">
+                                                                  <OppositePlayerCards
+                                                                      frontSrc={`/cards/${card}.svg`}
+                                                                      backSrc="/cards/Back.svg"
+                                                                      flipped={true}
+                                                                  />
+                                                              </div>
+                                                          ))}
+                                                </div>
                                             </div>
-                                            <div className="flex gap-2 mt-8">
-                                                {tableDataValues.tableDataRound === "preflop"
-                                                    ? // Show face-down cards in preflop
-                                                    Array(5)
-                                                        .fill(null)
-                                                        .map((_, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
-                                                            />
-                                                        ))
-                                                    : // Show actual cards for other rounds
-                                                    (tableDataValues.tableDataCommunityCards || []).map((card: any, index: number) => (
-                                                        <div key={index} className="card animate-fall">
-                                                            <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped={true} />
-                                                        </div>
-                                                    ))}
-                                            </div>
+
                                             {/*//! CHIP */}
                                             {/* {chipPositionArray.map((position, index) => (
                                                 <div
@@ -669,9 +724,7 @@ const Table = () => {
                                                 <VacantPlayer index={positionIndex} left={position.left} top={position.top} />
                                             ) : isCurrentUser ? (
                                                 // This is the current user's position - use Player component
-                                                <Player
-                                                    {...componentProps}
-                                                />
+                                                <Player {...componentProps} />
                                             ) : (
                                                 // This is another player's position - use OppositePlayer component
                                                 <OppositePlayer
@@ -714,7 +767,6 @@ const Table = () => {
                                             D
                                         </div>
                                     )}
-
                                 </div>
                             </div>
                         </div>
@@ -730,8 +782,9 @@ const Table = () => {
                 </div>
                 {/*//! SIDEBAR */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${openSidebar ? "w-[300px]" : "w-0"
-                        }`}
+                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
+                        openSidebar ? "w-[300px]" : "w-0"
+                    }`}
                     style={{
                         boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
                     }}
