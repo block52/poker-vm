@@ -136,7 +136,8 @@ const Table = () => {
         openTwoMore,
         showThreeCards,
         getUserBySeat,
-        currentUserSeat
+        currentUserSeat,
+        leave
     } = useTableContext();
 
     // Keep the existing variable
@@ -339,7 +340,32 @@ const Table = () => {
     };
 
     const onGoToDashboard = () => {
-        navigate("/");
+        // Find the current user's player data
+        const currentUserPlayer = tableDataValues.tableDataPlayers?.find(
+            (p: any) => p.address?.toLowerCase() === userWalletAddress
+        );
+        
+        // Check if the player exists and has not folded
+        if (currentUserPlayer && 
+            currentUserPlayer.status !== "folded" && 
+            currentUserPlayer.status !== "sitting-out") {
+            
+            // Alert the user they need to fold first
+            alert("You must fold your hand before leaving the table.");
+            return;
+        }
+        
+        // If they've folded or aren't in the game, call leave function and then navigate
+        if (currentUserPlayer) {
+            leave(); // Call the leave function from TableContext
+            // Small delay to allow leave action to be processed
+            setTimeout(() => {
+                navigate("/");
+            }, 500);
+        } else {
+            // If not in game at all, just navigate
+            navigate("/");
+        }
     };
 
     // Add this helper function for copying to clipboard

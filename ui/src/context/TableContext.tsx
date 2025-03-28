@@ -52,6 +52,7 @@ interface TableContextType {
   call: () => void;
   raise: (amount: number) => void;
   bet: (amount: number) => void;
+  leave: () => void;
   setPlayerAction: (action: PlayerActionType, amount?: number) => void;
   // New user data by seat
   getUserBySeat: (seat: number) => any;
@@ -459,19 +460,42 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [tableId, nonce, performAction]);
 
-  const setPlayerAction = useCallback((action: PlayerActionType, amount?: number) => {
-    if (action === PlayerActionType.FOLD) {
-      fold();
-    } else if (action === PlayerActionType.CHECK) {
-      check();
-    } else if (action === PlayerActionType.CALL) {
-      call();
-    } else if (action === PlayerActionType.RAISE && amount !== undefined) {
-      raise(amount);
-    } else if (action === PlayerActionType.BET && amount !== undefined) {
-      bet(amount);
+  const leave = useCallback(() => {
+    if (tableId && nonce !== null) {
+      // Get the current player's stack amount
+      if (currentUserSeat >= 0 && tableData?.data?.players) {
+        const playerStack = tableData.data.players[currentUserSeat]?.stack || "0";
+        performAction(tableId, PlayerActionType.LEAVE, playerStack, nonce);
+      }
     }
-  }, [fold, check, call, raise, bet]);
+  }, [tableId, nonce, performAction, currentUserSeat, tableData]);
+
+  const setPlayerAction = useCallback((action: PlayerActionType, amount?: number) => {
+    switch (action) {
+      case PlayerActionType.FOLD:
+        fold();
+        break;
+      case PlayerActionType.CHECK:
+        check();
+        break;
+      case PlayerActionType.CALL:
+        call();
+        break;
+      case PlayerActionType.RAISE:
+        if (amount !== undefined) {
+          raise(amount);
+        }
+        break;
+      case PlayerActionType.BET:
+        if (amount !== undefined) {
+          bet(amount);
+        }
+        break;
+      case PlayerActionType.LEAVE:
+        leave();
+        break;
+    }
+  }, [fold, check, call, raise, bet, leave]);
 
   // Update table type and round info when table data changes
   useEffect(() => {
@@ -539,6 +563,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       call,
       raise,
       bet,
+      leave,
       setPlayerAction,
       // New user data functionality
       getUserBySeat,
