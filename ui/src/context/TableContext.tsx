@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from '../config/constants';
 import { getPublicKey, isUserPlaying } from '../utils/accountUtils';
-import { whoIsNextToAct, getCurrentRound, getTotalPot, getPositionName } from '../utils/tableUtils';
+import { whoIsNextToAct, getCurrentRound, getTotalPot, getPositionName, getWinnerInfo } from '../utils/tableUtils';
 import { getPlayersLegalActions, isPlayersTurn } from '../utils/playerUtils';
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet";  // this is the browser wallet todo rename to useBrowserWallet
@@ -58,6 +58,12 @@ interface TableContextType {
   getUserBySeat: (seat: number) => any;
   currentUserSeat: number;
   userDataBySeat: Record<number, any>;
+  winnerInfo: {
+    seat: number;
+    address: string;
+    amount: string | number;
+    formattedAmount: string;
+  }[] | null;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -100,9 +106,20 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return address ? address.toLowerCase() : null;
   }, []);
 
-  // Calculate who is next to act whenever tableData changes
+  // Add state for winner information
+  const [winnerInfo, setWinnerInfo] = useState<any[] | null>(null);
+
+  // Calculate winner info whenever tableData changes
   useEffect(() => {
     if (tableData && tableData.data) {
+      // Get winner info if available
+      const winners = getWinnerInfo(tableData.data);
+      setWinnerInfo(winners);
+      
+      if (winners && winners.length > 0) {
+        console.log('🏆 Winners detected:', winners);
+      }
+      
       // Special case: if dealer position is 9, treat it as 0 for UI purposes
       if (tableData.data.dealer === 9) {
         tableData.data.dealer = 0;
@@ -568,7 +585,9 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // New user data functionality
       getUserBySeat,
       currentUserSeat,
-      userDataBySeat
+      userDataBySeat,
+      // Winner information
+      winnerInfo
     }}>
       {children}
     </TableContext.Provider>
