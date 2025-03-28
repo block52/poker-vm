@@ -10,7 +10,7 @@ import Player from "./Players/Player";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
-import block52Logo from "../../assets/YOUR_CLUB.png";
+import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
 import { useNavigate, useParams } from "react-router-dom";
@@ -603,8 +603,8 @@ const Table = () => {
                                                 }}
                                             >
                                                 <img
-                                                    src={block52Logo}
-                                                    alt="Block52 Logo"
+                                                    src={placeholderLogo}
+                                                    alt="Placeholder Logo"
                                                     style={{
                                                         width: "300px", // You can tweak this — it's now relative to the table
                                                         opacity: 0.3,
