@@ -123,7 +123,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({
                         )}
                         {isWinner && winnerAmount && (
                             <span className="text-white font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base">
-                                WINS: ${winnerAmount}
+                                WINS: {winnerAmount}
                             </span>
                         )}
                     </div>
