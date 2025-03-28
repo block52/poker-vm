@@ -471,18 +471,29 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [tableId, nonce, performAction, currentUserSeat, tableData]);
 
   const setPlayerAction = useCallback((action: PlayerActionType, amount?: number) => {
-    if (action === PlayerActionType.FOLD) {
-      fold();
-    } else if (action === PlayerActionType.CHECK) {
-      check();
-    } else if (action === PlayerActionType.CALL) {
-      call();
-    } else if (action === PlayerActionType.RAISE && amount !== undefined) {
-      raise(amount);
-    } else if (action === PlayerActionType.BET && amount !== undefined) {
-      bet(amount);
-    } else if (action === PlayerActionType.LEAVE) {
-      leave();
+    switch (action) {
+      case PlayerActionType.FOLD:
+        fold();
+        break;
+      case PlayerActionType.CHECK:
+        check();
+        break;
+      case PlayerActionType.CALL:
+        call();
+        break;
+      case PlayerActionType.RAISE:
+        if (amount !== undefined) {
+          raise(amount);
+        }
+        break;
+      case PlayerActionType.BET:
+        if (amount !== undefined) {
+          bet(amount);
+        }
+        break;
+      case PlayerActionType.LEAVE:
+        leave();
+        break;
     }
   }, [fold, check, call, raise, bet, leave]);
 
