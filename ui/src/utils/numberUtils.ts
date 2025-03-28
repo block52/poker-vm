@@ -96,3 +96,17 @@ export const formatWeiToUSD = (weiAmount: string | number): string => {
         return "0.00";
     }
 };
+
+/**
+ * Formats a winning amount with appropriate styling
+ * @param amount The winning amount in ETH as a string
+ * @returns Formatted string for display
+ */
+export const formatWinningAmount = (amount: string): string => {
+  // Convert to a number and format it with commas
+  const numAmount = parseFloat(amount);
+  return numAmount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};

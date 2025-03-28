@@ -2,6 +2,9 @@
  * Utility functions for poker table operations
  */
 
+import { ethers } from "ethers";
+import { formatWinningAmount } from "./numberUtils";
+
 /**
  * Determines which player is next to act based on table data
  * @param tableData The current table state data
@@ -288,4 +291,40 @@ export const isPlayerTurnToPostBlind = (tableData: any, playerAddress: string, b
   // It's the player's turn to post a blind if they're in position, it's their turn, 
   // they haven't posted yet, and they have the legal action to do so
   return isInBlindPosition && isPlayerTurn && !alreadyPosted && canPostBlind;
+};
+
+/**
+ * Gets the winner information from the table data if available
+ * @param tableData The table data object
+ * @returns An object with winner information or null if no winner
+ */
+export const getWinnerInfo = (tableData: any) => {
+  if (!tableData || !tableData.winners || tableData.winners.length === 0) {
+    return null;
+  }
+
+  const winners = tableData.winners;
+  const result = [];
+
+  for (const winner of winners) {
+    // Find the player's seat from their address
+    const playerSeat = tableData.players.find(
+      (p: any) => p.address?.toLowerCase() === winner.address?.toLowerCase()
+    )?.seat;
+
+    if (playerSeat !== undefined) {
+      // Format the winning amount to a readable format (ETH to dollars)
+      const winAmount = Number(ethers.formatUnits(winner.amount.toString(), 18));
+      const formattedAmount = formatWinningAmount(winAmount.toString());
+
+      result.push({
+        seat: playerSeat,
+        address: winner.address,
+        amount: winner.amount,
+        formattedAmount
+      });
+    }
+  }
+
+  return result.length > 0 ? result : null;
 }; 

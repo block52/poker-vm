@@ -28,7 +28,7 @@ type PlayerProps = {
 };
 
 const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
-    const { tableData } = useTableContext();
+    const { tableData, winnerInfo } = useTableContext();
 
     debugLog("Player rendered with these props:", { left, top, index, color, status });
     
@@ -57,6 +57,18 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     // Get hole cards if available
     const holeCards = playerData.holeCards;
     
+    // Check if this player is a winner
+    const isWinner = React.useMemo(() => {
+        if (!winnerInfo) return false;
+        return winnerInfo.some(winner => winner.seat === index);
+    }, [winnerInfo, index]);
+
+    // Get winner amount if this player is a winner
+    const winnerAmount = React.useMemo(() => {
+        if (!isWinner || !winnerInfo) return null;
+        const winner = winnerInfo.find(w => w.seat === index);
+        return winner ? winner.formattedAmount : null;
+    }, [isWinner, winnerInfo, index]);
 
     return (
         <div
@@ -83,19 +95,24 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
             </div>
             <div className="relative flex flex-col justify-end mt-[-6px] mx-1s">
                 <div
-                    style={{ backgroundColor: "green" }}
-                    className={`b-[0%] mt-[auto] w-full h-[55px]  shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col`}
+                    style={{ backgroundColor: isWinner ? "#2c8a3c" : "green" }}
+                    className={`b-[0%] mt-[auto] w-full h-[55px]  shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${isWinner ? "animate-pulse" : ""}`}
                 >
-                    {/* <p className="text-white font-bold text-sm mt-auto mb-1.5 self-center">+100</p> */}
-                    <ProgressBar index={index} />
-                    {playerData.status === PlayerStatus.FOLDED && (
+                    {/* Progress bar is not shown in showdown */}
+                    {!isWinner && tableData?.data?.round !== "showdown" && <ProgressBar index={index} />}
+                    {!isWinner && playerData.status === PlayerStatus.FOLDED && (
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">FOLD</span>
                     )}
-                    {playerData.status === PlayerStatus.ALL_IN && (
+                    {!isWinner && playerData.status === PlayerStatus.ALL_IN && (
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">All In</span>
                     )}
+                    {isWinner && winnerAmount && (
+                        <span className="text-white font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base">
+                            WINS: ${winnerAmount}
+                        </span>
+                    )}
                 </div>
-                <div className="absolute top-[0%] w-full">
+                <div className="absolute top-[-10px] w-full">
                     <Badge count={index} value={stackValue} color={color} />
                 </div>
             </div>
