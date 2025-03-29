@@ -7,6 +7,7 @@ import { whoIsNextToAct, getCurrentRound, getTotalPot, getPositionName, getWinne
 import { getPlayersLegalActions, isPlayersTurn } from '../utils/playerUtils';
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet";  // this is the browser wallet todo rename to useBrowserWallet
+import { ethers } from "ethers";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -434,7 +435,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         nonce,
         gameAddress
       });
-      b52?.playerAction(gameAddress, action, amount ?? "", nonce);
+      // b52?.playerAction(gameAddress, action, amount ?? "", nonce);
       
       // Wait a moment for the action to be processed
       setTimeout(async () => {
@@ -477,15 +478,74 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [tableId, nonce, performAction]);
 
-  const leave = useCallback(() => {
+  const leave = useCallback(async () => {
     if (tableId && nonce !== null) {
       // Get the current player's stack amount
       if (currentUserSeat >= 0 && tableData?.data?.players) {
-        const playerStack = tableData.data.players[currentUserSeat]?.stack || "0";
-        performAction(tableId, PlayerActionType.LEAVE, playerStack, nonce);
+        try {
+          const playerStack = tableData.data.players[currentUserSeat]?.stack || "0";
+          console.log('🚪 Executing leave action with stack:', playerStack);
+          
+          // Add specific URL construction for leave action
+          const leaveUrl = `${PROXY_URL}/table/${tableId}/playeraction`;
+          console.log('🔄 Using endpoint:', leaveUrl);
+          
+          // Get wallet info
+          const publicKey = localStorage.getItem('user_eth_public_key');
+          const privateKey = localStorage.getItem('user_eth_private_key');
+          
+          if (!publicKey || !privateKey) {
+            throw new Error('Wallet keys not available');
+          }
+          
+          // Create wallet for signing
+          const wallet = new ethers.Wallet(privateKey);
+          const timestamp = Math.floor(Date.now() / 1000);
+          const messageToSign = `leave${playerStack}${tableId}${timestamp}`;
+          const signature = await wallet.signMessage(messageToSign);
+          
+          // Make direct API call
+          console.log('📤 Making direct API call to playeraction for leave');
+          const response = await axios.post(leaveUrl, {
+            userAddress: publicKey,
+            action: 'leave',
+            amount: playerStack,
+            signature,
+            publicKey,
+            timestamp,
+            nonce
+          });
+          
+          console.log('✅ Leave action successful:', response.data);
+          
+          // Refresh nonce after successful leave
+          setTimeout(async () => {
+            const address = localStorage.getItem('user_eth_public_key');
+            if (address) {
+              await refreshNonce(address);
+            }
+          }, 1000);
+          
+          return {
+            success: true,
+            result: response.data,
+            actionName: "LEAVE",
+            timestamp: new Date().toISOString(),
+            method: 'directApiCall'
+          };
+        } catch (error) {
+          console.error('❌ Error in leave action:', error);
+          throw error;
+        }
+      } else {
+        console.warn('⚠️ Cannot leave: Player not found at current seat or no table data');
+        return null;
       }
+    } else {
+      console.warn('⚠️ Cannot leave: Missing tableId or nonce');
+      return null;
     }
-  }, [tableId, nonce, performAction, currentUserSeat, tableData]);
+  }, [tableId, nonce, refreshNonce, currentUserSeat, tableData]);
 
   const setPlayerAction = useCallback((action: PlayerActionType, amount?: number) => {
     switch (action) {
