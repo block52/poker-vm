@@ -18,26 +18,33 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ id, label, left, top, color, on
     };
 
     return (
-        <div className="absolute w-64 h-56 ml-[-72px] mt-[45px] rounded-2xl shadow-lg bg-[#c0d6d9] flex flex-col items-center px-1 py-1 z-[15]"
+        <div
+            className="absolute w-64 h-56 ml-[-72px] mt-[45px] rounded-2xl shadow-lg bg-[#c0d6d9] flex flex-col items-center px-1 py-1 z-[15]"
             style={{
                 left: left,
                 top: top
-            }}>
+            }}
+        >
             {/* Header Section */}
             <div className="flex justify-between items-center w-full mb-2">
-                <div style={{ backgroundColor: color }} className={`flex items-center justify-center w-7 h-7 text-white text-sm font-bold rounded-full`}>
+                <div style={{ backgroundColor: color }} className={"flex items-center justify-center w-7 h-7 text-white text-sm font-bold rounded-full"}>
                     {id}
                 </div>
-                <button
-                    onClick={onClose}
-                    className="text-xl text-gray-700 hover:text-red-500 transition mr-2"
-                >
+                <button onClick={onClose} className="text-xl text-gray-700 hover:text-red-500 transition mr-2">
                     ✕
                 </button>
             </div>
             <div className="px-2 w-64">
                 {/* Label */}
-                <div className="font-bold text-lg text-black bg-white py-1 w-full mb-4 rounded-2xl cursor-pointer" onClick={() => { setStartIndex(id - 1); onClose() }}>{label}</div>
+                <div
+                    className="font-bold text-lg text-black bg-white py-1 w-full mb-4 rounded-2xl cursor-pointer"
+                    onClick={() => {
+                        setStartIndex(id - 1);
+                        onClose();
+                    }}
+                >
+                    {label}
+                </div>
 
                 {/* Note Input */}
                 <input

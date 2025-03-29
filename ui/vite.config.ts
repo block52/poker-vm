@@ -11,7 +11,7 @@ export default defineConfig({
     },
     plugins: [react()],
     build: {
-        outDir: 'build',
+        outDir: "build",
         rollupOptions: {
             output: {
                 manualChunks: undefined,
@@ -20,12 +20,12 @@ export default defineConfig({
         copyPublicDir: true,
     },
     server: {
-        host: 'localhost',
+        host: "localhost",
         port: 3002,
         strictPort: true,
         middlewareMode: false
     },
-    base: '/',
+    base: "/",
     preview: {
         port: 3002
     },

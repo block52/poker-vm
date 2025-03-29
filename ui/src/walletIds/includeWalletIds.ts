@@ -7,4 +7,4 @@ export const includeWalletIds = [
     "c03dfee351b6fcc421b4494ea33b9d4b92a984f87aa76d1663bb28705e95034a",
     "1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369",
     "225affb176778569276e484e1b92637ad061b01e13a048b35a9d280c3b58970f"
-]
+];

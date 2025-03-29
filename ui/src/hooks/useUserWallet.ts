@@ -30,7 +30,7 @@ const useUserWallet = (): UserWalletResult => {
         setError(null);
 
         try {
-            const url = PROXY_URL; 
+            const url = PROXY_URL;
             const response = await axios.get(`${url}/get_account/${account}`);
             // console.log("=== BALANCE RESPONSE ===", response.data);
             // console.log(response.data);
@@ -93,7 +93,7 @@ const useUserWallet = (): UserWalletResult => {
 
     useEffect(() => {
         if (privateKey) {
-            const url = PROXY_URL; 
+            const url = PROXY_URL;
             const client = new NodeRpcClient(url, privateKey);
             setClient(client);
         }

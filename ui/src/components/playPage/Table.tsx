@@ -341,20 +341,15 @@ const Table = () => {
 
     const onGoToDashboard = () => {
         // Find the current user's player data
-        const currentUserPlayer = tableDataValues.tableDataPlayers?.find(
-            (p: any) => p.address?.toLowerCase() === userWalletAddress
-        );
-        
+        const currentUserPlayer = tableDataValues.tableDataPlayers?.find((p: any) => p.address?.toLowerCase() === userWalletAddress);
+
         // Check if the player exists and has not folded
-        if (currentUserPlayer && 
-            currentUserPlayer.status !== "folded" && 
-            currentUserPlayer.status !== "sitting-out") {
-            
+        if (currentUserPlayer && currentUserPlayer.status !== "folded" && currentUserPlayer.status !== "sitting-out") {
             // Alert the user they need to fold first
             alert("You must fold your hand before leaving the table.");
             return;
         }
-        
+
         // If they've folded or aren't in the game, call leave function and then navigate
         if (currentUserPlayer) {
             leave(); // Call the leave function from TableContext
@@ -546,7 +541,7 @@ const Table = () => {
             <div className="flex w-full flex-grow overflow-hidden">
                 {/*//! TABLE + FOOTER */}
                 <div
-                    className={`flex-grow flex flex-col justify-between transition-all duration-250 overflow-hidden`}
+                    className={"flex-grow flex flex-col justify-between transition-all duration-250 overflow-hidden"}
                     style={{
                         transition: "margin 0.3s ease"
                     }}

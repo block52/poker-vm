@@ -31,7 +31,7 @@ const userUserLastAction = (address: string, player: number): UserUserLastAction
             }
 
             setAction(response.data.lastAction.actoin);
-            setAmount(response.data.lastAction.amount)
+            setAmount(response.data.lastAction.amount);
         } catch (err) {
             setError(err instanceof Error ? err : new Error("An error occurred"));
         } finally {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import { useTableContext } from "../../../context/TableContext";
-import { PlayerStatus } from "@bitcoinbrisbane/block52"
+import { PlayerStatus } from "@bitcoinbrisbane/block52";
 
 type ProgressBarProps = {
     index: number;
@@ -10,7 +10,7 @@ type ProgressBarProps = {
 const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
     const [progress, setProgress] = useState(0);
     const { tableData } = useTableContext();
-    
+
     // Get players from tableData instead of PlayerContext
     const players = tableData?.data?.players || [];
     const currentPlayer = players[index] || { status: PlayerStatus.NOT_ACTED };

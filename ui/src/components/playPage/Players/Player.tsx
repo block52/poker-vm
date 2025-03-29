@@ -5,7 +5,7 @@ import ProgressBar from "../common/ProgressBar";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { BigUnit } from "bigunit";
 import { useTableContext } from "../../../context/TableContext";
-import { formatWeiToDollars } from "../../../utils/numberUtils"; 
+import { formatWeiToDollars } from "../../../utils/numberUtils";
 import { ethers } from "ethers";
 
 // Enable this to see verbose logging
@@ -13,9 +13,9 @@ const DEBUG_MODE = false;
 
 // Helper function that only logs when DEBUG_MODE is true
 const debugLog = (...args: any[]) => {
-  if (DEBUG_MODE) {
-    console.log(...args);
-  }
+    if (DEBUG_MODE) {
+        console.log(...args);
+    }
 };
 
 type PlayerProps = {
@@ -31,32 +31,32 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     const { tableData, winnerInfo } = useTableContext();
 
     debugLog("Player rendered with these props:", { left, top, index, color, status });
-    
+
     // // Add debugging
     // React.useEffect(() => {
     //     console.log("Player component rendering for seat:", index);
     //     console.log("Player component tableData:", tableData);
     // }, [index, tableData]);
-    
+
     // Get player data directly from the table data
     const playerData = React.useMemo(() => {
         if (!tableData?.data?.players) return null;
         return tableData.data.players.find((p: any) => p.seat === index);
     }, [tableData, index]);
-    
+
     if (!playerData) {
         debugLog("Player component has no player data for seat", index);
         return <></>;
     }
-    
+
     // Format stack value with ethers.js (more accurate for large numbers)
     const stackValue = playerData.stack ? Number(ethers.formatUnits(playerData.stack, 18)) : 0;
     // Format for display with 2 decimal places
     const formattedStackValue = stackValue.toFixed(2);
-    
+
     // Get hole cards if available
     const holeCards = playerData.holeCards;
-    
+
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
         if (!winnerInfo) return false;
@@ -107,9 +107,7 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">All In</span>
                     )}
                     {isWinner && winnerAmount && (
-                        <span className="text-white font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base">
-                            WINS: {winnerAmount}
-                        </span>
+                        <span className="text-white font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base">WINS: {winnerAmount}</span>
                     )}
                 </div>
                 <div className="absolute top-[-10px] w-full">

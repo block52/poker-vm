@@ -4,7 +4,6 @@ import { useTableContext } from "../context/TableContext";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 
-
 import axios from "axios";
 import { getUserTableStatus } from "../utils/accountUtils";
 import { isPlayerTurnToPostBlind } from "../utils/tableUtils";
@@ -46,23 +45,23 @@ const PokerActionPanel: React.FC = () => {
     // console.log("=== FOOTER COMPONENT DEBUG ===");
     // console.log("Player legal actions:", playerLegalActions);
     // console.log("Is player turn:", isPlayerTurn);
-    
+
     // Get user's seat from localStorage or tableData
-    const userAddress = localStorage.getItem("user_eth_public_key")
+    const userAddress = localStorage.getItem("user_eth_public_key");
     const userPlayer = tableData?.data?.players?.find((player: any) => player.address?.toLowerCase() === userAddress?.toLowerCase());
     const userSeat = userPlayer?.seat;
     // console.log("User player:", userPlayer);
-    
+
     // Check if fold action exists in legal actions
     const hasFoldAction = playerLegalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
     // console.log("Has fold action:", hasFoldAction);
-    
+
     // Check if current user has the deal action
     const currentUserCanDeal = userPlayer?.legalActions?.some((action: any) => action.action === "deal") || false;
-    
+
     // Only show deal button if global canDeal is true AND current user has the deal action
     const shouldShowDealButton = canDeal && currentUserCanDeal;
-    
+
     // New flag to determine whether to hide other action buttons when deal is available
     const hideOtherButtons = shouldShowDealButton;
 
@@ -94,12 +93,11 @@ const PokerActionPanel: React.FC = () => {
     const callAmount = callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0;
 
     // Get total pot for percentage calculations
-    const totalPot = tableData?.data?.pots?.reduce((sum: number, pot: string) => 
-        sum + Number(ethers.formatUnits(pot, 18)), 0) || 0;
+    const totalPot = tableData?.data?.pots?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0) || 0;
 
     useEffect(() => {
         if (tableData) {
-            // console.log("Table Data:asdfasd", tableData);   
+            // console.log("Table Data:asdfasd", tableData);
             const status = getUserTableStatus(tableData);
             // console.log("User Status:", status);
             setUserStatus(status);
@@ -141,8 +139,6 @@ const PokerActionPanel: React.FC = () => {
             }
         }
     }, [tableData]);
-
-
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -189,32 +185,47 @@ const PokerActionPanel: React.FC = () => {
             // Create the message to sign - Add delimiters for clarity and reliability
             const timestamp = Math.floor(Date.now() / 1000).toString();
             const tableId = tableData.data.address;
-            
+
             // Ensure action is properly formatted and consistent with API expectations
             // Convert action to lowercase string as expected by the API
-            let formattedAction = '';
-            
+            let formattedAction = "";
+
             // Handle the action format based on the type
-            if (typeof action === 'string') {
+            if (typeof action === "string") {
                 formattedAction = action.toLowerCase();
-            } else if (typeof action === 'number') {
+            } else if (typeof action === "number") {
                 // If it's a numeric enum, map it to the expected string
-                switch(action) {
-                    case PlayerActionType.FOLD: formattedAction = 'fold'; break;
-                    case PlayerActionType.CHECK: formattedAction = 'check'; break;
-                    case PlayerActionType.CALL: formattedAction = 'call'; break;
-                    case PlayerActionType.BET: formattedAction = 'bet'; break;
-                    case PlayerActionType.RAISE: formattedAction = 'raise'; break;
-                    case PlayerActionType.SMALL_BLIND: formattedAction = 'post small blind'; break;
-                    case PlayerActionType.BIG_BLIND: formattedAction = 'post big blind'; break;
-                    default: formattedAction = (action as any).toString().toLowerCase();
+                switch (action) {
+                    case PlayerActionType.FOLD:
+                        formattedAction = "fold";
+                        break;
+                    case PlayerActionType.CHECK:
+                        formattedAction = "check";
+                        break;
+                    case PlayerActionType.CALL:
+                        formattedAction = "call";
+                        break;
+                    case PlayerActionType.BET:
+                        formattedAction = "bet";
+                        break;
+                    case PlayerActionType.RAISE:
+                        formattedAction = "raise";
+                        break;
+                    case PlayerActionType.SMALL_BLIND:
+                        formattedAction = "post small blind";
+                        break;
+                    case PlayerActionType.BIG_BLIND:
+                        formattedAction = "post big blind";
+                        break;
+                    default:
+                        formattedAction = (action as any).toString().toLowerCase();
                 }
             } else {
                 formattedAction = (action as any).toString().toLowerCase();
             }
-            
+
             console.log(`Formatted action: ${formattedAction}`);
-            
+
             const message = `${formattedAction}:${amount}:${tableId}:${timestamp}`;
 
             // Sign the message
@@ -222,7 +233,7 @@ const PokerActionPanel: React.FC = () => {
 
             console.log("Message signed:", message);
             console.log("Signature:", signature);
-            
+
             // Debug log for the entire payload we're about to send
             const payload = {
                 userAddress,
@@ -232,11 +243,11 @@ const PokerActionPanel: React.FC = () => {
                 publicKey: userAddress, // Add publicKey which is needed by the API
                 timestamp
             };
-            
+
             console.log("Full API payload:", JSON.stringify(payload, null, 2));
 
             // Send the action to the backend
-    
+
             const response = await axios.post(`${PROXY_URL}/table/${tableId}/playeraction`, payload);
 
             console.log("Player action response:", response.data);
@@ -257,7 +268,7 @@ const PokerActionPanel: React.FC = () => {
             console.error("Error executing player action:", error);
             // Log the error stack trace for debugging
             console.error("Error stack:", error.stack);
-            
+
             // Show the detailed error
             if (error.response) {
                 console.error("Error response data:", error.response.data);
@@ -281,19 +292,19 @@ const PokerActionPanel: React.FC = () => {
 
     const handlePostBigBlind = () => {
         console.log("Posting big blind");
-        
+
         // Add more detailed logging
         console.log("Big blind details:", {
             userStatus,
             bigBlindAmount: userStatus?.bigBlindAmount,
             tableData: tableData?.data
         });
-        
+
         if (userStatus?.bigBlindAmount) {
             // Convert to string if it's not already
             const bigBlindAmountString = userStatus.bigBlindAmount.toString();
             console.log("Sending big blind action with amount:", bigBlindAmountString);
-            
+
             // Call the action with explicit string conversion
             handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmountString);
         } else {
@@ -328,11 +339,11 @@ const PokerActionPanel: React.FC = () => {
         // Log the bet limits from the legal actions
         console.log("Bet legal action:", betAction);
         console.log("Min bet:", minBet, "Max bet:", maxBet);
-        
+
         // Set initial bet amount to minimum
         setRaiseAmount(minBet);
         setIsBetAction(true);
-        
+
         // Show the bet input modal/section
         console.log("Showing bet input section");
     };
@@ -349,28 +360,28 @@ const PokerActionPanel: React.FC = () => {
             const raiseAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
             console.log("Raising with amount (wei):", raiseAmountWei);
             console.log("PlayerActionType.RAISE:", PlayerActionType.RAISE);
-            
+
             // Check if the raise amount meets the minimum
             if (raiseAmount < minRaise) {
                 console.error(`Raise amount ${raiseAmount} is less than minimum ${minRaise}`);
                 // Force to minimum
                 const minRaiseWei = ethers.parseUnits(minRaise.toString(), 18).toString();
                 console.log("Using minimum raise amount (wei):", minRaiseWei);
-                
+
                 // Handle the raise action, passing the string 'raise' explicitly
                 handleSetPlayerAction("raise" as any, minRaiseWei);
             } else {
                 // Handle the raise action, passing the string 'raise' explicitly
                 handleSetPlayerAction("raise" as any, raiseAmountWei);
             }
-            
+
             setIsRaiseAction(false);
         }
     };
 
     const submitBet = () => {
         console.log("Submit bet clicked with amount:", raiseAmount);
-        
+
         if (raiseAmount > 0) {
             // Check if bet amount is within allowed limits
             if (raiseAmount < minBet) {
@@ -379,19 +390,19 @@ const PokerActionPanel: React.FC = () => {
                 setRaiseAmount(minBet);
                 return;
             }
-            
+
             if (raiseAmount > maxBet) {
                 console.error(`Bet amount ${raiseAmount} is more than maximum ${maxBet}`);
                 // Set to maximum
                 setRaiseAmount(maxBet);
                 return;
             }
-            
+
             // Convert the raiseAmount (which is in ETH) back to wei for the contract
             const betAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
             console.log("Betting with amount (ETH):", raiseAmount);
             console.log("Betting with amount (wei):", betAmountWei);
-            
+
             // Call the action with the bet amount in wei
             handleSetPlayerAction(PlayerActionType.BET, betAmountWei);
             setIsBetAction(false);
@@ -402,18 +413,18 @@ const PokerActionPanel: React.FC = () => {
 
     // Make sure we're passing the actual table data object, not the wrapper
     const actualTableData = tableData?.data;
-    
+
     // Use our helper functions to determine if blind buttons should be shown
-    const shouldShowSmallBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", 'small');
-    const shouldShowBigBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", 'big');
-    
+    const shouldShowSmallBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", "small");
+    const shouldShowBigBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", "big");
+
     // Add debug logging to see what's happening
-        // console.log("Blind button visibility:", {
-        //     userAddress,
-        //     shouldShowSmallBlindButton,
-        //     shouldShowBigBlindButton,
-        //     tableData: actualTableData
-        // });
+    // console.log("Blind button visibility:", {
+    //     userAddress,
+    //     shouldShowSmallBlindButton,
+    //     shouldShowBigBlindButton,
+    //     tableData: actualTableData
+    // });
 
     // Add a more robust check for whether it's actually the player's turn
     useEffect(() => {
@@ -422,17 +433,16 @@ const PokerActionPanel: React.FC = () => {
         //     tableData,
         //     playerLegalActions,
         //     isPlayerTurn,
-        //     activePlayers: tableData?.data?.players?.filter((p: any) => 
+        //     activePlayers: tableData?.data?.players?.filter((p: any) =>
         //         p.status !== 'folded' && p.status !== 'sitting-out'),
         //     userAddress,
         //     nextToAct: tableData?.data?.nextToAct
         // });
-        
+
         // If there are no legal actions or all players except one have folded,
         // we shouldn't show action buttons even if isPlayerTurn is true
-        const activePlayers = tableData?.data?.players?.filter((p: any) => 
-            p.status !== 'folded' && p.status !== 'sitting-out');
-        
+        const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
+
         if (activePlayers?.length <= 1) {
             console.log("Only one active player left - no actions needed");
         }
@@ -440,23 +450,20 @@ const PokerActionPanel: React.FC = () => {
 
     // Update the showActionButtons logic to be more robust
     const hasLegalActions = playerLegalActions && playerLegalActions.length > 0;
-    const activePlayers = tableData?.data?.players?.filter((p: any) => 
-        p.status !== 'folded' && p.status !== 'sitting-out');
+    const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
     const gameInProgress = activePlayers && activePlayers.length > 1;
 
     // Always show fold button regardless of other conditions if the player has legal actions
-    const canFoldAnytime = playerLegalActions?.some((a: any) => 
-      a.action === PlayerActionType.FOLD || a.action === "fold"
-    ) && userPlayer?.status !== "folded";
-    
+    const canFoldAnytime = playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold") && userPlayer?.status !== "folded";
+
     console.log("canFoldAnytime calculation:", {
-      playerLegalActions,
-      hasFoldAction: playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold"),
-      playerNotFolded: userPlayer?.status !== "folded",
-      result: canFoldAnytime
+        playerLegalActions,
+        hasFoldAction: playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold"),
+        playerNotFolded: userPlayer?.status !== "folded",
+        result: canFoldAnytime
     });
 
-    // Only show other action buttons if it's the player's turn, they have legal actions, 
+    // Only show other action buttons if it's the player's turn, they have legal actions,
     // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
     const showActionButtons = isPlayerTurn && hasLegalActions && gameInProgress;
 
@@ -467,15 +474,15 @@ const PokerActionPanel: React.FC = () => {
     // Add this function to handle big blind posting
     const emergencyPostBigBlind = () => {
         // console.log("Emergency Big Blind function called");
-        
+
         if (!tableData || !tableData.data) {
             console.error("No table data available");
             return;
         }
-        
+
         const bigBlindAmount = tableData.data.bigBlind || "0";
         // console.log("Big blind amount:", bigBlindAmount);
-        
+
         // Call the action handler directly
         handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
     };
@@ -484,26 +491,26 @@ const PokerActionPanel: React.FC = () => {
     useEffect(() => {
         // Create a global keyboard shortcut for posting big blind
         const handleKeyPress = (event: KeyboardEvent) => {
-            if (event.key === 'b' && shouldShowBigBlindButton) {
+            if (event.key === "b" && shouldShowBigBlindButton) {
                 console.log("Big blind keyboard shortcut triggered");
-                
+
                 if (!tableData || !tableData.data) {
                     console.error("No table data available");
                     return;
                 }
-                
+
                 const bigBlindAmount = tableData.data.bigBlind || "0";
                 // console.log("Big blind amount:", bigBlindAmount);
-                
+
                 // Call the action handler directly
                 handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
             }
         };
 
-        window.addEventListener('keydown', handleKeyPress);
-        
+        window.addEventListener("keydown", handleKeyPress);
+
         return () => {
-            window.removeEventListener('keydown', handleKeyPress);
+            window.removeEventListener("keydown", handleKeyPress);
         };
     }, [tableData, shouldShowBigBlindButton]);
 
@@ -519,9 +526,9 @@ const PokerActionPanel: React.FC = () => {
             <div className="absolute inset-0 z-0 overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#64ffda] to-transparent opacity-70"></div>
                 <div className="absolute top-[10%] left-[1%] w-[1px] h-[80%] bg-[#64ffda] opacity-20 animate-pulse"></div>
-                <div className="absolute top-[10%] right-[1%] w-[1px] h-[80%] bg-[#64ffda] opacity-20 animate-pulse" style={{animationDelay: '0.7s'}}></div>
+                <div className="absolute top-[10%] right-[1%] w-[1px] h-[80%] bg-[#64ffda] opacity-20 animate-pulse" style={{ animationDelay: "0.7s" }}></div>
             </div>
-            
+
             <div className="flex flex-col w-[600px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
@@ -579,7 +586,7 @@ const PokerActionPanel: React.FC = () => {
                                     </span>
                                 </button>
                             )}
-                            
+
                             {/* Only show fold button if player hasn't folded yet */}
                             {canFoldAnytime && (
                                 <button
@@ -591,12 +598,10 @@ const PokerActionPanel: React.FC = () => {
                                     FOLD
                                 </button>
                             )}
-                            
+
                             {/* Show a message if the player has folded */}
                             {userPlayer?.status === "folded" && (
-                                <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">
-                                    You have folded this hand
-                                </div>
+                                <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
                             )}
                         </div>
 
@@ -651,7 +656,7 @@ const PokerActionPanel: React.FC = () => {
                                                     transition-all duration-200 font-medium transform hover:scale-105"
                                                     onClick={handleRaise}
                                                 >
-                                                    RAISE 
+                                                    RAISE
                                                 </button>
                                             )}
                                         </>

@@ -403,6 +403,62 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
     console.log("Request headers:", req.headers);
 
     try {
+        // Special handling for leave action
+        if (req.body.action === "leave") {
+            console.log("📤 PROCESSING LEAVE ACTION");
+            console.log("Leave action for player:", req.body.userAddress);
+            console.log("From table:", req.params.tableId);
+            console.log("Amount to return:", req.body.amount);
+            
+            // Always try to process leave requests, even if there are issues
+            let canProceed = true;
+            let warningMessage = "";
+            
+            try {
+                // Check if player is in folded state by getting table info
+                const tableInfoResponse = await axios.get(`${process.env.NODE_URL}/get_game_state/${req.params.tableId}`);
+                
+                if (!tableInfoResponse.data || !tableInfoResponse.data.result || !tableInfoResponse.data.result.data) {
+                    console.warn("⚠️ Unable to get table info for leave check");
+                    warningMessage = "Unable to verify player status, but attempting leave anyway.";
+                } else {
+                    const tableData = tableInfoResponse.data.result.data;
+                    console.log(`Got table data with ${tableData.players?.length || 0} players`);
+                    
+                    // Check if player exists in the table
+                    const player = tableData.players?.find(p => p.address?.toLowerCase() === req.body.userAddress?.toLowerCase());
+                    
+                    if (!player) {
+                        console.warn(`⚠️ Player ${req.body.userAddress} not found in table`);
+                        // Don't stop - player might already be partially removed
+                        warningMessage = "Player not found in table - might already be in the process of leaving.";
+                    } else {
+                        console.log(`Player status: ${player.status}`);
+                        if (player.status !== "folded" && player.status !== "sitting-out") {
+                            console.warn(`⚠️ Player ${req.body.userAddress} trying to leave without folding first. Status: ${player.status}`);
+                            // Only in this case do we return an error to tell the player they need to fold first
+                            return res.status(400).json({ 
+                                error: "Player must fold before leaving", 
+                                details: "Your hand must be folded before you can leave the table.",
+                                playerStatus: player.status
+                            });
+                        }
+                        
+                        console.log(`Player can leave - status is ${player.status}`);
+                    }
+                }
+            } catch (err) {
+                console.warn("Unable to verify player status before leave:", err.message);
+                warningMessage = "Error checking player status, but attempting leave anyway.";
+                // Continue with leave attempt even if we can't verify - the game engine will enforce rules
+            }
+            
+            // Add warning to the RPC call if applicable
+            if (warningMessage) {
+                req.body.warning = warningMessage;
+            }
+        }
+        
         // Log the expected signed message format for debugging
         console.log(`Expected signature format: ${req.body.action}${req.body.amount}${req.params.tableId}${req.body.timestamp}`);
         
@@ -445,6 +501,19 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
     } catch (error) {
         console.error("=== ERROR ===");
         console.error("Error details:", error);
+        
+        // Special handling for leave errors
+        if (req.body.action === "leave") {
+            console.error("❌ ERROR PROCESSING LEAVE ACTION");
+            // If the error has a response, log more details about it
+            if (error.response) {
+                console.error(`Status: ${error.response.status}`);
+                console.error(`Status Text: ${error.response.statusText}`);
+                console.error(`Request URL: ${error.config?.url || 'Unknown URL'}`);
+                console.error(`Request Data: ${JSON.stringify(error.config?.data || {})}`);
+                console.error(`Response Data: ${JSON.stringify(error.response.data || {})}`);
+            }
+        }
         
         // Log more detailed error information
         if (error.response) {
