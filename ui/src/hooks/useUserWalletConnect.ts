@@ -9,24 +9,24 @@ interface UseUserWalletConnectResult {
 }
 
 const useUserWalletConnect = (): UseUserWalletConnectResult => {
-    const { open } = useAppKit()
-    const { disconnect } = useDisconnect()
-    const { address, isConnected } = useAppKitAccount()
+    const { open } = useAppKit();
+    const { disconnect } = useDisconnect();
+    const { address, isConnected } = useAppKitAccount();
     const [connected, setConnected] = useState<boolean | null>(null);
 
     useEffect(() => {
-        setConnected(isConnected)
-    }, [isConnected])
+        setConnected(isConnected);
+    }, [isConnected]);
 
     return useMemo(
         () => ({
             open,
             disconnect,
             isConnected: connected,
-            address,
+            address
         }),
         [open, connected, disconnect, address]
-    )
+    );
 };
 
 export default useUserWalletConnect;

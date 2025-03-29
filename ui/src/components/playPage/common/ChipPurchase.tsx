@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as React from "react";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
-import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from "react-icons/md"
+import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from "react-icons/md";
 
 const ChipPurchase: React.FC = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -51,9 +51,7 @@ const ChipPurchase: React.FC = () => {
                                 className="w-full px-3 py-1 text-center text-white bg-[#4e5056] rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        <div className="flex text-white text-sm justify-end">
-                            Max. {maxAmount}
-                        </div>
+                        <div className="flex text-white text-sm justify-end">Max. {maxAmount}</div>
 
                         <button
                             onClick={handleBuy}

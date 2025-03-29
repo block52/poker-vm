@@ -11,20 +11,20 @@ export const getSignature = async (
 ): Promise<string> => {
     try {
         const wallet = new ethers.Wallet(privateKey);
-        
+
         // If additional params are provided, create a complete message
         if (from && to && amount && action) {
             const message = `${from}${to}${amount}${action}${nonce}`;
             return await wallet.signMessage(message);
         }
-        
+
         // Otherwise just sign the nonce
         return await wallet.signMessage(nonce.toString());
     } catch (error) {
         console.error("Error getting signature:", error);
         throw new Error("Failed to sign message");
     }
-}; 
+};
 
 /**
  * Get public key from private key
@@ -39,7 +39,7 @@ export const getPublicKey = (privateKey: string): string => {
         console.error("Error getting public key:", error);
         throw new Error("Failed to get public key");
     }
-}; 
+};
 
 /**
  * Check if the current user is in the table and has specific legal actions
@@ -47,54 +47,52 @@ export const getPublicKey = (privateKey: string): string => {
  * @returns Object with user's seat, available actions, and other relevant data
  */
 export const getUserTableStatus = (tableData: any) => {
-    // console.log("getUserTableStatus called with tableData:", tableData);    
-    
+    // console.log("getUserTableStatus called with tableData:", tableData);
+
     if (!tableData) {
         // console.log("tableData is null or undefined, returning null");
         return null;
     }
-    
+
     // Extract the actual table data from the nested structure
     const actualTableData = tableData.data || tableData;
     // console.log("Extracted actual table data:", actualTableData);
-    
-    const userAddress = localStorage.getItem('user_eth_public_key');
+
+    const userAddress = localStorage.getItem("user_eth_public_key");
     // console.log("User address from localStorage:", userAddress);
-    
+
     if (!userAddress) {
         // console.log("No user address found in localStorage, returning null");
         return null;
     }
-    
+
     // Check the structure of tableData to find players
     // console.log("actualTableData structure:", Object.keys(actualTableData));
     // console.log("actualTableData.players:", actualTableData.players);
-    
+
     // Try to find player in different possible locations
     const playersArray = actualTableData.players || [];
     // console.log("Using players array:", playersArray);
-    
+
     // Find the player in the table
-    const player = playersArray.find((p: any) => 
-        p.address?.toLowerCase() === userAddress.toLowerCase()
-    );
+    const player = playersArray.find((p: any) => p.address?.toLowerCase() === userAddress.toLowerCase());
     // console.log("Found player:", player);
-    
+
     if (!player) {
         // console.log("Player not found in table data, returning null");
         return null;
     }
-    
+
     // Check if it's the player's turn
     const nextToAct = actualTableData.nextToAct;
     // console.log("Next to act seat:", nextToAct);
     const isPlayerTurn = nextToAct === player.seat;
     // console.log("Is player's turn:", isPlayerTurn);
-    
+
     // Get available actions
     const availableActions = player.legalActions || [];
     // console.log("Available actions:", availableActions);
-    
+
     // Check for specific actions
     const canPostSmallBlind = availableActions.some((a: any) => a.action === "post small blind");
     const canPostBigBlind = availableActions.some((a: any) => a.action === "post big blind");
@@ -103,20 +101,22 @@ export const getUserTableStatus = (tableData: any) => {
     const canBet = availableActions.some((a: any) => a.action === "bet");
     const canRaise = availableActions.some((a: any) => a.action === "raise");
     const canFold = availableActions.some((a: any) => a.action === "fold");
-    
+
     // Check if player is in small blind position
     const isSmallBlindPosition = actualTableData.smallBlindPosition === player.seat;
     // console.log("Is small blind position:", isSmallBlindPosition);
-    
+
     // Get action limits if available
     const getActionLimits = (actionType: string) => {
         const action = availableActions.find((a: any) => a.action === actionType);
-        return action ? {
-            min: action.min,
-            max: action.max
-        } : null;
+        return action
+            ? {
+                  min: action.min,
+                  max: action.max
+              }
+            : null;
     };
-    
+
     const result = {
         isInTable: true,
         isPlayerTurn,
@@ -138,10 +138,10 @@ export const getUserTableStatus = (tableData: any) => {
         bigBlindAmount: getActionLimits("post big blind")?.min || actualTableData.bigBlind || "0",
         isSmallBlindPosition
     };
-    
+
     // console.log("Returning user status:", result);
     return result;
-}; 
+};
 
 /**
  * Check if the current user is playing at the table
@@ -150,12 +150,10 @@ export const getUserTableStatus = (tableData: any) => {
  */
 export const isUserPlaying = (tableData: any): boolean => {
     if (!tableData || !tableData.players) return false;
-    
-    const userAddress = localStorage.getItem('user_eth_public_key');
+
+    const userAddress = localStorage.getItem("user_eth_public_key");
     if (!userAddress) return false;
-    
+
     // Check if the user's address is in the players array
-    return tableData.players.some((player: any) => 
-        player.address.toLowerCase() === userAddress.toLowerCase()
-    );
-}; 
+    return tableData.players.some((player: any) => player.address.toLowerCase() === userAddress.toLowerCase());
+};

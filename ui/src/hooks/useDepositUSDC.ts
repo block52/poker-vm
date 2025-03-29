@@ -28,8 +28,8 @@ const useDepositUSDC = () => {
         } catch (err) {
             console.error("Transaction failed:", err);
         }
-    }
-    
+    };
+
     return useMemo(
         () => ({
             deposit,

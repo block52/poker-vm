@@ -4,11 +4,10 @@ import "./OppositePlayerCards.css";
 type OppositePlayerCardsProps = {
     frontSrc: string; // Front side image source
     backSrc: string; // Back side image source
-    flipped: boolean
+    flipped: boolean;
 };
 
 const OppositePlayerCards: React.FC<OppositePlayerCardsProps> = ({ frontSrc, backSrc, flipped }) => {
-
     return (
         // !Clickable
         <div className={`card ${flipped ? "" : "flipped"}`}>

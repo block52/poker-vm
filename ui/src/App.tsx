@@ -4,7 +4,6 @@ import Table from "./components/playPage/Table";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiProvider } from "wagmi";
 
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { projectId, metadata, networks, wagmiAdapter } from "./config";
 import { mainnet } from "@reown/appkit/networks";
@@ -13,13 +12,11 @@ import { featuredWalletIds } from "./walletIds/featuredWalletIds";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import useUserWallet from "./hooks/useUserWallet";
-import QRDeposit from './components/QRDeposit';
+import QRDeposit from "./components/QRDeposit";
 import { PROXY_URL } from "./config/constants";
-import { TableProvider } from './context/TableContext';
+import { TableProvider } from "./context/TableContext";
 
-
-
-console.log('PROXY_URL in App:', PROXY_URL); // Debug log
+console.log("PROXY_URL in App:", PROXY_URL); // Debug log
 
 const queryClient = new QueryClient();
 
@@ -39,23 +36,25 @@ createAppKit({
     enableCoinbase: true,
     defaultNetwork: mainnet,
     allWallets: "SHOW"
-})
+});
 
 function App() {
-
     const { account, balance, isLoading } = useUserWallet();
-    
+
     return (
         <WagmiProvider config={wagmiAdapter.wagmiConfig}>
             <QueryClientProvider client={queryClient}>
                 <Router>
                     <div className="bg-[#2c3245] min-h-screen">
                         <Routes>
-                            <Route path="/table/:id" element={
-                                <TableProvider>
-                                    <Table />
-                                </TableProvider>
-                            } />
+                            <Route
+                                path="/table/:id"
+                                element={
+                                    <TableProvider>
+                                        <Table />
+                                    </TableProvider>
+                                }
+                            />
                             <Route path="/deposit" element={<Deposit />} />
                             <Route path="/" element={<Dashboard />} />
                             <Route path="/qr-deposit" element={<QRDeposit />} />

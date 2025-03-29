@@ -9,15 +9,15 @@ interface TurnAnimationProps {
 
 const TurnAnimation: React.FC<TurnAnimationProps> = ({ left, top, index }) => {
     const { tableData } = useTableContext();
-    
+
     // Use tableData.data.players instead of players from PlayerContext
     const players = tableData?.data?.players || [];
-    
+
     // Only show the turn animation for the player who's next to act
     const isNextToAct = tableData?.data?.nextToAct === index;
 
     if (!isNextToAct) return null;
-    
+
     return (
         <div
             className="hidden opacity-0 animate-pulse"

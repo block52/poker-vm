@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
         try {
             const response = await axios.get(`${PROXY_URL}/games`);
             // console.log("Games Response:", response.data);
-            
+
             // Map the response to our game types
             const games = response.data.map((game: any) => ({
                 id: game.id,
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
                 minBuy: game.min,
                 maxBuy: game.max
             }));
-            
+
             // console.log("Processed Games:", games);
             setGames(games);
         } catch (error) {
@@ -88,7 +88,7 @@ const Dashboard: React.FC = () => {
     const handleGameType = (type: GameType) => {
         console.log("\n=== Game Type Selected ===");
         console.log("Type:", type);
-        
+
         if (type === GameType.CASH) {
             console.log("Setting type to CASH");
             setTypeSelected("cash");
@@ -103,7 +103,7 @@ const Dashboard: React.FC = () => {
     const handleGameVariant = (variant: Variant) => {
         console.log("\n=== Game Variant Selected ===");
         console.log("Variant:", variant);
-        
+
         if (variant === Variant.TEXAS_HOLDEM) {
             console.log("Setting variant to TEXAS HOLDEM");
             setVariantSelected("texas-holdem");
@@ -121,8 +121,8 @@ const Dashboard: React.FC = () => {
 
     const buildUrl = () => {
         // return `/table/${typeSelected}?variant=${variantSelected}&seats=${seatSelected}`;
-        return `/table/0x22dfa2150160484310c5163f280f49e23b8fd34326`;
-    }
+        return "/table/0x22dfa2150160484310c5163f280f49e23b8fd34326";
+    };
 
     const handleNext = () => {
         const url = buildUrl();
@@ -137,26 +137,26 @@ const Dashboard: React.FC = () => {
 
     // Add function to format address
     const formatAddress = (address: string | undefined) => {
-        if (!address) return '';
+        if (!address) return "";
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
 
     // Modify formatBalance to add logging
     const formatBalance = (rawBalance: string | number) => {
-        console.log('\n=== Format Balance Called ===');
-        console.log('Input Balance:', rawBalance);
+        console.log("\n=== Format Balance Called ===");
+        console.log("Input Balance:", rawBalance);
         const value = Number(rawBalance) / 1e18;
-        console.log('Converted Value:', value);
+        console.log("Converted Value:", value);
         const formatted = value.toFixed(2);
-        console.log('Formatted Result:', formatted);
-        console.log('==========================\n');
+        console.log("Formatted Result:", formatted);
+        console.log("==========================\n");
         return formatted;
     };
 
     const handleImportPrivateKey = () => {
         try {
             // Validate private key format
-            if (!importKey.startsWith('0x')) {
+            if (!importKey.startsWith("0x")) {
                 setImportError("Private key must start with 0x");
                 return;
             }
@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
 
             // Create wallet from private key to validate and get address
             const wallet = new Wallet(importKey);
-            
+
             // Save to localStorage
             localStorage.setItem(STORAGE_PRIVATE_KEY, importKey);
             localStorage.setItem(STORAGE_PUBLIC_KEY, wallet.address);
@@ -191,7 +191,7 @@ const Dashboard: React.FC = () => {
                 await navigator.clipboard.writeText(privateKey);
                 // Could add a toast notification here if you want
             } catch (err) {
-                console.error('Failed to copy private key:', err);
+                console.error("Failed to copy private key:", err);
             }
         }
     };
@@ -208,12 +208,10 @@ const Dashboard: React.FC = () => {
                                 type="text"
                                 placeholder="Enter private key (0x...)"
                                 value={importKey}
-                                onChange={(e) => setImportKey(e.target.value)}
+                                onChange={e => setImportKey(e.target.value)}
                                 className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-pink-500 focus:outline-none"
                             />
-                            {importError && (
-                                <p className="text-red-500 text-sm">{importError}</p>
-                            )}
+                            {importError && <p className="text-red-500 text-sm">{importError}</p>}
                             <div className="flex justify-end space-x-3">
                                 <button
                                     onClick={() => {
@@ -245,29 +243,23 @@ const Dashboard: React.FC = () => {
                     <div className="flex items-center gap-2 mb-2">
                         <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
                         <div className="relative group">
-                            <svg 
-                                className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors" 
-                                fill="none" 
-                                stroke="currentColor" 
+                            <svg
+                                className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
+                                fill="none"
+                                stroke="currentColor"
                                 viewBox="0 0 24 24"
                             >
-                                <path 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    strokeWidth="2" 
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
                             <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                <p className="mb-2">
-                                    This is your Layer 2 gaming wallet, automatically created for you. No Web3 wallet required!
-                                </p>
-                                <p className="mb-2">
-                                    You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.
-                                </p>
-                                <p>
-                                    All your in-game funds are secured and can be withdrawn at any time.
-                                </p>
+                                <p className="mb-2">This is your Layer 2 gaming wallet, automatically created for you. No Web3 wallet required!</p>
+                                <p className="mb-2">You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.</p>
+                                <p>All your in-game funds are secured and can be withdrawn at any time.</p>
                                 <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
                             </div>
                         </div>
@@ -278,32 +270,25 @@ const Dashboard: React.FC = () => {
                                 <p className="text-white text-sm">
                                     Address: <span className="font-mono text-pink-500">{formatAddress(publicKey)}</span>
                                 </p>
-                                <button
-                                    onClick={() => setShowImportModal(true)}
-                                    className="text-sm text-blue-400 hover:text-blue-300 transition duration-300"
-                                >
+                                <button onClick={() => setShowImportModal(true)} className="text-sm text-blue-400 hover:text-blue-300 transition duration-300">
                                     Import Private Key
                                 </button>
                             </div>
                             <div className="flex justify-between items-center">
                                 <p className="text-white text-sm">
-                                    Balance: <span className="font-bold text-pink-500">
-                                        ${formatBalance(b52Balance || '0')} USDC
-                                    </span>
+                                    Balance: <span className="font-bold text-pink-500">${formatBalance(b52Balance || "0")} USDC</span>
                                 </p>
                                 <button
                                     onClick={() => setShowPrivateKey(!showPrivateKey)}
                                     className="text-sm text-blue-400 hover:text-blue-300 transition duration-300"
                                 >
-                                    {showPrivateKey ? 'Hide Private Key' : 'Show Private Key'}
+                                    {showPrivateKey ? "Hide Private Key" : "Show Private Key"}
                                 </button>
                             </div>
                             {showPrivateKey && (
                                 <div className="mt-2 p-2 bg-gray-800 rounded-lg">
                                     <div className="flex justify-between items-center">
-                                        <p className="text-white text-sm font-mono break-all">
-                                            {localStorage.getItem(STORAGE_PRIVATE_KEY)}
-                                        </p>
+                                        <p className="text-white text-sm font-mono break-all">{localStorage.getItem(STORAGE_PRIVATE_KEY)}</p>
                                         <button
                                             onClick={handleCopyPrivateKey}
                                             className="ml-2 px-2 py-1 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded transition duration-300"
@@ -328,26 +313,22 @@ const Dashboard: React.FC = () => {
                     <div className="flex items-center gap-2 mb-2">
                         <h2 className="text-xl font-bold text-white">Web3 Wallet</h2>
                         <div className="relative group">
-                            <svg 
-                                className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors" 
-                                fill="none" 
-                                stroke="currentColor" 
+                            <svg
+                                className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
+                                fill="none"
+                                stroke="currentColor"
                                 viewBox="0 0 24 24"
                             >
-                                <path 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    strokeWidth="2" 
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
                             <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                <p className="mb-2">
-                                    Optional: Connect your Web3 wallet (like MetaMask) for additional features.
-                                </p>
-                                <p>
-                                    Not required to play - you can use the Block52 Game Wallet instead!
-                                </p>
+                                <p className="mb-2">Optional: Connect your Web3 wallet (like MetaMask) for additional features.</p>
+                                <p>Not required to play - you can use the Block52 Game Wallet instead!</p>
                                 <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
                             </div>
                         </div>
@@ -355,8 +336,9 @@ const Dashboard: React.FC = () => {
                     <div className="flex justify-between items-center">
                         <div>
                             <p className="text-white text-sm">
-                                Status: <span className={`font-bold ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
-                                    {isConnected ? 'Connected' : 'Not Connected'}
+                                Status:{" "}
+                                <span className={`font-bold ${isConnected ? "text-green-500" : "text-red-500"}`}>
+                                    {isConnected ? "Connected" : "Not Connected"}
                                 </span>
                             </p>
                             {isConnected && address && (
@@ -367,14 +349,14 @@ const Dashboard: React.FC = () => {
                         </div>
                         <div>
                             {!isConnected ? (
-                                <button 
+                                <button
                                     onClick={open}
                                     className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300"
                                 >
                                     Connect
                                 </button>
                             ) : (
-                                <button 
+                                <button
                                     onClick={disconnect}
                                     className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-300"
                                 >

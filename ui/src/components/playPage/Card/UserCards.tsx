@@ -4,11 +4,10 @@ import "./UserCards.css";
 type UserCardsProps = {
     frontSrc: string; // Front side image source
     backSrc: string; // Back side image source
-    flipped: boolean
+    flipped: boolean;
 };
 
 const UserCards: React.FC<UserCardsProps> = ({ frontSrc, backSrc, flipped }) => {
-
     return (
         // !Clickable
         <div className={`handcard ${flipped ? "" : "flipped"}`}>

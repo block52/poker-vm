@@ -13,9 +13,9 @@ const DEBUG_MODE = false;
 
 // Helper function that only logs when DEBUG_MODE is true
 const debugLog = (...args: any[]) => {
-  if (DEBUG_MODE) {
-    // console.log(...args);
-  }
+    if (DEBUG_MODE) {
+        // console.log(...args);
+    }
 };
 
 type OppositePlayerProps = {
@@ -30,23 +30,15 @@ type OppositePlayerProps = {
     setStartIndex: (index: number) => void;
 };
 
-const OppositePlayer: React.FC<OppositePlayerProps> = ({ 
-    left, 
-    top, 
-    index, 
-    color, 
-    isCardVisible, 
-    setCardVisible, 
-    setStartIndex 
-}) => {
+const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
     const { tableData, winnerInfo } = useTableContext();
-    
+
     // Add more detailed debugging
     React.useEffect(() => {
         debugLog("OppositePlayer component rendering for seat:", index);
         // console.log("OppositePlayer tableData:", tableData);
     }, [index, tableData]);
-    
+
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
         if (!winnerInfo) return false;
@@ -59,7 +51,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({
         const winner = winnerInfo.find(w => w.seat === index);
         return winner ? winner.formattedAmount : null;
     }, [isWinner, winnerInfo, index]);
-    
+
     // Get player data directly from the table data
     const playerData = React.useMemo(() => {
         if (!tableData?.data?.players) {
@@ -70,19 +62,19 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({
         debugLog("Found player data for seat", index, ":", player);
         return player;
     }, [tableData, index]);
-    
+
     if (!playerData) {
         debugLog("OppositePlayer component has no player data for seat", index);
         return <></>;
     }
-    
+
     // Format stack value
     const stackValue = playerData.stack ? Number(ethers.formatUnits(playerData.stack, 18)) : 0;
     // Format for display with 2 decimal places
     const formattedStackValue = stackValue.toFixed(2);
-    
+
     debugLog("Rendering OppositePlayer UI for seat", index, "with stack", playerData.stack);
-    
+
     return (
         <>
             <div
@@ -135,9 +127,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({
 
             <div
                 className={`absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
-                    isCardVisible === index
-                        ? "opacity-100 animate-slide-left-to-right"
-                        : "opacity-0 animate-slide-top-to-bottom"
+                    isCardVisible === index ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
                 }`}
                 style={{
                     left: left,
