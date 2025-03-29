@@ -118,13 +118,13 @@ export const chipPosition = {
         },
         {
             // 2
-            bottom: "-10px",
-            left: "120px"
+            bottom: "12px",
+            left: "210px"
         },
         {
             // 3
-            bottom: "60px",
-            left: "-5px"
+            bottom: "110px",
+            left: "40px"
         },
         {
             // 4
@@ -234,3 +234,4 @@ export const dealerPosition = {
         }
     ]
 };
+
