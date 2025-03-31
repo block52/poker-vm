@@ -9,6 +9,7 @@ import { ResponseCommand } from "./responseCommand";
 import { TransferCommand } from "./transferCommand";
 import { DealCommand } from "./dealCommand";
 import { DeployContractCommand } from "./deployContractCommand";
+import { ResetCommand } from "./resetCommand";
 
 import { BlockCommand, BlockCommandParams } from "./blockCommand";
 import { BurnCommand } from "./burnCommand";
@@ -57,6 +58,7 @@ export {
     MempoolCommand,
     MineCommand,
     PurgeMempoolCommand,
+    ResetCommand,
     ReceiveMinedBlockCommand,
     ReceiveMinedBlockHashCommand,
     SharedSecretCommand,
