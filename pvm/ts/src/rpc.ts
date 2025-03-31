@@ -23,6 +23,7 @@ import {
     MintCommand,
     PurgeMempoolCommand,
     ReceiveMinedBlockHashCommand,
+    ResetCommand,
     SharedSecretCommand,
     ShutdownCommand,
     StartServerCommand,
@@ -48,8 +49,10 @@ export class RPC {
         if (!request.method) {
             return makeErrorRPCResponse(request.id, "Missing method");
         }
+        
+        const method = request.method as RPCMethods;
 
-        const method: RPCMethods = request.method as RPCMethods;
+
         if (!Object.values(RPCMethods).includes(method)) {
             return makeErrorRPCResponse(request.id, "Method not found");
         }
@@ -89,6 +92,13 @@ export class RPC {
             case RPCMethods.SHUTDOWN: {
                 const [username, password] = request.params as RPCRequestParams[RPCMethods.SHUTDOWN];
                 const command = new ShutdownCommand(username, password);
+                result = await command.execute();
+                break;
+            }
+            case RPCMethods.RESET_BLOCKCHAIN: {
+                // SDK expects [username, password] params, but our implementation doesn't require them
+                // We could add authentication here if needed in the future
+                const command = new ResetCommand();
                 result = await command.execute();
                 break;
             }
