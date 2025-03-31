@@ -33,6 +33,39 @@ const Dashboard: React.FC = () => {
     const [importKey, setImportKey] = useState("");
     const [importError, setImportError] = useState("");
     const [showPrivateKey, setShowPrivateKey] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
+
+    // Add function to reset blockchain
+    const resetBlockchain = async () => {
+        if (!confirm("Are you sure you want to reset the blockchain? This will clear all data.")) {
+            return;
+        }
+
+        setIsResetting(true);
+        try {
+            // Determine API endpoint based on current URL
+            const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                ? 'http://localhost:3000'
+                : 'https://node1.block52.xyz';
+            
+            const response = await axios.post(apiUrl, {
+                id: 1,
+                method: "reset_blockchain",
+                params: []
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            alert(response.data.result?.data ? "Blockchain reset successful!" : "Blockchain reset failed.");
+        } catch (error) {
+            console.error("Error resetting blockchain:", error);
+            alert("Error resetting blockchain. See console for details.");
+        } finally {
+            setIsResetting(false);
+        }
+    };
 
     // Add logging to fetch games
     const fetchGames = async () => {
@@ -197,7 +230,7 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black">
+        <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black relative">
             {/* Import Private Key Modal */}
             {showImportModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -434,6 +467,15 @@ const Dashboard: React.FC = () => {
                     </Link>
                 </div>
             </div>
+
+            {/* Reset Blockchain Button */}
+            <button
+                onClick={resetBlockchain}
+                disabled={isResetting}
+                className="fixed bottom-4 right-4 px-3 py-2 text-xs bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-300 opacity-70 hover:opacity-100"
+            >
+                {isResetting ? "Resetting..." : "Beta Mode Reset Blockchain"}
+            </button>
         </div>
     );
 };
