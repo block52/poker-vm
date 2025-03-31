@@ -32,7 +32,7 @@ import {
 } from "./commands";
 
 import { makeErrorRPCResponse } from "./types/response";
-import { CONTROL_METHODS, ExtendedRPCMethods, READ_METHODS, RESET_BLOCKCHAIN, WRITE_METHODS } from "./types/rpc";
+import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
 import * as ethers from "ethers";
@@ -50,23 +50,9 @@ export class RPC {
             return makeErrorRPCResponse(request.id, "Missing method");
         }
         
-        const methodStr = request.method.toString(); // todo move to SDK if we keep
-
-        // Handle custom reset_blockchain method
-        if (methodStr === RESET_BLOCKCHAIN) { // todo move to SDK if we keep
-            const command = new ResetCommand();
-            const result = await command.execute();
-            return {
-                id: request.id,
-                result: {
-                    signature: "",
-                    data: result
-                }
-            };
-        }
-
-        // Handle standard methods
         const method = request.method as RPCMethods;
+
+
         if (!Object.values(RPCMethods).includes(method)) {
             return makeErrorRPCResponse(request.id, "Method not found");
         }
@@ -84,7 +70,7 @@ export class RPC {
         return makeErrorRPCResponse(request.id, "Method not found");
     }
 
-    static async handleControlMethod(method: RPCMethods | string, request: RPCRequest): Promise<RPCResponse<any>> {
+    static async handleControlMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<any>> {
         let result: any;
         switch (method) {
             case RPCMethods.PURGE: {
@@ -109,7 +95,9 @@ export class RPC {
                 result = await command.execute();
                 break;
             }
-            case RESET_BLOCKCHAIN: { // todo move to SDK if we keep
+            case RPCMethods.RESET_BLOCKCHAIN: {
+                // SDK expects [username, password] params, but our implementation doesn't require them
+                // We could add authentication here if needed in the future
                 const command = new ResetCommand();
                 result = await command.execute();
                 break;
