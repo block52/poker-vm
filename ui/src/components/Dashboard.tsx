@@ -474,7 +474,7 @@ const Dashboard: React.FC = () => {
                 disabled={isResetting}
                 className="fixed bottom-4 right-4 px-3 py-2 text-xs bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-300 opacity-70 hover:opacity-100"
             >
-                {isResetting ? "Resetting..." : "Beta Mode Reset Blockchain"}
+                {isResetting ? "Resetting..." : "Developer Testing Tool: Reset Testing Blockchain Data"}
             </button>
         </div>
     );
