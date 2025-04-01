@@ -31,6 +31,10 @@ dotenv.config();
 
 const port = process.env.PORT || 8080;
 
+// Use NODE_URL from environment with proper fallback
+const NODE_URL = process.env.NODE_URL || "https://node1.block52.xyz";
+console.log("Using NODE API URL:", NODE_URL);
+
 // ===================================
 // 3. Initialize Client (Singleton)
 // ===================================
@@ -132,7 +136,7 @@ app.get("/table/:id/player/:seat", async (req, res) => {
             id: Math.floor(Math.random() * 10000) // Simple request ID for the time being
         };
 
-        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz/", rpc_request, {
+        const response = await axios.post(NODE_URL, rpc_request, {
             headers: {
                 "Content-Type": "application/json"
             }
@@ -376,7 +380,7 @@ app.post("/table/:tableId/join", async (req, res) => {
         // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to node1
-        const response = await axios.post(process.env.NODE_URL, rpcCall, {
+        const response = await axios.post(NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
@@ -416,7 +420,7 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
             
             try {
                 // Check if player is in folded state by getting table info
-                const tableInfoResponse = await axios.get(`${process.env.NODE_URL}/get_game_state/${req.params.tableId}`);
+                const tableInfoResponse = await axios.get(`${NODE_URL}/get_game_state/${req.params.tableId}`);
                 
                 if (!tableInfoResponse.data || !tableInfoResponse.data.result || !tableInfoResponse.data.result.data) {
                     console.warn("⚠️ Unable to get table info for leave check");
@@ -484,11 +488,11 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
         console.log("=== FORMATTED RPC CALL ===");
         console.log(JSON.stringify(rpcCall, null, 2));
         console.log("=== NODE_URL ===");
-        console.log(process.env.NODE_URL);
+        console.log(NODE_URL);
 
         // Make the actual RPC call to node1
         console.log("Sending request to node...");
-        const response = await axios.post(process.env.NODE_URL, rpcCall, {
+        const response = await axios.post(NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
@@ -547,7 +551,7 @@ app.get("/get_account/:accountId", async (req, res) => {
         // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
-        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
+        const response = await axios.post(NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
@@ -596,7 +600,7 @@ app.get("/nonce/:address", async (req, res) => {
         // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
-        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
+        const response = await axios.post(NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
@@ -709,7 +713,7 @@ app.post("/table/:tableId/deal", async (req, res) => {
         // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to node1
-        const response = await axios.post(process.env.NODE_URL, rpcCall, {
+        const response = await axios.post(NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
@@ -754,7 +758,7 @@ app.get("/get_game_state/:tableId", async (req, res) => {
         // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
-        const response = await axios.post(process.env.NODE_URL || "https://node1.block52.xyz", rpcCall, {
+        const response = await axios.post(NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
