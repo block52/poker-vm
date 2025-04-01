@@ -374,45 +374,52 @@ const PokerActionPanel: React.FC = () => {
             return;
         }
 
+        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+
         if (canRaise) {
-            const raiseAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
-            console.log("Raising with amount (wei):", raiseAmountWei);
-            console.log("PlayerActionType.RAISE:", PlayerActionType.RAISE);
-
             if (raiseAmount < minRaise) {
-                console.error(`Raise amount ${raiseAmount} is less than minimum ${minRaise}`);
+                console.warn(`Raise amount ${raiseAmount} < minRaise ${minRaise}. Forcing to min.`);
                 const minRaiseWei = ethers.parseUnits(minRaise.toString(), 18).toString();
-                console.log("Using minimum raise amount (wei):", minRaiseWei);
-                handleSetPlayerAction("raise" as any, minRaiseWei);
+                handleSetPlayerAction(PlayerActionType.RAISE, minRaiseWei);
+            } else if (raiseAmount > maxRaise) {
+                console.warn(`Raise amount ${raiseAmount} > maxRaise ${maxRaise}. Forcing to max.`);
+                const maxRaiseWei = ethers.parseUnits(maxRaise.toString(), 18).toString();
+                handleSetPlayerAction(PlayerActionType.RAISE, maxRaiseWei);
             } else {
-                handleSetPlayerAction("raise" as any, raiseAmountWei);
+                handleSetPlayerAction(PlayerActionType.RAISE, amountWei);
             }
-
             return;
         }
 
         if (canBet) {
-            console.log("Submit bet clicked with amount:", raiseAmount);
-
             if (raiseAmount < minBet) {
-                console.error(`Bet amount ${raiseAmount} is less than minimum ${minBet}`);
-                setRaiseAmount(minBet);
-                return;
+                console.warn(`Bet amount ${raiseAmount} < minBet ${minBet}. Forcing to min.`);
+                const minBetWei = ethers.parseUnits(minBet.toString(), 18).toString();
+                handleSetPlayerAction(PlayerActionType.BET, minBetWei);
+            } else if (raiseAmount > maxBet) {
+                console.warn(`Bet amount ${raiseAmount} > maxBet ${maxBet}. Forcing to max.`);
+                const maxBetWei = ethers.parseUnits(maxBet.toString(), 18).toString();
+                handleSetPlayerAction(PlayerActionType.BET, maxBetWei);
+            } else {
+                handleSetPlayerAction(PlayerActionType.BET, amountWei);
             }
-
-            if (raiseAmount > maxBet) {
-                console.error(`Bet amount ${raiseAmount} is more than maximum ${maxBet}`);
-                setRaiseAmount(maxBet);
-                return;
-            }
-
-            const betAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
-            console.log("Betting with amount (ETH):", raiseAmount);
-            console.log("Betting with amount (wei):", betAmountWei);
-
-            handleSetPlayerAction(PlayerActionType.BET, betAmountWei);
         }
     };
+
+    //Raise State snapshop for capturing edge cases and verify behaviour
+    useEffect(() => {
+        console.log("Raise State Snapshot", {
+            raiseAmount,
+            raiseInputRaw,
+            minBet,
+            maxBet,
+            minRaise,
+            maxRaise,
+            canBet,
+            canRaise,
+            isRaiseAmountInvalid
+        });
+    }, [raiseAmount, raiseInputRaw, minBet, maxBet, minRaise, maxRaise]);
 
     // Make sure we're passing the actual table data object, not the wrapper
     const actualTableData = tableData?.data;
@@ -589,29 +596,41 @@ const PokerActionPanel: React.FC = () => {
                                     </span>
                                 </button>
                             )}
-
-                            {/* Only show fold button if player hasn't folded yet */}
-                            {canFoldAnytime && (
-                                <button
-                                    className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
-                                    px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
-                                    transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
-                                    onClick={handleFold}
-                                >
-                                    FOLD
-                                </button>
-                            )}
-
-                            {/* Show a message if the player has folded */}
-                            {userPlayer?.status === "folded" && (
-                                <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
-                            )}
+                            {canFoldAnytime && (!showActionButtons || (showSmallBlindButton || showBigBlindButton)) && (
+                                        <button
+                                            className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
+                    px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
+                    transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
+                                            onClick={handleFold}
+                                        >
+                                            FOLD
+                                        </button>
+                                    )}
+                                    {/* Show a message if the player has folded */}
+                                    {userPlayer?.status === "folded" && (
+                                        <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
+                                    )}
                         </div>
 
                         {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
                         {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
                             <>
                                 <div className="flex justify-between gap-2">
+                                    {canFoldAnytime && (
+                                        <button
+                                            className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
+                    px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
+                    transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
+                                            onClick={handleFold}
+                                        >
+                                            FOLD
+                                        </button>
+                                    )}
+                                    {/* Show a message if the player has folded */}
+                                    {userPlayer?.status === "folded" && (
+                                        <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
+                                    )}
+
                                     {canCheck && (
                                         <button
                                             className="cursor-pointer bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] hover:from-[#1e40af] hover:to-[#2563eb]
