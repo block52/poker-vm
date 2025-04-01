@@ -3,7 +3,6 @@ import { TransferCommand } from "./transferCommand";
 import { getMempoolInstance } from "../core/mempool";
 import { getTransactionInstance } from "../state/transactionManagement";
 import { Transaction } from "../models/transaction";
-import { NativeToken } from "../models/nativeToken";
 
 // Mock external dependencies
 jest.mock("ethers");
