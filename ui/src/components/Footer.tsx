@@ -34,11 +34,8 @@ type UserTableStatus = {
 const PokerActionPanel: React.FC = () => {
     const { tableData, playerLegalActions, isPlayerTurn, canDeal, dealTable } = useTableContext();
     const [publicKey, setPublicKey] = useState<string>();
-    const [raiseAmount, setRaiseAmount] = useState(0);
-    const [isBetAction, setIsBetAction] = useState(false);
     const [isCallAction, setIsCallAction] = useState(false);
     const [isCheckAction, setIsCheckAction] = useState(false);
-    const [isRaiseAction, setIsRaiseAction] = useState(false);
     const [balance, setBalance] = useState(0);
 
     // Debugging for fold button
@@ -91,6 +88,13 @@ const PokerActionPanel: React.FC = () => {
     const minRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0;
     const maxRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0;
     const callAmount = callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0;
+
+    //
+    const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
+    const [raiseInputRaw, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
+    const [lastAmountSource, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
+
+    const isRaiseAmountInvalid = canRaise ? raiseAmount < minRaise || raiseAmount > maxRaise : canBet ? raiseAmount < minBet || raiseAmount > maxBet : false;
 
     // Get total pot for percentage calculations
     const totalPot = tableData?.data?.pots?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0) || 0;
@@ -159,6 +163,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
+        setRaiseInputRaw(newAmount.toFixed(2));
     };
 
     // Player action function to handle all game actions
@@ -260,10 +265,9 @@ const PokerActionPanel: React.FC = () => {
             }
 
             // Reset UI states after action
-            setIsBetAction(false);
+
             setIsCallAction(false);
             setIsCheckAction(false);
-            setIsRaiseAction(false);
         } catch (error: any) {
             console.error("Error executing player action:", error);
             // Log the error stack trace for debugging
@@ -281,6 +285,17 @@ const PokerActionPanel: React.FC = () => {
             }
         }
     };
+
+    //Min Raise Text Prefill
+    useEffect(() => {
+        if (canRaise && minRaise > 0) {
+            setRaiseAmount(minRaise);
+            setRaiseInputRaw(minRaise.toFixed(2));
+        } else if (canBet && minBet > 0) {
+            setRaiseAmount(minBet);
+            setRaiseInputRaw(minBet.toFixed(2));
+        }
+    }, [canRaise, canBet, minRaise, minBet]);
 
     // Handler functions for different actions
     const handlePostSmallBlind = () => {
@@ -341,8 +356,8 @@ const PokerActionPanel: React.FC = () => {
         console.log("Min bet:", minBet, "Max bet:", maxBet);
 
         // Set initial bet amount to minimum
-        setRaiseAmount(minBet);
-        setIsBetAction(true);
+        console.log("betting");
+        submitBetOrRaise();
 
         // Show the bet input modal/section
         console.log("Showing bet input section");
@@ -350,64 +365,52 @@ const PokerActionPanel: React.FC = () => {
 
     const handleRaise = () => {
         console.log("Raising");
-        setRaiseAmount(minRaise);
-        setIsRaiseAction(true);
+        submitBetOrRaise();
     };
 
-    const submitRaise = () => {
-        if (raiseAmount > 0) {
-            // Convert the raiseAmount (which is in ETH) back to wei for the contract
+    const submitBetOrRaise = () => {
+        if (raiseAmount <= 0) {
+            console.error("Cannot bet or raise with zero or negative amount");
+            return;
+        }
+
+        if (canRaise) {
             const raiseAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
             console.log("Raising with amount (wei):", raiseAmountWei);
             console.log("PlayerActionType.RAISE:", PlayerActionType.RAISE);
 
-            // Check if the raise amount meets the minimum
             if (raiseAmount < minRaise) {
                 console.error(`Raise amount ${raiseAmount} is less than minimum ${minRaise}`);
-                // Force to minimum
                 const minRaiseWei = ethers.parseUnits(minRaise.toString(), 18).toString();
                 console.log("Using minimum raise amount (wei):", minRaiseWei);
-
-                // Handle the raise action, passing the string 'raise' explicitly
                 handleSetPlayerAction("raise" as any, minRaiseWei);
             } else {
-                // Handle the raise action, passing the string 'raise' explicitly
                 handleSetPlayerAction("raise" as any, raiseAmountWei);
             }
 
-            setIsRaiseAction(false);
+            return;
         }
-    };
 
-    const submitBet = () => {
-        console.log("Submit bet clicked with amount:", raiseAmount);
+        if (canBet) {
+            console.log("Submit bet clicked with amount:", raiseAmount);
 
-        if (raiseAmount > 0) {
-            // Check if bet amount is within allowed limits
             if (raiseAmount < minBet) {
                 console.error(`Bet amount ${raiseAmount} is less than minimum ${minBet}`);
-                // Set to minimum
                 setRaiseAmount(minBet);
                 return;
             }
 
             if (raiseAmount > maxBet) {
                 console.error(`Bet amount ${raiseAmount} is more than maximum ${maxBet}`);
-                // Set to maximum
                 setRaiseAmount(maxBet);
                 return;
             }
 
-            // Convert the raiseAmount (which is in ETH) back to wei for the contract
             const betAmountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
             console.log("Betting with amount (ETH):", raiseAmount);
             console.log("Betting with amount (wei):", betAmountWei);
 
-            // Call the action with the bet amount in wei
             handleSetPlayerAction(PlayerActionType.BET, betAmountWei);
-            setIsBetAction(false);
-        } else {
-            console.error("Cannot bet with zero amount");
         }
     };
 
@@ -629,69 +632,18 @@ const PokerActionPanel: React.FC = () => {
                                             CALL <span className="text-[#64ffda]">${callAmount.toFixed(2)}</span>
                                         </button>
                                     )}
-                                    {canRaise && (
-                                        <>
-                                            {isRaiseAction ? (
-                                                <div className="flex flex-col gap-2 w-full">
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-300">Raise Amount: ${raiseAmount.toFixed(2)}</span>
-                                                        <button
-                                                            className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                                            px-4 py-2 rounded-lg border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                                            transition-all duration-200 font-medium transform hover:scale-105"
-                                                            onClick={submitRaise}
-                                                        >
-                                                            CONFIRM RAISE
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex justify-between text-xs text-gray-400">
-                                                        <span>Min: ${minRaise.toFixed(2)}</span>
-                                                        <span>Max: ${maxRaise.toFixed(2)}</span>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                                    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                                    transition-all duration-200 font-medium transform hover:scale-105"
-                                                    onClick={handleRaise}
-                                                >
-                                                    RAISE
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
-                                    {canBet && (
-                                        <>
-                                            {isBetAction ? (
-                                                <div className="flex flex-col gap-2 w-full">
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-300">Bet Amount: ${raiseAmount.toFixed(2)}</span>
-                                                        <button
-                                                            className="cursor-pointer bg-gradient-to-r from-[#065f46] to-[#047857] hover:from-[#047857] hover:to-[#059669]
-                                                            px-4 py-2 rounded-lg border border-[#065f46] hover:border-[#10b981] shadow-md
-                                                            transition-all duration-200 font-medium transform hover:scale-105"
-                                                            onClick={submitBet}
-                                                        >
-                                                            CONFIRM BET
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex justify-between text-xs text-gray-400">
-                                                        <span>Min: ${minBet.toFixed(2)}</span>
-                                                        <span>Max: ${maxBet.toFixed(2)}</span>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    className="cursor-pointer bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                                    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                                    transition-all duration-200 font-medium transform hover:scale-105"
-                                                    onClick={handleBet}
-                                                >
-                                                    BET <span className="text-[#64ffda]">${minBet.toFixed(2)}</span>
-                                                </button>
-                                            )}
-                                        </>
+                                    {(canRaise || canBet) && (
+                                        <button
+                                            onClick={submitBetOrRaise}
+                                            disabled={isRaiseAmountInvalid || !isPlayerTurn}
+                                            className={`${
+                                                isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
+                                            } bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
+    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
+    transition-all duration-200 font-medium`}
+                                        >
+                                            {canRaise ? "RAISE" : "BET"} <span className="text-[#64ffda]">${raiseAmount.toFixed(2)}</span>
+                                        </button>
                                     )}
                                 </div>
 
@@ -702,32 +654,91 @@ const PokerActionPanel: React.FC = () => {
                                         <div className="flex items-center space-x-4 bg-[#0f172a40] p-2 rounded-lg border border-[#3a546d]">
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
-                                                transition-all duration-200"
+    py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
+    transition-all duration-200"
                                                 onClick={() => handleRaiseChange(Math.max(raiseAmount - 0.1, canBet ? minBet : minRaise))}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 -
                                             </button>
+
+                                            {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
                                                 min={canBet ? minBet : minRaise}
                                                 max={canBet ? maxBet : maxRaise}
-                                                step={0.1}
+                                                step={0.01}
                                                 value={raiseAmount}
-                                                onChange={e => handleRaiseChange(Number(e.target.value))}
-                                                className="flex-1 accent-[#64ffda]"
+                                                onChange={e => {
+                                                    handleRaiseChange(Number(e.target.value));
+                                                    setLastAmountSource("slider");
+                                                }}
+                                                className="flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
+                                                style={{
+                                                    background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
+                                                        ((raiseAmount - (canBet ? minBet : minRaise)) /
+                                                            ((canBet ? maxBet : maxRaise) - (canBet ? minBet : minRaise))) *
+                                                        100
+                                                    }%, #1e293b ${
+                                                        ((raiseAmount - (canBet ? minBet : minRaise)) /
+                                                            ((canBet ? maxBet : maxRaise) - (canBet ? minBet : minRaise))) *
+                                                        100
+                                                    }%, #1e293b 100%)`
+                                                }}
                                                 disabled={!isPlayerTurn}
                                             />
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
-                                                transition-all duration-200"
+    py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
+    transition-all duration-200"
                                                 onClick={() => handleRaiseChange(Math.min(raiseAmount + 0.1, canBet ? maxBet : maxRaise))}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 +
                                             </button>
+
+                                            {/* Inline Input Box and Min/Max */}
+                                            <div className="flex flex-col items-end gap-1 w-[120px]">
+                                                <input
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={raiseInputRaw}
+                                                    onChange={e => {
+                                                        const raw = e.target.value;
+
+                                                        // Always allow clearing the field
+                                                        if (raw === "") {
+                                                            setRaiseInputRaw("");
+                                                            setRaiseAmount(0);
+                                                            return;
+                                                        }
+
+                                                        // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
+                                                        if (/^\d*\.?\d{0,2}$/.test(raw)) {
+                                                            setRaiseInputRaw(raw);
+
+                                                            // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
+                                                            if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
+                                                                setRaiseAmount(parseFloat(raw));
+                                                                setLastAmountSource("input");
+                                                            }
+                                                        }
+                                                    }}
+                                                    className={`px-2 py-1 rounded text-sm w-full bg-[#1e293b] transition-all duration-200 border ${
+                                                        isRaiseAmountInvalid ? "border-red-500 text-red-400 focus:ring-red-500" : "border-[#3a546d] text-white"
+                                                    }`}
+                                                    disabled={!isPlayerTurn}
+                                                />
+
+                                                <div
+                                                    className={`text-[10px] w-full text-right leading-snug ${
+                                                        isRaiseAmountInvalid ? "text-red-400" : "text-gray-400"
+                                                    }`}
+                                                >
+                                                    <div>Min: ${canBet ? minBet.toFixed(2) : minRaise.toFixed(2)}</div>
+                                                    <div>Max: ${canBet ? maxBet.toFixed(2) : maxRaise.toFixed(2)}</div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {/* Additional Options */}
@@ -736,7 +747,11 @@ const PokerActionPanel: React.FC = () => {
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
                                                 transition-all duration-200 text-xs transform hover:scale-105"
-                                                onClick={() => setRaiseAmount(Math.max(totalPot / 4, canBet ? minBet : minRaise))}
+                                                onClick={() => {
+                                                    const newAmt = Math.max(totalPot / 4, canBet ? minBet : minRaise);
+                                                    handleRaiseChange(newAmt);
+                                                    setLastAmountSource("button");
+                                                }}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 1/4 Pot
@@ -745,7 +760,11 @@ const PokerActionPanel: React.FC = () => {
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
                                                 transition-all duration-200 text-xs transform hover:scale-105"
-                                                onClick={() => setRaiseAmount(Math.max(totalPot / 2, canBet ? minBet : minRaise))}
+                                                onClick={() => {
+                                                    const newAmt = Math.max(totalPot / 2, canBet ? minBet : minRaise);
+                                                    handleRaiseChange(newAmt);
+                                                    setLastAmountSource("button");
+                                                }}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 1/2 Pot
@@ -754,7 +773,11 @@ const PokerActionPanel: React.FC = () => {
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
                                                 transition-all duration-200 text-xs transform hover:scale-105"
-                                                onClick={() => setRaiseAmount(Math.max((totalPot / 4) * 3, canBet ? minBet : minRaise))}
+                                                onClick={() => {
+                                                    const newAmt = Math.max((totalPot * 3) / 4, canBet ? minBet : minRaise);
+                                                    handleRaiseChange(newAmt);
+                                                    setLastAmountSource("button");
+                                                }}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 3/4 Pot
@@ -763,7 +786,11 @@ const PokerActionPanel: React.FC = () => {
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
                                                 transition-all duration-200 text-xs transform hover:scale-105"
-                                                onClick={() => setRaiseAmount(Math.max(totalPot, canBet ? minBet : minRaise))}
+                                                onClick={() => {
+                                                    const newAmt = Math.max(totalPot, canBet ? minBet : minRaise);
+                                                    handleRaiseChange(newAmt);
+                                                    setLastAmountSource("button");
+                                                }}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 Pot
@@ -772,7 +799,11 @@ const PokerActionPanel: React.FC = () => {
                                                 className="bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
                                                 px-2 py-1.5 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
                                                 transition-all duration-200 text-xs font-medium transform hover:scale-105"
-                                                onClick={() => setRaiseAmount(canBet ? maxBet : maxRaise)}
+                                                onClick={() => {
+                                                    const newAmt = canBet ? maxBet : maxRaise;
+                                                    handleRaiseChange(newAmt);
+                                                    setLastAmountSource("button");
+                                                }}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 ALL-IN

@@ -542,10 +542,11 @@ const Table = () => {
             </div>
 
             {/*//! BODY */}
-            <div className="flex w-full flex-grow overflow-hidden">
+            <div className="flex w-full flex-grow overflow-visible">
                 {/*//! TABLE + FOOTER */}
                 <div
-                    className={`flex-grow flex flex-col justify-between transition-all duration-250 overflow-hidden`}
+                    className={"flex-grow flex flex-col justify-between transition-all duration-250 overflow-visible"}
+
                     style={{
                         transition: "margin 0.3s ease"
                     }}
@@ -611,7 +612,7 @@ const Table = () => {
                                 height: "850px",
                                 maxWidth: "100vw",
                                 maxHeight: "calc(100vh - 180px)", // leave room for header/footer
-                                overflow: "visible" // ensure nothing is cut off
+                                overflow: "visible", // ensure nothing is cut off
                             }}
                         >
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
@@ -805,7 +806,7 @@ const Table = () => {
                     </div>
 
                     {/*//! FOOTER */}
-                    <div className="flex-shrink-0 w-full h-[190px] bg-custom-footer text-center z-[10] flex justify-center">
+                    <div className="flex-shrink-0 w-full h-[250px] bg-custom-footer text-center z-[10] flex justify-center">
                         <PokerActionPanel />
                     </div>
                 </div>
