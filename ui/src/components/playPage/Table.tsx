@@ -6,6 +6,7 @@ import OppositePlayerCards from "./Card/OppositePlayerCards";
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
+import Chip from "./common/Chip";
 // import { usePlayerContext } from "../../context/usePlayerContext";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
@@ -20,7 +21,7 @@ import { ethers } from "ethers";
 import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
-import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
+import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -217,6 +218,9 @@ const Table = () => {
 
     const [dealerButtonPosition, setDealerButtonPosition] = useState({ left: "0px", top: "0px" });
     const [isDealerButtonVisible, setIsDealerButtonVisible] = useState(false);
+
+    const showPlayerBets = ["preflop", "flop", "turn", "river"].includes(currentRound);
+
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -541,7 +545,7 @@ const Table = () => {
             <div className="flex w-full flex-grow overflow-hidden">
                 {/*//! TABLE + FOOTER */}
                 <div
-                    className={"flex-grow flex flex-col justify-between transition-all duration-250 overflow-hidden"}
+                    className={`flex-grow flex flex-col justify-between transition-all duration-250 overflow-hidden`}
                     style={{
                         transition: "margin 0.3s ease"
                     }}
@@ -696,18 +700,22 @@ const Table = () => {
                                             </div>
 
                                             {/*//! CHIP */}
-                                            {/* {chipPositionArray.map((position, index) => (
-                                                <div
-                                                    key={`key-${index}`}
-                                                    style={{
-                                                        left: position.left,
-                                                        bottom: position.bottom
-                                                    }}
-                                                    className="absolute"
-                                                >
-                                                    <Chip amount={Number(tableDataValues.tableDataPots[index])} />
-                                                </div>
-                                            ))} */}
+                                            {chipPositionArray.map((position, index) => {
+                                                const player = tableData?.data?.players?.find((p: any) => p.seat === index);
+
+                                                return (
+                                                    <div
+                                                        key={`key-${index}`}
+                                                        style={{
+                                                            left: position.left,
+                                                            bottom: position.bottom
+                                                        }}
+                                                        className="absolute"
+                                                    >
+                                                        <Chip amount={parseFloat(formatWeiToDollars(player?.sumOfBets || "0"))} />
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
