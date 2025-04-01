@@ -10,6 +10,7 @@ import { useTableContext } from "../../../context/TableContext";
 import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { getSignature, getPublicKey } from "../../../utils/accountUtils";
 import useUserWallet from "../../../hooks/useUserWallet";
+import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -42,6 +43,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [showBuyInModal, setShowBuyInModal] = useState(false);
         const [buyInAmount, setBuyInAmount] = useState("");
         const [buyInError, setBuyInError] = useState("");
+        const [isConfirming, setIsConfirming] = useState(false);
 
         // Debug logs for initial state
         debugLog(`VacantPlayer ${index} initial state:`, {
@@ -227,6 +229,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
         // Function to handle the actual join after user confirms buy-in amount
         const handleConfirmBuyIn = async () => {
+
+            setShowBuyInModal(false);
             if (!buyInAmount || parseFloat(buyInAmount) <= 0) {
                 setBuyInError("Please enter a valid buy-in amount");
                 return;
@@ -237,15 +241,32 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
                 debugLog("Buy-in amount in Wei:", buyInWei);
 
-                // Close the modal
-                setShowBuyInModal(false);
+                // Show loading icon and hide modal
+                setIsConfirming(true);
+              
                 setBuyInError("");
 
-                // Call the join table function with the specified amount
-                await handleJoinTable(buyInWei);
+                // Use setTimeout with 0 delay to ensure UI updates before proceeding
+                setTimeout(async () => {
+                    try {
+                        // Call the join table function with the specified amount
+                        await handleJoinTable(buyInWei);
+                    } catch (error) {
+                        console.error("Error joining table:", error);
+                        setShowBuyInModal(true);
+                        setBuyInError("Failed to join table. Please try again.");
+                        setIsConfirming(false);
+                    } finally {
+                        // Reset confirming state when done
+                        setTimeout(() => {
+                            setIsConfirming(false);
+                        }, 1000);
+                    }
+                }, 0);
             } catch (error) {
                 console.error("Error converting buy-in amount:", error);
                 setBuyInError("Invalid buy-in amount");
+                setIsConfirming(false);
             }
         };
 
@@ -323,6 +344,24 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             }
         };
 
+        // Update the useEffect to set default buy-in to max wallet amount
+        useEffect(() => {
+            if (showBuyInModal && balance) {
+                // Set the buy-in amount to the player's full balance
+                const maxBuyIn = ethers.formatUnits(balance, 18);
+                
+                // Get minimum buy-in from table data
+                const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
+                const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
+                const minBuyInWei = localTableData?.data?.minBuyIn || twentyBigBlinds;
+                const minBuyIn = ethers.formatUnits(minBuyInWei, 18);
+                
+                // Set to maximum wallet amount (or min buy-in if that's higher)
+                const defaultAmount = Number(maxBuyIn) < Number(minBuyIn) ? maxBuyIn : maxBuyIn;
+                setBuyInAmount(defaultAmount);
+            }
+        }, [showBuyInModal, balance, localTableData?.data?.bigBlind, localTableData?.data?.minBuyIn]);
+
         // Only log position once during mount
         useEffect(() => {
             debugLog("VacantPlayer mounted at position:", { left, top, index });
@@ -355,39 +394,71 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     </div>
                 )}
 
-                {/* Buy-in Modal */}
-                {showBuyInModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96">
-                            <h2 className="text-xl font-bold mb-4 text-white">Buy In</h2>
-                            <p className="mb-4 text-gray-300">Enter the amount you want to buy in with (in USDC):</p>
+                {/* Loading Animation - with semi-transparent background */}
+                {isConfirming && (
+                    <div className="fixed inset-0 flex items-center justify-center z-[100] bg-black bg-opacity-60">
+                        <LoadingPokerIcon size={80} />
+                    </div>
+                )}
 
-                            <div className="mb-4">
-                                <label className="block text-gray-300 mb-2">Amount:</label>
-                                <input
-                                    type="number"
-                                    value={buyInAmount}
-                                    onChange={e => setBuyInAmount(e.target.value)}
-                                    className="w-full p-2 bg-gray-700 text-white rounded"
-                                    placeholder="e.g., 4.0"
-                                    step="0.1"
-                                    min="0.1"
-                                />
-                                {buyInError && <p className="text-red-500 mt-1">{buyInError}</p>}
+                {/* Enhanced Buy-in Modal - remove full-screen overlay */}
+                {showBuyInModal && (
+                    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+                        <div className="bg-gradient-to-b from-gray-800 to-gray-900 p-8 rounded-xl shadow-2xl w-96 border border-gray-700 overflow-hidden relative">
+                            {/* Decorative card suits in the background */}
+                            <div className="absolute -right-8 -top-8 text-6xl opacity-10 rotate-12">♠</div>
+                            <div className="absolute -left-8 -bottom-8 text-6xl opacity-10 -rotate-12">♥</div>
+                            
+                            <h2 className="text-2xl font-bold mb-2 text-white flex items-center">
+                                <span className="text-green-400 mr-2">♣</span>
+                                Buy In
+                                <span className="text-red-400 ml-2">♦</span>
+                            </h2>
+                            
+                            <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent mb-4 opacity-50"></div>
+                            
+                            <p className="mb-6 text-gray-300">How much would you like to bring to the table?</p>
+
+                            <div className="mb-6">
+                                <label className="block text-gray-300 mb-2 font-medium">Amount (USDC):</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-400 font-bold">$</span>
+                                    <input
+                                        type="number"
+                                        value={buyInAmount}
+                                        onChange={e => setBuyInAmount(e.target.value)}
+                                        className="w-full p-3 pl-8 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-400 transition-all duration-200"
+                                        placeholder="0.00"
+                                        step="0.1"
+                                        min="0.1"
+                                    />
+                                </div>
+                                {buyInError && (
+                                    <p className="text-red-400 mt-2 flex items-center">
+                                        <span className="mr-1">⚠️</span>
+                                        {buyInError}
+                                    </p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-2">
+                                    Your balance: ${balance ? ethers.formatUnits(balance, 18) : "0.00"} USDC
+                                </p>
                             </div>
 
-                            <div className="flex justify-end space-x-4">
+                            <div className="flex justify-between space-x-4">
                                 <button
                                     onClick={() => {
                                         setShowBuyInModal(false);
                                         setBuyInError("");
                                     }}
-                                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
+                                    className="px-5 py-3 rounded-lg bg-gray-600 text-white font-medium transition-all duration-200 hover:bg-gray-500 flex-1"
                                 >
                                     Cancel
                                 </button>
-                                <button onClick={handleConfirmBuyIn} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500">
-                                    Confirm
+                                <button 
+                                    onClick={handleConfirmBuyIn} 
+                                    className="px-5 py-3 rounded-lg bg-gradient-to-r from-green-600 to-green-500 text-white font-medium shadow-lg transition-all duration-200 hover:from-green-500 hover:to-green-400 transform hover:scale-105 flex-1"
+                                >
+                                    Take Seat
                                 </button>
                             </div>
                         </div>

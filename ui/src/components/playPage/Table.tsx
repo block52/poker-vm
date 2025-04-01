@@ -784,19 +784,7 @@ const Table = () => {
                                             );
                                         })}
                                     </div>
-                                    {/*//! Dealer */}
-                                    {isDealerButtonVisible && (
-                                        <div
-                                            className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                            style={{
-                                                left: `calc(${dealerButtonPosition.left} + 200px)`,
-                                                top: dealerButtonPosition.top,
-                                                transform: "none"
-                                            }}
-                                        >
-                                            D
-                                        </div>
-                                    )}
+                                  
                                 </div>
                             </div>
                         </div>
