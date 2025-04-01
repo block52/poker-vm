@@ -80,7 +80,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
             <div
                 key={index}
                 className={`${
-                    playerData.status === PlayerStatus.FOLDED ? "opacity-60" : ""
+                    playerData.status.toLowerCase() === PlayerStatus.FOLDED.toLowerCase() ? "opacity-60" : ""
                 } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[10]`}
                 style={{
                     left: left,
@@ -105,10 +105,10 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                     >
                         {/* Progress bar is not shown in showdown */}
                         {!isWinner && tableData?.data?.round !== "showdown" && <ProgressBar index={index} />}
-                        {!isWinner && playerData.status === PlayerStatus.FOLDED && (
+                        {!isWinner && playerData.status.toLowerCase() === PlayerStatus.FOLDED.toLowerCase() && (
                             <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">FOLD</span>
                         )}
-                        {!isWinner && playerData.status === PlayerStatus.ALL_IN && (
+                        {!isWinner && playerData.status.toLowerCase() === PlayerStatus.ALL_IN.toLowerCase() && (
                             <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
                                 ALL IN
                             </span>
