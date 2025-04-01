@@ -596,6 +596,20 @@ const PokerActionPanel: React.FC = () => {
                                     </span>
                                 </button>
                             )}
+                            {canFoldAnytime && (!showActionButtons || (showSmallBlindButton || showBigBlindButton)) && (
+                                        <button
+                                            className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
+                    px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
+                    transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
+                                            onClick={handleFold}
+                                        >
+                                            FOLD
+                                        </button>
+                                    )}
+                                    {/* Show a message if the player has folded */}
+                                    {userPlayer?.status === "folded" && (
+                                        <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
+                                    )}
                         </div>
 
                         {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
