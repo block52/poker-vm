@@ -1,5 +1,7 @@
 import { RPCMethods } from "@bitcoinbrisbane/block52";
 
+// RESET_BLOCKCHAIN is now included in the SDK's RPCMethods enum, so we don't need a custom constant
+
 export const READ_METHODS = [
     RPCMethods.GET_ACCOUNT,
     RPCMethods.GET_BLOCK_BY_HASH,
@@ -28,4 +30,10 @@ export const WRITE_METHODS = [
     RPCMethods.DEAL
 ];
 
-export const CONTROL_METHODS = [RPCMethods.PURGE, RPCMethods.START, RPCMethods.STOP, RPCMethods.SHUTDOWN];
+export const CONTROL_METHODS = [
+    RPCMethods.PURGE, 
+    RPCMethods.START, 
+    RPCMethods.STOP, 
+    RPCMethods.SHUTDOWN,
+    RPCMethods.RESET_BLOCKCHAIN
+];

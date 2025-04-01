@@ -203,7 +203,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const fetchTableData = async () => {
             // Add debounce - only fetch if it's been at least 2 seconds since last update
             const now = Date.now();
-            if (!isFirstLoad && now - lastUpdateTimestamp < 20000) {
+            if (!isFirstLoad && now - lastUpdateTimestamp < 1000) {
                 return;
             }
 

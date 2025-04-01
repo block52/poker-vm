@@ -27,7 +27,7 @@ export class Server {
     private _started: boolean = false;
     private _syncing: boolean = false;
     private _synced: boolean = false;
-    private _lastDepositSync: Date;
+    _lastDepositSync: Date;
     private readonly _port: number = parseInt(process.env.PORT || "3000");
     private readonly _nodes: Map<string, Node> = new Map();
 

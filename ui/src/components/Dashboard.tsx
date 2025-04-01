@@ -33,6 +33,62 @@ const Dashboard: React.FC = () => {
     const [importKey, setImportKey] = useState("");
     const [importError, setImportError] = useState("");
     const [showPrivateKey, setShowPrivateKey] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
+
+    // Add function to reset blockchain
+    const resetBlockchain = async () => {
+        if (!confirm("Are you sure you want to reset the blockchain? This will clear all data.")) {
+            return;
+        }
+
+        setIsResetting(true);
+        try {
+            // Determine API endpoint based on current URL
+            const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                ? 'http://localhost:3000'
+                : 'https://node1.block52.xyz';
+            
+            // According to the SDK, RESET_BLOCKCHAIN expects [username, password] params
+            // but our implementation doesn't currently require them
+            const response = await axios.post(apiUrl, {
+                id: 1,
+                method: "reset_blockchain",
+                params: ["admin", "admin"] // Using placeholder values since our implementation ignores them
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            console.log("Reset response:", response.data);
+            
+            // Check if the response indicates success - could be in various formats
+            // Look for error first, then check if data is true, or if there's a result object at all
+            if (response.data.error) {
+                alert(`Blockchain reset failed: ${response.data.error}`);
+            } else if (response.data.result === true) {
+                // Direct boolean result - the new format
+                alert("Blockchain reset successful! All data has been cleared and accounts recreated.");
+            } else if (response.data.result && response.data.result.data) {
+                // Old format with nested data property
+                if (response.data.result.data === true || response.data.result.data === "true") {
+                    alert("Blockchain reset successful! All data has been cleared and account on layer 2 have been resynced with layer 1.");
+                } else {
+                    alert("Blockchain reset completed but with an unexpected response. Check console for details.");
+                }
+            } else {
+                alert("Blockchain reset response format unexpected. Check console for details.");
+            }
+            
+            // Refresh the page to update any UI components
+            window.location.reload();
+        } catch (error: any) {
+            console.error("Error resetting blockchain:", error);
+            alert(`Error resetting blockchain: ${error.message || "Unknown error"}`);
+        } finally {
+            setIsResetting(false);
+        }
+    };
 
     // Add logging to fetch games
     const fetchGames = async () => {
@@ -197,7 +253,7 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black">
+        <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black relative">
             {/* Import Private Key Modal */}
             {showImportModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -433,6 +489,39 @@ const Dashboard: React.FC = () => {
                         Next
                     </Link>
                 </div>
+            </div>
+
+            {/* Reset Blockchain Button */}
+            <div className="fixed bottom-4 right-4 flex flex-col items-end">
+                <button
+                    onClick={resetBlockchain}
+                    disabled={isResetting}
+                    className={`px-3 py-2 text-xs ${isResetting ? 'bg-gray-600' : 'bg-red-600 hover:bg-red-700'} text-white rounded-lg transition duration-300 opacity-70 hover:opacity-100 flex items-center`}
+                >
+                    {isResetting ? (
+                        <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Resetting Blockchain...
+                        </>
+                    ) : (
+                        "Developer Testing Tool: Reset Blockchain"
+                    )}
+                </button>
+                {isResetting && (
+                    <div className="mt-2 p-2 bg-gray-800 bg-opacity-90 rounded text-xs text-white max-w-xs">
+                        <p className="font-bold mb-1">Reset in progress:</p>
+                        <ul className="list-disc list-inside space-y-1 text-gray-300">
+                            <li>Clearing database collections</li>
+                            <li>Purging transaction mempool</li>
+                            <li>Creating genesis block</li>
+                            <li>Reprocessing deposits</li>
+                        </ul>
+                        <p className="mt-1 text-yellow-300 text-[10px]">Please wait, this may take a minute...</p>
+                    </div>
+                )}
             </div>
         </div>
     );
