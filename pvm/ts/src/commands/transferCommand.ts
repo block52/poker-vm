@@ -137,12 +137,10 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 return signResult(gameTx, this.privateKey);
             }
 
-            console.log(`Processing regular transaction...`);
+            console.log(`Processing EUA transaction...`);
 
             // If we haven't thrown an error, then we can create the transaction
-            // console.log(`Creating transaction...`);
             const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
-            // console.log(`Adding transaction to mempool...`);
             await this.mempool.add(transferTx);
 
             return signResult(transferTx, this.privateKey);

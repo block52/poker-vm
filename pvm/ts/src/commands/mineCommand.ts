@@ -8,15 +8,18 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import contractSchemas from "../schema/contractSchemas";
 import { GameStateCommand } from "./gameStateCommand";
 import GameState from "../schema/gameState";
+import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
 
 export class MineCommand implements ISignedCommand<Block | null> {
     private readonly mempool: Mempool;
+    private readonly accountManagement: AccountManagement;
     private readonly blockchainManagement: BlockchainManagement;
     private readonly transactionManagement: TransactionManagement;
     private readonly gameStateManagement: GameManagement;
 
     constructor(private readonly privateKey: string) {
         this.mempool = getMempoolInstance();
+        this.accountManagement = getAccountManagementInstance();
         this.blockchainManagement = getBlockchainInstance();
         this.transactionManagement = getTransactionInstance();
         this.gameStateManagement = new GameManagement();
@@ -27,7 +30,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         const validTxs: Transaction[] = this.validate(txs);
         const uniqueTxs: Transaction[] = await this.filter(validTxs);
-        await this.processGameTransactions(uniqueTxs);
+        await this.processTransactions(uniqueTxs);
 
         const lastBlock = await this.blockchainManagement.getLastBlock();
         const block = Block.create(lastBlock.index + 1, lastBlock.hash, uniqueTxs, this.privateKey);
@@ -36,6 +39,24 @@ export class MineCommand implements ISignedCommand<Block | null> {
         await this.mempool.clear();
 
         return signResult(block, this.privateKey);
+    }
+
+    private async processTransactions(txs: Transaction[]) {
+        console.log(`Processing ${txs.length} account transactions`);
+        const validAccountTxs = await this.filter(txs);
+        console.log(`Valid account transactions: ${validAccountTxs.length}`);
+
+        // const sortedTxs = validAccountTxs.sort((a, b) => a.nonce - b.nonce);
+        
+        for (let i = 0; i < validAccountTxs.length; i++) {
+            try {
+                await this.accountManagement.incrementBalance(validAccountTxs[i].from, validAccountTxs[i].value);
+                await this.accountManagement.decrementBalance(validAccountTxs[i].to, validAccountTxs[i].value);
+            }
+            catch (error) {
+                console.error(`Error processing transaction ${validAccountTxs[i].hash}:`, error);
+            }
+        }
     }
 
     private async processGameTransactions(txs: Transaction[]) {
@@ -60,7 +81,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
         }
 
         // execute the commands as promise all
-        // await Promise.all(commands.map(c => c.execute()));
         for (let i = 0; i < commands.length; i++) {
             const result = await commands[i].execute();
             const gameState = new GameState({
@@ -74,7 +94,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
     private async filterGameTransactions(txs: Transaction[]): Promise<Transaction[]> {
         const validTxs: Transaction[] = [];
 
-        // txs.forEach(tx => {
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
             const schema = await contractSchemas.findOne({ address: tx.to });
@@ -97,14 +116,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
             }
         }
         return validTxs;
-    }
-
-    private unique(txs: Transaction[]): Transaction[] {
-        const txMap = new Map<string, Transaction>();
-        for (const tx of txs) {
-            txMap.set(tx.hash, tx);
-        }
-        return Array.from(txMap.values());
     }
 
     private async filter(txs: Transaction[]): Promise<Transaction[]> {
