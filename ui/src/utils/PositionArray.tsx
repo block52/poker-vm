@@ -235,3 +235,70 @@ export const dealerPosition = {
     ]
 };
 
+export const turnAnimationPosition = {
+    six: [
+        {
+            left: "40%",
+            top: "100%"
+        },
+        {
+            left: "17%",
+            top: "32%"
+        },
+        {
+            left: "40%",
+            top: "-35%"
+        },
+        {
+            left: "60%",
+            top: "-35%"
+        },
+        {
+            left: "83%",
+            top: "32%"
+        },
+        {
+            left: "60%",
+            top: "100%"
+        }
+    ],
+    nine: [
+        {
+            left: "400px",
+            top: "380px"
+        },
+        {
+            left: "150px",
+            top: "425px"
+        },
+        {
+            left: "-122px",
+            top: "270px"
+        },
+        {
+            left: "-120px",
+            top: "30px"
+        },
+        {
+            left: "200px",
+            top: "-110px"
+        },
+        {
+            left: "600px",
+            top: "-110px"
+        },
+        {
+            left: "930px",
+            top: "30px"
+        },
+        {
+            left: "930px",
+            top: "230px"
+        },
+        {
+            left: "650px",
+            top: "380px"
+        }
+    ]
+};
+
