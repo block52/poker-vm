@@ -1,10 +1,10 @@
-import * as React from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
 
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useTableContext } from "../../../context/TableContext";
 import { ethers } from "ethers";
+import { useMemo } from "react";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -30,17 +30,24 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
 
     debugLog("Player rendered with these props:", { left, top, index, color, status });
 
-    // // Add debugging
-    // React.useEffect(() => {
-    //     console.log("Player component rendering for seat:", index);
-    //     console.log("Player component tableData:", tableData);
-    // }, [index, tableData]);
-
     // Get player data directly from the table data
-    const playerData = React.useMemo(() => {
+    const playerData = useMemo(() => {
         if (!tableData?.data?.players) return null;
         return tableData.data.players.find((p: any) => p.seat === index);
     }, [tableData, index]);
+
+    // Check if this player is a winner
+    const isWinner = useMemo(() => {
+        if (!winnerInfo) return false;
+        return winnerInfo.some(winner => winner.seat === index);
+    }, [winnerInfo, index]);
+
+    // Get winner amount if this player is a winner
+    const winnerAmount = useMemo(() => {
+        if (!isWinner || !winnerInfo) return null;
+        const winner = winnerInfo.find(w => w.seat === index);
+        return winner ? winner.formattedAmount : null;
+    }, [isWinner, winnerInfo, index]);
 
     if (!playerData) {
         debugLog("Player component has no player data for seat", index);
@@ -49,19 +56,6 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
 
     // Format stack value with ethers.js (more accurate for large numbers)
     const stackValue = playerData.stack ? Number(ethers.formatUnits(playerData.stack, 18)) : 0;
-
-    // Check if this player is a winner
-    const isWinner = React.useMemo(() => {
-        if (!winnerInfo) return false;
-        return winnerInfo.some(winner => winner.seat === index);
-    }, [winnerInfo, index]);
-
-    // Get winner amount if this player is a winner
-    const winnerAmount = React.useMemo(() => {
-        if (!isWinner || !winnerInfo) return null;
-        const winner = winnerInfo.find(w => w.seat === index);
-        return winner ? winner.formattedAmount : null;
-    }, [isWinner, winnerInfo, index]);
 
     return (
         <div

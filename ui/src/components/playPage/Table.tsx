@@ -128,7 +128,6 @@ const Table = () => {
     const {
         tableData,
         nextToActInfo,
-        currentRound,
         playerLegalActions,
         tableSize,
         showThreeCards,
@@ -170,14 +169,14 @@ const Table = () => {
         // If there are active players, set their positions
         if (activePlayers.length > 0) {
             // Player in seat 0
-            if (activePlayers.find((p: any) => p.seat === 0)) {
-                const player0 = activePlayers.find((p: any) => p.seat === 0);
+            if (activePlayers.find((p: Player) => p.seat === 0)) {
+                const player0 = activePlayers.find((p: Player) => p.seat === 0);
                 debugLog("Player 0:", player0);
             }
 
             // Player in seat 1
-            if (activePlayers.find((p: any) => p.seat === 1)) {
-                const player1 = activePlayers.find((p: any) => p.seat === 1);
+            if (activePlayers.find((p: Player) => p.seat === 1)) {
+                const player1 = activePlayers.find((p: Player) => p.seat === 1);
                 debugLog("Player 1:", player1);
             }
         }
@@ -342,7 +341,7 @@ const Table = () => {
 
     const onGoToDashboard = () => {
         // Find the current user's player data
-        const currentUserPlayer = tableDataValues.tableDataPlayers?.find((p: any) => p.address?.toLowerCase() === userWalletAddress);
+        const currentUserPlayer = tableDataValues.tableDataPlayers?.find((p: Player) => p.address?.toLowerCase() === userWalletAddress);
 
         // Check if the player exists and has not folded
         if (currentUserPlayer && currentUserPlayer.status !== "folded" && currentUserPlayer.status !== "sitting-out") {
@@ -719,7 +718,7 @@ const Table = () => {
                                     <div className="absolute inset-0 z-30">
                                         {playerPositionArray.map((position, positionIndex) => {
                                             // Find the player at this seat position
-                                            const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex);
+                                            const playerAtThisSeat = activePlayers.find((p: Player) => p.seat === positionIndex);
 
                                             // Check if this player is the current user
                                             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
