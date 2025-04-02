@@ -638,7 +638,7 @@ const Table = () => {
                                                 >
                                                     Total Pot:
                                                     <span style={{ fontWeight: "700px" }}>
-                                                        {" "}
+                                                        {" "} $
                                                         {tableDataValues.tableDataPots?.[0] === "0"
                                                             ? "0.00"
                                                             : tableDataValues.tableDataPots
@@ -658,7 +658,7 @@ const Table = () => {
                                                 >
                                                     Main Pot:
                                                     <span style={{ fontWeight: "700px" }}>
-                                                        {" "}
+                                                        {" "}$
                                                         {tableDataValues.tableDataPots?.[0] === "0"
                                                             ? "0.00"
                                                             : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2)}
