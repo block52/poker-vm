@@ -1,5 +1,3 @@
-import * as React from "react";
-
 type HandResult = {
     id: string;
     player: string;

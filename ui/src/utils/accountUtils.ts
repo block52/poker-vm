@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { LegalAction, Player, TableData, TableStatus } from "../types/index";
 
 export const getSignature = async (
     privateKey: string,
@@ -45,12 +46,12 @@ export const getPublicKey = (privateKey: string): string => {
  * @param tableData The table data from context
  * @returns Object with user's seat, available actions, and other relevant data
  */
-export const getUserTableStatus = (tableData: any) => {
+export const getUserTableStatus = (tableData: any): TableStatus | undefined => {
     // console.log("getUserTableStatus called with tableData:", tableData);
 
     if (!tableData) {
         // console.log("tableData is null or undefined, returning null");
-        return null;
+        return undefined;
     }
 
     // Extract the actual table data from the nested structure
@@ -62,19 +63,19 @@ export const getUserTableStatus = (tableData: any) => {
 
     if (!userAddress) {
         // console.log("No user address found in localStorage, returning null");
-        return null;
+        return undefined;
     }
 
     // Try to find player in different possible locations
     const playersArray = actualTableData.players || [];
 
     // Find the player in the table
-    const player = playersArray.find((p: any) => p.address?.toLowerCase() === userAddress.toLowerCase());
+    const player = playersArray.find((p: Player) => p.address?.toLowerCase() === userAddress.toLowerCase());
     // console.log("Found player:", player);
 
     if (!player) {
         // console.log("Player not found in table data, returning null");
-        return null;
+        return undefined;
     }
 
     // Check if it's the player's turn
@@ -85,13 +86,13 @@ export const getUserTableStatus = (tableData: any) => {
     const availableActions = player.legalActions || [];
 
     // Check for specific actions
-    const canPostSmallBlind = availableActions.some((a: any) => a.action === "post small blind");
-    const canPostBigBlind = availableActions.some((a: any) => a.action === "post big blind");
-    const canCheck = availableActions.some((a: any) => a.action === "check");
-    const canCall = availableActions.some((a: any) => a.action === "call");
-    const canBet = availableActions.some((a: any) => a.action === "bet");
-    const canRaise = availableActions.some((a: any) => a.action === "raise");
-    const canFold = availableActions.some((a: any) => a.action === "fold");
+    const canPostSmallBlind = availableActions.some((a: LegalAction) => a.action === "post small blind");
+    const canPostBigBlind = availableActions.some((a: LegalAction) => a.action === "post big blind");
+    const canCheck = availableActions.some((a: LegalAction) => a.action === "check");
+    const canCall = availableActions.some((a: LegalAction) => a.action === "call");
+    const canBet = availableActions.some((a: LegalAction) => a.action === "bet");
+    const canRaise = availableActions.some((a: LegalAction) => a.action === "raise");
+    const canFold = availableActions.some((a: LegalAction) => a.action === "fold");
 
     // Check if player is in small blind position
     const isSmallBlindPosition = actualTableData.smallBlindPosition === player.seat;
@@ -99,7 +100,7 @@ export const getUserTableStatus = (tableData: any) => {
 
     // Get action limits if available
     const getActionLimits = (actionType: string) => {
-        const action = availableActions.find((a: any) => a.action === actionType);
+        const action = availableActions.find((a: LegalAction) => a.action === actionType);
         return action
             ? {
                   min: action.min,
@@ -108,7 +109,7 @@ export const getUserTableStatus = (tableData: any) => {
             : null;
     };
 
-    const result = {
+    const result: TableStatus = {
         isInTable: true,
         isPlayerTurn,
         seat: player.seat,
@@ -139,12 +140,12 @@ export const getUserTableStatus = (tableData: any) => {
  * @param tableData The table data from context
  * @returns Boolean indicating if the user is playing
  */
-export const isUserPlaying = (tableData: any): boolean => {
+export const isUserPlaying = (tableData: TableData): boolean => {
     if (!tableData || !tableData.players) return false;
 
     const userAddress = localStorage.getItem("user_eth_public_key");
     if (!userAddress) return false;
 
     // Check if the user's address is in the players array
-    return tableData.players.some((player: any) => player.address.toLowerCase() === userAddress.toLowerCase());
+    return tableData.players.some((player: Player) => player.address.toLowerCase() === userAddress.toLowerCase());
 };
