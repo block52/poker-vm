@@ -5,7 +5,6 @@ import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
-import Player from "./Players/Player";
 import Chip from "./common/Chip";
 // import { usePlayerContext } from "../../context/usePlayerContext";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
@@ -22,6 +21,7 @@ import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
+import { Player } from "../../types/index";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -159,7 +159,9 @@ const Table = () => {
     }, [currentUserSeat, getUserBySeat]);
 
     // Define activePlayers only once
-    const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+    const activePlayers = React.useMemo(() => {
+        return tableDataValues.tableDataPlayers?.filter((player: Player) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+    }, [tableDataValues.tableDataPlayers]);
 
     useEffect(() => {
         if (!DEBUG_MODE) return; // Skip logging if not in debug mode
@@ -213,8 +215,6 @@ const Table = () => {
 
     const [dealerButtonPosition, setDealerButtonPosition] = useState({ left: "0px", top: "0px" });
     const [isDealerButtonVisible, setIsDealerButtonVisible] = useState(false);
-
-    const showPlayerBets = ["preflop", "flop", "turn", "river"].includes(currentRound);
 
 
     // Add state for mouse position
