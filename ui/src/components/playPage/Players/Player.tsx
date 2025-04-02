@@ -30,7 +30,7 @@ type PlayerProps = {
 const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     const { tableData, winnerInfo } = useTableContext();
 
-    debugLog("Player rendered with these props:", { left, top, index, color, status });
+
 
     // // Add debugging
     // React.useEffect(() => {
@@ -45,7 +45,6 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     }, [tableData, index]);
 
     if (!playerData) {
-        debugLog("Player component has no player data for seat", index);
         return <></>;
     }
 
