@@ -268,12 +268,12 @@ export const turnAnimationPosition = {
             top: "380px"
         },
         {
-            left: "150px",
-            top: "425px"
+            left: "149px",
+            top: "463px"
         },
         {
             left: "-122px",
-            top: "270px"
+            top: "317px"
         },
         {
             left: "-120px",
