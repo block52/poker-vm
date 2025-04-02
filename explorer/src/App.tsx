@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/theme/theme-provider";
 import { Navbar } from "./components/ui/navbar";
+import { Footer } from "./components/ui/Footer";
 import MempoolPage from "./components/pages/MempoolPage";
 import TransactionsPage from "./components/pages/TransactionsPage";
 import BlockPage from "./components/pages/BlockPage";
@@ -22,6 +23,7 @@ function App() {
                             <Route path="/transactions" element={<TransactionsPage />} />
                         </Routes>
                     </main>
+                    <Footer />
                 </div>
             </Router>
         </ThemeProvider>
