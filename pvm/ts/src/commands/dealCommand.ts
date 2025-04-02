@@ -3,9 +3,9 @@ import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
-import TexasHoldemGame, { GameOptions } from "../engine/texasHoldem";
-import { AccountCommand } from "./accountCommand";
+import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
+import { GameOptions } from "@bitcoinbrisbane/block52";
 
 export class DealCommand implements ICommand<ISignedResponse<any>> {
     private readonly gameManagement: GameManagement;

@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
-import TexasHoldemGame, { GameOptions } from "../engine/texasHoldem";
+import TexasHoldemGame from "../engine/texasHoldem";
+import { GameOptions } from "@bitcoinbrisbane/block52";
 
 describe("Game Tests", () => {
     // These need to be fetched from the contract in the future

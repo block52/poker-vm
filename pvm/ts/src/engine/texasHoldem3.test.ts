@@ -1,6 +1,6 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
-import TexasHoldemGame, { GameOptions } from "./texasHoldem";
+import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
 
 describe("Texas Holdem Game - Comprehensive Tests", () => {

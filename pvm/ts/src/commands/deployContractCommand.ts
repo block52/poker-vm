@@ -1,7 +1,6 @@
-import { ethers } from "ethers";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { GameOptions } from "../engine/texasHoldem";
+import { GameOptions } from "@bitcoinbrisbane/block52";
 import { GameManagement } from "../state/gameManagement";
 
 export class DeployContractCommand implements ISignedCommand<string> {

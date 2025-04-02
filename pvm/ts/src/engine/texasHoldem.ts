@@ -23,7 +23,7 @@ import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
+import { IPoker, IUpdate, Turn } from "./types";
 import { ethers } from "ethers";
 
 type TurnWithRound = Turn & { round: TexasHoldemRound };

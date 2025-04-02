@@ -1,6 +1,6 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
-import TexasHoldemGame, { GameOptions } from "../texasHoldem";
+import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
 import { Turn } from "../types";

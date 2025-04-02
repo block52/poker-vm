@@ -1,4 +1,5 @@
-import TexasHoldemGame, { GameOptions } from "./texasHoldem";
+import { GameOptions } from "@bitcoinbrisbane/block52";
+import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
 
 describe("CurrentPlayerId Tests", () => {
