@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { Footer } from "../ui/Footer"
 
 interface PageLayoutProps {
     children: ReactNode;
@@ -11,7 +10,7 @@ export function PageLayout({ children }: PageLayoutProps) {
             <div className="flex-grow w-full">
                 {children}
             </div>
-           \
+           
         </div>
     );
 }
