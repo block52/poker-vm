@@ -291,18 +291,6 @@ export class RPC {
                 //     break;
                 // }
 
-                case RPCMethods.MINT: {
-                    if (request.params?.length !== 1) {
-                        return makeErrorRPCResponse(id, "Invalid params");
-                    }
-                    const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
-
-                    const command = new MintCommand(depositIndex, "", validatorPrivateKey);
-                    result = await command.execute();
-
-                    break;
-                }
-
                 case RPCMethods.BURN: {
                     if (request.params?.length !== 3) {
                         return makeErrorRPCResponse(id, "Invalid params");
@@ -316,10 +304,19 @@ export class RPC {
                     break;
                 }
 
+                case RPCMethods.MINT: {
+                    if (request.params?.length !== 1) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
+
+                    const command = new MintCommand(depositIndex, "", validatorPrivateKey);
+                    result = await command.execute();
+
+                    break;
+                }
+
                 case RPCMethods.TRANSFER: {
-                    // if (request.params?.length !== 3) {
-                    //     return makeErrorRPCResponse(id, "Invalid params");
-                    // }
                     const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
 
                     // Todo: get from out of the signed request
@@ -343,27 +340,27 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.DEAL: {
-                    const [gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.DEAL];
+                case RPCMethods.PERFORM_ACTION: {
+                    const [from, gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
                     const publicKey = request.data as string;
 
-                    // Extract player address from the request's public key
-                    let playerAddress = ethers.ZeroAddress; // Default value
+                    // // Extract player address from the request's public key
+                    // let playerAddress = ethers.ZeroAddress; // Default value
 
-                    if (publicKey) {
-                        try {
-                            playerAddress = getAccountFromPublicKey(publicKey);
-                            console.log(`Derived player address from public key: ${playerAddress}`);
-                        } catch (error) {
-                            console.error("Failed to derive address from public key:", error);
-                        }
-                    } else if (request.data) {
-                        // Fallback to using data field if available
-                        playerAddress = request.data;
-                    }
+                    // if (publicKey) {
+                    //     try {
+                    //         playerAddress = getAccountFromPublicKey(publicKey);
+                    //         console.log(`Derived player address from public key: ${playerAddress}`);
+                    //     } catch (error) {
+                    //         console.error("Failed to derive address from public key:", error);
+                    //     }
+                    // } else if (request.data) {
+                    //     // Fallback to using data field if available
+                    //     playerAddress = request.data;
+                    // }
 
                     try {
-                        const command = new DealCommand(gameAddress, playerAddress, seed, validatorPrivateKey);
+                        const command = new DealCommand(gameAddress, from, seed, validatorPrivateKey);
                         result = await command.execute();
 
                         // Check if the result indicates an error but wasn't thrown as an exception
