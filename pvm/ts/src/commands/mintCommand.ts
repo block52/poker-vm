@@ -58,12 +58,6 @@ export class MintCommand implements ISignedCommand<Transaction> {
             publicKey: this.publicKey
         });
 
-        // const existingTx = await Blocks.findOne({ transactions: { $elemMatch: { identifier: this.depositIndex } } });
-        // console.log(existingTx);
-        // if (existingTx) {
-        //     return signResult(Transaction.fromDocument(existingTx), this.privateKey);
-        // }
-
         // TODO: Get txId from bridge contract event
         // const data = this.hash;
         const data = `MINT_${this.depositIndex}`;
@@ -71,8 +65,9 @@ export class MintCommand implements ISignedCommand<Transaction> {
         const exists = await this.transactionManagement.getTransactionByData(data);
         
         if (exists) {
-            console.log("⚠️ Transaction already exists in blockchain");
-            throw new Error("Transaction already in blockchain");
+            console.log("ℹ️ Transaction already exists in blockchain, returning existing transaction");
+            // Return the existing transaction instead of throwing an error
+            return signResult(exists, this.privateKey);
         }
 
         console.log("🔍 Fetching deposit details from bridge contract...");

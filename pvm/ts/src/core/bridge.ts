@@ -110,77 +110,99 @@ export class Bridge {
     public async resync(): Promise<void> {
         console.log("\n🔄 Bridge: Starting resync...");
         
-        const events = await this.bridgeContract.queryFilter("Deposited", 0, "latest");
-        console.log(`📊 Bridge: Found ${events.length} deposit events to process`);
+        try {
+            const events = await this.bridgeContract.queryFilter("Deposited", 0, "latest");
+            console.log(`📊 Bridge: Found ${events.length} deposit events to process`);
 
-        // First, log all events found with more detail
-        console.log("\n📋 Bridge: All found events (Raw Format):");
-        events.forEach((event, i) => {
-            const depositEvent = event as EventLog;
-            if (depositEvent.args) {
-                console.log(`\n🔍 Event ${i} Details:`, {
-                    blockNumber: depositEvent.blockNumber,
-                    txHash: depositEvent.transactionHash,
-                    raw_data: {
+            // First, log all events found with more detail
+            console.log("\n📋 Bridge: All found events (Raw Format):");
+            events.forEach((event, i) => {
+                const depositEvent = event as EventLog;
+                if (depositEvent.args) {
+                    console.log(`\n🔍 Event ${i} Details:`, {
+                        blockNumber: depositEvent.blockNumber,
+                        txHash: depositEvent.transactionHash,
+                        raw_data: {
+                            account: depositEvent.args.account,
+                            amount: {
+                                raw: depositEvent.args.amount.toString(),
+                                hex: `0x${depositEvent.args.amount.toString(16)}`,
+                                decimal: Number(depositEvent.args.amount)
+                            },
+                            index: {
+                                raw: depositEvent.args.index.toString(),
+                                hex: `0x${depositEvent.args.index.toString(16)}`,
+                                decimal: Number(depositEvent.args.index)
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Then process each event with more logging
+            let successCount = 0;
+            let skippedCount = 0;
+            let errorCount = 0;
+            
+            for (const event of events) {
+                const depositEvent = event as EventLog;
+                if (depositEvent.args) {
+                    console.log("\n🎯 Processing Deposit Event:", {
+                        raw_index: depositEvent.args.index.toString(),
+                        adjusted_index: (depositEvent.args.index - 1n).toString(),
                         account: depositEvent.args.account,
                         amount: {
                             raw: depositEvent.args.amount.toString(),
                             hex: `0x${depositEvent.args.amount.toString(16)}`,
                             decimal: Number(depositEvent.args.amount)
                         },
-                        index: {
-                            raw: depositEvent.args.index.toString(),
-                            hex: `0x${depositEvent.args.index.toString(16)}`,
-                            decimal: Number(depositEvent.args.index)
+                        txHash: depositEvent.transactionHash,
+                        blockNumber: depositEvent.blockNumber
+                    });
+
+                    try {
+                        console.log("📤 Calling onDeposit with parameters:", {
+                            receiver: depositEvent.args.account,
+                            value: depositEvent.args.amount.toString(),
+                            index: (depositEvent.args.index - 1n).toString(),
+                            txHash: depositEvent.transactionHash
+                        });
+
+                        const index: bigint = depositEvent.args.index - 1n;
+                        await this.onDeposit(
+                            depositEvent.args.account, 
+                            depositEvent.args.amount, 
+                            index, 
+                            depositEvent.transactionHash
+                        );
+                        console.log(`✅ Successfully processed deposit at index ${index}`);
+                        successCount++;
+                    } catch (error) {
+                        if ((error as Error).message === "Transaction already in blockchain") {
+                            console.log(`⏭️ Skipping already processed deposit at index ${depositEvent.args.index - 1n}`);
+                            skippedCount++;
+                        } else {
+                            console.log(`❌ Failed to process deposit:`, {
+                                index: depositEvent.args.index.toString(),
+                                error: (error as Error).message,
+                                stack: (error as Error).stack
+                            });
+                            errorCount++;
                         }
+                        // Continue with the next deposit instead of throwing
                     }
-                });
-            }
-        });
-
-        // Then process each event with more logging
-        for (const event of events) {
-            const depositEvent = event as EventLog;
-            if (depositEvent.args) {
-                console.log("\n🎯 Processing Deposit Event:", {
-                    raw_index: depositEvent.args.index.toString(),
-                    adjusted_index: (depositEvent.args.index - 1n).toString(),
-                    account: depositEvent.args.account,
-                    amount: {
-                        raw: depositEvent.args.amount.toString(),
-                        hex: `0x${depositEvent.args.amount.toString(16)}`,
-                        decimal: Number(depositEvent.args.amount)
-                    },
-                    txHash: depositEvent.transactionHash,
-                    blockNumber: depositEvent.blockNumber
-                });
-
-                try {
-                    console.log("📤 Calling onDeposit with parameters:", {
-                        receiver: depositEvent.args.account,
-                        value: depositEvent.args.amount.toString(),
-                        index: (depositEvent.args.index - 1n).toString(),
-                        txHash: depositEvent.transactionHash
-                    });
-
-                    const index: bigint = depositEvent.args.index - 1n;
-                    await this.onDeposit(
-                        depositEvent.args.account, 
-                        depositEvent.args.amount, 
-                        index, 
-                        depositEvent.transactionHash
-                    );
-                    console.log(`✅ Successfully processed deposit at index ${index}`);
-                } catch (error) {
-                    console.log(`❌ Failed to process deposit:`, {
-                        index: depositEvent.args.index.toString(),
-                        error: (error as Error).message,
-                        stack: (error as Error).stack
-                    });
                 }
             }
+            
+            console.log("\n🏁 Bridge: Resync complete", {
+                total: events.length,
+                success: successCount,
+                skipped: skippedCount,
+                errors: errorCount
+            });
+        } catch (error) {
+            console.error("\n💥 Bridge: Resync failed with error:", error);
+            // Don't throw the error further - let the service continue running
         }
-        
-        console.log("\n🏁 Bridge: Resync complete");
     }
 }

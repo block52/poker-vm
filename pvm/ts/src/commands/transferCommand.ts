@@ -102,6 +102,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 await this.gameManagement.saveFromJSON(_json);
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+                await this.mempool.add(gameTx);
                 return signResult(gameTx, this.privateKey);
             } 
             
@@ -134,6 +135,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 await this.gameManagement.saveFromJSON(_json);
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, this.data ?? "");
+                await this.mempool.add(gameTx);
                 return signResult(gameTx, this.privateKey);
             }
 
