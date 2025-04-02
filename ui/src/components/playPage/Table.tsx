@@ -193,7 +193,6 @@ const Table = () => {
     const [dealerIndex, setDealerIndex] = useState<number>(0);
 
     // Handle loading state
-
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -293,10 +292,12 @@ const Table = () => {
                 if (prevIndex === 2) {
                     // Handle case where prevIndex is 2 (e.g., no change or custom logic)
                     return prevIndex + 2; // For example, keep it the same
-                } else if (prevIndex === 4) {
+                } 
+                if (prevIndex === 4) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex + 2;
-                } else if (prevIndex === 9) {
+                } 
+                if (prevIndex === 9) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex - 8;
                 } else {
