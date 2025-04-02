@@ -1,5 +1,4 @@
 import { useState } from "react";
-import * as React from "react";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from "react-icons/md";
 

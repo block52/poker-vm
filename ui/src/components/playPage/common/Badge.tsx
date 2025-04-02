@@ -1,6 +1,4 @@
-import * as React from "react";
-
-interface BadgeProps {
+type BadgeProps = {
     count: number; // The number displayed in the badge
     value: number; // The larger number displayed next to the badge
     color?: string;

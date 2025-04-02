@@ -2,7 +2,7 @@ import React from "react";
 import { useTableContext } from "../../../context/TableContext";
 import { turnAnimationPosition } from "../../../utils/PositionArray";
 
-interface TurnAnimationProps {
+type TurnAnimationProps = {
     index: number;
 }
 
@@ -62,7 +62,7 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
                             border: "2px solid rgba(255,255,255,0.1)",
                             backgroundColor: "rgba(255, 255, 255, 0.1)",
                             borderRadius: "9999px",
-                            animation: `ripple 2.5s linear infinite`,
+                            animation: "ripple 2.5s linear infinite",
                             animationDelay: `${i * 455}ms`
                         }}
                     />
