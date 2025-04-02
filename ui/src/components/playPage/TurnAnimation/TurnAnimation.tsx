@@ -15,31 +15,39 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
     const timeRemaining = nextToActInfo?.seat === index ? nextToActInfo?.timeRemaining ?? 15 : 15;
 
     // Dynamically get animation position from array
-    const turnPos =
-        turnAnimationPosition?.[tableSize === 6 ? "six" : "nine"]?.[index] || { left: "0px", top: "0px" };
+    const turnPos = turnAnimationPosition?.[tableSize === 6 ? "six" : "nine"]?.[index] || { left: "0px", top: "0px" };
 
     // Determine pulse speed
-    let animationDuration = "2.5s";
-    if (timeRemaining < 5) animationDuration = "2s";
-    else if (timeRemaining < 10) animationDuration = "2.5s";
-    else if (timeRemaining < 15) animationDuration = "3s";
+    const baseRingStyle = {
+        width: "220px",
+        height: "110px",
+        borderRadius: "9999px",
+        position: "absolute" as const,
+        left: "0",
+        top: "0",
+        transform: "translate(-50%, -50%)",
+        backgroundColor: "rgba(100, 255, 218, 0.1)",
+        border: "2px solid rgba(100, 255, 218, 0.3)",
+        animation: `ripple 2.4s linear infinite`
+    };
 
     return (
         <>
             <style>{`
                 @keyframes ripple {
-                    0% {
-                        transform: scale(0.8);
-                        opacity: 0.4;
-                    }
-                    50% {
-                        transform: scale(1);
-                        opacity: 0.8;
-                    }
-                    100% {
-                        transform: scale(0.8);
-                        opacity: 0.4;
-                    }
+                      0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  80% {
+    transform: scale(1.1);
+    opacity: 0.05;
+  }
+      100% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
                 }
             `}</style>
             <div
@@ -47,30 +55,29 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
                 style={{
                     left: turnPos.left,
                     top: turnPos.top,
-                    width: "160px",
-                    height: "160px",
-                    transform: "translate(-50%, calc(-50% - 20px))",
+                    width: "220px",
+                    height: "110px",
+                    transform: "translate(-50%, calc(-50% - 20px))"
                 }}
-            > 
-             {[0, 1, 2, 3].map((i) => (
+            >
+                {[0, 1, 2, 3].map(i => (
                     <div
                         key={i}
                         style={{
                             position: "absolute",
                             width: "100%",
                             height: "100%",
-                            border: "2px solid rgba(255,255,255,0.1)",
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            backgroundColor: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "9999px",
-                            animation: "ripple 2.5s linear infinite",
-                            animationDelay: `${i * 455}ms`
+
+                            animation: `ripple 2000ms linear infinite`,
+                            animationDelay: `${-i * 455}ms`
+
                         }}
                     />
                 ))}
             </div>
         </>
-           
-        
     );
 };
 
