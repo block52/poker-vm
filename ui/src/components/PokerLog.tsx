@@ -9,22 +9,7 @@ type HandResult = {
 };
 
 const PokerLog: React.FC = () => {
-    const logs: HandResult[] = [
-        {
-            id: "4720731082",
-            player: "Player 2",
-            description: "wins main pot (1,600) with (Two pair, nines and fives).",
-            winnings: "1,600",
-            cards: ["9D", "5D", "AD", "JS", "9S"]
-        },
-        {
-            id: "4720731369",
-            player: "Player 6",
-            description: "wins main pot (1,210) with (Two pair, kings and threes).",
-            winnings: "1,210",
-            cards: ["KS", "KC", "AC", "3S", "QH"]
-        }
-    ];
+    const logs: HandResult[] = [];
 
     // Helper function to get SVG paths for cards
     const getCardSvg = (card: string) => {

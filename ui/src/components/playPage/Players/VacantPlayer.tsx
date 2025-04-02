@@ -1,14 +1,12 @@
 import * as React from "react";
 import { memo, useEffect, useState } from "react";
 import { FaRegUserCircle } from "react-icons/fa";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { PROXY_URL } from "../../../config/constants";
 import axios from "axios";
-import { useAccount } from "wagmi";
 import { ethers } from "ethers";
 import { useTableContext } from "../../../context/TableContext";
-import { NodeRpcClient } from "@bitcoinbrisbane/block52";
-import { getSignature, getPublicKey } from "../../../utils/accountUtils";
+import { getSignature } from "../../../utils/accountUtils";
 import useUserWallet from "../../../hooks/useUserWallet";
 import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 
@@ -35,9 +33,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const { id: tableId } = useParams();
         const userAddress = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        const wallet = new ethers.Wallet(privateKey!);
 
-        const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
+        const { balance } = useUserWallet(); // this is the wallet in the browser.
 
         // Add state for buy-in modal
         const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -167,11 +164,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             nextAvailableSeat
         });
 
-        // Check if this is the first player
-        const isFirstPlayer =
-            !localTableData?.data?.players?.length ||
-            localTableData.data.players.every((player: any) => player.address === "0x0000000000000000000000000000000000000000");
-
         // Get blind values from table data
         const smallBlindWei = localTableData?.data?.smallBlind || "0";
         const bigBlindWei = localTableData?.data?.bigBlind || "0";
@@ -192,15 +184,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         });
 
         // Helper function to get position name
-        const getPositionName = (index: number) => {
-            // Use the actual positions from table data instead of calculating
-            const smallBlindPosition = localTableData?.data?.smallBlindPosition;
-            const bigBlindPosition = localTableData?.data?.bigBlindPosition;
-            const dealerPosition = localTableData?.data?.dealer;
-
-            // if (index === dealerPosition) return "Dealer (D)";
-            // if (index === smallBlindPosition) return "Small Blind (SB)";
-            // if (index === bigBlindPosition) return "Big Blind (BB)";
+        const getPositionName = (index: number): string => {
             return "";
         };
 
@@ -243,7 +227,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
                 // Show loading icon and hide modal
                 setIsConfirming(true);
-              
                 setBuyInError("");
 
                 // Use setTimeout with 0 delay to ensure UI updates before proceeding

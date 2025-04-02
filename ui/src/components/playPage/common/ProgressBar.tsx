@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import * as React from "react";
 import { useTableContext } from "../../../context/TableContext";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 

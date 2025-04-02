@@ -1,5 +1,3 @@
-import * as React from "react";
-
 const CheckboxList: React.FC = () => {
     return (
         <div className="left-0 text-white p-4 rounded">

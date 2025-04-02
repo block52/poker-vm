@@ -3,9 +3,7 @@ import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
 
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
-import { BigUnit } from "bigunit";
 import { useTableContext } from "../../../context/TableContext";
-import { formatWeiToDollars } from "../../../utils/numberUtils";
 import { ethers } from "ethers";
 
 // Enable this to see verbose logging
@@ -51,11 +49,6 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
 
     // Format stack value with ethers.js (more accurate for large numbers)
     const stackValue = playerData.stack ? Number(ethers.formatUnits(playerData.stack, 18)) : 0;
-    // Format for display with 2 decimal places
-    const formattedStackValue = stackValue.toFixed(2);
-
-    // Get hole cards if available
-    const holeCards = playerData.holeCards;
 
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
