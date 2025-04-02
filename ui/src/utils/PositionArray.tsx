@@ -113,13 +113,13 @@ export const chipPosition = {
     nine: [
         {
             // 1
-            bottom: "-10px",
-            left: "370px"
+            bottom: "10px",
+            left: "410px"
         },
         {
             // 2
-            bottom: "12px",
-            left: "210px"
+            bottom: "20px",
+            left: "150px"
         },
         {
             // 3
@@ -264,12 +264,12 @@ export const turnAnimationPosition = {
     ],
     nine: [
         {
-            left: "400px",
-            top: "380px"
+            left: "430px",
+            top: "509px"
         },
         {
-            left: "149px",
-            top: "463px"
+            left: "90px",
+            top: "487px"
         },
         {
             left: "-122px",
