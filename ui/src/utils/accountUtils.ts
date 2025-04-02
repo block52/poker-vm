@@ -1,5 +1,4 @@
 import { ethers } from "ethers";
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
 
 export const getSignature = async (
     privateKey: string,
@@ -66,13 +65,8 @@ export const getUserTableStatus = (tableData: any) => {
         return null;
     }
 
-    // Check the structure of tableData to find players
-    // console.log("actualTableData structure:", Object.keys(actualTableData));
-    // console.log("actualTableData.players:", actualTableData.players);
-
     // Try to find player in different possible locations
     const playersArray = actualTableData.players || [];
-    // console.log("Using players array:", playersArray);
 
     // Find the player in the table
     const player = playersArray.find((p: any) => p.address?.toLowerCase() === userAddress.toLowerCase());
@@ -85,13 +79,10 @@ export const getUserTableStatus = (tableData: any) => {
 
     // Check if it's the player's turn
     const nextToAct = actualTableData.nextToAct;
-    // console.log("Next to act seat:", nextToAct);
     const isPlayerTurn = nextToAct === player.seat;
-    // console.log("Is player's turn:", isPlayerTurn);
 
     // Get available actions
     const availableActions = player.legalActions || [];
-    // console.log("Available actions:", availableActions);
 
     // Check for specific actions
     const canPostSmallBlind = availableActions.some((a: any) => a.action === "post small blind");
