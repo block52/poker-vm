@@ -30,7 +30,12 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         const validTxs: Transaction[] = this.validate(txs);
         const uniqueTxs: Transaction[] = await this.filter(validTxs);
+        
+        // Process transactions for accounts
         await this.processTransactions(uniqueTxs);
+        
+        // Process game-specific transactions
+        await this.processGameTransactions(uniqueTxs);
 
         const lastBlock = await this.blockchainManagement.getLastBlock();
         const block = Block.create(lastBlock.index + 1, lastBlock.hash, uniqueTxs, this.privateKey);
@@ -82,12 +87,14 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         // execute the commands as promise all
         for (let i = 0; i < commands.length; i++) {
-            const result = await commands[i].execute();
-            const gameState = new GameState({
-                address: result.data.address,
-                state: result.data
-            });
-            // this.gameStateManagement.save(gameState);
+            try {
+                const result = await commands[i].execute();
+                // Save the game state to the database
+                await this.gameStateManagement.saveFromJSON(result.data);
+            } catch (error) {
+                console.warn(`Error processing game transactions for address ${commands[i].address}: ${(error as Error).message}`);
+                // Continue with next command rather than crashing
+            }
         }
     }
 
