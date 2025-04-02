@@ -4,14 +4,14 @@
 
 import { ethers } from "ethers";
 import { formatWinningAmount } from "./numberUtils";
-import { TableData } from "../types/index";
+import { TableData, Player } from "../types/index";
 
 /**
  * Determines which player is next to act based on table data
  * @param tableData The current table state data
  * @returns Object with information about the next player to act
  */
-export const whoIsNextToAct = (tableData: any) => {
+export const whoIsNextToAct = (tableData: TableData) => {
     if (!tableData) return null;
 
     // Get the seat number of the next player to act
@@ -23,7 +23,7 @@ export const whoIsNextToAct = (tableData: any) => {
     }
 
     // Find the player object for the next to act seat
-    const nextPlayer = tableData.players?.find((player: any) => player.seat === nextToActSeat);
+    const nextPlayer = tableData.players?.find((player: Player) => player.seat === nextToActSeat);
 
     // Get the current user's address
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
@@ -45,7 +45,7 @@ export const whoIsNextToAct = (tableData: any) => {
  * @param tableData The current table state data
  * @returns The current round (preflop, flop, turn, river)
  */
-export const getCurrentRound = (tableData: any): string => {
+export const getCurrentRound = (tableData: TableData): string => {
     return tableData?.round || "unknown";
 };
 
@@ -54,7 +54,7 @@ export const getCurrentRound = (tableData: any): string => {
  * @param tableData The current table state data
  * @returns The total pot amount in wei format
  */
-export const getTotalPot = (tableData: any): string => {
+export const getTotalPot = (tableData: TableData): string => {
     if (!tableData?.pots || tableData.pots.length === 0) {
         return "0";
     }
@@ -69,7 +69,7 @@ export const getTotalPot = (tableData: any): string => {
  * @param seat The seat number
  * @returns The position name (Dealer, SB, BB, etc.)
  */
-export const getPositionName = (tableData: any, seat: number): string => {
+export const getPositionName = (tableData: TableData, seat: number): string => {
     if (!tableData) return "";
 
     if (seat === tableData.dealer) return "Dealer (D)";
@@ -82,10 +82,9 @@ export const getPositionName = (tableData: any, seat: number): string => {
 /**
  * Gets the position for the dealer button
  * @param tableData The current table state data
- * @param playerPosition The position mapping for players
  * @returns The position coordinates for the dealer button
  */
-export const getDealerPosition = (tableData: any, playerPosition: any): { left: string; top: string } => {
+export const getDealerPosition = (tableData: TableData): { left: string; top: string } => {
     if (!tableData) return { left: "50%", top: "50%" };
 
     const dealerSeat = tableData.dealer;
@@ -123,10 +122,9 @@ export const getDealerPosition = (tableData: any, playerPosition: any): { left: 
 /**
  * Gets the position for the big blind indicator
  * @param tableData The current table state data
- * @param playerPosition The position mapping for players
  * @returns The position coordinates for the big blind indicator
  */
-export const getBigBlindPosition = (tableData: any, playerPosition: any): { left: string; top: string } => {
+export const getBigBlindPosition = (tableData: TableData): { left: string; top: string } => {
     if (!tableData) return { left: "50%", top: "50%" };
 
     const bigBlindSeat = tableData.bigBlindPosition;
@@ -168,14 +166,11 @@ export const getBigBlindPosition = (tableData: any, playerPosition: any): { left
  * @param playerPosition The position mapping for players
  * @returns The position coordinates for the small blind indicator
  */
-export const getSmallBlindPosition = (tableData: any, playerPosition: any): { left: string; top: string } => {
+export const getSmallBlindPosition = (tableData: TableData): { left: string; top: string } => {
     if (!tableData) return { left: "50%", top: "50%" };
 
     const smallBlindSeat = tableData.smallBlindPosition;
     if (smallBlindSeat === undefined || smallBlindSeat === null) return { left: "50%", top: "50%" };
-
-    // Get the appropriate array based on table size
-    const tableSize = tableData.players.length <= 6 ? "six" : "nine";
 
     // Look at the VacantPlayer.tsx logs to find the actual pixel positions
     // Map seat numbers to their pixel positions based on the logs
@@ -228,7 +223,7 @@ export const hasPostedBlind = (tableData: any, playerAddress: string, blindType:
     );
 
     // Also check the lastAction field on the player object
-    const player = tableData.players?.find((p: any) => p.address?.toLowerCase() === normalizedAddress);
+    const player = tableData.players?.find((p: Player) => p.address?.toLowerCase() === normalizedAddress);
     const hasPostedInLastAction = player?.lastAction?.action === (blindType === "small" ? "post small blind" : "post big blind");
 
     return hasPosted || hasPostedInLastAction;
@@ -249,7 +244,7 @@ export const isPlayerTurnToPostBlind = (tableData: TableData, playerAddress: str
     const normalizedAddress = playerAddress.toLowerCase();
 
     // Get the player object
-    const player = tableData.players?.find((p: any) => p.address?.toLowerCase() === normalizedAddress);
+    const player = tableData.players?.find((p: Player) => p.address?.toLowerCase() === normalizedAddress);
     if (!player) return false;
 
     // Check if this player is in the small/big blind position
@@ -284,7 +279,7 @@ export const getWinnerInfo = (tableData: any) => {
 
     for (const winner of winners) {
         // Find the player's seat from their address
-        const playerSeat = tableData.players.find((p: any) => p.address?.toLowerCase() === winner.address?.toLowerCase())?.seat;
+        const playerSeat = tableData.players.find((p: Player) => p.address?.toLowerCase() === winner.address?.toLowerCase())?.seat;
 
         if (playerSeat !== undefined) {
             // Format the winning amount to a readable format (ETH to dollars)
