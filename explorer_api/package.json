@@ -12,7 +12,7 @@
     "node": "20.x"
   },
   "dependencies": {
-    "@bitcoinbrisbane/block52": "^1.0.43",
+    "@bitcoinbrisbane/block52": "^1.0.51",
     "axios": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
