@@ -29,30 +29,31 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem}
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 232 100% 14%; /* #0C1246 */
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 0 0% 0%; /* #000000 */
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 232 100% 14%; /* #0C1246 */
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
+    --primary: 301 99% 33%; /* #AA01A3 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 212 93% 64%; /* #4D9CF8 */
+    --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 295 95% 35%; /* #B405AD */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%}
+    --border: 212 93% 64%; /* #4D9CF8 */
+    --input: 232 100% 14%; /* #0C1246 */
+    --ring: 301 99% 33%; /* #AA01A3 */
+    --chart-1: 301 99% 33%; /* #AA01A3 */
+    --chart-2: 295 95% 35%; /* #B405AD */
+    --chart-3: 212 93% 64%; /* #4D9CF8 */
+    --chart-4: 232 100% 14%; /* #0C1246 */
+    --chart-5: 0 0% 85%; /* #D9D9D9 */
+  }
 }
 @layer base {
   * {
@@ -60,5 +61,18 @@
   }
   body {
     @apply bg-background text-foreground;
+    background: linear-gradient(to bottom, #0C1246, #000000);
+    min-height: 100vh;
   }
+}
+
+/* B52 gradient for buttons and special elements */
+.b52-gradient {
+  background: linear-gradient(90deg, #AA01A3, #B405AD, #4D9CF8);
+  background-size: 200% auto;
+  transition: background-position 0.5s;
+}
+
+.b52-gradient:hover {
+  background-position: right center;
 }
