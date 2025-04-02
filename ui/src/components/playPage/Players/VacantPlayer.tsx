@@ -364,7 +364,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
                     <div className="whitespace-nowrap">
                         {isUserAlreadyPlaying
-                            ? "Already playing"
+                            ? ""
                             : canJoinThisSeat
                               ? index === localTableData?.data?.bigBlindPosition
                                   ? `Click to Join ($${bigBlindDisplay})`
