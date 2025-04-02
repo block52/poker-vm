@@ -1,13 +1,14 @@
 import {
     ActionDTO,
+    Card,
+    GameOptions,
     LegalActionDTO,
     PlayerActionType,
     PlayerDTO,
     PlayerStatus,
     TexasHoldemRound,
     TexasHoldemStateDTO,
-    WinnerDTO,
-    Card
+    WinnerDTO
 } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
@@ -22,18 +23,8 @@ import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IPoker, IUpdate, LegalAction, PlayerState, Turn } from "./types";
+import { IPoker, IUpdate, Turn } from "./types";
 import { ethers } from "ethers";
-
-export type GameOptions = {
-    minBuyIn: bigint;
-    maxBuyIn: bigint;
-    minPlayers: number;
-    maxPlayers: number;
-    smallBlind: bigint;
-    bigBlind: bigint;
-};
-
 
 type TurnWithRound = Turn & { round: TexasHoldemRound };
 
@@ -46,8 +37,6 @@ class TexasHoldemGame implements IPoker {
 
     private _rounds = new Map<TexasHoldemRound, Turn[]>();
     private _lastActedSeat: number;
-    // private _previousActions = new Stack<TurnWithRound>();
-
     private _deck!: Deck;
 
     private _pot: bigint;
@@ -58,13 +47,15 @@ class TexasHoldemGame implements IPoker {
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
 
-    // Table options
-    private readonly _minBuyIn: bigint;
-    private readonly _maxBuyIn: bigint;
-    private readonly _minPlayers: number;
-    private readonly _maxPlayers: number;
-    private readonly _smallBlind: bigint;
-    private readonly _bigBlind: bigint;
+    // // Table options
+    // private readonly _minBuyIn: bigint;
+    // private readonly _maxBuyIn: bigint;
+    // private readonly _minPlayers: number;
+    // private readonly _maxPlayers: number;
+    // private readonly _smallBlind: bigint;
+    // private readonly _bigBlind: bigint;
+
+    private readonly _gameOptions: GameOptions;
 
     private seed: number[] = [];
     private readonly _communityCards: Card[] = [];
@@ -108,20 +99,21 @@ class TexasHoldemGame implements IPoker {
 
         this._pot = BigInt(currentPot);
         this._currentRound = _currentRound;
+        this._gameOptions = gameOptions;
 
-        this._minBuyIn = gameOptions.minBuyIn;
-        this._maxBuyIn = gameOptions.maxBuyIn;
-        this._minPlayers = gameOptions.minPlayers;
-        this._maxPlayers = gameOptions.maxPlayers;
-        this._smallBlind = gameOptions.smallBlind;
-        this._bigBlind = gameOptions.bigBlind;
+        // this._minBuyIn = gameOptions.minBuyIn;
+        // this._maxBuyIn = gameOptions.maxBuyIn;
+        // this._minPlayers = gameOptions.minPlayers;
+        // this._maxPlayers = gameOptions.maxPlayers;
+        // this._smallBlind = gameOptions.smallBlind;
+        // this._bigBlind = gameOptions.bigBlind;
 
         // this was is causing the 10 & 11
         this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
         this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
 
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
-        this._dealer = _dealer === 0 ? this._maxPlayers : _dealer;
+        this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
         this._lastActedSeat = _lastToAct; // Need to recalculate this
 
         for (const action of previousActions) {
@@ -157,10 +149,10 @@ class TexasHoldemGame implements IPoker {
         return this._playersMap;
     }
     get bigBlind() {
-        return this._bigBlind;
+        return this._gameOptions.bigBlind;
     }
     get smallBlind() {
-        return this._smallBlind;
+        return this._gameOptions.smallBlind;
     }
     get bigBlindPosition() {
         return this._bigBlindPosition;
@@ -207,7 +199,7 @@ class TexasHoldemGame implements IPoker {
 
     deal(seed: number[] = []): void {
         // Check minimum players
-        if (this.getActivePlayerCount() < this._minPlayers) throw new Error("Not enough active players");
+        if (this.getActivePlayerCount() < this._gameOptions.minPlayers) throw new Error("Not enough active players");
 
         if (![TexasHoldemRound.PREFLOP, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
@@ -216,10 +208,10 @@ class TexasHoldemGame implements IPoker {
         if (!preFlopActions || preFlopActions.length < 2) {
             throw new Error("Blinds must be posted before dealing.");
         }
-        
+
         const hasSmallBlind = preFlopActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
         const hasBigBlind = preFlopActions.some(a => a.action === PlayerActionType.BIG_BLIND);
-        
+
         if (!hasSmallBlind || !hasBigBlind) {
             throw new Error("Both small and big blinds must be posted before dealing.");
         }
@@ -228,14 +220,14 @@ class TexasHoldemGame implements IPoker {
         const hasDealt = preFlopActions.some(a => a.action === PlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values())
             .some(p => p !== null && p.holeCards !== undefined);
-        
+
         if (hasDealt || anyPlayerHasCards) {
             throw new Error("Cards have already been dealt for this hand.");
         }
 
         // Reset the deck and shuffle
         this.shuffle(seed);
-        
+
         // Deal 2 cards to each player
         const players = this.getSeatedPlayers();
         players.forEach(p => {
@@ -265,7 +257,7 @@ class TexasHoldemGame implements IPoker {
 
         // ensure the seat is valid
         if (seat === -1) {
-            console.log(`Table full. Current players: ${this.getPlayerCount()}, Max players: ${this._maxPlayers}`);
+            console.log(`Table full. Current players: ${this.getPlayerCount()}, Max players: ${this._gameOptions.maxPlayers}`);
             throw new Error("Table full."); // This must be thrown
         }
 
@@ -286,13 +278,13 @@ class TexasHoldemGame implements IPoker {
             // Auto join the first player
             if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.PREFLOP) {
                 // post small blind
-                new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
+                new SmallBlindAction(this, this._update).execute(player, this._gameOptions.smallBlind);
 
                 // This is the last player to act
                 this._lastActedSeat = seat;
 
                 // Add to bets to preflop round
-                const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._smallBlind };
+                const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._gameOptions.smallBlind };
 
                 player.addAction(turn);
                 player.updateStatus(PlayerStatus.ACTIVE);
@@ -301,13 +293,13 @@ class TexasHoldemGame implements IPoker {
             // Auto join the second player
             if (this.getPlayerCount() === 2 && this.currentRound === TexasHoldemRound.PREFLOP) {
                 // post big blind
-                new BigBlindAction(this, this._update).execute(player, this._bigBlind);
+                new BigBlindAction(this, this._update).execute(player, this._gameOptions.bigBlind);
 
                 // This is the last player to act
                 this._lastActedSeat = seat;
 
                 // Add to bets to pre-flop round
-                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._bigBlind };
+                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind };
 
                 player.addAction(turn);
                 player.updateStatus(PlayerStatus.ACTIVE);
@@ -316,7 +308,7 @@ class TexasHoldemGame implements IPoker {
 
         // Check if we haven't dealt
         if (autoPostBlinds) {
-            if (this.getPlayerCount() === this._minPlayers && this.currentRound === TexasHoldemRound.PREFLOP) {
+            if (this.getPlayerCount() === this._gameOptions.minPlayers && this.currentRound === TexasHoldemRound.PREFLOP) {
                 this.shuffle();
                 this.deal();
             }
@@ -326,18 +318,18 @@ class TexasHoldemGame implements IPoker {
     leave(address: string): bigint {
         const player = this.getPlayer(address);
         const seat = this.getPlayerSeatNumber(address);
-        
+
         // Check if player has folded
         if (player.status !== PlayerStatus.FOLDED && player.status !== PlayerStatus.SITTING_OUT) {
             throw new Error("Player must fold before leaving the table");
         }
-        
+
         // Get their current stack before removing them
         const currentStack = player.chips;
-        
+
         // Remove player from seat
         this._playersMap.set(seat, null);
-        
+
         // Return their stack amount
         return currentStack;
     }
@@ -376,8 +368,8 @@ class TexasHoldemGame implements IPoker {
 
         // If cards have been dealt but no betting actions yet, betting starts with small blind in 2-player game
         if (hasDealt || anyPlayerHasCards) {
-            const bettingActionsCount = preFlopActions?.filter(a => 
-                a.action !== PlayerActionType.SMALL_BLIND && 
+            const bettingActionsCount = preFlopActions?.filter(a =>
+                a.action !== PlayerActionType.SMALL_BLIND &&
                 a.action !== PlayerActionType.BIG_BLIND &&
                 a.action !== PlayerActionType.DEAL
             ).length || 0;
@@ -390,12 +382,12 @@ class TexasHoldemGame implements IPoker {
         // For subsequent actions in the round, find the next player after the last acted player
         let next = this._lastActedSeat + 1;
 
-        if (next > this._maxPlayers) {
+        if (next > this._gameOptions.maxPlayers) {
             next = 1;
         }
 
         // Search from current position to end
-        for (let i = next; i <= this._maxPlayers; i++) {
+        for (let i = next; i <= this._gameOptions.maxPlayers; i++) {
             const player = this.getPlayerAtSeat(i);
 
             if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
@@ -419,10 +411,10 @@ class TexasHoldemGame implements IPoker {
     getLegalActions(address: string): LegalActionDTO[] {
         const player = this.getPlayer(address);
         const nextToAct = this.getNextPlayerToAct();
-        
+
         // Check if player is active
         const isActive = player.status === PlayerStatus.ACTIVE;
-        
+
         // If it's not this player's turn, they can only fold if they are active
         if (nextToAct && nextToAct.address !== player.address) {
             // Even if it's not their turn, active players can fold
@@ -451,16 +443,16 @@ class TexasHoldemGame implements IPoker {
 
         // Get all valid actions for this player
         const actions = this._actions.map(verifyAction).filter(a => a) as LegalActionDTO[];
-        
+
         // Check if cards have been dealt already (any player has hole cards)
         const anyPlayerHasCards = Array.from(this._playersMap.values())
             .some(p => p !== null && p.holeCards !== undefined);
-            
+
         // If cards have been dealt, remove the deal action
         if (anyPlayerHasCards) {
             return actions.filter(a => a.action !== PlayerActionType.DEAL);
         }
-        
+
         return actions;
     }
 
@@ -490,7 +482,7 @@ class TexasHoldemGame implements IPoker {
     performAction(address: string, action: PlayerActionType, amount?: bigint): void {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
-                if (this.getActivePlayerCount() < this._minPlayers) {
+                if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
             }
@@ -502,7 +494,7 @@ class TexasHoldemGame implements IPoker {
 
         const player = this.getPlayer(address);
         const nextToAct = this.getNextPlayerToAct();
-        
+
         // Allow folding even if it's not the player's turn
         if (action === PlayerActionType.FOLD) {
             // No status checks - allow any player to fold
@@ -518,22 +510,22 @@ class TexasHoldemGame implements IPoker {
         switch (action) {
             // todo: ante
             case PlayerActionType.SMALL_BLIND:
-                const smallBlind = new SmallBlindAction(this, this._update).execute(player, this._smallBlind);
+                const smallBlind = new SmallBlindAction(this, this._update).execute(player, this._gameOptions.smallBlind);
                 break;
             case PlayerActionType.BIG_BLIND:
-                const bigBlind = new BigBlindAction(this, this._update).execute(player, this._bigBlind);
+                const bigBlind = new BigBlindAction(this, this._update).execute(player, this._gameOptions.bigBlind);
                 break;
             case PlayerActionType.DEAL:
                 // First verify the deal is valid via the DealAction
                 try {
                     const dealAction = new DealAction(this, this._update).execute(player);
-                    
+
                     // After verifying the deal is valid, actually deal the cards to all players
                     this.deal();
-                    
+
                     // Add the deal action to the round actions
                     this.addAction({ playerId: address, action: PlayerActionType.DEAL });
-                    
+
                     // After dealing, the next player to act is the small blind position
                     // In a 2-player game, SB player acts first after the cards are dealt
                     this._lastActedSeat = seat;
@@ -562,13 +554,13 @@ class TexasHoldemGame implements IPoker {
                     const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
                     const anyPlayerHasCards = Array.from(this._playersMap.values())
                         .some(p => p !== null && p.holeCards !== undefined);
-                        
+
                     // Only try to deal if cards haven't been dealt yet
                     if (!hasDealt && !anyPlayerHasCards) {
                         // Deal cards before executing bet
                         this.deal();
                     }
-                    
+
                     // Now execute the bet action
                     const bet = new BetAction(this, this._update).execute(player, amount);
                 }
@@ -628,12 +620,6 @@ class TexasHoldemGame implements IPoker {
 
                 actions.push(action);
             }
-
-            // const roundActions: ActionDTO[] = this.getActionsForRound(round);
-
-            // for (const action of roundActions) {
-            //     actions.push(action);
-            // }
         }
 
         return actions;
@@ -797,7 +783,7 @@ class TexasHoldemGame implements IPoker {
     }
 
     findNextSeat(): number {
-        const maxSeats = this._maxPlayers;
+        const maxSeats = this._gameOptions.maxPlayers;
 
         // Iterate through all seat numbers to find next available (empty) seat
         for (let seatNumber = 1; seatNumber <= maxSeats; seatNumber++) {
@@ -860,7 +846,7 @@ class TexasHoldemGame implements IPoker {
 
         const pot: bigint = this.getPot();
         const winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
-        
+
         // Convert winningHands.length to BigInt to avoid type mismatch
         const winnersCount = BigInt(winningHands.length);
 
@@ -921,19 +907,19 @@ class TexasHoldemGame implements IPoker {
         const hasDealt = actions.some(a => a.action === PlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values())
             .some(p => p !== null && p.holeCards !== undefined);
-            
+
         // In preflop round, make sure cards have been dealt before we can end the round
         if (round === TexasHoldemRound.PREFLOP && !hasDealt && !anyPlayerHasCards) {
             return false;
         }
 
         // Check if there's betting action yet
-        const bettingActions = actions.filter(a => 
-            a.action !== PlayerActionType.SMALL_BLIND && 
+        const bettingActions = actions.filter(a =>
+            a.action !== PlayerActionType.SMALL_BLIND &&
             a.action !== PlayerActionType.BIG_BLIND &&
             a.action !== PlayerActionType.DEAL
         );
-        
+
         // If cards dealt but no betting actions yet, round is not over
         if ((hasDealt || anyPlayerHasCards) && bettingActions.length === 0) {
             return false;
@@ -945,10 +931,10 @@ class TexasHoldemGame implements IPoker {
         for (const player of activePlayers) {
             // Get this player's actions in this round
             const playerActions = actions.filter(a => a.playerId === player.address);
-            
+
             // Filter to just betting actions (not blinds or deal)
-            const playerBettingActions = playerActions.filter(a => 
-                a.action !== PlayerActionType.SMALL_BLIND && 
+            const playerBettingActions = playerActions.filter(a =>
+                a.action !== PlayerActionType.SMALL_BLIND &&
                 a.action !== PlayerActionType.BIG_BLIND &&
                 a.action !== PlayerActionType.DEAL
             );
@@ -1131,15 +1117,15 @@ class TexasHoldemGame implements IPoker {
 
         const nextPlayerToAct = this.findNextPlayerToAct();
         const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
-        
+
         const previousActions: ActionDTO[] = this.getActionDTOs();
         const winners: WinnerDTO[] = [];
-        
+
         // If we're in showdown and winners haven't been calculated yet, calculate them now
         if (this._currentRound === TexasHoldemRound.SHOWDOWN && (!this._winners || this._winners.size === 0)) {
             this.calculateWinner();
         }
-        
+
         // Populate winners array from _winners Map if in showdown
         if (this._currentRound === TexasHoldemRound.SHOWDOWN && this._winners) {
             for (const [address, amount] of this._winners.entries()) {
@@ -1149,7 +1135,7 @@ class TexasHoldemGame implements IPoker {
                 });
             }
         }
-        
+
         const pot = this.getPot();
 
         const deckAsString = this._deck.toString();
@@ -1162,8 +1148,7 @@ class TexasHoldemGame implements IPoker {
         return {
             type: "cash",
             address: this._address,
-            smallBlind: this._smallBlind.toString(),
-            bigBlind: this._bigBlind.toString(),
+            gameOptions: this.gameOptions,
             smallBlindPosition: this._smallBlindPosition,
             bigBlindPosition: this._bigBlindPosition,
             dealer: this._dealer,

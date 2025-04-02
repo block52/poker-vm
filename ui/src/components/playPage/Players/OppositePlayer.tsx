@@ -3,9 +3,7 @@ import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import PlayerCard from "./PlayerCard";
-import { BigUnit } from "bigunit";
 import { useTableContext } from "../../../context/TableContext";
-import { formatWeiToDollars } from "../../../utils/numberUtils";
 import { ethers } from "ethers";
 
 // Enable this to see verbose logging
@@ -70,8 +68,6 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
 
     // Format stack value
     const stackValue = playerData.stack ? Number(ethers.formatUnits(playerData.stack, 18)) : 0;
-    // Format for display with 2 decimal places
-    const formattedStackValue = stackValue.toFixed(2);
 
     debugLog("Rendering OppositePlayer UI for seat", index, "with stack", playerData.stack);
 

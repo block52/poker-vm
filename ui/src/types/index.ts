@@ -36,3 +36,51 @@ export interface PlayerContextType {
     isLoading: boolean;
     error: Error | null;
 }
+
+export type Player = {
+    address: string;
+    seat: number;
+    legalActions: LegalAction[];
+    timeout: number;
+}
+
+export type LegalAction = {
+    action: string;
+}
+
+export type TableData = {
+    smallBlindPosition: number;
+    bigBlindPosition: number;
+    nextToAct: number;
+    dealer: number;
+    players: Player[];
+    round: string;
+    pots: string[];
+}
+
+type Limits = {
+    min: string;
+    max: string;
+}
+
+export type TableStatus = {
+    isInTable: boolean;
+    isPlayerTurn: boolean;
+    seat: number;
+    stack: string;
+    status: string;
+    availableActions: LegalAction[];
+    canPostSmallBlind: boolean;
+    canPostBigBlind: boolean;
+    canCheck: boolean;
+    canCall: boolean;
+    canBet: boolean;
+    canRaise: boolean;
+    canFold: boolean;
+    betLimits: Limits | null;
+    raiseLimits: Limits | null;
+    callAmount: string;
+    smallBlindAmount: string;
+    bigBlindAmount: string;
+    isSmallBlindPosition: boolean;
+}

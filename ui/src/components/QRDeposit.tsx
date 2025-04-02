@@ -22,13 +22,6 @@ interface DepositSession {
     amount: number | null;
 }
 
-// Add ERC20 Transfer event interface
-interface TransferEvent {
-    from: string;
-    to: string;
-    value: bigint;
-}
-
 // Add USDC contract ABI (just the transfer method)
 const USDC_ABI = [
     "function transfer(address to, uint256 amount) returns (bool)",

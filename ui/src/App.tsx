@@ -7,8 +7,6 @@ import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { projectId, metadata, networks, wagmiAdapter } from "./config";
 import { mainnet } from "@reown/appkit/networks";
-import { includeWalletIds } from "./walletIds/includeWalletIds";
-import { featuredWalletIds } from "./walletIds/featuredWalletIds";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import useUserWallet from "./hooks/useUserWallet";
@@ -31,16 +29,12 @@ createAppKit({
         email: false,
         analytics: true
     },
-    featuredWalletIds: featuredWalletIds,
-    includeWalletIds: includeWalletIds,
     enableCoinbase: true,
     defaultNetwork: mainnet,
     allWallets: "SHOW"
 });
 
 function App() {
-    const { account, balance, isLoading } = useUserWallet();
-
     return (
         <WagmiProvider config={wagmiAdapter.wagmiConfig}>
             <QueryClientProvider client={queryClient}>

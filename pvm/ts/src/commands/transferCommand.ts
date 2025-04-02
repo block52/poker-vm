@@ -1,10 +1,10 @@
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
-import TexasHoldemGame, { GameOptions } from "../engine/texasHoldem";
+import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
 import contractSchemas from "../schema/contractSchemas";
 
@@ -102,6 +102,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 await this.gameManagement.saveFromJSON(_json);
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+                await this.mempool.add(gameTx);
                 return signResult(gameTx, this.privateKey);
             } 
             
@@ -134,6 +135,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 await this.gameManagement.saveFromJSON(_json);
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, this.data ?? "");
+                await this.mempool.add(gameTx);
                 return signResult(gameTx, this.privateKey);
             }
 

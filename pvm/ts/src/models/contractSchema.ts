@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { IContractSchemaDocument, IJSONModel } from "./interfaces";
-import { GameOptions } from "../engine/texasHoldem";
 import ContractSchemas from "../schema/contractSchemas";
+import { GameOptions } from "@bitcoinbrisbane/block52";
 
 export class ContractSchema implements IJSONModel {
     private readonly _address: string;

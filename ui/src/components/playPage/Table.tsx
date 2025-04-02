@@ -22,6 +22,7 @@ import { useTableContext } from "../../context/TableContext";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
+import { toDisplaySeat } from "../../utils/tableUtils";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -129,12 +130,8 @@ const Table = () => {
         tableData,
         nextToActInfo,
         currentRound,
-        totalPot,
         playerLegalActions,
-        isPlayerTurn,
         tableSize,
-        openOneMore,
-        openTwoMore,
         showThreeCards,
         getUserBySeat,
         currentUserSeat,
@@ -171,16 +168,16 @@ const Table = () => {
         debugLog("Active Players:", activePlayers);
         // If there are active players, set their positions
         if (activePlayers.length > 0) {
-            // Player in seat 0
-            if (activePlayers.find((p: any) => p.seat === 0)) {
-                const player0 = activePlayers.find((p: any) => p.seat === 0);
-                debugLog("Player 0:", player0);
-            }
-
             // Player in seat 1
             if (activePlayers.find((p: any) => p.seat === 1)) {
                 const player1 = activePlayers.find((p: any) => p.seat === 1);
                 debugLog("Player 1:", player1);
+            }
+
+            // Player in seat 2
+            if (activePlayers.find((p: any) => p.seat === 2)) {
+                const player2 = activePlayers.find((p: any) => p.seat === 2);
+                debugLog("Player 2:", player2);
             }
         }
     }, [activePlayers]);
@@ -196,7 +193,6 @@ const Table = () => {
     const [dealerIndex, setDealerIndex] = useState<number>(0);
 
     // Handle loading state
-
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -296,10 +292,12 @@ const Table = () => {
                 if (prevIndex === 2) {
                     // Handle case where prevIndex is 2 (e.g., no change or custom logic)
                     return prevIndex + 2; // For example, keep it the same
-                } else if (prevIndex === 4) {
+                } 
+                if (prevIndex === 4) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex + 2;
-                } else if (prevIndex === 9) {
+                } 
+                if (prevIndex === 9) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex - 8;
                 } else {
@@ -702,7 +700,7 @@ const Table = () => {
 
                                             {/*//! CHIP */}
                                             {chipPositionArray.map((position, index) => {
-                                                const player = tableData?.data?.players?.find((p: any) => p.seat === index);
+                                                const player = tableData?.data?.players?.find((p: any) => p.seat === index + 1);
 
                                                 return (
                                                     <div
@@ -722,14 +720,14 @@ const Table = () => {
                                     <div className="absolute inset-0 z-30">
                                         {playerPositionArray.map((position, positionIndex) => {
                                             // Find the player at this seat position
-                                            const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex);
+                                            const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex + 1);
 
                                             // Check if this player is the current user
                                             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
 
                                             // More detailed logging only in DEBUG_MODE
                                             if (DEBUG_MODE && playerAtThisSeat) {
-                                                debugLog(`Seat ${positionIndex} detailed comparison:`, {
+                                                debugLog(`Seat ${positionIndex + 1} detailed comparison:`, {
                                                     playerAddress: playerAtThisSeat.address,
                                                     playerAddressLower: playerAtThisSeat.address?.toLowerCase(),
                                                     currentUserAddress: userWalletAddress,
@@ -741,17 +739,17 @@ const Table = () => {
                                             }
 
                                             const componentProps = {
-                                                index: positionIndex,
+                                                index: positionIndex + 1,
                                                 currentIndex: currentIndex,
                                                 left: position.left,
                                                 top: position.top,
                                                 color: position.color,
-                                                status: tableDataValues.tableDataPlayers?.[positionIndex]?.status
+                                                status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === positionIndex + 1)?.status
                                             };
 
                                             const componentToRender = !playerAtThisSeat ? (
                                                 // No player at this seat - show vacant player
-                                                <VacantPlayer index={positionIndex} left={position.left} top={position.top} />
+                                                <VacantPlayer index={positionIndex + 1} left={position.left} top={position.top} />
                                             ) : isCurrentUser ? (
                                                 // This is the current user's position - use Player component
                                                 <Player {...componentProps} />
@@ -766,7 +764,7 @@ const Table = () => {
                                             );
 
                                             if (DEBUG_MODE) {
-                                                debugLog(`Rendering component for seat ${positionIndex}:`, {
+                                                debugLog(`Rendering component for seat ${positionIndex + 1}:`, {
                                                     isVacant: !playerAtThisSeat,
                                                     isCurrentUser,
                                                     componentType: !playerAtThisSeat ? "VacantPlayer" : isCurrentUser ? "Player" : "OppositePlayer",
@@ -819,7 +817,7 @@ const Table = () => {
             )}
             {/* Add a message for the current user's seat */}
             {currentUserSeat >= 0 && (
-                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">You are seated at position {currentUserSeat + 1}</div>
+                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">You are seated at position {toDisplaySeat(currentUserSeat)}</div>
             )}
             {/* Add an indicator for whose turn it is */}
             {nextToActInfo && isGameInProgress() && (

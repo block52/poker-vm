@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState } from "react";
 
 type PlayerCardProps = {
     id: number;
@@ -11,7 +11,7 @@ type PlayerCardProps = {
 };
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ id, label, left, top, color, onClose, setStartIndex }) => {
-    const [note, setNote] = React.useState("");
+    const [note, setNote] = useState("");
 
     const handleNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNote(e.target.value);

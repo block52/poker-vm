@@ -1,16 +1,15 @@
 import * as React from "react";
 import { memo, useEffect, useState } from "react";
 import { FaRegUserCircle } from "react-icons/fa";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { PROXY_URL } from "../../../config/constants";
 import axios from "axios";
-import { useAccount } from "wagmi";
 import { ethers } from "ethers";
 import { useTableContext } from "../../../context/TableContext";
-import { NodeRpcClient } from "@bitcoinbrisbane/block52";
-import { getSignature, getPublicKey } from "../../../utils/accountUtils";
+import { getSignature } from "../../../utils/accountUtils";
 import useUserWallet from "../../../hooks/useUserWallet";
 import LoadingPokerIcon from "../../common/LoadingPokerIcon";
+import { toDisplaySeat } from "../../../utils/tableUtils";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -35,9 +34,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const { id: tableId } = useParams();
         const userAddress = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        const wallet = new ethers.Wallet(privateKey!);
 
-        const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
+        const { balance } = useUserWallet(); // this is the wallet in the browser.
 
         // Add state for buy-in modal
         const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -61,7 +59,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     hasData: !!tableData,
                     players: tableData?.data?.players?.map((p: any) => ({
                         address: p.address,
-                        seat: p.seat
+                        seat: p.seat // No need to add 1 since backend is already using 1-based
                     }))
                 });
             }, 1000); // 1 second debounce
@@ -84,12 +82,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             // Log each player for comparison
             localTableData.data.players.forEach((player: any, idx: number) => {
-                debugLog(`Player ${idx} comparison:`, {
-                    playerAddress: player.address,
-                    userAddress: userAddress,
-                    isMatch: player.address?.toLowerCase() === userAddress?.toLowerCase(),
-                    playerSeat: player.seat
-                });
             });
 
             const result = localTableData.data.players.some((player: any) => player.address?.toLowerCase() === userAddress?.toLowerCase());
@@ -117,8 +109,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             debugLog(`VacantPlayer ${index} - Occupied seats:`, Array.from(occupiedSeats));
 
-            // Find the first available seat (0-8)
-            for (let i = 0; i < 9; i++) {
+            // Find the first available seat (1-9)
+            for (let i = 1; i <= 9; i++) {
                 if (!occupiedSeats.has(i)) {
                     debugLog(`VacantPlayer ${index} - First available seat:`, i);
                     return i;
@@ -152,7 +144,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             // 2. The user is not already playing
             const result = isSeatVacant && !isUserAlreadyPlaying;
 
-            debugLog(`VacantPlayer ${index} - canJoinThisSeat:`, {
+            debugLog(`VacantPlayer ${index + 1} - canJoinThisSeat:`, {
                 isSeatVacant,
                 isUserAlreadyPlaying,
                 result
@@ -162,15 +154,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         }, [isSeatVacant, isUserAlreadyPlaying]);
 
         const isNextAvailableSeat = index === nextAvailableSeat;
-        debugLog(`VacantPlayer ${index} - isNextAvailableSeat:`, isNextAvailableSeat, {
-            index,
-            nextAvailableSeat
-        });
-
-        // Check if this is the first player
-        const isFirstPlayer =
-            !localTableData?.data?.players?.length ||
-            localTableData.data.players.every((player: any) => player.address === "0x0000000000000000000000000000000000000000");
 
         // Get blind values from table data
         const smallBlindWei = localTableData?.data?.smallBlind || "0";
@@ -180,27 +163,15 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
         // Get dealer position from table data
         const dealerPosition = localTableData?.data?.dealer || 0;
-        debugLog(`VacantPlayer ${index} - Dealer position:`, dealerPosition);
+        debugLog(`VacantPlayer ${index + 1} - Dealer position:`, dealerPosition + 1);
 
         // Calculate small blind and big blind positions
         const smallBlindPosition = (dealerPosition + 1) % 9; // Assuming 9 max seats
         const bigBlindPosition = (dealerPosition + 2) % 9;
-        debugLog(`VacantPlayer ${index} - Blind positions:`, {
-            dealer: dealerPosition,
-            smallBlind: smallBlindPosition,
-            bigBlind: bigBlindPosition
-        });
+
 
         // Helper function to get position name
-        const getPositionName = (index: number) => {
-            // Use the actual positions from table data instead of calculating
-            const smallBlindPosition = localTableData?.data?.smallBlindPosition;
-            const bigBlindPosition = localTableData?.data?.bigBlindPosition;
-            const dealerPosition = localTableData?.data?.dealer;
-
-            // if (index === dealerPosition) return "Dealer (D)";
-            // if (index === smallBlindPosition) return "Small Blind (SB)";
-            // if (index === bigBlindPosition) return "Big Blind (BB)";
+        const getPositionName = (index: number): string => {
             return "";
         };
 
@@ -243,7 +214,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
                 // Show loading icon and hide modal
                 setIsConfirming(true);
-              
                 setBuyInError("");
 
                 // Use setTimeout with 0 delay to ensure UI updates before proceeding
@@ -373,11 +343,11 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     <FaRegUserCircle style={{ color: "rgba(255, 255, 255, 0.4)" }} className="w-12 h-12" />
                 </div>
                 <div className="text-white text-center">
-                    <div className="text-sm mb-1 whitespace-nowrap">Seat {index}</div>
+                    <div className="text-sm mb-1 whitespace-nowrap">Seat {toDisplaySeat(index)}</div>
 
                     <div className="whitespace-nowrap">
                         {isUserAlreadyPlaying
-                            ? "Already playing"
+                            ? ""
                             : canJoinThisSeat
                               ? index === localTableData?.data?.bigBlindPosition
                                   ? `Click to Join ($${bigBlindDisplay})`

@@ -35,23 +35,6 @@ export const formatUSDC = (amount: string): string => {
     return toDollar(usdc);
 };
 
-// New function to format Wei values (18 decimals) to dollars
-// export const formatWeiToDollars = (weiAmount: string | bigint): number => {
-//     try {
-//         // Convert from Wei (18 decimals) to standard units
-//         const etherValue = ethers.formatUnits(weiAmount.toString(), 18);
-
-//         // Parse to number and format to 2 decimal places
-//         const dollarValue = parseFloat(etherValue);
-
-//         // Format with commas for thousands and fixed 2 decimal places
-//         return dollarValue;
-//     } catch (error) {
-//         console.error("Error formatting Wei amount:", error);
-//         return 0;
-//     }
-// }
-
 // Update the formatting function to ensure two decimal places
 export const formatWeiToDollars = (weiAmount: string | bigint): string => {
     try {
