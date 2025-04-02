@@ -432,16 +432,6 @@ const Table = () => {
                         </span>
                     </div>
 
-                    {/* Middle Section - Table info */}
-                    <div className="flex flex-col items-center text-white z-10">
-                        <div className="bg-[#0f172a80] px-4 py-1 rounded-lg border border-[#3a546d] shadow-inner">
-                            <span className="text-[#64ffda] mr-2 text-sm">♠️</span>
-                            <span>Table: {id}</span>
-                            <span className="text-[#64ffda] mx-2 text-sm">♦️</span>
-                            {/* <span>{tableData && tableData.data?.type}</span> */}
-                        </div>
-                    </div>
-
                     {/* Right Section - Wallet info */}
                     <div className="flex items-center z-10">
                         <div className="flex flex-col items-end justify-center text-white mr-3">
@@ -639,7 +629,7 @@ const Table = () => {
                                             <div className="flex flex-col items-center justify-center -mt-20">
                                                 <div
                                                     style={{
-                                                        fontSize: "15px",
+                                                        fontSize: "20px",
                                                         backgroundColor: "rgba(0,0,0,0.25)",
                                                         borderRadius: "9999px",
                                                         color: "rgb(255, 255, 255)",
@@ -658,7 +648,7 @@ const Table = () => {
                                                 </div>
                                                 <div
                                                     style={{
-                                                        fontSize: "13px",
+                                                        fontSize: "18px",
                                                         backgroundColor: "rgba(0,0,0,0.25)",
                                                         borderRadius: "9999px",
                                                         color: "rgb(255, 255, 255)",

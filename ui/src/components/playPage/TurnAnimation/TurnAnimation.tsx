@@ -9,13 +9,14 @@ type TurnAnimationProps = {
 const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
     const { tableData, nextToActInfo, tableSize } = useTableContext();
 
-    const isNextToAct = tableData?.data?.nextToAct === index;
+    const visualIndex = tableData?.data?.players?.findIndex(
+        (p: any) => p.seat === nextToActInfo?.seat
+    );
+    const isNextToAct = index === visualIndex;
     if (!isNextToAct) return null;
-
-    const timeRemaining = nextToActInfo?.seat === index ? nextToActInfo?.timeRemaining ?? 15 : 15;
-
-    // Dynamically get animation position from array
-    const turnPos = turnAnimationPosition?.[tableSize === 6 ? "six" : "nine"]?.[index] || { left: "0px", top: "0px" };
+    
+    const turnPos = turnAnimationPosition?.[tableSize === 6 ? "six" : "nine"]?.[visualIndex ?? index];
+    
 
     // Determine pulse speed
     const baseRingStyle = {

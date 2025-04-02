@@ -77,8 +77,8 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
             <div className="flex justify-center gap-1">
                 {playerData.holeCards && playerData.holeCards.length === 2 ? (
                     <>
-                        <img src={`/cards/${playerData.holeCards[0]}.svg`} width={60} height={80} />
-                        <img src={`/cards/${playerData.holeCards[1]}.svg`} width={60} height={80} />
+                        <img src={`/cards/${playerData.holeCards[0]}.svg`} width={60} height={80} className="mb-[11px]"/>
+                        <img src={`/cards/${playerData.holeCards[1]}.svg`} width={60} height={80} className="mb-[11px]"/>
                     </>
                 ) : (
                     // Render nothing when no cards have been dealt yet
