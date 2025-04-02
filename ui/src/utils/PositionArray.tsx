@@ -28,8 +28,8 @@ export const playerPosition = {
     nine: [
         {
             //* 1 orange
-            left: "400px",
-            top: "400px",
+            left: "430px",
+            top: "420px",
             color: "#4ade80"
         },
         {
