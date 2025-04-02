@@ -1,15 +1,14 @@
-import React, { createContext, useContext, ReactNode, useEffect, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import { getPublicKey, isUserPlaying } from "../utils/accountUtils";
-import { whoIsNextToAct, getCurrentRound, getTotalPot, getPositionName, getWinnerInfo } from "../utils/tableUtils";
+import { whoIsNextToAct, getCurrentRound, getTotalPot, getWinnerInfo } from "../utils/tableUtils";
 import { getPlayersLegalActions, isPlayersTurn } from "../utils/playerUtils";
-import { PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet"; // this is the browser wallet todo rename to useBrowserWallet
 import { ethers } from "ethers";
 import { formatWeiToDollars } from "../utils/numberUtils";
-
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -116,42 +115,43 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (tableData && tableData.data) {
             // Get winner info if available
             const winners = getWinnerInfo(tableData.data);
-            
+
             // Check for "win by fold" scenario - when all players except one have folded
             if (!winners || winners.length === 0) {
                 // Add check to ensure players array exists before filtering
                 if (tableData.data.players && Array.isArray(tableData.data.players)) {
                     // Only consider win by fold when there are multiple players at the table
                     const totalPlayersAtTable = tableData.data.players.filter((p: any) => p).length;
-                    
+
                     // Only proceed with win detection if there are at least 2 players
                     if (totalPlayersAtTable >= 2) {
-                        const activePlayers = tableData.data.players.filter((p: any) => 
-                            p && p.status.toLowerCase() !== "folded" && p.status.toLowerCase() !== "inactive");
-                        
+                        const activePlayers = tableData.data.players.filter(
+                            (p: any) => p && p.status.toLowerCase() !== "folded" && p.status.toLowerCase() !== "inactive"
+                        );
+
                         // Check if this is a real win-by-fold situation
                         const hasHandStarted = tableData.data.round !== "waiting"; // Make sure game has started
-                        const somePlayersHaveFolded = tableData.data.players.some((p: any) => 
-                                    p && p.status.toLowerCase() === "folded");
+                        const somePlayersHaveFolded = tableData.data.players.some((p: any) => p && p.status.toLowerCase() === "folded");
                         const hasPreviousActions = tableData.data.previousActions?.length > 0;
-                        
+
                         // Only declare a winner if:
                         // 1. Only one player remains active AND
                         // 2. The hand has started AND
                         // 3. Either some players folded OR there were previous actions
-                        if (activePlayers.length === 1 && hasHandStarted && 
-                            (somePlayersHaveFolded || hasPreviousActions)) {
+                        if (activePlayers.length === 1 && hasHandStarted && (somePlayersHaveFolded || hasPreviousActions)) {
                             const potAmount = getTotalPot(tableData.data);
                             const formattedAmount = formatWeiToDollars(potAmount);
-                            
-                            const winByFold = [{
-                                seat: activePlayers[0].seat,
-                                address: activePlayers[0].address,
-                                amount: potAmount,
-                                formattedAmount,
-                                winType: 'fold'  // Add this to distinguish win by fold
-                            }];
-                            
+
+                            const winByFold = [
+                                {
+                                    seat: activePlayers[0].seat,
+                                    address: activePlayers[0].address,
+                                    amount: potAmount,
+                                    formattedAmount,
+                                    winType: "fold" // Add this to distinguish win by fold
+                                }
+                            ];
+
                             console.log("🏆 Winner by fold detected:", winByFold);
                             setWinnerInfo(winByFold);
                         } else {
@@ -167,7 +167,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 }
             } else {
                 setWinnerInfo(winners);
-                
+
                 if (winners && winners.length > 0) {
                     console.log("🏆 Winners detected:", winners);
                 }

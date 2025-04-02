@@ -4,6 +4,7 @@
 
 import { ethers } from "ethers";
 import { formatWinningAmount } from "./numberUtils";
+import { TableData } from "../types/index";
 
 /**
  * Determines which player is next to act based on table data
@@ -230,14 +231,6 @@ export const hasPostedBlind = (tableData: any, playerAddress: string, blindType:
     const player = tableData.players?.find((p: any) => p.address?.toLowerCase() === normalizedAddress);
     const hasPostedInLastAction = player?.lastAction?.action === (blindType === "small" ? "post small blind" : "post big blind");
 
-    // Log for debugging
-    // console.log(`hasPosted${blindType === 'small' ? 'Small' : 'Big'}Blind check for ${normalizedAddress}:`, {
-    //   hasPosted,
-    //   hasPostedInLastAction,
-    //   previousActions: tableData.previousActions,
-    //   playerLastAction: player?.lastAction
-    // });
-
     return hasPosted || hasPostedInLastAction;
 };
 
@@ -248,7 +241,7 @@ export const hasPostedBlind = (tableData: any, playerAddress: string, blindType:
  * @param blindType The type of blind to check ('small' or 'big')
  * @returns Boolean indicating if it's the player's turn to post the specified blind
  */
-export const isPlayerTurnToPostBlind = (tableData: any, playerAddress: string, blindType: "small" | "big"): boolean => {
+export const isPlayerTurnToPostBlind = (tableData: TableData, playerAddress: string, blindType: "small" | "big"): boolean => {
     // console.log("tableData", tableData);
     if (!tableData || !playerAddress) return false;
 
@@ -270,15 +263,6 @@ export const isPlayerTurnToPostBlind = (tableData: any, playerAddress: string, b
 
     // Check if the player has the legal action to post this blind
     const canPostBlind = player.legalActions?.some((action: any) => action.action === (blindType === "small" ? "post small blind" : "post big blind"));
-
-    // Log for debugging
-    // console.log(`isPlayerTurnToPost${blindType === 'small' ? 'Small' : 'Big'}Blind check for ${normalizedAddress}:`, {
-    //   isInBlindPosition,
-    //   isPlayerTurn,
-    //   alreadyPosted,
-    //   canPostBlind,
-    //   legalActions: player.legalActions
-    // });
 
     // It's the player's turn to post a blind if they're in position, it's their turn,
     // they haven't posted yet, and they have the legal action to do so
