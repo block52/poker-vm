@@ -13,7 +13,7 @@ const Badge: React.FC<BadgeProps> = ({ count, value, color }) => {
             <div style={{ backgroundColor: color }} className={"flex items-center justify-center w-6 h-6 text-white text-sm font-bold rounded-full"}>
                 {count}
             </div>
-            <div className="ml-2 text-lg font-semibold text-black flex justify-between ml-auto mr-auto">{formattedValue}</div>
+            <div className="ml-2 text-lg font-semibold text-black flex justify-between ml-auto mr-auto">${formattedValue}</div>
         </div>
     );
 };
