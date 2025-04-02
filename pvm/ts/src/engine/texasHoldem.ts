@@ -59,6 +59,7 @@ class TexasHoldemGame implements IPoker {
 
     private seed: number[] = [];
     private readonly _communityCards: Card[] = [];
+    private _handNumber: number = 0;
 
     constructor(
         private readonly _address: string,
@@ -100,13 +101,6 @@ class TexasHoldemGame implements IPoker {
         this._pot = BigInt(currentPot);
         this._currentRound = _currentRound;
         this._gameOptions = gameOptions;
-
-        // this._minBuyIn = gameOptions.minBuyIn;
-        // this._maxBuyIn = gameOptions.maxBuyIn;
-        // this._minPlayers = gameOptions.minPlayers;
-        // this._maxPlayers = gameOptions.maxPlayers;
-        // this._smallBlind = gameOptions.smallBlind;
-        // this._bigBlind = gameOptions.bigBlind;
 
         // this was is causing the 10 & 11
         this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
@@ -176,6 +170,9 @@ class TexasHoldemGame implements IPoker {
     }
     get winners() {
         return this._winners;
+    }
+    get handNumber() {
+        return this._handNumber;
     }
 
     exists(playerId: string): boolean {
@@ -819,6 +816,29 @@ class TexasHoldemGame implements IPoker {
 
         // Advance to next round
         this.setNextRound();
+    }
+
+    reInit(seed: number[]): void {
+        if (!this._playersMap.size) throw new Error("No players in game.");
+        if (this._currentRound !== TexasHoldemRound.PREFLOP) throw new Error("Hand currently in progress.");
+
+        this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
+        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
+        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
+
+        this._rounds.clear();
+        this._rounds.set(TexasHoldemRound.PREFLOP, []);
+
+        this._lastActedSeat = 0;
+        this._deck = new Deck();
+        // this should come from another source
+        this.seed = seed || Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
+        this._deck.shuffle(this.seed);
+        this._pot = 0n;
+        this._communityCards.length = 0;
+        this._winners?.clear();
+
+        this._handNumber += 1;
     }
 
     private calculateSidePots(): void {
