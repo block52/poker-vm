@@ -775,11 +775,11 @@ const Table = () => {
                                             }
 
                                             return (
-                                                <div key={positionIndex} className="z-[10]">
-                                                    {componentToRender}
+                                                <div key={positionIndex} className="z-[10]">  
                                                     <div>
-                                                        <TurnAnimation left={position.left} top={position.top} index={positionIndex} />
+                                                        <TurnAnimation index={positionIndex} />
                                                     </div>
+                                                    {componentToRender}
                                                 </div>
                                             );
                                         })}
