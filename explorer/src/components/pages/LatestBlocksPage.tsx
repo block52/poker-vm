@@ -75,7 +75,14 @@ export default function LatestBlocksPage() {
             }
         };
 
+        // Fetch blocks immediately on mount
         fetchBlocks();
+        
+        // Set up interval to fetch blocks every 5 seconds
+        const intervalId = setInterval(fetchBlocks, 5000);
+        
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(intervalId);
     }, []);
 
     return (
