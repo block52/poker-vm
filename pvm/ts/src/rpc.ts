@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+import { GameOptions, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import {
     AccountCommand,
@@ -37,7 +37,6 @@ import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
 import * as ethers from "ethers";
 import { getAccountFromPublicKey } from "./utils/crypto";
-import { GameOptions } from "./engine/texasHoldem";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -49,9 +48,8 @@ export class RPC {
         if (!request.method) {
             return makeErrorRPCResponse(request.id, "Missing method");
         }
-        
-        const method = request.method as RPCMethods;
 
+        const method = request.method as RPCMethods;
 
         if (!Object.values(RPCMethods).includes(method)) {
             return makeErrorRPCResponse(request.id, "Method not found");
@@ -367,7 +365,7 @@ export class RPC {
                     try {
                         const command = new DealCommand(gameAddress, playerAddress, seed, validatorPrivateKey);
                         result = await command.execute();
-                        
+
                         // Check if the result indicates an error but wasn't thrown as an exception
                         if (result && result.data && result.data.success === false) {
                             console.warn("Deal command returned failure:", result.data.message);
@@ -384,7 +382,7 @@ export class RPC {
                     const [nonce, owner, data] = request.params as RPCRequestParams[RPCMethods.DEPLOY_CONTRACT];
                     const params = data.split("-");
 
-                    const gameOptions : GameOptions =  {
+                    const gameOptions: GameOptions = {
                         minBuyIn: BigInt(params[0]),
                         maxBuyIn: BigInt(params[1]),
                         minPlayers: parseInt(params[2]),

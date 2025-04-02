@@ -1,6 +1,5 @@
-import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { Player } from "../models/player";
-import TexasHoldemGame, { GameOptions } from "./texasHoldem";
+import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
+import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
 

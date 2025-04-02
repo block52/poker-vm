@@ -1,10 +1,10 @@
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
-import TexasHoldemGame, { GameOptions } from "../engine/texasHoldem";
+import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
 import contractSchemas from "../schema/contractSchemas";
 

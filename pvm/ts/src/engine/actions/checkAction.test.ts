@@ -1,7 +1,7 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
-import TexasHoldemGame, { GameOptions } from "../texasHoldem";
+import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 
 describe("CheckAction", () => {

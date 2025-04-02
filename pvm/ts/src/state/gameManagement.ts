@@ -4,8 +4,8 @@ import { ethers } from "ethers";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IJSONModel } from "../models/interfaces";
 import { ContractSchema } from "../models/contractSchema";
-import { GameOptions } from "../engine/texasHoldem";
 import crypto from "crypto";
+import { GameOptions } from "@bitcoinbrisbane/block52";
 
 export class GameManagement extends StateManager {
     private readonly mempool: Mempool;

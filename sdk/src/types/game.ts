@@ -31,6 +31,15 @@ export enum TexasHoldemRound {
     SHOWDOWN = "showdown"
 }
 
+export type GameOptions = {
+    minBuyIn: bigint;
+    maxBuyIn: bigint;
+    minPlayers: number;
+    maxPlayers: number;
+    smallBlind: bigint;
+    bigBlind: bigint;
+};
+
 // This is the type of the last action of a player
 export type ActionDTO = {
     playerId: string,
@@ -70,8 +79,7 @@ export type PlayerDTO = {
 export type TexasHoldemStateDTO = {
     type: "cash";
     address: string;
-    smallBlind: string;
-    bigBlind: string;
+    gameOptions: GameOptions;
     smallBlindPosition: number;
     bigBlindPosition: number;
     dealer: number;
