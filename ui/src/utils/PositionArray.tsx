@@ -28,14 +28,14 @@ export const playerPosition = {
     nine: [
         {
             //* 1 orange
-            left: "400px",
-            top: "380px",
+            left: "430px",
+            top: "420px",
             color: "#4ade80"
         },
         {
             //* 2 green
-            left: "150px",
-            top: "380px",
+            left: "90px",
+            top: "400px",
             color: "#f97316"
         },
         {
@@ -47,7 +47,7 @@ export const playerPosition = {
         {
             //* 4 blue
             left: "-120px",
-            top: "30px",
+            top: "20px",
             color: "#3b82f6"
         },
         {
@@ -76,8 +76,8 @@ export const playerPosition = {
         },
         {
             //* 9 gray
-            left: "650px",
-            top: "380px",
+            left: "700px",
+            top: "400px",
             color: "#6b7280"
         }
     ]

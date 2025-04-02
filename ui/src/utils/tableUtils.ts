@@ -318,3 +318,23 @@ export const getWinnerInfo = (tableData: any) => {
 
     return result.length > 0 ? result : null;
 };
+
+/**
+ * Converts a backend seat number to a display seat number
+ * Since the backend is already using 1-based seat numbers,
+ * this function now simply returns the input
+ * @param seatIndex The backend seat index (already 1-based)
+ * @returns The 1-based seat number for display
+ */
+export const toDisplaySeat = (seatIndex: number): number => {
+    return seatIndex;
+};
+
+/**
+ * Converts a 1-based seat number (UI) to the backend seat index (also 1-based)
+ * @param seatNumber The 1-based seat number
+ * @returns The backend 1-based seat index
+ */
+export const toInternalSeat = (seatNumber: number): number => {
+    return seatNumber;
+};

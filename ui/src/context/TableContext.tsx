@@ -188,8 +188,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
             // Update current user's seat when table data changes
             if (userWalletAddress && tableData.data.players) {
-                const playerIndex = tableData.data.players.findIndex((player: any) => player.address?.toLowerCase() === userWalletAddress);
-                setCurrentUserSeat(playerIndex >= 0 ? playerIndex : -1);
+                const player = tableData.data.players.find((player: any) => player.address?.toLowerCase() === userWalletAddress);
+                setCurrentUserSeat(player ? player.seat : -1);
             }
         }
     }, [tableData, userWalletAddress]);
