@@ -5,7 +5,7 @@ import { Stack } from "../core/datastructures/stack";
 
 export class Player implements IJSONModel {
     chips: bigint = 0n;
-    holeCards: [Card, Card ] | undefined;
+    holeCards: [Card, Card] | undefined;
     lastAction: Turn | undefined;
     status: PlayerStatus = PlayerStatus.ACTIVE;
 
@@ -41,7 +41,7 @@ export class Player implements IJSONModel {
         return this._previousActions.toArray();
     }
 
-    public toJson(): PlayerDTO { 
+    public toJson(): PlayerDTO {
         return {} as PlayerDTO;
     }
 }
