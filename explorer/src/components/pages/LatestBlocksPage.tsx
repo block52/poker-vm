@@ -63,7 +63,7 @@ export default function LatestBlocksPage() {
     useEffect(() => {
         const fetchBlocks = async () => {
             try {
-                const apiUrl = import.meta.env.VITE_EXPLORER_API_URL || 'http://localhost:3800';
+                const apiUrl = import.meta.env.VITE_EXPLORER_API_URL || 'http://localhost:9090';
                 const response = await fetch(`${apiUrl}/rpc/blocks`);
                 console.log('Response:', response);
                 const data = await response.json();

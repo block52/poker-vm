@@ -40,7 +40,7 @@ export default function BlockPage() {
             
             try {
                 setLoading(true);
-                const apiUrl = import.meta.env.VITE_EXPLORER_API_URL || 'http://localhost:3800';
+                const apiUrl = import.meta.env.VITE_EXPLORER_API_URL || 'http://localhost:9090';
                 const response = await fetch(`${apiUrl}/rpc/block/${index}`);
                 
                 if (!response.ok) {
