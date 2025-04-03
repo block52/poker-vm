@@ -530,6 +530,61 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
 });
 
 // ===================================
+// Perform action endpoint
+// ===================================
+app.post("/table/:tableId/perform", async (req, res) => {
+    console.log("=== PERFORM ACTION REQUEST ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    console.log("Route params:", req.params);
+
+    try {
+        // Format the RPC call to match the SDK client structure
+        const rpcCall = {
+            id: "1",
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress,         // from (player address)
+                req.params.tableId,           // to (table address)
+                req.body.actionType,          // action type (fold, check, bet, etc.)
+                req.body.amount || null,      // amount (if needed for the action)
+                req.body.data || null         // additional data (if needed)
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey || req.body.userAddress
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+
+        // Make the actual RPC call to node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(JSON.stringify(response.data, null, 2));
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        
+        // If the error has a response, log more details about it
+        if (error.response) {
+            console.error("Error response data:", error.response.data);
+            console.error("Error response status:", error.response.status);
+        }
+        
+        res.status(500).json({ 
+            error: "Failed to perform action", 
+            details: error.message 
+        });
+    }
+});
+
+// ===================================
 // 13. Account-related endpoints
 // ===================================
 app.get("/get_account/:accountId", async (req, res) => {
