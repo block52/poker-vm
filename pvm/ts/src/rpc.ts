@@ -344,27 +344,12 @@ export class RPC {
                     const [from, gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
                     const publicKey = request.data as string;
 
-                    // // Extract player address from the request's public key
-                    // let playerAddress = ethers.ZeroAddress; // Default value
-
-                    // if (publicKey) {
-                    //     try {
-                    //         playerAddress = getAccountFromPublicKey(publicKey);
-                    //         console.log(`Derived player address from public key: ${playerAddress}`);
-                    //     } catch (error) {
-                    //         console.error("Failed to derive address from public key:", error);
-                    //     }
-                    // } else if (request.data) {
-                    //     // Fallback to using data field if available
-                    //     playerAddress = request.data;
-                    // }
-
                     try {
                         const command = new DealCommand(gameAddress, from, seed, validatorPrivateKey);
                         result = await command.execute();
 
                         // Check if the result indicates an error but wasn't thrown as an exception
-                        if (result && result.data && result.data.success === false) {
+                        if (result && result.data && !result.data.success) {
                             console.warn("Deal command returned failure:", result.data.message);
                             // We still return the result, but log the warning
                         }
@@ -377,18 +362,7 @@ export class RPC {
 
                 case RPCMethods.DEPLOY_CONTRACT: {
                     const [nonce, owner, data] = request.params as RPCRequestParams[RPCMethods.DEPLOY_CONTRACT];
-                    const params = data.split("-");
-
-                    const gameOptions: GameOptions = {
-                        minBuyIn: BigInt(params[0]),
-                        maxBuyIn: BigInt(params[1]),
-                        minPlayers: parseInt(params[2]),
-                        maxPlayers: parseInt(params[3]),
-                        smallBlind: BigInt(params[4]),
-                        bigBlind: BigInt(params[5])
-                    };
-
-                    const command = new DeployContractCommand(BigInt(nonce), owner, gameOptions, validatorPrivateKey);
+                    const command = new DeployContractCommand(BigInt(nonce), owner, data, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
