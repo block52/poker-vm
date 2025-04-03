@@ -40,6 +40,15 @@ export type GameOptions = {
     bigBlind: bigint;
 };
 
+export type GameOptionsDTO = {
+    minBuyIn: string;
+    maxBuyIn: string;
+    minPlayers: number;
+    maxPlayers: number;
+    smallBlind: string;
+    bigBlind: string;
+};
+
 // This is the type of the last action of a player
 export type ActionDTO = {
     playerId: string,
@@ -79,7 +88,7 @@ export type PlayerDTO = {
 export type TexasHoldemStateDTO = {
     type: "cash";
     address: string;
-    gameOptions: GameOptions;
+    gameOptions: GameOptionsDTO;
     smallBlindPosition: number;
     bigBlindPosition: number;
     dealer: number;

@@ -35,8 +35,6 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
-import * as ethers from "ethers";
-import { getAccountFromPublicKey } from "./utils/crypto";
 import { NextCommand } from "./commands/nextCommand";
 
 export class RPC {

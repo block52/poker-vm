@@ -2,6 +2,7 @@ import {
     ActionDTO,
     Card,
     GameOptions,
+    GameOptionsDTO,
     LegalActionDTO,
     PlayerActionType,
     PlayerDTO,
@@ -1165,10 +1166,19 @@ class TexasHoldemGame implements IPoker {
             communityCards.push(this._communityCards[i].mnemonic);
         }
 
+        const gameOptions: GameOptionsDTO = {
+            minBuyIn: this._gameOptions.minBuyIn.toString(),
+            maxBuyIn: this._gameOptions.maxBuyIn.toString(),
+            maxPlayers: this._gameOptions.maxPlayers,
+            minPlayers: this._gameOptions.minPlayers,
+            smallBlind: this._gameOptions.smallBlind.toString(),
+            bigBlind: this._gameOptions.bigBlind.toString()
+        };
+
         return {
             type: "cash",
             address: this._address,
-            gameOptions: this.gameOptions,
+            gameOptions: gameOptions,
             smallBlindPosition: this._smallBlindPosition,
             bigBlindPosition: this._bigBlindPosition,
             dealer: this._dealer,
