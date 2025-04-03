@@ -341,21 +341,25 @@ export class RPC {
                 }
 
                 case RPCMethods.PERFORM_ACTION: {
-                    const [from, gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
-                    const publicKey = request.data as string;
+                    const [from, to, action, amount, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
 
-                    try {
-                        const command = new DealCommand(gameAddress, from, seed, validatorPrivateKey);
-                        result = await command.execute();
+                    switch (action) {
+                        case "deal":
+                            try {
+                                const command = new DealCommand(to, from, validatorPrivateKey, data || "");
+                                result = await command.execute();
 
-                        // Check if the result indicates an error but wasn't thrown as an exception
-                        if (result && result.data && !result.data.success) {
-                            console.warn("Deal command returned failure:", result.data.message);
-                            // We still return the result, but log the warning
-                        }
-                    } catch (error: any) {
-                        console.error("Deal command failed:", error);
-                        return makeErrorRPCResponse(id, `Deal operation failed: ${error.message || "Unknown error"}`);
+                                // Check if the result indicates an error but wasn't thrown as an exception
+                                if (result && result.data && !result.data.success) {
+                                    console.warn("Deal command returned failure:", result.data.message);
+                                    // We still return the result, but log the warning
+                                }
+                            } catch (error: any) {
+                                console.error("Deal command failed:", error);
+                                return makeErrorRPCResponse(id, `Deal operation failed: ${error.message || "Unknown error"}`);
+                            }
+                            break;
+                        case "next-round":
                     }
                     break;
                 }
