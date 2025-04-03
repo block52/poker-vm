@@ -1,6 +1,6 @@
 import * as React from "react";
 import { memo, useEffect, useState } from "react";
-import { FaRegUserCircle } from "react-icons/fa";
+import PokerProfile from '../../../assets/PokerProfile.svg'
 import { useParams } from "react-router-dom";
 import { PROXY_URL } from "../../../config/constants";
 import axios from "axios";
@@ -340,7 +340,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         return (
             <div className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`} style={{ left, top }} onClick={canJoinThisSeat ? handleJoinClick : undefined}>
                 <div className={`flex justify-center gap-4 mb-2 ${canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"}`}>
-                    <FaRegUserCircle style={{ color: "rgba(255, 255, 255, 0.4)" }} className="w-12 h-12" />
+                    <img src={PokerProfile} className="w-12 h-12" />
                 </div>
                 <div className="text-white text-center">
                     <div className="text-sm mb-1 whitespace-nowrap">Seat {toDisplaySeat(index)}</div>
