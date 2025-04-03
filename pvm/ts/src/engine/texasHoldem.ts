@@ -230,10 +230,24 @@ class TexasHoldemGame implements IPoker {
 
         // Deal 2 cards to each player
         const players = this.getSeatedPlayers();
-        players.forEach(p => {
-            const cards = this._deck.deal(2) as [Card, Card];
-            p.holeCards = cards;
-        });
+        
+        // Deal first card to each player
+        for (const player of players) {
+            const firstCard = this._deck.getNext();
+            if (!player.holeCards) {
+                player.holeCards = [firstCard, firstCard]; // Temporarily assign same card twice
+            } else {
+                player.holeCards[0] = firstCard; // Replace first card if holeCards already exists
+            }
+        }
+
+        // Deal second card to each player
+        for (const player of players) {
+            const secondCard = this._deck.getNext();
+            if (player.holeCards) {
+                player.holeCards[1] = secondCard; // Replace second card
+            }
+        }
 
         console.log("Cards dealt successfully");
     }

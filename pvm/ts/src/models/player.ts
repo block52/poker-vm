@@ -41,7 +41,7 @@ export class Player implements IJSONModel {
         return this._previousActions.toArray();
     }
 
-    public toJson(): PlayerDTO { 
+    public toJson(): PlayerDTO {
         return {} as PlayerDTO;
     }
 }
