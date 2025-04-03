@@ -37,6 +37,7 @@ import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
 import * as ethers from "ethers";
 import { getAccountFromPublicKey } from "./utils/crypto";
+import { NextCommand } from "./commands/nextCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -360,6 +361,12 @@ export class RPC {
                             }
                             break;
                         case "next-round":
+                            const command = new NextCommand(to, validatorPrivateKey, data || "");
+                            result = await command.execute();
+                            break;
+                        default:
+                            return makeErrorRPCResponse(id, `Unknown action: ${action}`);
+                            
                     }
                     break;
                 }
