@@ -488,11 +488,11 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             // Use the new perform endpoint
             const response = await axios.post(`${PROXY_URL}/table/${tableId}/perform`, {
                 userAddress: publicKey,
-                actionType: "deal",
+                actionType: PlayerActionType.DEAL,
                 signature,
                 publicKey,
                 timestamp,
-                data: "randomseed123" // Optional seed data
+                data: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
             });
             
             debugLog("Deal response:", response.data);
