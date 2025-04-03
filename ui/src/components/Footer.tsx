@@ -104,7 +104,7 @@ const PokerActionPanel: React.FC = () => {
             // console.log("Table Data:asdfasd", tableData);
             const status = getUserTableStatus(tableData);
             // console.log("User Status:", status);
-            setUserStatus(status);
+            setUserStatus(status || null);
 
             // Check if it's the current user's turn directly from tableData
             const nextToActPlayer = tableData.players?.find((player: any) => player.seat === tableData.nextToAct);

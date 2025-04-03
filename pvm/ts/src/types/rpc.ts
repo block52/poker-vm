@@ -26,14 +26,14 @@ export const WRITE_METHODS = [
     RPCMethods.MINE,
     RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.MINT,
-    RPCMethods.TRANSFER,
-    RPCMethods.DEAL
+    RPCMethods.PERFORM_ACTION,
+    RPCMethods.TRANSFER
 ];
 
 export const CONTROL_METHODS = [
-    RPCMethods.PURGE, 
-    RPCMethods.START, 
-    RPCMethods.STOP, 
-    RPCMethods.SHUTDOWN,
-    RPCMethods.RESET_BLOCKCHAIN
+    RPCMethods.PURGE,
+    RPCMethods.RESET_BLOCKCHAIN,
+    RPCMethods.START,
+    RPCMethods.STOP,
+    RPCMethods.SHUTDOWN
 ];

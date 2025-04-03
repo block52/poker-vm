@@ -2,13 +2,14 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
-import { getPublicKey, isUserPlaying } from "../utils/accountUtils";
+import { getPublicKey, isUserPlaying, getSignature } from "../utils/accountUtils";
 import { whoIsNextToAct, getCurrentRound, getTotalPot, getWinnerInfo } from "../utils/tableUtils";
 import { getPlayersLegalActions, isPlayersTurn } from "../utils/playerUtils";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet"; // this is the browser wallet todo rename to useBrowserWallet
 import { ethers } from "ethers";
 import { formatWeiToDollars } from "../utils/numberUtils";
+import { TableData } from "../types/index";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -453,8 +454,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, [currentUserSeat, tableId, fetchUserBySeat]);
 
-    // Add the deal function
-    const dealTable = async () => {
+    
+    const dealTable = async (): Promise<void> => {
         if (!tableId) {
             console.error("No table ID available");
             return;
@@ -462,10 +463,40 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         try {
             debugLog("Dealing cards for table:", tableId);
-
-            const response = await axios.post(`${PROXY_URL}/table/${tableId}/deal`);
+            
+            // Get wallet info
+            const publicKey = localStorage.getItem("user_eth_public_key");
+            const privateKey = localStorage.getItem("user_eth_private_key");
+            
+            if (!publicKey || !privateKey) {
+                throw new Error("Wallet keys not available");
+            }
+            
+            // Use timestamp as the nonce
+            const timestamp = Math.floor(Date.now() / 1000);
+            
+            // Get signature using the utility function
+            const signature = await getSignature(
+                privateKey,
+                timestamp,       // Using timestamp as nonce
+                publicKey,       // from
+                tableId,         // to
+                "0",             // amount (0 for deal action)
+                "deal"           // action
+            );
+            
+            // Use the new perform endpoint
+            const response = await axios.post(`${PROXY_URL}/table/${tableId}/perform`, {
+                userAddress: publicKey,
+                actionType: PlayerActionType.DEAL,
+                signature,
+                publicKey,
+                timestamp,
+                data: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+            });
+            
             debugLog("Deal response:", response.data);
-
+            
             if (response.data?.result?.data) {
                 setTableData({ data: response.data.result.data });
             }

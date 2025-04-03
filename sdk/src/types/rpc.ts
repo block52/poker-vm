@@ -22,7 +22,6 @@ export enum RPCMethods {
     BURN = "burn",
     CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
-    DEAL = "deal",
     DEPLOY_CONTRACT = "deploy_contract",
     GET_ACCOUNT = "get_account",
     GET_BALANCE = "get_balance",
@@ -42,6 +41,7 @@ export enum RPCMethods {
     MINE = "mine",
     MINED_BLOCK_HASH = "mined_block_hash",
     MINT = "mint",
+    PERFORM_ACTION = "perform_action",
     PURGE = "purge",
     RESET_BLOCKCHAIN = "reset_blockchain",
     SHUTDOWN = "shutdown",
@@ -55,7 +55,6 @@ export type RPCRequestParams = {
     [RPCMethods.BURN]: [string, string, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
-    [RPCMethods.DEAL]: [string, string, string]; // [gameAddress, seed, publicKey]
     [RPCMethods.DEPLOY_CONTRACT]: [string, string, string]; // [nonce, owner, data]
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
     [RPCMethods.GET_BALANCE]: [string]; // [address]
@@ -75,6 +74,7 @@ export type RPCRequestParams = {
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
     [RPCMethods.MINT]: [string]; // [depositIndex]
+    [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string | null]; // [from, to, action, amount, data]
     [RPCMethods.PURGE]: [string, string]; // [username, password]
     [RPCMethods.RESET_BLOCKCHAIN]: [string, string]; // [username, password]
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
