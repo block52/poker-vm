@@ -343,20 +343,22 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     <img src={PokerProfile} className="w-12 h-12" />
                 </div>
                 <div className="text-white text-center">
-                    <div className="text-sm mb-1 whitespace-nowrap">Seat {toDisplaySeat(index)}</div>
+    <div className="text-sm mb-1 whitespace-nowrap">
+        {isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}
+    </div>
 
-                    <div className="whitespace-nowrap">
-                        {isUserAlreadyPlaying
-                            ? ""
-                            : canJoinThisSeat
-                              ? index === localTableData?.data?.bigBlindPosition
-                                  ? `Click to Join ($${bigBlindDisplay})`
-                                  : index === localTableData?.data?.smallBlindPosition
-                                    ? `Click to Join ($${smallBlindDisplay})`
-                                    : "Click to Join"
-                              : "Seat Taken"}
-                    </div>
-                </div>
+    {!isUserAlreadyPlaying && (
+        <div className="whitespace-nowrap">
+            {canJoinThisSeat
+                ? index === localTableData?.data?.bigBlindPosition
+                    ? `Click to Join ($${bigBlindDisplay})`
+                    : index === localTableData?.data?.smallBlindPosition
+                        ? `Click to Join ($${smallBlindDisplay})`
+                        : "Click to Join"
+                : "Seat Taken"}
+        </div>
+    )}
+</div>
                 {/* Position indicator */}
                 {getPositionName(index) && (
                     <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
