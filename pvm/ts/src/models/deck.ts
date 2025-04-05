@@ -115,8 +115,6 @@ export class Deck implements IDeck, IJSONModel {
     public toString(): string {
         const mnemonics: string[] = [];
 
-        console.log(`toString called. Total cards: ${this.cards.length}`);
-
         for (let i = 0; i < this.cards.length; i++) {
             const card = this.cards[i];
 

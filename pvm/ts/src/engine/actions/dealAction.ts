@@ -52,6 +52,9 @@ class DealAction extends BaseAction implements IAction {
     }
 
     execute(player: Player): void {
+
+        this.game.deal();
+
         // The verification should have already been done
         // The actual dealing of cards happens in the game class
         // Record the deal action
