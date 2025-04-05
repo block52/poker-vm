@@ -652,7 +652,7 @@ class TexasHoldemGame implements IPoker {
             for (const turn of turns) {
                 const action: ActionDTO = {
                     playerId: turn.playerId,
-                    seat: this.getPlayerSeatNumber(turn.playerId),
+                    seat: turn.seat,
                     action: turn.action,
                     amount: turn.amount ? turn.amount.toString() : "",
                     round
