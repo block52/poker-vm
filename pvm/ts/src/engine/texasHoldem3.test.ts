@@ -33,7 +33,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
         describe("Round Progression", () => {
             it("should correctly progress through game rounds", () => {
                 // TODO: Fix getNextRound() to handle invalid round transitions
-                expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+                expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
                 // TODO: Implement proper round progression in nextHand()
                 // TODO: Add validation for round progression conditions
             });
