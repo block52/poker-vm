@@ -14,5 +14,5 @@ jobs:
         with:
           node-version: '20.18'
       - name: Install dependencies
-        run: cd /pvm/ts && yarn install
-      - run: cd /pvm/ts && yarn test
+        run: cd ~/pvm/ts && yarn install
+      - run: cd ~/pvm/ts && yarn test
