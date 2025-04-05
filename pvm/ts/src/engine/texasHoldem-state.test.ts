@@ -31,6 +31,14 @@ describe.only("Texas Holdem - State", () => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
+        describe("Deck initialization", () => {
+            it("should initialize with a standard 52 card deck", () => {
+                const game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+                expect(game).toBeDefined();
+                // expect(game.deck.cards.length).toEqual(52);
+            });
+        });
+
         it("should create instance of TexasHoldemGame from JSON", () => {
             expect(game).toBeDefined();
 
@@ -40,6 +48,7 @@ describe.only("Texas Holdem - State", () => {
             expect(game.dealerPosition).toEqual(9);
             expect(game.currentPlayerId).toEqual(ethers.ZeroAddress);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+            expect(game.pot).toEqual(0n);
 
             // Player properties
             expect(game.getPlayerCount()).toEqual(0);

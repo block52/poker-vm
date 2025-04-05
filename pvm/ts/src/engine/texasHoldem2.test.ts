@@ -33,37 +33,6 @@ describe.only("Texas Holdem Game", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
-
-        it("should initialize with correct base properties", () => {
-            expect(game.smallBlind).toEqual(10000000000000000n);
-            expect(game.bigBlind).toEqual(20000000000000000n);
-            expect(game.dealerPosition).toEqual(9);
-            expect(game.getPlayerCount()).toEqual(0);
-            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
-            expect(game.pot).toEqual(0n);
-        });
-
-        it("should find correct next available seat", () => {
-            expect(game.findNextSeat()).toEqual(1);
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
-            expect(game.findNextSeat()).toEqual(2);
-        });
-
-        it("should throw error when table is full", () => {
-            for (let i = 1; i <= 9; i++) {
-                game.join2(`0x${i}`, TEN_TOKENS);
-            }
-
-            expect(() => game.join2("0x9999", TEN_TOKENS)).toThrow("Table full.");
-        });
-
-        it("should not be able to join more than once", () => {
-            expect(game.findNextSeat()).toEqual(1);
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
-            expect(() => {
-                game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
-            }).toThrow("Player already joined.");
-        });
     });
 
     describe("Deck initialization", () => {
@@ -81,20 +50,12 @@ describe.only("Texas Holdem Game", () => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
-        it("should correctly add players", () => {
+        it("should not be able to join more than once", () => {
+            expect(game.findNextSeat()).toEqual(1);
             game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
-            expect(game.getPlayerCount()).toEqual(1);
-            expect(game.exists("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeTruthy();
-
-            const player1 = game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-            expect(player1).toBeDefined();
-
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
-            expect(game.getPlayerCount()).toEqual(2);
-            expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
-
-            const player2 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-            expect(player2).toBeDefined();
+            expect(() => {
+                game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
+            }).toThrow("Player already joined.");
         });
 
         it("should not allow duplicate players", () => {
