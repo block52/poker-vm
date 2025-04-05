@@ -625,6 +625,8 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
         actions.push({ action, value: legalAction.action });
     }
 
+    actions.push({ action: "Fold", value: "fold" });
+
     return actions;
 };
 
