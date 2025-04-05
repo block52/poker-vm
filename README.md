@@ -1,3 +1,5 @@
+[![PVM UnitTests](https://github.com/block52/poker-vm/actions/workflows/main.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/main.yml)
+
 # poker-vm
 
 The Layer 2 poker game virtual machine.
