@@ -136,7 +136,7 @@ describe.only("Texas Holdem Game", () => {
             // Attempt to act with the wrong player (big blind) should throw an error
             expect(() => {
                 game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND);
-            }).toThrow("Not players turn.");
+            }).toThrow("Not player's turn.");
         });
 
         it("should allow correct player to act", () => {
@@ -167,7 +167,7 @@ describe.only("Texas Holdem Game", () => {
             // Attempting to act with big blind should throw error
             expect(() => {
                 game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            }).toThrow("Not players turn.");
+            }).toThrow("Not player's turn.");
 
             // Small blind should be able to act
             expect(() => {
@@ -192,11 +192,11 @@ describe.only("Texas Holdem Game", () => {
             // Trying to act with small blind or big blind should fail
             expect(() => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CHECK);
-            }).toThrow("Not players turn.");
+            }).toThrow("Not player's turn.");
 
             expect(() => {
                 game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK);
-            }).toThrow("Not players turn.");
+            }).toThrow("Not player's turn.");
 
             // Player 3 should be able to act
             expect(() => {
