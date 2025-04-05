@@ -51,7 +51,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 };
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-                console.log(`Game object created, processing action: ${this.data}`);
 
                 if (!game) {
                     console.log(`No game found for address ${this.to}`);
@@ -108,7 +107,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             
             if (await this.isGameTransaction(this.from)) {
                 const json = await this.gameManagement.get(this.from);
-                console.log(`Current game state:`, json);
 
                 // TODO: These need to be fetched from the contract in the future
                 const gameOptions: GameOptions = {
@@ -121,7 +119,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 };
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-                console.log(`Game object created, processing action: ${this.data}`);
                 
                 // Assume player is leaving the game
                 console.log(`Player ${this.to} leaving game...`);

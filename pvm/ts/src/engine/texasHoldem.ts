@@ -27,7 +27,7 @@ import PokerSolver from "pokersolver";
 import { IPoker, IUpdate, Turn } from "./types";
 import { ethers } from "ethers";
 
-type TurnWithRound = Turn & { round: TexasHoldemRound };
+type TurnWithSeat = Turn & { seat: number };
 
 class TexasHoldemGame implements IPoker {
     private readonly _update: IUpdate;
@@ -36,7 +36,7 @@ class TexasHoldemGame implements IPoker {
     private readonly _playersMap: Map<number, Player | null>;
     // private readonly _players: FixedCircularList<Player>;
 
-    private _rounds = new Map<TexasHoldemRound, Turn[]>();
+    private _rounds = new Map<TexasHoldemRound, TurnWithSeat[]>();
     private _lastActedSeat: number;
     private _deck!: Deck;
 
@@ -627,23 +627,21 @@ class TexasHoldemGame implements IPoker {
     }
 
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
+
+        const seat = this.getPlayerSeatNumber(turn.playerId);
+        const turnWithSeat: TurnWithSeat = { ...turn, seat };
+
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
             // Get the existing actions array
             const actions = this._rounds.get(round)!;
             // Push the new turn to it
-            actions.push(turn);
-            console.log("Added action to existing round");
-            console.log(actions);
-
+            actions.push(turnWithSeat);
             this._rounds.set(round, actions);
         } else {
             // Create a new array with this turn as the first element
-            this._rounds.set(round, [turn]);
+            this._rounds.set(round, [turnWithSeat]);
         }
-
-        console.log("Added action to round");
-        console.log(this._rounds);
     }
 
     getActionDTOs(): ActionDTO[] {
