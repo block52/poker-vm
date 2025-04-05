@@ -45,7 +45,7 @@ describe.only("Texas Holdem - Ante - Heads Up", () => {
             );
         });
 
-        it("should allow players to join", () => {
+        it("should allow a player to join", () => {
             game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
