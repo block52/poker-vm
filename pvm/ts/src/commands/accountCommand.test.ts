@@ -8,7 +8,7 @@ import { Account, Transaction } from "../models";
 jest.mock("../core/mempool");
 jest.mock("../state/accountManagement");
 
-describe.skip("AccountCommand Tests", () => {
+describe("AccountCommand Tests", () => {
     const testAddress = ethers.Wallet.createRandom().address;
     const testPrivateKey = ethers.Wallet.createRandom().privateKey;
 

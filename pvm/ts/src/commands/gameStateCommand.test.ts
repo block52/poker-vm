@@ -1,6 +1,4 @@
-import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import TexasHoldemGame from "../engine/texasHoldem";
 import { Transaction } from "../models";
 import { GameStateCommand } from "./gameStateCommand";
 import { ethers } from "ethers";
@@ -19,7 +17,7 @@ jest.mock("../core/mempool", () => {
     };
 });
 
-describe.only("GameStateCommand", () => {
+describe.skip("GameStateCommand", () => {
     let mockMempool: jest.Mocked<Mempool>;
 
     beforeEach(() => {

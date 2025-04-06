@@ -17,15 +17,12 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
     public async execute(): Promise<ISignedResponse<TexasHoldemStateDTO>> {
         try {
-            console.log("Getting game state for address:", this.address);
-
             const [json, gameOptions] = await Promise.all([
                 this.gameManagement.get(this.address),
                 ContractSchema.getGameOptions(this.address)
             ]);
 
             const game = TexasHoldemGame.fromJson(json, gameOptions);
-            console.log("Created game object");
 
             // Track players who are already in the game to avoid duplicate joins
             const playerSeats = new Map<string, number>();
