@@ -39,9 +39,6 @@ export class Mempool {
             // throw new Error("Invalid transaction");
         }
 
-        // console.log(`Adding transaction ${transaction.hash} to mempool`);
-
-        // this.transactions.push(transaction);
         this.txMap.set(transaction.hash, transaction);
     }
 
