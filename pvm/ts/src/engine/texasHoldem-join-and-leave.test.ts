@@ -1,6 +1,7 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
+import { gameOptions } from "./testConstants";
 
 describe("Texas Holdem - Join and Leave", () => {
 
@@ -15,15 +16,6 @@ describe("Texas Holdem - Join and Leave", () => {
         communityCards: [],
         pot: 0n,
         players: []
-    };
-
-    const gameOptions: GameOptions = {
-        minBuyIn: 1000000000000000000n, // 1 ETH or $1
-        maxBuyIn: 10000000000000000000n, // 10 ETH or $10
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000n, // 0.01 ETH or 1 cent
-        bigBlind: 20000000000000000n, // 0.02 ETH or 2 cents
     };
 
     describe("Player Management", () => {
