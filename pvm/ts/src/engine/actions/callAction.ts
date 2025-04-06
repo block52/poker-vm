@@ -47,15 +47,17 @@ class CallAction extends BaseAction implements IAction {
     protected getDeductAmount(player: Player): bigint {
         const lastAction = this.game.getLastRoundAction();
         const sumBets = this.getSumBets(player.address);
-        const amountToCall = lastAction?.amount || this.game.bigBlind;
         
-        // If player has already bet the same or more than needed to call, return 0
-        if (sumBets >= amountToCall) {
+        // Get the largest bet in the current round
+        const largestBet = this.getLargestBet();
+        
+        // If player has already bet the same or more than the largest bet, return 0
+        if (sumBets >= largestBet) {
             return 0n;
         }
         
         // Otherwise return the difference needed to call
-        return amountToCall - sumBets;
+        return largestBet - sumBets;
     }
 }
 
