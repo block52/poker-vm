@@ -228,7 +228,7 @@ export const dealerPosition = {
             top: "255px"
         },
         {
-            // 8
+            // 9
             left: "560px",
             top: "340px"
         }
