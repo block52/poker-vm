@@ -73,9 +73,7 @@ abstract class BaseAction {
 
     protected getSumBets(playerId: string): bigint {
         let totalBet = 0n;
-
         const roundBets = this.game.getBets(this.game.currentRound);
-        console.log(`getSumBets for player ${playerId} in round ${this.game.currentRound} - bets:`, Array.from(roundBets.entries()));
 
         // If the player made a bet in this round, add it to the total
         if (roundBets.has(playerId)) {

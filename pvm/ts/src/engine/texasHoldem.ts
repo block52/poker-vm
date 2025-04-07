@@ -228,7 +228,7 @@ class TexasHoldemGame implements IPoker {
 
         // Deal 2 cards to each player
         const players = this.getSeatedPlayers();
-        
+
         // Deal first card to each player
         for (const player of players) {
             const firstCard = this._deck.getNext();
@@ -358,7 +358,7 @@ class TexasHoldemGame implements IPoker {
         }
 
         // Has the big blind posted?
-        const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);   
+        const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
         if (!hasBigBlindPosted) {
             return this.getPlayerAtSeat(this._bigBlindPosition);
         }
@@ -367,8 +367,7 @@ class TexasHoldemGame implements IPoker {
         const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values())
             .some(p => p !== null && p.holeCards !== undefined);
-
-
+        
         // If blinds are posted but cards haven't been dealt yet,
         // then deal action is next - small blind player typically does this
         if (!hasDealt && !anyPlayerHasCards) {
@@ -388,50 +387,39 @@ class TexasHoldemGame implements IPoker {
             if (bettingActionsCount === 0) {
                 // Count active players
                 const activePlayerCount = this.getActivePlayerCount();
-                
+
                 if (activePlayerCount === 2) {
                     // In 2-player games, small blind acts first
-                    console.log("findNextPlayerToAct - 2 players, small blind acts first");
                     return this.getPlayerAtSeat(this._smallBlindPosition);
                 } else {
                     // In 3+ player games, player after big blind acts first
-                    console.log("findNextPlayerToAct - 3+ players, player after big blind acts first");
-                    
                     // Find the next active player after the big blind position
                     let nextSeat = this._bigBlindPosition + 1;
                     if (nextSeat > this._gameOptions.maxPlayers) {
                         nextSeat = 1;
                     }
-                    
-                    console.log("findNextPlayerToAct - looking for next active player starting from seat:", nextSeat);
-                    
+
                     // First look specifically for seat 3 (common case) for efficiency
                     if (nextSeat === 3) {
                         const player = this.getPlayerAtSeat(3);
                         if (player && player.status === PlayerStatus.ACTIVE) {
-                            console.log("findNextPlayerToAct - found next player at seat 3");
                             return player;
                         }
                     }
-                    
+
                     // Search for the next active player, starting from the seat after big blind
                     for (let i = 0; i < this._gameOptions.maxPlayers; i++) {
                         const seatToCheck = (nextSeat + i - 1) % this._gameOptions.maxPlayers + 1;
-                        
+
                         // Skip checking seat 3 again if we already did
                         if (seatToCheck === 3 && nextSeat === 3) continue;
-                        
+
                         const player = this.getPlayerAtSeat(seatToCheck);
-                        
-                        console.log("findNextPlayerToAct - checking seat:", seatToCheck, "player found:", !!player, "status:", player?.status);
-                        
                         if (player && player.status === PlayerStatus.ACTIVE) {
-                            console.log("findNextPlayerToAct - found next player at seat:", seatToCheck);
                             return player;
                         }
                     }
-                    
-                    console.log("findNextPlayerToAct - no active player found after big blind, returning small blind");
+
                     // If no active players found after big blind, return small blind
                     return this.getPlayerAtSeat(this._smallBlindPosition);
                 }
@@ -469,22 +457,23 @@ class TexasHoldemGame implements IPoker {
     // Should be get valid players actions
     getLegalActions(address: string): LegalActionDTO[] {
         const player = this.getPlayer(address);
-        const nextToAct = this.getNextPlayerToAct();
 
         // Check if player is active
         const isActive = player.status === PlayerStatus.ACTIVE;
+        if (!isActive) {
+            return [];
+        }
+
+        const nextToAct = this.getNextPlayerToAct();
 
         // If it's not this player's turn, they can only fold if they are active
         if (nextToAct && nextToAct.address !== player.address) {
             // Even if it's not their turn, active players can fold
-            if (isActive) {
-                return [{
-                    action: PlayerActionType.FOLD,
-                    min: "0",
-                    max: "0"
-                }];
-            }
-            return [];
+            return [{
+                action: PlayerActionType.FOLD,
+                min: "0",
+                max: "0"
+            }];
         }
 
         const verifyAction = (action: BaseAction): LegalActionDTO | undefined => {
@@ -601,7 +590,7 @@ class TexasHoldemGame implements IPoker {
                 new CheckAction(this, this._update).execute(player);
                 break;
             case PlayerActionType.BET:
-               new BetAction(this, this._update).execute(player, amount);
+                new BetAction(this, this._update).execute(player, amount);
                 break;
             case PlayerActionType.CALL:
                 new CallAction(this, this._update).execute(player);
