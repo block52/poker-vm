@@ -1,6 +1,12 @@
 name: PVM UnitTests
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 defaults:
   run:

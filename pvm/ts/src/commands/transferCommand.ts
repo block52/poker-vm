@@ -7,14 +7,17 @@ import { GameManagement, getGameManagementInstance } from "../state/gameManageme
 import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
 import contractSchemas from "../schema/contractSchemas";
+import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 
 export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly gameManagement: GameManagement;
+    private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
 
     constructor(private from: string, private to: string, private amount: bigint, private data: string | null, private readonly privateKey: string) {
         console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
+        this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
     }
 
@@ -37,18 +40,10 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             if (this.data && await this.isGameTransaction(this.to)) {
                 console.log(`Processing game transaction: data=${this.data}, to=${this.to}`);
 
-                const json = await this.gameManagement.get(this.to);
-                console.log(`Current game state:`, json);
-
-                // TODO: These need to be fetched from the contract in the future
-                const gameOptions: GameOptions = {
-                    minBuyIn: 1000000000000000000n,
-                    maxBuyIn: 10000000000000000000n,
-                    minPlayers: 2,
-                    maxPlayers: 9,
-                    smallBlind: 100000000000000000n,
-                    bigBlind: 200000000000000000n,
-                };
+                const [json, gameOptions] = await Promise.all([
+                    this.gameManagement.get(this.to),
+                    this.contractSchemas.getGameOptions(this.to)
+                ]);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
