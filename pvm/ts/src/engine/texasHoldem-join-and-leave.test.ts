@@ -1,28 +1,37 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions } from "./testConstants";
+import { baseGameConfig, gameOptions } from "./testConstants";
+import { Player } from "../models/player";
 
 describe("Texas Holdem - Join and Leave", () => {
 
     const TEN_TOKENS = 10000000000000000000n;
     const FIFTY_TOKENS = 50000000000000000000n;
 
-    const baseGameConfig = {
-        address: ethers.ZeroAddress,
-        dealer: 0,
-        nextToAct: 1,
-        currentRound: "preflop",
-        communityCards: [],
-        pot: 0n,
-        players: []
-    };
-
     describe("Player Management", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+        });
+
+        it("should start in PREFLOP round", () => {
+            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
+        });
+
+        it("should not progress rounds without minimum players", () => {
+            // Create test players with sufficient chips
+            const player1 = new Player(
+                    "0x1111111111111111111111111111111111111111",
+                    undefined,
+                    2000000000000000000000n, // 2000 tokens
+                    undefined,
+                    PlayerStatus.ACTIVE
+                );
+
+            game.join(player1); // Only one player
+            expect(() => game.deal()).toThrow("Not enough active players");
         });
 
         it("should not be able to join more than once", () => {

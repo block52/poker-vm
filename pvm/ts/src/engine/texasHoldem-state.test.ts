@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import { gameOptions } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
-describe.only("Texas Holdem - State", () => {
+describe("Texas Holdem - State", () => {
     const baseGameConfig = {
         address: ethers.ZeroAddress,
         dealer: 0,
@@ -44,6 +44,12 @@ describe.only("Texas Holdem - State", () => {
 
             // Player properties
             expect(game.getPlayerCount()).toEqual(0);
+        });
+
+        it("should correctly track dealer position", () => {
+            // TODO: Fix dealer position calculation in constructor
+            // TODO: Implement proper dealer button movement
+            expect(game.dealerPosition).toBe(0);
         });
     });
 });
