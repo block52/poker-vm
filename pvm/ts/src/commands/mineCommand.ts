@@ -30,12 +30,29 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         const validTxs: Transaction[] = this.validate(txs);
         const uniqueTxs: Transaction[] = await this.filter(validTxs);
+       
         
-        // Process transactions for accounts
-        await this.processTransactions(uniqueTxs);
-        
-        // Process game-specific transactions
-        await this.processGameTransactions(uniqueTxs);
+        if (uniqueTxs.length === 0) {
+            console.log("ℹ️ No transactions to process, will create an empty block");
+        } else {
+            // Log transaction details for debugging
+            uniqueTxs.forEach((tx, idx) => {
+                console.log(`🧾 Transaction ${idx+1}/${uniqueTxs.length}:`, {
+                    hash: tx.hash,
+                    from: tx.from,
+                    to: tx.to,
+                    value: tx.value.toString(),
+                    data: tx.data ? (tx.data.substring(0, 30) + (tx.data.length > 30 ? '...' : '')) : 'undefined'
+                });
+            });
+            
+            // IMPORTANT: We no longer process transactions here. 
+            // BlockchainManagement.addBlock will do this for us to avoid double-processing.
+            // Simply create the block and let addBlock handle the transaction processing
+            
+            // Process game-specific transactions (this is still needed)
+            await this.processGameTransactions(uniqueTxs);
+        }
 
         const lastBlock = await this.blockchainManagement.getLastBlock();
         const block = Block.create(lastBlock.index + 1, lastBlock.hash, uniqueTxs, this.privateKey);
@@ -47,21 +64,68 @@ export class MineCommand implements ISignedCommand<Block | null> {
     }
 
     private async processTransactions(txs: Transaction[]) {
-        console.log(`Processing ${txs.length} account transactions`);
         const validAccountTxs = await this.filter(txs);
-        console.log(`Valid account transactions: ${validAccountTxs.length}`);
 
         // const sortedTxs = validAccountTxs.sort((a, b) => a.nonce - b.nonce);
         
+        let successCount = 0;
+        let errorCount = 0;
+        
         for (let i = 0; i < validAccountTxs.length; i++) {
+            const tx = validAccountTxs[i];
+            console.log(`\n🔄 Processing transaction ${i+1}/${validAccountTxs.length}:`, {
+                hash: tx.hash,
+                from: tx.from,
+                to: tx.to,
+                value: tx.value.toString(),
+                data: tx.data ? (tx.data.substring(0, 30) + (tx.data.length > 30 ? '...' : '')) : 'undefined'
+            });
+            
             try {
-                await this.accountManagement.incrementBalance(validAccountTxs[i].from, validAccountTxs[i].value);
-                await this.accountManagement.decrementBalance(validAccountTxs[i].to, validAccountTxs[i].value);
+                // Check if accounts exist before attempting to update balances
+                const fromAccount = await this.accountManagement.getAccount(tx.from);
+                const toAccount = await this.accountManagement.getAccount(tx.to);
+                
+                console.log(`👤 Account check:`, {
+                    fromExists: !!fromAccount, 
+                    fromAddress: tx.from,
+                    fromBalance: fromAccount ? fromAccount.balance.toString() : "N/A",
+                    toExists: !!toAccount,
+                    toAddress: tx.to,
+                    toBalance: toAccount ? toAccount.balance.toString() : "N/A"
+                });
+                
+                // Check if this is a mint transaction (data starts with "MINT_")
+                const isMintTx = tx.data && tx.data.startsWith("MINT_");
+                
+                // For mint transactions, only increment the receiver's balance
+                if (isMintTx) {
+                    console.log(`💰 MINT Transaction detected: ${tx.data}`);
+                    console.log(`🔼 Incrementing balance for ${tx.to} by ${tx.value.toString()}`);
+                    await this.accountManagement.incrementBalance(tx.to, tx.value);
+                } else {
+                    // Normal transaction - decrement from sender, increment to receiver
+                    console.log(`🔼 Incrementing balance for ${tx.to} by ${tx.value.toString()}`);
+                    await this.accountManagement.incrementBalance(tx.to, tx.value);
+                    
+                    console.log(`🔽 Decrementing balance for ${tx.from} by ${tx.value.toString()}`);
+                    await this.accountManagement.decrementBalance(tx.from, tx.value);
+                }
+                
+                console.log(`✅ Transaction ${tx.hash} processed successfully`);
+                successCount++;
             }
             catch (error) {
-                console.error(`Error processing transaction ${validAccountTxs[i].hash}:`, error);
+                console.error(`❌ Error processing transaction ${tx.hash}:`, error);
+                errorCount++;
             }
         }
+        
+        console.log(`\n📊 Transaction processing summary:`, {
+            total: validAccountTxs.length,
+            success: successCount,
+            errors: errorCount
+        });
     }
 
     private async processGameTransactions(txs: Transaction[]) {
@@ -127,15 +191,18 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
     private async filter(txs: Transaction[]): Promise<Transaction[]> {
         const validTxs: Transaction[] = [];
+        let duplicateCount = 0;
 
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
-            if (await this.transactionManagement.exists(tx.hash)) {
+            const exists = await this.transactionManagement.exists(tx.hash);
+            
+            if (exists) {
+                duplicateCount++;
                 continue;
             }
             validTxs.push(tx);
         }
-
         return validTxs;
     }
 }
