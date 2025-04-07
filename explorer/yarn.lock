@@ -191,10 +191,10 @@
     "@babel/helper-validator-identifier" "^7.25.7"
     to-fast-properties "^2.0.0"
 
-"@bitcoinbrisbane/block52@1.0.50":
-  version "1.0.50"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.50.tgz#e105c05fb1806d78083212509ab3b1d42f6d9be9"
-  integrity sha512-APBNvG7889e+s4VMYi/o1myz/a1Bwp8RcfBifK1YVNG14AItOUTTbuTFjsGHem3IMsknN9VI09OYEBaAhB1MCQ==
+"@bitcoinbrisbane/block52@1.0.54":
+  version "1.0.54"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.54.tgz#fdafed12262fd6133bad0a1f796d4e779eb26227"
+  integrity sha512-4CIPH9bxRCI18dFu/sR1k3/jsa5zVLpnT08XkdSXDOndTLqKlizq48u0DrHyF6uFJHpTFT3X4ge2aQoGQaDOrw==
   dependencies:
     axios "^1.7.9"
     bigunit "^1.2.5"
