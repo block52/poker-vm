@@ -102,7 +102,7 @@ describe("BigBlindAction", () => {
             // Mock player in a different position than small blind
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(1);
 
-            expect(() => action.verify(player)).toThrow("Only the small blind player can bet the small blind amount.");
+            expect(() => action.verify(player)).toThrow("Only the big blind player can bet the big blind amount.");
         });
     });
 
