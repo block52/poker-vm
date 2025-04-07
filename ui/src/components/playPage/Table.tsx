@@ -127,17 +127,7 @@ const useTableData = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const {
-        tableData,
-        nextToActInfo,
-        currentRound,
-        playerLegalActions,
-        tableSize,
-        showThreeCards,
-        getUserBySeat,
-        currentUserSeat,
-        leave
-    } = useTableContext();
+    const { tableData, nextToActInfo, currentRound, playerLegalActions, tableSize, showThreeCards, getUserBySeat, currentUserSeat, leave } = useTableContext();
 
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
@@ -218,7 +208,6 @@ const Table = () => {
 
     const showPlayerBets = ["preflop", "flop", "turn", "river"].includes(currentRound);
 
-
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -293,11 +282,11 @@ const Table = () => {
                 if (prevIndex === 2) {
                     // Handle case where prevIndex is 2 (e.g., no change or custom logic)
                     return prevIndex + 2; // For example, keep it the same
-                } 
+                }
                 if (prevIndex === 4) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex + 2;
-                } 
+                }
                 if (prevIndex === 9) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex - 8;
@@ -506,7 +495,7 @@ const Table = () => {
                     {/* Right Section */}
                     <div className="flex items-center z-10 mr-3">
                         <span className="cursor-pointer hover:text-green-400 transition-colors duration-200 text-gray-400" onClick={onCloseSideBar}>
-                            {openSidebar ? <LuPanelLeftOpen size={17}/> : <LuPanelLeftClose size={17}/>}
+                            {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                         </span>
                         <button
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
@@ -525,7 +514,6 @@ const Table = () => {
                 {/*//! TABLE + FOOTER */}
                 <div
                     className={"flex-grow flex flex-col justify-between transition-all duration-250 overflow-visible"}
-
                     style={{
                         transition: "margin 0.3s ease"
                     }}
@@ -591,7 +579,7 @@ const Table = () => {
                                 height: "850px",
                                 maxWidth: "100vw",
                                 maxHeight: "calc(100vh - 180px)", // leave room for header/footer
-                                overflow: "visible", // ensure nothing is cut off
+                                overflow: "visible" // ensure nothing is cut off
                             }}
                         >
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
@@ -629,7 +617,8 @@ const Table = () => {
                                                 >
                                                     Total Pot:
                                                     <span style={{ fontWeight: "700px" }}>
-                                                        {" "} $
+                                                        {" "}
+                                                        $
                                                         {tableDataValues.tableDataPots?.[0] === "0"
                                                             ? "0.00"
                                                             : tableDataValues.tableDataPots
@@ -649,7 +638,8 @@ const Table = () => {
                                                 >
                                                     Main Pot:
                                                     <span style={{ fontWeight: "700px" }}>
-                                                        {" "}$
+                                                        {" "}
+                                                        $
                                                         {tableDataValues.tableDataPots?.[0] === "0"
                                                             ? "0.00"
                                                             : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2)}
@@ -696,6 +686,19 @@ const Table = () => {
                                                     </div>
                                                 );
                                             })}
+                                            {/*//! Dealer */}
+                                            {isDealerButtonVisible && (
+                                                <div
+                                                    className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    style={{
+                                                        left: `calc(${dealerButtonPosition.left} + 200px)`,
+                                                        top: dealerButtonPosition.top,
+                                                        transform: "none"
+                                                    }}
+                                                >
+                                                    D
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
@@ -754,7 +757,7 @@ const Table = () => {
                                             }
 
                                             return (
-                                                <div key={positionIndex} className="z-[10]">  
+                                                <div key={positionIndex} className="z-[10]">
                                                     <div>
                                                         <TurnAnimation index={positionIndex} />
                                                     </div>
@@ -763,7 +766,6 @@ const Table = () => {
                                             );
                                         })}
                                     </div>
-                                  
                                 </div>
                             </div>
                         </div>
@@ -798,7 +800,9 @@ const Table = () => {
             )}
             {/* Add a message for the current user's seat */}
             {currentUserSeat >= 0 && (
-                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">You are seated at position {toDisplaySeat(currentUserSeat)}</div>
+                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
+                    You are seated at position {toDisplaySeat(currentUserSeat)}
+                </div>
             )}
             {/* Add an indicator for whose turn it is */}
             {nextToActInfo && isGameInProgress() && (
