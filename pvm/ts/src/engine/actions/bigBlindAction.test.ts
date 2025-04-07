@@ -3,22 +3,13 @@ import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
+import { gameOptions } from "../testConstants";
 
 describe("BigBlindAction", () => {
     let game: TexasHoldemGame;
     let updateMock: any;
     let action: BigBlindAction;
     let player: Player;
-
-    const gameOptions: GameOptions = {
-        minBuyIn: 100000000000000000n,
-        maxBuyIn: 1000000000000000000n,
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000n,
-        bigBlind: 20000000000000000n
-    };
-
     const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
@@ -60,8 +51,6 @@ describe("BigBlindAction", () => {
             undefined, // holeCards
             PlayerStatus.ACTIVE // status
         );
-        console.log("Player stack size:", player.chips.toString());
-        console.log("Big blind amount:", game.bigBlind.toString());
     });
 
     describe("type", () => {
@@ -106,14 +95,14 @@ describe("BigBlindAction", () => {
             // Override the current round mock to be FLOP instead of PREFLOP
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
 
-            expect(() => action.verify(player)).toThrow("Can only bet small blind amount when preflop.");
+            expect(() => action.verify(player)).toThrow("Can only post big blind when preflop.");
         });
 
         it("should throw error if player is not in small blind position", () => {
             // Mock player in a different position than small blind
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(1);
 
-            expect(() => action.verify(player)).toThrow("Only the small blind player can bet the small blind amount.");
+            expect(() => action.verify(player)).toThrow("Only the big blind player can bet the big blind amount.");
         });
     });
 
@@ -137,6 +126,8 @@ describe("BigBlindAction", () => {
 
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+            jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(1);
+
 
             // Mock smallBlindPosition
             Object.defineProperty(game, 'smallBlindPosition', {
@@ -153,7 +144,7 @@ describe("BigBlindAction", () => {
             expect(player.chips).toBe(initialChips - game.bigBlind);
         });
 
-        it.skip("should add big blind action to update", () => {
+        it("should add big blind action to update", () => {
             action.execute(player, game.bigBlind);
             expect(updateMock.addAction).toHaveBeenCalledWith({
                 playerId: player.id,
