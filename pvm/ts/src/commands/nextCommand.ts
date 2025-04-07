@@ -5,10 +5,11 @@ import { ICommand, ISignedResponse } from "./interfaces";
 import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
-import { GameOptions } from "@bitcoinbrisbane/block52";
+import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 
 export class NextCommand implements ICommand<ISignedResponse<any>> {
     private readonly gameManagement: GameManagement;
+    private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
     private readonly seed: number[];
 
@@ -18,6 +19,7 @@ export class NextCommand implements ICommand<ISignedResponse<any>> {
         _seed: string | undefined = undefined
     ) {
         this.gameManagement = getGameManagementInstance();
+        this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
 
                 // Convert the seed string to a number array for shuffling
@@ -39,17 +41,10 @@ export class NextCommand implements ICommand<ISignedResponse<any>> {
         try {
             // Check if the address is a game contract
             if (await this.isGameContract(this.gameAddress)) {
-                const json = await this.gameManagement.get(this.gameAddress);
-
-                // TODO: These need to be fetched from the contract in the future
-                const gameOptions: GameOptions = {
-                    minBuyIn: 1000000000000000000n,
-                    maxBuyIn: 10000000000000000000n,
-                    minPlayers: 2,
-                    maxPlayers: 9,
-                    smallBlind: 100000000000000000n,
-                    bigBlind: 200000000000000000n,
-                };
+                const [json, gameOptions] = await Promise.all([
+                    this.gameManagement.get(this.gameAddress),
+                    this.contractSchemas.getGameOptions(this.gameAddress)
+                ]);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 

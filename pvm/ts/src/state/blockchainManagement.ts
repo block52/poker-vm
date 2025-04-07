@@ -5,7 +5,6 @@ import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
 import { AccountManagement } from "./accountManagement";
 import { TransactionManagement } from "./transactionManagement";
-import { getTransactionInstance } from "./transactionManagement";
 
 export class BlockchainManagement extends StateManager {
     constructor() {
