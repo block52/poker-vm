@@ -1,9 +1,8 @@
 import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound, Card } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
-// import { Card } from "../models/deck";
 
 export interface IAction {
-    type: PlayerActionType;
+    readonly type: PlayerActionType;
     verify(player: Player): Range | undefined;
     execute(player: Player, amount?: bigint): void;
 }
@@ -36,8 +35,15 @@ export type Turn = {
     amount?: bigint;
 };
 
+export type TurnWithSeat = Turn & { seat: number };
+
 export type LegalAction = ActionDTO;
 
 export interface IUpdate {
     addAction(action: Turn): void;
+}
+
+export interface IGame extends IUpdate {
+    getPlayers(): Player[];
+    getPlayerStatus(): PlayerStatus;
 }

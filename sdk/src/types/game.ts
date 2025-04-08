@@ -47,6 +47,7 @@ export type GameOptionsDTO = {
     maxPlayers: number;
     smallBlind: string;
     bigBlind: string;
+    
 };
 
 // This is the type of the last action of a player
