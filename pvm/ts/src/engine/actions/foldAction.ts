@@ -8,12 +8,7 @@ class FoldAction extends BaseAction {
     
     // Override verify method to allow folding anytime
     verify(player: Player): Range | undefined {
-        // Only check if the game has ended
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
-            throw new Error("Hand has ended.");
-        
         // Remove all status checks - allow any player to fold regardless of status
-        
         return undefined;
     }
     

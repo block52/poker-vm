@@ -281,6 +281,16 @@ export class NodeRpcClient {
         return body.result.data;
     }
 
+    public async nextHand(gameAddress: string, nonce?: number): Promise<any> {
+        const signature = await this.getSignature(nonce);
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [gameAddress, "next-hand", signature]
+        });
+        return body.result.data;
+    }
+
     private async getSignature(nonce?: number): Promise<string> {
         if (!this.wallet) {
             throw new Error("Cannot transfer funds without a private key");
@@ -309,9 +319,9 @@ export class NodeRpcClient {
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.DEAL,
-            params: [gameAddress, seed, publicKey],
-            data: "",  // todo; work out what we will use data for
+            method: RPCMethods.PERFORM_ACTION,
+            params: [address, gameAddress, "deal", "", seed],
+            data: publicKey,  // todo; work out what we will use data for
             signature: signature
         });
 

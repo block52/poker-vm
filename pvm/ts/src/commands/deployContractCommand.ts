@@ -5,8 +5,21 @@ import { GameManagement } from "../state/gameManagement";
 
 export class DeployContractCommand implements ISignedCommand<string> {
     private readonly gameManagement: GameManagement;
+    private readonly gameOptions: GameOptions;
     
-    constructor(private nonce: bigint, private owner: string, private gameOptions: GameOptions, private readonly privateKey: string) { 
+    constructor(private nonce: bigint, private owner: string, private data: string, private readonly privateKey: string) {
+        const params = data.split("-");
+
+        const gameOptions: GameOptions = {
+            minBuyIn: BigInt(params[0]),
+            maxBuyIn: BigInt(params[1]),
+            minPlayers: parseInt(params[2]),
+            maxPlayers: parseInt(params[3]),
+            smallBlind: BigInt(params[4]),
+            bigBlind: BigInt(params[5])
+        };
+
+        this.gameOptions = gameOptions;
         this.gameManagement = new GameManagement();
     }
 

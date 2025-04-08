@@ -8,29 +8,12 @@ import { Account, Transaction } from "../models";
 jest.mock("../core/mempool");
 jest.mock("../state/accountManagement");
 
-describe.skip("AccountCommand Tests", () => {
+describe("AccountCommand Tests", () => {
     const testAddress = ethers.Wallet.createRandom().address;
     const testPrivateKey = ethers.Wallet.createRandom().privateKey;
 
     let mockMempool: jest.Mocked<any>;
     let mockAccountManagement: jest.Mocked<any>;
-
-    const logAccountState = (stage: string, account: Account) => {
-        console.log(`\n=== Account State at ${stage} ===`);
-        console.log(`Address: ${account.address}`);
-        console.log(`Balance: ${account.balance.toString()}`);
-        console.log(`Nonce: ${account.nonce}`);
-        console.log("================================\n");
-    };
-
-    const logTransactions = (fromTxs: Transaction[], toTxs: Transaction[]) => {
-        console.log("\n=== Pending Transactions in Mempool ===");
-        console.log("Outgoing Transactions (will be subtracted from balance):");
-        fromTxs.forEach(tx => console.log(`  Hash: ${tx.hash}, Value: ${tx.value.toString()}`));
-        console.log("Incoming Transactions (will be added to balance):");
-        toTxs.forEach(tx => console.log(`  Hash: ${tx.hash}, Value: ${tx.value.toString()}`));
-        console.log("=====================================\n");
-    };
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -69,22 +52,10 @@ describe.skip("AccountCommand Tests", () => {
     it("should calculate correct balance including pending transactions", async () => {
         const command = new AccountCommand(testAddress, testPrivateKey);
 
-        // Get initial account state from blockchain
-        const initialAccount = await mockAccountManagement.getAccount(testAddress);
-        logAccountState("Initial State", initialAccount);
-
-        // Get pending transactions from mempool
-        // fromTxs: transactions where this account is sending money (outgoing, will decrease balance)
-        const fromTxs = mockMempool.findAll((tx: Transaction) => tx.from === testAddress);
-        // toTxs: transactions where this account is receiving money (incoming, will increase balance)
-        const toTxs = mockMempool.findAll((tx: Transaction) => tx.to === testAddress);
-        logTransactions(fromTxs, toTxs);
-
         // Execute command to get final balance calculation:
         // final_balance = initial_balance + incoming_transactions - outgoing_transactions
         // Example: 1000 + 700 - 300 = 1400
         const response = await command.execute();
-        logAccountState("Final State (Including Pending Transactions)", response.data);
 
         // Verify response structure and final balance
         expect(response).toHaveProperty("data");
@@ -97,12 +68,7 @@ describe.skip("AccountCommand Tests", () => {
         mockMempool.findAll.mockReturnValue([]);
         const command = new AccountCommand(testAddress, testPrivateKey);
 
-        const initialAccount = await mockAccountManagement.getAccount(testAddress);
-        logAccountState("Initial State", initialAccount);
-
         const response = await command.execute();
-        logAccountState("Final State (No Pending Transactions)", response.data);
-
         expect(response.data.balance).toBe(BigInt(1000));
     });
 
@@ -119,18 +85,9 @@ describe.skip("AccountCommand Tests", () => {
 
         const command = new AccountCommand(testAddress, testPrivateKey);
 
-        // Initial balance from blockchain
-        const initialAccount = await mockAccountManagement.getAccount(testAddress);
-        logAccountState("Initial State", initialAccount); // Balance: 1000
-
-        // Show only outgoing transactions
-        const fromTxs = mockMempool.findAll((tx: Transaction) => tx.from === testAddress);
-        logTransactions(fromTxs, []);
-
         // Final balance calculation:
         // 1000 (initial) - 300 (outgoing) = 700
         const response = await command.execute();
-        logAccountState("Final State (After Subtracting Outgoing Transactions)", response.data);
 
         expect(response.data.balance).toBe(BigInt(700));
     });

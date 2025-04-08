@@ -82,9 +82,6 @@ export class ContractSchema implements IJSONModel {
             throw new Error("Invalid schema");
         }
 
-        // texas holdem args[0]
-        // cash game args[1]
-
         const options: GameOptions = {
             minBuyIn: BigInt(args[5]) * 20n, // 20 big blinds
             maxBuyIn: BigInt(args[5]) * 100n, // 100 big blinds

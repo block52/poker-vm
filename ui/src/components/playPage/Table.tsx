@@ -16,6 +16,7 @@ import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
 import { useNavigate, useParams } from "react-router-dom";
 import { IoMenuSharp } from "react-icons/io5";
+import { RxExit } from "react-icons/rx";
 
 import { ethers } from "ethers";
 import { useTableContext } from "../../context/TableContext";
@@ -126,17 +127,7 @@ const useTableData = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const {
-        tableData,
-        nextToActInfo,
-        currentRound,
-        playerLegalActions,
-        tableSize,
-        showThreeCards,
-        getUserBySeat,
-        currentUserSeat,
-        leave
-    } = useTableContext();
+    const { tableData, nextToActInfo, currentRound, playerLegalActions, tableSize, showThreeCards, getUserBySeat, currentUserSeat, leave } = useTableContext();
 
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
@@ -217,7 +208,6 @@ const Table = () => {
 
     const showPlayerBets = ["preflop", "flop", "turn", "river"].includes(currentRound);
 
-
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -292,11 +282,11 @@ const Table = () => {
                 if (prevIndex === 2) {
                     // Handle case where prevIndex is 2 (e.g., no change or custom logic)
                     return prevIndex + 2; // For example, keep it the same
-                } 
+                }
                 if (prevIndex === 4) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex + 2;
-                } 
+                }
                 if (prevIndex === 9) {
                     // If prevIndex is 4, increment by 2
                     return prevIndex - 8;
@@ -418,14 +408,8 @@ const Table = () => {
 
                     {/* Left Section - Lobby button */}
                     <div className="flex items-center space-x-3 z-10">
-                        <div
-                            className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#64ffda] transition-all duration-300"
-                            onClick={() => navigate("/")}
-                        >
-                            <IoMenuSharp size={20} className="text-[#64ffda]" />
-                        </div>
                         <span
-                            className="text-white font-medium text-[20px] cursor-pointer hover:text-[#64ffda] transition-colors duration-300"
+                            className="text-gray-400 text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300"
                             onClick={() => navigate("/")}
                         >
                             Lobby
@@ -440,34 +424,34 @@ const Table = () => {
                             ) : (
                                 <>
                                     <div className="flex items-center gap-1 text-gray-300">
-                                        <span className="opacity-75 text-[11px]">Account:</span>
-                                        <span className="font-mono text-[10px] text-[#64ffda]">
+                                        <span className="opacity-75 text-[14px]">Account:</span>
+                                        <span className=" text-[14px] text-[#ffffff]">
                                             {`${localStorage.getItem("user_eth_public_key")?.slice(0, 6)}...${localStorage
                                                 .getItem("user_eth_public_key")
                                                 ?.slice(-4)}`}
                                         </span>
                                         <FaCopy
-                                            className="ml-1 cursor-pointer text-gray-400 hover:text-[#64ffda] transition-colors duration-200"
-                                            size={12}
+                                            className="ml-1 cursor-pointer text-gray-400 hover:text-[#ffffff] transition-colors duration-200"
+                                            size={13}
                                             onClick={() => copyToClipboard(localStorage.getItem("user_eth_public_key") || "")}
                                             title="Copy full address"
                                         />
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
-                                        <span className="opacity-75 text-[11px]">Balance:</span>
-                                        <span className="font-medium text-[#64ffda] text-[12px]">
+                                        <span className="opacity-75 text-[13px]">Balance:</span>
+                                        <span className="font-medium text-[#ffffff] text-[14px]">
                                             ${balance ? formatWeiToUSD(balance) : "0.00"}
-                                            <span className="text-[10px] ml-1 text-gray-400">USDC</span>
+                                            <span className="text-[13px] ml-1 text-gray-400">USDC</span>
                                         </span>
                                     </div>
                                 </>
                             )}
                         </div>
 
-                        <div className="flex items-center justify-center w-10 h-10 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#64ffda] transition-all duration-300">
+                        <div className="flex items-center justify-center w-10 h-10 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300">
                             <RiMoneyDollarCircleLine
-                                className="text-[#64ffda] hover:scale-110 transition-transform duration-200"
-                                size={22}
+                                className="text-[#ffffff] hover:scale-110 transition-transform duration-200"
+                                size={24}
                                 onClick={() => navigate("/deposit")}
                             />
                         </div>
@@ -500,30 +484,26 @@ const Table = () => {
 
                     {/* Left Section */}
                     <div className="flex items-center z-10">
-                        <span className="px-2 py-1 rounded bg-gradient-to-r from-green-900 to-green-800 shadow-inner text-[12px] border border-green-700">
+                        <span className="px-2 py-1 rounded  text-[15px] ">
                             ${tableDataValues.tableDataSmallBlind}/${tableDataValues.tableDataBigBlind}
                         </span>
-                        <span className="ml-2 text-[12px]">
-                            Game Type: <span className="font-semibold text-[13px] text-yellow-400">{tableDataValues.tableDataType}</span>
+                        <span className="ml-2 text-[15px]">
+                            Game Type: <span className="text-[15px] text-yellow-400">{tableDataValues.tableDataType}</span>
                         </span>
                     </div>
 
                     {/* Right Section */}
-                    <div className="flex items-center z-10">
-                        <span className="text-sm cursor-pointer hover:text-green-400 transition-colors duration-200" onClick={onCloseSideBar}>
-                            {openSidebar ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
+                    <div className="flex items-center z-10 mr-3">
+                        <span className="cursor-pointer hover:text-green-400 transition-colors duration-200 text-gray-400" onClick={onCloseSideBar}>
+                            {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                         </span>
                         <button
-                            className="ml-2 px-3 py-1 rounded-md bg-gradient-to-r from-red-800 to-red-700 hover:from-red-700 hover:to-red-600 
-                            text-white font-medium text-xs shadow-md border border-red-900 hover:border-red-800 
-                            transition-all duration-200 flex items-center justify-center transform hover:scale-105"
+                            className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
                             onClick={onGoToDashboard}
                             title="Return to Lobby"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Exit
+                            Leave Table
+                            <RxExit size={15} />
                         </button>
                     </div>
                 </div>
@@ -534,7 +514,6 @@ const Table = () => {
                 {/*//! TABLE + FOOTER */}
                 <div
                     className={"flex-grow flex flex-col justify-between transition-all duration-250 overflow-visible"}
-
                     style={{
                         transition: "margin 0.3s ease"
                     }}
@@ -600,7 +579,7 @@ const Table = () => {
                                 height: "850px",
                                 maxWidth: "100vw",
                                 maxHeight: "calc(100vh - 180px)", // leave room for header/footer
-                                overflow: "visible", // ensure nothing is cut off
+                                overflow: "visible" // ensure nothing is cut off
                             }}
                         >
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
@@ -638,7 +617,8 @@ const Table = () => {
                                                 >
                                                     Total Pot:
                                                     <span style={{ fontWeight: "700px" }}>
-                                                        {" "} $
+                                                        {" "}
+                                                        $
                                                         {tableDataValues.tableDataPots?.[0] === "0"
                                                             ? "0.00"
                                                             : tableDataValues.tableDataPots
@@ -658,7 +638,8 @@ const Table = () => {
                                                 >
                                                     Main Pot:
                                                     <span style={{ fontWeight: "700px" }}>
-                                                        {" "}$
+                                                        {" "}
+                                                        $
                                                         {tableDataValues.tableDataPots?.[0] === "0"
                                                             ? "0.00"
                                                             : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2)}
@@ -705,6 +686,19 @@ const Table = () => {
                                                     </div>
                                                 );
                                             })}
+                                            {/*//! Dealer */}
+                                            {isDealerButtonVisible && (
+                                                <div
+                                                    className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    style={{
+                                                        left: `calc(${dealerButtonPosition.left} + 200px)`,
+                                                        top: dealerButtonPosition.top,
+                                                        transform: "none"
+                                                    }}
+                                                >
+                                                    D
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
@@ -763,7 +757,7 @@ const Table = () => {
                                             }
 
                                             return (
-                                                <div key={positionIndex} className="z-[10]">  
+                                                <div key={positionIndex} className="z-[10]">
                                                     <div>
                                                         <TurnAnimation index={positionIndex} />
                                                     </div>
@@ -772,7 +766,6 @@ const Table = () => {
                                             );
                                         })}
                                     </div>
-                                  
                                 </div>
                             </div>
                         </div>
@@ -807,13 +800,15 @@ const Table = () => {
             )}
             {/* Add a message for the current user's seat */}
             {currentUserSeat >= 0 && (
-                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">You are seated at position {toDisplaySeat(currentUserSeat)}</div>
+                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
+                    You are seated at position {toDisplaySeat(currentUserSeat)}
+                </div>
             )}
             {/* Add an indicator for whose turn it is */}
             {nextToActInfo && isGameInProgress() && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
                     {nextToActInfo.isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
-                        <span className="text-green-400 font-bold">Your turn to act!</span>
+                        <span className="text-white">Your turn to act!</span>
                     ) : (
                         <span>
                             Waiting for{" "}

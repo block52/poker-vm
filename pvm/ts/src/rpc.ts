@@ -35,8 +35,7 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
-import * as ethers from "ethers";
-import { getAccountFromPublicKey } from "./utils/crypto";
+import { NextCommand } from "./commands/nextCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -291,18 +290,6 @@ export class RPC {
                 //     break;
                 // }
 
-                case RPCMethods.MINT: {
-                    if (request.params?.length !== 1) {
-                        return makeErrorRPCResponse(id, "Invalid params");
-                    }
-                    const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
-
-                    const command = new MintCommand(depositIndex, "", validatorPrivateKey);
-                    result = await command.execute();
-
-                    break;
-                }
-
                 case RPCMethods.BURN: {
                     if (request.params?.length !== 3) {
                         return makeErrorRPCResponse(id, "Invalid params");
@@ -316,10 +303,19 @@ export class RPC {
                     break;
                 }
 
+                case RPCMethods.MINT: {
+                    if (request.params?.length !== 1) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [depositIndex] = request.params as RPCRequestParams[RPCMethods.MINT];
+
+                    const command = new MintCommand(depositIndex, "", validatorPrivateKey);
+                    result = await command.execute();
+
+                    break;
+                }
+
                 case RPCMethods.TRANSFER: {
-                    // if (request.params?.length !== 3) {
-                    //     return makeErrorRPCResponse(id, "Invalid params");
-                    // }
                     const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
 
                     // Todo: get from out of the signed request
@@ -343,55 +339,39 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.DEAL: {
-                    const [gameAddress, seed] = request.params as RPCRequestParams[RPCMethods.DEAL];
-                    const publicKey = request.data as string;
+                case RPCMethods.PERFORM_ACTION: {
+                    const [from, to, action, amount, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
 
-                    // Extract player address from the request's public key
-                    let playerAddress = ethers.ZeroAddress; // Default value
+                    switch (action) {
+                        case "deal":
+                            try {
+                                const command = new DealCommand(to, from, validatorPrivateKey, data || "");
+                                result = await command.execute();
 
-                    if (publicKey) {
-                        try {
-                            playerAddress = getAccountFromPublicKey(publicKey);
-                            console.log(`Derived player address from public key: ${playerAddress}`);
-                        } catch (error) {
-                            console.error("Failed to derive address from public key:", error);
-                        }
-                    } else if (request.data) {
-                        // Fallback to using data field if available
-                        playerAddress = request.data;
-                    }
-
-                    try {
-                        const command = new DealCommand(gameAddress, playerAddress, seed, validatorPrivateKey);
-                        result = await command.execute();
-
-                        // Check if the result indicates an error but wasn't thrown as an exception
-                        if (result && result.data && result.data.success === false) {
-                            console.warn("Deal command returned failure:", result.data.message);
-                            // We still return the result, but log the warning
-                        }
-                    } catch (error: any) {
-                        console.error("Deal command failed:", error);
-                        return makeErrorRPCResponse(id, `Deal operation failed: ${error.message || "Unknown error"}`);
+                                // Check if the result indicates an error but wasn't thrown as an exception
+                                if (result && result.data && !result.data.success) {
+                                    console.warn("Deal command returned failure:", result.data.message);
+                                    // We still return the result, but log the warning
+                                }
+                            } catch (error: any) {
+                                console.error("Deal command failed:", error);
+                                return makeErrorRPCResponse(id, `Deal operation failed: ${error.message || "Unknown error"}`);
+                            }
+                            break;
+                        case "next-round":
+                            const command = new NextCommand(to, validatorPrivateKey, data || "");
+                            result = await command.execute();
+                            break;
+                        default:
+                            return makeErrorRPCResponse(id, `Unknown action: ${action}`);
+                            
                     }
                     break;
                 }
 
                 case RPCMethods.DEPLOY_CONTRACT: {
                     const [nonce, owner, data] = request.params as RPCRequestParams[RPCMethods.DEPLOY_CONTRACT];
-                    const params = data.split("-");
-
-                    const gameOptions: GameOptions = {
-                        minBuyIn: BigInt(params[0]),
-                        maxBuyIn: BigInt(params[1]),
-                        minPlayers: parseInt(params[2]),
-                        maxPlayers: parseInt(params[3]),
-                        smallBlind: BigInt(params[4]),
-                        bigBlind: BigInt(params[5])
-                    };
-
-                    const command = new DeployContractCommand(BigInt(nonce), owner, gameOptions, validatorPrivateKey);
+                    const command = new DeployContractCommand(BigInt(nonce), owner, data, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
