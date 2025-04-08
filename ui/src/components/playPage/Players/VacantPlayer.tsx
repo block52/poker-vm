@@ -1,6 +1,6 @@
 import * as React from "react";
 import { memo, useEffect, useState } from "react";
-import PokerProfile from '../../../assets/PokerProfile.svg'
+import PokerProfile from "../../../assets/PokerProfile.svg"
 import { useParams } from "react-router-dom";
 import { PROXY_URL } from "../../../config/constants";
 import axios from "axios";

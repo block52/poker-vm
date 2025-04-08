@@ -29,7 +29,7 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
         transform: "translate(-50%, -50%)",
         backgroundColor: "rgba(100, 255, 218, 0.1)",
         border: "2px solid rgba(100, 255, 218, 0.3)",
-        animation: `ripple 2.4s linear infinite`
+        animation: "ripple 2.4s linear infinite"
     };
 
     return (
@@ -71,7 +71,7 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
                             backgroundColor: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "9999px",
 
-                            animation: `ripple 2000ms linear infinite`,
+                            animation: "ripple 2000ms linear infinite",
                             animationDelay: `${-i * 455}ms`
 
                         }}

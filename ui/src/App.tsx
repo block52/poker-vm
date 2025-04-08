@@ -9,7 +9,7 @@ import { projectId, metadata, networks, wagmiAdapter } from "./config";
 import { mainnet } from "@reown/appkit/networks";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
-import useUserWallet from "./hooks/useUserWallet";
+
 import QRDeposit from "./components/QRDeposit";
 import { PROXY_URL } from "./config/constants";
 import { TableProvider } from "./context/TableContext";

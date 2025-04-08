@@ -56,7 +56,7 @@ const app = express();
 app.use(
     cors({
         origin: ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
-        methods: ["GET", "POST", "OPTIONS"],
+        methods: ["GET", "POST", "OPTIONS", "PUT"],
         credentials: true,
         allowedHeaders: ["Content-Type", "Authorization"]
     })
@@ -67,13 +67,13 @@ app.use(express.json());
 // ===================================
 // 6. Database Connection
 // ===================================
-// connectDB()
-//     .then(() => {
-//         console.log("MongoDB connection established");
-//     })
-//     .catch(err => {
-//         console.error("MongoDB connection error:", err);
-//     }); 
+connectDB()
+    .then(() => {
+        console.log("MongoDB connection established");
+    })
+    .catch(err => {
+        console.error("MongoDB connection error:", err);
+    }); 
 
 // ===================================
 // 7. Configure API Documentation
@@ -150,7 +150,7 @@ app.get("/table/:id/player/:seat", async (req, res) => {
 
         res.send(data.result);
     } catch (error) {
-        console.error('Error fetching player:', error);
+        console.error("Error fetching player:", error);
         res.send(null);
     }
 });
@@ -513,7 +513,7 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
             if (error.response) {
                 console.error(`Status: ${error.response.status}`);
                 console.error(`Status Text: ${error.response.statusText}`);
-                console.error(`Request URL: ${error.config?.url || 'Unknown URL'}`);
+                console.error(`Request URL: ${error.config?.url || "Unknown URL"}`);
                 console.error(`Request Data: ${JSON.stringify(error.config?.data || {})}`);
                 console.error(`Response Data: ${JSON.stringify(error.response.data || {})}`);
             }
