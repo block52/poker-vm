@@ -44,9 +44,9 @@ const Dashboard: React.FC = () => {
         setIsResetting(true);
         try {
             // Determine API endpoint based on current URL
-            const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                ? 'http://localhost:3000'
-                : 'https://node1.block52.xyz';
+            const apiUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+                ? "http://localhost:3000"
+                : "https://node1.block52.xyz";
             
             // According to the SDK, RESET_BLOCKCHAIN expects [username, password] params
             // but our implementation doesn't currently require them
@@ -56,7 +56,7 @@ const Dashboard: React.FC = () => {
                 params: ["admin", "admin"] // Using placeholder values since our implementation ignores them
             }, {
                 headers: {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json"
                 }
             });
             
@@ -496,7 +496,7 @@ const Dashboard: React.FC = () => {
                 <button
                     onClick={resetBlockchain}
                     disabled={isResetting}
-                    className={`px-3 py-2 text-xs ${isResetting ? 'bg-gray-600' : 'bg-red-600 hover:bg-red-700'} text-white rounded-lg transition duration-300 opacity-70 hover:opacity-100 flex items-center`}
+                    className={`px-3 py-2 text-xs ${isResetting ? "bg-gray-600" : "bg-red-600 hover:bg-red-700"} text-white rounded-lg transition duration-300 opacity-70 hover:opacity-100 flex items-center`}
                 >
                     {isResetting ? (
                         <>
