@@ -31,6 +31,11 @@ const depositSessionSchema = new mongoose.Schema({
     txHash: {
         type: String,
         default: null
+    },
+    txStatus: {
+        type: String,
+        enum: ["DETECTED", "PROCESSING", "CONFIRMING", "CONFIRMED", "COMPLETED", null],
+        default: null
     }
 });
 

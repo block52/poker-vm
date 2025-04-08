@@ -268,7 +268,18 @@ const QRDeposit: React.FC = () => {
                 }
             }
         } catch (error) {
-            console.error("Failed to check session status:", error);
+            if (axios.isAxiosError(error) && error.response?.status === 404) {
+                // Session not found, stop polling
+                console.log("🔷 QRDeposit: Session no longer exists, stopping checks");
+                setIsDepositCompleted(true);
+                // Clear the current session if it was removed from the server
+                if (currentSession.status !== "COMPLETED") {
+                    setCurrentSession(null);
+                    setShowQR(false);
+                }
+            } else {
+                console.error("Failed to check session status:", error);
+            }
         }
     };
 
@@ -278,7 +289,10 @@ const QRDeposit: React.FC = () => {
         
         console.log("🔷 QRDeposit: Starting session polling");
         const interval = setInterval(checkSessionStatus, 5000);
-        return () => clearInterval(interval);
+        return () => {
+            console.log("🔷 QRDeposit: Stopping session polling");
+            clearInterval(interval);
+        };
     }, [currentSession, sessionId, loggedInAccount, isDepositCompleted]);
 
     // Reset completion state when starting a new QR code session
@@ -476,27 +490,34 @@ const QRDeposit: React.FC = () => {
                 const response = await axios.get(`${PROXY_URL}/deposit-sessions/user/${loggedInAccount}`);
                 if (response.data) {
                     const session = response.data;
-                    setCurrentSession(session);
-                    setSessionId(session._id);
-                    setShowQR(true);
+                    
+                    // Only set current session if it's not completed or expired
+                    if (session.status === "PENDING" || session.status === "PROCESSING") {
+                        console.log("🔷 QRDeposit: Found active session:", session);
+                        setCurrentSession(session);
+                        setSessionId(session._id);
+                        setShowQR(true);
 
-                    // Set transaction status if available
-                    if (session.txStatus) {
-                        setTransactionStatus(session.txStatus);
-                    }
+                        // Set transaction status if available
+                        if (session.txStatus) {
+                            setTransactionStatus(session.txStatus);
+                        }
 
-                    // Calculate remaining time
-                    const expiresAt = new Date(session.expiresAt).getTime();
-                    const now = new Date().getTime();
-                    const remainingTime = Math.max(0, Math.floor((expiresAt - now) / 1000));
-                    setTimeLeft(Math.min(remainingTime, 300));
+                        // Calculate remaining time
+                        const expiresAt = new Date(session.expiresAt).getTime();
+                        const now = new Date().getTime();
+                        const remainingTime = Math.max(0, Math.floor((expiresAt - now) / 1000));
+                        setTimeLeft(Math.min(remainingTime, 300));
 
-                    if (remainingTime > 0) {
-                        startPolling();
+                        if (remainingTime > 0) {
+                            startPolling();
+                        }
+                    } else {
+                        console.log("🔷 QRDeposit: Found completed or expired session, not loading it:", session);
                     }
                 }
-            } catch {
-                console.log("No active session found");
+            } catch (error) {
+                console.log("No active session found or error occurred:", error);
             }
         };
 
