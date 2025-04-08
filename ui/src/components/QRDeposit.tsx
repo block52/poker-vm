@@ -63,6 +63,7 @@ const QRDeposit: React.FC = () => {
     const [transactionStatus, setTransactionStatus] = useState<TransactionStatus>(null);
     const [progressPercentage, setProgressPercentage] = useState<number>(0);
     const [completionCountdown, setCompletionCountdown] = useState<number>(0);
+    const [isDepositCompleted, setIsDepositCompleted] = useState<boolean>(false);
 
     // Get progress percentage based on transaction status
     const getProgressFromStatus = (status: TransactionStatus): number => {
@@ -236,7 +237,7 @@ const QRDeposit: React.FC = () => {
 
     // Function to check session status periodically
     const checkSessionStatus = async () => {
-        if (!sessionId || !currentSession) return;
+        if (!sessionId || !currentSession || isDepositCompleted) return;
 
         try {
             console.log("🔷 QRDeposit: Checking session status");
@@ -251,12 +252,19 @@ const QRDeposit: React.FC = () => {
                 if (session.txStatus && session.txStatus !== transactionStatus) {
                     console.log("🔷 QRDeposit: Transaction status changed to:", session.txStatus);
                     setTransactionStatus(session.txStatus);
+                    
+                    // Set completed flag when we reach COMPLETED state
+                    if (session.txStatus === "COMPLETED") {
+                        console.log("🔷 QRDeposit: Deposit completed, stopping further checks");
+                        setIsDepositCompleted(true);
+                    }
                 }
                 
                 // If session is completed, request a balance refresh
                 if (session.status === "COMPLETED" && currentSession.status !== "COMPLETED") {
                     console.log("🔷 QRDeposit: Session completed, refreshing balance");
                     refreshBalance();
+                    setIsDepositCompleted(true);
                 }
             }
         } catch (error) {
@@ -264,13 +272,21 @@ const QRDeposit: React.FC = () => {
         }
     };
 
-    // Poll for session status updates
+    // Poll for session status updates - stop when completed
     useEffect(() => {
-        if (!currentSession || !sessionId) return;
+        if (!currentSession || !sessionId || isDepositCompleted) return;
         
+        console.log("🔷 QRDeposit: Starting session polling");
         const interval = setInterval(checkSessionStatus, 5000);
         return () => clearInterval(interval);
-    }, [currentSession, sessionId, loggedInAccount]);
+    }, [currentSession, sessionId, loggedInAccount, isDepositCompleted]);
+
+    // Reset completion state when starting a new QR code session
+    useEffect(() => {
+        if (showQR && currentSession?.status === "PENDING") {
+            setIsDepositCompleted(false);
+        }
+    }, [showQR, currentSession]);
 
     const completeSession = async (amount: number) => {
         if (!sessionId) return;
@@ -447,7 +463,7 @@ const QRDeposit: React.FC = () => {
             case "CONFIRMING": return "Confirming transaction on Layer 1...";
             case "CONFIRMED": return `Deposit confirmed on Layer 1! Finalizing (${completionCountdown}s)...`;
             case "COMPLETED": return "Deposit confirmed on Layer 2!";
-            // default: return "Waiting for deposit...";
+            default: return "Waiting for deposit...";
         }
     };
 
