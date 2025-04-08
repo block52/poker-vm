@@ -150,7 +150,7 @@ app.get("/table/:id/player/:seat", async (req, res) => {
 
         res.send(data.result);
     } catch (error) {
-        console.error('Error fetching player:', error);
+        console.error("Error fetching player:", error);
         res.send(null);
     }
 });
@@ -513,7 +513,7 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
             if (error.response) {
                 console.error(`Status: ${error.response.status}`);
                 console.error(`Status Text: ${error.response.statusText}`);
-                console.error(`Request URL: ${error.config?.url || 'Unknown URL'}`);
+                console.error(`Request URL: ${error.config?.url || "Unknown URL"}`);
                 console.error(`Request Data: ${JSON.stringify(error.config?.data || {})}`);
                 console.error(`Response Data: ${JSON.stringify(error.response.data || {})}`);
             }

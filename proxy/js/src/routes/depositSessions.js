@@ -1,8 +1,8 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { ethers } = require('ethers');
-const DepositSession = require('../models/depositSession');
-console.log('DepositSession model:', DepositSession);
+const { ethers } = require("ethers");
+const DepositSession = require("../models/depositSession");
+console.log("DepositSession model:", DepositSession);
 
 // Update contract addresses to mainnet
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";  // Your mainnet deposit contract
@@ -15,13 +15,13 @@ const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
 // Add this function to handle the token transfer
 async function handleTokenTransfer(amount, userAddress) {
-    console.log('=== Starting handleTokenTransfer ===');
-    console.log('Amount:', amount.toString());
-    console.log('User Address:', userAddress);
+    console.log("=== Starting handleTokenTransfer ===");
+    console.log("Amount:", amount.toString());
+    console.log("User Address:", userAddress);
 
     // Check for valid inputs to prevent empty data errors
     if (!userAddress || !amount) {
-        console.error('Invalid inputs: address or amount is missing');
+        console.error("Invalid inputs: address or amount is missing");
         return { success: false };
     }
 
@@ -49,48 +49,48 @@ async function handleTokenTransfer(amount, userAddress) {
             wallet
         );
 
-        console.log('Attempting forwardDepositUnderlying with:');
-        console.log('- User:', userAddress);
-        console.log('- Amount:', amount);
+        console.log("Attempting forwardDepositUnderlying with:");
+        console.log("- User:", userAddress);
+        console.log("- Amount:", amount);
 
         // Encode the function data properly to prevent empty data
-        const data = depositInterface.encodeFunctionData('forwardDepositUnderlying', [userAddress, amount]);
-        console.log('Encoded function data:', data);
+        const data = depositInterface.encodeFunctionData("forwardDepositUnderlying", [userAddress, amount]);
+        console.log("Encoded function data:", data);
 
         // Use manual transaction to ensure data is included
         const tx = await wallet.sendTransaction({
             to: DEPOSIT_ADDRESS,
             data: data,
             gasLimit: 300000,
-            maxFeePerGas: ethers.parseUnits('3', 'gwei'),
-            maxPriorityFeePerGas: ethers.parseUnits('1.5', 'gwei')
+            maxFeePerGas: ethers.parseUnits("3", "gwei"),
+            maxPriorityFeePerGas: ethers.parseUnits("1.5", "gwei")
         });
         
-        console.log('Transaction hash:', tx.hash);
+        console.log("Transaction hash:", tx.hash);
         
         // Return transaction hash for tracking
         return { 
             success: true, 
             hash: tx.hash,
-            status: 'CONFIRMING'
+            status: "CONFIRMING"
         };
     } catch (error) {
-        console.error('=== Error in handleTokenTransfer ===');
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
+        console.error("=== Error in handleTokenTransfer ===");
+        console.error("Error name:", error.name);
+        console.error("Error message:", error.message);
         
         // Check if error is due to transaction already being processed
-        if (error.message && error.message.includes('already known')) {
-            console.log('Transaction already submitted, may be pending confirmation');
+        if (error.message && error.message.includes("already known")) {
+            console.log("Transaction already submitted, may be pending confirmation");
             return { 
                 success: true, 
-                status: 'CONFIRMING',
-                message: 'Transaction already submitted'
+                status: "CONFIRMING",
+                message: "Transaction already submitted"
             }; 
         }
         
         if (error.transaction) {
-            console.error('Transaction details:', {
+            console.error("Transaction details:", {
                 from: error.transaction.from,
                 to: error.transaction.to,
                 data: error.transaction.data
@@ -107,19 +107,19 @@ async function checkTransactionStatus(txHash) {
         
         const receipt = await provider.getTransactionReceipt(txHash);
         if (!receipt) {
-            return 'CONFIRMING';
+            return "CONFIRMING";
         }
         
-        return receipt.status === 1 ? 'CONFIRMED' : 'FAILED';
+        return receipt.status === 1 ? "CONFIRMED" : "FAILED";
     } catch (error) {
-        console.error('Error checking transaction status:', error);
+        console.error("Error checking transaction status:", error);
         return null;
     }
 }
 
 // Create deposit session
 router.post("/", async (req, res) => {
-    console.log('Received deposit session request:', req.body);
+    console.log("Received deposit session request:", req.body);
     const { userAddress, depositAddress } = req.body;
 
     try {
@@ -147,10 +147,10 @@ router.post("/", async (req, res) => {
         });
 
         await session.save();
-        console.log('Created new session:', session);
+        console.log("Created new session:", session);
         res.status(201).json(session);
     } catch (error) {
-        console.error('Error creating deposit session:', error);
+        console.error("Error creating deposit session:", error);
         res.status(500).json({ error: "Failed to create deposit session" });
     }
 });
@@ -174,8 +174,8 @@ router.get("/user/:userAddress", async (req, res) => {
             txStatus = await checkTransactionStatus(session.txHash);
             
             // If transaction is confirmed, update status if needed
-            if (txStatus === 'CONFIRMED' && session.status === 'PROCESSING') {
-                session.status = 'COMPLETED';
+            if (txStatus === "CONFIRMED" && session.status === "PROCESSING") {
+                session.status = "COMPLETED";
                 await session.save();
             }
         }
@@ -186,19 +186,19 @@ router.get("/user/:userAddress", async (req, res) => {
             txStatus: txStatus
         });
     } catch (error) {
-        console.error('Error fetching session:', error);
+        console.error("Error fetching session:", error);
         res.status(500).json({ error: "Failed to fetch session" });
     }
 });
 
 // Complete deposit session
 router.put("/:id/complete", async (req, res) => {
-    console.log('=== Starting session completion ===');
+    console.log("=== Starting session completion ===");
     const { id } = req.params;
     const { amount } = req.body;
     
-    console.log('Session ID:', id);
-    console.log('Amount received:', amount);
+    console.log("Session ID:", id);
+    console.log("Amount received:", amount);
 
     // Add a mutex object to track sessions being processed
     if (!global.processingSessionIds) {
@@ -207,7 +207,7 @@ router.put("/:id/complete", async (req, res) => {
 
     // Check if this session is already being processed
     if (global.processingSessionIds.has(id)) {
-        console.log('Session is already being processed, skipping duplicate request');
+        console.log("Session is already being processed, skipping duplicate request");
         
         // Return status info for the frontend
         const session = await DepositSession.findById(id);
@@ -239,13 +239,13 @@ router.put("/:id/complete", async (req, res) => {
         });
 
         if (existingSession) {
-            console.log('Session already completed, skipping');
+            console.log("Session already completed, skipping");
             global.processingSessionIds.delete(id); // Remove from processing set
             return res.json(existingSession);
         }
 
         const session = await DepositSession.findById(id);
-        console.log('Found session:', {
+        console.log("Found session:", {
             id: session?._id,
             userAddress: session?.userAddress,
             status: session?.status,
@@ -253,13 +253,13 @@ router.put("/:id/complete", async (req, res) => {
         });
         
         if (!session) {
-            console.log('Session not found');
+            console.log("Session not found");
             global.processingSessionIds.delete(id); // Remove from processing set
             return res.status(404).json({ error: "Session not found" });
         }
 
         if (session.status !== "PENDING") {
-            console.log('Invalid session status:', session.status);
+            console.log("Invalid session status:", session.status);
             global.processingSessionIds.delete(id); // Remove from processing set
             return res.status(400).json({ error: "Session already completed or expired" });
         }
@@ -270,11 +270,11 @@ router.put("/:id/complete", async (req, res) => {
         session.amount = amount;
         await session.save();
         
-        console.log('Calling handleTokenTransfer...');
+        console.log("Calling handleTokenTransfer...");
         const result = await handleTokenTransfer(amount, session.userAddress);
         
         if (!result.success) {
-            console.error('handleTokenTransfer failed');
+            console.error("handleTokenTransfer failed");
             // Revert to PENDING in case of failure, so it can be retried
             session.status = "PENDING";
             await session.save();
@@ -288,7 +288,7 @@ router.put("/:id/complete", async (req, res) => {
             await session.save();
         }
         
-        console.log('Transaction submitted, waiting for confirmation...');
+        console.log("Transaction submitted, waiting for confirmation...");
         
         // Start monitoring the transaction confirmation in background
         monitorTransactionConfirmation(session._id, result.hash);
@@ -297,14 +297,14 @@ router.put("/:id/complete", async (req, res) => {
         global.processingSessionIds.delete(id);
         res.json({
             ...session.toObject(),
-            txStatus: result.status || 'CONFIRMING'
+            txStatus: result.status || "CONFIRMING"
         });
         
     } catch (error) {
-        console.error('=== Error in session completion ===');
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Stack trace:', error.stack);
+        console.error("=== Error in session completion ===");
+        console.error("Error name:", error.name);
+        console.error("Error message:", error.message);
+        console.error("Stack trace:", error.stack);
         
         // Clean up processing state
         if (id) global.processingSessionIds.delete(id);
@@ -315,10 +315,10 @@ router.put("/:id/complete", async (req, res) => {
             if (session && session.status === "PROCESSING") {
                 session.status = "PENDING";
                 await session.save();
-                console.log('Reverted session status to PENDING after error');
+                console.log("Reverted session status to PENDING after error");
             }
         } catch (dbError) {
-            console.error('Failed to revert session status:', dbError);
+            console.error("Failed to revert session status:", dbError);
         }
         
         res.status(500).json({ error: "Failed to complete deposit session" });
@@ -334,33 +334,33 @@ async function monitorTransactionConfirmation(sessionId, txHash) {
         
         // Wait for transaction to be confirmed
         const receipt = await provider.waitForTransaction(txHash, 1);
-        console.log('Transaction confirmed in block:', receipt.blockNumber);
+        console.log("Transaction confirmed in block:", receipt.blockNumber);
         
         if (receipt.status === 1) {
-            console.log('Transaction successful');
+            console.log("Transaction successful");
             
             // Update session status
             const session = await DepositSession.findById(sessionId);
             if (session && session.status === "PROCESSING") {
-                console.log('Updating session status...');
+                console.log("Updating session status...");
                 session.status = "COMPLETED";
                 // No need to update amount here as it's already set when status changed to PROCESSING
                 await session.save();
-                console.log('Session updated successfully');
+                console.log("Session updated successfully");
             }
         } else {
-            console.log('Transaction failed');
+            console.log("Transaction failed");
             
             // Revert session status to PENDING
             const session = await DepositSession.findById(sessionId);
             if (session && session.status === "PROCESSING") {
                 session.status = "PENDING";
                 await session.save();
-                console.log('Session reverted to PENDING due to failed transaction');
+                console.log("Session reverted to PENDING due to failed transaction");
             }
         }
     } catch (error) {
-        console.error('Error monitoring transaction confirmation:', error);
+        console.error("Error monitoring transaction confirmation:", error);
     }
 }
 
@@ -377,7 +377,7 @@ const cleanupExpiredSessions = async () => {
             }
         );
     } catch (error) {
-        console.error('Error cleaning up expired sessions:', error);
+        console.error("Error cleaning up expired sessions:", error);
     }
 };
 
