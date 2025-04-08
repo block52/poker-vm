@@ -28,7 +28,8 @@ export class ContractSchemaManagement extends StateManager {
             minPlayers: parseInt(args[2]),
             maxPlayers: parseInt(args[3]),
             smallBlind: BigInt(args[4]),
-            bigBlind: BigInt(args[5])
+            bigBlind: BigInt(args[5]),
+            timeout: parseInt(args[1]),
         };
 
         return options;

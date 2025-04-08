@@ -38,6 +38,7 @@ export type GameOptions = {
     maxPlayers: number;
     smallBlind: bigint;
     bigBlind: bigint;
+    timeout: number;
 };
 
 export type GameOptionsDTO = {

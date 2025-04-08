@@ -161,7 +161,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
                 await this.gameStateManagement.saveFromJSON(result.data);
             } catch (error) {
                 console.warn(`Error processing game transactions for address ${commands[i].address}: ${(error as Error).message}`);
-                // Continue with next command rather than crashing
             }
         }
 

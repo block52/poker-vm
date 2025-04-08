@@ -102,16 +102,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             
             if (await this.isGameTransaction(this.from)) {
                 const json = await this.gameManagement.get(this.from);
-
-                // TODO: These need to be fetched from the contract in the future
-                const gameOptions: GameOptions = {
-                    minBuyIn: 1000000000000000000n,
-                    maxBuyIn: 10000000000000000000n,
-                    minPlayers: 2,
-                    maxPlayers: 9,
-                    smallBlind: 100000000000000000n,
-                    bigBlind: 200000000000000000n,
-                };
+                const gameOptions = await this.contractSchemas.getGameOptions(this.from);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
                 
