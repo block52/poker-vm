@@ -21,11 +21,15 @@ const depositSessionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["PENDING", "COMPLETED", "EXPIRED"],
+        enum: ["PENDING", "PROCESSING", "COMPLETED", "EXPIRED"],
         default: "PENDING"
     },
     amount: {
         type: Number,
+        default: null
+    },
+    txHash: {
+        type: String,
         default: null
     }
 });

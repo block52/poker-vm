@@ -56,7 +56,7 @@ const app = express();
 app.use(
     cors({
         origin: ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
-        methods: ["GET", "POST", "OPTIONS"],
+        methods: ["GET", "POST", "OPTIONS", "PUT"],
         credentials: true,
         allowedHeaders: ["Content-Type", "Authorization"]
     })
@@ -67,13 +67,13 @@ app.use(express.json());
 // ===================================
 // 6. Database Connection
 // ===================================
-// connectDB()
-//     .then(() => {
-//         console.log("MongoDB connection established");
-//     })
-//     .catch(err => {
-//         console.error("MongoDB connection error:", err);
-//     }); 
+connectDB()
+    .then(() => {
+        console.log("MongoDB connection established");
+    })
+    .catch(err => {
+        console.error("MongoDB connection error:", err);
+    }); 
 
 // ===================================
 // 7. Configure API Documentation
