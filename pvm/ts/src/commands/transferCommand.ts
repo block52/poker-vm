@@ -46,12 +46,6 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 ]);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-
-                if (!game) {
-                    console.log(`No game found for address ${this.to}`);
-                    // return default response
-                }
-
                 // Replay tx from mempool
 
                 // Cast string to PlayerActionType
