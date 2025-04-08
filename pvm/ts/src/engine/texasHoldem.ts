@@ -24,12 +24,10 @@ import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IPoker, IUpdate, Turn } from "./types";
+import { IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers } from "ethers";
 
-type TurnWithSeat = Turn & { seat: number };
-
-class TexasHoldemGame implements IPoker {
+class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
 
     // Players should be a map of player to seat index
@@ -47,15 +45,6 @@ class TexasHoldemGame implements IPoker {
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
-
-    // // Table options
-    // private readonly _minBuyIn: bigint;
-    // private readonly _maxBuyIn: bigint;
-    // private readonly _minPlayers: number;
-    // private readonly _maxPlayers: number;
-    // private readonly _smallBlind: bigint;
-    // private readonly _bigBlind: bigint;
-
     private readonly _gameOptions: GameOptions;
 
     private seed: number[] = [];
@@ -504,7 +493,7 @@ class TexasHoldemGame implements IPoker {
         return actions;
     }
 
-    getLastRoundAction(): Turn | undefined {
+    getLastRoundAction(): TurnWithSeat | undefined {
         const round = this._currentRound; // or previous round?
         const actions = this._rounds.get(round);
 
@@ -515,7 +504,6 @@ class TexasHoldemGame implements IPoker {
         return actions.at(-1);
     }
 
-    // Should be get last players action
     getPlayersLastAction(address: string): Turn | undefined {
         const player = this.getPlayer(address);
         const status = this.getPlayerStatus(address);

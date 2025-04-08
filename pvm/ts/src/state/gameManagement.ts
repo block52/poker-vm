@@ -2,7 +2,7 @@ import { StateManager } from "./stateManager";
 import GameState from "../schema/gameState";
 import { ethers } from "ethers";
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import { IJSONModel } from "../models/interfaces";
+import { IGameStateDocument, IJSONModel } from "../models/interfaces";
 import { ContractSchema } from "../models/contractSchema";
 import crypto from "crypto";
 import { GameOptions } from "@bitcoinbrisbane/block52";
@@ -13,6 +13,19 @@ export class GameManagement extends StateManager {
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
         this.mempool = getMempoolInstance();
+    }
+
+    async getAll(): Promise<IGameStateDocument[]> {
+        const gameStates = await GameState.find({});
+        const states = gameStates.map((gameState) => {
+            // this is stored in MongoDB as an object / document
+            const state: IGameStateDocument = {
+                address: gameState.address,
+                state: gameState.state
+            }
+            return state;
+        });
+        return states;
     }
 
     async get(address: string): Promise<any> {
