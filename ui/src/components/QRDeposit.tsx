@@ -5,6 +5,7 @@ import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import useUserWallet from "../hooks/useUserWallet";
 import useUserWalletConnect from "../hooks/useUserWalletConnect";
+import { Link } from "react-router-dom";
 
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
 const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
@@ -525,12 +526,23 @@ const QRDeposit: React.FC = () => {
     }, [loggedInAccount]);
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
-            <div className="max-w-md w-full bg-gray-800 rounded-lg shadow-xl p-6">
-                <h1 className="text-2xl font-bold text-center mb-6">Deposit USDC in to Block52</h1>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-800 via-gray-900 to-black p-4">
+            <div className="max-w-md w-full bg-gray-800 rounded-xl shadow-2xl p-6 relative">
+                {/* Back Button */}
+                <Link 
+                    to="/" 
+                    className="absolute top-4 left-4 text-gray-400 hover:text-white flex items-center transition duration-300"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
+                    <span>Back to Dashboard</span>
+                </Link>
+
+                <h1 className="text-2xl font-extrabold text-center text-white mb-6 mt-5">Deposit USDC in to Block52</h1>
 
                 <div className="bg-gray-700 rounded-lg p-4 mb-6">
-                    <p className="text-lg mb-2">Block 52 Balance:</p>
+                    <p className="text-lg mb-2 text-white">Block 52 Balance:</p>
                     <p className="text-xl font-bold text-pink-500">${formatBalance(displayBalance || "0")} USDC</p>
                 </div>
 
@@ -538,7 +550,7 @@ const QRDeposit: React.FC = () => {
                 {transactionStatus && (
                     <div className="mb-6">
                         <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-lg font-semibold">Deposit Status</h2>
+                            <h2 className="text-lg font-semibold text-white">Deposit Status</h2>
                             <span className="text-sm text-green-400">{getStatusMessage()}</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-4">
@@ -565,7 +577,7 @@ const QRDeposit: React.FC = () => {
                 {/* Session Status */}
                 {currentSession && !transactionStatus && (
                     <div className="bg-gray-700 rounded-lg p-4 mb-6">
-                        <h2 className="text-lg font-semibold mb-2">Session Status</h2>
+                        <h2 className="text-lg font-semibold mb-2 text-white">Session Status</h2>
                         <p className="text-sm text-gray-300">Status: {currentSession.status}</p>
                         <p className="text-sm text-gray-300">Session ID: {currentSession._id}</p>
                         {currentSession.amount && <p className="text-sm text-gray-300">Amount: ${(Number(currentSession.amount) / 1e6).toFixed(2)} USDC</p>}
@@ -575,9 +587,17 @@ const QRDeposit: React.FC = () => {
                 {/* Timer Display */}
                 {showQR && currentSession?.status === "PENDING" && !transactionStatus && (
                     <div className="text-center mb-4">
-                        <div className="text-xl font-bold">Time Remaining: {formatTime(timeLeft)}</div>
+                        <div className="text-xl font-bold text-white">Time Remaining: {formatTime(timeLeft)}</div>
                         <div className="text-sm text-gray-400">
                             Session will expire in {Math.floor(timeLeft / 60)} minutes and {timeLeft % 60} seconds
+                        </div>
+                        <div className="mt-2 p-2 bg-yellow-800 bg-opacity-40 border border-yellow-600 rounded-md">
+                            <div className="flex items-center text-yellow-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                <span className="font-semibold">Do not close this page while waiting for deposit</span>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -585,58 +605,17 @@ const QRDeposit: React.FC = () => {
                 {/* Block52 Account Display */}
                 {!showQR && (
                     <div className="bg-gray-700 rounded-lg p-4 mb-6">
-                        <h2 className="text-lg font-semibold mb-2">Block52 Account</h2>
+                        <h2 className="text-lg font-semibold mb-2 text-white">Block52 Account</h2>
                         <p className="text-sm text-gray-300 break-all">{loggedInAccount || "Not logged in"}</p>
                     </div>
                 )}
-
-                {/* Web3 Wallet Connection Section */}
-                <div className="mt-6 p-4 bg-gray-700 rounded-lg">
-                    <h2 className="text-lg font-semibold mb-4">Deposit with Web3 Wallet</h2>
-
-                    {!isConnected ? (
-                        <button onClick={open} className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            Connect Wallet
-                        </button>
-                    ) : (
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span>
-                                    Connected: {web3Address?.slice(0, 6)}...{web3Address?.slice(-4)}
-                                </span>
-                                <span>Balance: {web3Balance} USDC</span>
-                            </div>
-
-                            <div className="space-y-2">
-                                <input
-                                    type="number"
-                                    value={depositAmount}
-                                    onChange={e => setDepositAmount(e.target.value)}
-                                    placeholder="Enter USDC amount"
-                                    className="w-full p-2 bg-gray-600 rounded border border-gray-500"
-                                    min="0"
-                                    step="0.01"
-                                />
-
-                                <button
-                                    onClick={handleDirectTransfer}
-                                    disabled={!depositAmount || isTransferring || !currentSession || transactionStatus !== null}
-                                    className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 
-                                             disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    {isTransferring ? "Processing..." : "Deposit USDC"}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
 
                 {/* Generate QR / Main Content Area */}
                 {!showQR ? (
                     <button
                         onClick={handleGenerateQR}
                         disabled={!loggedInAccount}
-                        className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                        className="w-full py-3 px-4 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300"
                     >
                         Generate Deposit QR Code
                     </button>
@@ -646,7 +625,7 @@ const QRDeposit: React.FC = () => {
                         {!transactionStatus && (
                             <>
                                 <div className="bg-gray-700 rounded-lg p-4 mb-6">
-                                    <h2 className="text-lg font-semibold mb-2">Pay with USDC ERC20</h2>
+                                    <h2 className="text-lg font-semibold mb-2 text-white">Pay with USDC ERC20</h2>
                                     <p className="text-sm text-gray-300 mb-4">Only send USDC using the Ethereum network</p>
                                 </div>
 
@@ -665,7 +644,7 @@ const QRDeposit: React.FC = () => {
                                             className="flex items-center justify-between bg-gray-700 p-2 rounded cursor-pointer"
                                             onClick={() => copyToClipboard(DEPOSIT_ADDRESS)}
                                         >
-                                            <span className="text-sm">{`${DEPOSIT_ADDRESS}`}</span>
+                                            <span className="text-sm text-white">{`${DEPOSIT_ADDRESS}`}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -676,12 +655,12 @@ const QRDeposit: React.FC = () => {
                         {latestTransaction && !transactionStatus && (
                             <div className="mt-6">
                                 <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-lg font-semibold">Latest Transaction</h3>
+                                    <h3 className="text-lg font-semibold text-white">Latest Transaction</h3>
                                     <span className={`text-xs ${isQuerying ? "text-green-400" : "text-gray-400"}`}>
                                         {isQuerying ? "🔄 Checking for new transactions..." : "Last checked just now"}
                                     </span>
                                 </div>
-                                <div className="bg-gray-700 p-3 rounded text-sm">
+                                <div className="bg-gray-700 p-3 rounded text-sm text-white">
                                     <p>
                                         Hash: {latestTransaction.hash.slice(0, 10)}...{latestTransaction.hash.slice(-8)}
                                     </p>
@@ -695,6 +674,54 @@ const QRDeposit: React.FC = () => {
                         )}
                     </>
                 )}
+
+                {/* Web3 Wallet Connection Section - Now placed below as alternative */}
+                <div className="mt-8 pt-6 border-t border-gray-700">
+                    <div className="text-center mb-4">
+                        <span className="text-gray-400 text-sm">OR</span>
+                    </div>
+                    
+                    <div className="bg-gray-700 rounded-lg p-4">
+                        <h2 className="text-lg font-semibold mb-4 text-white">Deposit with Web3 Wallet</h2>
+                        <p className="text-sm text-gray-400 mb-4">Alternative method using your connected Web3 wallet</p>
+
+                        {!isConnected ? (
+                            <button onClick={open} className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
+                                Connect Wallet
+                            </button>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center text-white">
+                                    <span>
+                                        Connected: {web3Address?.slice(0, 6)}...{web3Address?.slice(-4)}
+                                    </span>
+                                    <span>Balance: {web3Balance} USDC</span>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <input
+                                        type="number"
+                                        value={depositAmount}
+                                        onChange={e => setDepositAmount(e.target.value)}
+                                        placeholder="Enter USDC amount"
+                                        className="w-full p-2 bg-gray-600 rounded border border-gray-500 text-white"
+                                        min="0"
+                                        step="0.01"
+                                    />
+
+                                    <button
+                                        onClick={handleDirectTransfer}
+                                        disabled={!depositAmount || isTransferring || !currentSession || transactionStatus !== null}
+                                        className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                                                disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300"
+                                    >
+                                        {isTransferring ? "Processing..." : "Deposit USDC"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Error message display */}
