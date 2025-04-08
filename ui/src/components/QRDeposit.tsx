@@ -45,7 +45,7 @@ const USDC_ABI = [
 ];
 
 const QRDeposit: React.FC = () => {
-    const { balance: b52Balance } = useUserWallet();
+    const { balance: b52Balance, refreshBalance } = useUserWallet();
     const { isConnected, open, address: web3Address } = useUserWalletConnect();
     const [showQR, setShowQR] = useState<boolean>(false);
     const [latestTransaction, setLatestTransaction] = useState<EtherscanTransaction | null>(null);
@@ -110,10 +110,25 @@ const QRDeposit: React.FC = () => {
 
     // Update displayBalance when b52Balance changes
     useEffect(() => {
+        console.log("🔷 QRDeposit: b52Balance changed:", b52Balance);
         if (b52Balance) {
             setDisplayBalance(b52Balance.toString());
+            console.log("🔷 QRDeposit: Updated displayBalance to:", b52Balance.toString());
         }
     }, [b52Balance]);
+
+    // Add refresh interval for balance
+    useEffect(() => {
+        // Set up a timer to refresh balance every 5 seconds
+        const balanceRefreshInterval = setInterval(() => {
+            // Use the refreshBalance function from the hook
+            console.log("🔷 QRDeposit: Refreshing balance via interval...");
+            refreshBalance();
+        }, 5000);
+        
+        // Clean up interval on unmount
+        return () => clearInterval(balanceRefreshInterval);
+    }, [refreshBalance]);
 
     // Add countdown timer effect
     useEffect(() => {
@@ -224,22 +239,24 @@ const QRDeposit: React.FC = () => {
         if (!sessionId || !currentSession) return;
 
         try {
+            console.log("🔷 QRDeposit: Checking session status");
             const response = await axios.get(`${PROXY_URL}/deposit-sessions/user/${loggedInAccount}`);
             const session = response.data;
             
             if (session) {
-                console.log("Session status update:", session);
+                console.log("🔷 QRDeposit: Session status update:", session);
                 setCurrentSession(session);
                 
                 // Update transaction status if it changed
                 if (session.txStatus && session.txStatus !== transactionStatus) {
+                    console.log("🔷 QRDeposit: Transaction status changed to:", session.txStatus);
                     setTransactionStatus(session.txStatus);
                 }
                 
-                // Update the display balance if session is completed
-                if (session.status === "COMPLETED" && session.amount) {
-                    const newAmount = (Number(displayBalance) + Number(session.amount) / 1e6).toString();
-                    setDisplayBalance(newAmount);
+                // If session is completed, request a balance refresh
+                if (session.status === "COMPLETED" && currentSession.status !== "COMPLETED") {
+                    console.log("🔷 QRDeposit: Session completed, refreshing balance");
+                    refreshBalance();
                 }
             }
         } catch (error) {
@@ -427,10 +444,10 @@ const QRDeposit: React.FC = () => {
         switch (transactionStatus) {
             case "DETECTED": return "Deposit detected! Processing...";
             case "PROCESSING": return "Processing your deposit...";
-            case "CONFIRMING": return "Confirming transaction on blockchain...";
-            case "CONFIRMED": return `Deposit confirmed! Finalizing (${completionCountdown}s)...`;
-            case "COMPLETED": return "Deposit completed successfully!";
-            default: return "Waiting for deposit...";
+            case "CONFIRMING": return "Confirming transaction on Layer 1...";
+            case "CONFIRMED": return `Deposit confirmed on Layer 1! Finalizing (${completionCountdown}s)...`;
+            case "COMPLETED": return "Deposit confirmed on Layer 2!";
+            // default: return "Waiting for deposit...";
         }
     };
 
