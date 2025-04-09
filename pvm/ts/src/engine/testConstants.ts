@@ -7,7 +7,8 @@ export const gameOptions: GameOptions = {
     minPlayers: 2,
     maxPlayers: 9,
     smallBlind: 10000000000000000n,
-    bigBlind: 20000000000000000n
+    bigBlind: 20000000000000000n,
+    timeout: 60000,
 };
 
 export const baseGameConfig = {

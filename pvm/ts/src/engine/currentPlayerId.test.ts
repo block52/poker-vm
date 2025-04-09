@@ -1,27 +1,9 @@
 import { GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
+import { baseGameConfig, gameOptions } from "./testConstants";
 
 describe("CurrentPlayerId Tests", () => {
-    const baseGameConfig = {
-        address: ethers.ZeroAddress,
-        dealer: 9,
-        nextToAct: 0,
-        currentRound: "ante",
-        communityCards: [],
-        pot: 0n,
-        players: []
-    };
-
-    const gameOptions: GameOptions = {
-        minBuyIn: 100000000000000000n,
-        maxBuyIn: 1000000000000000000n,
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000n,
-        bigBlind: 20000000000000000n,
-    };
-
     let game: TexasHoldemGame;
 
     beforeEach(() => {

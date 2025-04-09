@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
 import { IUpdate, Turn } from "../types";
 import { gameOptions } from "../testConstants";
+import { time } from "console";
 
 describe("Raise Action", () => {
     let game: TexasHoldemGame;
@@ -69,13 +70,15 @@ describe("Raise Action", () => {
         bets.set("0x3333333333333333333333333333333333333333", TWENTY_TOKENS); // 20 tokens
         jest.spyOn(game, "getBets").mockReturnValue(bets);
 
-        const bet = {
+        const turn = {
             playerId: "0x2222222222222222222222222222222222222222",
             action: PlayerActionType.BET,
-            amount: FIFTY_TOKENS // 50 tokens
+            amount: FIFTY_TOKENS, // 50 tokens
+            seat: 2,
+            timestamp: Date.now()
         };
 
-        jest.spyOn(game, "getLastRoundAction").mockReturnValue(bet);
+        jest.spyOn(game, "getLastRoundAction").mockReturnValue(turn);
 
         // Mock addAction method on game
         game.addAction = jest.fn();

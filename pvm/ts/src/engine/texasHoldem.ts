@@ -24,12 +24,10 @@ import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IPoker, IUpdate, Turn } from "./types";
+import { IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers } from "ethers";
 
-type TurnWithSeat = Turn & { seat: number };
-
-class TexasHoldemGame implements IPoker {
+class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
 
     // Players should be a map of player to seat index
@@ -47,15 +45,6 @@ class TexasHoldemGame implements IPoker {
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: BaseAction[];
-
-    // // Table options
-    // private readonly _minBuyIn: bigint;
-    // private readonly _maxBuyIn: bigint;
-    // private readonly _minPlayers: number;
-    // private readonly _maxPlayers: number;
-    // private readonly _smallBlind: bigint;
-    // private readonly _bigBlind: bigint;
-
     private readonly _gameOptions: GameOptions;
 
     private seed: number[] = [];
@@ -273,14 +262,14 @@ class TexasHoldemGame implements IPoker {
             throw new Error("Table full."); // This must be thrown
         }
 
+        if (player.chips < this._gameOptions.minBuyIn) {
+            throw new Error("Player does not have enough chips to join.");
+        }
+
         this._playersMap.set(seat, player);
 
         // TODO: Need to consider the work flow here, but make active for now
         player.updateStatus(PlayerStatus.ACTIVE);
-
-        if (player.chips < this._gameOptions.minBuyIn) {
-            throw new Error("Player does not have enough chips to join.");
-        }
 
         const autoPostBlinds = false;
         if (autoPostBlinds) {
@@ -367,7 +356,7 @@ class TexasHoldemGame implements IPoker {
         const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values())
             .some(p => p !== null && p.holeCards !== undefined);
-        
+
         // If blinds are posted but cards haven't been dealt yet,
         // then deal action is next - small blind player typically does this
         if (!hasDealt && !anyPlayerHasCards) {
@@ -504,7 +493,7 @@ class TexasHoldemGame implements IPoker {
         return actions;
     }
 
-    getLastRoundAction(): Turn | undefined {
+    getLastRoundAction(): TurnWithSeat | undefined {
         const round = this._currentRound; // or previous round?
         const actions = this._rounds.get(round);
 
@@ -515,7 +504,6 @@ class TexasHoldemGame implements IPoker {
         return actions.at(-1);
     }
 
-    // Should be get last players action
     getPlayersLastAction(address: string): Turn | undefined {
         const player = this.getPlayer(address);
         const status = this.getPlayerStatus(address);
@@ -541,17 +529,6 @@ class TexasHoldemGame implements IPoker {
         }
 
         const player = this.getPlayer(address);
-        const nextToAct = this.getNextPlayerToAct();
-
-        // TODO: ADD TO ACTION CLASSES
-        // Allow folding even if it's not the player's turn
-        if (action === PlayerActionType.FOLD) {
-            // No status checks - allow any player to fold
-        } else if (nextToAct !== player) {
-            // For all other actions, it must be the player's turn
-            throw new Error("Not player's turn.");
-        }
-
         const seat = this.getPlayerSeatNumber(address);
 
         switch (action) {
@@ -615,7 +592,8 @@ class TexasHoldemGame implements IPoker {
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
 
         const seat = this.getPlayerSeatNumber(turn.playerId);
-        const turnWithSeat: TurnWithSeat = { ...turn, seat };
+        const timestamp = Date.now();
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
@@ -787,7 +765,7 @@ class TexasHoldemGame implements IPoker {
         return pot;
     }
 
-    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
+    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): TurnWithSeat[] {
         // Get the actions for the specified round
         const actions = this._rounds.get(round);
 
@@ -1072,7 +1050,7 @@ class TexasHoldemGame implements IPoker {
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
-        json.players.map((p: any) => {
+        json?.players.map((p: any) => {
             const stack: bigint = BigInt(p.stack);
 
             // Create hole cards if they exist in the JSON
@@ -1199,7 +1177,8 @@ class TexasHoldemGame implements IPoker {
             maxPlayers: this._gameOptions.maxPlayers,
             minPlayers: this._gameOptions.minPlayers,
             smallBlind: this._gameOptions.smallBlind.toString(),
-            bigBlind: this._gameOptions.bigBlind.toString()
+            bigBlind: this._gameOptions.bigBlind.toString(),
+            timeout: this._gameOptions.timeout
         };
 
         return {

@@ -2,17 +2,33 @@ import { StateManager } from "./stateManager";
 import GameState from "../schema/gameState";
 import { ethers } from "ethers";
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import { IJSONModel } from "../models/interfaces";
+import { IGameStateDocument, IJSONModel } from "../models/interfaces";
 import { ContractSchema } from "../models/contractSchema";
 import crypto from "crypto";
 import { GameOptions } from "@bitcoinbrisbane/block52";
+import { ContractSchemaManagement, getContractSchemaManagement } from "./contractSchemaManagement";
 
 export class GameManagement extends StateManager {
     private readonly mempool: Mempool;
+    private readonly contractSchemas: ContractSchemaManagement;
 
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
         this.mempool = getMempoolInstance();
+        this.contractSchemas = getContractSchemaManagement();
+    }
+
+    async getAll(): Promise<IGameStateDocument[]> {
+        const gameStates = await GameState.find({});
+        const states = gameStates.map((gameState) => {
+            // this is stored in MongoDB as an object / document
+            const state: IGameStateDocument = {
+                address: gameState.address,
+                state: gameState.state
+            }
+            return state;
+        });
+        return states;
     }
 
     async get(address: string): Promise<any> {
@@ -27,7 +43,7 @@ export class GameManagement extends StateManager {
         }
 
         // Do defaults for the game contract
-        const gameOptions: GameOptions = await ContractSchema.getGameOptions(address);
+        const gameOptions: GameOptions = await this.contractSchemas.getGameOptions(address);
 
         if (gameOptions) {
             const json = {

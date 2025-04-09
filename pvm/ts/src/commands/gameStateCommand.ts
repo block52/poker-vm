@@ -5,21 +5,24 @@ import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { ContractSchema } from "../models/contractSchema";
+import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: GameManagement;
     private readonly mempool: Mempool;
+    private readonly contractSchemaManagement: ContractSchemaManagement;
 
     constructor(readonly address: string, private readonly privateKey: string) {
         this.gameManagement = new GameManagement();
         this.mempool = getMempoolInstance();
+        this.contractSchemaManagement = getContractSchemaManagement();
     }
 
     public async execute(): Promise<ISignedResponse<TexasHoldemStateDTO>> {
         try {
             const [json, gameOptions] = await Promise.all([
                 this.gameManagement.get(this.address),
-                ContractSchema.getGameOptions(this.address)
+                this.contractSchemaManagement.getGameOptions(this.address)
             ]);
 
             const game = TexasHoldemGame.fromJson(json, gameOptions);

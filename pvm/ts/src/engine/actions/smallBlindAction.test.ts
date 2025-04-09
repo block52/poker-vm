@@ -3,21 +3,13 @@ import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
+import { gameOptions } from "../testConstants";
 
 describe("SmallBlindAction", () => {
     let game: TexasHoldemGame;
     let updateMock: any;
     let action: SmallBlindAction;
     let player: Player;
-
-    const gameOptions: GameOptions = {
-        minBuyIn: 100000000000000000n,
-        maxBuyIn: 1000000000000000000n,
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000n,
-        bigBlind: 20000000000000000n
-    };
 
     const previousActions: ActionDTO[] = [];
 

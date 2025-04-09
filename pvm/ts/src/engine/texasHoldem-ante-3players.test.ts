@@ -2,28 +2,10 @@ import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
+import { baseGameConfig, gameOptions } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in with 3 players.
-describe.only("Texas Holdem - Ante - 3 Players", () => {
-    const baseGameConfig = {
-        address: ethers.ZeroAddress,
-        dealer: 0,
-        nextToAct: 1,
-        currentRound: "preflop",
-        communityCards: [],
-        pot: 0n,
-        players: []
-    };
-
-    const gameOptions: GameOptions = {
-        minBuyIn: 100000000000000000n,
-        maxBuyIn: 1000000000000000000n,
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000n,
-        bigBlind: 20000000000000000n,
-    };
-
+describe("Texas Holdem - Ante - 3 Players", () => {
     describe("3 Players", () => {
         let game: TexasHoldemGame;
 
