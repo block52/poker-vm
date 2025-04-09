@@ -5,17 +5,13 @@ import { IUpdate, Turn, TurnWithSeat } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 // Assuming you have a constants file, otherwise define TEN_TOKENS in this file
-import { gameOptions } from "../testConstants";
+import { gameOptions, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
 
 describe("CallAction", () => {
     let action: CallAction;
     let game: TexasHoldemGame;
     let player: Player;
     let updateMock: IUpdate;
-
-    // Define constants
-    const ONE_THOUSAND_TOKENS = 1000000000000000000n;
-    const TEN_TOKENS = 10000000000000000n; // Add this if not importing
 
     const previousActions: ActionDTO[] = [];
 
