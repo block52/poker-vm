@@ -262,8 +262,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Table full."); // This must be thrown
         }
 
-        if (player.chips < this._gameOptions.minBuyIn) {
-            throw new Error("Player does not have enough chips to join.");
+        if (player.chips < this._gameOptions.minBuyIn || player.chips > this._gameOptions.maxBuyIn) {
+            throw new Error("Player does not have enough or too many chips to join.");
         }
 
         this._playersMap.set(seat, player);
@@ -356,7 +356,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values())
             .some(p => p !== null && p.holeCards !== undefined);
-
+        
         // If blinds are posted but cards haven't been dealt yet,
         // then deal action is next - small blind player typically does this
         if (!hasDealt && !anyPlayerHasCards) {
@@ -1178,7 +1178,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             minPlayers: this._gameOptions.minPlayers,
             smallBlind: this._gameOptions.smallBlind.toString(),
             bigBlind: this._gameOptions.bigBlind.toString(),
-            timeout: this._gameOptions.timeout
+            timeout: this._gameOptions.timeout,
         };
 
         return {
