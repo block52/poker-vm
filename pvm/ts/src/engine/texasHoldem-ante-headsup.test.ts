@@ -33,7 +33,7 @@ describe.only("Texas Holdem - Ante - Heads Up", () => {
 
         it("should not allow player to join with insufficient funds", () => {
             expect(() => game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 10n)).toThrow(
-                "Player does not have enough chips to join."
+                "Player does not have enough or too many chips to join."
             );
         });
 
