@@ -356,7 +356,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values())
             .some(p => p !== null && p.holeCards !== undefined);
-        
+
         // If blinds are posted but cards haven't been dealt yet,
         // then deal action is next - small blind player typically does this
         if (!hasDealt && !anyPlayerHasCards) {
@@ -1177,7 +1177,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             maxPlayers: this._gameOptions.maxPlayers,
             minPlayers: this._gameOptions.minPlayers,
             smallBlind: this._gameOptions.smallBlind.toString(),
-            bigBlind: this._gameOptions.bigBlind.toString()
+            bigBlind: this._gameOptions.bigBlind.toString(),
+            timeout: this._gameOptions.timeout
         };
 
         return {
