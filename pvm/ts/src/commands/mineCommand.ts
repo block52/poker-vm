@@ -163,7 +163,9 @@ export class MineCommand implements ISignedCommand<Block | null> {
                 console.warn(`Error processing game transactions for address ${commands[i].address}: ${(error as Error).message}`);
             }
         }
+    }
 
+    async expireActions(): Promise<void> {
         // Look for expired actions
         const gameStates = await this.gameStateManagement.getAll();
         const gameStateAddresses = gameStates.map((gameState: IGameStateDocument) => gameState.address);
@@ -177,6 +179,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
             gameOptionsCache.set(address, gameOptions);
         }
 
+        const now = new Date();
         for (let i = 0; i < gameStates.length; i++) {
             const gameState = gameStates[i];
             const gameOptions = gameOptionsCache.get(gameState.address);
@@ -187,6 +190,13 @@ export class MineCommand implements ISignedCommand<Block | null> {
             const game = TexasHoldemGame.fromJson(gameState, gameOptions);
             const turn = game.getLastRoundAction();
             if (turn) {
+                const expirationDate = new Date(turn.timestamp);
+                expirationDate.setSeconds(expirationDate.getSeconds() + gameOptions.timeout);
+
+                if (now > expirationDate) {
+                    console.log(`Game ${gameState.address} expired, removing from database`);
+                    await this.gameStateManagement.remove(gameState.address);
+                }
             }
         }
     }

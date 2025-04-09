@@ -35,7 +35,7 @@ export type Turn = {
     amount?: bigint;
 };
 
-export type TurnWithSeat = Turn & { seat: number };
+export type TurnWithSeat = Turn & { seat: number, timestamp: number };
 
 export type LegalAction = ActionDTO;
 

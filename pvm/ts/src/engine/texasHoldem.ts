@@ -529,17 +529,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         const player = this.getPlayer(address);
-        const nextToAct = this.getNextPlayerToAct();
-
-        // TODO: ADD TO ACTION CLASSES
-        // Allow folding even if it's not the player's turn
-        if (action === PlayerActionType.FOLD) {
-            // No status checks - allow any player to fold
-        } else if (nextToAct !== player) {
-            // For all other actions, it must be the player's turn
-            throw new Error("Not player's turn.");
-        }
-
         const seat = this.getPlayerSeatNumber(address);
 
         switch (action) {
@@ -603,7 +592,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
 
         const seat = this.getPlayerSeatNumber(turn.playerId);
-        const turnWithSeat: TurnWithSeat = { ...turn, seat };
+        const timestamp = Date.now();
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
@@ -775,7 +765,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return pot;
     }
 
-    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
+    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): TurnWithSeat[] {
         // Get the actions for the specified round
         const actions = this._rounds.get(round);
 

@@ -4,17 +4,6 @@ import { gameOptions } from "../engine/testConstants";
 
 describe("Game Tests", () => {
     it("should get texas holdem state from JSON", async () => {
-        // const address = ethers.ZeroAddress;
-        // const sb = 10;
-        // const bb = 30;
-        // const dealer = 0;
-        // const players: PlayerState[] = [];
-        // const communityCards: Card[] = [];
-        // const pot = 0;
-        // const currentBet = 0;
-        // const round = TexasHoldemRound.PREFLOP;
-        // const winners = undefined;
-
         const json = {
             type: "cash",
             address: ethers.ZeroAddress,
