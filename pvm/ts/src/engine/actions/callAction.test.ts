@@ -1,10 +1,10 @@
 import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import CallAction from "./callAction";
 import { Player } from "../../models/player";
-import { IUpdate } from "../types";
+import { IUpdate, Turn, TurnWithSeat } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions } from "../testConstants";
+import { gameOptions, TEN_TOKENS } from "../testConstants";
 
 describe("CallAction", () => {
     let callAction: CallAction;
@@ -76,18 +76,34 @@ describe("CallAction", () => {
             expect(() => callAction.verify(player)).toThrow("No previous action to call.");
         });
 
-        // it("should throw error if previous action amount is 0", () => {
-        //     mockGame.getLastRoundAction.mockReturnValue({ amount: 0n });
+        it("should throw error if previous action amount is 0", () => {
+            const previousAction: TurnWithSeat = {
+                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                action: PlayerActionType.CALL,
+                amount: 0n,
+                seat: 0,
+                timestamp: Date.now(),
+            };
 
-        //     expect(() => callAction.verify(mockPlayer)).toThrow("Should check instead.");
-        // });
+            jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
 
-        // it("should throw error if player has already met maximum", () => {
-        //     mockGame.getLastRoundAction.mockReturnValue({ amount: 20n });
-        //     mockGame.getBets.mockReturnValue(new Map([["player1", 20n]]));
+            expect(() => callAction.verify(player)).toThrow("Should check instead.");
+        });
 
-        //     expect(() => callAction.verify(mockPlayer)).toThrow("Player has already met maximum so can check instead.");
-        // });
+        it("should throw error if player has already met maximum", () => {
+            const previousAction: TurnWithSeat = {
+                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                action: PlayerActionType.CALL,
+                amount: TEN_TOKENS,
+                seat: 0,
+                timestamp: Date.now(),
+            };
+
+            jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
+            jest.spyOn(game, "getBets").mockReturnValue(new Map([["player1", TEN_TOKENS]]));
+
+            expect(() => callAction.verify(player)).toThrow("Player has already met maximum so can check instead.");
+        });
 
         // it("should return correct range when player needs to call", () => {
         //     mockGame.getLastRoundAction.mockReturnValue({ amount: 30n });
@@ -159,41 +175,41 @@ describe("CallAction", () => {
     //     });
     // });
 
-    // describe("getDeductAmount", () => {
-    //     it("should calculate correct deduct amount based on previous bets", () => {
-    //         mockGame.getLastRoundAction.mockReturnValue({ amount: 50n });
-    //         mockGame.getBets.mockReturnValue(new Map([["player1", 20n]]));
+    describe("getDeductAmount", () => {
+        it("should calculate correct deduct amount based on previous bets", () => {
+            mockGame.getLastRoundAction.mockReturnValue({ amount: 50n });
+            mockGame.getBets.mockReturnValue(new Map([["player1", 20n]]));
 
-    //         const result = (callAction as any).getDeductAmount(mockPlayer);
+            const result = (callAction as any).getDeductAmount(mockPlayer);
 
-    //         expect(result).toBe(30n); // 50n - 20n
-    //     });
+            expect(result).toBe(30n); // 50n - 20n
+        });
 
-    //     it("should use big blind as minimum when no previous action exists", () => {
-    //         mockGame.getLastRoundAction.mockReturnValue(null);
-    //         mockGame.getBets.mockReturnValue(new Map([["player1", 0n]]));
+        it("should use big blind as minimum when no previous action exists", () => {
+            mockGame.getLastRoundAction.mockReturnValue(null);
+            mockGame.getBets.mockReturnValue(new Map([["player1", 0n]]));
 
-    //         const result = (callAction as any).getDeductAmount(mockPlayer);
+            const result = (callAction as any).getDeductAmount(mockPlayer);
 
-    //         expect(result).toBe(10n); // bigBlind value
-    //     });
-    // });
+            expect(result).toBe(10n); // bigBlind value
+        });
+    });
 
-    // describe("getSumBets", () => {
-    //     it("should return correct sum of bets for the player in current round", () => {
-    //         mockGame.getBets.mockReturnValue(new Map([["player1", 25n]]));
+    describe("getSumBets", () => {
+        it("should return correct sum of bets for the player in current round", () => {
+            mockGame.getBets.mockReturnValue(new Map([["player1", 25n]]));
 
-    //         const result = (callAction as any).getSumBets("player1");
+            const result = (callAction as any).getSumBets("player1");
 
-    //         expect(result).toBe(25n);
-    //     });
+            expect(result).toBe(25n);
+        });
 
-    //     it("should return 0 if player has no bets in current round", () => {
-    //         mockGame.getBets.mockReturnValue(new Map([["player2", 25n]]));
+        it("should return 0 if player has no bets in current round", () => {
+            mockGame.getBets.mockReturnValue(new Map([["player2", 25n]]));
 
-    //         const result = (callAction as any).getSumBets("player1");
+            const result = (callAction as any).getSumBets("player1");
 
-    //         expect(result).toBe(0n);
-    //     });
-    // });
+            expect(result).toBe(0n);
+        });
+    });
 });
