@@ -100,7 +100,7 @@ describe("CheckAction", () => {
         it.skip("should throw error if it's not player's turn", () => {
             // Mock a different player as next to act
             const differentPlayer = new Player(
-                "0x980b8D8A16f5891F41871d878a479d81Da52334c", // Different address
+                "0x1234567890abcdef1234567890abcdef12345678", // Different address
                 undefined,
                 ONE_THOUSAND_TOKENS,
                 undefined,
