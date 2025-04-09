@@ -17,7 +17,7 @@ export class DeployContractCommand implements ISignedCommand<string> {
             maxPlayers: parseInt(params[3]),
             smallBlind: BigInt(params[4]),
             bigBlind: BigInt(params[5]),
-            timeout: parseInt(params[6]),
+            timeout: params[6] ? parseInt(params[6]) : 60000, // Default timeout if not provided
         };
 
         this.gameOptions = gameOptions;
