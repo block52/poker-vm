@@ -262,14 +262,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Table full."); // This must be thrown
         }
 
+        if (player.chips < this._gameOptions.minBuyIn) {
+            throw new Error("Player does not have enough chips to join.");
+        }
+
         this._playersMap.set(seat, player);
 
         // TODO: Need to consider the work flow here, but make active for now
         player.updateStatus(PlayerStatus.ACTIVE);
-
-        if (player.chips < this._gameOptions.minBuyIn) {
-            throw new Error("Player does not have enough chips to join.");
-        }
 
         const autoPostBlinds = false;
         if (autoPostBlinds) {
@@ -1050,7 +1050,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
-        json.players.map((p: any) => {
+        json?.players.map((p: any) => {
             const stack: bigint = BigInt(p.stack);
 
             // Create hole cards if they exist in the JSON
