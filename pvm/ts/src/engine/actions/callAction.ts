@@ -45,7 +45,6 @@ class CallAction extends BaseAction implements IAction {
     }
 
     protected getDeductAmount(player: Player): bigint {
-        const lastAction = this.game.getLastRoundAction();
         const sumBets = this.getSumBets(player.address);
         
         // Get the largest bet in the current round
