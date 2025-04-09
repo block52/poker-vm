@@ -1177,7 +1177,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             maxPlayers: this._gameOptions.maxPlayers,
             minPlayers: this._gameOptions.minPlayers,
             smallBlind: this._gameOptions.smallBlind.toString(),
-            bigBlind: this._gameOptions.bigBlind.toString()
+            bigBlind: this._gameOptions.bigBlind.toString(),
+            timeout: this._gameOptions.timeout,
         };
 
         return {
