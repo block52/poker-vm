@@ -1,18 +1,8 @@
 import { ethers } from "ethers";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { GameOptions } from "@bitcoinbrisbane/block52";
+import { gameOptions } from "../engine/testConstants";
 
 describe("Game Tests", () => {
-    // These need to be fetched from the contract in the future
-    const gameOptions: GameOptions = {
-        minBuyIn: 100000000000000000n,
-        maxBuyIn: 1000000000000000000n,
-        minPlayers: 2,
-        maxPlayers: 9,
-        smallBlind: 10000000000000000n,
-        bigBlind: 20000000000000000n,
-    };
-
     it("should get texas holdem state from JSON", async () => {
         // const address = ethers.ZeroAddress;
         // const sb = 10;

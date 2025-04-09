@@ -72,7 +72,8 @@ describe("Raise Action", () => {
         const bet = {
             playerId: "0x2222222222222222222222222222222222222222",
             action: PlayerActionType.BET,
-            amount: FIFTY_TOKENS // 50 tokens
+            amount: FIFTY_TOKENS, // 50 tokens
+            seat: 2
         };
 
         jest.spyOn(game, "getLastRoundAction").mockReturnValue(bet);

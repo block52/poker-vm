@@ -18,18 +18,18 @@ export class ContractSchemaManagement extends StateManager {
         }
 
         const args = contract.schema.split(",");
-        if (args.length !== 6) {
+        if (args.length !== 9) {
             throw new Error("Invalid schema");
         }
 
         const options: GameOptions = {
-            minBuyIn: BigInt(args[5]) * 20n, // 20 big blinds
-            maxBuyIn: BigInt(args[5]) * 100n, // 100 big blinds
+            minBuyIn: BigInt(args[6]),
+            maxBuyIn: BigInt(args[7]),
             minPlayers: parseInt(args[2]),
             maxPlayers: parseInt(args[3]),
             smallBlind: BigInt(args[4]),
             bigBlind: BigInt(args[5]),
-            timeout: parseInt(args[1]),
+            timeout: parseInt(args[8]),
         };
 
         return options;

@@ -4,6 +4,7 @@ import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
 import { ethers } from "ethers";
+import { gameOptions } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -43,16 +44,6 @@ describe.skip("BaseAction", () => {
             PlayerStatus.ACTIVE  // status
         );
         playerStates.set(0, initialPlayer);
-
-        // These need to be fetched from the contract in the future
-        const gameOptions: GameOptions = {
-            minBuyIn: 100000000000000000n,
-            maxBuyIn: 1000000000000000000n,
-            minPlayers: 2,
-            maxPlayers: 9,
-            smallBlind: 10000000000000000n,
-            bigBlind: 20000000000000000n,
-        };
 
         const previousActions: ActionDTO[] = [];
 
