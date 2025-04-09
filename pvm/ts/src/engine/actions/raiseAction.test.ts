@@ -5,7 +5,6 @@ import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
 import { IUpdate, Turn } from "../types";
 import { gameOptions } from "../testConstants";
-import { time } from "console";
 
 describe("Raise Action", () => {
     let game: TexasHoldemGame;
