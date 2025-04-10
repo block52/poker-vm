@@ -27,28 +27,28 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             const game = TexasHoldemGame.fromJson(json, gameOptions);
 
-            // Track players who are already in the game to avoid duplicate joins
-            const playerSeats = new Map<string, number>();
-            const currentState = game.toJson();
+            // // Track players who are already in the game to avoid duplicate joins
+            // const playerSeats = new Map<string, number>();
+            // const currentState = game.toJson();
 
-            // Initialize player seats from the current game state
-            for (const player of currentState.players) {
-                if (player.address && player.address !== ethers.ZeroAddress) {
-                    playerSeats.set(player.address, player.seat);
-                    console.log(`Found existing player ${player.address} at seat ${player.seat}`);
-                }
-            }
+            // // Initialize player seats from the current game state
+            // for (const player of currentState.players) {
+            //     if (player.address && player.address !== ethers.ZeroAddress) {
+            //         playerSeats.set(player.address, player.seat);
+            //         console.log(`Found existing player ${player.address} at seat ${player.seat}`);
+            //     }
+            // }
 
             const mempoolTransactions = this.mempool.findAll(tx => tx.to === this.address);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
             mempoolTransactions.forEach(tx => {
                 try {
-                    // For join actions, check if player is already in the game
-                    if (tx.data === "join" && playerSeats.has(tx.from)) {
-                        console.log(`Skipping join for already seated player: ${tx.from}`);
-                        return;
-                    }
+                    // // For join actions, check if player is already in the game
+                    // if (tx.data === "join" && playerSeats.has(tx.from)) {
+                    //     console.log(`Skipping join for already seated player: ${tx.from}`);
+                    //     return;
+                    // }
 
                     switch (tx.data) {
                         case "bet":
@@ -92,7 +92,6 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             // update game state
             const state = game.toJson();
-            // console.log("Updated game state:", state);
 
             return await signResult(state, this.privateKey);
         } catch (error) {

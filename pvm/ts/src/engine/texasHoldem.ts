@@ -77,7 +77,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Shuffle the deck
             // console.log("About to shuffle deck with seed array:", this.seed);
             this._deck.shuffle(this.seed);
-            // console.log("Deck shuffled successfully");
         };
 
         // TODO: Make this a map
@@ -92,7 +91,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = _currentRound;
         this._gameOptions = gameOptions;
 
-        // this was is causing the 10 & 11
         this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
         this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
 
@@ -567,7 +565,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 new CallAction(this, this._update).execute(player);
                 break;
             case PlayerActionType.RAISE:
-                if (!amount) throw new Error("Amount must be provided for raise.");
                 new RaiseAction(this, this._update).execute(player, amount);
                 break;
             default:
@@ -583,11 +580,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
-    addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
-
+    addAction(turn: Turn, index: number, round: TexasHoldemRound = this._currentRound): void {
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const timestamp = Date.now();
-        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, index, timestamp };
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {

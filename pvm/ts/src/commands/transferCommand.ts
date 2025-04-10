@@ -14,7 +14,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
 
-    constructor(private from: string, private to: string, private amount: bigint, private data: string | null, private readonly privateKey: string) {
+    constructor(private from: string, private to: string, private amount: bigint, private readonly nonce: number | 0, private data: string | null, private readonly privateKey: string) {
         console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
@@ -27,7 +27,12 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         const accountCommand = new AccountCommand(this.from, this.privateKey);
         const accountResponse = await accountCommand.execute();
         const fromAccount = accountResponse.data;
-        console.log(`Account balance for ${this.from}: ${fromAccount.balance}`);
+        console.log(`Account balance for ${this.from}: ${fromAccount.balance} ${fromAccount.nonce}`);
+
+        if (this.nonce !== fromAccount.getNextNonce()) {
+            console.log(`Invalid nonce: expected=${fromAccount.getNextNonce()}, provided=${this.nonce}`);
+            throw new Error("Invalid nonce");
+        }
 
         if (this.amount > fromAccount.balance) {
             console.log(`Insufficient balance: required=${this.amount}, available=${fromAccount.balance}`);
@@ -50,10 +55,10 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 game.join(this.from, this.amount);
                 console.log(`Join successful`);
 
-                const _json = game.toJson();
-                await this.gameManagement.saveFromJSON(_json);
+                // const _json = game.toJson();
+                // await this.gameManagement.saveFromJSON(_json);
 
-                const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+                const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, "JOIN");
                 await this.mempool.add(gameTx);
                 return signResult(gameTx, this.privateKey);
             }
@@ -72,10 +77,10 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 }
                 console.log(`Leave successful, returning ${stack} chips`);
 
-                const _json = game.toJson();
-                await this.gameManagement.saveFromJSON(_json);
+                // const _json = game.toJson();
+                // await this.gameManagement.saveFromJSON(_json);
 
-                const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, this.data ?? "");
+                const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "LEAVE");
                 await this.mempool.add(gameTx);
                 return signResult(gameTx, this.privateKey);
             }

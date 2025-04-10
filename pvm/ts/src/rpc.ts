@@ -316,10 +316,10 @@ export class RPC {
                 }
 
                 case RPCMethods.TRANSFER: {
-                    const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
+                    const [from, to, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
 
                     // Todo: get from out of the signed request
-                    const command = new TransferCommand(from, to, BigInt(amount), data, validatorPrivateKey);
+                    const command = new TransferCommand(from, to, BigInt(amount), nonce, data, validatorPrivateKey);
                     result = await command.execute();
 
                     break;
@@ -340,7 +340,7 @@ export class RPC {
                 }
 
                 case RPCMethods.PERFORM_ACTION: {
-                    const [from, to, action, amount, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
+                    const [from, to, action, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
 
                     switch (action) {
                         case "deal":

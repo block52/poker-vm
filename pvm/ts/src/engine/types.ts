@@ -32,9 +32,11 @@ export type Turn = {
     playerId: string;
     action: PlayerActionType;
     amount?: bigint;
+    index: number;
+    timestamp: number;
 };
 
-export type TurnWithSeat = Turn & { seat: number, timestamp: number };
+export type TurnWithSeat = Turn & { seat: number, index: number, timestamp: number };
 
 export type LegalAction = ActionDTO;
 

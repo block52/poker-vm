@@ -67,7 +67,7 @@ describe("TransferCommand", () => {
         // });
 
         it.skip("should successfully create and add transfer transaction to mempool", async () => {
-            let command: TransferCommand = new TransferCommand(MOCK_FROM, MOCK_GAME_ADDRESS, 1000000n, "data", "privateKey");
+            let command: TransferCommand = new TransferCommand(MOCK_FROM, MOCK_GAME_ADDRESS, 1000000n, 0, "data", "privateKey");
             const tx = new Transaction(
                 MOCK_GAME_ADDRESS,
                 MOCK_FROM,
