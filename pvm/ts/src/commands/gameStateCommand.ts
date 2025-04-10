@@ -4,8 +4,8 @@ import TexasHoldemGame from "../engine/texasHoldem";
 import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { ContractSchema } from "../models/contractSchema";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
+import { ethers } from "ethers";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: GameManagement;
@@ -33,7 +33,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             
             // Initialize player seats from the current game state
             for (const player of currentState.players) {
-                if (player.address && player.address !== "0x0000000000000000000000000000000000000000") {
+                if (player.address && player.address !== ethers.ZeroAddress) {
                     playerSeats.set(player.address, player.seat);
                     console.log(`Found existing player ${player.address} at seat ${player.seat}`);
                 }
