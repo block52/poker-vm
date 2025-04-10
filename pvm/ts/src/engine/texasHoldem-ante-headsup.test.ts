@@ -32,13 +32,13 @@ describe.only("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should not allow player to join with insufficient funds", () => {
-            expect(() => game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 10n)).toThrow(
+            expect(() => game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", 10n)).toThrow(
                 "Player does not have enough or too many chips to join."
             );
         });
 
         it("should allow a player to join", () => {
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
+            game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
@@ -51,8 +51,8 @@ describe.only("Texas Holdem - Ante - Heads Up", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000n);
+            game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
+            game.join("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000n);
         });
 
         it("should have the correct players pre flop", () => {

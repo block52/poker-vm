@@ -1,4 +1,4 @@
-import {  PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { GameManagement } from "../state/gameManagement";
@@ -30,7 +30,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             // Track players who are already in the game to avoid duplicate joins
             const playerSeats = new Map<string, number>();
             const currentState = game.toJson();
-            
+
             // Initialize player seats from the current game state
             for (const player of currentState.players) {
                 if (player.address && player.address !== ethers.ZeroAddress) {
@@ -42,13 +42,6 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             const mempoolTransactions = this.mempool.findAll(tx => tx.to === this.address);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
-            // // Get all transactions from the chain
-            // const minedTransactions = await this.transactionManagement.getTransactionsByAddress(this.address);
-            // console.log(`Mined transactions: ${minedTransactions.length}`);
-
-            // // Get all transactions from mempool and replay them
-            // const allTransactions = [...minedTransactions, ...mempoolTransactions];
-
             mempoolTransactions.forEach(tx => {
                 try {
                     // For join actions, check if player is already in the game
@@ -56,23 +49,8 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                         console.log(`Skipping join for already seated player: ${tx.from}`);
                         return;
                     }
-                    
+
                     switch (tx.data) {
-                        case "join":
-                            try {
-                                game.join2(tx.from, tx.value);
-                                // Update player seat tracking after successful join
-                                const seat = game.getPlayerSeatNumber(tx.from);
-                                playerSeats.set(tx.from, seat);
-                            } catch (error) {
-                                // Special handling for join errors - don't throw
-                                if ((error as Error).message.includes("Player already joined")) {
-                                    console.warn(`Player ${tx.from} already joined the game, skipping join action`);
-                                } else {
-                                    throw error;
-                                }
-                            }
-                            break;
                         case "bet":
                             game.performAction(tx.from, PlayerActionType.BET, tx.value);
                             break;
@@ -119,7 +97,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             return await signResult(state, this.privateKey);
         } catch (error) {
             console.error("Error in GameStateCommand:", error);
-            
+
             // Return the original state without changes instead of throwing an error
             const originalState = await this.gameManagement.get(this.address);
             return await signResult(originalState, this.privateKey);

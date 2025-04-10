@@ -32,8 +32,8 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
 
         describe("Round Progression", () => {
             beforeEach(() => {
-                game.join(player1);
-                game.join(player2);
+                game.join(player1.address, 100000n);
+                game.join(player2.address, 100000n);
 
                 // Post blinds
                 game.performAction(player1.address, PlayerActionType.SMALL_BLIND, 1000n);

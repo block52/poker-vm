@@ -14,8 +14,8 @@ describe.skip("Texas Holdem Game", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             // Add minimum required players
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
+            game.join("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
+            game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
         });
 
         it("should throw error when player acts out of turn", () => {
@@ -70,7 +70,7 @@ describe.skip("Texas Holdem Game", () => {
 
         it("should enforce turn order with multiple players", () => {
             // Add a third player
-            game.join2("0x3333333333333333333333333333333333333333", TEN_TOKENS);
+            game.join("0x3333333333333333333333333333333333333333", TEN_TOKENS);
 
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
@@ -99,7 +99,7 @@ describe.skip("Texas Holdem Game", () => {
 
         it("should skip folded players when determining next turn", () => {
             // Add a third player
-            game.join2("0x3333333333333333333333333333333333333333", TEN_TOKENS);
+            game.join("0x3333333333333333333333333333333333333333", TEN_TOKENS);
 
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
@@ -125,8 +125,8 @@ describe.skip("Texas Holdem Game", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             // Add minimum required players
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
+            game.join("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
+            game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
         });
 
         it("should return false when no blinds have been posted", () => {
@@ -206,7 +206,7 @@ describe.skip("Texas Holdem Game", () => {
 
         it.skip("should handle three player scenarios correctly", () => {
             // Add a third player
-            game.join2("0x3333333333333333333333333333333333333333", TEN_TOKENS);
+            game.join("0x3333333333333333333333333333333333333333", TEN_TOKENS);
 
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND);
@@ -266,8 +266,8 @@ describe.skip("Texas Holdem Game", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             // Add minimum required players
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
+            game.join("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
+            game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
         });
 
         it("should have correct table properties", () => {
@@ -384,8 +384,8 @@ describe.skip("Texas Holdem Game", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
+            game.join("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", TEN_TOKENS);
+            game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", TEN_TOKENS);
         });
 
         it("should complete a full round of play", () => {

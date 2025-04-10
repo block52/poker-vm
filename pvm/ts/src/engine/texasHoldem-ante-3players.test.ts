@@ -11,14 +11,14 @@ describe("Texas Holdem - Ante - 3 Players", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000n);
+            game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
+            game.join("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000n);
         });
 
         it("should have the correct players pre flop", () => {
             expect(game.getPlayerCount()).toEqual(2);
 
-            game.join2("0x3333333333333333333333333333333333333333", 1000000000000000000n);
+            game.join("0x3333333333333333333333333333333333333333", 1000000000000000000n);
             expect(game.getPlayerCount()).toEqual(3);
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();

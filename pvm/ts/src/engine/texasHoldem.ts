@@ -238,11 +238,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         console.log("Cards dealt successfully");
     }
 
-    // join(player: Player) {
-    //     const seat = this.findNextSeat();
-    //     this.joinAtSeat(player, seat);
-    // }
-
     join(address: string, chips: bigint) {
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
         const seat = this.findNextSeat();

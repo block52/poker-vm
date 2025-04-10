@@ -11,7 +11,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Default contract address on L2
-let defaultTableAddress = "0x9d3998c6ce7ee5b0c911942ef196128cedebb7fd7a";
+let defaultTableAddress = "0xf6380ddc175c7c9c3816170e5b96adc90f754baf7e";
 let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 let nonce: number = 0;
 
