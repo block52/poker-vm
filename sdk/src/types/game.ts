@@ -1,6 +1,6 @@
 export enum PlayerActionType {
-    SMALL_BLIND = "post small blind",
-    BIG_BLIND = "post big blind",
+    SMALL_BLIND = "post-small-blind",
+    BIG_BLIND = "post-big-blind",
     FOLD = "fold",
     CHECK = "check",
     BET = "bet",
@@ -9,6 +9,8 @@ export enum PlayerActionType {
     ALL_IN = "all-in",
     MUCK = "muck",
     JOIN = "join",
+    BUY_IN = "buy-in",
+    SIT_OUT = "sit-out",
     LEAVE = "leave",
     DEAL = "deal"
 }

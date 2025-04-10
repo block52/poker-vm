@@ -9,7 +9,6 @@ export interface IAction {
 
 export interface IPoker {
     deal(): void;
-    join(player: Player): void;
     joinAtSeat(player: Player, seat: number): void;
     leave(address: string): void;
     getLastRoundAction(): Turn | undefined;
@@ -46,4 +45,5 @@ export interface IUpdate {
 export interface IGame extends IUpdate {
     getPlayers(): Player[];
     getPlayerStatus(): PlayerStatus;
+    join(player: Player, chips: bigint): void;
 }

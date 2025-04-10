@@ -149,7 +149,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
     get currentPlayerId() {
         const player = this.getPlayerAtSeat(this._lastActedSeat);
-
         return player?.address ?? ethers.ZeroAddress;
     }
     get currentRound() {
@@ -239,12 +238,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
         console.log("Cards dealt successfully");
     }
 
-    join(player: Player) {
-        const seat = this.findNextSeat();
-        this.joinAtSeat(player, seat);
-    }
+    // join(player: Player) {
+    //     const seat = this.findNextSeat();
+    //     this.joinAtSeat(player, seat);
+    // }
 
-    join2(address: string, chips: bigint) {
+    join(address: string, chips: bigint) {
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
         const seat = this.findNextSeat();
         this.joinAtSeat(player, seat);
