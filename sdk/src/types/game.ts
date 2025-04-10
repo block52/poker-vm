@@ -8,10 +8,8 @@ export enum PlayerActionType {
     RAISE = "raise",
     ALL_IN = "all-in",
     MUCK = "muck",
-    JOIN = "join",
     BUY_IN = "buy-in",
     SIT_OUT = "sit-out",
-    LEAVE = "leave",
     DEAL = "deal"
 }
 
