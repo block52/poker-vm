@@ -5,7 +5,16 @@ import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
-import { ethers } from "ethers";
+import { Transaction } from "../models";
+
+
+type OrderedTransaction = {
+    from: string;
+    to: string;
+    value: bigint;
+    type: PlayerActionType;
+    index: number;
+};
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: GameManagement;
@@ -27,19 +36,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             const game = TexasHoldemGame.fromJson(json, gameOptions);
 
-            // // Track players who are already in the game to avoid duplicate joins
-            // const playerSeats = new Map<string, number>();
-            // const currentState = game.toJson();
-
-            // // Initialize player seats from the current game state
-            // for (const player of currentState.players) {
-            //     if (player.address && player.address !== ethers.ZeroAddress) {
-            //         playerSeats.set(player.address, player.seat);
-            //         console.log(`Found existing player ${player.address} at seat ${player.seat}`);
-            //     }
-            // }
-
-            const mempoolTransactions = this.mempool.findAll(tx => tx.to === this.address);
+            const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
             mempoolTransactions.forEach(tx => {

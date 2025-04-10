@@ -50,6 +50,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private seed: number[] = [];
     private readonly _communityCards: Card[] = [];
     private _handNumber: number = 0;
+    private _turnIndex: number = 0;
 
     constructor(
         private readonly _address: string,
@@ -91,18 +92,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = _currentRound;
         this._gameOptions = gameOptions;
 
-        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
+        this._smallBlindPosition = this._dealer === gameOptions.maxPlayers ? 1 : this._dealer + 1;
+        this._bigBlindPosition = this._dealer === gameOptions.maxPlayers ? 2 : this._dealer + 2;
+        this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
 
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
-        this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
         this._lastActedSeat = _lastToAct; // Need to recalculate this
 
         for (const action of previousActions) {
-            const turn = {
+            const turn: Turn = {
                 playerId: action.playerId,
                 action: action.action,
-                amount: BigInt(action.amount)
+                amount: BigInt(action.amount),
+                index: action.index
             };
 
             this.addAction(turn, action.round);
@@ -110,9 +112,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         this._update = new (class implements IUpdate {
             constructor(public game: TexasHoldemGame) { }
-
-            addAction(action: Turn): void {
-            }
+            addAction(action: Turn): void { }
         })(this);
 
         this._actions = [
@@ -160,6 +160,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
     get handNumber() {
         return this._handNumber;
+    }
+    
+    turnIndex(): number {
+        // count number of actions
+        return this._turnIndex++;
     }
 
     exists(playerId: string): boolean {
@@ -264,6 +269,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         player.updateStatus(PlayerStatus.ACTIVE);
 
         const autoPostBlinds = false;
+        // These should be done via the add action function
         if (autoPostBlinds) {
             // Auto join the first player
             if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.PREFLOP) {
@@ -274,7 +280,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this._lastActedSeat = seat;
 
                 // Add to bets to preflop round
-                const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._gameOptions.smallBlind };
+                const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._gameOptions.smallBlind, index: this._turnIndex };
 
                 player.addAction(turn);
                 player.updateStatus(PlayerStatus.ACTIVE);
@@ -289,7 +295,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this._lastActedSeat = seat;
 
                 // Add to bets to pre-flop round
-                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind };
+                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind, index: this._turnIndex };
 
                 player.addAction(turn);
                 player.updateStatus(PlayerStatus.ACTIVE);
@@ -303,6 +309,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this.deal();
             }
         }
+    }
+
+    private incrementHandNumber(): void {
+        this._handNumber++;
+    }
+
+    private incrementTurnIndex(): void {
+        this._turnIndex++;
     }
 
     leave(address: string): bigint {
@@ -348,7 +362,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values())
             .some(p => p !== null && p.holeCards !== undefined);
-        
+
         // If blinds are posted but cards haven't been dealt yet,
         // then deal action is next - small blind player typically does this
         if (!hasDealt && !anyPlayerHasCards) {
@@ -363,7 +377,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 a.action !== PlayerActionType.BIG_BLIND &&
                 a.action !== PlayerActionType.DEAL
             ).length || 0;
-
 
             if (bettingActionsCount === 0) {
                 // Count active players
@@ -580,10 +593,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
-    addAction(turn: Turn, index: number, round: TexasHoldemRound = this._currentRound): void {
+    addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
+        if (this.turnIndex() !== turn.index) {
+            throw new Error("Invalid action index.");
+        }
+
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const timestamp = Date.now();
-        const turnWithSeat: TurnWithSeat = { ...turn, seat, index, timestamp };
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
