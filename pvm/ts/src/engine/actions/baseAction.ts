@@ -50,7 +50,7 @@ abstract class BaseAction {
         }
 
         const round = this.game.currentRound;
-        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount }, round);
+        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount, index: index }, round);
     }
 
     protected getDeductAmount(_player: Player, amount?: bigint): bigint {

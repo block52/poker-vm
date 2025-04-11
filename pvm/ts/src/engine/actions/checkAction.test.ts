@@ -149,12 +149,12 @@ describe("CheckAction", () => {
 
         it("should not change player's chips", () => {
             const initialChips = player.chips;
-            action.execute(player);
+            action.execute(player, 0);
             expect(player.chips).toBe(initialChips);
         });
 
         it("should add CHECK action with 0 amount", () => {
-            action.execute(player);
+            action.execute(player, 0);
 
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
@@ -164,7 +164,7 @@ describe("CheckAction", () => {
         });
 
         it("should throw error if an amount is specified", () => {
-            expect(() => action.execute(player, 10000000000000000n)).toThrow("Amount should not be specified for check");
+            expect(() => action.execute(player, 0, 10000000000000000n)).toThrow("Amount should not be specified for check");
         });
     });
 });
