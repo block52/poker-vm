@@ -126,12 +126,12 @@ describe("FoldAction", () => {
 
         it("should not change player's chips", () => {
             const initialChips = player.chips;
-            action.execute(player);
+            action.execute(player, 0);
             expect(player.chips).toBe(initialChips);
         });
 
         it.skip("should add FOLD action with 0 amount", () => {
-            action.execute(player);
+            action.execute(player, 0);
 
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,

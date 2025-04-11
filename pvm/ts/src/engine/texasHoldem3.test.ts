@@ -36,8 +36,8 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
                 game.join(player2.address, 100000n);
 
                 // Post blinds
-                game.performAction(player1.address, PlayerActionType.SMALL_BLIND, 1000n);
-                game.performAction(player2.address, PlayerActionType.SMALL_BLIND, 500n);
+                game.performAction(player1.address, PlayerActionType.SMALL_BLIND, 0, 1000n);
+                game.performAction(player2.address, PlayerActionType.SMALL_BLIND, 1, 500n);
 
                 game.deal();
             });
@@ -46,14 +46,14 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
                 expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
                 // Simulate betting actions to progress rounds
-                game.performAction(player1.address, PlayerActionType.CALL);
-                game.performAction(player2.address, PlayerActionType.CHECK);
+                game.performAction(player1.address, PlayerActionType.CALL, 2);
+                game.performAction(player2.address, PlayerActionType.CHECK, 3);
 
                 expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
 
                 // More betting actions
-                game.performAction(player1.address, PlayerActionType.CHECK);
-                game.performAction(player2.address, PlayerActionType.CHECK);
+                game.performAction(player1.address, PlayerActionType.CHECK, 4);
+                game.performAction(player2.address, PlayerActionType.CHECK, 5);
 
                 expect(game.currentRound).toBe(TexasHoldemRound.TURN);
             });
@@ -73,8 +73,8 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
 
                     // Progress to next round
                     if (stage.round !== TexasHoldemRound.SHOWDOWN) {
-                        game.performAction(player1.address, PlayerActionType.CHECK);
-                        game.performAction(player2.address, PlayerActionType.CHECK);
+                        game.performAction(player1.address, PlayerActionType.CHECK, 6);
+                        game.performAction(player2.address, PlayerActionType.CHECK, 7);
                     }
                 }
             });

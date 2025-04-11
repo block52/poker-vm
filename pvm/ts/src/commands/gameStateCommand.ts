@@ -36,53 +36,37 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             const game = TexasHoldemGame.fromJson(json, gameOptions);
 
-            const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address);
+            const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
-            mempoolTransactions.forEach(tx => {
+            const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx))
+                .sort((a, b) => a.index - b.index);
+
+            orderedTransactions.forEach(tx => {
                 try {
+                    game.performAction(tx.from, tx.type, tx.index, tx.value);
+                    console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
                     // // For join actions, check if player is already in the game
                     // if (tx.data === "join" && playerSeats.has(tx.from)) {
                     //     console.log(`Skipping join for already seated player: ${tx.from}`);
                     //     return;
                     // }
 
-                    switch (tx.data) {
-                        case "bet":
-                            game.performAction(tx.from, PlayerActionType.BET, tx.value);
-                            break;
-                        case "call":
-                            game.performAction(tx.from, PlayerActionType.CALL, tx.value);
-                            break;
-                        case "fold":
-                            game.performAction(tx.from, PlayerActionType.FOLD, 0n);
-                            break;
-                        case "check":
-                            game.performAction(tx.from, PlayerActionType.CHECK, 0n);
-                            break;
-                        case "raise":
-                            game.performAction(tx.from, PlayerActionType.RAISE, tx.value);
-                            break;
-                        case "post small blind":
-                            game.performAction(tx.from, PlayerActionType.SMALL_BLIND, tx.value);
-                            break;
-                        case "post big blind":
-                            game.performAction(tx.from, PlayerActionType.BIG_BLIND, tx.value);
-                            break;
-                        case "deal":
-                            console.log(`Processing deal action from ${tx.from}`);
-                            try {
-                                game.deal();
-                            } catch (error) {
-                                console.error("Error dealing cards:", error);
-                                // Don't rethrow the error - continue processing other actions
-                            }
-                            break;
-                        default:
-                            throw new Error("Invalid action");
-                    };
+                    // switch (tx.data) {
+                    //     case "deal":
+                    //         console.log(`Processing deal action from ${tx.from}`);
+                    //         try {
+                    //             game.deal();
+                    //         } catch (error) {
+                    //             console.error("Error dealing cards:", error);
+                    //             // Don't rethrow the error - continue processing other actions
+                    //         }
+                    //         break;
+                    //     default:
+                    //         throw new Error("Invalid action");
+                    // };
                 } catch (error) {
-                    console.warn(`Error processing transaction ${tx.data} from ${tx.from}: ${(error as Error).message}`);
+                    console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                     // Continue with other transactions, don't let this error propagate up
                 }
             });
@@ -98,5 +82,23 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             const originalState = await this.gameManagement.get(this.address);
             return await signResult(originalState, this.privateKey);
         }
+    }
+
+    private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
+        if (!tx.data) {
+            throw new Error("Transaction data is undefined");
+        }
+
+        const params = tx.data.split("-");
+        const action = params[0].trim() as PlayerActionType;
+        const index = parseInt(params[1].trim());
+
+        return {
+            from: tx.from,
+            to: tx.to,
+            value: tx.value,
+            type: action,
+            index: index
+        };
     }
 }

@@ -514,13 +514,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const status = this.getPlayerStatus(address);
 
         if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
-        if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN };
-        if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD };
+        if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN, index: 0 }; // Todo: fix this
+        if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD, index: 0 }; // Todo: fix this
 
         return undefined;
     }
 
-    performAction(address: string, action: PlayerActionType, amount?: bigint): void {
+    performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void {
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
                 if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
@@ -539,15 +539,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
         switch (action) {
             // todo: ante
             case PlayerActionType.SMALL_BLIND:
-                new SmallBlindAction(this, this._update).execute(player, this._gameOptions.smallBlind);
+                new SmallBlindAction(this, this._update).execute(player, index, this._gameOptions.smallBlind);
                 break;
             case PlayerActionType.BIG_BLIND:
-                new BigBlindAction(this, this._update).execute(player, this._gameOptions.bigBlind);
+                new BigBlindAction(this, this._update).execute(player, index, this._gameOptions.bigBlind);
                 break;
             case PlayerActionType.DEAL:
                 // First verify the deal is valid via the DealAction
                 try {
-                    new DealAction(this, this._update).execute(player);
+                    new DealAction(this, this._update).execute(player, index);
 
                     // For 3+ player games, set the last acted seat to the big blind position
                     // so that the next player to act will be the one after the big blind
@@ -566,26 +566,26 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             case PlayerActionType.FOLD:
                 // Don't update player status before executing fold
-                new FoldAction(this, this._update).execute(player);
+                new FoldAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.CHECK:
-                new CheckAction(this, this._update).execute(player);
+                new CheckAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.BET:
-                new BetAction(this, this._update).execute(player, amount);
+                new BetAction(this, this._update).execute(player, index, amount);
                 break;
             case PlayerActionType.CALL:
-                new CallAction(this, this._update).execute(player);
+                new CallAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.RAISE:
-                new RaiseAction(this, this._update).execute(player, amount);
+                new RaiseAction(this, this._update).execute(player, index, amount);
                 break;
             default:
                 // do we need to roll back last acted seat?
                 throw new Error("Invalid action.");
         }
 
-        player.addAction({ playerId: address, action, amount });
+        player.addAction({ playerId: address, action, amount, index });
         this._lastActedSeat = seat;
 
         if (this.hasRoundEnded(this._currentRound) === true) {
@@ -626,7 +626,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     seat: turn.seat,
                     action: turn.action,
                     amount: turn.amount ? turn.amount.toString() : "",
-                    round
+                    round,
+                    index: turn.index,
                 };
 
                 actions.push(action);
@@ -650,7 +651,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 seat: this.getPlayerSeatNumber(turn.playerId),
                 action: turn.action,
                 amount: turn.amount ? turn.amount.toString() : "",
-                round
+                round,
+                index: turn.index,
             };
 
             actions.push(action);

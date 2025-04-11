@@ -4,7 +4,7 @@ import { Player } from "../models/player";
 export interface IAction {
     readonly type: PlayerActionType;
     verify(player: Player): Range | undefined;
-    execute(player: Player, amount?: bigint): void;
+    execute(player: Player, index: number, amount?: bigint): void;
 }
 
 export interface IPoker {
@@ -12,7 +12,7 @@ export interface IPoker {
     joinAtSeat(player: Player, seat: number): void;
     leave(address: string): void;
     getLastRoundAction(): Turn | undefined;
-    performAction(address: string, action: PlayerActionType, amount?: bigint): void;
+    performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;
 }
 
@@ -35,7 +35,8 @@ export type Turn = {
     index: number;
 };
 
-export type TurnWithSeat = Turn & { seat: number};
+// Timestamp in milliseconds is required for auto folding etc
+export type TurnWithSeat = Turn & { seat: number, timestamp: number };
 
 export type LegalAction = ActionDTO;
 

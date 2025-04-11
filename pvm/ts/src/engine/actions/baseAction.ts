@@ -25,7 +25,7 @@ abstract class BaseAction {
         return undefined;
     }
 
-    execute(player: Player, amount?: bigint): void {
+    execute(player: Player, index: number,  amount?: bigint): void {
         const range = this.verify(player);
 
         if (range) {

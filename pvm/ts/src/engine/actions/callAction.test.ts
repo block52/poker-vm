@@ -83,7 +83,8 @@ describe("CallAction", () => {
                 action: PlayerActionType.CALL,
                 amount: 0n,
                 seat: 0,
-                timestamp: Date.now(),
+                index: 0,
+                timestamp: Date.now()
             };
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
@@ -98,7 +99,8 @@ describe("CallAction", () => {
                 action: PlayerActionType.BET,
                 amount: TEN_TOKENS,
                 seat: 0,
-                timestamp: Date.now(),
+                index: 0,
+                timestamp: Date.now()
             };
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
@@ -119,7 +121,8 @@ describe("CallAction", () => {
                 action: PlayerActionType.BET,
                 amount: 30n,
                 seat: 1,
-                timestamp: Date.now(),
+                index: 0,
+                timestamp: Date.now()
             };
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
@@ -142,7 +145,8 @@ describe("CallAction", () => {
                 action: PlayerActionType.BET,
                 amount: 200n,
                 seat: 1,
-                timestamp: Date.now(),
+                index: 0,
+                timestamp: Date.now()
             };
             
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);

@@ -51,7 +51,7 @@ class DealAction extends BaseAction implements IAction {
         return { minAmount: 0n, maxAmount: 0n };
     }
 
-    execute(player: Player): void {
+    execute(player: Player, index: number): void {
 
         this.game.deal();
 
@@ -60,7 +60,8 @@ class DealAction extends BaseAction implements IAction {
         // Record the deal action
         this.update.addAction({
             playerId: player.address,
-            action: PlayerActionType.DEAL
+            action: PlayerActionType.DEAL,
+            index: index
         });
     }
 }
