@@ -15,7 +15,7 @@
     "@bitcoinbrisbane/block52": "^1.0.43",
     "axios": "^1.8.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "express": "^4.20.0",
     "mongoose": "^8.10.2",
     "swagger-jsdoc": "^6.2.8",
