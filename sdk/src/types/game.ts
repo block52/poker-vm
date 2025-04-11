@@ -65,6 +65,7 @@ export type LegalActionDTO = {
     action: PlayerActionType;
     min: string | undefined;
     max: string | undefined;
+    index: number;
 };
 
 export type WinnerDTO = {

@@ -185,6 +185,7 @@ export class Block implements IJSONModel {
                     txHash, // hash
                     '', // signature
                     0, // timestamp
+                    0n, // nonce
                 );
             });
         }

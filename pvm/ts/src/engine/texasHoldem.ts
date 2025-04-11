@@ -476,7 +476,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return {
                     action: action.type,
                     min: range ? range.minAmount.toString() : "0",
-                    max: range ? range.maxAmount.toString() : "0"
+                    max: range ? range.maxAmount.toString() : "0",
+                    index: this.turnIndex()
                 }
             } catch {
                 return undefined;
