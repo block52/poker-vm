@@ -48,8 +48,8 @@ describe.skip("GameStateCommand", () => {
             ethers.ZeroHash,
             ethers.ZeroHash,
             Date.now(),
-            0,
             0n,
+            0,
             "join"
         );
 
@@ -101,8 +101,8 @@ describe.skip("GameStateCommand", () => {
             ethers.ZeroHash,
             ethers.ZeroHash,
             Date.now(),
-            0,
             0n,
+            0,
             "join"
         );
 
@@ -113,8 +113,8 @@ describe.skip("GameStateCommand", () => {
             ethers.ZeroHash,
             ethers.ZeroHash,
             Date.now(),
-            0,
             0n,
+            0,
             "join"
         );
         // const sbTx = new Transaction(tableAddress, "0xb297255C6e686B3FC05E9F1A95CbCF46EEF9981f", 10n, ethers.ZeroHash, ethers.ZeroHash, Date.now(), 0, 0n, "bet");
