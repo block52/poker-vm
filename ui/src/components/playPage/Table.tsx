@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { playerPosition, chipPosition, dealerPosition } from "../../utils/PositionArray";
+import { playerPosition, chipPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
@@ -703,13 +703,9 @@ const Table = () => {
                                     </div>
                                     <div className="absolute inset-0 z-30">
                                         {playerPositionArray.map((position, positionIndex) => {
-                                            // Find the player at this seat position
                                             const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex + 1);
-
-                                            // Check if this player is the current user
                                             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
 
-                                            // More detailed logging only in DEBUG_MODE
                                             if (DEBUG_MODE && playerAtThisSeat) {
                                                 debugLog(`Seat ${positionIndex + 1} detailed comparison:`, {
                                                     playerAddress: playerAtThisSeat.address,
@@ -732,13 +728,22 @@ const Table = () => {
                                             };
 
                                             const componentToRender = !playerAtThisSeat ? (
-                                                // No player at this seat - show vacant player
-                                                <VacantPlayer index={positionIndex + 1} left={position.left} top={position.top} />
+                                                <VacantPlayer
+                                                    index={positionIndex + 1}
+                                                    left={
+                                                        tableSize === 6
+                                                            ? vacantPlayerPosition.six[positionIndex].left
+                                                            : vacantPlayerPosition.nine[positionIndex].left
+                                                    }
+                                                    top={
+                                                        tableSize === 6
+                                                            ? vacantPlayerPosition.six[positionIndex].top
+                                                            : vacantPlayerPosition.nine[positionIndex].top
+                                                    }
+                                                />
                                             ) : isCurrentUser ? (
-                                                // This is the current user's position - use Player component
                                                 <Player {...componentProps} />
                                             ) : (
-                                                // This is another player's position - use OppositePlayer component
                                                 <OppositePlayer
                                                     {...componentProps}
                                                     setStartIndex={(index: number) => setStartIndex(index)}

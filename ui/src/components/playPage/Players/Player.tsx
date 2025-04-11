@@ -67,7 +67,7 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
             key={index}
             className={`${
                 playerData.status === PlayerStatus.FOLDED ? "opacity-60" : ""
-            } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
+            } absolute flex flex-col justify-center text-gray-600 w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
             style={{
                 left: left,
                 top: top,
