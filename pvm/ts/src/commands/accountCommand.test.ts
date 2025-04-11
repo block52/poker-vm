@@ -27,10 +27,10 @@ describe("AccountCommand Tests", () => {
 
         // Create test transactions
         const transactions = [
-            new Transaction("other", testAddress, BigInt(200), "hash1", "sig1", Date.now(), 1), // incoming
-            new Transaction(testAddress, "other", BigInt(300), "hash2", "sig2", Date.now(), 2), // outgoing
-            new Transaction("other", testAddress, BigInt(100), "hash3", "sig3", Date.now(), 3), // incoming
-            new Transaction(testAddress, "other", BigInt(400), "hash4", "sig4", Date.now(), 4) // outgoing
+            new Transaction("other", testAddress, BigInt(200), "hash1", "sig1", Date.now(), 0n, 1), // incoming
+            new Transaction(testAddress, "other", BigInt(300), "hash2", "sig2", Date.now(), 1n, 2), // outgoing
+            new Transaction("other", testAddress, BigInt(100), "hash3", "sig3", Date.now(), 2n, 3), // incoming
+            new Transaction(testAddress, "other", BigInt(400), "hash4", "sig4", Date.now(), 3n, 4) // outgoing
         ];
 
         // Mock mempool with better predicate handling
@@ -77,8 +77,8 @@ describe("AccountCommand Tests", () => {
         // These are transactions where money is being sent FROM this account
         mockMempool.findAll.mockImplementation((predicate: (tx: Transaction) => boolean) => {
             const transactions = [
-                new Transaction("other", testAddress, BigInt(200), "hash1", "sig1", Date.now(), 1), // -200 from balance
-                new Transaction("other", testAddress, BigInt(100), "hash3", "sig3", Date.now(), 3) // -100 from balance
+                new Transaction("other", testAddress, BigInt(200), "hash1", "sig1", Date.now(), 0n, 1), // -200 from balance
+                new Transaction("other", testAddress, BigInt(100), "hash3", "sig3", Date.now(), 1n, 3) // -100 from balance
             ];
             return transactions.filter(predicate);
         });
