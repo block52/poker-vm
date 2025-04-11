@@ -60,7 +60,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
 
         const hash = createHash("sha256").update(_data).digest("hex");
 
-        return new Transaction(to, from, value, hash, signature, timestamp, undefined, nonce, data);
+        return new Transaction(to, from, value, hash, signature, timestamp, nonce, undefined, data);
     }
 
     public toJson(): TransactionDTO {
@@ -85,6 +85,7 @@ export class Transaction implements ICryptoModel, IJSONModel {
             json.hash,
             json.signature,
             Number(json.timestamp),
+            json.nonce ? BigInt(json.nonce) : 0n,
             json.index ? Number(json.index) : undefined
         );
     }
@@ -97,8 +98,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
             document.hash,
             document.signature,
             document.timestamp ? Number(document.timestamp) : 0,
+            document.nonce ? BigInt(document.nonce) : 0n,
             document.index ? Number(document.index) : undefined,
-            document.nonce ? BigInt(document.nonce) : undefined,
             document.data
         );
     }

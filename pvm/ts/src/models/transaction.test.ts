@@ -14,8 +14,8 @@ describe("Transaction Tests", () => {
                 ethers.ZeroHash,
                 "signature",
                 Date.now(),
-                1,
                 BigInt(1),
+                1,
                 "data"
             );
 
