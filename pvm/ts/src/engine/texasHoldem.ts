@@ -274,7 +274,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Auto join the first player
             if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.PREFLOP) {
                 // post small blind
-                new SmallBlindAction(this, this._update).execute(player, this._gameOptions.smallBlind);
+                new SmallBlindAction(this, this._update).execute(player, 0, this._gameOptions.smallBlind);
 
                 // This is the last player to act
                 this._lastActedSeat = seat;
@@ -289,7 +289,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Auto join the second player
             if (this.getPlayerCount() === 2 && this.currentRound === TexasHoldemRound.PREFLOP) {
                 // post big blind
-                new BigBlindAction(this, this._update).execute(player, this._gameOptions.bigBlind);
+                new BigBlindAction(this, this._update).execute(player, 0, this._gameOptions.bigBlind);
 
                 // This is the last player to act
                 this._lastActedSeat = seat;

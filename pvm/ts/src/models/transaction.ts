@@ -14,8 +14,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
         readonly hash: string,
         readonly signature: string,
         readonly timestamp: number,
+        readonly nonce: bigint,
         readonly index?: number,
-        readonly nonce?: bigint,
         readonly data?: string
     ) {
         // If the index is not provided, set it to 0 or look for the last index in the blockchain
