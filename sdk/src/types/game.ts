@@ -9,8 +9,20 @@ export enum PlayerActionType {
     ALL_IN = "all-in",
     MUCK = "muck",
     SIT_IN = "sit-in",
-    SIT_OUT = "sit-out",
-    DEAL = "deal"
+    SIT_OUT = "sit-out"
+}
+
+export enum NonPlayerActionType {
+    DEAL = "deal",
+    NEXT = "next-round",
+    LEAVE = "leave"
+}
+
+export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
+
+export enum GameType {
+    CASH = "cash",
+    TOURNAMENT = "tournament"
 }
 
 export enum PlayerStatus {

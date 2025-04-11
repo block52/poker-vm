@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { Wallet } from "ethers";
 import { ethers } from "ethers";
 
-import { TexasHoldemStateDTO, NodeRpcClient, TexasHoldemRound, PlayerDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO, NodeRpcClient, PlayerActionType } from "@bitcoinbrisbane/block52";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -68,6 +68,15 @@ const getAddress = () => {
     }
 
     throw new Error("No valid private key found");
+};
+
+const getNonce = async (address: string): Promise<number> => {
+    const rpcClient = getClient();
+    const response = await rpcClient.getAccount(address);
+    if (response) {
+        nonce = response?.nonce || 0;
+    }
+    return nonce;
 };
 
 const getPublicKeyDetails = (privateKey: string): string => {
@@ -262,7 +271,7 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
     console.log(chalk.cyan("=".repeat(60)));
 
     // Game info
-    console.log(chalk.yellow(`Game Type: ${state.type} | Round: ${state.round} | Blinds: ${formatChips(state.smallBlind)}/${formatChips(state.bigBlind)}`));
+    console.log(chalk.yellow(`Game Type: ${state.type} | Round: ${state.round} | Blinds: ${formatChips(state.gameOptions.smallBlind)}/${formatChips(state.gameOptions.bigBlind)}`));
 
     // Community cards
     let communityCardsStr = "Board: ";

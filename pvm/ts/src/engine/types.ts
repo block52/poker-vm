@@ -8,9 +8,9 @@ export interface IAction {
 }
 
 export interface IPoker {
-    deal(): void;
-    joinAtSeat(player: Player, seat: number): void;
-    leave(address: string): void;
+    // deal(): void;
+    // joinAtSeat(player: Player, seat: number): void;
+    // leave(address: string): void;
     getLastRoundAction(): Turn | undefined;
     performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;

@@ -4,6 +4,7 @@ import {
     GameOptions,
     GameOptionsDTO,
     LegalActionDTO,
+    NonPlayerActionType,
     PlayerActionType,
     PlayerDTO,
     PlayerStatus,
@@ -25,7 +26,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
 import { IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
-import { ethers } from "ethers";
+import { ethers, N } from "ethers";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
@@ -111,8 +112,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) {}
-            addAction(action: Turn): void {}
+            constructor(public game: TexasHoldemGame) { }
+            addAction(action: Turn): void { }
         })(this);
 
         this._actions = [
@@ -240,13 +241,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         console.log("Cards dealt successfully");
     }
 
-    join(address: string, chips: bigint) {
+    private join(address: string, chips: bigint) {
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
         const seat = this.findNextSeat();
         this.joinAtSeat(player, seat);
     }
 
-    joinAtSeat(player: Player, seat: number) {
+    private joinAtSeat(player: Player, seat: number) {
         // Check if the player is already in the game
         if (this.exists(player.address)) {
             throw new Error("Player already joined.");
@@ -323,7 +324,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._turnIndex++;
     }
 
-    leave(address: string): bigint {
+    private leave(address: string): bigint {
         const player = this.getPlayer(address);
         const seat = this.getPlayerSeatNumber(address);
 
@@ -525,17 +526,22 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return undefined;
     }
 
-    performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void {
+    performAction(address: string, action: PlayerActionType & NonPlayerActionType, index: number, amount?: bigint): void {
+
+        if (index !== this.turnIndex()) {
+            throw new Error("Invalid action index.");
+        }
+
+        if (!this.exists(address)) {
+            throw new Error("Player not found.");
+        }
+
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
                 if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
             }
-        }
-
-        if (!this.exists(address)) {
-            throw new Error("Player not found.");
         }
 
         const player = this.getPlayer(address);
@@ -548,26 +554,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             case PlayerActionType.BIG_BLIND:
                 new BigBlindAction(this, this._update).execute(player, index, this._gameOptions.bigBlind);
-                break;
-            case PlayerActionType.DEAL:
-                // First verify the deal is valid via the DealAction
-                try {
-                    new DealAction(this, this._update).execute(player, index);
-
-                    // For 3+ player games, set the last acted seat to the big blind position
-                    // so that the next player to act will be the one after the big blind
-                    const activePlayerCount = this.getActivePlayerCount();
-                    if (activePlayerCount > 2) {
-                        console.log("Deal action: Setting last acted seat to big blind position:", this._bigBlindPosition);
-                        this._lastActedSeat = this._bigBlindPosition;
-                    } else {
-                        // For 2-player games, set to dealer position so small blind acts next
-                        console.log("Deal action: Setting last acted seat to dealer position:", this._dealer);
-                        this._lastActedSeat = this._dealer;
-                    }
-                } catch (error) {
-                    console.error("Error performing deal action:", error);
-                }
                 break;
             case PlayerActionType.FOLD:
                 // Don't update player status before executing fold
@@ -587,7 +573,35 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             default:
                 // do we need to roll back last acted seat?
-                throw new Error("Invalid action.");
+                break;
+        }
+
+        switch (action) {
+            case NonPlayerActionType.JOIN:
+                this.join(address, amount!);
+                break;
+            case NonPlayerActionType.DEAL:
+                // First verify the deal is valid via the DealAction
+                try {
+                    new DealAction(this, this._update).execute(player, index);
+
+                    // For 3+ player games, set the last acted seat to the big blind position
+                    // so that the next player to act will be the one after the big blind
+                    const activePlayerCount = this.getActivePlayerCount();
+                    if (activePlayerCount > 2) {
+                        console.log("Deal action: Setting last acted seat to big blind position:", this._bigBlindPosition);
+                        this._lastActedSeat = this._bigBlindPosition;
+                    } else {
+                        // For 2-player games, set to dealer position so small blind acts next
+                        console.log("Deal action: Setting last acted seat to dealer position:", this._dealer);
+                        this._lastActedSeat = this._dealer;
+                    }
+                } catch (error) {
+                    console.error("Error performing deal action:", error);
+                }
+                break;
+            default:
+                throw new Error(`Invalid ${action} action.`);
         }
 
         player.addAction({ playerId: address, action, amount, index });
