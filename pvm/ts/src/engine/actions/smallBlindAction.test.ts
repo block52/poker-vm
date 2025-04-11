@@ -119,12 +119,12 @@ describe("SmallBlindAction", () => {
 
         it("should deduct small blind amount from player chips", () => {
             const initialChips = player.chips;
-            action.execute(player, game.smallBlind);
+            action.execute(player, 0, game.smallBlind);
             expect(player.chips).toBe(initialChips - game.smallBlind);
         });
 
         it.skip("should add small blind action to update", () => {
-            action.execute(player, game.smallBlind);
+            action.execute(player, 0, game.smallBlind);
             expect(updateMock.addAction).toHaveBeenCalledWith({
                 playerId: player.id,
                 action: PlayerActionType.SMALL_BLIND,
@@ -133,7 +133,7 @@ describe("SmallBlindAction", () => {
         });
 
         it("should throw error if amount doesn't match small blind", () => {
-            expect(() => action.execute(player, game.smallBlind + 1n)).toThrow("Amount is greater than maximum allowed.");
+            expect(() => action.execute(player, 0, game.smallBlind + 1n)).toThrow("Amount is greater than maximum allowed.");
         });
     });
 });

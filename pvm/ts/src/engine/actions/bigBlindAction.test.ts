@@ -148,12 +148,12 @@ describe("BigBlindAction", () => {
 
         it("should deduct big blind amount from player chips", () => {
             const initialChips = player.chips;
-            action.execute(player, game.bigBlind);
+            action.execute(player, 0, game.bigBlind);
             expect(player.chips).toBe(initialChips - game.bigBlind);
         });
 
         it("should add big blind action to update", () => {
-            action.execute(player, game.bigBlind);
+            action.execute(player, 0, game.bigBlind);
             expect(updateMock.addAction).toHaveBeenCalledWith({
                 playerId: player.id,
                 action: PlayerActionType.BIG_BLIND,
@@ -162,7 +162,7 @@ describe("BigBlindAction", () => {
         });
 
         it("should throw error if amount doesn't match big blind", () => {
-            expect(() => action.execute(player, game.bigBlind + 1n)).toThrow("Amount is greater than maximum allowed.");
+            expect(() => action.execute(player, 0, game.bigBlind + 1n)).toThrow("Amount is greater than maximum allowed.");
         });
     });
 });
