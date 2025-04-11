@@ -70,7 +70,8 @@ describe("Transaction Tests", () => {
                 BigInt(100),
                 ethers.ZeroHash,
                 "signature",
-                Date.now()
+                Date.now(),
+                0n
             );
 
             const testHash = "0x123";
@@ -88,8 +89,8 @@ describe("Transaction Tests", () => {
                 ethers.ZeroHash,
                 "signature",
                 Date.now(),
-                1,
-                BigInt(1)
+                0n,
+                1
             );
 
             expect(tx.getId()).toBe(tx.calculateHash());
@@ -162,8 +163,8 @@ describe("Transaction Tests", () => {
                 ethers.ZeroHash,
                 "signature",
                 Date.now(),
-                1,
-                BigInt(1)
+                BigInt(1),
+                1
             );
 
             const tx2 = new Transaction(
@@ -173,8 +174,8 @@ describe("Transaction Tests", () => {
                 ethers.ZeroHash,
                 "signature",
                 Date.now(),
-                1,
-                BigInt(1)
+                BigInt(1),
+                1
             );
 
             expect(tx1.calculateHash()).toBe(tx2.calculateHash());
@@ -188,8 +189,8 @@ describe("Transaction Tests", () => {
                 ethers.ZeroHash,
                 "signature",
                 Date.now(),
-                1,
-                BigInt(1)
+                BigInt(1),
+                1
             );
 
             const tx2 = new Transaction(
@@ -199,8 +200,8 @@ describe("Transaction Tests", () => {
                 ethers.ZeroHash,
                 "signature",
                 Date.now(),
-                1,
-                BigInt(1)
+                BigInt(1),
+                1
             );
 
             expect(tx1.calculateHash()).not.toBe(tx2.calculateHash());
