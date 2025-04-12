@@ -490,54 +490,6 @@ app.get("/nonce/:address", async (req, res) => {
     }
 });
 
-// Add a test endpoint to check WebSocket functionality
-app.get("/websocket-test", (req, res) => {
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>WebSocket Test</title>
-    </head>
-    <body>
-      <h1>WebSocket Test</h1>
-      <div id="status">Connecting...</div>
-      <div id="messages"></div>
-      <script>
-        const status = document.getElementById('status');
-        const messages = document.getElementById('messages');
-        
-        // Create WebSocket connection
-        const socket = new WebSocket('${req.protocol === "https" ? "wss" : "ws"}://${req.headers.host}/ws');
-        
-        // Connection opened
-        socket.addEventListener('open', (event) => {
-          status.textContent = 'Connected';
-          socket.send(JSON.stringify({type: 'ping'}));
-        });
-        
-        // Listen for messages
-        socket.addEventListener('message', (event) => {
-          const msg = document.createElement('div');
-          msg.textContent = 'Received: ' + event.data;
-          messages.appendChild(msg);
-        });
-        
-        // Connection closed
-        socket.addEventListener('close', (event) => {
-          status.textContent = 'Disconnected: ' + event.code;
-        });
-        
-        // Connection error
-        socket.addEventListener('error', (event) => {
-          status.textContent = 'Error';
-          console.error('WebSocket error:', event);
-        });
-      </script>
-    </body>
-    </html>
-  `);
-});
-
 // ===================================
 // Deal cards endpoint
 // ===================================
