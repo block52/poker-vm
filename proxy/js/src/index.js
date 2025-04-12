@@ -16,12 +16,11 @@ const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
 
-const { NodeRpcClient, RPCMethods } = require("@bitcoinbrisbane/block52");
+const { RPCMethods } = require("@bitcoinbrisbane/block52");
 
 const { getUnixTime } = require("./utils/helpers");
 
 // Add WebSocket support
-const WebSocket = require("ws");
 const http = require("http");
 
 // ===================================
@@ -35,14 +34,16 @@ const port = process.env.PORT || 8080;
 const NODE_URL = process.env.NODE_URL || "https://node1.block52.xyz";
 console.log("Using NODE API URL:", NODE_URL);
 
+// Helper function to generate incrementing RPC IDs
+let rpcIdCounter = 0;
+const getNextRpcId = () => {
+    rpcIdCounter++;
+    return rpcIdCounter.toString();
+};
+
 // ===================================
 // 3. Initialize Client (Singleton)
 // ===================================
-let clientInstance = null;
-
-
-
-
 
 // ===================================
 // 4. Initialize Express Application
@@ -158,202 +159,6 @@ app.get("/table/:id/player/:seat", async (req, res) => {
 // Create HTTP server instead of directly using app.listen
 const server = http.createServer(app);
 
-// Create WebSocket server with proper CORS handling
-// const wss = new WebSocket.Server({
-//     server,
-//     path: "/ws",
-//     // Add proper verification for CORS
-//     verifyClient: info => {
-//         const origin = info.origin || info.req.headers.origin;
-//         const allowedOrigins = ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080"];
-
-//         if (allowedOrigins.includes(origin)) {
-//             console.log(`Accepted WebSocket connection from origin: ${origin}`);
-//             return true;
-//         }
-
-//         console.log(`Rejected WebSocket connection from origin: ${origin}`);
-//         return false;
-//     }
-// });
-
-// Add more detailed error logging
-// wss.on("error", error => {
-//     console.error("WebSocket server error:", error);
-// });
-
-// Keep track of table subscriptions
-// const tableSubscriptions = new Map();
-
-// Function to send table state to a specific client
-// async function sendTableState(tableId, ws) {
-//     try {
-//         console.log(`Fetching table state for ${tableId} to send via WebSocket`);
-        
-//         // Use the existing client instance instead of creating a new one
-//         const client = getClient();
-        
-//         // Or if you need to use NodeRpcClient specifically, add proper error handling:
-//         // const client = new NodeRpcClient(
-//         //     process.env.NODE_URL || "https://node1.block52.xyz/", 
-//         //     process.env.VALIDATOR_KEY || ""
-//         // );
-        
-//         const table = await client.getGameState(tableId);
-//         console.log("=== TABLE STATE ===");
-//         console.log(table);
-
-//         if (ws.readyState === WebSocket.OPEN) {
-//             ws.send(
-//                 JSON.stringify({
-//                     type: "tableUpdate",
-//                     data: table
-//                 })
-//             );
-//             console.log(`Sent table state for ${tableId} via WebSocket`);
-//         } else {
-//             console.log(`WebSocket not open, skipping table state send for ${tableId}`);
-//         }
-//     } catch (error) {
-//         console.error("Error fetching table state for WebSocket:", error);
-        
-//         // Send an error message to the client so they know to fall back to polling
-//         if (ws.readyState === WebSocket.OPEN) {
-//             ws.send(JSON.stringify({
-//                 type: "error",
-//                 message: "Failed to fetch table state"
-//             }));
-//         }
-//     }
-// }
-
-// WebSocket connection handler - simplified for debugging
-// wss.on("connection", (ws, req) => {
-//     console.log("WebSocket client connected from", req.socket.remoteAddress);
-//     console.log("WebSocket connection headers:", req.headers);
-
-//     // Send a welcome message immediately
-//     try {
-//         ws.send(
-//             JSON.stringify({
-//                 type: "welcome",
-//                 message: "Connected to WebSocket server"
-//             })
-//         );
-//         console.log("Sent welcome message");
-//     } catch (error) {
-//         console.error("Error sending welcome message:", error);
-//     }
-
-//     let subscribedTableId = null;
-
-//     // Handle messages from clients
-//     ws.on("message", message => {
-//         try {
-//             console.log("Raw message received:", message.toString());
-//             const data = JSON.parse(message.toString());
-//             console.log("WebSocket message received:", data);
-
-//             // Handle subscription requests
-//             if (data.type === "subscribe" && data.tableId) {
-//                 subscribedTableId = data.tableId;
-//                 console.log(`Client subscribed to table: ${subscribedTableId}`);
-
-//                 // Add this connection to the table's subscription list
-//                 if (!tableSubscriptions.has(subscribedTableId)) {
-//                     tableSubscriptions.set(subscribedTableId, new Set());
-//                 }
-//                 tableSubscriptions.get(subscribedTableId).add(ws);
-
-//                 // Send confirmation to client
-//                 ws.send(
-//                     JSON.stringify({
-//                         type: "subscribed",
-//                         tableId: subscribedTableId
-//                     })
-//                 );
-
-//                 // Send initial table state
-//                 sendTableState(subscribedTableId, ws);
-//             }
-//         } catch (error) {
-//             console.error("Error processing WebSocket message:", error);
-//         }
-//     });
-
-//     // Handle disconnection
-//     ws.on("close", (code, reason) => {
-//         console.log("WebSocket client disconnected with code:", code, "reason:", reason || "No reason provided");
-//         if (subscribedTableId && tableSubscriptions.has(subscribedTableId)) {
-//             tableSubscriptions.get(subscribedTableId).delete(ws);
-
-//             // Clean up empty subscription sets
-//             if (tableSubscriptions.get(subscribedTableId).size === 0) {
-//                 tableSubscriptions.delete(subscribedTableId);
-//             }
-//         }
-//     });
-
-//     // Handle errors
-//     ws.on("error", error => {
-//         console.error("WebSocket connection error:", error);
-//     });
-// });
-
-// Heartbeat interval to keep connections alive
-// const interval = setInterval(function ping() {
-//     wss.clients.forEach(function each(ws) {
-//         if (ws.isAlive === false) {
-//             console.log("Terminating inactive WebSocket connection");
-//             return ws.terminate();
-//         }
-
-//         ws.isAlive = false;
-//         ws.ping();
-//     });
-// }, 30000);
-
-// Clean up interval on server close
-// wss.on("close", function close() {
-//     clearInterval(interval);
-// });
-
-// Function to broadcast table updates to all subscribed clients
-// async function broadcastTableUpdate(tableId) {
-//     if (!tableSubscriptions.has(tableId)) return;
-
-//     try {
-//         const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
-//         const table = await client.getGameState(tableId);
-
-//         const subscribers = tableSubscriptions.get(tableId);
-//         const message = JSON.stringify({
-//             type: "tableUpdate",
-//             data: table
-//         });
-
-//         for (const client of subscribers) {
-//             if (client.readyState === WebSocket.OPEN) {
-//                 client.send(message);
-//             }
-//         }
-//     } catch (error) {
-//         console.error("Error broadcasting table update:", error);
-//     }
-// }
-
-
-// Add a new endpoint to trigger table updates (can be called by the game server when state changes)
-// app.post("/notify-table-update/:id", async (req, res) => {
-//     const tableId = req.params.id;
-//     console.log(`Received update notification for table: ${tableId}`);
-
-//     // Broadcast the update to all subscribed clients
-//     await broadcastTableUpdate(tableId);
-
-//     res.status(200).json({ success: true });
-// });
-
 // ===================================
 // 12. Join table endpoint
 // ===================================
@@ -367,7 +172,7 @@ app.post("/table/:tableId/join", async (req, res) => {
     try {
         // Format the RPC call to match the SDK client structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             method: RPCMethods.TRANSFER,
             params: [req.body.userAddress, req.body.tableId, req.body.buyInAmount, "join"],
             signature: req.body.signature,
@@ -415,7 +220,6 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
             console.log("Amount to return:", req.body.amount);
             
             // Always try to process leave requests, even if there are issues
-            let canProceed = true;
             let warningMessage = "";
             
             try {
@@ -472,7 +276,7 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
         
         // Format the RPC call to match the SDK client structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             method: RPCMethods.TRANSFER,
             params: [
                 req.body.userAddress,
@@ -540,7 +344,7 @@ app.post("/table/:tableId/perform", async (req, res) => {
     try {
         // Format the RPC call to match the SDK client structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [
                 req.body.userAddress,         // from (player address)
@@ -594,7 +398,7 @@ app.get("/get_account/:accountId", async (req, res) => {
     try {
         // Format the RPC call according to the specified structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             method: "get_account",
             version: "2.0",
             params: [req.params.accountId]
@@ -643,7 +447,7 @@ app.get("/nonce/:address", async (req, res) => {
     try {
         // Format the RPC call according to the specified structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             method: "get_account",
             version: "2.0",
             params: [req.params.address]
@@ -751,7 +555,7 @@ app.post("/table/:tableId/deal", async (req, res) => {
     try {
         // Format the RPC call to match the SDK client structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             version: "2.0",
             method: "deal",
             params: [
@@ -801,7 +605,7 @@ app.get("/get_game_state/:tableId", async (req, res) => {
     try {
         // Format the RPC call according to the specified structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             method: "get_game_state",
             version: "2.0",
             params: [req.params.tableId]
