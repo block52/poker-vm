@@ -392,22 +392,14 @@ app.post("/table/:tableId/perform", async (req, res) => {
 // 13. Account-related endpoints
 // ===================================
 app.get("/get_account/:accountId", async (req, res) => {
-    // console.log("=== GET ACCOUNT REQUEST ===");
-    // console.log("Account ID:", req.params.accountId);
-
     try {
-        // Format the RPC call according to the specified structure
+        // Format the RPC call using the shared type
         const rpcCall = {
             id: getNextRpcId(),
-            method: "get_account",
+            method: RPCMethods.GET_ACCOUNT,
             version: "2.0",
             params: [req.params.accountId]
         };
-
-        // console.log("=== FORMATTED RPC CALL ===");
-        // console.log(JSON.stringify(rpcCall, null, 2));
-        // console.log("=== NODE_URL ===");
-        // console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
         const response = await axios.post(NODE_URL, rpcCall, {
@@ -416,13 +408,8 @@ app.get("/get_account/:accountId", async (req, res) => {
             }
         });
 
-        // console.log("=== NODE RESPONSE ===");
-        // console.log(response.data);
-
         res.json(response.data);
     } catch (error) {
-        // console.error("=== ERROR ===");
-        // console.error("Error details:", error);
         res.status(500).json({ 
             error: "Failed to get account", 
             details: error.message 
