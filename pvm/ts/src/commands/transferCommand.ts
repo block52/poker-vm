@@ -71,10 +71,9 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
 
                 // Assume player is leaving the game
                 console.log(`Player ${this.to} leaving game...`);
-                const stack = game.leave(this.to);
-                if (stack !== this.amount) {
-                    throw new Error("Leave amount doesn't match player's stack");
-                }
+                const player = game.getPlayer(this.from);
+                const stack = player?.chips ?? 0n;
+                game.performAction(this.to, NonPlayerActionType.LEAVE, game.turnIndex(), stack);
                 console.log(`Leave successful, returning ${stack} chips`);
 
                 // const _json = game.toJson();
