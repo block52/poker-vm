@@ -207,7 +207,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // Check if cards have already been dealt
-        const hasDealt = preFlopActions.some(a => a.action === PlayerActionType.DEAL);
+        const hasDealt = preFlopActions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
         if (hasDealt || anyPlayerHasCards) {
@@ -364,7 +364,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // Check if cards have been dealt
-        const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
+        const hasDealt = preFlopActions?.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
         // If blinds are posted but cards haven't been dealt yet,
@@ -378,7 +378,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Check if there have been any betting actions yet
             const bettingActionsCount =
                 preFlopActions?.filter(
-                    a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== PlayerActionType.DEAL
+                    a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
                 ).length || 0;
 
             if (bettingActionsCount === 0) {
@@ -498,7 +498,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // If cards have been dealt, remove the deal action
         if (anyPlayerHasCards) {
-            return actions.filter(a => a.action !== PlayerActionType.DEAL);
+            return actions.filter(a => a.action !== NonPlayerActionType.DEAL);
         }
 
         return actions;
@@ -526,7 +526,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return undefined;
     }
 
-    performAction(address: string, action: PlayerActionType & NonPlayerActionType, index: number, amount?: bigint): void {
+    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint): void {
 
         if (index !== this.turnIndex()) {
             throw new Error("Invalid action index.");
@@ -956,7 +956,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // Check if cards have been dealt, which is required before ending the round
-        const hasDealt = actions.some(a => a.action === PlayerActionType.DEAL);
+        const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
         // In preflop round, make sure cards have been dealt before we can end the round
@@ -966,7 +966,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Check if there's betting action yet
         const bettingActions = actions.filter(
-            a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== PlayerActionType.DEAL
+            a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
         );
 
         // If cards dealt but no betting actions yet, round is not over
@@ -983,7 +983,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
             // Filter to just betting actions (not blinds or deal)
             const playerBettingActions = playerActions.filter(
-                a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== PlayerActionType.DEAL
+                a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
             );
 
             // If no betting actions yet for this player after cards dealt, round not over

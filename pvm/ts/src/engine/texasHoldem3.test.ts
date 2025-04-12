@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions } from "./testConstants";
@@ -32,12 +32,12 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
 
         describe("Round Progression", () => {
             beforeEach(() => {
-                game.join(player1.address, 100000n);
-                game.join(player2.address, 100000n);
+                game.performAction(player1.address, NonPlayerActionType.JOIN, 0, 100000n);
+                game.performAction(player2.address, NonPlayerActionType.JOIN, 1, 100000n);
 
                 // Post blinds
-                game.performAction(player1.address, PlayerActionType.SMALL_BLIND, 0, 1000n);
-                game.performAction(player2.address, PlayerActionType.SMALL_BLIND, 1, 500n);
+                game.performAction(player1.address, PlayerActionType.SMALL_BLIND, 2, 1000n);
+                game.performAction(player2.address, PlayerActionType.SMALL_BLIND, 3, 500n);
 
                 game.deal();
             });
@@ -46,14 +46,14 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
                 expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
                 // Simulate betting actions to progress rounds
-                game.performAction(player1.address, PlayerActionType.CALL, 2);
-                game.performAction(player2.address, PlayerActionType.CHECK, 3);
+                game.performAction(player1.address, PlayerActionType.CALL, 4);
+                game.performAction(player2.address, PlayerActionType.CHECK, 5);
 
                 expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
 
                 // More betting actions
-                game.performAction(player1.address, PlayerActionType.CHECK, 4);
-                game.performAction(player2.address, PlayerActionType.CHECK, 5);
+                game.performAction(player1.address, PlayerActionType.CHECK, 6);
+                game.performAction(player2.address, PlayerActionType.CHECK, 7);
 
                 expect(game.currentRound).toBe(TexasHoldemRound.TURN);
             });
@@ -67,14 +67,18 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
                     { round: TexasHoldemRound.SHOWDOWN, cards: 5 }
                 ];
 
+                let index = 4;
+
                 for (const stage of roundProgression) {
                     expect(game.currentRound).toBe(stage.round);
                     // expect(game._communityCards.length).toBe(stage.cards);
 
                     // Progress to next round
                     if (stage.round !== TexasHoldemRound.SHOWDOWN) {
-                        game.performAction(player1.address, PlayerActionType.CHECK, 6);
-                        game.performAction(player2.address, PlayerActionType.CHECK, 7);
+                        game.performAction(player1.address, PlayerActionType.CHECK, index);
+                        game.performAction(player2.address, PlayerActionType.CHECK, index + 1);
+
+                        index += 2;
                     }
                 }
             });

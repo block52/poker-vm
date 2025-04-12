@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound, Card } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound, Card, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
 
 export interface IAction {
@@ -30,7 +30,7 @@ export type Range = {
 
 export type Turn = {
     playerId: string;
-    action: PlayerActionType;
+    action: PlayerActionType | NonPlayerActionType;
     amount?: bigint;
     index: number;
 };
