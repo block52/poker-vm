@@ -1,8 +1,8 @@
-import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
+import { TexasHoldemRound, GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 
-import { ethers } from "ethers";
-import { baseGameConfig, gameOptions } from "./testConstants";
+import { ethers, N } from "ethers";
+import { baseGameConfig, gameOptions, TEN_TOKENS } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in with 3 players.
 describe("Texas Holdem - Ante - 3 Players", () => {
@@ -11,14 +11,14 @@ describe("Texas Holdem - Ante - 3 Players", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.join("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
-            game.join("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000n);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 0, TEN_TOKENS);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, TEN_TOKENS);
         });
 
         it("should have the correct players pre flop", () => {
             expect(game.getPlayerCount()).toEqual(2);
 
-            game.join("0x3333333333333333333333333333333333333333", 1000000000000000000n);
+            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 1, TEN_TOKENS);
             expect(game.getPlayerCount()).toEqual(3);
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
