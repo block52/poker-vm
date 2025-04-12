@@ -1,7 +1,5 @@
-import { TexasHoldemRound, GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-
-import { ethers, N } from "ethers";
 import { baseGameConfig, gameOptions, TEN_TOKENS } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in with 3 players.
