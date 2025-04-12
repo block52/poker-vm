@@ -36,8 +36,13 @@ export const formatUSDC = (amount: string): string => {
 };
 
 // Update the formatting function to ensure two decimal places
-export const formatWeiToDollars = (weiAmount: string | bigint): string => {
+export const formatWeiToDollars = (weiAmount: string | bigint | undefined | null): string => {
     try {
+        // Handle undefined or null values
+        if (weiAmount === undefined || weiAmount === null) {
+            return "0.00";
+        }
+        
         // Convert from Wei (18 decimals) to standard units
         const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
 
@@ -53,8 +58,13 @@ export const formatWeiToDollars = (weiAmount: string | bigint): string => {
 };
 
 // Simplified version without commas if needed
-export const formatWeiToSimpleDollars = (weiAmount: string | bigint): string => {
+export const formatWeiToSimpleDollars = (weiAmount: string | bigint | undefined | null): string => {
     try {
+        // Handle undefined or null values
+        if (weiAmount === undefined || weiAmount === null) {
+            return "0.00";
+        }
+        
         const etherValue = ethers.formatUnits(weiAmount.toString(), 18);
         return parseFloat(etherValue).toFixed(2);
     } catch (error) {
@@ -63,8 +73,13 @@ export const formatWeiToSimpleDollars = (weiAmount: string | bigint): string => 
     }
 };
 
-export const formatWeiToUSD = (weiAmount: string | number): string => {
+export const formatWeiToUSD = (weiAmount: string | number | undefined | null): string => {
     try {
+        // Handle undefined or null values
+        if (weiAmount === undefined || weiAmount === null) {
+            return "0.00";
+        }
+        
         // Convert from Wei (18 decimals) to standard units
         const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
         // Format to 2 decimal places and add commas

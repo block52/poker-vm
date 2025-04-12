@@ -1,8 +1,8 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { abi } from "../abis/contractABI";
-import { FunctionName } from "../types";
+import { abi } from "../../abis/contractABI";
+import { FunctionName } from "../../types";
 import { useMemo } from "react";
-import { CONTRACT_ADDRESSES } from "../constants";
+import { CONTRACT_ADDRESSES } from "../../constants";
 
 const useDepositUSDC = () => {
     const BRIDGE_ADDRESS = CONTRACT_ADDRESSES.bridgeAddress;

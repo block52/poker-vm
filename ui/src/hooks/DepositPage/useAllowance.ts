@@ -1,7 +1,7 @@
 import { useReadContract } from "wagmi";
 import useUserWalletConnect from "./useUserWalletConnect";
-import { erc20abi } from "../abis/erc20ABI";
-import { FunctionName } from "../types";
+import { erc20abi } from "../../abis/erc20ABI";
+import { FunctionName } from "../../types";
 
 const useAllowance = () => {
     const { address } = useUserWalletConnect();

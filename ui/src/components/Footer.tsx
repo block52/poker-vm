@@ -32,7 +32,15 @@ type UserTableStatus = {
 } | null;
 
 const PokerActionPanel: React.FC = () => {
-    const { tableData, playerLegalActions, isPlayerTurn, canDeal, dealTable } = useTableContext();
+    const { 
+        tableData, 
+        playerLegalActions, 
+        isPlayerTurn,
+        canDeal, 
+        dealTable,
+        postSmallBlind,
+        postBigBlind
+    } = useTableContext();
     const [publicKey, setPublicKey] = useState<string>();
     const [isCallAction, setIsCallAction] = useState(false);
     const [isCheckAction, setIsCheckAction] = useState(false);
@@ -299,32 +307,13 @@ const PokerActionPanel: React.FC = () => {
 
     // Handler functions for different actions
     const handlePostSmallBlind = () => {
-        console.log("Posting small blind");
-        if (userStatus?.smallBlindAmount) {
-            handleSetPlayerAction(PlayerActionType.SMALL_BLIND, userStatus.smallBlindAmount);
-        }
+        console.log("Posting small blindtom");
+        postSmallBlind();
     };
 
     const handlePostBigBlind = () => {
         console.log("Posting big blind");
-
-        // Add more detailed logging
-        console.log("Big blind details:", {
-            userStatus,
-            bigBlindAmount: userStatus?.bigBlindAmount,
-            tableData: tableData?.data
-        });
-
-        if (userStatus?.bigBlindAmount) {
-            // Convert to string if it's not already
-            const bigBlindAmountString = userStatus.bigBlindAmount.toString();
-            console.log("Sending big blind action with amount:", bigBlindAmountString);
-
-            // Call the action with explicit string conversion
-            handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmountString);
-        } else {
-            console.error("Missing big blind amount in userStatus");
-        }
+        postBigBlind();
     };
 
     const handleCheck = () => {

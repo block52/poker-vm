@@ -1,20 +1,19 @@
 import { useState, useEffect } from "react";
 import * as React from "react";
-import useUserWalletConnect from "../hooks/useUserWalletConnect";
-import useDepositUSDC from "../hooks/useDepositUSDC";
-import useAllowance from "../hooks/useAllowance";
-import useDecimal from "../hooks/useDecimals";
-import useApprove from "../hooks/useApprove";
+import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
+import useDepositUSDC from "../hooks/DepositPage/useDepositUSDC";
+import useAllowance from "../hooks/DepositPage/useAllowance";
+import useDecimal from "../hooks/DepositPage/useDecimals";
+import useApprove from "../hooks/DepositPage/useApprove";
 import { BigUnit } from "bigunit";
 import spinner from "../assets/spinning-circles.svg";
-import useWalletBalance from "../hooks/useWalletBalance";
+import useWalletBalance from "../hooks/DepositPage/useWalletBalance";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { CONTRACT_ADDRESSES } from "../constants";
-import axios from "axios";
-import { ethers } from "ethers";
+import useUserWallet from "../hooks/useUserWallet";
 
 const Deposit: React.FC = () => {
     const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
@@ -31,7 +30,7 @@ const Deposit: React.FC = () => {
     const [tmpDepositAmount, setTmpDepositAmount] = useState<bigint>(BigInt(0));
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
-    const [block52Balance, setBlock52Balance] = useState<string>("0");
+    const { balance: b52Balance } = useUserWallet();
 
     // console.log("allowance: ", allowance);
     // console.log("balance: ", balance);
@@ -79,25 +78,17 @@ const Deposit: React.FC = () => {
         }
     }, [approveError]);
 
-    useEffect(() => {
-        if (address) {
-            axios
-                .get(`https://proxy.block52.xyz/get_account/${address}`)
-                .then(response => {
-                    // The balance is likely nested in result.data
-                    const balance = response.data?.result?.data?.balance || "0";
-                    setBlock52Balance(balance);
-                    console.log("Block52 Account Data:", response.data);
-                })
-                .catch(error => console.error("Error fetching Block52 balance:", error));
-        }
-    }, [address]);
-
     const allowed = React.useMemo(() => {
         if (!walletAllowance || !decimals || !+amount) return false;
         const amountInBigInt = BigUnit.from(+amount, decimals).toBigInt();
         return walletAllowance >= amountInBigInt;
     }, [amount, walletAllowance, decimals, isApproveConfirmed, isDepositConfirmed]);
+
+    // Format balance like in Dashboard component
+    const formatBalance = (rawBalance: string | number) => {
+        const value = Number(rawBalance) / 1e18;
+        return value.toFixed(2);
+    };
 
     const handleApprove = async () => {
         if (!address || !decimals) {
@@ -166,7 +157,7 @@ const Deposit: React.FC = () => {
                 )}
 
                 <h4 className="border-b border-gray-600 text-blue-400 mb-4">
-                    Layer 2 Block52 Balance (Poker Table): ${Number(ethers.formatEther(block52Balance || "0")).toFixed(2)} USDC
+                    Layer 2 Block52 Balance (Poker Table): ${formatBalance(b52Balance || "0")} USDC
                 </h4>
 
                 <div className="mb-4 relative">

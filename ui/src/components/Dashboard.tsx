@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"; // Import React and useEffec
 import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
 import { STORAGE_PUBLIC_KEY, STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import "./Dashboard.css";
-import useUserWalletConnect from "../hooks/useUserWalletConnect"; // Add this import
+import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; // Add this import
 import useUserWallet from "../hooks/useUserWallet"; // Add this import
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
