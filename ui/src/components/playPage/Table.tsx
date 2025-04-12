@@ -24,6 +24,7 @@ import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
+import Footer2 from "../Footer2";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -783,6 +784,10 @@ const Table = () => {
                     {/*//! FOOTER */}
                     <div className="flex-shrink-0 w-full h-[250px] bg-custom-footer text-center z-[10] flex justify-center">
                         <PokerActionPanel />
+                       
+                    </div>
+                    <div className="flex-shrink-0 w-full h-[250px] bg-custom-footer text-center z-[10] flex justify-center">
+                        <Footer2 tableId={id} />
                     </div>
                 </div>
                 {/*//! SIDEBAR */}
@@ -830,6 +835,8 @@ const Table = () => {
                     <span>Hand complete - waiting for next hand</span>
                 </div>
             )}
+
+            
         </div>
     );
 };
