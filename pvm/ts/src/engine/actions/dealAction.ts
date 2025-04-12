@@ -1,11 +1,11 @@
-import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
 
 class DealAction extends BaseAction implements IAction {
-    get type(): PlayerActionType {
-        return PlayerActionType.DEAL;
+    get type(): NonPlayerActionType {
+        return NonPlayerActionType.DEAL;
     }
 
     verify(player: Player): Range {
@@ -60,7 +60,7 @@ class DealAction extends BaseAction implements IAction {
         // Record the deal action
         this.update.addAction({
             playerId: player.address,
-            action: PlayerActionType.DEAL,
+            action: NonPlayerActionType.DEAL,
             index: index
         });
     }

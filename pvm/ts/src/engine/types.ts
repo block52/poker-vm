@@ -2,7 +2,7 @@ import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound, Card, NonP
 import { Player } from "../models/player";
 
 export interface IAction {
-    readonly type: PlayerActionType;
+    readonly type: PlayerActionType | NonPlayerActionType;
     verify(player: Player): Range | undefined;
     execute(player: Player, index: number, amount?: bigint): void;
 }

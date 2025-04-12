@@ -1,4 +1,4 @@
-import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range } from "../types";
@@ -6,7 +6,7 @@ import { IUpdate, Range } from "../types";
 abstract class BaseAction {
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
-    abstract get type(): PlayerActionType;
+    abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
