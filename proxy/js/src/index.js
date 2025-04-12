@@ -16,7 +16,7 @@ const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
 
-const { RPCMethods } = require("@bitcoinbrisbane/block52");
+const { RPCMethods, PlayerActionType, NonPlayerActionType } = require("@bitcoinbrisbane/block52");
 
 const { getUnixTime } = require("./utils/helpers");
 
@@ -74,7 +74,7 @@ connectDB()
     })
     .catch(err => {
         console.error("MongoDB connection error:", err);
-    }); 
+    });
 
 // ===================================
 // 7. Configure API Documentation
@@ -92,8 +92,6 @@ app.get("/", (req, res) => {
 
 // Mount feature-specific routes
 app.use("/deposit-sessions", depositSessionsRouter);
-
-
 
 // ===================================
 // 10. Game lobby-related endpoints
@@ -117,9 +115,6 @@ app.get("/games", (req, res) => {
 // 11. Table-related endpoints
 // ===================================
 app.get("/tables", async (req, res) => {
-   
-   
-
     res.send("todo: you need to wire this up");
 });
 
@@ -128,8 +123,6 @@ app.get("/table/:id/player/:seat", async (req, res) => {
         const id = req.params.id;
         const seat = req.params.seat;
 
-        
-        
         const rpc_request = {
             jsonrpc: "2.0",
             method: "get_player",
@@ -175,12 +168,12 @@ app.post("/table/:tableId/join", async (req, res) => {
             id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.body.userAddress,       // from
-                req.params.tableId,         // to (using the tableId from URL params)
-                RPCMethods.JOIN,                     // action
-                req.body.buyInAmount,       // amount 
-                req.body.nonce || 0,        // nonce (optional)
-                0                           // data/index
+                req.body.userAddress, // from
+                req.params.tableId, // to (using the tableId from URL params)
+                NonPlayerActionType.JOIN, // action
+                req.body.buyInAmount, // amount
+                req.body.nonce || 0, // nonce (optional)
+                0 // data/index
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
@@ -209,7 +202,51 @@ app.post("/table/:tableId/join", async (req, res) => {
     }
 });
 
+app.post("/table/:tableId/fold", async (req, res) => {
+    console.log("=== FOLD ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
 
+    try {
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                "fold", // action
+                "0", // amount (folding doesn't require an amount)
+                req.body.nonce || 0, // nonce (optional)
+                0 // data/index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to fold", details: error.message });
+    }
+});
 
 app.post("/table/:tableId/leave", async (req, res) => {
     console.log("=== LEAVE TABLE REQUEST ===");
@@ -224,12 +261,12 @@ app.post("/table/:tableId/leave", async (req, res) => {
             id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.body.userAddress,       // from
-                req.params.tableId,         // to (using the tableId from URL params)
-                RPCMethods.LEAVE,                    // action
-                req.body.amount || "0",     // amount 
-                req.body.nonce || 0,        // nonce (optional)
-                0                           // data/index
+                req.body.userAddress, // from
+                req.params.tableId, // to (using the tableId from URL params)
+                NonPlayerActionType.LEAVE, // action
+                req.body.amount || "0", // amount
+                req.body.nonce || 0, // nonce (optional)
+                0 // data/index
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
@@ -274,24 +311,24 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
             console.log("Leave action for player:", req.body.userAddress);
             console.log("From table:", req.params.tableId);
             console.log("Amount to return:", req.body.amount);
-            
+
             // Always try to process leave requests, even if there are issues
             let warningMessage = "";
-            
+
             try {
                 // Check if player is in folded state by getting table info
                 const tableInfoResponse = await axios.get(`${NODE_URL}/get_game_state/${req.params.tableId}`);
-                
+
                 if (!tableInfoResponse.data || !tableInfoResponse.data.result || !tableInfoResponse.data.result.data) {
                     console.warn("⚠️ Unable to get table info for leave check");
                     warningMessage = "Unable to verify player status, but attempting leave anyway.";
                 } else {
                     const tableData = tableInfoResponse.data.result.data;
                     console.log(`Got table data with ${tableData.players?.length || 0} players`);
-                    
+
                     // Check if player exists in the table
                     const player = tableData.players?.find(p => p.address?.toLowerCase() === req.body.userAddress?.toLowerCase());
-                    
+
                     if (!player) {
                         console.warn(`⚠️ Player ${req.body.userAddress} not found in table`);
                         // Don't stop - player might already be partially removed
@@ -301,13 +338,13 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
                         if (player.status !== "folded" && player.status !== "sitting-out") {
                             console.warn(`⚠️ Player ${req.body.userAddress} trying to leave without folding first. Status: ${player.status}`);
                             // Only in this case do we return an error to tell the player they need to fold first
-                            return res.status(400).json({ 
-                                error: "Player must fold before leaving", 
+                            return res.status(400).json({
+                                error: "Player must fold before leaving",
                                 details: "Your hand must be folded before you can leave the table.",
                                 playerStatus: player.status
                             });
                         }
-                        
+
                         console.log(`Player can leave - status is ${player.status}`);
                     }
                 }
@@ -316,33 +353,28 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
                 warningMessage = "Error checking player status, but attempting leave anyway.";
                 // Continue with leave attempt even if we can't verify - the game engine will enforce rules
             }
-            
+
             // Add warning to the RPC call if applicable
             if (warningMessage) {
                 req.body.warning = warningMessage;
             }
         }
-        
+
         // Log the expected signed message format for debugging
         console.log(`Expected signature format: ${req.body.action}${req.body.amount}${req.params.tableId}${req.body.timestamp}`);
-        
+
         // Log the action and amount in detail
         console.log(`Player ${req.body.userAddress} is attempting to perform action: ${req.body.action}`);
         console.log(`Action amount: ${req.body.amount} (${ethers.formatUnits(req.body.amount || "0", 18)} ETH)`);
-        
+
         // Format the RPC call to match the SDK client structure
         const rpcCall = {
             id: getNextRpcId(),
             method: RPCMethods.TRANSFER,
-            params: [
-                req.body.userAddress,
-                req.params.tableId,
-                req.body.amount,
-                req.body.action
-            ],
+            params: [req.body.userAddress, req.params.tableId, req.body.amount, req.body.action],
             signature: req.body.signature,
             publicKey: req.body.publicKey || req.body.userAddress,
-            timestamp: req.body.timestamp  // Include timestamp if needed
+            timestamp: req.body.timestamp // Include timestamp if needed
         };
 
         console.log("=== FORMATTED RPC CALL ===");
@@ -365,7 +397,7 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
     } catch (error) {
         console.error("=== ERROR ===");
         console.error("Error details:", error);
-        
+
         // Special handling for leave errors
         if (req.body.action === "leave") {
             console.error("❌ ERROR PROCESSING LEAVE ACTION");
@@ -378,13 +410,13 @@ app.post("/table/:tableId/playeraction", async (req, res) => {
                 console.error(`Response Data: ${JSON.stringify(error.response.data || {})}`);
             }
         }
-        
+
         // Log more detailed error information
         if (error.response) {
             console.error("Error response data:", error.response.data);
             console.error("Error response status:", error.response.status);
         }
-        
+
         res.status(500).json({ error: "Failed to perform player action", details: error.message });
     }
 });
@@ -403,11 +435,11 @@ app.post("/table/:tableId/perform", async (req, res) => {
             id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.body.userAddress,         // from (player address)
-                req.params.tableId,           // to (table address)
-                req.body.actionType,          // action type (fold, check, bet, etc.)
-                req.body.amount || null,      // amount (if needed for the action)
-                req.body.data || null         // additional data (if needed)
+                req.body.userAddress, // from (player address)
+                req.params.tableId, // to (table address)
+                req.body.actionType, // action type (fold, check, bet, etc.)
+                req.body.amount || null, // amount (if needed for the action)
+                req.body.data || null // additional data (if needed)
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey || req.body.userAddress
@@ -430,16 +462,16 @@ app.post("/table/:tableId/perform", async (req, res) => {
     } catch (error) {
         console.error("=== ERROR ===");
         console.error("Error details:", error);
-        
+
         // If the error has a response, log more details about it
         if (error.response) {
             console.error("Error response data:", error.response.data);
             console.error("Error response status:", error.response.status);
         }
-        
-        res.status(500).json({ 
-            error: "Failed to perform action", 
-            details: error.message 
+
+        res.status(500).json({
+            error: "Failed to perform action",
+            details: error.message
         });
     }
 });
@@ -466,9 +498,9 @@ app.get("/get_account/:accountId", async (req, res) => {
 
         res.json(response.data);
     } catch (error) {
-        res.status(500).json({ 
-            error: "Failed to get account", 
-            details: error.message 
+        res.status(500).json({
+            error: "Failed to get account",
+            details: error.message
         });
     }
 });
@@ -554,9 +586,9 @@ app.post("/table/:tableId/deal", async (req, res) => {
             version: "2.0",
             method: "deal",
             params: [
-                req.params.tableId,                // table address
-                req.body.seed || "randomseed123",  // random seed (use provided or default) todo: this should be the seed from the game
-                req.body.publicKey                 // public key
+                req.params.tableId, // table address
+                req.body.seed || "randomseed123", // random seed (use provided or default) todo: this should be the seed from the game
+                req.body.publicKey // public key
             ],
             signature: req.body.signature
         };
@@ -577,7 +609,7 @@ app.post("/table/:tableId/deal", async (req, res) => {
         // console.log(response.data);
 
         res.json(response.data);
-        
+
         // // Also broadcast this update to WebSocket clients
         // if (tableSubscriptions.has(req.params.tableId)) {
         //     console.log(`Broadcasting table update after deal to ${tableSubscriptions.get(req.params.tableId).size} WebSocket clients`);
@@ -625,9 +657,9 @@ app.get("/get_game_state/:tableId", async (req, res) => {
     } catch (error) {
         // console.error("=== ERROR ===");
         // console.error("Error details:", error);
-        res.status(500).json({ 
-            error: "Failed to get game state", 
-            details: error.message 
+        res.status(500).json({
+            error: "Failed to get game state",
+            details: error.message
         });
     }
 });
@@ -635,7 +667,6 @@ app.get("/get_game_state/:tableId", async (req, res) => {
 // ===================================
 // New endpoint for get_account
 // ===================================
-
 
 // ===================================
 // 14. Start Server
@@ -645,7 +676,6 @@ server.listen(port, "0.0.0.0", () => {
     // ====================================
     // 🚀 Server is running
     // 📡 Port: ${port}
-
     // 🌍 URL: http://localhost:${port}
     // 📚 Docs: http://localhost:${port}/docs
     // ====================================
