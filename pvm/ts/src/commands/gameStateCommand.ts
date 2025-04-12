@@ -35,7 +35,6 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             ]);
 
             const game = TexasHoldemGame.fromJson(json, gameOptions);
-
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
