@@ -342,7 +342,12 @@ export class RPC {
                 case RPCMethods.PERFORM_ACTION: {
                     const [from, to, action, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
 
+                    // todo: cast to enum
                     switch (action) {
+                        case "leave":
+                            throw new Error("Not implemented");
+                        case "join":
+                            throw new Error("Not implemented");
                         case "deal":
                             try {
                                 const command = new DealCommand(to, from, validatorPrivateKey, data || "");

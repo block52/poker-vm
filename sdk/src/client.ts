@@ -242,13 +242,18 @@ export class NodeRpcClient {
         return body.result.data;
     }
 
+    /**
+     * Create a new account on the remote node
+     * @param gameAddress The address of the game
+     * @returns A Promise that resolves to the address of the new account
+     */
     public async playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
         const address = this.getAddress();
         const signature = await this.getSignature(nonce);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
+            method: RPCMethods.PERFORM_ACTION,
             params: [address, gameAddress, amount.toString(), "join", signature]
         });
 
@@ -261,7 +266,7 @@ export class NodeRpcClient {
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
+            method: RPCMethods.PERFORM_ACTION,
             params: [address, gameAddress, amount.toString(), action, signature]
         });
 
@@ -270,12 +275,18 @@ export class NodeRpcClient {
 
     public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
         const address = this.getAddress();
-        const signature = await this.getSignature(nonce);
+
+        const [signature, index] = await Promise.all([
+            this.getSignature(nonce),
+            this.getNextTurnIndex(gameAddress, address)
+        ]);
+
+        const data = `LEAVE-${index}`;
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
-            params: [gameAddress, address, amount.toString(), "leave", signature]
+            method: RPCMethods.PERFORM_ACTION,
+            params: [gameAddress, address, "LEAVE", amount.toString(), index.toString()]
         });
 
         return body.result.data;
@@ -306,6 +317,18 @@ export class NodeRpcClient {
         const signature = await this.wallet.signMessage(nonce.toString());
         return signature;
     }
+
+    private async getNextTurnIndex(gameAddress: string, playerId: string): Promise<number> {
+        const gameState = await this.getGameState(gameAddress);
+        const players = gameState.players;
+
+        if (!players) {
+            return 0;
+        }
+
+        // return players.findIndex((player) => player.id === playerId);
+        return 0;
+    }   
 
     /**
      * Deal cards in a Texas Holdem game
