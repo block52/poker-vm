@@ -84,7 +84,9 @@ const Deposit: React.FC = () => {
             axios
                 .get(`https://proxy.block52.xyz/get_account/${address}`)
                 .then(response => {
-                    setBlock52Balance(response.data.balance);
+                    // The balance is likely nested in result.data
+                    const balance = response.data?.result?.data?.balance || "0";
+                    setBlock52Balance(balance);
                     console.log("Block52 Account Data:", response.data);
                 })
                 .catch(error => console.error("Error fetching Block52 balance:", error));
@@ -164,7 +166,7 @@ const Deposit: React.FC = () => {
                 )}
 
                 <h4 className="border-b border-gray-600 text-blue-400 mb-4">
-                    Layer 2 Block52 Balance (Poker Table): ${Number(ethers.formatEther(block52Balance)).toFixed(2)} USDC
+                    Layer 2 Block52 Balance (Poker Table): ${Number(ethers.formatEther(block52Balance || "0")).toFixed(2)} USDC
                 </h4>
 
                 <div className="mb-4 relative">
