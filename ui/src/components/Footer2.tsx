@@ -14,8 +14,6 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Use prop tableId, URL param tableId, or fallback to empty string
     const effectiveTableId = propTableId || urlTableId || "";
     
-    console.log("🟢 Footer2 rendering with tableId:", effectiveTableId);
-    
     // Use the hook with the effective tableId
     const {
         legalActions,
@@ -57,42 +55,43 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         }
     };
 
-    // Simple display of the legal actions data for now
+    // Simple display of the legal actions data now with more compact design
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-4">
+        <div className="w-full h-full bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-2 overflow-y-auto text-xs">
             <div className="max-w-4xl mx-auto">
-                <h3 className="text-xl mb-2">Player Actions{effectiveTableId ? ` (Table: ${effectiveTableId.substring(0, 8)}...)` : ""}</h3>
+                <h3 className="text-sm font-bold mb-1">Player Actions{effectiveTableId ? ` (${effectiveTableId.substring(0, 6)}...)` : ""}</h3>
                 
                 {isLoading ? (
-                    <p>Loading player actions...</p>
+                    <p>Loading...</p>
                 ) : error ? (
-                    <p className="text-red-400">Error loading actions: {error.message}</p>
+                    <p className="text-red-400 text-xs">Error: {error.message}</p>
                 ) : (
-                    <div>
-                        <div className="mb-2 grid grid-cols-2">
+                    <div className="text-xs">
+                        <div className="grid grid-cols-2 gap-1 mb-1">
                             <div>
-                                <p><b>My Address:</b> {userAddress ? `${userAddress.substring(0, 8)}...` : "Not found"}</p>
-                                <p><b>Seat:</b> {playerSeat !== null ? playerSeat : "Not seated"}</p>
-                                <p><b>Status:</b> {playerStatus || "Unknown"}</p>
+                                <p className="leading-tight"><span className="opacity-80">Address:</span> {userAddress ? `${userAddress.substring(0, 6)}...` : "None"}</p>
+                                <p className="leading-tight"><span className="opacity-80">Seat:</span> {playerSeat !== null ? playerSeat : "Not seated"}</p>
+                                <p className="leading-tight"><span className="opacity-80">Status:</span> {playerStatus || "Unknown"}</p>
                             </div>
                             <div>
-                                <p><b>Turn:</b> {isPlayerTurn ? "Your turn" : "Not your turn"}</p>
-                                <p><b>Positions:</b> 
-                                    {isSmallBlindPosition ? " Small Blind" : ""} 
-                                    {isBigBlindPosition ? " Big Blind" : ""} 
+                                <p className="leading-tight"><span className="opacity-80">Turn:</span> {isPlayerTurn ? "Your turn" : "Not your turn"}</p>
+                                <p className="leading-tight">
+                                    <span className="opacity-80">Positions:</span> 
+                                    {isSmallBlindPosition ? " SB" : ""} 
+                                    {isBigBlindPosition ? " BB" : ""} 
                                     {isDealerPosition ? " Dealer" : ""}
                                 </p>
-                                <p><b>Actions Count:</b> {legalActions?.length || 0}</p>
+                                <p className="leading-tight"><span className="opacity-80">Actions:</span> {legalActions?.length || 0}</p>
                             </div>
                         </div>
                         
-                        <h4 className="font-bold mt-2 bg-slate-700 p-2 rounded">Available Actions:</h4>
+                        <h4 className="text-xs font-bold mt-1 bg-slate-700 p-1 rounded">Available Actions:</h4>
                         {!legalActions || legalActions.length === 0 ? (
-                            <p className="p-2 italic">No actions available</p>
+                            <p className="py-1 px-1 italic text-xs">No actions available</p>
                         ) : (
-                            <ul className="list-none divide-y divide-gray-600">
+                            <ul className="list-none divide-y divide-gray-600 max-h-[80px] overflow-y-auto text-xs">
                                 {legalActions.map((action, index) => (
-                                    <li key={index} className="py-2 flex justify-between">
+                                    <li key={index} className="py-1 flex justify-between">
                                         <span className="font-semibold text-green-400">{action.action}</span>
                                         <span>
                                             {action.min !== "0" && `Min: ${formatAmount(action.min)}`}
@@ -104,11 +103,11 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                             </ul>
                         )}
                         
-                        {/* Debug section */}
-                        <div className="mt-4 p-2 bg-gray-800 rounded text-xs">
+                        {/* Debug section - hidden by default to save space */}
+                        <div className="mt-1 p-1 bg-gray-800 rounded text-[10px]">
                             <details>
-                                <summary className="cursor-pointer">Debug Info</summary>
-                                <pre className="overflow-auto max-h-32 mt-2">
+                                <summary className="cursor-pointer text-gray-400">Debug</summary>
+                                <pre className="overflow-auto max-h-[40px] mt-1 opacity-70">
                                     {JSON.stringify({tableId: effectiveTableId, legalActions}, null, 2)}
                                 </pre>
                             </details>

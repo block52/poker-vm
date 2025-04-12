@@ -56,7 +56,7 @@ interface PositionArray {
 const calculateZoom = () => {
     const baseWidth = 1600;
     const baseHeight = 850;
-    const headerFooterHeight = 180;
+    const headerFooterHeight = 550; // Updated to account for both footers (250px + 300px)
 
     const availableHeight = window.innerHeight - headerFooterHeight;
     const scaleWidth = window.innerWidth / baseWidth;
@@ -526,7 +526,7 @@ const Table = () => {
                     }}
                 >
                     {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-800px)] z-[0] relative">
                         {/* Animated background overlay */}
                         <div
                             className="absolute inset-0 z-0 opacity-30"
@@ -782,12 +782,13 @@ const Table = () => {
                     </div>
 
                     {/*//! FOOTER */}
-                    <div className="flex-shrink-0 w-full h-[250px] bg-custom-footer text-center z-[10] flex justify-center">
-                        <PokerActionPanel />
-                       
-                    </div>
-                    <div className="flex-shrink-0 w-full h-[250px] bg-custom-footer text-center z-[10] flex justify-center">
-                        <Footer2 tableId={id} />
+                    <div className="flex-shrink-0 w-full flex flex-col bg-custom-footer text-center z-[10]">
+                        <div className="w-full h-[250px] flex justify-center">
+                            <PokerActionPanel />
+                        </div>
+                        <div className="w-full h-[400px] flex justify-center overflow-y-auto">
+                            <Footer2 tableId={id} />
+                        </div>
                     </div>
                 </div>
                 {/*//! SIDEBAR */}
