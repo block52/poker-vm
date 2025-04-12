@@ -1,7 +1,7 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { abi } from "../abis/contractABI";
 import { FunctionName } from "../types";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { CONTRACT_ADDRESSES } from "../constants";
 
 const useDepositUSDC = () => {
@@ -13,7 +13,7 @@ const useDepositUSDC = () => {
         hash
     });
 
-    const deposit = async (amount: bigint, receiver: string, token: string): Promise<void> => {
+    const deposit = useCallback(async (amount: bigint, receiver: string, token: string): Promise<void> => {
         console.log("Transaction starting...");
         try {
             const tx = await writeContract({
@@ -28,7 +28,7 @@ const useDepositUSDC = () => {
         } catch (err) {
             console.error("Transaction failed:", err);
         }
-    };
+    }, [writeContract, BRIDGE_ADDRESS]);
 
     return useMemo(
         () => ({

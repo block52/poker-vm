@@ -34,6 +34,11 @@ export const useContract = ({ rpcUrl, contractAddress, abi }: UseContractOptions
         };
 
         initializeContract();
+        
+        // Cleanup function
+        return () => {
+            setContract(null);
+        };
     }, [rpcUrl, contractAddress, abi]);
 
     const callContractFunction = useCallback(

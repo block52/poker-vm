@@ -22,7 +22,7 @@ const useWalletBalance = () => {
     } = useReadContract({
         ...wagmiContractConfig,
         functionName: FunctionName.Balance,
-        args: [address as `0x${string}`]
+        args: address ? [address as `0x${string}`] : undefined
     });
 
     return useMemo(

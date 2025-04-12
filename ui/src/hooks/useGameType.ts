@@ -1,6 +1,7 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PROXY_URL } from "../config/constants";
+
 interface UseGameTypeResult {
     type: string | null;
     isLoading: boolean;
@@ -13,7 +14,7 @@ const useGameType = (address: string): UseGameTypeResult => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchType = async () => {
+    const fetchType = useCallback(async () => {
         if (!address) return;
 
         setIsLoading(true);
@@ -33,11 +34,16 @@ const useGameType = (address: string): UseGameTypeResult => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [address]);
 
     useEffect(() => {
         fetchType();
-    }, [address]);
+        
+        // Cleanup function
+        return () => {
+            setType(null);
+        };
+    }, [fetchType]);
 
     return {
         type,

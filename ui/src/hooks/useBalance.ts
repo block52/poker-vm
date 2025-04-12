@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PROXY_URL } from "../config/constants";
 
 interface UseBalanceResult {
@@ -14,7 +14,7 @@ const useBalance = (address: string): UseBalanceResult => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchBalance = async () => {
+    const fetchBalance = useCallback(async () => {
         if (!address) return;
 
         setIsLoading(true);
@@ -34,11 +34,11 @@ const useBalance = (address: string): UseBalanceResult => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [address]);
 
     useEffect(() => {
         fetchBalance();
-    }, [address]);
+    }, [fetchBalance]);
 
     return {
         balance,

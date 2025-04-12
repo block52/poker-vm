@@ -106,6 +106,8 @@ const useUserWallet = (): UserWalletResult => {
         };
 
         initializeWallet();
+        
+        // No cleanup needed here as we want to persist wallet state
     }, []);
 
     useEffect(() => {
@@ -114,6 +116,10 @@ const useUserWallet = (): UserWalletResult => {
             const client = new NodeRpcClient(url, privateKey);
             setClient(client);
         }
+        
+        return () => {
+            setClient(null);
+        };
     }, [privateKey]);
 
     return {

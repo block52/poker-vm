@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PROXY_URL } from "../config/constants";
 
 interface UseTableTypeResult {
@@ -14,7 +14,7 @@ const useTableType = (address: string): UseTableTypeResult => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchType = async () => {
+    const fetchType = useCallback(async () => {
         if (!address) return;
 
         setIsLoading(true);
@@ -34,11 +34,16 @@ const useTableType = (address: string): UseTableTypeResult => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [address]);
 
     useEffect(() => {
         fetchType();
-    }, [address]);
+        
+        // Cleanup function
+        return () => {
+            setType(null);
+        };
+    }, [fetchType]);
 
     return {
         type,

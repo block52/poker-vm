@@ -1,20 +1,20 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PROXY_URL } from "../config/constants";
 
-interface UseBalanceResult {
+interface UseGameMetadataResult {
     balance: string | null;
     isLoading: boolean;
     error: Error | null;
     refetch: () => Promise<void>;
 }
 
-const useGameMetadata = (address: string): UseBalanceResult => {
+const useGameMetadata = (address: string): UseGameMetadataResult => {
     const [balance, setBalance] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchGameData = async () => {
+    const fetchGameData = useCallback(async () => {
         if (!address) return;
 
         setIsLoading(true);
@@ -34,11 +34,16 @@ const useGameMetadata = (address: string): UseBalanceResult => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [address]);
 
     useEffect(() => {
         fetchGameData();
-    }, [address]);
+        
+        // Cleanup function
+        return () => {
+            setBalance(null);
+        };
+    }, [fetchGameData]);
 
     return {
         balance,
