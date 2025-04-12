@@ -23,6 +23,7 @@ import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
+import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -127,7 +128,10 @@ const useTableData = () => {
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const { tableData, nextToActInfo, currentRound, playerLegalActions, tableSize, showThreeCards, getUserBySeat, currentUserSeat, leave } = useTableContext();
-
+    
+    // Add the useMinAndMaxBuyIns hook HERE at the top with other hooks
+    const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
+    
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
     debugLog("Current user address from localStorage:", currentUserAddress);
@@ -139,7 +143,7 @@ const Table = () => {
 
     // Add the new hook usage here with prefixed names - directly at top level, not inside useMemo
     const tableDataValues = useTableData();
-
+    
     // Replace useUserBySeat with getUserBySeat from context
     // Get the user data for the current seat from context instead of hook
     const userData = React.useMemo(() => {
@@ -366,7 +370,7 @@ const Table = () => {
         return activePlayers && activePlayers.length > 1;
     };
 
-    // Add this check early in your component
+    // NOW you can have your conditional returns
     if (tableDataValues.isLoading) {
         return <div className="h-screen flex items-center justify-center text-white">Loading table data...</div>;
     }
@@ -483,9 +487,12 @@ const Table = () => {
 
                     {/* Left Section */}
                     <div className="flex items-center z-10">
-                        <span className="px-2 py-1 rounded  text-[15px] ">
-                            ${tableDataValues.tableDataSmallBlind}/${tableDataValues.tableDataBigBlind}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                            <span className="px-2 py-1 rounded text-[15px]">
+                            ${minBuyInFormatted} / ${maxBuyInFormatted}
+                            </span>
+                           
+                        </div>
                         <span className="ml-2 text-[15px]">
                             Game Type: <span className="text-[15px] text-yellow-400">{tableDataValues.tableDataType}</span>
                         </span>

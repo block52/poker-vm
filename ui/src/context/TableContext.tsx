@@ -7,7 +7,6 @@ import { whoIsNextToAct, getCurrentRound, getTotalPot, getWinnerInfo } from "../
 import { getPlayersLegalActions, isPlayersTurn } from "../utils/playerUtils";
 import { AllPlayerActions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet"; // this is the browser wallet todo rename to useBrowserWallet
-import { ethers } from "ethers";
 import { formatWeiToDollars } from "../utils/numberUtils";
 import { performAction as performActionUtil, playerLeave } from "../utils/performActionUtils";
 

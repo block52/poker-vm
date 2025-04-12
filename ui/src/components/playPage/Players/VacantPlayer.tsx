@@ -8,6 +8,7 @@ import useUserWallet from "../../../hooks/useUserWallet";
 import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 import { toDisplaySeat } from "../../../utils/tableUtils";
 import { playerJoin } from "../../../utils/performActionUtils";
+import { useMinAndMaxBuyIns } from "../../../hooks/useMinAndMaxBuyIns";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -40,6 +41,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [buyInAmount, setBuyInAmount] = useState("");
         const [buyInError, setBuyInError] = useState("");
         const [isConfirming, setIsConfirming] = useState(false);
+
+        // Add the hook at the top of your component
+        const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(tableId);
 
         // Debug logs for initial state
         debugLog(`VacantPlayer ${index} initial state:`, {
@@ -224,6 +228,17 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setIsConfirming(true);
                 setBuyInError("");
 
+                // Validate against min/max limits
+                if (BigInt(buyInWei) < BigInt(minBuyInWei)) {
+                    setBuyInError(`Minimum buy-in is ${minBuyInFormatted} USDC`);
+                    return;
+                }
+                
+                if (BigInt(buyInWei) > BigInt(maxBuyInWei)) {
+                    setBuyInError(`Maximum buy-in is ${maxBuyInFormatted} USDC`);
+                    return;
+                }
+
                 // Use setTimeout with 0 delay to ensure UI updates before proceeding
                 setTimeout(async () => {
                     try {
@@ -258,20 +273,22 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         // Update the useEffect to set default buy-in to max wallet amount
         useEffect(() => {
             if (showBuyInModal && balance) {
-                // Set the buy-in amount to the player's full balance
-                const maxBuyIn = ethers.formatUnits(balance, 18);
-                
-                // Get minimum buy-in from table data
+                // Set default buy-in to 20x big blind, but within min-max range
                 const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
                 const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-                const minBuyInWei = localTableData?.data?.minBuyIn || twentyBigBlinds;
-                const minBuyIn = ethers.formatUnits(minBuyInWei, 18);
                 
-                // Set to maximum wallet amount (or min buy-in if that's higher)
-                const defaultAmount = Number(maxBuyIn) < Number(minBuyIn) ? maxBuyIn : maxBuyIn;
-                setBuyInAmount(defaultAmount);
+                // Ensure the amount is within the table's min-max range
+                let defaultAmount = twentyBigBlinds;
+                if (BigInt(defaultAmount) < BigInt(minBuyInWei)) {
+                    defaultAmount = minBuyInWei;
+                } else if (BigInt(defaultAmount) > BigInt(maxBuyInWei)) {
+                    defaultAmount = maxBuyInWei;
+                }
+                
+                const formattedAmount = ethers.formatUnits(defaultAmount, 18);
+                setBuyInAmount(formattedAmount);
             }
-        }, [showBuyInModal, balance, localTableData?.data?.bigBlind, localTableData?.data?.minBuyIn]);
+        }, [showBuyInModal, balance, minBuyInWei, maxBuyInWei]);
 
         // Only log position once during mount
         useEffect(() => {
