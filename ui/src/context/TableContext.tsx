@@ -5,7 +5,7 @@ import { PROXY_URL } from "../config/constants";
 import { getPublicKey, isUserPlaying, getSignature } from "../utils/accountUtils";
 import { whoIsNextToAct, getCurrentRound, getTotalPot, getWinnerInfo } from "../utils/tableUtils";
 import { getPlayersLegalActions, isPlayersTurn } from "../utils/playerUtils";
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { AllPlayerActions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet"; // this is the browser wallet todo rename to useBrowserWallet
 import { ethers } from "ethers";
 import { formatWeiToDollars } from "../utils/numberUtils";
@@ -56,7 +56,10 @@ interface TableContextType {
     raise: (amount: number) => void;
     bet: (amount: number) => void;
     leave: () => void;
-    setPlayerAction: (action: PlayerActionType, amount?: number) => void;
+    setPlayerAction: (action: PlayerActionType | NonPlayerActionType, amount?: number) => void;
+    // Add the new blind posting methods
+    postSmallBlind: () => void;
+    postBigBlind: () => void;
     // New user data by seat
     getUserBySeat: (seat: number) => any;
     currentUserSeat: number;
@@ -488,7 +491,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             // Use the new perform endpoint
             const response = await axios.post(`${PROXY_URL}/table/${tableId}/perform`, {
                 userAddress: publicKey,
-                actionType: PlayerActionType.DEAL,
+                actionType: NonPlayerActionType.DEAL,
                 signature,
                 publicKey,
                 timestamp,
@@ -514,18 +517,103 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 nonce,
                 gameAddress
             });
-            // b52?.playerAction(gameAddress, action, amount ?? "", nonce);
-
-            // Wait a moment for the action to be processed
-            setTimeout(async () => {
-                const address = localStorage.getItem("user_eth_public_key");
-                if (address) {
-                    await refreshNonce(address);
+            
+            try {
+                // Get wallet info
+                const publicKey = localStorage.getItem("user_eth_public_key");
+                const privateKey = localStorage.getItem("user_eth_private_key");
+                
+                if (!publicKey || !privateKey) {
+                    throw new Error("Wallet keys not available");
                 }
-            }, 1000);
+                
+                // Create wallet for signing
+                const wallet = new ethers.Wallet(privateKey);
+                const timestamp = Math.floor(Date.now() / 1000);
+                
+                // Create the message to sign - different format for perform endpoint
+                const messageToSign = `${action}:${amount || "0"}:${gameAddress}:${timestamp}`;
+                const signature = await wallet.signMessage(messageToSign);
+                
+                console.log("📝 Sending action to /perform endpoint:", {
+                    action,
+                    amount,
+                    gameAddress
+                });
+                
+                const response = await axios.post(`${PROXY_URL}/table/${gameAddress}/perform`, {
+                    userAddress: publicKey,
+                    actionType: action,
+                    amount: amount || "0",
+                    signature,
+                    publicKey,
+                    timestamp,
+                    data: null
+                });
+                
+                console.log("✅ Perform action response:", response.data);
+                
+                // Wait a moment for the action to be processed
+                setTimeout(async () => {
+                    const address = localStorage.getItem("user_eth_public_key");
+                    if (address) {
+                        await refreshNonce(address);
+                    }
+                }, 1000);
+                
+                return response.data;
+            } catch (error) {
+                console.error("❌ Error performing action:", error);
+                throw error;
+            }
         },
-        [b52, refreshNonce]
+        [refreshNonce]
     );
+
+    // Add specific methods for posting blinds
+    const postSmallBlind = useCallback(() => {
+        console.log("🎮 Attempting to post small blind");
+        console.log("TableData structure:", tableData);
+        
+        // Access gameOptions from the data structure
+        const smallBlindAmount = tableData?.data?.gameOptions?.smallBlind;
+        
+        if (!tableId) {
+            console.error("❌ Cannot post small blind: No table ID available");
+            return;
+        }
+        
+        if (!smallBlindAmount) {
+            console.error("❌ Cannot post small blind: No small blind amount found in table data");
+            console.log("Table data:", tableData);
+            return;
+        }
+        
+        console.log("✅ Posting small blind with amount:", smallBlindAmount);
+        return performAction(tableId, PlayerActionType.SMALL_BLIND, smallBlindAmount);
+    }, [tableId, tableData, performAction]);
+    
+    const postBigBlind = useCallback(() => {
+        console.log("🎮 Attempting to post big blind");
+        console.log("TableData structure:", tableData);
+        
+        // Access gameOptions from the data structure
+        const bigBlindAmount = tableData?.data?.gameOptions?.bigBlind;
+        
+        if (!tableId) {
+            console.error("❌ Cannot post big blind: No table ID available");
+            return;
+        }
+        
+        if (!bigBlindAmount) {
+            console.error("❌ Cannot post big blind: No big blind amount found in table data");
+            console.log("Table data:", tableData);
+            return;
+        }
+        
+        console.log("✅ Posting big blind with amount:", bigBlindAmount);
+        return performAction(tableId, PlayerActionType.BIG_BLIND, bigBlindAmount);
+    }, [tableId, tableData, performAction]);
 
     const fold = useCallback(() => {
         if (tableId && nonce !== null) {
@@ -633,7 +721,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [tableId, nonce, refreshNonce, currentUserSeat, tableData]);
 
     const setPlayerAction = useCallback(
-        (action: PlayerActionType, amount?: number) => {
+        (action: PlayerActionType | NonPlayerActionType, amount?: number) => {
             switch (action) {
                 case PlayerActionType.FOLD:
                     fold();
@@ -654,7 +742,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         bet(amount);
                     }
                     break;
-                case PlayerActionType.LEAVE:
+                case NonPlayerActionType.LEAVE: 
                     leave();
                     break;
             }
@@ -732,6 +820,9 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 bet,
                 leave,
                 setPlayerAction,
+                // Add the new blind posting methods
+                postSmallBlind,
+                postBigBlind,
                 // New user data functionality
                 getUserBySeat,
                 currentUserSeat,
