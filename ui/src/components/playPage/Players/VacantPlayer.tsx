@@ -7,7 +7,7 @@ import { useTableContext } from "../../../context/TableContext";
 import useUserWallet from "../../../hooks/useUserWallet";
 import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 import { toDisplaySeat } from "../../../utils/tableUtils";
-import { playerJoin } from "../../../utils/performActionUtils";
+import { useTableJoin } from "../../../hooks/useTableJoin";
 import { useMinAndMaxBuyIns } from "../../../hooks/useMinAndMaxBuyIns";
 
 // Enable this to see verbose logging
@@ -177,6 +177,10 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             return "";
         };
 
+        const { joinTable, isJoining, error: joinError } = tableId 
+            ? useTableJoin(tableId) 
+            : { joinTable: null, isJoining: false, error: null };
+
         const handleJoinClick = React.useCallback(async () => {
             debugLog("\n=== JOIN CLICK DETECTED ===");
             debugLog("Can join?", canJoinThisSeat);
@@ -209,62 +213,62 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             }
 
             // Verify required values exist
-            if (!tableId || !userAddress || !privateKey) {
+            if (!tableId || !userAddress || !privateKey || !joinTable) {
                 console.error("Missing required values:", { 
                     hasTableId: !!tableId, 
                     hasUserAddress: !!userAddress, 
-                    hasPrivateKey: !!privateKey 
+                    hasPrivateKey: !!privateKey,
+                    hasJoinFunction: !!joinTable
                 });
-                setBuyInError("Missing wallet information. Please reconnect your wallet.");
+                setBuyInError("Missing required information to join table.");
                 return;
             }
 
             try {
                 // Convert ETH to Wei
                 const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
-                debugLog("Buy-in amount in Wei:", buyInWei);
-
-                // Show loading icon and hide modal
-                setIsConfirming(true);
-                setBuyInError("");
-
-                // Validate against min/max limits
+                
+                // Validation against min/max
                 if (BigInt(buyInWei) < BigInt(minBuyInWei)) {
-                    setBuyInError(`Minimum buy-in is ${minBuyInFormatted} USDC`);
+                    setBuyInError(`Minimum buy-in is $${minBuyInFormatted}`);
+                    setShowBuyInModal(true);
                     return;
                 }
                 
                 if (BigInt(buyInWei) > BigInt(maxBuyInWei)) {
-                    setBuyInError(`Maximum buy-in is ${maxBuyInFormatted} USDC`);
+                    setBuyInError(`Maximum buy-in is $${maxBuyInFormatted}`);
+                    setShowBuyInModal(true);
                     return;
                 }
 
-                // Use setTimeout with 0 delay to ensure UI updates before proceeding
-                setTimeout(async () => {
-                    try {
-                        // Call the join table function with the specified amount
-                        await playerJoin({
-                            tableId,
-                            buyInAmount: buyInWei,
-                            userAddress,
-                            privateKey,
-                            publicKey: userPublicKey
-                        });
-                    } catch (error) {
-                        console.error("Error joining table:", error);
-                        setShowBuyInModal(true);
-                        setBuyInError("Failed to join table. Please try again.");
-                        setIsConfirming(false);
-                    } finally {
-                        // Reset confirming state when done
-                        setTimeout(() => {
-                            setIsConfirming(false);
-                        }, 1000);
-                    }
-                }, 0);
+                // Show loading state
+                setIsConfirming(true);
+                setBuyInError("");
+                
+                // Use the mutation hook to join
+                const result = await joinTable({
+                    buyInAmount: buyInWei,
+                    userAddress,
+                    privateKey,
+                    publicKey: userPublicKey
+                });
+                
+                // Handle success (setting table data)
+                if (result?.result?.data) {
+                    setTableData({ data: result.result.data });
+                    
+                    // Wait for backend to process the join, then refresh nonce
+                    setTimeout(async () => {
+                        if (userAddress) {
+                            await refreshNonce(userAddress);
+                        }
+                    }, 1000);
+                }
             } catch (error) {
-                console.error("Error converting buy-in amount:", error);
-                setBuyInError("Invalid buy-in amount");
+                console.error("Error joining table:", error);
+                setShowBuyInModal(true);
+                setBuyInError("Failed to join table. Please try again.");
+            } finally {
                 setIsConfirming(false);
             }
         };
