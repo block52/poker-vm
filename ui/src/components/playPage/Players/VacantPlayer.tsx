@@ -2,14 +2,12 @@ import * as React from "react";
 import { memo, useEffect, useState } from "react";
 import PokerProfile from "../../../assets/PokerProfile.svg"
 import { useParams } from "react-router-dom";
-import { PROXY_URL } from "../../../config/constants";
-import axios from "axios";
 import { ethers } from "ethers";
 import { useTableContext } from "../../../context/TableContext";
-import { getSignature } from "../../../utils/accountUtils";
 import useUserWallet from "../../../hooks/useUserWallet";
 import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 import { toDisplaySeat } from "../../../utils/tableUtils";
+import { playerJoin } from "../../../utils/performActionUtils";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -200,10 +198,20 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
         // Function to handle the actual join after user confirms buy-in amount
         const handleConfirmBuyIn = async () => {
-
             setShowBuyInModal(false);
             if (!buyInAmount || parseFloat(buyInAmount) <= 0) {
                 setBuyInError("Please enter a valid buy-in amount");
+                return;
+            }
+
+            // Verify required values exist
+            if (!tableId || !userAddress || !privateKey) {
+                console.error("Missing required values:", { 
+                    hasTableId: !!tableId, 
+                    hasUserAddress: !!userAddress, 
+                    hasPrivateKey: !!privateKey 
+                });
+                setBuyInError("Missing wallet information. Please reconnect your wallet.");
                 return;
             }
 
@@ -220,7 +228,13 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setTimeout(async () => {
                     try {
                         // Call the join table function with the specified amount
-                        await handleJoinTable(buyInWei);
+                        await playerJoin({
+                            tableId,
+                            buyInAmount: buyInWei,
+                            userAddress,
+                            privateKey,
+                            publicKey: userPublicKey
+                        });
                     } catch (error) {
                         console.error("Error joining table:", error);
                         setShowBuyInModal(true);
@@ -240,79 +254,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             }
         };
 
-        const handleJoinTable = async (buyInWei: string) => {
-            if (!userAddress || !privateKey) {
-                console.error("Missing user address or private key");
-                return;
-            }
-
-            try {
-                await refreshNonce(userAddress);
-                const currentNonce = nonce?.toString() || "0";
-
-                debugLog("User balance:", balance);
-
-                // Get minimum buy-in from table data with proper fallback
-                const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
-                const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-                const minBuyIn = localTableData?.data?.minBuyIn || twentyBigBlinds; // Default to 20x big blind
-
-                debugLog("=== MIN BUY IN ===");
-                debugLog("minBuyIn:", minBuyIn);
-                debugLog("bigBlindValue:", bigBlindValue);
-                debugLog("twentyBigBlinds:", twentyBigBlinds);
-
-                // Use the user's input amount directly
-                const buyInAmount = buyInWei;
-
-                // Check if user's input exceeds their balance
-                if (balance && BigInt(buyInWei) > BigInt(balance)) {
-                    debugLog(`User input (${buyInWei}) exceeds balance (${balance})`);
-                    setShowBuyInModal(true);
-                    setBuyInError(`Amount exceeds your balance of ${ethers.formatUnits(balance, 18)} USDC`);
-                    return;
-                }
-
-                debugLog("Final buy-in amount:", buyInAmount);
-
-                const signature = await getSignature(privateKey, currentNonce, userAddress, tableId, buyInAmount, "join");
-
-                const requestData = {
-                    id: "1",
-                    method: "transfer",
-                    userAddress,
-                    tableId,
-                    buyInAmount,
-                    signature,
-                    publicKey: userPublicKey
-                };
-
-                debugLog("Sending join request:", requestData);
-                const response = await axios.post(`${PROXY_URL}/table/${tableId}/join`, requestData);
-                debugLog("Join response:", response.data);
-
-                if (response.data?.result?.data) {
-                    setTableData(response.data.result.data);
-
-                    // Wait for backend to process the join, then fetch fresh data
-                    setTimeout(async () => {
-                        try {
-                            debugLog("Fetching fresh table data after join...");
-                            const freshDataResponse = await axios.get(`${PROXY_URL}/get_game_state/${tableId}`);
-                            debugLog("Fresh table data received:", freshDataResponse.data);
-                            setTableData({ data: freshDataResponse.data });
-                        } catch (refreshError) {
-                            console.error("Error refreshing table data:", refreshError);
-                        }
-                    }, 1500); // Wait 1.5 seconds before refreshing
-                }
-            } catch (error) {
-                console.error("Error joining table:", error);
-                // Show error to user
-                setShowBuyInModal(true);
-                setBuyInError("Failed to join table. Please try again.");
-            }
-        };
 
         // Update the useEffect to set default buy-in to max wallet amount
         useEffect(() => {

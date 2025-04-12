@@ -9,7 +9,7 @@ import { AllPlayerActions, NonPlayerActionType, PlayerActionType } from "@bitcoi
 import useUserWallet from "../hooks/useUserWallet"; // this is the browser wallet todo rename to useBrowserWallet
 import { ethers } from "ethers";
 import { formatWeiToDollars } from "../utils/numberUtils";
-import { TableData } from "../types/index";
+import { performAction as performActionUtil, playerLeave } from "../utils/performActionUtils";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -519,39 +519,9 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             });
             
             try {
-                // Get wallet info
-                const publicKey = localStorage.getItem("user_eth_public_key");
-                const privateKey = localStorage.getItem("user_eth_private_key");
+                const response = await performActionUtil(gameAddress, action, amount, nonce);
                 
-                if (!publicKey || !privateKey) {
-                    throw new Error("Wallet keys not available");
-                }
-                
-                // Create wallet for signing
-                const wallet = new ethers.Wallet(privateKey);
-                const timestamp = Math.floor(Date.now() / 1000);
-                
-                // Create the message to sign - different format for perform endpoint
-                const messageToSign = `${action}:${amount || "0"}:${gameAddress}:${timestamp}`;
-                const signature = await wallet.signMessage(messageToSign);
-                
-                console.log("📝 Sending action to /perform endpoint:", {
-                    action,
-                    amount,
-                    gameAddress
-                });
-                
-                const response = await axios.post(`${PROXY_URL}/table/${gameAddress}/perform`, {
-                    userAddress: publicKey,
-                    actionType: action,
-                    amount: amount || "0",
-                    signature,
-                    publicKey,
-                    timestamp,
-                    data: null
-                });
-                
-                console.log("✅ Perform action response:", response.data);
+                console.log("✅ Perform action response:", response);
                 
                 // Wait a moment for the action to be processed
                 setTimeout(async () => {
@@ -561,7 +531,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     }
                 }, 1000);
                 
-                return response.data;
+                return response;
             } catch (error) {
                 console.error("❌ Error performing action:", error);
                 throw error;
@@ -659,37 +629,13 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     const playerStack = tableData.data.players[currentUserSeat]?.stack || "0";
                     console.log("🚪 Executing leave action with stack:", playerStack);
 
-                    // Add specific URL construction for leave action
-                    const leaveUrl = `${PROXY_URL}/table/${tableId}/playeraction`;
-                    console.log("🔄 Using endpoint:", leaveUrl);
-
-                    // Get wallet info
-                    const publicKey = localStorage.getItem("user_eth_public_key");
-                    const privateKey = localStorage.getItem("user_eth_private_key");
-
-                    if (!publicKey || !privateKey) {
-                        throw new Error("Wallet keys not available");
-                    }
-
-                    // Create wallet for signing
-                    const wallet = new ethers.Wallet(privateKey);
-                    const timestamp = Math.floor(Date.now() / 1000);
-                    const messageToSign = `leave${playerStack}${tableId}${timestamp}`;
-                    const signature = await wallet.signMessage(messageToSign);
-
-                    // Make direct API call
-                    console.log("📤 Making direct API call to playeraction for leave");
-                    const response = await axios.post(leaveUrl, {
-                        userAddress: publicKey,
-                        action: "leave",
-                        amount: playerStack,
-                        signature,
-                        publicKey,
-                        timestamp,
+                    const response = await playerLeave(
+                        tableId, 
+                        BigInt(playerStack),
                         nonce
-                    });
-
-                    console.log("✅ Leave action successful:", response.data);
+                    );
+                    
+                    console.log("✅ Leave action successful:", response);
 
                     // Refresh nonce after successful leave
                     setTimeout(async () => {
@@ -701,10 +647,10 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
                     return {
                         success: true,
-                        result: response.data,
+                        result: response,
                         actionName: "LEAVE",
                         timestamp: new Date().toISOString(),
-                        method: "directApiCall"
+                        method: "clientSdkCall"
                     };
                 } catch (error) {
                     console.error("❌ Error in leave action:", error);

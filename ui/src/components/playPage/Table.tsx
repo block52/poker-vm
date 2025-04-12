@@ -15,7 +15,6 @@ import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
 import { useNavigate, useParams } from "react-router-dom";
-import { IoMenuSharp } from "react-icons/io5";
 import { RxExit } from "react-icons/rx";
 
 import { ethers } from "ethers";
