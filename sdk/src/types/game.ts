@@ -68,14 +68,14 @@ export type GameOptionsDTO = {
 export type ActionDTO = {
     playerId: string,
     seat: number,
-    action: PlayerActionType;
+    action: PlayerActionType | NonPlayerActionType;
     amount: string;
     round: TexasHoldemRound;
     index: number;
 };
 
 export type LegalActionDTO = {
-    action: PlayerActionType;
+    action: PlayerActionType | NonPlayerActionType;
     min: string | undefined;
     max: string | undefined;
     index: number;
