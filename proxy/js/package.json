@@ -11,7 +11,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.68",
+    "@bitcoinbrisbane/block52": "1.0.69",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",
     "axios": "^1.8.3",
@@ -31,7 +31,10 @@
     "node": "20.18.2"
   },
   "devDependencies": {
-    "eslint": "^9.19.0",
+    "@eslint/js": "^9.24.0",
+    "eslint": "^9.24.0",
+    "eslint-plugin-import": "^2.29.1",
+    "globals": "^16.0.0",
     "nodemon": "^3.1.7",
     "prettier": "^3.4.2"
   }
