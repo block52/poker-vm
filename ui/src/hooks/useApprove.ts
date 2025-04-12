@@ -2,7 +2,7 @@ import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { erc20abi } from "../abis/erc20ABI";
 import useUserWalletConnect from "./useUserWalletConnect";
 import { FunctionName } from "../types";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 const useApprove = () => {
     const { data: hash, isPending, writeContract, error } = useWriteContract();
@@ -12,7 +12,7 @@ const useApprove = () => {
         hash
     });
 
-    const approve = async (tokenAddress: string, spender: string, amount: bigint): Promise<void> => {
+    const approve = useCallback(async (tokenAddress: string, spender: string, amount: bigint): Promise<void> => {
         if (!userAddress) {
             console.error("User wallet is not connected");
             return;
@@ -36,7 +36,7 @@ const useApprove = () => {
         } catch (err) {
             console.error("Approval failed:", err);
         }
-    };
+    }, [userAddress, writeContract]);
 
     return useMemo(
         () => ({
@@ -47,7 +47,7 @@ const useApprove = () => {
             isApproveConfirmed: isConfirmed,
             approveError: error
         }),
-        [approve, isPending, hash, error, error, isConfirmed, isConfirmed]
+        [approve, isPending, hash, error, isConfirming, isConfirmed]
     );
 };
 
