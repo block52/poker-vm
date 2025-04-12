@@ -532,6 +532,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Invalid action index.");
         }
 
+        switch (action) {
+            case NonPlayerActionType.JOIN:
+                this.join(address, amount!);
+                break;
+        }
+
         if (!this.exists(address)) {
             throw new Error("Player not found.");
         }
@@ -571,15 +577,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case PlayerActionType.RAISE:
                 new RaiseAction(this, this._update).execute(player, index, amount);
                 break;
-            default:
-                // do we need to roll back last acted seat?
-                break;
-        }
-
-        switch (action) {
-            case NonPlayerActionType.JOIN:
-                this.join(address, amount!);
-                break;
             case NonPlayerActionType.DEAL:
                 // First verify the deal is valid via the DealAction
                 try {
@@ -601,7 +598,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 }
                 break;
             default:
-                throw new Error(`Invalid ${action} action.`);
+                // do we need to roll back last acted seat?
+                break;
         }
 
         player.addAction({ playerId: address, action, amount, index });
