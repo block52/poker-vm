@@ -1,13 +1,25 @@
-import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, TEN_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, TEN_TOKENS } from "./testConstants";
+import { Player } from "../models/player";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Ante - Heads Up", () => {
     describe("Preflop game states", () => {
         let game: TexasHoldemGame;
 
+        const player1 = new Player(
+            "0x1111111111111111111111111111111111111111",
+            undefined,
+            ONE_HUNDRED_TOKENS,
+            undefined,
+            PlayerStatus.ACTIVE
+        );
+
+
         beforeEach(() => {
+            //baseGameConfig.players.push(player1);
+
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
