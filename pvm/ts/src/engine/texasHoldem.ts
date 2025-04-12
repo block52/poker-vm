@@ -526,7 +526,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return undefined;
     }
 
-    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint): void {
+    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
 
         if (index !== this.turnIndex()) {
             throw new Error("Invalid action index.");
@@ -540,7 +540,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this.leave(address);
                 break;
             case NonPlayerActionType.DEAL:
-                this.deal();
+                this.deal(data);
                 break;
         }
 
