@@ -14,63 +14,6 @@ interface JoinTableOptions {
   onError?: (error: any) => void;
 }
 
-/**
- * Handles joining a table by signing the message client-side and sending to proxy
- * @param options Configuration options for joining a table
- * @returns Response data from the join operation
- */
-export const playerJoin = async ({
-  tableId,
-  buyInAmount,
-  userAddress,
-  privateKey,
-  publicKey,
-  nonce = Date.now().toString(),
-  onSuccess,
-  onError
-}: JoinTableOptions): Promise<any> => {
-  if (!userAddress || !privateKey) {
-    const error = new Error("Missing user address or private key");
-    if (onError) onError(error);
-    throw error;
-  }
-
-  try {
-    // Create a wallet to sign the message
-    const wallet = new ethers.Wallet(privateKey);
-    
-    // Create message to sign in format that matches the action pattern
-    // Format: "join" + amount + tableId + timestamp
-    const timestamp = Math.floor(Date.now() / 1000);
-    const messageToSign = `join${buyInAmount}${tableId}${timestamp}`;
-    
-    // Sign the message
-    const signature = await wallet.signMessage(messageToSign);
-
-    // Prepare request data that matches the proxy's expected format for PERFORM_ACTION
-    const requestData = {
-      userAddress,
-      buyInAmount,
-      signature,
-      publicKey: publicKey || userAddress,
-      nonce: nonce || timestamp,
-      timestamp
-    };
-
-    // Send the request to the proxy server
-    const response = await axios.post(`${PROXY_URL}/table/${tableId}/join`, requestData);
-    
-    if (response.data?.result?.data && onSuccess) {
-      onSuccess(response.data.result.data);
-    }
-    
-    return response.data;
-  } catch (error) {
-    console.error("Error joining table:", error);
-    if (onError) onError(error);
-    throw error;
-  }
-};
 
 /**
  * Performs a game action by signing the message client-side and sending to proxy
