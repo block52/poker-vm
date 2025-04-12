@@ -9,6 +9,7 @@ export type RPCRequest = {
     method: RPCMethods;
     params: RPCRequestParams[RPCMethods];
     data?: string;
+    signature?: string;
 };
 
 export type RPCResponse<T> = {
