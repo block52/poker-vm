@@ -1,4 +1,4 @@
-import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
@@ -52,7 +52,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
                 console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
-                game.join(this.from, this.amount);
+                game.performAction(this.from, PlayerActionType.JOIN, )
                 console.log(`Join successful`);
 
                 // const _json = game.toJson();
