@@ -254,6 +254,58 @@ app.post("/table/:tableId/post_small_blind", async (req, res) => {
     }
 });
 
+// Post big blind endpoint
+app.post("/table/:tableId/post_big_blind", async (req, res) => {
+    console.log("=== POST BIG BLIND REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index);
+    console.log("Big blind amount:", req.body.amount || req.body.bigBlindAmount);
+
+    try {
+        // Format the RPC call to match the PERFORM_ACTION structure
+        // Parameter order in RPC call must match:
+        // 1. The RPC creates PerformActionCommand(from, to, data/index, amount, action, ...)
+        // 2. Then PerformActionCommand calls game.performAction(from, action, index, amount)
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (using the tableId from URL params)
+                PlayerActionType.BIG_BLIND, // action
+                req.body.amount || req.body.bigBlindAmount || "0", // amount (use amount or bigBlindAmount)
+                req.body.nonce || 0, // nonce (optional)
+                req.body.index // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to post big blind", details: error.message });
+    }
+});
+
 app.post("/table/:tableId/fold", async (req, res) => {
     console.log("=== FOLD ACTION REQUEST ===");
     console.log("Request body:", req.body);

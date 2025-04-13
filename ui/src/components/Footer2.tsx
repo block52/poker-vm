@@ -4,6 +4,7 @@ import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
 import { useParams } from "react-router-dom";
 import { useTableFold } from "../hooks/useTableFold";
 import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
+import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
 
 
 interface Footer2Props {
@@ -42,6 +43,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
 
     // Initialize post small blind hook - MOVED UP before any conditionals
     const { postSmallBlind, isPostingSmallBlind } = useTablePostSmallBlind(effectiveTableId);
+    
+    // Initialize post big blind hook
+    const { postBigBlind, isPostingBigBlind } = useTablePostBigBlind(effectiveTableId);
 
     // Don't render the footer if the user is not in the game
     if (!isPlayerInGame) {
@@ -56,6 +60,11 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Check if post-small-blind action is available
     const hasPostSmallBlindAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "post-small-blind");
+    }, [legalActions]);
+    
+    // Check if post-big-blind action is available
+    const hasPostBigBlindAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "post-big-blind");
     }, [legalActions]);
 
     // Get private key from localStorage (assuming it's stored there)
@@ -120,6 +129,23 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             console.error("Error when posting small blind:", error);
         }
     };
+    
+    // Handle post big blind button click
+    const handlePostBigBlind = async () => {
+        if (!postBigBlind) return;
+        
+        try {
+            await postBigBlind({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex
+            });
+            console.log("Post big blind successful");
+        } catch (error) {
+            console.error("Error when posting big blind:", error);
+        }
+    };
 
     // Simple display of the legal actions data now with more compact design
     return (
@@ -146,6 +172,17 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                             disabled={isPostingSmallBlind}
                         >
                             {isPostingSmallBlind ? "Posting SB..." : "Post Small Blind"}
+                        </button>
+                    )}
+                    
+                    {/* Big Blind button if available */}
+                    {hasPostBigBlindAction && (
+                        <button
+                            onClick={handlePostBigBlind}
+                            className="bg-purple-600 hover:bg-purple-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isPostingBigBlind}
+                        >
+                            {isPostingBigBlind ? "Posting BB..." : "Post Big Blind"}
                         </button>
                     )}
                 </div>
