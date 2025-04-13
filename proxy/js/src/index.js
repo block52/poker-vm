@@ -173,7 +173,7 @@ app.post("/table/:tableId/join", async (req, res) => {
                 NonPlayerActionType.JOIN, // action
                 req.body.buyInAmount, // amount
                 req.body.nonce || 0, // nonce (optional)
-                0 // data/index
+                req.body.index
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
@@ -319,7 +319,7 @@ app.post("/table/:tableId/leave", async (req, res) => {
                 NonPlayerActionType.LEAVE, // action
                 req.body.amount || "0", // amount
                 req.body.nonce || 0, // nonce (optional)
-                0 // data/index
+                req.body.index
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
