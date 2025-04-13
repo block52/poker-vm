@@ -99,16 +99,35 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
         this._lastActedSeat = _lastToAct; // Need to recalculate this
+        
+        // Initialize turnIndex to 0
+        this._turnIndex = 0;
 
-        for (const action of previousActions) {
-            const turn: Turn = {
-                playerId: action.playerId,
-                action: action.action,
-                amount: BigInt(action.amount),
-                index: action.index
-            };
-
-            this.addAction(turn, action.round);
+        // Process previous actions to set the correct turnIndex
+        // This is crucial for proper synchronization when loading from JSON
+        if (previousActions && previousActions.length > 0) {
+            console.log(`Initializing from ${previousActions.length} previous actions`);
+            
+            // Get the highest index from previous actions
+            let highestIndex = -1;
+            for (const action of previousActions) {
+                if (action.index > highestIndex) {
+                    highestIndex = action.index;
+                }
+                
+                const turn: Turn = {
+                    playerId: action.playerId,
+                    action: action.action,
+                    amount: action.amount ? BigInt(action.amount) : undefined,
+                    index: action.index
+                };
+                
+                this.addAction(turn, action.round);
+            }
+            
+            // Set turnIndex to next available index
+            this._turnIndex = highestIndex + 1;
+            console.log(`Initialized _turnIndex to ${this._turnIndex} based on previous action indices`);
         }
 
         this._update = new (class implements IUpdate {
@@ -170,6 +189,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     // Returns the current turn index without incrementing it
     currentTurnIndex(): number {
+        console.log(`[DEBUG] Getting currentTurnIndex: ${this._turnIndex}`);
         return this._turnIndex;
     }
 
@@ -280,6 +300,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     private incrementTurnIndex(): void {
+        console.log(`[DEBUG] Incrementing _turnIndex from ${this._turnIndex} to ${this._turnIndex + 1}`);
         this._turnIndex++;
     }
 
@@ -486,105 +507,139 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
+        console.log(`[DEBUG] performAction called: address=${address}, action=${action}, index=${index}, _turnIndex=${this._turnIndex}`);
 
         // Check if the provided index matches the current turn index (without incrementing)
         if (index !== this.currentTurnIndex()) {
+            console.error(`[DEBUG] Invalid action index. Expected ${this.currentTurnIndex()}, got ${index}`);
             throw new Error("Invalid action index.");
         }
 
-        // Handle non-player actions that don't require the player to exist
-        if (action === NonPlayerActionType.JOIN) {
-            this.join(address, amount!);
-            // Add the join action to history
-            this.addAction({ playerId: address, action, amount, index }, this._currentRound);
-            return; // Exit early, don't need further processing
-        }
+        // Store the addAction method in a variable so we can temporarily override it
+        const originalAddAction = this.addAction.bind(this);
+        
+        // Override the addAction method to do nothing when called from the action classes
+        this.addAction = (turn: Turn, round: TexasHoldemRound = this._currentRound) => {
+            console.log(`[DEBUG] Skipping internal addAction call for ${turn.action}`);
+            // Do nothing, we'll add the action ourselves at the end
+        };
 
-        if (action === NonPlayerActionType.LEAVE) {
-            this.leave(address);
-            // Add the leave action to history
-            this.addAction({ playerId: address, action, amount, index }, this._currentRound);
-            return; // Exit early, don't need further processing
-        }
-
-        // Check if player exists for all other actions
-        if (!this.exists(address)) {
-            throw new Error("Player not found.");
-        }
-
-        if (this.currentRound === TexasHoldemRound.ANTE) {
-            if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
-                if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
-                    throw new Error("Not enough players to start game.");
+        try {
+            // Handle non-player actions that don't require the player to exist
+            if (action === NonPlayerActionType.JOIN) {
+                console.log(`[DEBUG] Processing JOIN action with index ${index}`);
+                this.join(address, amount!);
+                // Restore the original addAction method
+                this.addAction = originalAddAction;
+                // Add the join action to history
+                this.addAction({ playerId: address, action, amount, index }, this._currentRound);
+                return; // Exit early, don't need further processing
+            }
+    
+            if (action === NonPlayerActionType.LEAVE) {
+                console.log(`[DEBUG] Processing LEAVE action with index ${index}`);
+                this.leave(address);
+                // Restore the original addAction method
+                this.addAction = originalAddAction;
+                // Add the leave action to history
+                this.addAction({ playerId: address, action, amount, index }, this._currentRound);
+                return; // Exit early, don't need further processing
+            }
+    
+            // Check if player exists for all other actions
+            if (!this.exists(address)) {
+                throw new Error("Player not found.");
+            }
+    
+            // Log the current player's legal actions for debugging
+            const player = this.getPlayer(address);
+            const legalActions = this.getLegalActions(address);
+            console.log(`[DEBUG] Legal actions for ${address}: ${JSON.stringify(legalActions)}`);
+    
+            if (this.currentRound === TexasHoldemRound.ANTE) {
+                if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
+                    if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
+                        throw new Error("Not enough players to start game.");
+                    }
                 }
             }
-        }
-
-        const player = this.getPlayer(address);
-        const seat = this.getPlayerSeatNumber(address);
-
-        // Process the action
-        switch (action) {
-            case NonPlayerActionType.DEAL:
-                this.deal(data);
-                // First verify the deal is valid via the DealAction
-                try {
-                    new DealAction(this, this._update).execute(player, index);
-
-                    // For 3+ player games, set the last acted seat to the big blind position
-                    // so that the next player to act will be the one after the big blind
-                    const activePlayerCount = this.getActivePlayerCount();
-                    if (activePlayerCount > 2) {
-                        console.log("Deal action: Setting last acted seat to big blind position:", this._bigBlindPosition);
-                        this._lastActedSeat = this._bigBlindPosition;
-                    } else {
-                        // For 2-player games, set to dealer position so small blind acts next
-                        console.log("Deal action: Setting last acted seat to dealer position:", this._dealer);
-                        this._lastActedSeat = this._dealer;
+    
+            const seat = this.getPlayerSeatNumber(address);
+    
+            // Process the action
+            console.log(`[DEBUG] Processing action ${action} for player at seat ${seat} with index ${index}`);
+            switch (action) {
+                case NonPlayerActionType.DEAL:
+                    this.deal(data);
+                    // First verify the deal is valid via the DealAction
+                    try {
+                        new DealAction(this, this._update).execute(player, index);
+    
+                        // For 3+ player games, set the last acted seat to the big blind position
+                        // so that the next player to act will be the one after the big blind
+                        const activePlayerCount = this.getActivePlayerCount();
+                        if (activePlayerCount > 2) {
+                            console.log("Deal action: Setting last acted seat to big blind position:", this._bigBlindPosition);
+                            this._lastActedSeat = this._bigBlindPosition;
+                        } else {
+                            // For 2-player games, set to dealer position so small blind acts next
+                            console.log("Deal action: Setting last acted seat to dealer position:", this._dealer);
+                            this._lastActedSeat = this._dealer;
+                        }
+                    } catch (error) {
+                        console.error("Error performing deal action:", error);
                     }
-                } catch (error) {
-                    console.error("Error performing deal action:", error);
-                }
-                break;
-            // todo: ante
-            case PlayerActionType.SMALL_BLIND:
-                new SmallBlindAction(this, this._update).execute(player, index, this._gameOptions.smallBlind);
-                break;
-            case PlayerActionType.BIG_BLIND:
-                new BigBlindAction(this, this._update).execute(player, index, this._gameOptions.bigBlind);
-                break;
-            case PlayerActionType.FOLD:
-                // Don't update player status before executing fold
-                new FoldAction(this, this._update).execute(player, index);
-                break;
-            case PlayerActionType.CHECK:
-                new CheckAction(this, this._update).execute(player, index);
-                break;
-            case PlayerActionType.BET:
-                new BetAction(this, this._update).execute(player, index, amount);
-                break;
-            case PlayerActionType.CALL:
-                new CallAction(this, this._update).execute(player, index);
-                break;
-            case PlayerActionType.RAISE:
-                new RaiseAction(this, this._update).execute(player, index, amount);
-                break;
-            default:
-                // do we need to roll back last acted seat?
-                break;
-        }
-
-        // Update player's actions and the game state
-        player.addAction({ playerId: address, action, amount, index });
-        this._lastActedSeat = seat;
-        this.addAction({ playerId: address, action, amount, index }, this._currentRound);
-        
-        if (this.hasRoundEnded(this._currentRound) === true) {
-            this.nextRound();
+                    break;
+                // todo: ante
+                case PlayerActionType.SMALL_BLIND:
+                    console.log(`[DEBUG] Executing small blind action for ${address} with index ${index}`);
+                    new SmallBlindAction(this, this._update).execute(player, index, this._gameOptions.smallBlind);
+                    break;
+                case PlayerActionType.BIG_BLIND:
+                    new BigBlindAction(this, this._update).execute(player, index, this._gameOptions.bigBlind);
+                    break;
+                case PlayerActionType.FOLD:
+                    // Don't update player status before executing fold
+                    new FoldAction(this, this._update).execute(player, index);
+                    break;
+                case PlayerActionType.CHECK:
+                    new CheckAction(this, this._update).execute(player, index);
+                    break;
+                case PlayerActionType.BET:
+                    new BetAction(this, this._update).execute(player, index, amount);
+                    break;
+                case PlayerActionType.CALL:
+                    new CallAction(this, this._update).execute(player, index);
+                    break;
+                case PlayerActionType.RAISE:
+                    new RaiseAction(this, this._update).execute(player, index, amount);
+                    break;
+                default:
+                    // do we need to roll back last acted seat?
+                    break;
+            }
+    
+            // Restore the original addAction method
+            this.addAction = originalAddAction;
+    
+            // Update player's actions and the game state
+            console.log(`[DEBUG] Updating player actions and game state for ${action}`);
+            player.addAction({ playerId: address, action, amount, index });
+            this._lastActedSeat = seat;
+            this.addAction({ playerId: address, action, amount, index }, this._currentRound);
+            
+            if (this.hasRoundEnded(this._currentRound) === true) {
+                this.nextRound();
+            }
+        } catch (error) {
+            // Make sure to restore the original addAction method even if there's an error
+            this.addAction = originalAddAction;
+            throw error;
         }
     }
 
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
+        console.log(`[DEBUG] Adding action: ${turn.action} with index ${turn.index}, current _turnIndex: ${this._turnIndex}`);
         // We already validated the index in performAction, so no need to check again here
         // This prevents the double incrementing problem
         
@@ -594,6 +649,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         
         // Now explicitly increment the turn index once
         this.incrementTurnIndex();
+        console.log(`[DEBUG] After incrementing, new _turnIndex: ${this._turnIndex}`);
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
@@ -884,7 +940,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // TODO: ROLL BACK
         // // TODO: Check this will work in all cases when multiple side pots in same round
         // this._players
-        //     .filter(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN && !this._sidePots.has(p.id))
+        //     .filter(p => this.getPlayerStatus(p.id) == PlayerStatus.ALL_IN && !this._sidePots.has(p.id))
         //     .forEach(p => this._sidePots.set(p.id, startingPot + this.getPlayerStake(p) * (1 + numActive)));
     }
 
@@ -1071,6 +1127,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
+        console.log(`[DEBUG] Creating TexasHoldemGame from JSON with ${json?.previousActions?.length || 0} previous actions`);
+        
         const players = new Map<number, Player | null>();
 
         json?.players.map((p: any) => {
@@ -1092,6 +1150,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
             const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
             players.set(p.seat, player);
         });
+
+        // Print the highest action index from previousActions
+        if (json.previousActions && json.previousActions.length > 0) {
+            const highestIndex = Math.max(...json.previousActions.map((a: any) => a.index));
+            console.log(`[DEBUG] Highest action index in previousActions: ${highestIndex}, next index will be ${highestIndex + 1}`);
+        } else {
+            console.log(`[DEBUG] No previous actions, starting with index 0`);
+        }
 
         return new TexasHoldemGame(
             json.address,
@@ -1223,6 +1289,44 @@ class TexasHoldemGame implements IPoker, IUpdate {
             winners: winners,
             signature: ethers.ZeroHash
         };
+    }
+
+    // Handle parsing transaction data that might come in different formats
+    // This helps ensure backward compatibility with different formats
+    static parseTransactionData(data: string): { action: string, index: number } {
+        console.log(`[DEBUG] Parsing transaction data: ${data}`);
+        
+        // Check if it uses the new pipe format: "action|index"
+        if (data.includes('|')) {
+            const [action, indexStr] = data.split('|');
+            return { 
+                action, 
+                index: parseInt(indexStr) 
+            };
+        }
+        
+        // Check if it uses the old dash format: "action-index"
+        if (data.includes('-')) {
+            // Extract the action and index from format like "post-small-blind-1"
+            const parts = data.split('-');
+            
+            // If it's a multi-part action name like "post-small-blind"
+            if (parts.length > 2) {
+                // The last part is the index, join the rest as the action
+                const index = parseInt(parts[parts.length - 1]);
+                const action = parts.slice(0, parts.length - 1).join('-');
+                return { action, index };
+            } else {
+                // Simple action-index format
+                return { 
+                    action: parts[0], 
+                    index: parseInt(parts[1]) 
+                };
+            }
+        }
+        
+        // If no separators found, assume it's just an action with no index
+        return { action: data, index: 0 };
     }
 }
 
