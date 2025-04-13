@@ -538,9 +538,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (index !== this.currentTurnIndex()) {
             throw new Error("Invalid action index.");
         }
-        
-        // Now explicitly increment the turn index once
-        this.turnIndex();
 
         switch (action) {
             case NonPlayerActionType.JOIN:
@@ -620,7 +617,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         player.addAction({ playerId: address, action, amount, index });
         this._lastActedSeat = seat;
-
         if (this.hasRoundEnded(this._currentRound) === true) {
             this.nextRound();
         }
@@ -633,6 +629,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+        
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
