@@ -36,8 +36,12 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         ]);
 
         const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-        game.performAction(this.from, this.action, this.index, this.amount);
-
+        
+        if (!this.isActionLegal(game)) {
+            throw new Error(`Action ${this.action} is not legal for player ${this.from} with index ${this.index}`);
+        }
+        
+        console.log(`Adding action ${this.action} with index ${this.index} to mempool`);
         const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, `${this.action}-${this.index}`);
         await this.mempool.add(tx);
         return signResult(tx, this.privateKey);
@@ -52,5 +56,32 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         console.log(`Is game transaction: ${found}`);
         return found;
+    }
+
+    private isActionLegal(game: TexasHoldemGame): boolean {
+        try {
+            if (this.action === NonPlayerActionType.JOIN || this.action === NonPlayerActionType.LEAVE) {
+                return true;
+            }
+            
+            if (!game.exists(this.from)) {
+                console.log(`Player ${this.from} does not exist in game ${this.to}`);
+                return false;
+            }
+            
+            if (this.index !== game.currentTurnIndex()) {
+                console.log(`Invalid index: expected ${game.currentTurnIndex()}, got ${this.index}`);
+                return false;
+            }
+            
+            const legalActions = game.getLegalActions(this.from);
+            const isLegal = legalActions.some(action => action.action === this.action);
+            
+            console.log(`Action ${this.action} is ${isLegal ? 'legal' : 'not legal'} for player ${this.from}`);
+            return isLegal;
+        } catch (error) {
+            console.error(`Error checking if action is legal: ${error}`);
+            return false;
+        }
     }
 }
