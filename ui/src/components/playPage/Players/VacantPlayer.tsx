@@ -196,12 +196,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             // Instead of joining immediately, show the buy-in modal
             setShowBuyInModal(true);
-
-            // Set default buy-in amount (20x big blind)
-            const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC
-            const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-            const defaultBuyIn = ethers.formatUnits(twentyBigBlinds, 18);
-            setBuyInAmount(defaultBuyIn);
+            setBuyInAmount("");
         }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index]);
 
         // Function to handle the actual join after user confirms buy-in amount
@@ -272,27 +267,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setIsConfirming(false);
             }
         };
-
-
-        // Update the useEffect to set default buy-in to max wallet amount
-        useEffect(() => {
-            if (showBuyInModal && balance) {
-                // Set default buy-in to 20x big blind, but within min-max range
-                const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
-                const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-                
-                // Ensure the amount is within the table's min-max range
-                let defaultAmount = twentyBigBlinds;
-                if (BigInt(defaultAmount) < BigInt(minBuyInWei)) {
-                    defaultAmount = minBuyInWei;
-                } else if (BigInt(defaultAmount) > BigInt(maxBuyInWei)) {
-                    defaultAmount = maxBuyInWei;
-                }
-                
-                const formattedAmount = ethers.formatUnits(defaultAmount, 18);
-                setBuyInAmount(formattedAmount);
-            }
-        }, [showBuyInModal, balance, minBuyInWei, maxBuyInWei]);
 
         // Only log position once during mount
         useEffect(() => {
