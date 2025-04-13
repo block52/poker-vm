@@ -25,7 +25,7 @@ abstract class BaseAction {
         return undefined;
     }
 
-    execute(player: Player, index: number,  amount?: bigint): void {
+    execute(player: Player, index: number, amount?: bigint): void {
         const range = this.verify(player);
 
         if (range) {
@@ -49,6 +49,7 @@ abstract class BaseAction {
             player.chips -= deductAmount;
         }
 
+        // Add the action to the game state
         const round = this.game.currentRound;
         this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount, index: index }, round);
     }
