@@ -17,6 +17,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Use prop tableId, URL param tableId, or fallback to empty string
     const effectiveTableId = propTableId || urlTableId || "";
     
+    // Get stored address for display
+    const userAddress = localStorage.getItem("user_eth_public_key");
+    
     // Use the hook with the effective tableId
     const { 
         legalActions,
@@ -28,8 +31,15 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         playerSeat,
         isLoading,
         error,
-        foldActionIndex
+        foldActionIndex,
+        actionTurnIndex,
+        isPlayerInGame
     } = usePlayerLegalActions(effectiveTableId);
+
+    // Don't render the footer if the user is not in the game
+    if (!isPlayerInGame) {
+        return null;
+    }
 
     // Initialize fold hook
     const { foldHand, isFolding } = useTableFold(effectiveTableId);
@@ -47,14 +57,6 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         return legalActions?.some(action => action.action === "post-small-blind");
     }, [legalActions]);
 
-    // Find the post-small-blind action index
-    const postSmallBlindActionIndex = React.useMemo(() => {
-        const action = legalActions?.find(action => action.action === "post-small-blind");
-        return action?.index || 0;
-    }, [legalActions]);
-
-    // Get stored address for display
-    const userAddress = localStorage.getItem("user_eth_public_key");
     // Get private key from localStorage (assuming it's stored there)
     const privateKey = localStorage.getItem("user_eth_private_key");
 
@@ -67,9 +69,10 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             isDealerPosition,
             isPlayerTurn,
             playerStatus,
-            playerSeat
+            playerSeat,
+            actionTurnIndex
         });
-    }, [legalActions, isSmallBlindPosition, isBigBlindPosition, isDealerPosition, isPlayerTurn, playerStatus, playerSeat]);
+    }, [legalActions, isSmallBlindPosition, isBigBlindPosition, isDealerPosition, isPlayerTurn, playerStatus, playerSeat, actionTurnIndex]);
 
     // Format the amount to make it more readable (convert from wei to ETH)
     const formatAmount = (amountWei: string): string => {
@@ -92,7 +95,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                 userAddress,
                 privateKey,
                 publicKey: userAddress,
-                actionIndex: foldActionIndex
+                actionIndex: actionTurnIndex
             });
             console.log("Fold successful");
         } catch (error) {
@@ -109,7 +112,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                 userAddress,
                 privateKey,
                 publicKey: userAddress,
-                actionIndex: postSmallBlindActionIndex
+                actionIndex: actionTurnIndex
             });
             console.log("Post small blind successful");
         } catch (error) {
@@ -198,8 +201,8 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                                     {JSON.stringify({tableId: effectiveTableId, legalActions}, null, 2)}
                                 </pre>
                             </details>
-                                            </div>
-                                        </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
