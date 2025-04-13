@@ -57,7 +57,7 @@ async function postSmallBlindFetcher(
     action: "post-small-blind", // Explicitly specify the action
     amount, // Small blind amount
     smallBlindAmount: amount, // Include as both for flexibility in the server
-    nonce: nonce || timestamp,
+    nonce: nonce,
     timestamp,
     index: actionIndex !== undefined && actionIndex !== null ? actionIndex : 0 // Check explicitly for undefined/null
   };
