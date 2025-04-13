@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import { useTableFold } from "../hooks/useTableFold";
 import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
 import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
+import { useTableCall } from "../hooks/useTableCall";
 
 
 interface Footer2Props {
@@ -46,25 +47,34 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     
     // Initialize post big blind hook
     const { postBigBlind, isPostingBigBlind } = useTablePostBigBlind(effectiveTableId);
-
-    // Don't render the footer if the user is not in the game
-    if (!isPlayerInGame) {
-        return null;
-    }
     
-    // Check if fold action is available
+    // Initialize call hook
+    const { callHand, isCalling } = useTableCall(effectiveTableId);
+
+    // Check if fold action is available - ALWAYS define this, even if not used
     const hasFoldAction = React.useMemo(() => {
-        return legalActions?.some(action => action.action === "fold");
+        return legalActions?.some(action => action.action === "fold") || false;
     }, [legalActions]);
 
-    // Check if post-small-blind action is available
+    // Check if post-small-blind action is available - ALWAYS define this, even if not used
     const hasPostSmallBlindAction = React.useMemo(() => {
-        return legalActions?.some(action => action.action === "post-small-blind");
+        return legalActions?.some(action => action.action === "post-small-blind") || false;
     }, [legalActions]);
     
-    // Check if post-big-blind action is available
+    // Check if post-big-blind action is available - ALWAYS define this, even if not used
     const hasPostBigBlindAction = React.useMemo(() => {
-        return legalActions?.some(action => action.action === "post-big-blind");
+        return legalActions?.some(action => action.action === "post-big-blind") || false;
+    }, [legalActions]);
+    
+    // Check if call action is available - ALWAYS define this, even if not used
+    const hasCallAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "call") || false;
+    }, [legalActions]);
+    
+    // Get call amount if available - ALWAYS define this, even if not used
+    const callAmount = React.useMemo(() => {
+        const callAction = legalActions?.find(action => action.action === "call");
+        return callAction?.min || "0";
     }, [legalActions]);
 
     // Get private key from localStorage (assuming it's stored there)
@@ -146,6 +156,29 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             console.error("Error when posting big blind:", error);
         }
     };
+    
+    // Handle call button click
+    const handleCall = async () => {
+        if (!callHand) return;
+        
+        try {
+            await callHand({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex,
+                amount: callAmount // Pass the call amount from legal actions
+            });
+            console.log("Call successful");
+        } catch (error) {
+            console.error("Error when calling:", error);
+        }
+    };
+
+    // Don't render the footer if the user is not in the game
+    if (!isPlayerInGame) {
+        return null;
+    }
 
     // Simple display of the legal actions data now with more compact design
     return (
@@ -183,6 +216,17 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                             disabled={isPostingBigBlind}
                         >
                             {isPostingBigBlind ? "Posting BB..." : "Post Big Blind"}
+                        </button>
+                    )}
+                    
+                    {/* Call button if available */}
+                    {hasCallAction && (
+                        <button
+                            onClick={handleCall}
+                            className="bg-green-600 hover:bg-green-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isCalling}
+                        >
+                            {isCalling ? "Calling..." : `Call ${formatAmount(callAmount)}`}
                         </button>
                     )}
                 </div>
