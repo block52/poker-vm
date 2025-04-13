@@ -50,16 +50,24 @@ export class Transaction implements ICryptoModel, IJSONModel {
     }
 
     public calculateHash(): string {
-        return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.nonce}`).digest("hex");
+        // Include the data field in the hash calculation to ensure consistency
+        // This prevents duplicate transactions with the same content but different hashes
+        return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.nonce}${this.data || ""}`).digest("hex");
     }
 
     public static async create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Promise<Transaction> {
         const timestamp = Date.now();
-        const _data = `${to}${from}${value}${nonce}${data}`;
-        const signature = await signData(privateKey, _data);
-
-        const hash = createHash("sha256").update(_data).digest("hex");
-
+        
+        // Create the transaction object first
+        const transaction = new Transaction(to, from, value, "", "", timestamp, nonce, undefined, data);
+        
+        // Use the calculateHash method to ensure consistency with other hash calculations
+        const hash = transaction.calculateHash();
+        
+        // Sign the hash
+        const signature = await signData(privateKey, hash);
+        
+        // Create the final transaction with the correct hash and signature
         return new Transaction(to, from, value, hash, signature, timestamp, nonce, undefined, data);
     }
 
