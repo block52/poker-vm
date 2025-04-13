@@ -164,13 +164,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     turnIndex(): number {
-        // count number of actions
+        // Return the current value and THEN increment
         return this._turnIndex++;
     }
 
+    // Returns the current turn index without incrementing it
+    currentTurnIndex(): number {
+        return this._turnIndex;
+    }
+
     exists(playerId: string): boolean {
+        const normalizedPlayerId = playerId.toLowerCase();
         for (const [seat, player] of this._playersMap.entries()) {
-            if (player?.address === playerId) {
+            if (player?.address.toLowerCase() === normalizedPlayerId) {
                 return true;
             }
         }
@@ -471,7 +477,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     action: PlayerActionType.FOLD,
                     min: "0",
                     max: "0",
-                    index: this.turnIndex()
+                    index: this.currentTurnIndex()
                 }
             ];
         }
@@ -483,7 +489,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     action: action.type,
                     min: range ? range.minAmount.toString() : "0",
                     max: range ? range.maxAmount.toString() : "0",
-                    index: this.turnIndex()
+                    index: this.currentTurnIndex()
                 };
             } catch {
                 return undefined;
@@ -528,9 +534,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
 
-        if (index !== this.turnIndex()) {
+        // Check if the provided index matches the current turn index (without incrementing)
+        if (index !== this.currentTurnIndex()) {
             throw new Error("Invalid action index.");
         }
+        
+        // Now explicitly increment the turn index once
+        this.turnIndex();
 
         switch (action) {
             case NonPlayerActionType.JOIN:
@@ -617,10 +627,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
-        if (this.turnIndex() !== turn.index) {
-            throw new Error("Invalid action index.");
-        }
-
+        // We already validated the index in performAction, so no need to check again here
+        // This prevents the double incrementing problem
+        
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
@@ -688,8 +697,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Player not found.");
         }
 
+        const normalizedAddress = address.toLowerCase();
         for (const [seat, player] of this._playersMap.entries()) {
-            if (player?.address === address) {
+            if (player?.address.toLowerCase() === normalizedAddress) {
                 return player;
             }
         }
@@ -712,8 +722,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Player not found.");
         }
 
+        const normalizedAddress = address.toLowerCase();
         for (const [seat, player] of this._playersMap.entries()) {
-            if (player?.address === address) {
+            if (player?.address.toLowerCase() === normalizedAddress) {
                 return seat;
             }
         }
@@ -875,6 +886,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._pot = 0n;
         this._communityCards.length = 0;
         this._winners?.clear();
+        this._turnIndex = 0; // Reset the turn index to 0 when reinitializing the game
 
         this._handNumber += 1;
     }
