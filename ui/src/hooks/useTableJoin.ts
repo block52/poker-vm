@@ -10,17 +10,20 @@ interface JoinTableOptions {
   privateKey: string | null;
   publicKey: string | null;
   nonce?: string | number;
+  index?: number;
 }
 
 async function joinTableFetcher(
   url: string,
   { arg }: { arg: JoinTableOptions }
 ) {
-  const { buyInAmount, userAddress, privateKey, publicKey, nonce = Date.now().toString() } = arg;
+  const { buyInAmount, userAddress, privateKey, publicKey, nonce = Date.now().toString(), index = 0 } = arg;
   
   if (!userAddress || !privateKey) {
     throw new Error("Missing user address or private key");
   }
+
+  console.log("Joining table with index:", index);
 
   // Create a wallet to sign the message
   const wallet = new ethers.Wallet(privateKey);
@@ -40,8 +43,11 @@ async function joinTableFetcher(
     signature,
     publicKey: publicKey || userAddress,
     nonce: nonce || timestamp,
-    timestamp
+    timestamp,
+    index
   };
+
+  console.log("Join table request:", requestData);
 
   // Send the request to the proxy server
   const response = await axios.post(url, requestData);

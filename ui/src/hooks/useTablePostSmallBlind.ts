@@ -19,7 +19,7 @@ async function postSmallBlindFetcher(
   const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), actionIndex, smallBlindAmount } = arg;
   
   console.log("🔵 Post small blind attempt for:", url);
-  console.log("🔵 Using action index:", actionIndex);
+  console.log("🔵 Using action index:", actionIndex, typeof actionIndex);
   
   if (!userAddress || !privateKey) {
     console.error("🔵 Missing address or private key");
