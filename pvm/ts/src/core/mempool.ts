@@ -11,9 +11,27 @@ export class Mempool {
     }
 
     public async add(transaction: Transaction): Promise<void> {
+        // Check if this transaction is already in the mempool by hash
         if (this.txMap.has(transaction.hash)) {
-            console.log(`Transaction already in mempool: ${transaction.hash}`);
+            console.log(`Transaction already in mempool (hash match): ${transaction.hash}`);
+            console.log(`Transaction data: ${transaction.data}, from: ${transaction.from}, to: ${transaction.to}`);
             return;
+        }
+
+        // Also check for potential duplicates by content (same from, to, data, amount)
+        // This is a backup check in case hash calculation isn't consistent
+        const potentialDuplicate = this.find(tx => 
+            tx.from.toLowerCase() === transaction.from.toLowerCase() &&
+            tx.to.toLowerCase() === transaction.to.toLowerCase() &&
+            tx.data === transaction.data &&
+            tx.value === transaction.value
+        );
+
+        if (potentialDuplicate) {
+            console.log(`Potential duplicate transaction detected in mempool (content match):`);
+            console.log(`Existing: ${potentialDuplicate.hash}, data: ${potentialDuplicate.data}`);
+            console.log(`New: ${transaction.hash}, data: ${transaction.data}`);
+            // Still add it since we can't be 100% sure it's a duplicate without proper hash calculation
         }
 
         const exists = await this.transactionManagement.exists(transaction.hash);
@@ -40,6 +58,7 @@ export class Mempool {
         }
 
         this.txMap.set(transaction.hash, transaction);
+        console.log(`Added transaction to mempool: ${transaction.hash}, data: ${transaction.data}`);
     }
 
     public get(): Transaction[] {
