@@ -207,6 +207,7 @@ app.post("/table/:tableId/fold", async (req, res) => {
     console.log("Request body:", req.body);
     console.log("   signature:", req.body.signature);
     console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index);
 
     try {
         // Format the RPC call to match the PERFORM_ACTION structure
@@ -219,7 +220,7 @@ app.post("/table/:tableId/fold", async (req, res) => {
                 "fold", // action
                 "0", // amount (folding doesn't require an amount)
                 req.body.nonce || 0, // nonce (optional)
-                0 // data/index
+                req.body.index // data/index - use the provided index or default to 1 based on game state
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
