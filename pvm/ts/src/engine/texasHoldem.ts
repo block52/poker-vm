@@ -542,12 +542,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
         switch (action) {
             case NonPlayerActionType.JOIN:
                 this.join(address, amount!);
+                this.incrementTurnIndex();
                 break;
             case NonPlayerActionType.LEAVE:
                 this.leave(address);
+                this.incrementTurnIndex();
                 break;
             case NonPlayerActionType.DEAL:
                 this.deal(data);
+                this.incrementTurnIndex();
                 break;
         }
 
