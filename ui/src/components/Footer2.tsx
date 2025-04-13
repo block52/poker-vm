@@ -20,6 +20,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Get stored address for display
     const userAddress = localStorage.getItem("user_eth_public_key");
     
+    // IMPORTANT: Initialize ALL hooks at the top level, before any conditional logic
     // Use the hook with the effective tableId
     const { 
         legalActions,
@@ -36,16 +37,16 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         isPlayerInGame
     } = usePlayerLegalActions(effectiveTableId);
 
+    // Initialize fold hook - MOVED UP before any conditionals
+    const { foldHand, isFolding } = useTableFold(effectiveTableId);
+
+    // Initialize post small blind hook - MOVED UP before any conditionals
+    const { postSmallBlind, isPostingSmallBlind } = useTablePostSmallBlind(effectiveTableId);
+
     // Don't render the footer if the user is not in the game
     if (!isPlayerInGame) {
         return null;
     }
-
-    // Initialize fold hook
-    const { foldHand, isFolding } = useTableFold(effectiveTableId);
-
-    // Initialize post small blind hook
-    const { postSmallBlind, isPostingSmallBlind } = useTablePostSmallBlind(effectiveTableId);
     
     // Check if fold action is available
     const hasFoldAction = React.useMemo(() => {
