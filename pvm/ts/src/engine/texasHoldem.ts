@@ -273,53 +273,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // TODO: Need to consider the work flow here, but make active for now
         player.updateStatus(PlayerStatus.ACTIVE);
-
-        const autoPostBlinds = false;
-        // These should be done via the add action function
-        if (autoPostBlinds) {
-            // Auto join the first player
-            if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.PREFLOP) {
-                // post small blind
-                new SmallBlindAction(this, this._update).execute(player, 0, this._gameOptions.smallBlind);
-
-                // This is the last player to act
-                this._lastActedSeat = seat;
-
-                // Add to bets to preflop round
-                const turn: Turn = {
-                    playerId: player.address,
-                    action: PlayerActionType.SMALL_BLIND,
-                    amount: this._gameOptions.smallBlind,
-                    index: this._turnIndex
-                };
-
-                player.addAction(turn);
-                player.updateStatus(PlayerStatus.ACTIVE);
-            }
-
-            // Auto join the second player
-            if (this.getPlayerCount() === 2 && this.currentRound === TexasHoldemRound.PREFLOP) {
-                // post big blind
-                new BigBlindAction(this, this._update).execute(player, 0, this._gameOptions.bigBlind);
-
-                // This is the last player to act
-                this._lastActedSeat = seat;
-
-                // Add to bets to pre-flop round
-                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind, index: this._turnIndex };
-
-                player.addAction(turn);
-                player.updateStatus(PlayerStatus.ACTIVE);
-            }
-        }
-
-        // Check if we haven't dealt
-        if (autoPostBlinds) {
-            if (this.getPlayerCount() === this._gameOptions.minPlayers && this.currentRound === TexasHoldemRound.PREFLOP) {
-                this.shuffle();
-                this.deal();
-            }
-        }
     }
 
     private incrementHandNumber(): void {
@@ -539,21 +492,22 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Invalid action index.");
         }
 
-        switch (action) {
-            case NonPlayerActionType.JOIN:
-                this.join(address, amount!);
-                this.incrementTurnIndex();
-                break;
-            case NonPlayerActionType.LEAVE:
-                this.leave(address);
-                this.incrementTurnIndex();
-                break;
-            case NonPlayerActionType.DEAL:
-                this.deal(data);
-                this.incrementTurnIndex();
-                break;
+        // Handle non-player actions that don't require the player to exist
+        if (action === NonPlayerActionType.JOIN) {
+            this.join(address, amount!);
+            // Add the join action to history
+            this.addAction({ playerId: address, action, amount, index }, this._currentRound);
+            return; // Exit early, don't need further processing
         }
 
+        if (action === NonPlayerActionType.LEAVE) {
+            this.leave(address);
+            // Add the leave action to history
+            this.addAction({ playerId: address, action, amount, index }, this._currentRound);
+            return; // Exit early, don't need further processing
+        }
+
+        // Check if player exists for all other actions
         if (!this.exists(address)) {
             throw new Error("Player not found.");
         }
@@ -569,7 +523,29 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const player = this.getPlayer(address);
         const seat = this.getPlayerSeatNumber(address);
 
+        // Process the action
         switch (action) {
+            case NonPlayerActionType.DEAL:
+                this.deal(data);
+                // First verify the deal is valid via the DealAction
+                try {
+                    new DealAction(this, this._update).execute(player, index);
+
+                    // For 3+ player games, set the last acted seat to the big blind position
+                    // so that the next player to act will be the one after the big blind
+                    const activePlayerCount = this.getActivePlayerCount();
+                    if (activePlayerCount > 2) {
+                        console.log("Deal action: Setting last acted seat to big blind position:", this._bigBlindPosition);
+                        this._lastActedSeat = this._bigBlindPosition;
+                    } else {
+                        // For 2-player games, set to dealer position so small blind acts next
+                        console.log("Deal action: Setting last acted seat to dealer position:", this._dealer);
+                        this._lastActedSeat = this._dealer;
+                    }
+                } catch (error) {
+                    console.error("Error performing deal action:", error);
+                }
+                break;
             // todo: ante
             case PlayerActionType.SMALL_BLIND:
                 new SmallBlindAction(this, this._update).execute(player, index, this._gameOptions.smallBlind);
@@ -593,33 +569,16 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case PlayerActionType.RAISE:
                 new RaiseAction(this, this._update).execute(player, index, amount);
                 break;
-            case NonPlayerActionType.DEAL:
-                // First verify the deal is valid via the DealAction
-                try {
-                    new DealAction(this, this._update).execute(player, index);
-
-                    // For 3+ player games, set the last acted seat to the big blind position
-                    // so that the next player to act will be the one after the big blind
-                    const activePlayerCount = this.getActivePlayerCount();
-                    if (activePlayerCount > 2) {
-                        console.log("Deal action: Setting last acted seat to big blind position:", this._bigBlindPosition);
-                        this._lastActedSeat = this._bigBlindPosition;
-                    } else {
-                        // For 2-player games, set to dealer position so small blind acts next
-                        console.log("Deal action: Setting last acted seat to dealer position:", this._dealer);
-                        this._lastActedSeat = this._dealer;
-                    }
-                } catch (error) {
-                    console.error("Error performing deal action:", error);
-                }
-                break;
             default:
                 // do we need to roll back last acted seat?
                 break;
         }
 
+        // Update player's actions and the game state
         player.addAction({ playerId: address, action, amount, index });
         this._lastActedSeat = seat;
+        this.addAction({ playerId: address, action, amount, index }, this._currentRound);
+        
         if (this.hasRoundEnded(this._currentRound) === true) {
             this.nextRound();
         }
@@ -652,8 +611,21 @@ class TexasHoldemGame implements IPoker, IUpdate {
     getActionDTOs(): ActionDTO[] {
         const actions: ActionDTO[] = [];
 
+        // Track non-player actions like JOIN, LEAVE that should be included
+        // in previousActions even though they might not belong to a specific round
+        const nonPlayerActions: TurnWithSeat[] = [];
+
         for (const [round, turns] of this._rounds) {
             for (const turn of turns) {
+                // Handle JOIN and LEAVE actions by collecting them separately
+                if (
+                    turn.action === NonPlayerActionType.JOIN ||
+                    turn.action === NonPlayerActionType.LEAVE
+                ) {
+                    nonPlayerActions.push(turn);
+                    continue;
+                }
+
                 const action: ActionDTO = {
                     playerId: turn.playerId,
                     seat: turn.seat,
@@ -665,6 +637,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
                 actions.push(action);
             }
+        }
+
+        // Add non-player actions at the beginning of the array
+        // since they usually happen before the round actions
+        for (const turn of nonPlayerActions) {
+            actions.unshift({
+                playerId: turn.playerId,
+                seat: turn.seat,
+                action: turn.action,
+                amount: turn.amount ? turn.amount.toString() : "",
+                round: TexasHoldemRound.PREFLOP, // Non-player actions happen in PREFLOP
+                index: turn.index
+            });
         }
 
         return actions;
