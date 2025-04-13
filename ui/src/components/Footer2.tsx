@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import * as React from "react";
 import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
 import { useParams } from "react-router-dom";
+import { useTableFold } from "../hooks/useTableFold";
+
 
 interface Footer2Props {
     tableId?: string;
@@ -15,7 +17,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     const effectiveTableId = propTableId || urlTableId || "";
     
     // Use the hook with the effective tableId
-    const {
+    const { 
         legalActions,
         isSmallBlindPosition,
         isBigBlindPosition,
@@ -24,12 +26,23 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         playerStatus,
         playerSeat,
         isLoading,
-        error
+        error,
+        foldActionIndex
     } = usePlayerLegalActions(effectiveTableId);
+
+    // Initialize fold hook
+    const { foldHand, isFolding } = useTableFold(effectiveTableId);
+    
+    // Check if fold action is available
+    const hasFoldAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "fold");
+    }, [legalActions]);
 
     // Get stored address for display
     const userAddress = localStorage.getItem("user_eth_public_key");
-    
+    // Get private key from localStorage (assuming it's stored there)
+    const privateKey = localStorage.getItem("user_eth_private_key");
+
     // Show when legal actions change
     useEffect(() => {
         console.log("🔄 Player legal actions updated:", {
@@ -55,10 +68,40 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         }
     };
 
+    // Handle fold button click
+    const handleFold = async () => {
+        if (!foldHand) return;
+        
+        try {
+            await foldHand({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: foldActionIndex
+            });
+            console.log("Fold successful");
+        } catch (error) {
+            console.error("Error when folding:", error);
+        }
+    };
+
     // Simple display of the legal actions data now with more compact design
     return (
         <div className="w-full h-full bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-2 overflow-y-auto text-xs">
             <div className="max-w-4xl mx-auto">
+                {/* Fold button if available */}
+                {hasFoldAction && (
+                    <div className="mb-2">
+                        <button
+                            onClick={handleFold}
+                            className="bg-red-600 hover:bg-red-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isFolding}
+                        >
+                            {isFolding ? "Folding..." : "Fold"}
+                        </button>
+                    </div>
+                )}
+
                 <h3 className="text-sm font-bold mb-1">Player Actions{effectiveTableId ? ` (${effectiveTableId.substring(0, 6)}...)` : ""}</h3>
                 
                 {isLoading ? (
@@ -84,7 +127,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                                 <p className="leading-tight"><span className="opacity-80">Actions:</span> {legalActions?.length || 0}</p>
                             </div>
                         </div>
-                        
+
                         <h4 className="text-xs font-bold mt-1 bg-slate-700 p-1 rounded">Available Actions:</h4>
                         {!legalActions || legalActions.length === 0 ? (
                             <p className="py-1 px-1 italic text-xs">No actions available</p>
@@ -111,8 +154,8 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                                     {JSON.stringify({tableId: effectiveTableId, legalActions}, null, 2)}
                                 </pre>
                             </details>
-                        </div>
-                    </div>
+                                            </div>
+                                        </div>
                 )}
             </div>
         </div>

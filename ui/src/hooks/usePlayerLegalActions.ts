@@ -30,6 +30,7 @@ interface PlayerLegalActionsResult {
   isLoading: boolean;
   error: any;
   refresh: () => void;
+  foldActionIndex: number | null;
 }
 
 /**
@@ -91,7 +92,8 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     playerSeat: null,
     isLoading,
     error,
-    refresh: mutate
+    refresh: mutate,
+    foldActionIndex: null
   };
 
   // Handle loading and error states
@@ -185,6 +187,16 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     const isPlayerTurn = gameData.nextToAct === currentPlayer.seat;
     console.log("⚠️ Next to act:", gameData.nextToAct, "Player seat:", currentPlayer.seat, "Is player turn:", isPlayerTurn);
     
+    // Find the fold action index
+    let foldActionIndex = null;
+    if (Array.isArray(currentPlayer.legalActions)) {
+      const foldAction = currentPlayer.legalActions.find((action: LegalAction) => action.action === "fold");
+      if (foldAction) {
+        foldActionIndex = foldAction.index;
+        console.log("⚠️ Found fold action with index:", foldActionIndex);
+      }
+    }
+    
     // Extract and return all the relevant information
     const result = {
       legalActions: Array.isArray(currentPlayer.legalActions) ? currentPlayer.legalActions : [],
@@ -196,7 +208,8 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
       playerSeat: currentPlayer.seat || null,
       isLoading: false,
       error: null,
-      refresh: mutate
+      refresh: mutate,
+      foldActionIndex
     };
     
     console.log("⚠️ FINAL RESULT:", JSON.stringify(result, null, 2));
