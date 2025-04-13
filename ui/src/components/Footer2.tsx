@@ -3,6 +3,7 @@ import * as React from "react";
 import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
 import { useParams } from "react-router-dom";
 import { useTableFold } from "../hooks/useTableFold";
+import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
 
 
 interface Footer2Props {
@@ -32,10 +33,24 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
 
     // Initialize fold hook
     const { foldHand, isFolding } = useTableFold(effectiveTableId);
+
+    // Initialize post small blind hook
+    const { postSmallBlind, isPostingSmallBlind } = useTablePostSmallBlind(effectiveTableId);
     
     // Check if fold action is available
     const hasFoldAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "fold");
+    }, [legalActions]);
+
+    // Check if post-small-blind action is available
+    const hasPostSmallBlindAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "post-small-blind");
+    }, [legalActions]);
+
+    // Find the post-small-blind action index
+    const postSmallBlindActionIndex = React.useMemo(() => {
+        const action = legalActions?.find(action => action.action === "post-small-blind");
+        return action?.index || 0;
     }, [legalActions]);
 
     // Get stored address for display
@@ -85,13 +100,31 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         }
     };
 
+    // Handle post small blind button click
+    const handlePostSmallBlind = async () => {
+        if (!postSmallBlind) return;
+        
+        try {
+            await postSmallBlind({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: postSmallBlindActionIndex
+            });
+            console.log("Post small blind successful");
+        } catch (error) {
+            console.error("Error when posting small blind:", error);
+        }
+    };
+
     // Simple display of the legal actions data now with more compact design
     return (
         <div className="w-full h-full bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-2 overflow-y-auto text-xs">
             <div className="max-w-4xl mx-auto">
-                {/* Fold button if available */}
-                {hasFoldAction && (
-                    <div className="mb-2">
+                {/* Action buttons */}
+                <div className="flex gap-2 mb-2">
+                    {/* Fold button if available */}
+                    {hasFoldAction && (
                         <button
                             onClick={handleFold}
                             className="bg-red-600 hover:bg-red-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
@@ -99,8 +132,19 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                         >
                             {isFolding ? "Folding..." : "Fold"}
                         </button>
-                    </div>
-                )}
+                    )}
+
+                    {/* Small Blind button if available */}
+                    {hasPostSmallBlindAction && (
+                        <button
+                            onClick={handlePostSmallBlind}
+                            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isPostingSmallBlind}
+                        >
+                            {isPostingSmallBlind ? "Posting SB..." : "Post Small Blind"}
+                        </button>
+                    )}
+                </div>
 
                 <h3 className="text-sm font-bold mb-1">Player Actions{effectiveTableId ? ` (${effectiveTableId.substring(0, 6)}...)` : ""}</h3>
                 
