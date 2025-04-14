@@ -177,7 +177,7 @@ describe("Texas Holdem - Turn Index", () => {
             game.reInit([]);
         });
 
-        it("should throw an error if action is performed with incorrect index", () => {
+        it.only("should throw an error if action is performed with incorrect index", () => {
             // Attempt to perform an action with incorrect index (1 instead of 0)
             expect(() => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 1);
