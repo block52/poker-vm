@@ -9,6 +9,7 @@ import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 import { toDisplaySeat } from "../../../utils/tableUtils";
 import { useTableJoin } from "../../../hooks/useTableJoin";
 import { useMinAndMaxBuyIns } from "../../../hooks/useMinAndMaxBuyIns";
+import { useTableTurnIndex } from "../../../hooks/useTableTurnIndex";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -35,6 +36,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const privateKey = localStorage.getItem("user_eth_private_key");
 
         const { balance } = useUserWallet(); // this is the wallet in the browser.
+        const actionIndex = useTableTurnIndex(tableId);
 
         // Add state for buy-in modal
         const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -50,7 +52,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             userAddress,
             hasTableData: !!tableData,
             hasLocalTableData: !!localTableData,
-            tableId
+            tableId,
+            actionIndex
         });
 
         // Update local table data with debounce
@@ -62,12 +65,13 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     players: tableData?.data?.players?.map((p: any) => ({
                         address: p.address,
                         seat: p.seat // No need to add 1 since backend is already using 1-based
-                    }))
+                    })),
+                    actionIndex
                 });
             }, 1000); // 1 second debounce
 
             return () => clearTimeout(timer);
-        }, [tableData, index]);
+        }, [tableData, index, actionIndex]);
 
         // First, check if user is already playing
         // First, check if user is already playing
@@ -188,6 +192,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             debugLog("isUserAlreadyPlaying:", isUserAlreadyPlaying);
             debugLog("Seat Index:", index);
             debugLog("Table ID:", tableId);
+            debugLog("Action Index:", actionIndex);
 
             if (!canJoinThisSeat) {
                 debugLog("Cannot join: either seat is taken or user is already playing");
@@ -196,13 +201,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             // Instead of joining immediately, show the buy-in modal
             setShowBuyInModal(true);
-
-            // Set default buy-in amount (20x big blind)
-            const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC
-            const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-            const defaultBuyIn = ethers.formatUnits(twentyBigBlinds, 18);
-            setBuyInAmount(defaultBuyIn);
-        }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index]);
+            setBuyInAmount("");
+        }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index, actionIndex]);
 
         // Function to handle the actual join after user confirms buy-in amount
         const handleConfirmBuyIn = async () => {
@@ -245,12 +245,15 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setIsConfirming(true);
                 setBuyInError("");
                 
-                // Use the mutation hook to join
+                console.log("Joining table with action index:", actionIndex);
+                
+                // Use the mutation hook to join with the action index
                 const result = await joinTable({
                     buyInAmount: buyInWei,
                     userAddress,
                     privateKey,
-                    publicKey: userPublicKey
+                    publicKey: userPublicKey,
+                    index: actionIndex
                 });
                 
                 // Handle success (setting table data)
@@ -272,27 +275,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setIsConfirming(false);
             }
         };
-
-
-        // Update the useEffect to set default buy-in to max wallet amount
-        useEffect(() => {
-            if (showBuyInModal && balance) {
-                // Set default buy-in to 20x big blind, but within min-max range
-                const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
-                const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-                
-                // Ensure the amount is within the table's min-max range
-                let defaultAmount = twentyBigBlinds;
-                if (BigInt(defaultAmount) < BigInt(minBuyInWei)) {
-                    defaultAmount = minBuyInWei;
-                } else if (BigInt(defaultAmount) > BigInt(maxBuyInWei)) {
-                    defaultAmount = maxBuyInWei;
-                }
-                
-                const formattedAmount = ethers.formatUnits(defaultAmount, 18);
-                setBuyInAmount(formattedAmount);
-            }
-        }, [showBuyInModal, balance, minBuyInWei, maxBuyInWei]);
 
         // Only log position once during mount
         useEffect(() => {

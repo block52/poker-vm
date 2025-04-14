@@ -781,7 +781,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 };
 
-export const useTableContext = () => {
+export const useTableContext = (): TableContextType => {
     const context = useContext(TableContext);
     if (context === undefined) {
         throw new Error("useTableContext must be used within a TableProvider");

@@ -31,6 +31,8 @@ interface PlayerLegalActionsResult {
   error: any;
   refresh: () => void;
   foldActionIndex: number | null;
+  actionTurnIndex: number;
+  isPlayerInGame: boolean;
 }
 
 /**
@@ -93,7 +95,9 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     isLoading,
     error,
     refresh: mutate,
-    foldActionIndex: null
+    foldActionIndex: null,
+    actionTurnIndex: 0,
+    isPlayerInGame: false
   };
 
   // Handle loading and error states
@@ -126,6 +130,7 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     
     // Try to find the current player in the table data
     let currentPlayer = null;
+    let isPlayerInGame = false;
     
     if (userAddress && gameData.players?.length > 0) {
       // Log all player addresses for debugging
@@ -147,8 +152,10 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
       
       if (currentPlayer) {
         console.log("⚠️ Found matching player for address:", userAddress);
+        isPlayerInGame = true;
       } else {
         console.log("⚠️ No matching player found for address:", userAddress);
+        isPlayerInGame = false;
       }
     }
 
@@ -197,6 +204,27 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
       }
     }
     
+    // Calculate the common action turn index
+    // Get all indices from all legal actions
+    let actionTurnIndex = 0;
+    if (Array.isArray(currentPlayer.legalActions) && currentPlayer.legalActions.length > 0) {
+      // Get the first index - all actions should have the same index
+      const firstActionIndex = currentPlayer.legalActions[0].index;
+      
+      // Verify that all actions have the same index (for debugging)
+      const allSameIndex = currentPlayer.legalActions.every((action: LegalAction) => 
+        action.index === firstActionIndex
+      );
+      
+      if (!allSameIndex) {
+        console.warn("⚠️ WARNING: Not all legal actions have the same index!");
+        console.warn("⚠️ Action indices:", currentPlayer.legalActions.map((a: LegalAction) => `${a.action}: ${a.index}`));
+      }
+      
+      actionTurnIndex = firstActionIndex;
+      console.log("⚠️ Using common action turn index:", actionTurnIndex);
+    }
+    
     // Extract and return all the relevant information
     const result = {
       legalActions: Array.isArray(currentPlayer.legalActions) ? currentPlayer.legalActions : [],
@@ -209,7 +237,9 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
       isLoading: false,
       error: null,
       refresh: mutate,
-      foldActionIndex
+      foldActionIndex,
+      actionTurnIndex, // Add the common action turn index
+      isPlayerInGame // Add the flag indicating if the player is in the game
     };
     
     console.log("⚠️ FINAL RESULT:", JSON.stringify(result, null, 2));

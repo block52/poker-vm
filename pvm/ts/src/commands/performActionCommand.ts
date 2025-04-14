@@ -36,7 +36,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         ]);
 
         const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-        game.performAction(this.to, this.action, this.index, this.amount);
+        game.performAction(this.from, this.action, this.index, this.amount);
 
         const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, `${this.action}-${this.index}`);
         await this.mempool.add(tx);

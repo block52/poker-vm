@@ -3,6 +3,7 @@ import * as React from "react";
 import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
 import { useParams } from "react-router-dom";
 import { useTableFold } from "../hooks/useTableFold";
+import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
 
 
 interface Footer2Props {
@@ -16,6 +17,10 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Use prop tableId, URL param tableId, or fallback to empty string
     const effectiveTableId = propTableId || urlTableId || "";
     
+    // Get stored address for display
+    const userAddress = localStorage.getItem("user_eth_public_key");
+    
+    // IMPORTANT: Initialize ALL hooks at the top level, before any conditional logic
     // Use the hook with the effective tableId
     const { 
         legalActions,
@@ -27,19 +32,32 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         playerSeat,
         isLoading,
         error,
-        foldActionIndex
+        foldActionIndex,
+        actionTurnIndex,
+        isPlayerInGame
     } = usePlayerLegalActions(effectiveTableId);
 
-    // Initialize fold hook
+    // Initialize fold hook - MOVED UP before any conditionals
     const { foldHand, isFolding } = useTableFold(effectiveTableId);
+
+    // Initialize post small blind hook - MOVED UP before any conditionals
+    const { postSmallBlind, isPostingSmallBlind } = useTablePostSmallBlind(effectiveTableId);
+
+    // Don't render the footer if the user is not in the game
+    if (!isPlayerInGame) {
+        return null;
+    }
     
     // Check if fold action is available
     const hasFoldAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "fold");
     }, [legalActions]);
 
-    // Get stored address for display
-    const userAddress = localStorage.getItem("user_eth_public_key");
+    // Check if post-small-blind action is available
+    const hasPostSmallBlindAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "post-small-blind");
+    }, [legalActions]);
+
     // Get private key from localStorage (assuming it's stored there)
     const privateKey = localStorage.getItem("user_eth_private_key");
 
@@ -52,9 +70,10 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             isDealerPosition,
             isPlayerTurn,
             playerStatus,
-            playerSeat
+            playerSeat,
+            actionTurnIndex
         });
-    }, [legalActions, isSmallBlindPosition, isBigBlindPosition, isDealerPosition, isPlayerTurn, playerStatus, playerSeat]);
+    }, [legalActions, isSmallBlindPosition, isBigBlindPosition, isDealerPosition, isPlayerTurn, playerStatus, playerSeat, actionTurnIndex]);
 
     // Format the amount to make it more readable (convert from wei to ETH)
     const formatAmount = (amountWei: string): string => {
@@ -77,7 +96,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                 userAddress,
                 privateKey,
                 publicKey: userAddress,
-                actionIndex: foldActionIndex
+                actionIndex: actionTurnIndex
             });
             console.log("Fold successful");
         } catch (error) {
@@ -85,13 +104,31 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         }
     };
 
+    // Handle post small blind button click
+    const handlePostSmallBlind = async () => {
+        if (!postSmallBlind) return;
+        
+        try {
+            await postSmallBlind({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex
+            });
+            console.log("Post small blind successful");
+        } catch (error) {
+            console.error("Error when posting small blind:", error);
+        }
+    };
+
     // Simple display of the legal actions data now with more compact design
     return (
         <div className="w-full h-full bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-2 overflow-y-auto text-xs">
             <div className="max-w-4xl mx-auto">
-                {/* Fold button if available */}
-                {hasFoldAction && (
-                    <div className="mb-2">
+                {/* Action buttons */}
+                <div className="flex gap-2 mb-2">
+                    {/* Fold button if available */}
+                    {hasFoldAction && (
                         <button
                             onClick={handleFold}
                             className="bg-red-600 hover:bg-red-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
@@ -99,8 +136,19 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                         >
                             {isFolding ? "Folding..." : "Fold"}
                         </button>
-                    </div>
-                )}
+                    )}
+
+                    {/* Small Blind button if available */}
+                    {hasPostSmallBlindAction && (
+                        <button
+                            onClick={handlePostSmallBlind}
+                            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isPostingSmallBlind}
+                        >
+                            {isPostingSmallBlind ? "Posting SB..." : "Post Small Blind"}
+                        </button>
+                    )}
+                </div>
 
                 <h3 className="text-sm font-bold mb-1">Player Actions{effectiveTableId ? ` (${effectiveTableId.substring(0, 6)}...)` : ""}</h3>
                 
@@ -154,8 +202,8 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                                     {JSON.stringify({tableId: effectiveTableId, legalActions}, null, 2)}
                                 </pre>
                             </details>
-                                            </div>
-                                        </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

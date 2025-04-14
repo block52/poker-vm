@@ -19,7 +19,7 @@ async function postSmallBlindFetcher(
   const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), actionIndex, smallBlindAmount } = arg;
   
   console.log("🔵 Post small blind attempt for:", url);
-  console.log("🔵 Using action index:", actionIndex);
+  console.log("🔵 Using action index:", actionIndex, typeof actionIndex);
   
   if (!userAddress || !privateKey) {
     console.error("🔵 Missing address or private key");
@@ -57,7 +57,7 @@ async function postSmallBlindFetcher(
     action: "post-small-blind", // Explicitly specify the action
     amount, // Small blind amount
     smallBlindAmount: amount, // Include as both for flexibility in the server
-    nonce: nonce || timestamp,
+    nonce: nonce,
     timestamp,
     index: actionIndex !== undefined && actionIndex !== null ? actionIndex : 0 // Check explicitly for undefined/null
   };
