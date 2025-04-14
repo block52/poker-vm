@@ -1,4 +1,4 @@
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
@@ -7,6 +7,11 @@ class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CALL }
 
     verify(player: Player): Range | undefined {
+        // Cannot call in the ANTE round
+        if (this.game.currentRound === TexasHoldemRound.ANTE) {
+            throw new Error("Cannot call in the ante round. Small blind must post.");
+        }
+        
         const lastAction = this.game.getLastRoundAction();
 
         if (!lastAction)

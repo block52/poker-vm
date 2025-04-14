@@ -9,6 +9,11 @@ class BetAction extends BaseAction implements IAction {
     }
 
     verify(player: Player): Range | undefined {
+        // Cannot bet in the ANTE round
+        if (this.game.currentRound === TexasHoldemRound.ANTE) {
+            throw new Error("Cannot bet in the ante round. Small blind must post.");
+        }
+        
         // Can never bet if you haven't matched the largest bet of the round
         const largestBet = this.getLargestBet();
         const sumBets = this.getSumBets(player.address);
