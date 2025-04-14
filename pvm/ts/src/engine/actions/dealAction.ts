@@ -9,9 +9,9 @@ class DealAction extends BaseAction implements IAction {
     }
 
     verify(player: Player): Range {
-        // Can only bet the big blind amount when preflop
-        if (this.game.currentRound !== TexasHoldemRound.PREFLOP) {
-            throw new Error("Can only deal when preflop.");
+        // Can only deal when in preflop or ante
+        if (this.game.currentRound !== TexasHoldemRound.PREFLOP && this.game.currentRound !== TexasHoldemRound.ANTE) {
+            throw new Error("Can only deal when in preflop or ante round.");
         }
 
         const count = this.game.getPlayerCount();
@@ -19,9 +19,12 @@ class DealAction extends BaseAction implements IAction {
             throw new Error("Not enough players to deal.");
         }
 
-        const actions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
-        if (actions.length !== 2) {
-            throw new Error("Not all players have posted their blinds or action has already started.");
+        // Get actions from the current round
+        const actions = this.game.getActionsForRound(this.game.currentRound);
+        
+        // Check if we're in the right phase to deal
+        if (actions.length < 2) {
+            throw new Error("Not all players have posted their blinds.");
         }
 
         // Check if small blind has been posted first
@@ -52,7 +55,8 @@ class DealAction extends BaseAction implements IAction {
     }
 
     execute(player: Player, index: number): void {
-
+        this.verify(player);
+        
         this.game.deal();
 
         // The verification should have already been done

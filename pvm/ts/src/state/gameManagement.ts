@@ -60,7 +60,7 @@ export class GameManagement extends StateManager {
                 communityCards: [],
                 pots: ["0"],
                 nextToAct: -1,
-                round: "preflop",
+                round: "ante",
                 winners: [],
                 signature: ethers.ZeroHash
             };
@@ -91,7 +91,7 @@ export class GameManagement extends StateManager {
                 communityCards: [],
                 pots: ["0"],
                 nextToAct: -1,
-                round: "preflop",
+                round: "ante",
                 winners: [],
                 signature: ethers.ZeroHash
             }
