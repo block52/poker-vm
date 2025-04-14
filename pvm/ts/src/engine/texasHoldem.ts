@@ -342,6 +342,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             
             const hasBigBlindPosted = anteActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
             if (!hasBigBlindPosted) {
+                // After small blind posts, big blind player is next to act
                 return this.getPlayerAtSeat(this._bigBlindPosition);
             }
             
@@ -649,6 +650,25 @@ class TexasHoldemGame implements IPoker, IUpdate {
             this.addAction({ playerId: address, action, amount, index }, this._currentRound);
             
             if (this.hasRoundEnded(this._currentRound) === true) {
+                // Special handling for transition from ANTE to PREFLOP
+                // When we transition from ANTE to PREFLOP after small blind is posted,
+                // copy the blind action to the PREFLOP round as well
+                if (this._currentRound === TexasHoldemRound.ANTE && action === PlayerActionType.SMALL_BLIND) {
+                    console.log(`[DEBUG] Transitioning from ANTE to PREFLOP, copying small blind action`);
+                    // Make sure the PREFLOP round exists
+                    if (!this._rounds.has(TexasHoldemRound.PREFLOP)) {
+                        this._rounds.set(TexasHoldemRound.PREFLOP, []);
+                    }
+                    
+                    // Get the current action with seat and timestamp
+                    const anteActions = this._rounds.get(TexasHoldemRound.ANTE) || [];
+                    const lastAction = anteActions[anteActions.length - 1];
+                    
+                    // Add it to the PREFLOP round as well without incrementing the turn index
+                    const actions = this._rounds.get(TexasHoldemRound.PREFLOP)!;
+                    actions.push(lastAction);
+                }
+                
                 this.nextRound();
             }
         } catch (error) {
@@ -1023,12 +1043,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     hasRoundEnded(round: TexasHoldemRound): boolean {
-        // Special case for ANTE round - it ends when the first player joins
+        // Special case for ANTE round - it transitions to PREFLOP when small blind is posted
         if (round === TexasHoldemRound.ANTE) {
-            const players = this.getSeatedPlayers();
-            if (players.length > 0) {
+            const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+            if (!anteActions || anteActions.length === 0) {
+                return false;
+            }
+            
+            // When small blind is posted, we transition to PREFLOP
+            const hasSmallBlindPosted = anteActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
+            if (hasSmallBlindPosted) {
                 return true;
             }
+            
             return false;
         }
 
