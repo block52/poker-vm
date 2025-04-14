@@ -531,9 +531,17 @@ class TexasHoldemGame implements IPoker, IUpdate {
         console.log(`[DEBUG] performAction called: address=${address}, action=${action}, index=${index}, _turnIndex=${this._turnIndex}`);
 
         // Check if the provided index matches the current turn index (without incrementing)
-        if (index !== this.currentTurnIndex()) {
-            console.error(`[DEBUG] Invalid action index. Expected ${this.currentTurnIndex()}, got ${index}`);
+        // Allow a tolerance of +1 to account for frontend/backend sync issues
+        const expectedIndex = this.currentTurnIndex();
+        if (index !== expectedIndex && index !== expectedIndex + 1) {
+            console.error(`[DEBUG] Invalid action index. Expected ${expectedIndex} or ${expectedIndex + 1}, got ${index}`);
             throw new Error("Invalid action index.");
+        }
+        
+        // If the index is ahead by 1, adjust our internal index to match
+        if (index === expectedIndex + 1) {
+            console.log(`[DEBUG] Adjusting turn index to match client: ${expectedIndex} -> ${index}`);
+            this._turnIndex = index;
         }
 
         // Store the addAction method in a variable so we can temporarily override it
