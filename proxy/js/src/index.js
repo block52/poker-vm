@@ -354,6 +354,55 @@ app.post("/table/:tableId/call", async (req, res) => {
     }
 });
 
+// Raise endpoint
+app.post("/table/:tableId/raise", async (req, res) => {
+    console.log("=== RAISE ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index);
+    console.log("Raise amount:", req.body.amount);
+
+    try {
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.RAISE, // action
+                req.body.amount, // amount (required for raise)
+                req.body.nonce || 0, // nonce (optional)
+                req.body.index // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to raise", details: error.message });
+    }
+});
+
 app.post("/table/:tableId/fold", async (req, res) => {
     console.log("=== FOLD ACTION REQUEST ===");
     console.log("Request body:", req.body);

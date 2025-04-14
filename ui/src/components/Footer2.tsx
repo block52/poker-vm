@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import * as React from "react";
 import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
 import { useParams } from "react-router-dom";
@@ -6,6 +6,7 @@ import { useTableFold } from "../hooks/useTableFold";
 import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
 import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
 import { useTableCall } from "../hooks/useTableCall";
+import { useTableRaise } from "../hooks/useTableRaise";
 
 
 interface Footer2Props {
@@ -15,6 +16,9 @@ interface Footer2Props {
 const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Get the tableId from URL params
     const { tableId: urlTableId } = useParams<{ tableId: string }>();
+    
+    // State for raise amount
+    const [raiseAmount, setRaiseAmount] = useState<string>("");
     
     // Use prop tableId, URL param tableId, or fallback to empty string
     const effectiveTableId = propTableId || urlTableId || "";
@@ -50,6 +54,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     
     // Initialize call hook
     const { callHand, isCalling } = useTableCall(effectiveTableId);
+    
+    // Initialize raise hook
+    const { raiseHand, isRaising } = useTableRaise(effectiveTableId);
 
     // Check if fold action is available - ALWAYS define this, even if not used
     const hasFoldAction = React.useMemo(() => {
@@ -69,6 +76,17 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Check if call action is available - ALWAYS define this, even if not used
     const hasCallAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "call") || false;
+    }, [legalActions]);
+    
+    // Check if raise action is available - ALWAYS define this, even if not used
+    const hasRaiseAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "raise") || false;
+    }, [legalActions]);
+    
+    // Get raise amount limits if available - ALWAYS define this, even if not used
+    const raiseActionLimits = React.useMemo(() => {
+        const raiseAction = legalActions?.find(action => action.action === "raise");
+        return raiseAction ? { min: raiseAction.min, max: raiseAction.max } : { min: "0", max: "0" };
     }, [legalActions]);
     
     // Get call amount if available - ALWAYS define this, even if not used
@@ -93,6 +111,13 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             actionTurnIndex
         });
     }, [legalActions, isSmallBlindPosition, isBigBlindPosition, isDealerPosition, isPlayerTurn, playerStatus, playerSeat, actionTurnIndex]);
+
+    // Set default raise amount to minimum when raise limits change
+    useEffect(() => {
+        if (hasRaiseAction && raiseActionLimits.min !== "0") {
+            setRaiseAmount(raiseActionLimits.min);
+        }
+    }, [hasRaiseAction, raiseActionLimits]);
 
     // Format the amount to make it more readable (convert from wei to ETH)
     const formatAmount = (amountWei: string): string => {
@@ -174,6 +199,34 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             console.error("Error when calling:", error);
         }
     };
+    
+    // Handle raise button click
+    const handleRaise = async () => {
+        if (!raiseHand || !raiseAmount) return;
+        
+        // Check if raise amount is within limits
+        const minRaise = BigInt(raiseActionLimits.min);
+        const maxRaise = BigInt(raiseActionLimits.max);
+        const raiseAmountBigInt = BigInt(raiseAmount);
+        
+        if (raiseAmountBigInt < minRaise || raiseAmountBigInt > maxRaise) {
+            console.error(`Raise amount must be between ${formatAmount(raiseActionLimits.min)} and ${formatAmount(raiseActionLimits.max)}`);
+            return;
+        }
+        
+        try {
+            await raiseHand({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex,
+                amount: raiseAmount
+            });
+            console.log("Raise successful");
+        } catch (error) {
+            console.error("Error when raising:", error);
+        }
+    };
 
     // Don't render the footer if the user is not in the game
     if (!isPlayerInGame) {
@@ -185,7 +238,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         <div className="w-full h-full bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-2 overflow-y-auto text-xs">
             <div className="max-w-4xl mx-auto">
                 {/* Action buttons */}
-                <div className="flex gap-2 mb-2">
+                <div className="flex flex-wrap gap-2 mb-2">
                     {/* Fold button if available */}
                     {hasFoldAction && (
                         <button
@@ -228,6 +281,29 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                         >
                             {isCalling ? "Calling..." : `Call ${formatAmount(callAmount)}`}
                         </button>
+                    )}
+                    
+                    {/* Raise controls if available */}
+                    {hasRaiseAction && (
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={raiseAmount}
+                                onChange={(e) => setRaiseAmount(e.target.value)}
+                                className="bg-gray-700 text-white px-2 py-1 rounded w-28 text-sm"
+                                placeholder={`Min: ${formatAmount(raiseActionLimits.min)}`}
+                            />
+                            <button
+                                onClick={handleRaise}
+                                className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                                disabled={isRaising || !raiseAmount}
+                            >
+                                {isRaising ? "Raising..." : "Raise"}
+                            </button>
+                            <span className="text-xs opacity-70">
+                                Min: {formatAmount(raiseActionLimits.min)}, Max: {formatAmount(raiseActionLimits.max)}
+                            </span>
+                        </div>
                     )}
                 </div>
 
