@@ -7,6 +7,7 @@ import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
 import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
 import { useTableCall } from "../hooks/useTableCall";
 import { useTableRaise } from "../hooks/useTableRaise";
+import { useTableDeal } from "../hooks/useTableDeal";
 
 
 interface Footer2Props {
@@ -57,6 +58,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     
     // Initialize raise hook
     const { raiseHand, isRaising } = useTableRaise(effectiveTableId);
+    
+    // Initialize deal hook
+    const { dealCards, isDealing } = useTableDeal(effectiveTableId);
 
     // Check if fold action is available - ALWAYS define this, even if not used
     const hasFoldAction = React.useMemo(() => {
@@ -81,6 +85,11 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Check if raise action is available - ALWAYS define this, even if not used
     const hasRaiseAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "raise") || false;
+    }, [legalActions]);
+    
+    // Check if deal action is available - ALWAYS define this, even if not used
+    const hasDealAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "deal") || false;
     }, [legalActions]);
     
     // Get raise amount limits if available - ALWAYS define this, even if not used
@@ -227,6 +236,23 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             console.error("Error when raising:", error);
         }
     };
+    
+    // Handle deal button click
+    const handleDeal = async () => {
+        if (!dealCards) return;
+        
+        try {
+            await dealCards({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex
+            });
+            console.log("Deal successful");
+        } catch (error) {
+            console.error("Error when dealing:", error);
+        }
+    };
 
     // Don't render the footer if the user is not in the game
     if (!isPlayerInGame) {
@@ -304,6 +330,17 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                                 Min: {formatAmount(raiseActionLimits.min)}, Max: {formatAmount(raiseActionLimits.max)}
                             </span>
                         </div>
+                    )}
+                    
+                    {/* Deal button if available */}
+                    {hasDealAction && (
+                        <button
+                            onClick={handleDeal}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isDealing}
+                        >
+                            {isDealing ? "Dealing..." : "Deal Cards"}
+                        </button>
                     )}
                 </div>
 
