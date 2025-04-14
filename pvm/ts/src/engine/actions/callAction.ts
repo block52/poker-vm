@@ -12,6 +12,21 @@ class CallAction extends BaseAction implements IAction {
             throw new Error("Cannot call in the ante round. Small blind must post.");
         }
         
+        // Check if this player should be posting the big blind instead
+        const seat = this.game.getPlayerSeatNumber(player.address);
+        const isBigBlindSeat = seat === this.game.bigBlindPosition;
+        
+        // If in PREFLOP and big blind player hasn't posted big blind yet, they should post big blind, not call
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP && isBigBlindSeat) {
+            // Check if big blind has been posted yet
+            const bigBlindPosted = this.game.getActionsForRound(TexasHoldemRound.PREFLOP)
+                .some(a => a.action === PlayerActionType.BIG_BLIND);
+                
+            if (!bigBlindPosted) {
+                throw new Error("Big blind player must post big blind before calling.");
+            }
+        }
+        
         const lastAction = this.game.getLastRoundAction();
 
         if (!lastAction)

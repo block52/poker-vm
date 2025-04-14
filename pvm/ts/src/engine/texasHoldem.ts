@@ -658,25 +658,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             this.addAction({ playerId: address, action, amount, index }, this._currentRound);
             
             if (this.hasRoundEnded(this._currentRound) === true) {
-                // Special handling for transition from ANTE to PREFLOP
-                // When we transition from ANTE to PREFLOP after small blind is posted,
-                // copy the blind action to the PREFLOP round as well
-                if (this._currentRound === TexasHoldemRound.ANTE && action === PlayerActionType.SMALL_BLIND) {
-                    console.log(`[DEBUG] Transitioning from ANTE to PREFLOP, copying small blind action`);
-                    // Make sure the PREFLOP round exists
-                    if (!this._rounds.has(TexasHoldemRound.PREFLOP)) {
-                        this._rounds.set(TexasHoldemRound.PREFLOP, []);
-                    }
-                    
-                    // Get the current action with seat and timestamp
-                    const anteActions = this._rounds.get(TexasHoldemRound.ANTE) || [];
-                    const lastAction = anteActions[anteActions.length - 1];
-                    
-                    // Add it to the PREFLOP round as well without incrementing the turn index
-                    const actions = this._rounds.get(TexasHoldemRound.PREFLOP)!;
-                    actions.push(lastAction);
-                }
-                
+                // No special handling needed for transition between rounds
                 this.nextRound();
             }
         } catch (error) {
@@ -714,21 +696,36 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     getActionDTOs(): ActionDTO[] {
         const actions: ActionDTO[] = [];
+        const processedActionKeys = new Set<string>(); // To track duplicate actions
 
         // Track non-player actions like JOIN, LEAVE that should be included
         // in previousActions even though they might not belong to a specific round
         const nonPlayerActions: TurnWithSeat[] = [];
+        
+        // Track any ANTE actions that should be included in the previous actions
+        const anteActions: TurnWithSeat[] = [];
 
         for (const [round, turns] of this._rounds) {
             for (const turn of turns) {
                 // Handle JOIN and LEAVE actions by collecting them separately
-                if (
-                    turn.action === NonPlayerActionType.JOIN ||
-                    turn.action === NonPlayerActionType.LEAVE
-                ) {
+                if (turn.action === NonPlayerActionType.JOIN || turn.action === NonPlayerActionType.LEAVE) {
                     nonPlayerActions.push(turn);
                     continue;
                 }
+                
+                // Track ANTE round actions separately
+                if (round === TexasHoldemRound.ANTE) {
+                    anteActions.push(turn);
+                    continue;
+                }
+
+                // Create a unique key for this action to detect duplicates
+                const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}`;
+                if (processedActionKeys.has(actionKey)) {
+                    // Skip this action as it's a duplicate
+                    continue;
+                }
+                processedActionKeys.add(actionKey);
 
                 const action: ActionDTO = {
                     playerId: turn.playerId,
@@ -743,9 +740,35 @@ class TexasHoldemGame implements IPoker, IUpdate {
             }
         }
 
+        // Add ANTE actions to the action list, but skip any that would be duplicates
+        for (const turn of anteActions) {
+            const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}`;
+            if (processedActionKeys.has(actionKey)) {
+                // Skip this action as it's a duplicate
+                continue;
+            }
+            processedActionKeys.add(actionKey);
+
+            actions.push({
+                playerId: turn.playerId,
+                seat: turn.seat,
+                action: turn.action,
+                amount: turn.amount ? turn.amount.toString() : "",
+                round: TexasHoldemRound.ANTE,
+                index: turn.index
+            });
+        }
+
         // Add non-player actions at the beginning of the array
         // since they usually happen before the round actions
         for (const turn of nonPlayerActions) {
+            const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}`;
+            if (processedActionKeys.has(actionKey)) {
+                // Skip this action as it's a duplicate
+                continue;
+            }
+            processedActionKeys.add(actionKey);
+
             actions.unshift({
                 playerId: turn.playerId,
                 seat: turn.seat,
