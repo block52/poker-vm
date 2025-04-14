@@ -552,8 +552,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this.join(address, amount!);
                 // Restore the original addAction method
                 this.addAction = originalAddAction;
-                // Add the join action to history
-                this.addAction({ playerId: address, action, amount, index }, this._currentRound);
+                // Add the join action to history - make sure it's in the ANTE round
+                this.addAction({ playerId: address, action, amount, index }, TexasHoldemRound.ANTE);
                 return; // Exit early, don't need further processing
             }
     
@@ -743,10 +743,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 seat: turn.seat,
                 action: turn.action,
                 amount: turn.amount ? turn.amount.toString() : "",
-                round: TexasHoldemRound.PREFLOP, // Non-player actions happen in PREFLOP
+                round: TexasHoldemRound.ANTE, // Non-player actions happen in ANTE
                 index: turn.index
             });
         }
+
+        // Sort all actions by index to ensure proper order
+        actions.sort((a, b) => a.index - b.index);
 
         return actions;
     }
