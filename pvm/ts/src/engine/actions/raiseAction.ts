@@ -31,28 +31,29 @@ class RaiseAction extends BaseAction implements IAction {
         
         super.verify(player);
 
-        const lastBet = this.game.getLastRoundAction();
-        if (!lastBet) throw new Error("No previous bet to raise.");
-
         const largestBet = this.getLargestBet();
-        if (largestBet === 0n) throw new Error("Cannot raise when there's been no action.");
         
-        const sumBets = this.getSumBets(player.address);
+        // Calculate the total amount the player has already bet across all rounds
+        let playerTotalBets = 0n;
         
-        // Special case: Allow big blind to raise in pre-flop
-        const playerSeatNumber = this.game.getPlayerSeatNumber(player.address);
-        const isPlayerBigBlind = this.game.bigBlindPosition === playerSeatNumber;
-        const isPreflop = this.game.currentRound === TexasHoldemRound.PREFLOP;
+        // Get the sum of bets for this player in the ANTE round
+        const anteRoundBets = this.game.getPlayerTotalBets(player.address, TexasHoldemRound.ANTE);
+        playerTotalBets += anteRoundBets;
         
-        // Only throw error if not big blind in pre-flop
-        if (largestBet === sumBets && !(isPlayerBigBlind && isPreflop)) {
-            throw new Error("Player must bet not raise.");
-        }
-
-        const minAmount = (lastBet?.amount || 0n) + this.game.bigBlind;
-        if (player.chips < minAmount) throw new Error("Player has insufficient chips to raise.");
-
-        return { minAmount: minAmount, maxAmount: player.chips };
+        // Get the sum of bets for this player in the current round
+        const currentRoundBets = this.game.getPlayerTotalBets(player.address, this.game.currentRound);
+        playerTotalBets += currentRoundBets;
+        
+        // Calculate how much more the player needs to add to match the current largest bet
+        const toCall = playerTotalBets >= largestBet ? 0n : largestBet - playerTotalBets;
+        
+        // The minimum raise is double the largest bet minus what the player has already put in
+        // But it must be at least the big blind
+        const minRaiseAmount = largestBet + this.game.bigBlind - playerTotalBets;
+        const maxRaiseAmount = player.chips;
+        
+        // Can never raise less than the minimum or more than the player's stack
+        return { minAmount: minRaiseAmount, maxAmount: maxRaiseAmount };
     }
 
     protected getDeductAmount(player: Player, amount?: bigint): bigint {

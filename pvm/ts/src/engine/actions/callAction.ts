@@ -65,18 +65,28 @@ class CallAction extends BaseAction implements IAction {
     }
 
     protected getDeductAmount(player: Player): bigint {
-        const sumBets = this.getSumBets(player.address);
+        // First get player's bets across all rounds, not just current round
+        // This ensures that bets in ANTE (like small blind) are counted when in PREFLOP
+        let totalBetsAllRounds = 0n;
+        
+        // Get the sum of bets for this player in the ANTE round
+        const anteRoundBets = this.game.getPlayerTotalBets(player.address, TexasHoldemRound.ANTE);
+        totalBetsAllRounds += anteRoundBets;
+        
+        // Get the sum of bets for this player in the current round
+        const currentRoundBets = this.game.getPlayerTotalBets(player.address, this.game.currentRound);
+        totalBetsAllRounds += currentRoundBets;
         
         // Get the largest bet in the current round
         const largestBet = this.getLargestBet();
         
         // If player has already bet the same or more than the largest bet, return 0
-        if (sumBets >= largestBet) {
+        if (totalBetsAllRounds >= largestBet) {
             return 0n;
         }
         
         // Otherwise return the difference needed to call
-        return largestBet - sumBets;
+        return largestBet - totalBetsAllRounds;
     }
 }
 

@@ -19,11 +19,14 @@ class SmallBlindAction extends BaseAction implements IAction {
             throw new Error("Only the small blind player can bet the small blind amount.");
         }
 
-        const actions = this.game.getActionsForRound(this.game.currentRound);
-
-        // Check if small blind has already been posted
-        const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);
-        if (smallBlindAction) {
+        // Check if small blind has already been posted in ANTE or PREFLOP round
+        const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
+        const preFlopActions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
+        
+        const hasPostedInAnte = anteActions.some(a => a.action === PlayerActionType.SMALL_BLIND && a.playerId === _player.address);
+        const hasPostedInPreflop = preFlopActions.some(a => a.action === PlayerActionType.SMALL_BLIND && a.playerId === _player.address);
+        
+        if (hasPostedInAnte || hasPostedInPreflop) {
             throw new Error("Small blind has already been posted.");
         }
 

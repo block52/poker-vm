@@ -350,6 +350,21 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return this.getPlayerAtSeat(this._smallBlindPosition);
         }
 
+        // Special case for PREFLOP round - first action is the big blind posting
+        if (this._currentRound === TexasHoldemRound.PREFLOP) {
+            const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
+            
+            // Has the big blind posted?
+            const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
+            if (!hasBigBlindPosted) {
+                // If big blind hasn't posted yet, they should be next to act
+                console.log('[DEBUG] Big blind player should act next in PREFLOP round');
+                return this.getPlayerAtSeat(this._bigBlindPosition);
+            }
+            
+            // Rest of PREFLOP logic remains the same...
+        }
+
         // Has the small blind posted?
         const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
         const hasSmallBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
@@ -463,20 +478,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         const nextToAct = this.getNextPlayerToAct();
-
-        // If it's not this player's turn, they can only fold if they are active
-        if (nextToAct && nextToAct.address !== player.address) {
-            // Even if it's not their turn, active players can fold
-            return [
-                {
-                    action: PlayerActionType.FOLD,
-                    min: "0",
-                    max: "0",
-                    index: this.currentTurnIndex()
-                }
-            ];
-        }
-
+        const turnIndex = this.currentTurnIndex();
+        
+        // Let each action's verify method determine if it's legal
         const verifyAction = (action: BaseAction): LegalActionDTO | undefined => {
             try {
                 const range = action.verify(player);
@@ -484,7 +488,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     action: action.type,
                     min: range ? range.minAmount.toString() : "0",
                     max: range ? range.maxAmount.toString() : "0",
-                    index: this.currentTurnIndex()
+                    index: turnIndex
                 };
             } catch {
                 return undefined;
@@ -970,17 +974,22 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private nextRound(): void {
         this.calculateSidePots();
 
+        // When transitioning from ANTE to PREFLOP, make sure the next player to act is the big blind
+        if (this._currentRound === TexasHoldemRound.ANTE) {
+            console.log(`[DEBUG] Transitioning from ANTE to PREFLOP, setting next player to big blind position: ${this._bigBlindPosition}`);
+            this._lastActedSeat = this._smallBlindPosition; // Set last acted to small blind so big blind acts next
+        }
         // Deal community cards based on the CURRENT round
         // before advancing to the next round
-        if (this._currentRound === TexasHoldemRound.PREFLOP) {
+        else if (this._currentRound === TexasHoldemRound.PREFLOP) {
             // Deal the flop (3 cards)
             this._communityCards.push(...this._deck.deal(3));
         }
-        if (this._currentRound === TexasHoldemRound.FLOP || this._currentRound === TexasHoldemRound.TURN) {
+        else if (this._currentRound === TexasHoldemRound.FLOP || this._currentRound === TexasHoldemRound.TURN) {
             // Deal turn or river (1 card)
             this._communityCards.push(...this._deck.deal(1));
         }
-        if (this._currentRound === TexasHoldemRound.RIVER) {
+        else if (this._currentRound === TexasHoldemRound.RIVER) {
             // Next is showdown, calculate winner
             this.calculateWinner();
         }
@@ -1087,6 +1096,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // When small blind is posted, we transition to PREFLOP
             const hasSmallBlindPosted = anteActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             if (hasSmallBlindPosted) {
+                console.log("[DEBUG] Small blind posted in ANTE round, transitioning to PREFLOP");
                 return true;
             }
             
@@ -1331,8 +1341,21 @@ class TexasHoldemGame implements IPoker, IUpdate {
             };
         });
 
+        // Use findNextPlayerToAct to determine the correct next player
         const nextPlayerToAct = this.findNextPlayerToAct();
-        const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
+        let nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
+        
+        // Special case for PREFLOP - if small blind posted but not big blind, ensure big blind is next
+        if (this._currentRound === TexasHoldemRound.PREFLOP) {
+            const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
+            const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
+            
+            if (!hasBigBlindPosted) {
+                // Force nextToAct to be the big blind position
+                console.log(`[DEBUG] In PREFLOP without big blind posted, setting nextToAct to big blind position: ${this._bigBlindPosition}`);
+                nextToAct = this._bigBlindPosition;
+            }
+        }
 
         const previousActions: ActionDTO[] = this.getActionDTOs();
         const winners: WinnerDTO[] = [];

@@ -14,6 +14,20 @@ class BetAction extends BaseAction implements IAction {
             throw new Error("Cannot bet in the ante round. Small blind must post.");
         }
         
+        // If in PREFLOP round and this player is the big blind position, they should post the big blind first
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+            const seat = this.game.getPlayerSeatNumber(player.address);
+            const isBigBlindSeat = seat === this.game.bigBlindPosition;
+            
+            // Check if big blind has been posted yet
+            const preFlopActions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
+            const hasBigBlindPosted = preFlopActions.some(a => a.action === PlayerActionType.BIG_BLIND);
+            
+            if (isBigBlindSeat && !hasBigBlindPosted) {
+                throw new Error("Big blind player must post big blind first before betting.");
+            }
+        }
+        
         // Can never bet if you haven't matched the largest bet of the round
         const largestBet = this.getLargestBet();
         const sumBets = this.getSumBets(player.address);

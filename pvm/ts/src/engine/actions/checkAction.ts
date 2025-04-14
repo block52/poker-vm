@@ -9,14 +9,20 @@ class CheckAction extends BaseAction implements IAction {
     verify(player: Player): Range | undefined {
         // Cannot check in the ANTE round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Cannot check in the ante round. Small blind must post.");
+            throw new Error("Cannot check in the ante round.");
         }
 
+        // If in PREFLOP round and this player is the big blind position, they should post the big blind first
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            const preflopRoundBets = this.game.getBets();
-
-            if (preflopRoundBets.size === 0) {
-                throw new Error("Cannot check in the preflop round when there's been no action.");
+            const seat = this.game.getPlayerSeatNumber(player.address);
+            const isBigBlindSeat = seat === this.game.bigBlindPosition;
+            
+            // Check if big blind has been posted yet
+            const preFlopActions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
+            const hasBigBlindPosted = preFlopActions.some(a => a.action === PlayerActionType.BIG_BLIND);
+            
+            if (isBigBlindSeat && !hasBigBlindPosted) {
+                throw new Error("Big blind player must post big blind first before checking.");
             }
         }
 

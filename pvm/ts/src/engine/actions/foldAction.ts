@@ -8,7 +8,14 @@ class FoldAction extends BaseAction {
     
     // Override verify method to allow folding anytime
     verify(player: Player): Range | undefined {
-        // Remove all status checks - allow any player to fold regardless of status
+        // Only basic requirement is that the player is in active status
+        if (player.status !== PlayerStatus.ACTIVE) {
+            throw new Error("Only active players can fold.");
+        }
+        
+        // No need to check if it's the player's turn - folding is always permitted
+        // This bypasses the check in BaseAction.verify that requires it to be the player's turn
+        
         return undefined;
     }
     
