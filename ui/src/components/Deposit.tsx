@@ -32,9 +32,6 @@ const Deposit: React.FC = () => {
     const { balance } = useWalletBalance();
     const { balance: b52Balance } = useUserWallet();
 
-    // console.log("allowance: ", allowance);
-    // console.log("balance: ", balance);
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -56,7 +53,7 @@ const Deposit: React.FC = () => {
             setAmount("0");
             setWalletAllowance(walletAllowance - tmpDepositAmount);
         }
-    }, [isDepositConfirmed]);
+    }, [BRIDGE_ADDRESS, amount, isDepositConfirmed, tmpDepositAmount, walletAllowance]);
 
     useEffect(() => {
         if (isApproveConfirmed) {
@@ -64,7 +61,7 @@ const Deposit: React.FC = () => {
             setAmount("0");
             setWalletAllowance(tmpWalletAllowance);
         }
-    }, [isApproveConfirmed]);
+    }, [amount, isApproveConfirmed, tmpWalletAllowance]);
 
     useEffect(() => {
         if (depositError) {
@@ -82,7 +79,7 @@ const Deposit: React.FC = () => {
         if (!walletAllowance || !decimals || !+amount) return false;
         const amountInBigInt = BigUnit.from(+amount, decimals).toBigInt();
         return walletAllowance >= amountInBigInt;
-    }, [amount, walletAllowance, decimals, isApproveConfirmed, isDepositConfirmed]);
+    }, [amount, walletAllowance, decimals]);
 
     // Format balance like in Dashboard component
     const formatBalance = (rawBalance: string | number) => {
