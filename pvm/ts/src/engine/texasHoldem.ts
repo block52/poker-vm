@@ -369,7 +369,70 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return this.getPlayerAtSeat(this._bigBlindPosition);
             }
             
-            // Rest of PREFLOP logic remains the same...
+            // Check if cards have been dealt
+            const hasDealt = preFlopActions?.some(a => a.action === NonPlayerActionType.DEAL);
+            const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
+            
+            // If cards have been dealt, let's check for special 2-player case
+            if (hasDealt || anyPlayerHasCards) {
+                const activePlayerCount = this.getActivePlayerCount();
+                
+                if (activePlayerCount === 2) {
+                    // Check if small blind has acted after the deal
+                    const smallBlindPlayerAddress = this.getPlayerAtSeat(this._smallBlindPosition)?.address;
+                    
+                    if (smallBlindPlayerAddress) {
+                        // Check if there was a check action by small blind after deal
+                        const lastCheckBySmallBlind = preFlopActions
+                            ?.filter(a => a.action === PlayerActionType.CHECK && a.playerId === smallBlindPlayerAddress)
+                            ?.sort((a, b) => b.index - a.index)[0];
+                            
+                        // If small blind checked, big blind should act next
+                        if (lastCheckBySmallBlind) {
+                            console.log('[DEBUG] Small blind checked, big blind should act next');
+                            return this.getPlayerAtSeat(this._bigBlindPosition);
+                        }
+                        
+                        // If no check yet, small blind acts first post-deal
+                        const dealActions = preFlopActions?.filter(a => a.action === NonPlayerActionType.DEAL);
+                        if (dealActions && dealActions.length > 0 && this._lastActedSeat === this._smallBlindPosition) {
+                            console.log('[DEBUG] Small blind should act first post-deal');
+                            return this.getPlayerAtSeat(this._smallBlindPosition);
+                        }
+                    }
+                }
+            }
+        }
+
+        // For FLOP, TURN, and RIVER rounds, handle 2-player case similarly to PREFLOP
+        if (this._currentRound === TexasHoldemRound.FLOP || 
+            this._currentRound === TexasHoldemRound.TURN || 
+            this._currentRound === TexasHoldemRound.RIVER) {
+            
+            const activePlayerCount = this.getActivePlayerCount();
+            
+            if (activePlayerCount === 2) {
+                // Get the current round actions
+                const currentRoundActions = this._rounds.get(this._currentRound);
+                
+                // If last action was a check by small blind, big blind should act next
+                if (this._lastActedSeat === this._smallBlindPosition) {
+                    const lastAction = this.getLastRoundAction();
+                    if (lastAction && lastAction.action === PlayerActionType.CHECK) {
+                        console.log(`[DEBUG] Small blind checked in ${this._currentRound} round, big blind should act next`);
+                        return this.getPlayerAtSeat(this._bigBlindPosition);
+                    }
+                }
+                
+                // If last action was a check by big blind, small blind should act next
+                else if (this._lastActedSeat === this._bigBlindPosition) {
+                    const lastAction = this.getLastRoundAction();
+                    if (lastAction && lastAction.action === PlayerActionType.CHECK) {
+                        console.log(`[DEBUG] Big blind checked in ${this._currentRound} round, small blind should act next`);
+                        return this.getPlayerAtSeat(this._smallBlindPosition);
+                    }
+                }
+            }
         }
 
         // Has the small blind posted?
@@ -451,6 +514,22 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         if (next > this._gameOptions.maxPlayers) {
             next = 1;
+        }
+
+        // Special handling for 2-player games after check
+        if (this.getActivePlayerCount() === 2) {
+            const lastAction = this.getLastRoundAction();
+            
+            // If last action was a check, switch to the other player
+            if (lastAction && lastAction.action === PlayerActionType.CHECK) {
+                console.log(`[DEBUG] Last action was check in 2-player game, switching to other player from seat ${lastAction.seat}`);
+                
+                if (lastAction.seat === this._smallBlindPosition) {
+                    return this.getPlayerAtSeat(this._bigBlindPosition);
+                } else if (lastAction.seat === this._bigBlindPosition) {
+                    return this.getPlayerAtSeat(this._smallBlindPosition);
+                }
+            }
         }
 
         // Search from current position to end
@@ -651,6 +730,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     new FoldAction(this, this._update).execute(player, index);
                     break;
                 case PlayerActionType.CHECK:
+                    console.log(`[DEBUG] Executing check action for ${address} with index ${index}`);
                     new CheckAction(this, this._update).execute(player, index);
                     break;
                 case PlayerActionType.BET:
@@ -674,7 +754,31 @@ class TexasHoldemGame implements IPoker, IUpdate {
             console.log(`[DEBUG] Updating player actions and game state for ${action}`);
             player.addAction({ playerId: address, action, amount, index });
             this._lastActedSeat = seat;
+            
+            // Explicitly add the action to the game state with the current round
+            console.log(`[DEBUG] Adding action to game state: ${action} for player ${address} at seat ${seat} in round ${this._currentRound}`);
             this.addAction({ playerId: address, action, amount, index }, this._currentRound);
+            
+            // For 2-player games in FLOP, TURN, or RIVER rounds, ensure proper turn advancement after check
+            if (action === PlayerActionType.CHECK && 
+                (this._currentRound === TexasHoldemRound.FLOP || 
+                 this._currentRound === TexasHoldemRound.TURN || 
+                 this._currentRound === TexasHoldemRound.RIVER) && 
+                this.getActivePlayerCount() === 2) {
+                
+                console.log(`[DEBUG] Ensuring proper turn advancement after check in ${this._currentRound} round`);
+                
+                // If small blind checks, next player should be big blind
+                if (seat === this._smallBlindPosition) {
+                    console.log(`[DEBUG] Small blind checked, setting next player to big blind (seat ${this._bigBlindPosition})`);
+                    // Next player will be determined by findNextPlayerToAct
+                }
+                // If big blind checks, next player should be small blind
+                else if (seat === this._bigBlindPosition) {
+                    console.log(`[DEBUG] Big blind checked, setting next player to small blind (seat ${this._smallBlindPosition})`);
+                    // Next player will be determined by findNextPlayerToAct
+                }
+            }
             
             if (this.hasRoundEnded(this._currentRound) === true) {
                 // No special handling needed for transition between rounds
@@ -721,7 +825,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // in previousActions even though they might not belong to a specific round
         const nonPlayerActions: TurnWithSeat[] = [];
         
-        // Track any ANTE actions that should be included in the previous actions
+        // Track any ANTE round actions that should be included in the previous actions
         const anteActions: TurnWithSeat[] = [];
 
         for (const [round, turns] of this._rounds) {
@@ -739,7 +843,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 }
 
                 // Create a unique key for this action to detect duplicates
-                const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}`;
+                // Include the round and index in the key to distinguish between same actions in different rounds
+                const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}-${round}-${turn.index}`;
                 if (processedActionKeys.has(actionKey)) {
                     // Skip this action as it's a duplicate
                     continue;
@@ -761,7 +866,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Add ANTE actions to the action list, but skip any that would be duplicates
         for (const turn of anteActions) {
-            const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}`;
+            const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}-${TexasHoldemRound.ANTE}-${turn.index}`;
             if (processedActionKeys.has(actionKey)) {
                 // Skip this action as it's a duplicate
                 continue;
@@ -781,7 +886,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Add non-player actions at the beginning of the array
         // since they usually happen before the round actions
         for (const turn of nonPlayerActions) {
-            const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}`;
+            const actionKey = `${turn.playerId}-${turn.action}-${turn.amount}-${TexasHoldemRound.ANTE}-${turn.index}`;
             if (processedActionKeys.has(actionKey)) {
                 // Skip this action as it's a duplicate
                 continue;
@@ -800,7 +905,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Sort all actions by index to ensure proper order
         actions.sort((a, b) => a.index - b.index);
-
+        
+        // Add debug logging to see what actions are included
+        console.log(`[DEBUG] Returning ${actions.length} actions in previousActions array`);
+        
         return actions;
     }
 

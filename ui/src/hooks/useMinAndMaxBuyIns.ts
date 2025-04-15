@@ -1,7 +1,7 @@
-import useSWR from 'swr';
-import axios from 'axios';
-import { ethers } from 'ethers';
-import { PROXY_URL } from '../config/constants';
+import useSWR from "swr"; 
+import axios from "axios";
+import { ethers } from "ethers";
+import { PROXY_URL } from "../config/constants";
 
 // Define the fetcher function
 const fetcher = (url: string) => 
