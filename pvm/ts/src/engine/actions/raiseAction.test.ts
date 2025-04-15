@@ -210,7 +210,8 @@ describe("Raise Action", () => {
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
                 action: PlayerActionType.RAISE,
-                amount: raiseAmount
+                amount: raiseAmount,
+                index: 0
             },
                 TexasHoldemRound.PREFLOP);
         });

@@ -20,10 +20,10 @@ class RaiseAction extends BaseAction implements IAction {
         if (!lastBet) throw new Error("No previous bet to raise.");
 
         const sumBets = this.getSumBets(player.address);
-        const minAmount = (lastBet?.amount || 0n) + this.game.bigBlind - sumBets;
+        let minAmount = (lastBet?.amount || 0n) + this.game.bigBlind - sumBets;
 
-        if (minAmount < player.chips) {
-            return { minAmount: minAmount, maxAmount: player.chips };
+        if (player.chips < minAmount) {
+            minAmount = player.chips;
         }
 
         return { minAmount: minAmount, maxAmount: player.chips };
