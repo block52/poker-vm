@@ -25,11 +25,11 @@ describe("Texas Holdem - State", () => {
             expect(game).toBeDefined();
 
             // Game properties
-            expect(game.smallBlind).toEqual(10000000000000000n);
-            expect(game.bigBlind).toEqual(20000000000000000n);
+            expect(game.smallBlind).toEqual(100000000000000000n);
+            expect(game.bigBlind).toEqual(2000000000000000000n);
             expect(game.dealerPosition).toEqual(9);
             expect(game.currentPlayerId).toEqual(ethers.ZeroAddress);
-            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(0n);
 
             // Player properties
