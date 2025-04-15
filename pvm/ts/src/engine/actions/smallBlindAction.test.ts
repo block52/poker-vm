@@ -115,25 +115,49 @@ describe("SmallBlindAction", () => {
 
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+            
+            // Make sure player has enough chips for testing
+            player.chips = 1000000000000000000n; // Set to 1 ETH to ensure enough for small blind
+            
+            // Mock the game's small blind to a known value for testing
+            jest.spyOn(game, "smallBlind", "get").mockReturnValue(100000000000000000n);
         });
 
         it("should deduct small blind amount from player chips", () => {
             const initialChips = player.chips;
-            action.execute(player, 0, game.smallBlind);
-            expect(player.chips).toBe(initialChips - game.smallBlind);
+            const smallBlindAmount = game.smallBlind; // Get the mocked small blind amount
+            
+            action.execute(player, 0, smallBlindAmount);
+            expect(player.chips).toBe(initialChips - smallBlindAmount);
         });
 
-        it.skip("should add small blind action to update", () => {
-            action.execute(player, 0, game.smallBlind);
-            expect(updateMock.addAction).toHaveBeenCalledWith({
-                playerId: player.id,
-                action: PlayerActionType.SMALL_BLIND,
-                amount: game.smallBlind
-            });
+        it("should add small blind action to update", () => {
+            // Mock game.addAction to track calls
+            const originalAddAction = game.addAction;
+            game.addAction = jest.fn();
+            
+            try {
+                action.execute(player, 0, game.smallBlind);
+                
+                // Check that game.addAction was called with the right parameters
+                expect(game.addAction).toHaveBeenCalledWith(
+                    {
+                        playerId: player.address,
+                        action: PlayerActionType.SMALL_BLIND,
+                        amount: game.smallBlind,
+                        index: 0
+                    },
+                    game.currentRound
+                );
+            } finally {
+                // Restore original method
+                game.addAction = originalAddAction;
+            }
         });
 
         it("should throw error if amount doesn't match small blind", () => {
-            expect(() => action.execute(player, 0, game.smallBlind + 1n)).toThrow("Amount is greater than maximum allowed.");
+            const incorrectAmount = game.smallBlind + 1n;
+            expect(() => action.execute(player, 0, incorrectAmount)).toThrow("Amount is greater than maximum allowed.");
         });
     });
 });
