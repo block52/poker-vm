@@ -103,7 +103,7 @@ describe("BigBlindAction", () => {
             // Override the current round mock to be FLOP instead of PREFLOP
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
 
-            expect(() => action.verify(player)).toThrow("Can only post big blind when preflop.");
+            expect(() => action.verify(player)).toThrow("Can only post big blind during ante or preflop rounds.");
         });
 
         it("should throw error if player is not in small blind position", () => {

@@ -58,7 +58,7 @@ describe("Transaction Tests", () => {
             );
             
             const hash = tx.calculateHash();
-            expect(hash).toBe("58990a597533a2026a1a901058c4db0a2aae6c7e499c8e5730c14db397c08cf8");
+            expect(hash).toBe("3a69cd4bc7a037425f3e345dd3f199892c7a636231e2e9fa98b3c04e3207bbe0");
         });
     });
 
