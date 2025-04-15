@@ -92,9 +92,9 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getBets").mockReturnValue(new Map([["0x980b8D8A16f5891F41871d878a479d81Da52334c", 0n]]));
         });
 
-        it("should not return a range for check action", () => {
+        it("should return a range with zero min and max for check action", () => {
             const range = action.verify(player);
-            expect(range).toBeUndefined();
+            expect(range).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
         it.skip("should throw error if it's not player's turn", () => {
@@ -140,8 +140,8 @@ describe("CheckAction", () => {
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
-            // Mock verify to return undefined (no range)
-            jest.spyOn(action, "verify").mockReturnValue(undefined);
+            // Mock verify to return a range with zero min and max
+            jest.spyOn(action, "verify").mockReturnValue({ minAmount: 0n, maxAmount: 0n });
 
             // Mock game's addAction method
             game.addAction = jest.fn();
@@ -159,12 +159,13 @@ describe("CheckAction", () => {
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
                 action: PlayerActionType.CHECK,
-                amount: 0n
+                amount: 0n,
+                index: 0
             }, TexasHoldemRound.PREFLOP);
         });
 
-        it.skip("should throw error if an amount is specified", () => {
-            expect(() => action.execute(player, 0, 10000000000000000n)).toThrow("Amount should not be specified for check");
+        it("should throw error if an amount is specified", () => {
+            expect(() => action.execute(player, 0, 10000000000000000n)).toThrow("Invalid amount for check. Must be exactly 0.");
         });
     });
 });
