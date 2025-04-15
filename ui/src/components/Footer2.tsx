@@ -21,6 +21,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // State for raise amount
     const [raiseAmount, setRaiseAmount] = useState<string>("");
     
+    // State for bet amount
+    const [betAmount, setBetAmount] = useState<string>("");
+    
     // Use prop tableId, URL param tableId, or fallback to empty string
     const effectiveTableId = propTableId || urlTableId || "";
     
@@ -82,9 +85,19 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         return legalActions?.some(action => action.action === "call") || false;
     }, [legalActions]);
     
+    // Check if check action is available - ALWAYS define this, even if not used
+    const hasCheckAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "check") || false;
+    }, [legalActions]);
+    
     // Check if raise action is available - ALWAYS define this, even if not used
     const hasRaiseAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "raise") || false;
+    }, [legalActions]);
+    
+    // Check if bet action is available - ALWAYS define this, even if not used
+    const hasBetAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "bet") || false;
     }, [legalActions]);
     
     // Check if deal action is available - ALWAYS define this, even if not used
@@ -96,6 +109,12 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     const raiseActionLimits = React.useMemo(() => {
         const raiseAction = legalActions?.find(action => action.action === "raise");
         return raiseAction ? { min: raiseAction.min, max: raiseAction.max } : { min: "0", max: "0" };
+    }, [legalActions]);
+    
+    // Get bet amount limits if available - ALWAYS define this, even if not used
+    const betActionLimits = React.useMemo(() => {
+        const betAction = legalActions?.find(action => action.action === "bet");
+        return betAction ? { min: betAction.min, max: betAction.max } : { min: "0", max: "0" };
     }, [legalActions]);
     
     // Get call amount if available - ALWAYS define this, even if not used
@@ -127,6 +146,13 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             setRaiseAmount(raiseActionLimits.min);
         }
     }, [hasRaiseAction, raiseActionLimits]);
+    
+    // Set default bet amount to minimum when bet limits change
+    useEffect(() => {
+        if (hasBetAction && betActionLimits.min !== "0") {
+            setBetAmount(betActionLimits.min);
+        }
+    }, [hasBetAction, betActionLimits]);
 
     // Format the amount to make it more readable (convert from wei to ETH)
     const formatAmount = (amountWei: string): string => {
@@ -154,6 +180,52 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             console.log("Fold successful");
         } catch (error) {
             console.error("Error when folding:", error);
+        }
+    };
+
+    // Handle check button click
+    const handleCheck = async () => {
+        if (!callHand) return;
+        
+        try {
+            await callHand({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex,
+                amount: "0" // Check is a call with amount 0
+            });
+            console.log("Check successful");
+        } catch (error) {
+            console.error("Error when checking:", error);
+        }
+    };
+    
+    // Handle bet button click
+    const handleBet = async () => {
+        if (!raiseHand || !betAmount) return;
+        
+        // Check if bet amount is within limits
+        const minBet = BigInt(betActionLimits.min);
+        const maxBet = BigInt(betActionLimits.max);
+        const betAmountBigInt = BigInt(betAmount);
+        
+        if (betAmountBigInt < minBet || betAmountBigInt > maxBet) {
+            console.error(`Bet amount must be between ${formatAmount(betActionLimits.min)} and ${formatAmount(betActionLimits.max)}`);
+            return;
+        }
+        
+        try {
+            await raiseHand({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex,
+                amount: betAmount // Use the bet amount for the raise hook
+            });
+            console.log("Bet successful");
+        } catch (error) {
+            console.error("Error when betting:", error);
         }
     };
 
@@ -276,6 +348,17 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                         </button>
                     )}
 
+                    {/* Check button if available */}
+                    {hasCheckAction && (
+                        <button
+                            onClick={handleCheck}
+                            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isCalling}
+                        >
+                            {isCalling ? "Checking..." : "Check"}
+                        </button>
+                    )}
+
                     {/* Small Blind button if available */}
                     {hasPostSmallBlindAction && (
                         <button
@@ -296,6 +379,29 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                         >
                             {isPostingBigBlind ? "Posting BB..." : "Post Big Blind"}
                         </button>
+                    )}
+                    
+                    {/* Bet controls if available */}
+                    {hasBetAction && (
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={betAmount}
+                                onChange={(e) => setBetAmount(e.target.value)}
+                                className="bg-gray-700 text-white px-2 py-1 rounded w-28 text-sm"
+                                placeholder={`Min: ${formatAmount(betActionLimits.min)}`}
+                            />
+                            <button
+                                onClick={handleBet}
+                                className="bg-green-600 hover:bg-green-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                                disabled={isRaising || !betAmount}
+                            >
+                                {isRaising ? "Betting..." : "Bet"}
+                            </button>
+                            <span className="text-xs opacity-70">
+                                Min: {formatAmount(betActionLimits.min)}, Max: {formatAmount(betActionLimits.max)}
+                            </span>
+                        </div>
                     )}
                     
                     {/* Call button if available */}
