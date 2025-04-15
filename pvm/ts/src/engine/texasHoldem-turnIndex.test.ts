@@ -237,9 +237,16 @@ describe("Texas Holdem - Turn Index", () => {
                 PlayerStatus.ACTIVE
             );
             
-            // Mock the addAction method to prevent game state errors
+            // Add a helper to see what happens with the turn index
+            let addActionCalls = 0;
+            
+            // Mock the addAction method to track calls
             const originalAddAction = game.addAction;
-            game.addAction = jest.fn();
+            game.addAction = jest.fn((...args) => {
+                addActionCalls++;
+                // Call the original so the index gets incremented
+                return originalAddAction.apply(game, args);
+            });
             
             // Mock the player verification to always pass
             const originalGetNextPlayerToAct = game.getNextPlayerToAct;
@@ -261,18 +268,23 @@ describe("Texas Holdem - Turn Index", () => {
             const originalHasRoundEnded = game.hasRoundEnded;
             game.hasRoundEnded = jest.fn().mockReturnValue(false);
             
+            // Mock getActivePlayerCount to return 2 (minimum required)
+            const originalGetActivePlayerCount = game.getActivePlayerCount;
+            game.getActivePlayerCount = jest.fn().mockReturnValue(2);
+            
             try {
-                // Initial index should be 0
-                expect(game.currentTurnIndex()).toBe(0);
+                // Get the initial index
+                const initialIndex = game.currentTurnIndex();
+                expect(initialIndex).toBe(0);
                 
-                // Call performAction which should increment index once
-                game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.FOLD, 0);
+                // Call performAction
+                game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 0);
                 
-                // After the action, index should be 1
-                expect(game.currentTurnIndex()).toBe(1);
+                // Verify addAction was called once
+                expect(addActionCalls).toBe(1);
                 
-                // Verify addAction was called once with the correct index
-                expect(game.addAction).toHaveBeenCalledTimes(1);
+                // Verify index was incremented exactly once
+                expect(game.currentTurnIndex()).toBe(initialIndex + 1);
             } finally {
                 // Restore original methods
                 game.addAction = originalAddAction;
@@ -281,6 +293,7 @@ describe("Texas Holdem - Turn Index", () => {
                 game.getPlayer = originalGetPlayer;
                 game.getPlayerSeatNumber = originalGetPlayerSeatNumber;
                 game.hasRoundEnded = originalHasRoundEnded;
+                game.getActivePlayerCount = originalGetActivePlayerCount;
             }
         });
     });
