@@ -2,7 +2,7 @@ import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
-import { baseGameConfig, gameOptions } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - State", () => {
@@ -25,8 +25,8 @@ describe("Texas Holdem - State", () => {
             expect(game).toBeDefined();
 
             // Game properties
-            expect(game.smallBlind).toEqual(100000000000000000n);
-            expect(game.bigBlind).toEqual(2000000000000000000n);
+            expect(game.smallBlind).toEqual(ONE_TOKEN);
+            expect(game.bigBlind).toEqual(TWO_TOKENS);
             expect(game.dealerPosition).toEqual(9);
             expect(game.currentPlayerId).toEqual(ethers.ZeroAddress);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
