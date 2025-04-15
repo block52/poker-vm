@@ -57,6 +57,40 @@ class CheckAction extends BaseAction implements IAction {
 
         return { minAmount: 0n, maxAmount: 0n };
     }
+
+    // Override the execute method to handle the zero amount case specifically for check action
+    execute(player: Player, index: number, amount?: bigint): void {
+        console.log(`CheckAction execute - Player: ${player.address}, Index: ${index}, Amount: ${amount}`);
+        
+        // For a check action, verify without requiring an amount
+        const range = this.verify(player);
+        
+        // If there's a range, ensure the amount (even if 0 or undefined) is valid
+        if (range) {
+            // We know check always has minAmount and maxAmount of 0, so just set amount to 0 if not provided
+            const safeAmount = amount || 0n;
+            
+            // Still validate the range bounds (though for check both min and max are 0)
+            if (safeAmount < range.minAmount || safeAmount > range.maxAmount) {
+                console.log(`Invalid amount for check: ${safeAmount}, valid range: ${range.minAmount}-${range.maxAmount}`);
+                throw new Error(`Invalid amount for check. Must be exactly 0.`);
+            }
+            
+            // Check has no deduct amount (it's always 0)
+            // Add the action to the game state
+            const round = this.game.currentRound;
+            console.log(`Adding check action to game state for round ${round}, index ${index}`);
+            this.game.addAction({ 
+                playerId: player.address, 
+                action: this.type, 
+                amount: 0n, 
+                index: index 
+            }, round);
+        } else {
+            // Shouldn't reach here as verify should return a range for check
+            throw new Error("Unexpected error: Check verification failed to return a range");
+        }
+    }
 }
 
 export default CheckAction;

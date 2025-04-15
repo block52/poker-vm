@@ -8,6 +8,8 @@ import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
 import { useTableCall } from "../hooks/useTableCall";
 import { useTableRaise } from "../hooks/useTableRaise";
 import { useTableDeal } from "../hooks/useTableDeal";
+import { useTableCheck } from "../hooks/useTableCheck";
+import { useTableBet } from "../hooks/useTableBet";
 
 
 interface Footer2Props {
@@ -58,6 +60,12 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     
     // Initialize call hook
     const { callHand, isCalling } = useTableCall(effectiveTableId);
+    
+    // Initialize check hook
+    const { checkHand, isChecking } = useTableCheck(effectiveTableId);
+    
+    // Initialize bet hook
+    const { betHand, isBetting } = useTableBet(effectiveTableId);
     
     // Initialize raise hook
     const { raiseHand, isRaising } = useTableRaise(effectiveTableId);
@@ -185,15 +193,14 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
 
     // Handle check button click
     const handleCheck = async () => {
-        if (!callHand) return;
+        if (!checkHand) return;
         
         try {
-            await callHand({
+            await checkHand({
                 userAddress,
                 privateKey,
                 publicKey: userAddress,
-                actionIndex: actionTurnIndex,
-                amount: "0" // Check is a call with amount 0
+                actionIndex: actionTurnIndex
             });
             console.log("Check successful");
         } catch (error) {
@@ -203,7 +210,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     
     // Handle bet button click
     const handleBet = async () => {
-        if (!raiseHand || !betAmount) return;
+        if (!betHand || !betAmount) return;
         
         // Check if bet amount is within limits
         const minBet = BigInt(betActionLimits.min);
@@ -216,12 +223,12 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         }
         
         try {
-            await raiseHand({
+            await betHand({
                 userAddress,
                 privateKey,
                 publicKey: userAddress,
                 actionIndex: actionTurnIndex,
-                amount: betAmount // Use the bet amount for the raise hook
+                amount: betAmount
             });
             console.log("Bet successful");
         } catch (error) {
@@ -353,9 +360,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                         <button
                             onClick={handleCheck}
                             className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
-                            disabled={isCalling}
+                            disabled={isChecking}
                         >
-                            {isCalling ? "Checking..." : "Check"}
+                            {isChecking ? "Checking..." : "Check"}
                         </button>
                     )}
 
@@ -394,9 +401,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                             <button
                                 onClick={handleBet}
                                 className="bg-green-600 hover:bg-green-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
-                                disabled={isRaising || !betAmount}
+                                disabled={isBetting || !betAmount}
                             >
-                                {isRaising ? "Betting..." : "Bet"}
+                                {isBetting ? "Betting..." : "Bet"}
                             </button>
                             <span className="text-xs opacity-70">
                                 Min: {formatAmount(betActionLimits.min)}, Max: {formatAmount(betActionLimits.max)}
