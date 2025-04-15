@@ -2,6 +2,7 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
+import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 
 class RaiseAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -12,6 +13,26 @@ class RaiseAction extends BaseAction implements IAction {
         // Cannot raise in the ANTE round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot raise in the ante round. Small blind must post.");
+        }
+        
+        // Check if cards have been dealt
+        const hasDealt = this.game.getActionsForRound(this.game.currentRound)
+            .some(a => a.action === NonPlayerActionType.DEAL);
+        const anyPlayerHasCards = Array.from(this.game.players.values())
+            .some(p => p !== null && p.holeCards !== undefined);
+            
+        // After dealing, players should bet (not raise) if there's no bet yet
+        if ((hasDealt || anyPlayerHasCards) && this.game.currentRound === TexasHoldemRound.PREFLOP) {
+            // Check if anyone has made a bet or raise after the deal
+            const betsAfterDeal = this.game.getActionsForRound(this.game.currentRound)
+                .filter(a => 
+                    a.action === PlayerActionType.BET || 
+                    a.action === PlayerActionType.RAISE);
+                
+            // If no one has bet yet, player should BET not RAISE
+            if (betsAfterDeal.length === 0) {
+                throw new Error("Cannot raise when there's no bet - use bet action instead.");
+            }
         }
         
         // Check if this player should be posting the big blind instead

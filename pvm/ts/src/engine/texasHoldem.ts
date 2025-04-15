@@ -223,12 +223,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Make sure small blind and big blind have been posted
         const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
-        if (!preFlopActions || preFlopActions.length < 2) {
+        const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        
+        if (!preFlopActions || preFlopActions.length < 1 || !anteActions) {
             throw new Error("Blinds must be posted before dealing.");
         }
 
-        const hasSmallBlind = preFlopActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
+        // Check for small blind in ANTE round and big blind in PREFLOP round
+        const hasSmallBlind = anteActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
         const hasBigBlind = preFlopActions.some(a => a.action === PlayerActionType.BIG_BLIND);
+
+        console.log(`[DEBUG] Checking blinds before dealing: hasSmallBlind=${hasSmallBlind}, hasBigBlind=${hasBigBlind}`);
+        console.log(`[DEBUG] ANTE actions: ${JSON.stringify(anteActions.map(a => a.action))}`);
+        console.log(`[DEBUG] PREFLOP actions: ${JSON.stringify(preFlopActions.map(a => a.action))}`);
 
         if (!hasSmallBlind || !hasBigBlind) {
             throw new Error("Both small and big blinds must be posted before dealing.");
@@ -535,15 +542,23 @@ class TexasHoldemGame implements IPoker, IUpdate {
         console.log(`[DEBUG] performAction called: address=${address}, action=${action}, index=${index}, _turnIndex=${this._turnIndex}`);
 
         // Check if the provided index matches the current turn index (without incrementing)
-        // Allow a tolerance of +1 to account for frontend/backend sync issues
+        // Allow a tolerance of up to 5 to account for mempool transactions that haven't been confirmed yet
+        // This helps prevent "Invalid index" errors when multiple actions are submitted in quick succession
         const expectedIndex = this.currentTurnIndex();
-        if (index !== expectedIndex && index !== expectedIndex + 1) {
-            console.error(`[DEBUG] Invalid action index. Expected ${expectedIndex} or ${expectedIndex + 1}, got ${index}`);
-            throw new Error("Invalid action index.");
+        const maxAllowedIndex = expectedIndex + 5; // Allow for several pending transactions
+        
+        if (index < expectedIndex) {
+            console.error(`[DEBUG] Invalid action index. Index too low. Expected at least ${expectedIndex}, got ${index}`);
+            throw new Error(`Invalid index: expected ${expectedIndex}, got ${index}`);
         }
         
-        // If the index is ahead by 1, adjust our internal index to match
-        if (index === expectedIndex + 1) {
+        if (index > maxAllowedIndex) {
+            console.error(`[DEBUG] Invalid action index. Index too high. Expected no more than ${maxAllowedIndex}, got ${index}`);
+            throw new Error(`Invalid index: too far ahead of current index ${expectedIndex}`);
+        }
+        
+        // If the index is ahead of our current index, adjust the internal index to match
+        if (index > expectedIndex) {
             console.log(`[DEBUG] Adjusting turn index to match client: ${expectedIndex} -> ${index}`);
             this._turnIndex = index;
         }
@@ -1003,9 +1018,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (this._currentRound !== TexasHoldemRound.ANTE && this._currentRound !== TexasHoldemRound.PREFLOP) 
             throw new Error("Hand currently in progress.");
 
-        this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
+        // Get the actual number of players
+        const playerCount = this.getPlayerCount();
+        // Calculate the max seat number that has a player
+        const maxSeat = Math.max(...Array.from(this._playersMap.entries())
+            .filter(([_, player]) => player !== null)
+            .map(([seat, _]) => seat));
+
+        // Update the dealer position
+        this._dealer = this._dealer >= maxSeat ? 1 : this._dealer + 1;
+        
+        // Calculate blind positions based on the dealer
+        this._smallBlindPosition = this._dealer >= maxSeat ? 1 : this._dealer + 1;
+        this._bigBlindPosition = this._smallBlindPosition >= maxSeat ? 1 : this._smallBlindPosition + 1;
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
