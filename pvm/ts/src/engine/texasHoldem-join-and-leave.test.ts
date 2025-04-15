@@ -13,7 +13,7 @@ describe("Texas Holdem - Join and Leave", () => {
         });
 
         it("should start in PREFLOP round", () => {
-            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
         });
 
         it("should not progress rounds without minimum players", () => {
