@@ -215,7 +215,8 @@ describe("CallAction", () => {
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
                 action: PlayerActionType.CALL,
-                amount: 30n
+                amount: 30n,
+                index: 0
             }, TexasHoldemRound.PREFLOP);
         });
 
@@ -236,7 +237,8 @@ describe("CallAction", () => {
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
                 action: PlayerActionType.ALL_IN,
-                amount: 100n
+                amount: 100n,
+                index: 0
             }, TexasHoldemRound.PREFLOP);
         });
     });
