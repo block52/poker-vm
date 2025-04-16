@@ -163,13 +163,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._handNumber;
     }
 
-    turnIndex(): number {
-        // Return the current value and THEN increment
-        return this._turnIndex++;
-    }
-
     // Returns the current turn index without incrementing it
-    currentTurnIndex(): number {
+    getTurnIndex(): number {
         return this._turnIndex;
     }
 
@@ -477,7 +472,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     action: PlayerActionType.FOLD,
                     min: "0",
                     max: "0",
-                    index: this.currentTurnIndex()
+                    index: this.getTurnIndex()
                 }
             ];
         }
@@ -489,7 +484,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     action: action.type,
                     min: range ? range.minAmount.toString() : "0",
                     max: range ? range.maxAmount.toString() : "0",
-                    index: this.currentTurnIndex()
+                    index: this.getTurnIndex()
                 };
             } catch {
                 return undefined;
@@ -535,7 +530,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
 
         // Check if the provided index matches the current turn index (without incrementing)
-        if (index !== this.currentTurnIndex()) {
+        if (index !== this.getTurnIndex()) {
             throw new Error("Invalid action index.");
         }
 
@@ -632,9 +627,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
-        
-        // Now explicitly increment the turn index once
-        this.incrementTurnIndex();
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
@@ -647,6 +639,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Create a new array with this turn as the first element
             this._rounds.set(round, [turnWithSeat]);
         }
+
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
     }
 
     getActionDTOs(): ActionDTO[] {
