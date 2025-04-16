@@ -26,8 +26,7 @@ class LeaveAction extends BaseAction {
         this.game.players.delete(seat);
         
         // Add the action to the game
-        const round = this.game.currentRound;
-        this.game.addAction({ playerId: player.address, action: NonPlayerActionType.LEAVE, index: index }, round);
+        this.game.addNonPlayerAction({ playerId: player.address, action: NonPlayerActionType.LEAVE, index: index });
     }
 }
 

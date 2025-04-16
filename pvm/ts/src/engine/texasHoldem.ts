@@ -523,7 +523,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
-                break;
+                return;
             case NonPlayerActionType.DEAL:
                 this.deal(data);
                 this.incrementTurnIndex();
@@ -621,6 +621,28 @@ class TexasHoldemGame implements IPoker, IUpdate {
             this._rounds.set(round, [turnWithSeat]);
         }
 
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
+    }
+
+    addNonPlayerAction(turn: Turn): void {
+        const timestamp = Date.now();
+        const round = this._currentRound;
+        const seat = -1;
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+
+        // Check if the round already exists in the map
+        if (this._rounds.has(round)) {
+            // Get the existing actions array
+            const actions = this._rounds.get(round)!;
+            // Push the new turn to it
+            actions.push(turnWithSeat);
+            this._rounds.set(round, actions);
+        } else {
+            // Create a new array with this turn as the first element
+            this._rounds.set(round, [turnWithSeat]);
+        }
+        
         // Now explicitly increment the turn index once
         this.incrementTurnIndex();
     }
