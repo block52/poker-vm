@@ -1,4 +1,4 @@
-import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range } from "../types";
@@ -6,7 +6,7 @@ import { IUpdate, Range } from "../types";
 abstract class BaseAction {
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
-    abstract get type(): PlayerActionType;
+    abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN)
@@ -25,7 +25,7 @@ abstract class BaseAction {
         return undefined;
     }
 
-    execute(player: Player, amount?: bigint): void {
+    execute(player: Player, index: number,  amount?: bigint): void {
         const range = this.verify(player);
 
         if (range) {
@@ -50,7 +50,7 @@ abstract class BaseAction {
         }
 
         const round = this.game.currentRound;
-        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount }, round);
+        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount, index: index }, round);
     }
 
     protected getDeductAmount(_player: Player, amount?: bigint): bigint {

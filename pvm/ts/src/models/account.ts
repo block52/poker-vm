@@ -6,7 +6,6 @@ export class Account {
     address: string;
     balance: bigint;
     nonce: number;
-    // private privateKey: string;
 
     constructor(address: string, balance: bigint, nonce: number = 0) {
         this.address = address;

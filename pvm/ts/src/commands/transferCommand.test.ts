@@ -67,7 +67,7 @@ describe("TransferCommand", () => {
         // });
 
         it.skip("should successfully create and add transfer transaction to mempool", async () => {
-            let command: TransferCommand = new TransferCommand(MOCK_FROM, MOCK_GAME_ADDRESS, 1000000n, "data", "privateKey");
+            let command: TransferCommand = new TransferCommand(MOCK_FROM, MOCK_GAME_ADDRESS, 1000000n, 0, "data", "privateKey");
             const tx = new Transaction(
                 MOCK_GAME_ADDRESS,
                 MOCK_FROM,
@@ -75,8 +75,8 @@ describe("TransferCommand", () => {
                 ethers.ZeroHash,
                 "0x8bf5d2b410baf602fbb1ca59ab16b1772ca0f143950e12a2d4a2ead44ab845fb",
                 1000,
-                1,
-                undefined,
+                0n,
+                0,
                 undefined
             );
 
@@ -109,8 +109,8 @@ describe("TransferCommand", () => {
                 ethers.ZeroHash,
                 "0x8bf5d2b410baf602fbb1ca59ab16b1772ca0f143950e12a2d4a2ead44ab845fb",
                 1000,
+                0n,
                 1,
-                undefined,
                 "data"
             );
             (Transaction.create as jest.Mock).mockResolvedValue(tx);

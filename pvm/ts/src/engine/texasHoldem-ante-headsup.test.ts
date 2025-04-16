@@ -1,25 +1,25 @@
-import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-
-import { ethers } from "ethers";
-import { gameOptions } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, TEN_TOKENS } from "./testConstants";
+import { Player } from "../models/player";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
-describe.only("Texas Holdem - Ante - Heads Up", () => {
-    const baseGameConfig = {
-        address: ethers.ZeroAddress,
-        dealer: 0,
-        nextToAct: 1,
-        currentRound: "preflop",
-        communityCards: [],
-        pot: 0n,
-        players: []
-    };
-
+describe("Texas Holdem - Ante - Heads Up", () => {
     describe("Preflop game states", () => {
         let game: TexasHoldemGame;
 
+        const player1 = new Player(
+            "0x1111111111111111111111111111111111111111",
+            undefined,
+            ONE_HUNDRED_TOKENS,
+            undefined,
+            PlayerStatus.ACTIVE
+        );
+
+
         beforeEach(() => {
+            //baseGameConfig.players.push(player1);
+
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
@@ -32,13 +32,13 @@ describe.only("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should not allow player to join with insufficient funds", () => {
-            expect(() => game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 10n)).toThrow(
+            expect(() => game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 0, 10n)).toThrow(
                 "Player does not have enough or too many chips to join."
             );
         });
 
         it("should allow a player to join", () => {
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
@@ -51,8 +51,8 @@ describe.only("Texas Holdem - Ante - Heads Up", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.join2("0x980b8D8A16f5891F41871d878a479d81Da52334c", 1000000000000000000n);
-            game.join2("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", 1000000000000000000n);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
         });
 
         it("should have the correct players pre flop", () => {

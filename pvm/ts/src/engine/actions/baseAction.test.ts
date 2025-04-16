@@ -135,22 +135,22 @@ describe.skip("BaseAction", () => {
         describe("amount validation", () => {
             it("should throw error if amount provided but not required", () => {
                 action.shouldReturnRange = false;
-                expect(() => action.execute(player, 50n)).toThrow("Amount should not be specified for check");
+                expect(() => action.execute(player, 0, 50n)).toThrow("Amount should not be specified for check");
             });
 
             it("should throw error if amount is less than minimum", () => {
                 action.shouldReturnRange = true;
-                expect(() => action.execute(player, 5n)).toThrow("Amount is less than minimum allowed.");
+                expect(() => action.execute(player, 0, 5n)).toThrow("Amount is less than minimum allowed.");
             });
 
             it("should throw error if amount is greater than maximum", () => {
                 action.shouldReturnRange = true;
-                expect(() => action.execute(player, 150n)).toThrow("Amount is greater than maximum allowed.");
+                expect(() => action.execute(player, 0, 150n)).toThrow("Amount is greater than maximum allowed.");
             });
 
             it("should accept amount within valid range", () => {
                 action.shouldReturnRange = true;
-                expect(() => action.execute(player, 50n)).not.toThrow();
+                expect(() => action.execute(player, 0, 50n)).not.toThrow();
             });
         });
 
@@ -165,13 +165,13 @@ describe.skip("BaseAction", () => {
                     PlayerStatus.ACTIVE
                 );
 
-                expect(() => action.execute(poorPlayer, 50n)).toThrow("Player has insufficient chips to check.");
+                expect(() => action.execute(poorPlayer, 0, 50n)).toThrow("Player has insufficient chips to check.");
             });
 
             it("should deduct correct amount from player chips", () => {
                 action.shouldReturnRange = true;
                 const initialChips = player.chips;
-                action.execute(player, 50n);
+                action.execute(player, 0, 50n);
                 expect(player.chips).toBe(initialChips - 50n);
             });
 
@@ -184,7 +184,7 @@ describe.skip("BaseAction", () => {
                     undefined,
                     PlayerStatus.ACTIVE
                 );
-                action.execute(allInPlayer, 50n);
+                action.execute(allInPlayer, 0, 50n);
 
                 expect(allInPlayer.chips).toBe(0n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
@@ -194,7 +194,7 @@ describe.skip("BaseAction", () => {
         describe("action recording", () => {
             it("should record normal action", () => {
                 action.shouldReturnRange = true;
-                action.execute(player, 50n);
+                action.execute(player, 0, 50n);
 
                 expect(addedActions[0]).toEqual({
                     playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
@@ -205,7 +205,7 @@ describe.skip("BaseAction", () => {
 
             it("should record action without amount when not required", () => {
                 action.shouldReturnRange = false;
-                action.execute(player, 0n);
+                action.execute(player, 0, 0n);
 
                 expect(addedActions[0]).toEqual({
                     playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
@@ -264,7 +264,7 @@ describe.skip("BaseAction", () => {
                     PlayerStatus.ACTIVE
                 );
                 action.shouldReturnRange = true;
-                action.execute(shortStackPlayer, 25n);
+                action.execute(shortStackPlayer, 0, 25n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
             });
         });
@@ -302,12 +302,12 @@ describe.skip("BaseAction", () => {
 
             it("should validate amount when range is provided", () => {
                 action.shouldReturnRange = true;
-                expect(() => action.execute(player, 5n)).toThrow("Amount is less than minimum allowed.");
+                expect(() => action.execute(player, 0, 5n)).toThrow("Amount is less than minimum allowed.");
             });
 
             it("should not allow amount when range is undefined", () => {
                 action.shouldReturnRange = false;
-                expect(() => action.execute(player, 50n)).toThrow("Amount should not be specified for check");
+                expect(() => action.execute(player, 0, 50n)).toThrow("Amount should not be specified for check");
             });
 
             it("should check if player has sufficient chips", () => {
@@ -319,13 +319,13 @@ describe.skip("BaseAction", () => {
                     undefined,
                     PlayerStatus.ACTIVE
                 );
-                expect(() => action.execute(poorPlayer, 50n)).toThrow("Player has insufficient chips to check");
+                expect(() => action.execute(poorPlayer, 0, 50n)).toThrow("Player has insufficient chips to check");
             });
 
             it("should deduct chips correctly", () => {
                 action.shouldReturnRange = true;
                 const initialChips = player.chips;
-                action.execute(player, 50n);
+                action.execute(player, 0, 50n);
                 expect(player.chips).toBe(initialChips - 50n);
             });
 
@@ -338,7 +338,7 @@ describe.skip("BaseAction", () => {
                     undefined,
                     PlayerStatus.ACTIVE
                 );
-                action.execute(allInPlayer, 50n);
+                action.execute(allInPlayer, 0, 50n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
             });
         });

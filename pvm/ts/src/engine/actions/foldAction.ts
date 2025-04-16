@@ -13,7 +13,7 @@ class FoldAction extends BaseAction {
     }
     
     // Override execute to set player's status to FOLDED
-    execute(player: Player, amount?: bigint): void {
+    execute(player: Player, index: number, amount?: bigint): void {
         // First verify the action
         this.verify(player);
         
@@ -22,7 +22,7 @@ class FoldAction extends BaseAction {
         
         // Add the action to the game
         const round = this.game.currentRound;
-        this.game.addAction({ playerId: player.address, action: PlayerActionType.FOLD }, round);
+        this.game.addAction({ playerId: player.address, action: PlayerActionType.FOLD, index: index }, round);
     }
 }
 

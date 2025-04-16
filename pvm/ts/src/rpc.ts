@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { GameOptions, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import {
     AccountCommand,
@@ -36,6 +36,7 @@ import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
 import { NextCommand } from "./commands/nextCommand";
+import { PerformActionCommand } from "./commands/performActionCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -236,9 +237,6 @@ export class RPC {
                     const [address] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
                     const command = new GameStateCommand(address, validatorPrivateKey);
                     result = await command.execute();
-
-                    // Hack for now, mine these and clear mempool
-
                     break;
                 }
 
@@ -316,10 +314,10 @@ export class RPC {
                 }
 
                 case RPCMethods.TRANSFER: {
-                    const [from, to, amount, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
+                    const [from, to, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.TRANSFER];
 
                     // Todo: get from out of the signed request
-                    const command = new TransferCommand(from, to, BigInt(amount), data, validatorPrivateKey);
+                    const command = new TransferCommand(from, to, BigInt(amount), nonce, data, validatorPrivateKey);
                     result = await command.execute();
 
                     break;
@@ -340,32 +338,10 @@ export class RPC {
                 }
 
                 case RPCMethods.PERFORM_ACTION: {
-                    const [from, to, action, amount, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
-
-                    switch (action) {
-                        case "deal":
-                            try {
-                                const command = new DealCommand(to, from, validatorPrivateKey, data || "");
-                                result = await command.execute();
-
-                                // Check if the result indicates an error but wasn't thrown as an exception
-                                if (result && result.data && !result.data.success) {
-                                    console.warn("Deal command returned failure:", result.data.message);
-                                    // We still return the result, but log the warning
-                                }
-                            } catch (error: any) {
-                                console.error("Deal command failed:", error);
-                                return makeErrorRPCResponse(id, `Deal operation failed: ${error.message || "Unknown error"}`);
-                            }
-                            break;
-                        case "next-round":
-                            const command = new NextCommand(to, validatorPrivateKey, data || "");
-                            result = await command.execute();
-                            break;
-                        default:
-                            return makeErrorRPCResponse(id, `Unknown action: ${action}`);
-                            
-                    }
+                    const [from, to, action, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
+                    const _action = action as PlayerActionType | NonPlayerActionType;
+                    const command = new PerformActionCommand(from, to, Number(data), BigInt(amount || "0"), _action, validatorPrivateKey);
+                    result = await command.execute();
                     break;
                 }
 

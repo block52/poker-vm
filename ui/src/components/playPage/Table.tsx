@@ -15,7 +15,6 @@ import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
 import { useNavigate, useParams } from "react-router-dom";
-import { IoMenuSharp } from "react-icons/io5";
 import { RxExit } from "react-icons/rx";
 
 import { ethers } from "ethers";
@@ -24,6 +23,8 @@ import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
+import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
+import Footer2 from "../Footer2";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -55,7 +56,7 @@ interface PositionArray {
 const calculateZoom = () => {
     const baseWidth = 1600;
     const baseHeight = 850;
-    const headerFooterHeight = 180;
+    const headerFooterHeight = 550; // Updated to account for both footers (250px + 300px)
 
     const availableHeight = window.innerHeight - headerFooterHeight;
     const scaleWidth = window.innerWidth / baseWidth;
@@ -128,7 +129,10 @@ const useTableData = () => {
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const { tableData, nextToActInfo, currentRound, playerLegalActions, tableSize, showThreeCards, getUserBySeat, currentUserSeat, leave } = useTableContext();
-
+    
+    // Add the useMinAndMaxBuyIns hook HERE at the top with other hooks
+    const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
+    
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
     debugLog("Current user address from localStorage:", currentUserAddress);
@@ -140,7 +144,7 @@ const Table = () => {
 
     // Add the new hook usage here with prefixed names - directly at top level, not inside useMemo
     const tableDataValues = useTableData();
-
+    
     // Replace useUserBySeat with getUserBySeat from context
     // Get the user data for the current seat from context instead of hook
     const userData = React.useMemo(() => {
@@ -367,7 +371,7 @@ const Table = () => {
         return activePlayers && activePlayers.length > 1;
     };
 
-    // Add this check early in your component
+    // NOW you can have your conditional returns
     if (tableDataValues.isLoading) {
         return <div className="h-screen flex items-center justify-center text-white">Loading table data...</div>;
     }
@@ -484,9 +488,12 @@ const Table = () => {
 
                     {/* Left Section */}
                     <div className="flex items-center z-10">
-                        <span className="px-2 py-1 rounded  text-[15px] ">
-                            ${tableDataValues.tableDataSmallBlind}/${tableDataValues.tableDataBigBlind}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                            <span className="px-2 py-1 rounded text-[15px]">
+                            ${minBuyInFormatted} / ${maxBuyInFormatted}
+                            </span>
+                           
+                        </div>
                         <span className="ml-2 text-[15px]">
                             Game Type: <span className="text-[15px] text-yellow-400">{tableDataValues.tableDataType}</span>
                         </span>
@@ -519,7 +526,7 @@ const Table = () => {
                     }}
                 >
                     {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-800px)] z-[0] relative">
                         {/* Animated background overlay */}
                         <div
                             className="absolute inset-0 z-0 opacity-30"
@@ -780,8 +787,13 @@ const Table = () => {
                     </div>
 
                     {/*//! FOOTER */}
-                    <div className="flex-shrink-0 w-full h-[250px] bg-custom-footer text-center z-[10] flex justify-center">
-                        <PokerActionPanel />
+                    <div className="flex-shrink-0 w-full flex flex-col bg-custom-footer text-center z-[10]">
+                        <div className="w-full h-[250px] flex justify-center">
+                            <PokerActionPanel />
+                        </div>
+                        <div className="w-full h-[400px] flex justify-center overflow-y-auto">
+                            <Footer2 tableId={id} />
+                        </div>
                     </div>
                 </div>
                 {/*//! SIDEBAR */}
@@ -829,6 +841,8 @@ const Table = () => {
                     <span>Hand complete - waiting for next hand</span>
                 </div>
             )}
+
+            
         </div>
     );
 };

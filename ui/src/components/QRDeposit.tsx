@@ -4,7 +4,7 @@ import { Eip1193Provider, ethers, parseUnits } from "ethers";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import useUserWallet from "../hooks/useUserWallet";
-import useUserWalletConnect from "../hooks/useUserWalletConnect";
+import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
 import { Link } from "react-router-dom";
 
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";

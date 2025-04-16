@@ -1,4 +1,4 @@
-import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
@@ -14,7 +14,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
 
-    constructor(private from: string, private to: string, private amount: bigint, private data: string | null, private readonly privateKey: string) {
+    constructor(private from: string, private to: string, private amount: bigint, private readonly nonce: number | 0, private data: string | null, private readonly privateKey: string) {
         console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
@@ -27,17 +27,21 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         const accountCommand = new AccountCommand(this.from, this.privateKey);
         const accountResponse = await accountCommand.execute();
         const fromAccount = accountResponse.data;
-        console.log(`Account balance for ${this.from}: ${fromAccount.balance}`);
+        console.log(`Account balance for ${this.from}: ${fromAccount.balance} ${fromAccount.nonce}`);
 
-        if (this.amount > fromAccount.balance && !await this.isGameTransaction(this.from)) {
+        if (this.nonce !== fromAccount.getNextNonce()) {
+            console.log(`Invalid nonce: expected=${fromAccount.getNextNonce()}, provided=${this.nonce}`);
+            throw new Error("Invalid nonce");
+        }
+
+        if (this.amount > fromAccount.balance) {
             console.log(`Insufficient balance: required=${this.amount}, available=${fromAccount.balance}`);
             throw new Error("Insufficient balance");
         }
 
-        // todo: check nonce
         // Check if from is a game account
         try {
-            if (this.data && await this.isGameTransaction(this.to)) {
+            if (await this.isGameTransaction(this.to)) {
                 console.log(`Processing game transaction: data=${this.data}, to=${this.to}`);
 
                 const [json, gameOptions] = await Promise.all([
@@ -46,72 +50,36 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 ]);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-                // Replay tx from mempool
 
-                // Cast string to PlayerActionType
-                const playerAction = this.data;
-                console.log(`Player action type: ${playerAction}`);
+                console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
+                game.performAction(this.from, NonPlayerActionType.JOIN, game.turnIndex(), this.amount);
+                console.log(`Join successful`);
 
-                switch (playerAction) {
-                    case "join":
-                        console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
-                        game.join2(this.from, this.amount);
-                        console.log(`Join successful`);
-                        break;
-                    case "post small blind":
-                        game.performAction(this.from, PlayerActionType.SMALL_BLIND, this.amount);
-                        break;
-                    case "post big blind":
-                        game.performAction(this.from, PlayerActionType.BIG_BLIND, this.amount);
-                        break;
-                    case "bet":
-                        console.log(`Player ${this.from} betting ${this.amount}...`);
-                        game.performAction(this.from, PlayerActionType.BET, this.amount);
-                        break;
-                    case "call":
-                        game.performAction(this.from, PlayerActionType.CALL);
-                        break;
-                    case "fold":
-                        game.performAction(this.from, PlayerActionType.FOLD);
-                        break;
-                    case "check":
-                        game.performAction(this.from, PlayerActionType.CHECK);
-                        break;
-                    case "raise":
-                        console.log(`Player ${this.from} raising to ${this.amount}...`);
-                        // Ensure amount is converted to bigint for the RAISE action
-                        game.performAction(this.from, PlayerActionType.RAISE, BigInt(this.amount.toString()));
-                        break;
-                    default:
-                        throw new Error(`Invalid action: ${playerAction}`);
-                };
+                // const _json = game.toJson();
+                // await this.gameManagement.saveFromJSON(_json);
 
-                const _json = game.toJson();
-                await this.gameManagement.saveFromJSON(_json);
-
-                const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+                const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, "JOIN");
                 await this.mempool.add(gameTx);
                 return signResult(gameTx, this.privateKey);
-            } 
-            
+            }
+
             if (await this.isGameTransaction(this.from)) {
                 const json = await this.gameManagement.get(this.from);
                 const gameOptions = await this.contractSchemas.getGameOptions(this.from);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-                
+
                 // Assume player is leaving the game
                 console.log(`Player ${this.to} leaving game...`);
-                const stack = game.leave(this.to);
-                if (stack !== this.amount) {
-                    throw new Error("Leave amount doesn't match player's stack");
-                }
+                const player = game.getPlayer(this.from);
+                const stack = player?.chips ?? 0n;
+                game.performAction(this.to, NonPlayerActionType.LEAVE, game.turnIndex(), stack);
                 console.log(`Leave successful, returning ${stack} chips`);
-                
-                const _json = game.toJson();
-                await this.gameManagement.saveFromJSON(_json);
 
-                const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, this.data ?? "");
+                // const _json = game.toJson();
+                // await this.gameManagement.saveFromJSON(_json);
+
+                const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "LEAVE");
                 await this.mempool.add(gameTx);
                 return signResult(gameTx, this.privateKey);
             }
@@ -119,10 +87,10 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             console.log(`Processing EUA transaction...`);
 
             // If we haven't thrown an error, then we can create the transaction
-            const transferTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
-            await this.mempool.add(transferTx);
+            const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+            await this.mempool.add(transaction);
 
-            return signResult(transferTx, this.privateKey);
+            return signResult(transaction, this.privateKey);
 
         } catch (e) {
             console.error(`Error in transfer command:`, e);

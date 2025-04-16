@@ -83,7 +83,8 @@ describe("CallAction", () => {
                 action: PlayerActionType.CALL,
                 amount: 0n,
                 seat: 0,
-                timestamp: Date.now(),
+                index: 0,
+                timestamp: Date.now()
             };
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
@@ -98,7 +99,8 @@ describe("CallAction", () => {
                 action: PlayerActionType.BET,
                 amount: TEN_TOKENS,
                 seat: 0,
-                timestamp: Date.now(),
+                index: 0,
+                timestamp: Date.now()
             };
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
@@ -119,7 +121,8 @@ describe("CallAction", () => {
                 action: PlayerActionType.BET,
                 amount: 30n,
                 seat: 1,
-                timestamp: Date.now(),
+                index: 0,
+                timestamp: Date.now()
             };
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
@@ -142,7 +145,8 @@ describe("CallAction", () => {
                 action: PlayerActionType.BET,
                 amount: 200n,
                 seat: 1,
-                timestamp: Date.now(),
+                index: 0,
+                timestamp: Date.now()
             };
             
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
@@ -176,7 +180,7 @@ describe("CallAction", () => {
             // Set player chips
             player.chips = 50n;
 
-            expect(() => action.execute(player)).toThrow("Player has insufficient chips to call.");
+            expect(() => action.execute(player, 0)).toThrow("Player has insufficient chips to call.");
         });
 
         it("should deduct correct amount from player chips", () => {
@@ -190,7 +194,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(30n);
             
             player.chips = 100n;
-            action.execute(player);
+            action.execute(player, 0);
 
             expect(player.chips).toBe(70n); // 100n - 30n
         });
@@ -206,7 +210,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(30n);
             
             player.chips = 100n;
-            action.execute(player);
+            action.execute(player, 0);
 
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
@@ -226,7 +230,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(100n);
             
             player.chips = 100n;
-            action.execute(player);
+            action.execute(player, 0);
 
             expect(player.chips).toBe(0n);
             expect(game.addAction).toHaveBeenCalledWith({

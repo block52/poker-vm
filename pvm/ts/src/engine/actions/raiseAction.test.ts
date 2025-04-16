@@ -74,7 +74,8 @@ describe("Raise Action", () => {
             action: PlayerActionType.BET,
             amount: FIFTY_TOKENS, // 50 tokens
             seat: 2,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            index: 0
         };
 
         jest.spyOn(game, "getLastRoundAction").mockReturnValue(turn);
@@ -95,7 +96,8 @@ describe("Raise Action", () => {
         const lastBet: Turn = {
             playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
             action: PlayerActionType.BET,
-            amount: FIFTY_TOKENS // 50 tokens
+            amount: FIFTY_TOKENS, // 50 tokens
+            index: 0
         };
 
         beforeEach(() => {
@@ -156,7 +158,8 @@ describe("Raise Action", () => {
             const lastBet: Turn = {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 action: PlayerActionType.BET,
-                amount: FIFTY_TOKENS
+                amount: FIFTY_TOKENS,
+                index: 0
             };
 
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
@@ -187,7 +190,8 @@ describe("Raise Action", () => {
             const lastBet: Turn = {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 action: PlayerActionType.BET,
-                amount: FIFTY_TOKENS // 50 tokens
+                amount: FIFTY_TOKENS, // 50 tokens
+                index: 0
             };
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
 
@@ -202,7 +206,7 @@ describe("Raise Action", () => {
             const initialChips = player.chips;
             const raiseAmount = ONE_HUNDRED_TOKENS; // 100 tokens
 
-            action.execute(player, raiseAmount);
+            action.execute(player, 0, raiseAmount);
 
             expect(player.chips).toBe(initialChips - raiseAmount);
             expect(game.addAction).toHaveBeenCalledWith({
@@ -216,7 +220,7 @@ describe("Raise Action", () => {
         it("should set player's action to ALL_IN if raising all chips", () => {
             const raiseAmount = player.chips;
 
-            action.execute(player, raiseAmount);
+            action.execute(player, 0, raiseAmount);
 
             expect(player.chips).toBe(0n);
             expect(game.addAction).toHaveBeenCalledWith({
@@ -230,7 +234,7 @@ describe("Raise Action", () => {
         it("should throw error if amount is less than minimum allowed", () => {
             const tooSmallAmount = FIFTY_TOKENS; // 50 tokens
 
-            expect(() => action.execute(player, tooSmallAmount)).toThrow("Amount is less than minimum allowed.");
+            expect(() => action.execute(player, 0, tooSmallAmount)).toThrow("Amount is less than minimum allowed.");
         });
 
         it("should throw error if amount is greater than maximum allowed", () => {
@@ -243,11 +247,11 @@ describe("Raise Action", () => {
                 maxAmount: player.chips
             });
 
-            expect(() => action.execute(player, tooLargeAmount)).toThrow("Amount is greater than maximum allowed.");
+            expect(() => action.execute(player, 0, tooLargeAmount)).toThrow("Amount is greater than maximum allowed.");
         });
 
         it("should throw error if required amount is not provided", () => {
-            expect(() => action.execute(player)).toThrow(`Amount needs to be specified for ${PlayerActionType.RAISE}`);
+            expect(() => action.execute(player, 0)).toThrow(`Amount needs to be specified for ${PlayerActionType.RAISE}`);
         });
     });
 });

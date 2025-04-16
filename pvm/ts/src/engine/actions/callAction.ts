@@ -31,7 +31,7 @@ class CallAction extends BaseAction implements IAction {
         return { minAmount: deductAmount, maxAmount: deductAmount };
     }
 
-    execute(player: Player): void {
+    execute(player: Player, index: number): void {
         const deductAmount = this.getDeductAmount(player);
         if (deductAmount) {
             if (player.chips < deductAmount)
@@ -41,7 +41,7 @@ class CallAction extends BaseAction implements IAction {
         }
 
         const round = this.game.currentRound;
-        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount }, round);
+        this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount, index: index }, round);
     }
 
     protected getDeductAmount(player: Player): bigint {

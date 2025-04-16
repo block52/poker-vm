@@ -1,9 +1,9 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
-import { Range } from "../types";
+import { IAction, Range } from "../types";
 
-class AllInAction extends BaseAction {
+class AllInAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.ALL_IN }
 
     verify(player: Player): Range | undefined {

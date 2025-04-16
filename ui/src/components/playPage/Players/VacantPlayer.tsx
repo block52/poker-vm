@@ -2,14 +2,14 @@ import * as React from "react";
 import { memo, useEffect, useState } from "react";
 import PokerProfile from "../../../assets/PokerProfile.svg"
 import { useParams } from "react-router-dom";
-import { PROXY_URL } from "../../../config/constants";
-import axios from "axios";
 import { ethers } from "ethers";
 import { useTableContext } from "../../../context/TableContext";
-import { getSignature } from "../../../utils/accountUtils";
 import useUserWallet from "../../../hooks/useUserWallet";
 import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 import { toDisplaySeat } from "../../../utils/tableUtils";
+import { useTableJoin } from "../../../hooks/useTableJoin";
+import { useMinAndMaxBuyIns } from "../../../hooks/useMinAndMaxBuyIns";
+import { useTableTurnIndex } from "../../../hooks/useTableTurnIndex";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -36,6 +36,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const privateKey = localStorage.getItem("user_eth_private_key");
 
         const { balance } = useUserWallet(); // this is the wallet in the browser.
+        const actionIndex = useTableTurnIndex(tableId);
 
         // Add state for buy-in modal
         const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -43,12 +44,16 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [buyInError, setBuyInError] = useState("");
         const [isConfirming, setIsConfirming] = useState(false);
 
+        // Add the hook at the top of your component
+        const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(tableId);
+
         // Debug logs for initial state
         debugLog(`VacantPlayer ${index} initial state:`, {
             userAddress,
             hasTableData: !!tableData,
             hasLocalTableData: !!localTableData,
-            tableId
+            tableId,
+            actionIndex
         });
 
         // Update local table data with debounce
@@ -60,12 +65,13 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     players: tableData?.data?.players?.map((p: any) => ({
                         address: p.address,
                         seat: p.seat // No need to add 1 since backend is already using 1-based
-                    }))
+                    })),
+                    actionIndex
                 });
             }, 1000); // 1 second debounce
 
             return () => clearTimeout(timer);
-        }, [tableData, index]);
+        }, [tableData, index, actionIndex]);
 
         // First, check if user is already playing
         // First, check if user is already playing
@@ -175,6 +181,10 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             return "";
         };
 
+        const { joinTable, isJoining, error: joinError } = tableId 
+            ? useTableJoin(tableId) 
+            : { joinTable: null, isJoining: false, error: null };
+
         const handleJoinClick = React.useCallback(async () => {
             debugLog("\n=== JOIN CLICK DETECTED ===");
             debugLog("Can join?", canJoinThisSeat);
@@ -182,6 +192,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             debugLog("isUserAlreadyPlaying:", isUserAlreadyPlaying);
             debugLog("Seat Index:", index);
             debugLog("Table ID:", tableId);
+            debugLog("Action Index:", actionIndex);
 
             if (!canJoinThisSeat) {
                 debugLog("Cannot join: either seat is taken or user is already playing");
@@ -190,147 +201,80 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             // Instead of joining immediately, show the buy-in modal
             setShowBuyInModal(true);
-
-            // Set default buy-in amount (20x big blind)
-            const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC
-            const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-            const defaultBuyIn = ethers.formatUnits(twentyBigBlinds, 18);
-            setBuyInAmount(defaultBuyIn);
-        }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index]);
+            setBuyInAmount("");
+        }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index, actionIndex]);
 
         // Function to handle the actual join after user confirms buy-in amount
         const handleConfirmBuyIn = async () => {
-
             setShowBuyInModal(false);
             if (!buyInAmount || parseFloat(buyInAmount) <= 0) {
                 setBuyInError("Please enter a valid buy-in amount");
                 return;
             }
 
-            try {
-                // Convert ETH to Wei
-                const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
-                debugLog("Buy-in amount in Wei:", buyInWei);
-
-                // Show loading icon and hide modal
-                setIsConfirming(true);
-                setBuyInError("");
-
-                // Use setTimeout with 0 delay to ensure UI updates before proceeding
-                setTimeout(async () => {
-                    try {
-                        // Call the join table function with the specified amount
-                        await handleJoinTable(buyInWei);
-                    } catch (error) {
-                        console.error("Error joining table:", error);
-                        setShowBuyInModal(true);
-                        setBuyInError("Failed to join table. Please try again.");
-                        setIsConfirming(false);
-                    } finally {
-                        // Reset confirming state when done
-                        setTimeout(() => {
-                            setIsConfirming(false);
-                        }, 1000);
-                    }
-                }, 0);
-            } catch (error) {
-                console.error("Error converting buy-in amount:", error);
-                setBuyInError("Invalid buy-in amount");
-                setIsConfirming(false);
-            }
-        };
-
-        const handleJoinTable = async (buyInWei: string) => {
-            if (!userAddress || !privateKey) {
-                console.error("Missing user address or private key");
+            // Verify required values exist
+            if (!tableId || !userAddress || !privateKey || !joinTable) {
+                console.error("Missing required values:", { 
+                    hasTableId: !!tableId, 
+                    hasUserAddress: !!userAddress, 
+                    hasPrivateKey: !!privateKey,
+                    hasJoinFunction: !!joinTable
+                });
+                setBuyInError("Missing required information to join table.");
                 return;
             }
 
             try {
-                await refreshNonce(userAddress);
-                const currentNonce = nonce?.toString() || "0";
-
-                debugLog("User balance:", balance);
-
-                // Get minimum buy-in from table data with proper fallback
-                const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
-                const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-                const minBuyIn = localTableData?.data?.minBuyIn || twentyBigBlinds; // Default to 20x big blind
-
-                debugLog("=== MIN BUY IN ===");
-                debugLog("minBuyIn:", minBuyIn);
-                debugLog("bigBlindValue:", bigBlindValue);
-                debugLog("twentyBigBlinds:", twentyBigBlinds);
-
-                // Use the user's input amount directly
-                const buyInAmount = buyInWei;
-
-                // Check if user's input exceeds their balance
-                if (balance && BigInt(buyInWei) > BigInt(balance)) {
-                    debugLog(`User input (${buyInWei}) exceeds balance (${balance})`);
+                // Convert ETH to Wei
+                const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
+                
+                // Validation against min/max
+                if (BigInt(buyInWei) < BigInt(minBuyInWei)) {
+                    setBuyInError(`Minimum buy-in is $${minBuyInFormatted}`);
                     setShowBuyInModal(true);
-                    setBuyInError(`Amount exceeds your balance of ${ethers.formatUnits(balance, 18)} USDC`);
+                    return;
+                }
+                
+                if (BigInt(buyInWei) > BigInt(maxBuyInWei)) {
+                    setBuyInError(`Maximum buy-in is $${maxBuyInFormatted}`);
+                    setShowBuyInModal(true);
                     return;
                 }
 
-                debugLog("Final buy-in amount:", buyInAmount);
-
-                const signature = await getSignature(privateKey, currentNonce, userAddress, tableId, buyInAmount, "join");
-
-                const requestData = {
-                    id: "1",
-                    method: "transfer",
+                // Show loading state
+                setIsConfirming(true);
+                setBuyInError("");
+                
+                console.log("Joining table with action index:", actionIndex);
+                
+                // Use the mutation hook to join with the action index
+                const result = await joinTable({
+                    buyInAmount: buyInWei,
                     userAddress,
-                    tableId,
-                    buyInAmount,
-                    signature,
-                    publicKey: userPublicKey
-                };
-
-                debugLog("Sending join request:", requestData);
-                const response = await axios.post(`${PROXY_URL}/table/${tableId}/join`, requestData);
-                debugLog("Join response:", response.data);
-
-                if (response.data?.result?.data) {
-                    setTableData(response.data.result.data);
-
-                    // Wait for backend to process the join, then fetch fresh data
+                    privateKey,
+                    publicKey: userPublicKey,
+                    index: actionIndex
+                });
+                
+                // Handle success (setting table data)
+                if (result?.result?.data) {
+                    setTableData({ data: result.result.data });
+                    
+                    // Wait for backend to process the join, then refresh nonce
                     setTimeout(async () => {
-                        try {
-                            debugLog("Fetching fresh table data after join...");
-                            const freshDataResponse = await axios.get(`${PROXY_URL}/get_game_state/${tableId}`);
-                            debugLog("Fresh table data received:", freshDataResponse.data);
-                            setTableData({ data: freshDataResponse.data });
-                        } catch (refreshError) {
-                            console.error("Error refreshing table data:", refreshError);
+                        if (userAddress) {
+                            await refreshNonce(userAddress);
                         }
-                    }, 1500); // Wait 1.5 seconds before refreshing
+                    }, 1000);
                 }
             } catch (error) {
                 console.error("Error joining table:", error);
-                // Show error to user
                 setShowBuyInModal(true);
                 setBuyInError("Failed to join table. Please try again.");
+            } finally {
+                setIsConfirming(false);
             }
         };
-
-        // Update the useEffect to set default buy-in to max wallet amount
-        useEffect(() => {
-            if (showBuyInModal && balance) {
-                // Set the buy-in amount to the player's full balance
-                const maxBuyIn = ethers.formatUnits(balance, 18);
-                
-                // Get minimum buy-in from table data
-                const bigBlindValue = localTableData?.data?.bigBlind || "200000000000000000"; // 0.2 USDC default
-                const twentyBigBlinds = (BigInt(bigBlindValue) * BigInt(20)).toString();
-                const minBuyInWei = localTableData?.data?.minBuyIn || twentyBigBlinds;
-                const minBuyIn = ethers.formatUnits(minBuyInWei, 18);
-                
-                // Set to maximum wallet amount (or min buy-in if that's higher)
-                const defaultAmount = Number(maxBuyIn) < Number(minBuyIn) ? maxBuyIn : maxBuyIn;
-                setBuyInAmount(defaultAmount);
-            }
-        }, [showBuyInModal, balance, localTableData?.data?.bigBlind, localTableData?.data?.minBuyIn]);
 
         // Only log position once during mount
         useEffect(() => {

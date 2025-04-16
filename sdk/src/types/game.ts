@@ -1,6 +1,6 @@
 export enum PlayerActionType {
-    SMALL_BLIND = "post small blind",
-    BIG_BLIND = "post big blind",
+    SMALL_BLIND = "post-small-blind",
+    BIG_BLIND = "post-big-blind",
     FOLD = "fold",
     CHECK = "check",
     BET = "bet",
@@ -8,9 +8,22 @@ export enum PlayerActionType {
     RAISE = "raise",
     ALL_IN = "all-in",
     MUCK = "muck",
+    SIT_IN = "sit-in",
+    SIT_OUT = "sit-out"
+}
+
+export enum NonPlayerActionType {
+    DEAL = "deal",
     JOIN = "join",
-    LEAVE = "leave",
-    DEAL = "deal"
+    NEXT = "next-round",
+    LEAVE = "leave"
+}
+
+export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
+
+export enum GameType {
+    CASH = "cash",
+    TOURNAMENT = "tournament"
 }
 
 export enum PlayerStatus {
@@ -55,15 +68,17 @@ export type GameOptionsDTO = {
 export type ActionDTO = {
     playerId: string,
     seat: number,
-    action: PlayerActionType;
+    action: PlayerActionType | NonPlayerActionType;
     amount: string;
     round: TexasHoldemRound;
+    index: number;
 };
 
 export type LegalActionDTO = {
-    action: PlayerActionType;
+    action: PlayerActionType | NonPlayerActionType;
     min: string | undefined;
     max: string | undefined;
+    index: number;
 };
 
 export type WinnerDTO = {

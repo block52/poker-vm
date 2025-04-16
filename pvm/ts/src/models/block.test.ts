@@ -11,8 +11,8 @@ function createTestTransaction(from: string, value: bigint): Transaction {
         `test-${from}-${value}`,  // unique hash for each transaction
         "test",        // signature
         Date.now(),    // timestamp
-        4,            // index
         4n,           // nonce
+        1,        // index
         "test"         // data
     );
 }

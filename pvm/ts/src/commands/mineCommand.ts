@@ -11,7 +11,7 @@ import { AccountManagement, getAccountManagementInstance } from "../state/accoun
 import TexasHoldemGame from "../engine/texasHoldem";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { IGameStateDocument } from "../models/interfaces";
-import { GameOptions } from "@bitcoinbrisbane/block52";
+import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 
 export class MineCommand implements ISignedCommand<Block | null> {
@@ -136,6 +136,8 @@ export class MineCommand implements ISignedCommand<Block | null> {
                 const expirationDate = new Date(turn.timestamp);
                 expirationDate.setSeconds(expirationDate.getSeconds() + gameOptions.timeout);
 
+                const turnIndex = game.turnIndex();
+
                 if (now > expirationDate) {
                     const transaction = new Transaction(
                         gameState.address,
@@ -144,9 +146,9 @@ export class MineCommand implements ISignedCommand<Block | null> {
                         ethers.ZeroHash,
                         ethers.ZeroHash,
                         Date.now(),
+                        0n,
                         undefined,
-                        undefined,
-                        "fold");
+                        `${PlayerActionType.FOLD}-${turnIndex}`);
 
                     this.mempool.add(transaction);
                     console.log(`Expired action for game ${gameState.address} and player ${turn.playerId}`);
