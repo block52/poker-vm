@@ -358,14 +358,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (this._currentRound === TexasHoldemRound.PREFLOP) {
             const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
             
-            // Has the big blind posted?
-            const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
-            if (!hasBigBlindPosted) {
-                // If big blind hasn't posted yet, they should be next to act
-                console.log('[DEBUG] Big blind player should act next in PREFLOP round');
-                return this.getPlayerAtSeat(this._bigBlindPosition);
-            }
-            
             // Check if cards have been dealt
             const hasDealt = preFlopActions?.some(a => a.action === NonPlayerActionType.DEAL);
             const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
