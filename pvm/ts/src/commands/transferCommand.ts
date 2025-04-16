@@ -52,7 +52,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
                 console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
-                game.performAction(this.from, NonPlayerActionType.JOIN, game.turnIndex(), this.amount);
+                game.performAction(this.from, NonPlayerActionType.JOIN, game.getTurnIndex(), this.amount);
                 console.log(`Join successful`);
 
                 // const _json = game.toJson();
@@ -73,7 +73,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 console.log(`Player ${this.to} leaving game...`);
                 const player = game.getPlayer(this.from);
                 const stack = player?.chips ?? 0n;
-                game.performAction(this.to, NonPlayerActionType.LEAVE, game.turnIndex(), stack);
+                game.performAction(this.to, NonPlayerActionType.LEAVE, game.getTurnIndex(), stack);
                 console.log(`Leave successful, returning ${stack} chips`);
 
                 // const _json = game.toJson();
