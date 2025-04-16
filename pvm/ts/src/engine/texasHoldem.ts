@@ -328,18 +328,24 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return player;
     }
 
+    private hasSmallBlindPosted(): boolean {
+        const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        return anteActions?.some(a => a.action === PlayerActionType.SMALL_BLIND) ?? false;
+    }
+    
+    private hasBigBlindPosted(): boolean {
+        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
+        return preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND) ?? false;
+    }
+
     private findNextPlayerToAct(): Player | undefined {
         // Special case for ANTE round - first player to act is small blind
         if (this._currentRound === TexasHoldemRound.ANTE) {
-            const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
-            const hasSmallBlindPosted = anteActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
-            
-            if (!hasSmallBlindPosted) {
+            if (!this.hasSmallBlindPosted()) {
                 return this.getPlayerAtSeat(this._smallBlindPosition);
             }
             
-            const hasBigBlindPosted = anteActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
-            if (!hasBigBlindPosted) {
+            if (!this.hasBigBlindPosted()) {
                 // After small blind posts, big blind player is next to act
                 return this.getPlayerAtSeat(this._bigBlindPosition);
             }
