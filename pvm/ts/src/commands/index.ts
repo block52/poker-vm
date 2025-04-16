@@ -23,6 +23,7 @@ import { GetNodesCommand } from "./getNodesCommand";
 import { GetTransactionCommand } from "./getTransactionCommand";
 import { MempoolCommand } from "./mempoolCommand";
 import { MineCommand } from "./mineCommand";
+import { PerformActionCommand } from "./performActionCommand";
 import { PurgeMempoolCommand } from "./purgeMempoolCommand";
 import { ReceiveMinedBlockCommand } from "./receiveMinedBlockCommand";
 import { ReceiveMinedBlockHashCommand } from "./receiveMinedBlockHashCommand";
@@ -57,6 +58,7 @@ export {
     GetTransactionCommand,
     MempoolCommand,
     MineCommand,
+    PerformActionCommand,
     PurgeMempoolCommand,
     ResetCommand,
     ReceiveMinedBlockCommand,
