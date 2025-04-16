@@ -4,20 +4,13 @@ import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
 import { IUpdate, Turn } from "../types";
-import { gameOptions } from "../testConstants";
+import { FIFTY_TOKENS, gameOptions, ONE_HUNDRED_TOKENS, ONE_THOUSAND_TOKENS, TEN_TOKENS, TWENTY_TOKENS, TWO_THOUSAND_TOKENS } from "../testConstants";
 
 describe("Raise Action", () => {
     let game: TexasHoldemGame;
     let updateMock: IUpdate;
     let action: RaiseAction;
     let player: Player;
-
-    const TEN_TOKENS = 10000000000000000n;
-    const TWENTY_TOKENS = 20000000000000000n;
-    const FIFTY_TOKENS = 50000000000000000n;
-    const ONE_HUNDRED_TOKENS = 100000000000000000n;
-    const ONE_THOUSAND_TOKENS = 1000000000000000000n;
-    const TWO_THOUSAND_TOKENS = 2000000000000000000n;
 
     const previousActions: ActionDTO[] = [];
 

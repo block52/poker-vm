@@ -20,8 +20,8 @@ class RaiseAction extends BaseAction implements IAction {
         const sumBets = this.getSumBets(player.address);
         
         // Special case: Allow big blind to raise in pre-flop
-        const playerSeatNumber = this.game.getPlayerSeatNumber(player.address);
-        const isPlayerBigBlind = this.game.bigBlindPosition === playerSeatNumber;
+        const seat = this.game.getPlayerSeatNumber(player.address);
+        const isPlayerBigBlind = this.game.bigBlindPosition === seat;
         const isPreflop = this.game.currentRound === TexasHoldemRound.PREFLOP;
         
         // Only throw error if not big blind in pre-flop
