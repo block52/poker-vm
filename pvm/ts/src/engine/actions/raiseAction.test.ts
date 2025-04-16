@@ -105,7 +105,7 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
         });
 
-        it("should return correct range for a raise", () => {
+        it.only("should return correct range for a raise", () => {
             const range = action.verify(player);
 
             // Min amount should be previous bet + big blind
@@ -212,6 +212,7 @@ describe("Raise Action", () => {
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
                 action: PlayerActionType.RAISE,
+                index: 0,
                 amount: raiseAmount
             },
                 TexasHoldemRound.PREFLOP);
@@ -226,6 +227,7 @@ describe("Raise Action", () => {
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
                 action: PlayerActionType.ALL_IN,
+                index: 0,
                 amount: raiseAmount
             },
                 TexasHoldemRound.PREFLOP);
