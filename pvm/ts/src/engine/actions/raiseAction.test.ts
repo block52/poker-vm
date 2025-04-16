@@ -98,7 +98,7 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
         });
 
-        it.only("should return correct range for a raise", () => {
+        it("should return correct range for a raise", () => {
             const range = action.verify(player);
 
             // Min amount should be previous bet + big blind
