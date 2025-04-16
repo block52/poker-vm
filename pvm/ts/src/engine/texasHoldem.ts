@@ -183,13 +183,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._handNumber;
     }
 
-    turnIndex(): number {
-        // Return the current value and THEN increment
-        return this._turnIndex++;
-    }
-
-    // Returns the current turn index without incrementing it
-    currentTurnIndex(): number {
+    getTurnIndex(): number {
         console.log(`[DEBUG] Getting currentTurnIndex: ${this._turnIndex}`);
         return this._turnIndex;
     }
@@ -322,14 +316,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Player must fold before leaving the table");
         }
 
-        // Get their current stack before removing them
-        const currentStack = player.chips;
-
         // Remove player from seat
         this._playersMap.set(seat, null);
 
         // Return their stack amount
-        return currentStack;
+        return player.chips;
     }
 
     getNextPlayerToAct(): Player | undefined {
@@ -563,8 +554,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return [];
         }
 
-        const nextToAct = this.getNextPlayerToAct();
-        const turnIndex = this.currentTurnIndex();
+        const turnIndex = this.getTurnIndex();
         
         // Let each action's verify method determine if it's legal
         const verifyAction = (action: BaseAction): LegalActionDTO | undefined => {
@@ -620,44 +610,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         console.log(`[DEBUG] performAction called: address=${address}, action=${action}, index=${index}, _turnIndex=${this._turnIndex}`);
 
-        // Check if the provided index matches the current turn index (without incrementing)
-        // Allow a tolerance of up to 5 to account for mempool transactions that haven't been confirmed yet
-        // This helps prevent "Invalid index" errors when multiple actions are submitted in quick succession
-        const expectedIndex = this.currentTurnIndex();
-        const maxAllowedIndex = expectedIndex + 5; // Allow for several pending transactions
-        
-        if (index < expectedIndex) {
+        const expectedIndex = this.getTurnIndex();
+
+        if (index !== expectedIndex) {
             console.error(`[DEBUG] Invalid action index. Index too low. Expected at least ${expectedIndex}, got ${index}`);
             throw new Error(`Invalid index: expected ${expectedIndex}, got ${index}`);
         }
-        
-        if (index > maxAllowedIndex) {
-            console.error(`[DEBUG] Invalid action index. Index too high. Expected no more than ${maxAllowedIndex}, got ${index}`);
-            throw new Error(`Invalid index: too far ahead of current index ${expectedIndex}`);
-        }
-        
-        // If the index is ahead of our current index, adjust the internal index to match
-        if (index > expectedIndex) {
-            console.log(`[DEBUG] Adjusting turn index to match client: ${expectedIndex} -> ${index}`);
-            this._turnIndex = index;
-        }
-
-        // Store the addAction method in a variable so we can temporarily override it
-        const originalAddAction = this.addAction.bind(this);
-        
-        // Override the addAction method to do nothing when called from the action classes
-        this.addAction = (turn: Turn, round: TexasHoldemRound = this._currentRound) => {
-            console.log(`[DEBUG] Skipping internal addAction call for ${turn.action}`);
-            // Do nothing, we'll add the action ourselves at the end
-        };
 
         try {
             // Handle non-player actions that don't require the player to exist
             if (action === NonPlayerActionType.JOIN) {
                 console.log(`[DEBUG] Processing JOIN action with index ${index}`);
                 this.join(address, amount!);
-                // Restore the original addAction method
-                this.addAction = originalAddAction;
                 // Add the join action to history - make sure it's in the ANTE round
                 this.addAction({ playerId: address, action, amount, index }, TexasHoldemRound.ANTE);
                 return; // Exit early, don't need further processing
@@ -666,8 +630,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             if (action === NonPlayerActionType.LEAVE) {
                 console.log(`[DEBUG] Processing LEAVE action with index ${index}`);
                 this.leave(address);
-                // Restore the original addAction method
-                this.addAction = originalAddAction;
                 // Add the leave action to history
                 this.addAction({ playerId: address, action, amount, index }, this._currentRound);
                 return; // Exit early, don't need further processing
@@ -680,21 +642,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
     
             // Log the current player's legal actions for debugging
             const player = this.getPlayer(address);
-            const legalActions = this.getLegalActions(address);
-            console.log(`[DEBUG] Legal actions for ${address}: ${JSON.stringify(legalActions)}`);
-    
-            if (this.currentRound === TexasHoldemRound.ANTE) {
-                if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
-                    if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
-                        throw new Error("Not enough players to start game.");
-                    }
-                }
-            }
-    
-            const seat = this.getPlayerSeatNumber(address);
     
             // Process the action
-            console.log(`[DEBUG] Processing action ${action} for player at seat ${seat} with index ${index}`);
+            console.log(`[DEBUG] Processing action ${action} for player ${player} with index ${index}`);
             switch (action) {
                 case NonPlayerActionType.DEAL:
                     this.deal(data);
@@ -747,62 +697,28 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     break;
             }
     
-            // Restore the original addAction method
-            this.addAction = originalAddAction;
-    
             // Update player's actions and the game state
             console.log(`[DEBUG] Updating player actions and game state for ${action}`);
             player.addAction({ playerId: address, action, amount, index });
+
+            const seat = this.getPlayerSeatNumber(address);
             this._lastActedSeat = seat;
             
-            // Explicitly add the action to the game state with the current round
-            console.log(`[DEBUG] Adding action to game state: ${action} for player ${address} at seat ${seat} in round ${this._currentRound}`);
-            this.addAction({ playerId: address, action, amount, index }, this._currentRound);
-            
-            // For 2-player games in FLOP, TURN, or RIVER rounds, ensure proper turn advancement after check
-            if (action === PlayerActionType.CHECK && 
-                (this._currentRound === TexasHoldemRound.FLOP || 
-                 this._currentRound === TexasHoldemRound.TURN || 
-                 this._currentRound === TexasHoldemRound.RIVER) && 
-                this.getActivePlayerCount() === 2) {
-                
-                console.log(`[DEBUG] Ensuring proper turn advancement after check in ${this._currentRound} round`);
-                
-                // If small blind checks, next player should be big blind
-                if (seat === this._smallBlindPosition) {
-                    console.log(`[DEBUG] Small blind checked, setting next player to big blind (seat ${this._bigBlindPosition})`);
-                    // Next player will be determined by findNextPlayerToAct
-                }
-                // If big blind checks, next player should be small blind
-                else if (seat === this._bigBlindPosition) {
-                    console.log(`[DEBUG] Big blind checked, setting next player to small blind (seat ${this._smallBlindPosition})`);
-                    // Next player will be determined by findNextPlayerToAct
-                }
-            }
-            
             if (this.hasRoundEnded(this._currentRound) === true) {
-                // No special handling needed for transition between rounds
                 this.nextRound();
             }
         } catch (error) {
             // Make sure to restore the original addAction method even if there's an error
-            this.addAction = originalAddAction;
             throw error;
         }
     }
 
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
         console.log(`[DEBUG] Adding action: ${turn.action} with index ${turn.index}, current _turnIndex: ${this._turnIndex}`);
-        // We already validated the index in performAction, so no need to check again here
-        // This prevents the double incrementing problem
-        
+
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
-        
-        // Now explicitly increment the turn index once
-        this.incrementTurnIndex();
-        console.log(`[DEBUG] After incrementing, new _turnIndex: ${this._turnIndex}`);
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
@@ -815,6 +731,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Create a new array with this turn as the first element
             this._rounds.set(round, [turnWithSeat]);
         }
+
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
+        console.log(`[DEBUG] After incrementing, new _turnIndex: ${this._turnIndex}`);
     }
 
     getActionDTOs(): ActionDTO[] {
@@ -914,11 +834,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     getActionsForRound(round: TexasHoldemRound): ActionDTO[] {
         const actions: ActionDTO[] = [];
-        const turns = this._rounds.get(round);
-
-        if (!turns) {
-            return actions;
-        }
+        const turns = this.getTurnsForRound(round);
 
         for (const turn of turns) {
             const action: ActionDTO = {
@@ -934,6 +850,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         return actions;
+    }
+
+    getTurnsForRound(round: TexasHoldemRound): TurnWithSeat[] {
+        const turns = this._rounds.get(round);
+        if (!turns) {
+            return [];
+        }
+        return turns.map(turn => {
+            return {
+                ...turn,
+                seat: this.getPlayerSeatNumber(turn.playerId)
+            };
+        });
     }
 
     getPlayer(address: string): Player {
