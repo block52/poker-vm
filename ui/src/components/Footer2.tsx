@@ -4,7 +4,7 @@ import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
 import { useParams } from "react-router-dom";
 import { useTableFold } from "../hooks/useTableFold";
 import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
-
+import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
 
 interface Footer2Props {
     tableId?: string;
@@ -13,16 +13,16 @@ interface Footer2Props {
 const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Get the tableId from URL params
     const { tableId: urlTableId } = useParams<{ tableId: string }>();
-    
+
     // Use prop tableId, URL param tableId, or fallback to empty string
     const effectiveTableId = propTableId || urlTableId || "";
-    
+
     // Get stored address for display
     const userAddress = localStorage.getItem("user_eth_public_key");
-    
+
     // IMPORTANT: Initialize ALL hooks at the top level, before any conditional logic
     // Use the hook with the effective tableId
-    const { 
+    const {
         legalActions,
         isSmallBlindPosition,
         isBigBlindPosition,
@@ -43,19 +43,22 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Initialize post small blind hook - MOVED UP before any conditionals
     const { postSmallBlind, isPostingSmallBlind } = useTablePostSmallBlind(effectiveTableId);
 
-    // Don't render the footer if the user is not in the game
-    if (!isPlayerInGame) {
-        return null;
-    }
-    
-    // Check if fold action is available
+    // Initialize post big blind hook
+    const { postBigBlind, isPostingBigBlind } = useTablePostBigBlind(effectiveTableId);
+
+    // Check if fold action is available - MOVED UP before any conditionals
     const hasFoldAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "fold");
     }, [legalActions]);
 
-    // Check if post-small-blind action is available
+    // Check if post-small-blind action is available - MOVED UP before any conditionals
     const hasPostSmallBlindAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "post-small-blind");
+    }, [legalActions]);
+
+    // Check if post-big-blind action is available - MOVED UP before any conditionals
+    const hasPostBigBlindAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "post-big-blind");
     }, [legalActions]);
 
     // Get private key from localStorage (assuming it's stored there)
@@ -75,6 +78,11 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         });
     }, [legalActions, isSmallBlindPosition, isBigBlindPosition, isDealerPosition, isPlayerTurn, playerStatus, playerSeat, actionTurnIndex]);
 
+    // Don't render the footer if the user is not in the game
+    if (!isPlayerInGame) {
+        return null;
+    }
+
     // Format the amount to make it more readable (convert from wei to ETH)
     const formatAmount = (amountWei: string): string => {
         if (!amountWei || amountWei === "0") return "0";
@@ -90,7 +98,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Handle fold button click
     const handleFold = async () => {
         if (!foldHand) return;
-        
+
         try {
             await foldHand({
                 userAddress,
@@ -107,7 +115,7 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Handle post small blind button click
     const handlePostSmallBlind = async () => {
         if (!postSmallBlind) return;
-        
+
         try {
             await postSmallBlind({
                 userAddress,
@@ -118,6 +126,23 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
             console.log("Post small blind successful");
         } catch (error) {
             console.error("Error when posting small blind:", error);
+        }
+    };
+
+    // Handle post big blind button click
+    const handlePostBigBlind = async () => {
+        if (!postBigBlind) return;
+
+        try {
+            await postBigBlind({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex
+            });
+            console.log("Post big blind successful");
+        } catch (error) {
+            console.error("Error when posting big blind:", error);
         }
     };
 
@@ -148,10 +173,21 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                             {isPostingSmallBlind ? "Posting SB..." : "Post Small Blind"}
                         </button>
                     )}
+
+                    {/* Big Blind button if available */}
+                    {hasPostBigBlindAction && (
+                        <button
+                            onClick={handlePostBigBlind}
+                            className="bg-green-600 hover:bg-green-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isPostingBigBlind}
+                        >
+                            {isPostingBigBlind ? "Posting BB..." : "Post Big Blind"}
+                        </button>
+                    )}
                 </div>
 
                 <h3 className="text-sm font-bold mb-1">Player Actions{effectiveTableId ? ` (${effectiveTableId.substring(0, 6)}...)` : ""}</h3>
-                
+
                 {isLoading ? (
                     <p>Loading...</p>
                 ) : error ? (
@@ -160,19 +196,29 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                     <div className="text-xs">
                         <div className="grid grid-cols-2 gap-1 mb-1">
                             <div>
-                                <p className="leading-tight"><span className="opacity-80">Address:</span> {userAddress ? `${userAddress.substring(0, 6)}...` : "None"}</p>
-                                <p className="leading-tight"><span className="opacity-80">Seat:</span> {playerSeat !== null ? playerSeat : "Not seated"}</p>
-                                <p className="leading-tight"><span className="opacity-80">Status:</span> {playerStatus || "Unknown"}</p>
+                                <p className="leading-tight">
+                                    <span className="opacity-80">Address:</span> {userAddress ? `${userAddress.substring(0, 6)}...` : "None"}
+                                </p>
+                                <p className="leading-tight">
+                                    <span className="opacity-80">Seat:</span> {playerSeat !== null ? playerSeat : "Not seated"}
+                                </p>
+                                <p className="leading-tight">
+                                    <span className="opacity-80">Status:</span> {playerStatus || "Unknown"}
+                                </p>
                             </div>
                             <div>
-                                <p className="leading-tight"><span className="opacity-80">Turn:</span> {isPlayerTurn ? "Your turn" : "Not your turn"}</p>
                                 <p className="leading-tight">
-                                    <span className="opacity-80">Positions:</span> 
-                                    {isSmallBlindPosition ? " SB" : ""} 
-                                    {isBigBlindPosition ? " BB" : ""} 
+                                    <span className="opacity-80">Turn:</span> {isPlayerTurn ? "Your turn" : "Not your turn"}
+                                </p>
+                                <p className="leading-tight">
+                                    <span className="opacity-80">Positions:</span>
+                                    {isSmallBlindPosition ? " SB" : ""}
+                                    {isBigBlindPosition ? " BB" : ""}
                                     {isDealerPosition ? " Dealer" : ""}
                                 </p>
-                                <p className="leading-tight"><span className="opacity-80">Actions:</span> {legalActions?.length || 0}</p>
+                                <p className="leading-tight">
+                                    <span className="opacity-80">Actions:</span> {legalActions?.length || 0}
+                                </p>
                             </div>
                         </div>
 
@@ -193,13 +239,13 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                                 ))}
                             </ul>
                         )}
-                        
+
                         {/* Debug section - hidden by default to save space */}
                         <div className="mt-1 p-1 bg-gray-800 rounded text-[10px]">
                             <details>
                                 <summary className="cursor-pointer text-gray-400">Debug</summary>
                                 <pre className="overflow-auto max-h-[40px] mt-1 opacity-70">
-                                    {JSON.stringify({tableId: effectiveTableId, legalActions}, null, 2)}
+                                    {JSON.stringify({ tableId: effectiveTableId, legalActions }, null, 2)}
                                 </pre>
                             </details>
                         </div>
