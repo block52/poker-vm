@@ -27,6 +27,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers, N } from "ethers";
+import LeaveAction from "./actions/leaveAction";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
@@ -325,25 +326,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._turnIndex++;
     }
 
-    private leave(address: string): bigint {
-        const player = this.getPlayer(address);
-        const seat = this.getPlayerSeatNumber(address);
-
-        // Check if player has folded
-        if (player.status !== PlayerStatus.FOLDED && player.status !== PlayerStatus.SITTING_OUT) {
-            throw new Error("Player must fold before leaving the table");
-        }
-
-        // Get their current stack before removing them
-        const currentStack = player.chips;
-
-        // Remove player from seat
-        this._playersMap.set(seat, null);
-
-        // Return their stack amount
-        return currentStack;
-    }
-
     getNextPlayerToAct(): Player | undefined {
         const player = this.findNextPlayerToAct();
         return player;
@@ -540,9 +522,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this.incrementTurnIndex();
                 break;
             case NonPlayerActionType.LEAVE:
-                this.leave(address);
-                this.incrementTurnIndex();
-                break;
+                new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
+                return;
             case NonPlayerActionType.DEAL:
                 this.deal(data);
                 this.incrementTurnIndex();
@@ -640,6 +621,28 @@ class TexasHoldemGame implements IPoker, IUpdate {
             this._rounds.set(round, [turnWithSeat]);
         }
 
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
+    }
+
+    addNonPlayerAction(turn: Turn): void {
+        const timestamp = Date.now();
+        const round = this._currentRound;
+        const seat = -1;
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+
+        // Check if the round already exists in the map
+        if (this._rounds.has(round)) {
+            // Get the existing actions array
+            const actions = this._rounds.get(round)!;
+            // Push the new turn to it
+            actions.push(turnWithSeat);
+            this._rounds.set(round, actions);
+        } else {
+            // Create a new array with this turn as the first element
+            this._rounds.set(round, [turnWithSeat]);
+        }
+        
         // Now explicitly increment the turn index once
         this.incrementTurnIndex();
     }

@@ -57,14 +57,14 @@ echo "1. Enter an existing private key"
 echo "2. Generate a new private key"
 read -p "Enter your choice (1 or 2): " key_choice
 
-ETH_PRIVATE_KEY=""
+VALIDATOR_KEY=""
 
 case $key_choice in
     1)
         while true; do
             read -p "Enter your Ethereum private key (64 hex characters): " input_key
             if validate_eth_key "$input_key"; then
-                ETH_PRIVATE_KEY=$input_key
+                VALIDATOR_KEY=$input_key
                 break
             else
                 echo -e "${RED}Invalid private key format. Please enter a valid 32-byte hex string.${NC}"
@@ -72,8 +72,8 @@ case $key_choice in
         done
         ;;
     2)
-        ETH_PRIVATE_KEY=$(generate_eth_key)
-        echo -e "${GREEN}Generated new private key: ${ETH_PRIVATE_KEY}${NC}"
+        VALIDATOR_KEY=$(generate_eth_key)
+        echo -e "${GREEN}Generated new private key: ${VALIDATOR_KEY}${NC}"
         echo -e "${RED}IMPORTANT: Save this private key in a secure location!${NC}"
         ;;
     *)
@@ -94,7 +94,7 @@ fi
 
 cat > .env << EOL
 # Generated on $(date)
-ETH_PRIVATE_KEY=${ETH_PRIVATE_KEY}
+VALIDATOR_KEY=${VALIDATOR_KEY}
 RPC_URL=${RPC_URL}
 VAULT_CONTRACT_ADDRESS=0x893c26846d7cE76445230B2b6285a663BF4C3BF5
 BRIDGE_CONTRACT_ADDRESS=0x859329813d8e500F4f6Be0fc934E53AC16670fa0

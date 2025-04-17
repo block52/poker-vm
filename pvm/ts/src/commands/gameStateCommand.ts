@@ -88,7 +88,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             throw new Error("Transaction data is undefined");
         }
 
-        const params = tx.data.split("-");
+        const params = tx.data.split(",");
         const action = params[0].trim() as PlayerActionType;
         const index = parseInt(params[1].trim());
 
