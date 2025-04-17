@@ -128,7 +128,7 @@ const useTableData = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const { tableData, nextToActInfo, currentRound, playerLegalActions, tableSize, showThreeCards, getUserBySeat, currentUserSeat, leave } = useTableContext();
+    const { tableData, nextToActInfo, currentRound, playerLegalActions, tableSize, showThreeCards, getUserBySeat, currentUserSeat } = useTableContext();
     
     // Add the useMinAndMaxBuyIns hook HERE at the top with other hooks
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
@@ -348,7 +348,7 @@ const Table = () => {
 
         // If they've folded or aren't in the game, call leave function and then navigate
         if (currentUserPlayer) {
-            leave(); // Call the leave function from TableContext
+            // leave(); // Call the leave function from TableContext
             // Small delay to allow leave action to be processed
             setTimeout(() => {
                 navigate("/");
