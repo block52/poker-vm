@@ -1,6 +1,7 @@
 import useSWR from "swr";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
+import { GameOptions } from "@bitcoinbrisbane/block52"
 
 // Define default values
 export const DEFAULT_SMALL_BLIND = "100000000000000000"; // 0.1 ETH
@@ -8,16 +9,7 @@ export const DEFAULT_BIG_BLIND = "200000000000000000"; // 0.2 ETH
 export const DEFAULT_MIN_BUY_IN = "10000000000000000"; // 0.01 ETH
 export const DEFAULT_MAX_BUY_IN = "1000000000000000000"; // 1 ETH
 
-// Define the types for game options
-export interface GameOptions {
-  minBuyIn: string;
-  maxBuyIn: string;
-  maxPlayers: number;
-  minPlayers: number;
-  smallBlind: string;
-  bigBlind: string;
-  timeout: number;
-}
+
 
 // Define the fetcher function
 const fetcher = (url: string) => 
@@ -42,12 +34,12 @@ export const useGameOptions = (tableId?: string) => {
 
   // Default values in case of error or loading
   const defaultOptions: GameOptions = {
-    minBuyIn: DEFAULT_MIN_BUY_IN,
-    maxBuyIn: DEFAULT_MAX_BUY_IN,
+    minBuyIn: BigInt(DEFAULT_MIN_BUY_IN),
+    maxBuyIn: BigInt(DEFAULT_MAX_BUY_IN),
     maxPlayers: 9,
     minPlayers: 2,
-    smallBlind: DEFAULT_SMALL_BLIND,
-    bigBlind: DEFAULT_BIG_BLIND,
+    smallBlind: BigInt(DEFAULT_SMALL_BLIND),
+    bigBlind: BigInt(DEFAULT_BIG_BLIND),
     timeout: 300
   };
 

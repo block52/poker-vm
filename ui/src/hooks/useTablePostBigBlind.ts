@@ -2,7 +2,8 @@ import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../config/constants";
-import { useGameOptions, DEFAULT_BIG_BLIND } from "./useGameOptions";
+import { DEFAULT_BIG_BLIND, useGameOptions } from "./useGameOptions";
+
 
 interface PostBigBlindOptions {
   userAddress: string | null;
@@ -103,7 +104,7 @@ export function useTablePostBigBlind(tableId: string | undefined) {
       trigger({
         ...options,
         // Use the provided amount or the game options amount, falling back to default
-        bigBlindAmount: options.bigBlindAmount || gameOptions.bigBlind || DEFAULT_BIG_BLIND
+        bigBlindAmount: options.bigBlindAmount || gameOptions.bigBlind.toString() || DEFAULT_BIG_BLIND
       }) : null,
     isPostingBigBlind: isMutating,
     error,

@@ -4,6 +4,7 @@ import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../config/constants";
 import { useGameOptions, DEFAULT_SMALL_BLIND } from "./useGameOptions";
 
+
 interface PostSmallBlindOptions {
   userAddress: string | null;
   privateKey: string | null;
@@ -103,7 +104,7 @@ export function useTablePostSmallBlind(tableId: string | undefined) {
       trigger({
         ...options,
         // Use the provided amount or the game options amount, falling back to default
-        smallBlindAmount: options.smallBlindAmount || gameOptions.smallBlind || DEFAULT_SMALL_BLIND
+        smallBlindAmount: options.smallBlindAmount || gameOptions.smallBlind.toString() || DEFAULT_SMALL_BLIND
       }) : null,
     isPostingSmallBlind: isMutating,
     error,
