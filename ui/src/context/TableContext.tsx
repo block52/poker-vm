@@ -48,18 +48,7 @@ interface TableContextType {
     openOneMore: boolean;
     openTwoMore: boolean;
     showThreeCards: boolean;
-    performAction: (gameAddress: string, action: PlayerActionType, amount?: string, nonce?: number) => void;
-    fold: () => void;
-    check: () => void;
-    call: () => void;
-    raise: (amount: number) => void;
-    bet: (amount: number) => void;
-    leave: () => void;
-    setPlayerAction: (action: PlayerActionType | NonPlayerActionType, amount?: number) => void;
-    // Add the new blind posting methods
-    postSmallBlind: () => void;
-    postBigBlind: () => void;
-    // New user data by seat
+   
     getUserBySeat: (seat: number) => any;
     currentUserSeat: number;
     userDataBySeat: Record<number, any>;
@@ -507,193 +496,14 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     };
 
-    // Add these functions from PlayerContext
-    const performAction = useCallback(
-        async (gameAddress: string, action: PlayerActionType, amount?: string, nonce?: number) => {
-            console.log("🎮 Performing action with nonce:", {
-                action,
-                amount,
-                nonce,
-                gameAddress
-            });
-            
-            try {
-                const response = await performActionUtil(gameAddress, action, amount, nonce);
-                
-                console.log("✅ Perform action response:", response);
-                
-                // Wait a moment for the action to be processed
-                setTimeout(async () => {
-                    const address = localStorage.getItem("user_eth_public_key");
-                    if (address) {
-                        await refreshNonce(address);
-                    }
-                }, 1000);
-                
-                return response;
-            } catch (error) {
-                console.error("❌ Error performing action:", error);
-                throw error;
-            }
-        },
-        [refreshNonce]
-    );
 
-    // Add specific methods for posting blinds
-    const postSmallBlind = useCallback(() => {
-        console.log("🎮 Attempting to post small blind");
-        console.log("TableData structure:", tableData);
-        
-        // Access gameOptions from the data structure
-        const smallBlindAmount = tableData?.data?.gameOptions?.smallBlind;
-        
-        if (!tableId) {
-            console.error("❌ Cannot post small blind: No table ID available");
-            return;
-        }
-        
-        if (!smallBlindAmount) {
-            console.error("❌ Cannot post small blind: No small blind amount found in table data");
-            console.log("Table data:", tableData);
-            return;
-        }
-        
-        console.log("✅ Posting small blind with amount:", smallBlindAmount);
-        return performAction(tableId, PlayerActionType.SMALL_BLIND, smallBlindAmount);
-    }, [tableId, tableData, performAction]);
+
     
-    const postBigBlind = useCallback(() => {
-        console.log("🎮 Attempting to post big blind");
-        console.log("TableData structure:", tableData);
-        
-        // Access gameOptions from the data structure
-        const bigBlindAmount = tableData?.data?.gameOptions?.bigBlind;
-        
-        if (!tableId) {
-            console.error("❌ Cannot post big blind: No table ID available");
-            return;
-        }
-        
-        if (!bigBlindAmount) {
-            console.error("❌ Cannot post big blind: No big blind amount found in table data");
-            console.log("Table data:", tableData);
-            return;
-        }
-        
-        console.log("✅ Posting big blind with amount:", bigBlindAmount);
-        return performAction(tableId, PlayerActionType.BIG_BLIND, bigBlindAmount);
-    }, [tableId, tableData, performAction]);
+ 
 
-    const fold = useCallback(() => {
-        if (tableId && nonce !== null) {
-            performAction(tableId, PlayerActionType.FOLD, undefined, nonce);
-        }
-    }, [tableId, nonce, performAction]);
 
-    const check = useCallback(() => {
-        if (tableId && nonce !== null) {
-            performAction(tableId, PlayerActionType.CHECK, undefined, nonce);
-        }
-    }, [tableId, nonce, performAction]);
 
-    const call = useCallback(() => {
-        if (tableId && nonce !== null) {
-            performAction(tableId, PlayerActionType.CALL, undefined, nonce);
-        }
-    }, [tableId, nonce, performAction]);
 
-    const raise = useCallback(
-        (amount: number) => {
-            if (tableId && nonce !== null) {
-                performAction(tableId, PlayerActionType.RAISE, amount.toString(), nonce);
-            }
-        },
-        [tableId, nonce, performAction]
-    );
-
-    const bet = useCallback(
-        (amount: number) => {
-            if (tableId && nonce !== null) {
-                performAction(tableId, PlayerActionType.BET, amount.toString(), nonce);
-            }
-        },
-        [tableId, nonce, performAction]
-    );
-
-    const leave = useCallback(async () => {
-        if (tableId && nonce !== null) {
-            // Get the current player's stack amount
-            if (currentUserSeat >= 0 && tableData?.data?.players) {
-                try {
-                    const playerStack = tableData.data.players[currentUserSeat]?.stack || "0";
-                    console.log("🚪 Executing leave action with stack:", playerStack);
-
-                    const response = await playerLeave(
-                        tableId, 
-                        BigInt(playerStack),
-                        nonce
-                    );
-                    
-                    console.log("✅ Leave action successful:", response);
-
-                    // Refresh nonce after successful leave
-                    setTimeout(async () => {
-                        const address = localStorage.getItem("user_eth_public_key");
-                        if (address) {
-                            await refreshNonce(address);
-                        }
-                    }, 1000);
-
-                    return {
-                        success: true,
-                        result: response,
-                        actionName: "LEAVE",
-                        timestamp: new Date().toISOString(),
-                        method: "clientSdkCall"
-                    };
-                } catch (error) {
-                    console.error("❌ Error in leave action:", error);
-                    throw error;
-                }
-            } else {
-                console.warn("⚠️ Cannot leave: Player not found at current seat or no table data");
-                return null;
-            }
-        } else {
-            console.warn("⚠️ Cannot leave: Missing tableId or nonce");
-            return null;
-        }
-    }, [tableId, nonce, refreshNonce, currentUserSeat, tableData]);
-
-    const setPlayerAction = useCallback(
-        (action: PlayerActionType | NonPlayerActionType, amount?: number) => {
-            switch (action) {
-                case PlayerActionType.FOLD:
-                    fold();
-                    break;
-                case PlayerActionType.CHECK:
-                    check();
-                    break;
-                case PlayerActionType.CALL:
-                    call();
-                    break;
-                case PlayerActionType.RAISE:
-                    if (amount !== undefined) {
-                        raise(amount);
-                    }
-                    break;
-                case PlayerActionType.BET:
-                    if (amount !== undefined) {
-                        bet(amount);
-                    }
-                    break;
-                case NonPlayerActionType.LEAVE: 
-                    leave();
-                    break;
-            }
-        },
-        [fold, check, call, raise, bet, leave]
-    );
 
     // Update table type and round info when table data changes
     useEffect(() => {
@@ -757,17 +567,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 openOneMore,
                 openTwoMore,
                 showThreeCards,
-                performAction,
-                fold,
-                check,
-                call,
-                raise,
-                bet,
-                leave,
-                setPlayerAction,
-                // Add the new blind posting methods
-                postSmallBlind,
-                postBigBlind,
+       
                 // New user data functionality
                 getUserBySeat,
                 currentUserSeat,
