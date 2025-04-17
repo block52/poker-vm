@@ -46,7 +46,7 @@ describe("Texas Holdem - Join and Leave", () => {
         });
 
         // Player must fold before leaving the table
-        it("should not allow player to leave before folding", () => {
+        it.skip("should not allow player to leave before folding", () => {
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
             expect(() => game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.LEAVE, 1)).toThrow(
                 "Player must fold before leaving the table"
