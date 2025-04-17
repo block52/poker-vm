@@ -4,7 +4,16 @@ import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
 import { IUpdate, Turn } from "../types";
-import { FIFTY_TOKENS, gameOptions, ONE_HUNDRED_TOKENS, ONE_THOUSAND_TOKENS, ONE_TOKEN, TEN_TOKENS, TWENTY_TOKENS, TWO_THOUSAND_TOKENS } from "../testConstants";
+import {
+    FIFTY_TOKENS,
+    gameOptions,
+    ONE_HUNDRED_TOKENS,
+    ONE_THOUSAND_TOKENS,
+    ONE_TOKEN,
+    TEN_TOKENS,
+    TWENTY_TOKENS,
+    TWO_THOUSAND_TOKENS
+} from "../testConstants";
 
 describe("Raise Action", () => {
     let game: TexasHoldemGame;
@@ -57,6 +66,24 @@ describe("Raise Action", () => {
         jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
         jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+        jest.spyOn(game, "getActionsForRound").mockReturnValue([
+            {
+                playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
+                amount: "50000000000000000000",
+                action: PlayerActionType.SMALL_BLIND,
+                index: 0,
+                seat: 2,
+                round: TexasHoldemRound.PREFLOP
+            },
+            {
+                playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
+                amount: "100000000000000000000",
+                action: PlayerActionType.BIG_BLIND,
+                index: 0,
+                seat: 3,
+                round: TexasHoldemRound.PREFLOP
+            },
+        ]);
 
         const bets = new Map<string, bigint>();
         bets.set("0x3333333333333333333333333333333333333333", TWENTY_TOKENS); // 20 tokens
@@ -84,7 +111,6 @@ describe("Raise Action", () => {
     });
 
     describe("verify", () => {
-
         // Mock a previous bet action to raise against
         const lastBet: Turn = {
             playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
@@ -207,13 +233,15 @@ describe("Raise Action", () => {
             action.execute(player, 0, raiseAmount);
 
             expect(player.chips).toBe(initialChips - raiseAmount);
-            expect(game.addAction).toHaveBeenCalledWith({
-                playerId: player.address,
-                action: PlayerActionType.RAISE,
-                amount: raiseAmount,
-                index: 0
-            },
-                TexasHoldemRound.PREFLOP);
+            expect(game.addAction).toHaveBeenCalledWith(
+                {
+                    playerId: player.address,
+                    action: PlayerActionType.RAISE,
+                    amount: raiseAmount,
+                    index: 0
+                },
+                TexasHoldemRound.PREFLOP
+            );
         });
 
         it.skip("should set player's action to ALL_IN if raising all chips", () => {
@@ -222,12 +250,14 @@ describe("Raise Action", () => {
             action.execute(player, 0, raiseAmount);
 
             expect(player.chips).toBe(0n);
-            expect(game.addAction).toHaveBeenCalledWith({
-                playerId: player.address,
-                action: PlayerActionType.ALL_IN,
-                amount: raiseAmount
-            },
-                TexasHoldemRound.PREFLOP);
+            expect(game.addAction).toHaveBeenCalledWith(
+                {
+                    playerId: player.address,
+                    action: PlayerActionType.ALL_IN,
+                    amount: raiseAmount
+                },
+                TexasHoldemRound.PREFLOP
+            );
         });
 
         it("should throw error if amount is less than minimum allowed", () => {
