@@ -15,6 +15,10 @@ class CallAction extends BaseAction implements IAction {
         if (lastAction?.amount === 0n || !lastAction?.amount)
             throw new Error("Should check instead.");
 
+        // Check if the last action was a bet or raise
+        if (lastAction.action !== PlayerActionType.BET && lastAction.action !== PlayerActionType.RAISE && lastAction.action !== PlayerActionType.SMALL_BLIND)
+            throw new Error("Last action was not a bet or raise.");
+
         // Get the sum of my bets in this round.
         let deductAmount: bigint = this.getDeductAmount(player);
 

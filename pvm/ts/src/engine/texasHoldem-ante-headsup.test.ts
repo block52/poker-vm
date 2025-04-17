@@ -1,6 +1,6 @@
-import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, TEN_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TEN_TOKENS } from "./testConstants";
 import { Player } from "../models/player";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -8,18 +8,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
     describe("Preflop game states", () => {
         let game: TexasHoldemGame;
 
-        const player1 = new Player(
-            "0x1111111111111111111111111111111111111111",
-            undefined,
-            ONE_HUNDRED_TOKENS,
-            undefined,
-            PlayerStatus.ACTIVE
-        );
-
-
         beforeEach(() => {
-            //baseGameConfig.players.push(player1);
-
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
@@ -62,6 +51,18 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.exists("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeTruthy();
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
+        });
+
+        it("should have correct legal actions after posting the small blind", () => {
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
+
+            // Get legal actions for the next player
+            const actual = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+
+            expect(actual.length).toEqual(3);
+            expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
+            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[2].action).toEqual(PlayerActionType.CALL);
         });
     });
 });

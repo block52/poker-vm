@@ -14,6 +14,16 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot call in the ante round. Small blind must post.");
         }
 
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+            if (!this.game.getActionsForRound(TexasHoldemRound.PREFLOP).find((action) => action.action === PlayerActionType.SMALL_BLIND)) {
+                throw new Error("Small blind must post before raising.");
+            }
+
+            if (!this.game.getActionsForRound(TexasHoldemRound.PREFLOP).find((action) => action.action === PlayerActionType.BIG_BLIND)) {
+                throw new Error("Big blind must post before raising.");
+            }
+        }
+
         super.verify(player);
 
         const lastBet = this.game.getLastRoundAction();
