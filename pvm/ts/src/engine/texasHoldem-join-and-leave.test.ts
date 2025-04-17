@@ -17,6 +17,8 @@ describe("Texas Holdem - Join and Leave", () => {
         });
 
         it("should not progress rounds without minimum players", () => {
+            jest.spyOn(game, "getTurnIndex").mockReturnValue(0);
+
             // Create test players with sufficient chips
             const player1 = new Player(
                 "0x1111111111111111111111111111111111111111",
@@ -26,7 +28,7 @@ describe("Texas Holdem - Join and Leave", () => {
                 PlayerStatus.ACTIVE
             );
 
-            game.performAction(player1.address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS); // Only one player
+            game.performAction(player1.address, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS); // Only one player
             expect(() => game.deal()).toThrow("Not enough active players");
         });
 
