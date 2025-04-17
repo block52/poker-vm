@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../config/constants";
+import { useGameOptions, DEFAULT_SMALL_BLIND } from "./useGameOptions";
 
 interface PostSmallBlindOptions {
   userAddress: string | null;
@@ -41,7 +42,7 @@ async function postSmallBlindFetcher(
   // Create message to sign in format that matches the action pattern
   // Format: "post-small-blind" + amount + tableId + timestamp
   const timestamp = Math.floor(Date.now() / 1000);
-  const amount = smallBlindAmount || "100000000000000000"; // Default to 0.1 ETH if not provided
+  const amount = smallBlindAmount || DEFAULT_SMALL_BLIND; // Use the default from useGameOptions
   const messageToSign = `post-small-blind${amount}${tableId}${timestamp}`;
   console.log("🔵 Message to sign:", messageToSign);
   
@@ -83,6 +84,9 @@ async function postSmallBlindFetcher(
 }
 
 export function useTablePostSmallBlind(tableId: string | undefined) {
+  // Get the game options to access the configured small blind amount
+  const { gameOptions } = useGameOptions(tableId);
+
   const { trigger, isMutating, error, data } = useSWRMutation(
     tableId ? `${PROXY_URL}/table/${tableId}/post_small_blind` : null,
     postSmallBlindFetcher
@@ -96,7 +100,11 @@ export function useTablePostSmallBlind(tableId: string | undefined) {
   // Return post small blind handler that accepts action index
   return {
     postSmallBlind: tableId ? (options: Omit<PostSmallBlindOptions, "actionIndex"> & { actionIndex?: number | null }) => 
-      trigger(options) : null,
+      trigger({
+        ...options,
+        // Use the provided amount or the game options amount, falling back to default
+        smallBlindAmount: options.smallBlindAmount || gameOptions.smallBlind || DEFAULT_SMALL_BLIND
+      }) : null,
     isPostingSmallBlind: isMutating,
     error,
     data

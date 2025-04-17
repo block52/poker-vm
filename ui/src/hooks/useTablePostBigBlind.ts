@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../config/constants";
+import { useGameOptions, DEFAULT_BIG_BLIND } from "./useGameOptions";
 
 interface PostBigBlindOptions {
   userAddress: string | null;
@@ -41,7 +42,7 @@ async function postBigBlindFetcher(
   // Create message to sign in format that matches the action pattern
   // Format: "post-big-blind" + amount + tableId + timestamp
   const timestamp = Math.floor(Date.now() / 1000);
-  const amount = bigBlindAmount || "200000000000000000"; // Default to 0.2 ETH if not provided
+  const amount = bigBlindAmount || DEFAULT_BIG_BLIND; // Use the default from useGameOptions
   const messageToSign = `post-big-blind${amount}${tableId}${timestamp}`;
   console.log("🔵 Message to sign:", messageToSign);
   
@@ -83,6 +84,9 @@ async function postBigBlindFetcher(
 }
 
 export function useTablePostBigBlind(tableId: string | undefined) {
+  // Get the game options to access the configured big blind amount
+  const { gameOptions } = useGameOptions(tableId);
+
   const { trigger, isMutating, error, data } = useSWRMutation(
     tableId ? `${PROXY_URL}/table/${tableId}/post_big_blind` : null,
     postBigBlindFetcher
@@ -96,7 +100,11 @@ export function useTablePostBigBlind(tableId: string | undefined) {
   // Return post big blind handler that accepts action index
   return {
     postBigBlind: tableId ? (options: Omit<PostBigBlindOptions, "actionIndex"> & { actionIndex?: number | null }) => 
-      trigger(options) : null,
+      trigger({
+        ...options,
+        // Use the provided amount or the game options amount, falling back to default
+        bigBlindAmount: options.bigBlindAmount || gameOptions.bigBlind || DEFAULT_BIG_BLIND
+      }) : null,
     isPostingBigBlind: isMutating,
     error,
     data
