@@ -69,10 +69,10 @@ delayed-stream@~1.0.0:
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
   integrity sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==
 
-ethers@^6.13.4:
-  version "6.13.4"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.13.4.tgz#bd3e1c3dc1e7dc8ce10f9ffb4ee40967a651b53c"
-  integrity sha512-21YtnZVg4/zKkCQPjrDj38B1r4nQvTZLopUGMLQ1ePU2zV/joCfDC3t3iKQjWRzjjjbzR+mdAIoikeBRNkdllA==
+ethers@^6.13.6:
+  version "6.13.6"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.13.6.tgz#b28121d12606aae5fb02871fb1f003e76d11d628"
+  integrity sha512-L3vauFXVJvtnCOqczpxXLnoBIuNtqjqlmSHbAZof/Z9MY6UHUoqnpoXajL2drHRAStZEoviVQePGyUOTsjN0rg==
   dependencies:
     "@adraffy/ens-normalize" "1.10.1"
     "@noble/curves" "1.2.0"
