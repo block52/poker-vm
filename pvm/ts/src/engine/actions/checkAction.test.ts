@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions } from "../testConstants";
+import { gameOptions, ONE_THOUSAND_TOKENS } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("CheckAction", () => {
@@ -11,13 +11,6 @@ describe("CheckAction", () => {
     let updateMock: IUpdate;
     let action: CheckAction;
     let player: Player;
-
-    const TEN_TOKENS = 10000000000000000n;
-    const TWENTY_TOKENS = 20000000000000000n;
-    const FIFTY_TOKENS = 50000000000000000n;
-    const ONE_HUNDRED_TOKENS = 100000000000000000n;
-    const ONE_THOUSAND_TOKENS = 1000000000000000000n;
-    const TWO_THOUSAND_TOKENS = 2000000000000000000n;
 
     const previousActions: ActionDTO[] = [];
 
@@ -159,7 +152,8 @@ describe("CheckAction", () => {
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
                 action: PlayerActionType.CHECK,
-                amount: 0n
+                amount: 0n,
+                index: 0
             }, TexasHoldemRound.PREFLOP);
         });
 
