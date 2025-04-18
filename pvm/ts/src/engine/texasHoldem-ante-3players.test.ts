@@ -1,7 +1,6 @@
 import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, TEN_TOKENS } from "./testConstants";
-import { Player } from "../models/player";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in with 3 players.
 describe("Texas Holdem - Ante - 3 Players", () => {
