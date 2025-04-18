@@ -2,30 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { PageLayout } from "../layout/PageLayout";
 import { truncateHash, handleCopyClick, formatBlockAge } from "../../lib/utils";
-
-interface Transaction {
-    nonce: string;
-    to: string;
-    from: string;
-    value: string;
-    hash: string;
-    signature: string;
-    timestamp: string;
-    data: string;
-}
-
-interface Block {
-    index: number;
-    hash: string;
-    previousHash: string;
-    merkleRoot: string;
-    signature: string;
-    timestamp: number;
-    validator: string;
-    version: string;
-    transactions: Transaction[];
-    transactionCount: number;
-}
+import { Block } from "@/types";
 
 export default function BlockPage() {
     const { index } = useParams();

@@ -1,23 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageLayout } from "../layout/PageLayout";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-
-interface Block {
-    _id: string;
-    hash: string;
-    index: number;
-    previousHash: string;
-    merkleRoot: string;
-    signature: string;
-    timestamp: number;
-    validator: string;
-    version: string;
-    transactions: any[];
-    transactionCount: number;
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-}
+import { Block } from "@/types";
 
 export default function BlocksPage() {
     const [searchParams] = useSearchParams();
@@ -33,17 +17,17 @@ export default function BlocksPage() {
     });
     const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
-    const page = Number(searchParams.get('page')) || 1;
-    const limit = Number(searchParams.get('limit')) || 100;
-    const sort = searchParams.get('sort') || '-index';
+    const page = Number(searchParams.get("page")) || 1;
+    const limit = Number(searchParams.get("limit")) || 100;
+    const sort = searchParams.get("sort") || "-index";
 
     // Check if we need to set default parameters
     useEffect(() => {
-        if (!searchParams.get('page') || !searchParams.get('limit') || !searchParams.get('sort')) {
-            navigate('/blocks?page=1&limit=100&sort=-index', { replace: true });
+        if (!searchParams.get("page") || !searchParams.get("limit") || !searchParams.get("sort")) {
+            navigate("/blocks?page=1&limit=100&sort=-index", { replace: true });
             return;
         }
-    }, []);
+    }, [navigate, searchParams]);
 
     const fetchBlocks = async () => {
         try {
@@ -57,8 +41,8 @@ export default function BlocksPage() {
             }
             setError(null);
         } catch (err) {
-            setError('Failed to fetch blocks');
-            console.error('Error fetching blocks:', err);
+            setError("Failed to fetch blocks");
+            console.error("Error fetching blocks:", err);
         } finally {
             setLoading(false);
         }
@@ -79,7 +63,7 @@ export default function BlocksPage() {
     };
 
     const truncateHash = (hash: string) => {
-        return hash.slice(0, 3) + '...' + hash.slice(-3);
+        return hash.slice(0, 3) + "..." + hash.slice(-3);
     };
 
     const handleCopyClick = async (text: string, id: string) => {
@@ -88,10 +72,9 @@ export default function BlocksPage() {
             setCopySuccess(id);
             setTimeout(() => setCopySuccess(null), 2000);
         } catch (err) {
-            console.error('Failed to copy text:', err);
+            console.error("Failed to copy text:", err);
         }
     };
-
 
     const formatBlockAge = (timestamp: number) => {
         const now = Date.now();
@@ -106,16 +89,16 @@ export default function BlocksPage() {
 
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) {
-            return `${minutes} min${minutes === 1 ? '' : 's'} ago`;
+            return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
         }
 
         const hours = Math.floor(minutes / 60);
         if (hours < 24) {
-            return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+            return `${hours} hr${hours === 1 ? "" : "s"} ago`;
         }
 
         const days = Math.floor(hours / 24);
-        return `${days} day${days === 1 ? '' : 's'} ago`;
+        return `${days} day${days === 1 ? "" : "s"} ago`;
     };
 
     return (
@@ -123,13 +106,9 @@ export default function BlocksPage() {
             <div className="container mx-auto p-4">
                 <h1 className="text-2xl font-bold mb-4">Blocks</h1>
 
-                {loading && (
-                    <div className="text-center">Loading blocks...</div>
-                )}
+                {loading && <div className="text-center">Loading blocks...</div>}
 
-                {error && (
-                    <div className="text-red-500 text-center">{error}</div>
-                )}
+                {error && <div className="text-red-500 text-center">{error}</div>}
 
                 {!loading && !error && (
                     <div>
@@ -141,7 +120,6 @@ export default function BlocksPage() {
                                         <th className="p-2 border-b border-gray-700">Age</th>
                                         <th className="p-2 border-b border-gray-700">Tx Count</th>
 
-
                                         <th className="p-2 border-b border-gray-700">Hash</th>
                                         <th className="p-2 border-b border-gray-700">Previous Hash</th>
                                         <th className="p-2 border-b border-gray-700">Merkle Root</th>
@@ -152,20 +130,15 @@ export default function BlocksPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {blocks.map((block) => (
-                                        <tr key={block._id} className="hover:bg-gray-800">
+                                    {blocks.map(block => (
+                                        <tr key={block.hash} className="hover:bg-gray-800">
                                             <td className="p-2 border-b border-gray-700 text-center">{block.index}</td>
-                                            <td className="p-2 border-b border-gray-700 text-center">
-                                                {formatBlockAge(block.timestamp)}
-                                            </td>
+                                            <td className="p-2 border-b border-gray-700 text-center">{formatBlockAge(block.timestamp)}</td>
                                             <td className="p-2 border-b border-gray-700 text-center">{block.transactionCount}</td>
 
                                             <td className="p-2 border-b border-gray-700 font-mono text-sm">
                                                 <div className="flex items-center gap-2">
-                                                    <Link 
-                                                        to={`/block/${block.hash}`} 
-                                                        className="text-blue-400 hover:text-blue-300 underline"
-                                                    >
+                                                    <Link to={`/block/${block.hash}`} className="text-blue-400 hover:text-blue-300 underline">
                                                         {truncateHash(block.hash)}
                                                     </Link>
                                                     <button
@@ -173,11 +146,7 @@ export default function BlocksPage() {
                                                         className="p-1 hover:bg-gray-700 rounded"
                                                         title="Copy block hash"
                                                     >
-                                                        {copySuccess === `hash-${block._id}` ? (
-                                                            <span className="text-green-500">✓</span>
-                                                        ) : (
-                                                            <span>📋</span>
-                                                        )}
+                                                        {copySuccess === `hash-${block._id}` ? <span className="text-green-500">✓</span> : <span>📋</span>}
                                                     </button>
                                                 </div>
                                             </td>
@@ -189,11 +158,7 @@ export default function BlocksPage() {
                                                         className="p-1 hover:bg-gray-700 rounded"
                                                         title="Copy previous hash"
                                                     >
-                                                        {copySuccess === `prev-${block._id}` ? (
-                                                            <span className="text-green-500">✓</span>
-                                                        ) : (
-                                                            <span>📋</span>
-                                                        )}
+                                                        {copySuccess === `prev-${block._id}` ? <span className="text-green-500">✓</span> : <span>📋</span>}
                                                     </button>
                                                 </div>
                                             </td>
@@ -201,15 +166,11 @@ export default function BlocksPage() {
                                                 <div className="flex items-center gap-2">
                                                     <span>{truncateHash(block.merkleRoot)}</span>
                                                     <button
-                                                        onClick={() => handleCopyClick(block.merkleRoot, `merkle-${block._id}`)}
+                                                        onClick={() => handleCopyClick(block.merkleRoot, `merkle-${block.hash}`)}
                                                         className="p-1 hover:bg-gray-700 rounded"
                                                         title="Copy merkle root"
                                                     >
-                                                        {copySuccess === `merkle-${block._id}` ? (
-                                                            <span className="text-green-500">✓</span>
-                                                        ) : (
-                                                            <span>📋</span>
-                                                        )}
+                                                        {copySuccess === `merkle-${block.hash}` ? <span className="text-green-500">✓</span> : <span>📋</span>}
                                                     </button>
                                                 </div>
                                             </td>
@@ -217,15 +178,11 @@ export default function BlocksPage() {
                                                 <div className="flex items-center gap-2">
                                                     <span>{truncateHash(block.signature)}</span>
                                                     <button
-                                                        onClick={() => handleCopyClick(block.signature, block._id)}
+                                                        onClick={() => handleCopyClick(block.signature, block.hash)}
                                                         className="p-1 hover:bg-gray-700 rounded"
                                                         title="Copy signature"
                                                     >
-                                                        {copySuccess === block._id ? (
-                                                            <span className="text-green-500">✓</span>
-                                                        ) : (
-                                                            <span>📋</span>
-                                                        )}
+                                                        {copySuccess === block.hash ? <span className="text-green-500">✓</span> : <span>📋</span>}
                                                     </button>
                                                 </div>
                                             </td>
@@ -236,20 +193,15 @@ export default function BlocksPage() {
                                                 <div className="flex items-center gap-2">
                                                     <span>{truncateHash(block.validator)}</span>
                                                     <button
-                                                        onClick={() => handleCopyClick(block.validator, `validator-${block._id}`)}
+                                                        onClick={() => handleCopyClick(block.validator, `validator-${block.hash}`)}
                                                         className="p-1 hover:bg-gray-700 rounded"
                                                         title="Copy validator address"
                                                     >
-                                                        {copySuccess === `validator-${block._id}` ? (
-                                                            <span className="text-green-500">✓</span>
-                                                        ) : (
-                                                            <span>📋</span>
-                                                        )}
+                                                        {copySuccess === `validator-${block.hash}` ? <span className="text-green-500">✓</span> : <span>📋</span>}
                                                     </button>
                                                 </div>
                                             </td>
                                             {/* <td className="p-2 border-b border-gray-700 text-center">{block.version}</td> */}
-
                                         </tr>
                                     ))}
                                 </tbody>

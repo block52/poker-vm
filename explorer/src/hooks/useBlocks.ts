@@ -1,18 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-interface Block {
-    hash: string;
-    index: number;
-    previousHash: string;
-    merkleRoot: string;
-    signature: string;
-    timestamp: number;
-    validator: string;
-    version: string;
-    transactions: any[];
-    transactionCount: number;
-}
+import { Block } from "@/types";
 
 interface PaginationInfo {
     currentPage: number;
@@ -35,9 +23,7 @@ export function useBlocks(page: number = 1, limit: number = 100) {
     useEffect(() => {
         const fetchBlocks = async () => {
             try {
-                const response = await axios.get<BlocksResponse>(
-                    `http://localhost:3800/blocks?page=${page}&limit=${limit}`
-                );
+                const response = await axios.get<BlocksResponse>(`http://localhost:3800/blocks?page=${page}&limit=${limit}`);
                 setBlocks(response.data.blocks);
                 setPagination(response.data.pagination);
                 setLoading(false);
