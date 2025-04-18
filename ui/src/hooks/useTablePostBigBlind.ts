@@ -2,25 +2,25 @@ import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../config/constants";
-import { useGameOptions, DEFAULT_SMALL_BLIND } from "./useGameOptions";
+import { DEFAULT_BIG_BLIND, useGameOptions } from "./useGameOptions";
 
 
-interface PostSmallBlindOptions {
+interface PostBigBlindOptions {
   userAddress: string | null;
   privateKey: string | null;
   publicKey: string | null;
   nonce?: string | number;
   actionIndex?: number | null;
-  smallBlindAmount?: string; // Optional amount override
+  bigBlindAmount?: string; // Optional amount override
 }
 
-async function postSmallBlindFetcher(
+async function postBigBlindFetcher(
   url: string,
-  { arg }: { arg: PostSmallBlindOptions }
+  { arg }: { arg: PostBigBlindOptions }
 ) {
-  const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), actionIndex, smallBlindAmount } = arg;
+  const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), actionIndex, bigBlindAmount } = arg;
   
-  console.log("🔵 Post small blind attempt for:", url);
+  console.log("🔵 Post big blind attempt for:", url);
   console.log("🔵 Using action index:", actionIndex, typeof actionIndex);
   
   if (!userAddress || !privateKey) {
@@ -37,14 +37,14 @@ async function postSmallBlindFetcher(
   
   // Extract tableId correctly - grab the last segment of the URL
   const urlParts = url.split("/");
-  const tableId = urlParts[urlParts.length - 2]; // Get the table ID part, not "post_small_blind"
+  const tableId = urlParts[urlParts.length - 2]; // Get the table ID part, not "post_big_blind"
   console.log("🔵 Extracted table ID:", tableId);
   
   // Create message to sign in format that matches the action pattern
-  // Format: "post-small-blind" + amount + tableId + timestamp
+  // Format: "post-big-blind" + amount + tableId + timestamp
   const timestamp = Math.floor(Date.now() / 1000);
-  const amount = smallBlindAmount || DEFAULT_SMALL_BLIND; // Use the default from useGameOptions
-  const messageToSign = `post-small-blind${amount}${tableId}${timestamp}`;
+  const amount = bigBlindAmount || DEFAULT_BIG_BLIND; // Use the default from useGameOptions
+  const messageToSign = `post-big-blind${amount}${tableId}${timestamp}`;
   console.log("🔵 Message to sign:", messageToSign);
   
   // Sign the message
@@ -56,15 +56,15 @@ async function postSmallBlindFetcher(
     userAddress: normalizedAddress, // Use the normalized (lowercase) address
     signature,
     publicKey: (publicKey || userAddress).toLowerCase(), // Also normalize publicKey
-    action: "post-small-blind", // Explicitly specify the action
-    amount, // Small blind amount
-    smallBlindAmount: amount, // Include as both for flexibility in the server
+    action: "post-big-blind", // Explicitly specify the action
+    amount, // Big blind amount
+    bigBlindAmount: amount, // Include as both for flexibility in the server
     nonce: nonce,
     timestamp,
     index: actionIndex !== undefined && actionIndex !== null ? actionIndex : 0 // Check explicitly for undefined/null
   };
 
-  console.log("🔵 Sending post small blind request:", requestData);
+  console.log("🔵 Sending post big blind request:", requestData);
   
   try {
     // Send the request to the proxy server with appropriate headers
@@ -73,10 +73,10 @@ async function postSmallBlindFetcher(
         "Content-Type": "application/json"
       }
     });
-    console.log("🔵 Post small blind response:", response.data);
+    console.log("🔵 Post big blind response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("🔵 Post small blind error:", error);
+    console.error("🔵 Post big blind error:", error);
     if (axios.isAxiosError(error) && error.response) {
       console.error("🔵 Response data:", error.response.data);
     }
@@ -84,29 +84,29 @@ async function postSmallBlindFetcher(
   }
 }
 
-export function useTablePostSmallBlind(tableId: string | undefined) {
-  // Get the game options to access the configured small blind amount
+export function useTablePostBigBlind(tableId: string | undefined) {
+  // Get the game options to access the configured big blind amount
   const { gameOptions } = useGameOptions(tableId);
 
   const { trigger, isMutating, error, data } = useSWRMutation(
-    tableId ? `${PROXY_URL}/table/${tableId}/post_small_blind` : null,
-    postSmallBlindFetcher
+    tableId ? `${PROXY_URL}/table/${tableId}/post_big_blind` : null,
+    postBigBlindFetcher
   );
 
   // Add better error handling
   if (error) {
-    console.error("Post small blind hook error:", error instanceof Error ? error.message : String(error));
+    console.error("Post big blind hook error:", error instanceof Error ? error.message : String(error));
   }
 
-  // Return post small blind handler that accepts action index
+  // Return post big blind handler that accepts action index
   return {
-    postSmallBlind: tableId ? (options: Omit<PostSmallBlindOptions, "actionIndex"> & { actionIndex?: number | null }) => 
+    postBigBlind: tableId ? (options: Omit<PostBigBlindOptions, "actionIndex"> & { actionIndex?: number | null }) => 
       trigger({
         ...options,
         // Use the provided amount or the game options amount, falling back to default
-        smallBlindAmount: options.smallBlindAmount || gameOptions.smallBlind.toString() || DEFAULT_SMALL_BLIND
+        bigBlindAmount: options.bigBlindAmount || gameOptions.bigBlind.toString() || DEFAULT_BIG_BLIND
       }) : null,
-    isPostingSmallBlind: isMutating,
+    isPostingBigBlind: isMutating,
     error,
     data
   };

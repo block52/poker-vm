@@ -38,8 +38,7 @@ const PokerActionPanel: React.FC = () => {
         isPlayerTurn,
         canDeal, 
         dealTable,
-        postSmallBlind,
-        postBigBlind
+      
     } = useTableContext();
     const [publicKey, setPublicKey] = useState<string>();
     const [isCallAction, setIsCallAction] = useState(false);
@@ -308,12 +307,12 @@ const PokerActionPanel: React.FC = () => {
     // Handler functions for different actions
     const handlePostSmallBlind = () => {
         console.log("Posting small blindtom");
-        postSmallBlind();
+        // postSmallBlind();  // about to replace with useTablePostSmallBlind.ts
     };
 
     const handlePostBigBlind = () => {
         console.log("Posting big blind");
-        postBigBlind();
+        // postBigBlind();  // about to replace with useTablePostBigBlind.ts
     };
 
     const handleCheck = () => {
