@@ -11,7 +11,7 @@ const express = require("express");
 const cors = require("cors");
 const ethers = require("ethers");
 const dotenv = require("dotenv");
-const connectDB = require("./db");
+// const connectDB = require("./db");
 const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
@@ -68,13 +68,13 @@ app.use(express.json());
 // ===================================
 // 6. Database Connection
 // ===================================
-connectDB()
-    .then(() => {
-        console.log("MongoDB connection established");
-    })
-    .catch(err => {
-        console.error("MongoDB connection error:", err);
-    });
+// connectDB()
+//     .then(() => {
+//         console.log("MongoDB connection established");
+//     })
+//     .catch(err => {
+//         console.error("MongoDB connection error:", err);
+//     });
 
 // ===================================
 // 7. Configure API Documentation
@@ -350,6 +350,104 @@ app.post("/table/:tableId/fold", async (req, res) => {
         console.error("=== ERROR ===");
         console.error("Error details:", error);
         res.status(500).json({ error: "Failed to fold", details: error.message });
+    }
+});
+
+// Add new raise endpoint
+app.post("/table/:tableId/raise", async (req, res) => {
+    console.log("=== RAISE ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
+    console.log("   raise amount:", req.body.amount);
+
+    try {
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                "raise", // action
+                req.body.amount, // amount to raise
+                req.body.nonce || 0, // nonce (optional)
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to raise", details: error.message });
+    }
+});
+
+// Add call endpoint
+app.post("/table/:tableId/call", async (req, res) => {
+    console.log("=== CALL ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
+    console.log("   call amount:", req.body.amount);
+
+    try {
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                "call", // action
+                req.body.amount, // amount to call
+                req.body.nonce || 0, // nonce (optional)
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to call", details: error.message });
     }
 });
 
