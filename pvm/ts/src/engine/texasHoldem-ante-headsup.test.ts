@@ -65,6 +65,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
 
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // Get legal actions for the next player
             actual = game.getLegalActions(BIG_BLIND_PLAYER);
