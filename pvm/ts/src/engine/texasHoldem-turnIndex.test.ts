@@ -26,6 +26,7 @@ describe("Texas Holdem - Turn Index", () => {
         it("should initialize with turn index of 0", () => {
             // Check initial turn index is 0
             expect(game.getTurnIndex()).toBe(0);
+            console.log("Turn index:", game.getTurnIndex());
         });
 
         it("should reset turn index to 0 when game is reinitialized", () => {
@@ -34,11 +35,11 @@ describe("Texas Holdem - Turn Index", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT);
 
             // Post blinds
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 2);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 3);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 0, gameOptions.smallBlind);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 1, gameOptions.bigBlind);
 
-            // Turn index should be 4 now
-            expect(game.getTurnIndex()).toBe(4);
+            // Turn index should be 2 now
+            expect(game.getTurnIndex()).toBe(2);
 
             // Reinitialize game
             game.reInit([]);
