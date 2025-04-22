@@ -5,6 +5,11 @@ import { useParams } from "react-router-dom";
 import { useTableFold } from "../hooks/useTableFold";
 import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
 import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
+import { useTableRaise } from "../hooks/useTableRaise";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { useState } from "react";
+import axios from "axios";
+import { PROXY_URL } from "../config/constants";
 
 interface Footer2Props {
     tableId?: string;
@@ -37,6 +42,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         isPlayerInGame
     } = usePlayerLegalActions(effectiveTableId);
 
+    // State for raise amount input
+    const [raiseAmount, setRaiseAmount] = useState<string>("");
+
     // Initialize fold hook - MOVED UP before any conditionals
     const { foldHand, isFolding } = useTableFold(effectiveTableId);
 
@@ -45,6 +53,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
 
     // Initialize post big blind hook
     const { postBigBlind, isPostingBigBlind } = useTablePostBigBlind(effectiveTableId);
+
+    // Initialize raise hook
+    const { raiseHand, isRaising } = useTableRaise(effectiveTableId);
 
     // Check if fold action is available - MOVED UP before any conditionals
     const hasFoldAction = React.useMemo(() => {
@@ -59,6 +70,27 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Check if post-big-blind action is available - MOVED UP before any conditionals
     const hasPostBigBlindAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "post-big-blind");
+    }, [legalActions]);
+
+    // Check if call action is available
+    const hasCallAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "call");
+    }, [legalActions]);
+
+    // Check if raise action is available and get min/max
+    const raiseActionDetails = React.useMemo(() => {
+        const raiseAction = legalActions?.find(action => action.action === "raise");
+        if (!raiseAction) return null;
+        return {
+            min: raiseAction.min,
+            max: raiseAction.max,
+            available: true
+        };
+    }, [legalActions]);
+
+    // Check if deal action is available
+    const hasDealAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "deal");
     }, [legalActions]);
 
     // Get private key from localStorage (assuming it's stored there)
@@ -146,12 +178,55 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         }
     };
 
+    // Handle call button click
+    const handleCall = async () => {
+        if (!legalActions) return;
+        const callAction = legalActions.find(action => action.action === "call");
+        if (!callAction) return;
+
+        try {
+            // Using axios directly for call since we haven't created a useTableCall hook yet
+            await axios.post(`${PROXY_URL}/table/${effectiveTableId}/call`, {
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex,
+                amount: callAction.min
+            });
+            console.log("Call successful");
+        } catch (error) {
+            console.error("Error when calling:", error);
+        }
+    };
+
+    // Handle raise button click
+    const handleRaise = async () => {
+        if (!raiseHand || !raiseActionDetails) return;
+        
+        // Use either the input amount or the minimum required
+        const amount = raiseAmount || raiseActionDetails.min;
+        
+        try {
+            await raiseHand({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex,
+                amount
+            });
+            console.log("Raise successful with amount:", amount);
+            setRaiseAmount(""); // Reset input after successful raise
+        } catch (error) {
+            console.error("Error when raising:", error);
+        }
+    };
+
     // Simple display of the legal actions data now with more compact design
     return (
         <div className="w-full h-full bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-2 overflow-y-auto text-xs">
             <div className="max-w-4xl mx-auto">
                 {/* Action buttons */}
-                <div className="flex gap-2 mb-2">
+                <div className="flex gap-2 mb-2 flex-wrap">
                     {/* Fold button if available */}
                     {hasFoldAction && (
                         <button
@@ -161,6 +236,36 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                         >
                             {isFolding ? "Folding..." : "Fold"}
                         </button>
+                    )}
+
+                    {/* Call button if available */}
+                    {hasCallAction && (
+                        <button
+                            onClick={handleCall}
+                            className="bg-purple-600 hover:bg-purple-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                        >
+                            Call {formatAmount(legalActions?.find(a => a.action === "call")?.min || "0")}
+                        </button>
+                    )}
+
+                    {/* Raise button and input if available */}
+                    {raiseActionDetails?.available && (
+                        <div className="flex gap-1">
+                            <input 
+                                type="text"
+                                value={raiseAmount}
+                                onChange={(e) => setRaiseAmount(e.target.value)}
+                                placeholder={`Min: ${formatAmount(raiseActionDetails.min)}`}
+                                className="w-24 px-2 py-1 text-sm bg-gray-700 rounded-md text-white"
+                            />
+                            <button
+                                onClick={handleRaise}
+                                className="bg-green-600 hover:bg-green-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                                disabled={isRaising}
+                            >
+                                {isRaising ? "Raising..." : "Raise"}
+                            </button>
+                        </div>
                     )}
 
                     {/* Small Blind button if available */}
@@ -182,6 +287,16 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                             disabled={isPostingBigBlind}
                         >
                             {isPostingBigBlind ? "Posting BB..." : "Post Big Blind"}
+                        </button>
+                    )}
+
+                    {/* Deal button if available */}
+                    {hasDealAction && (
+                        <button
+                            onClick={() => console.log("Deal not implemented yet")}
+                            className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                        >
+                            Deal
                         </button>
                     )}
                 </div>
