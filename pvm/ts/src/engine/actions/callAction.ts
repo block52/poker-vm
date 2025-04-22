@@ -16,7 +16,7 @@ class CallAction extends BaseAction implements IAction {
             throw new Error("Should check instead.");
 
         // Check if the last action was a bet or raise
-        if (lastAction.action !== PlayerActionType.BET && lastAction.action !== PlayerActionType.RAISE && lastAction.action !== PlayerActionType.SMALL_BLIND)
+        if (lastAction.action !== PlayerActionType.BET && lastAction.action !== PlayerActionType.RAISE && lastAction.action !== PlayerActionType.SMALL_BLIND && lastAction.action !== PlayerActionType.BIG_BLIND)
             throw new Error("Last action was not a bet or raise.");
 
         // Get the sum of my bets in this round.

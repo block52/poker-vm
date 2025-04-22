@@ -1,6 +1,6 @@
 import { NonPlayerActionType, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TEN_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TEN_TOKENS, TWO_TOKENS } from "./testConstants";
 import { Player } from "../models/player";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -63,6 +63,21 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
             expect(actual[2].action).toEqual(PlayerActionType.CALL);
+        });
+
+
+        it("should have correct legal actions after posting the big blind", () => {
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+
+            // Get legal actions for the next player
+            const actual = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+
+            expect(actual.length).toEqual(4);
+            expect(actual[0].action).toEqual(NonPlayerActionType.DEAL);
+            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[2].action).toEqual(PlayerActionType.CALL);
+            expect(actual[3].action).toEqual(PlayerActionType.RAISE);
         });
     });
 });
