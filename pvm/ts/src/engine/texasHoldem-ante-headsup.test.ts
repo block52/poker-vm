@@ -36,12 +36,16 @@ describe("Texas Holdem - Ante - Heads Up", () => {
     });
 
     describe("Heads up", () => {
+
+        const SMALL_BLIND_PLAYER = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
+        const BIG_BLIND_PLAYER = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
+
         let game: TexasHoldemGame;
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
         });
 
         it("should have the correct players pre flop", () => {
@@ -63,8 +67,11 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
             expect(actual[2].action).toEqual(PlayerActionType.CALL);
-        });
 
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+        });
 
         it("should have correct legal actions after posting the big blind", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
@@ -78,6 +85,16 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
             expect(actual[2].action).toEqual(PlayerActionType.CALL);
             expect(actual[3].action).toEqual(PlayerActionType.RAISE);
+        });
+
+        it.only("should have correct legal actions after posting blinds", () => {
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 4, ONE_TOKEN);
+
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
         });
     });
 });

@@ -346,65 +346,65 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return this.getPlayerAtSeat(this._bigBlindPosition);
         }
 
-        // Check if cards have been dealt
-        const hasDealt = preFlopActions?.some(a => a.action === NonPlayerActionType.DEAL);
-        const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
+        // // Check if cards have been dealt
+        // const hasDealt = preFlopActions?.some(a => a.action === NonPlayerActionType.DEAL);
+        // const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
-        // If blinds are posted but cards haven't been dealt yet,
-        // then deal action is next - small blind player typically does this
-        if (!hasDealt && !anyPlayerHasCards) {
-            return this.getPlayerAtSeat(this._smallBlindPosition);
-        }
+        // // If blinds are posted but cards haven't been dealt yet,
+        // // then deal action is next - small blind player typically does this
+        // if (!hasDealt && !anyPlayerHasCards) {
+        //     return this.getPlayerAtSeat(this._smallBlindPosition);
+        // }
 
-        // If cards have been dealt, determine who acts first in the betting round
-        if (anyPlayerHasCards) {
-            // Check if there have been any betting actions yet
-            const bettingActionsCount =
-                preFlopActions?.filter(
-                    a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
-                ).length || 0;
+        // // If cards have been dealt, determine who acts first in the betting round
+        // if (anyPlayerHasCards) {
+        //     // Check if there have been any betting actions yet
+        //     const bettingActionsCount =
+        //         preFlopActions?.filter(
+        //             a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
+        //         ).length || 0;
 
-            if (bettingActionsCount === 0) {
-                // Count active players
-                const activePlayerCount = this.getActivePlayerCount();
+        //     if (bettingActionsCount === 0) {
+        //         // Count active players
+        //         const activePlayerCount = this.getActivePlayerCount();
 
-                if (activePlayerCount === 2) {
-                    // In 2-player games, small blind acts first
-                    return this.getPlayerAtSeat(this._smallBlindPosition);
-                } else {
-                    // In 3+ player games, player after big blind acts first
-                    // Find the next active player after the big blind position
-                    let nextSeat = this._bigBlindPosition + 1;
-                    if (nextSeat > this._gameOptions.maxPlayers) {
-                        nextSeat = 1;
-                    }
+        //         if (activePlayerCount === 2) {
+        //             // In 2-player games, small blind acts first
+        //             return this.getPlayerAtSeat(this._smallBlindPosition);
+        //         } else {
+        //             // In 3+ player games, player after big blind acts first
+        //             // Find the next active player after the big blind position
+        //             let nextSeat = this._bigBlindPosition + 1;
+        //             if (nextSeat > this._gameOptions.maxPlayers) {
+        //                 nextSeat = 1;
+        //             }
 
-                    // First look specifically for seat 3 (common case) for efficiency
-                    if (nextSeat === 3) {
-                        const player = this.getPlayerAtSeat(3);
-                        if (player && player.status === PlayerStatus.ACTIVE) {
-                            return player;
-                        }
-                    }
+        //             // First look specifically for seat 3 (common case) for efficiency
+        //             if (nextSeat === 3) {
+        //                 const player = this.getPlayerAtSeat(3);
+        //                 if (player && player.status === PlayerStatus.ACTIVE) {
+        //                     return player;
+        //                 }
+        //             }
 
-                    // Search for the next active player, starting from the seat after big blind
-                    for (let i = 0; i < this._gameOptions.maxPlayers; i++) {
-                        const seatToCheck = ((nextSeat + i - 1) % this._gameOptions.maxPlayers) + 1;
+        //             // Search for the next active player, starting from the seat after big blind
+        //             for (let i = 0; i < this._gameOptions.maxPlayers; i++) {
+        //                 const seatToCheck = ((nextSeat + i - 1) % this._gameOptions.maxPlayers) + 1;
 
-                        // Skip checking seat 3 again if we already did
-                        if (seatToCheck === 3 && nextSeat === 3) continue;
+        //                 // Skip checking seat 3 again if we already did
+        //                 if (seatToCheck === 3 && nextSeat === 3) continue;
 
-                        const player = this.getPlayerAtSeat(seatToCheck);
-                        if (player && player.status === PlayerStatus.ACTIVE) {
-                            return player;
-                        }
-                    }
+        //                 const player = this.getPlayerAtSeat(seatToCheck);
+        //                 if (player && player.status === PlayerStatus.ACTIVE) {
+        //                     return player;
+        //                 }
+        //             }
 
-                    // If no active players found after big blind, return small blind
-                    return this.getPlayerAtSeat(this._smallBlindPosition);
-                }
-            }
-        }
+        //             // If no active players found after big blind, return small blind
+        //             return this.getPlayerAtSeat(this._smallBlindPosition);
+        //         }
+        //     }
+        // }
 
         // For subsequent actions in the round, find the next player after the last acted player
         let next = this._lastActedSeat + 1;
@@ -975,10 +975,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
-        // In preflop round, make sure cards have been dealt before we can end the round
-        if (round === TexasHoldemRound.PREFLOP && !hasDealt && !anyPlayerHasCards) {
-            return false;
-        }
+        // // In preflop round, make sure cards have been dealt before we can end the round
+        // if (round === TexasHoldemRound.PREFLOP && !hasDealt && !anyPlayerHasCards) {
+        //     return false;
+        // }
 
         // Check if there's betting action yet
         const bettingActions = actions.filter(
@@ -997,15 +997,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Get this player's actions in this round
             const playerActions = actions.filter(a => a.playerId === player.address);
 
-            // Filter to just betting actions (not blinds or deal)
-            const playerBettingActions = playerActions.filter(
-                a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
-            );
+            // // Filter to just betting actions (not blinds or deal)
+            // const playerBettingActions = playerActions.filter(
+            //     a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
+            // );
 
-            // If no betting actions yet for this player after cards dealt, round not over
-            if ((hasDealt || anyPlayerHasCards) && playerBettingActions.length === 0) {
-                return false;
-            }
+            // // If no betting actions yet for this player after cards dealt, round not over
+            // if ((hasDealt || anyPlayerHasCards) && playerBettingActions.length === 0) {
+            //     return false;
+            // }
 
             // If a player hasn't acted yet, round is not over
             if (playerActions.length === 0) {
@@ -1016,7 +1016,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             const lastAction = playerActions[playerActions.length - 1];
 
             // Skip players who have checked or called
-            if (lastAction.action === PlayerActionType.CALL || lastAction.action === PlayerActionType.CHECK) {
+            if (lastAction.action === PlayerActionType.CALL || lastAction.action === PlayerActionType.CHECK || lastAction.action === PlayerActionType.FOLD) {
                 continue;
             }
 
