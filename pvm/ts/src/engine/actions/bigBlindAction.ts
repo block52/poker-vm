@@ -10,8 +10,8 @@ class BigBlindAction extends BaseAction implements IAction {
 
     verify(_player: Player): Range {
         // Can only bet the big blind amount when preflop
-        if (this.game.currentRound !== TexasHoldemRound.PREFLOP) {
-            throw new Error("Can only post big blind when preflop.");
+        if (this.game.currentRound !== TexasHoldemRound.ANTE) {
+            throw new Error("Can only post big blind when in ante.");
         }
 
         const seat = this.game.getPlayerSeatNumber(_player.address);

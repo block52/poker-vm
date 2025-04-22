@@ -97,7 +97,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
         });
 
-        it.only("should advance to next round after ante round", () => {
+        it("should advance to next round after ante round", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 4, ONE_TOKEN);
