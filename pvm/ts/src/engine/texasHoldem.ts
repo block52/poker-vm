@@ -60,7 +60,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         private _dealer: number,
         private _lastToAct: number,
         private previousActions: ActionDTO[] = [],
-        private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
+        private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private communityCards: string[],
         private currentPot: bigint = 0n, // todo: this can be removed
         playerStates: Map<number, Player | null>,
@@ -851,15 +851,24 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Deal community cards based on the CURRENT round
         // before advancing to the next round
         if (this._currentRound === TexasHoldemRound.PREFLOP) {
+            this.deal();
+            this._communityCards.length = 0; // Clear community cards for the next round
+        }
+        if (this._currentRound === TexasHoldemRound.FLOP) {
             // Deal the flop (3 cards)
             this._communityCards.push(...this._deck.deal(3));
         }
-        if (this._currentRound === TexasHoldemRound.FLOP || this._currentRound === TexasHoldemRound.TURN) {
+            
+        if (this._currentRound === TexasHoldemRound.TURN) {
             // Deal turn or river (1 card)
             this._communityCards.push(...this._deck.deal(1));
         }
+
         if (this._currentRound === TexasHoldemRound.RIVER) {
-            // Next is showdown, calculate winner
+            this._communityCards.push(...this._deck.deal(1));
+        }
+
+        if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
             this.calculateWinner();
         }
 
@@ -971,6 +980,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return false;
         }
 
+        if (round === TexasHoldemRound.ANTE) {
+            const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
+            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
+
+            if (!hasSmallBlind || !hasBigBlind) {
+                return false; // Round not over if blinds haven't been posted
+            }
+
+            this.deal();
+            return true; // Round over after dealing
+        }
+
         // Check if cards have been dealt, which is required before ending the round
         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
@@ -1064,8 +1085,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     private getNextRound(): TexasHoldemRound {
         switch (this._currentRound) {
-            // case TexasHoldemRound.ANTE:
-            //     return TexasHoldemRound.PREFLOP;
+            case TexasHoldemRound.ANTE:
+                return TexasHoldemRound.PREFLOP;
             case TexasHoldemRound.PREFLOP:
                 return TexasHoldemRound.FLOP;
             case TexasHoldemRound.FLOP:

@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TEN_TOKENS, TWO_TOKENS } from "./testConstants";
 import { Player } from "../models/player";
@@ -87,7 +87,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actual[3].action).toEqual(PlayerActionType.RAISE);
         });
 
-        it.only("should have correct legal actions after posting blinds", () => {
+        it("should have correct legal actions after posting blinds", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 4, ONE_TOKEN);
@@ -95,6 +95,16 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
+        });
+
+        it.only("should advance to next round after ante round", () => {
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 4, ONE_TOKEN);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 5);
+
+            const round = game.currentRound;
+            expect(round).toEqual(TexasHoldemRound.FLOP);
         });
     });
 });
