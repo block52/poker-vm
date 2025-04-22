@@ -19,6 +19,7 @@ import { RxExit } from "react-icons/rx";
 
 import { ethers } from "ethers";
 import { useTableContext } from "../../context/TableContext";
+import { useTableState } from "../../hooks/useTableState";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
@@ -128,7 +129,24 @@ const useTableData = () => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const { tableData, nextToActInfo, currentRound, playerLegalActions, tableSize, showThreeCards, getUserBySeat, currentUserSeat } = useTableContext();
+    const { 
+        nextToActInfo, 
+        playerLegalActions, 
+        showThreeCards, 
+        getUserBySeat, 
+        currentUserSeat,
+        tableData,
+    } = useTableContext();
+    
+    // Add the useTableState hook to get table state properties
+    const { 
+        currentRound, 
+        totalPot: tableTotalPot, 
+        formattedTotalPot,
+        tableSize, 
+        tableType, 
+        roundType 
+    } = useTableState(id);
     
     // Add the useMinAndMaxBuyIns hook HERE at the top with other hooks
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
@@ -210,6 +228,7 @@ const Table = () => {
     const [dealerButtonPosition, setDealerButtonPosition] = useState({ left: "0px", top: "0px" });
     const [isDealerButtonVisible, setIsDealerButtonVisible] = useState(false);
 
+    // Update the showPlayerBets to use the hook's currentRound value
     const showPlayerBets = ["preflop", "flop", "turn", "river"].includes(currentRound);
 
     // Add state for mouse position
@@ -630,7 +649,7 @@ const Table = () => {
                                                             ? "0.00"
                                                             : tableDataValues.tableDataPots
                                                                   ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
-                                                                  .toFixed(2)}
+                                                                  .toFixed(2) || formattedTotalPot}
                                                     </span>
                                                 </div>
                                                 <div

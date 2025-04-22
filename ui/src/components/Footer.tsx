@@ -3,6 +3,8 @@ import * as React from "react";
 import { useTableContext } from "../context/TableContext";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
+import { useTableState } from "../hooks/useTableState";
+import { useParams } from "react-router-dom";
 
 import axios from "axios";
 import { getUserTableStatus } from "../utils/accountUtils";
@@ -32,14 +34,24 @@ type UserTableStatus = {
 } | null;
 
 const PokerActionPanel: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
     const { 
         tableData, 
         playerLegalActions, 
         isPlayerTurn,
         canDeal, 
         dealTable,
-      
     } = useTableContext();
+    
+    // Add the useTableState hook to get table state properties
+    const { 
+        currentRound, 
+        totalPot: tableTotalPot, 
+        formattedTotalPot,
+        tableType, 
+        roundType 
+    } = useTableState(id);
+    
     const [publicKey, setPublicKey] = useState<string>();
     const [isCallAction, setIsCallAction] = useState(false);
     const [isCheckAction, setIsCheckAction] = useState(false);
@@ -104,7 +116,7 @@ const PokerActionPanel: React.FC = () => {
     const isRaiseAmountInvalid = canRaise ? raiseAmount < minRaise || raiseAmount > maxRaise : canBet ? raiseAmount < minBet || raiseAmount > maxBet : false;
 
     // Get total pot for percentage calculations
-    const totalPot = tableData?.data?.pots?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0) || 0;
+    const totalPot = Number(formattedTotalPot) || 0;
 
     useEffect(() => {
         if (tableData) {

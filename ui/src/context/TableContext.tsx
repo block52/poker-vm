@@ -36,15 +36,10 @@ interface TableContextType {
         availableActions: any[];
         timeRemaining: number;
     } | null;
-    currentRound: string;
-    totalPot: string;
     playerLegalActions: any[] | null;
     isPlayerTurn: boolean;
     dealTable: () => Promise<void>;
     canDeal: boolean;
-    tableSize: number;
-    tableType: string;
-    roundType: string;
     openOneMore: boolean;
     openTwoMore: boolean;
     showThreeCards: boolean;
@@ -74,14 +69,9 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [userPublicKey, setUserPublicKey] = useState<string | null>(null);
     const [isCurrentUserPlaying, setIsCurrentUserPlaying] = useState<boolean>(false);
     const [nextToActInfo, setNextToActInfo] = useState<any>(null);
-    const [currentRound, setCurrentRound] = useState<string>("");
-    const [totalPot, setTotalPot] = useState<string>("0");
     const [playerLegalActions, setPlayerLegalActions] = useState<any[] | null>(null);
     const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false);
 
-    const [tableSize, setTableSize] = useState<number>(9);
-    const [tableType, setTableType] = useState<string>("");
-    const [roundType, setRoundType] = useState<string>("");
     const [openOneMore, setOpenOneMore] = useState<boolean>(false);
     const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
     const [showThreeCards, setShowThreeCards] = useState<boolean>(false);
@@ -173,10 +163,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             // Use the utility function to determine who is next to act
             const nextToActData = whoIsNextToAct(tableData.data);
             setNextToActInfo(nextToActData);
-
-            // Update other table information
-            setCurrentRound(getCurrentRound(tableData.data));
-            setTotalPot(getTotalPot(tableData.data));
 
             // Update current user's seat when table data changes
             if (userWalletAddress && tableData.data.players) {
@@ -496,26 +482,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     };
 
-
-
-    
- 
-
-
-
-
-
-    // Update table type and round info when table data changes
-    useEffect(() => {
-        if (tableData && tableData.data) {
-            // Set table type if available in data
-            setTableType(tableData.data.type || "No Limit Hold'em");
-
-            // Set round type from the current round
-            setRoundType(getCurrentRound(tableData.data));
-        }
-    }, [tableData]);
-
     // Add effect to determine if dealing is allowed
     useEffect(() => {
         if (tableData?.data) {
@@ -555,15 +521,10 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 userPublicKey,
                 isCurrentUserPlaying,
                 nextToActInfo,
-                currentRound,
-                totalPot,
                 playerLegalActions,
                 isPlayerTurn,
                 dealTable,
                 canDeal,
-                tableSize,
-                tableType,
-                roundType,
                 openOneMore,
                 openTwoMore,
                 showThreeCards,
