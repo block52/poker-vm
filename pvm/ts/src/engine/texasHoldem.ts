@@ -98,7 +98,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._bigBlindPosition = this._dealer === gameOptions.maxPlayers ? 2 : this._dealer + 2;
         this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
 
-        this._rounds.set(TexasHoldemRound.PREFLOP, []);
+        this._rounds.set(TexasHoldemRound.ANTE, []);
         this._lastActedSeat = _lastToAct; // Need to recalculate this
 
         for (const action of previousActions) {
