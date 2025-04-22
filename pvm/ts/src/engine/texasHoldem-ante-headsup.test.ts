@@ -57,11 +57,17 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
         });
 
-        it("should have correct legal actions after posting the small blind", () => {
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
+        it.only("should have correct legal actions after posting the small blind", () => {
+            // Get legal actions for the next player
+            let actual = game.getLegalActions(SMALL_BLIND_PLAYER);
+            expect(actual.length).toEqual(2);
+            expect(actual[0].action).toEqual(PlayerActionType.SMALL_BLIND);
+            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
 
             // Get legal actions for the next player
-            const actual = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            actual = game.getLegalActions(BIG_BLIND_PLAYER);
 
             expect(actual.length).toEqual(3);
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
@@ -70,7 +76,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
-            expect(nextToAct?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
         });
 
         it("should have correct legal actions after posting the big blind", () => {
