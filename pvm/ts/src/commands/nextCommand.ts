@@ -6,6 +6,7 @@ import { GameManagement, getGameManagementInstance } from "../state/gameManageme
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
+import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 
 export class NextCommand implements ICommand<ISignedResponse<any>> {
     private readonly gameManagement: GameManagement;
@@ -50,6 +51,10 @@ export class NextCommand implements ICommand<ISignedResponse<any>> {
 
                 if (!game) {
                     throw new Error("Game not found");
+                }
+
+                if (game.currentRound !== TexasHoldemRound.SHOWDOWN) {
+                    throw new Error("Game has not finished yet");
                 }
 
                 game.reInit(this.seed);
