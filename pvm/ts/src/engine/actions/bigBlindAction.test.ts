@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions } from "../testConstants";
+import { gameOptions, ONE_THOUSAND_TOKENS } from "../testConstants";
 
 describe("BigBlindAction", () => {
     let game: TexasHoldemGame;
@@ -27,7 +27,7 @@ describe("BigBlindAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            0, // dealer
+            9, // dealer
             1, // nextToAct
             previousActions, // previousActions
             TexasHoldemRound.PREFLOP,
@@ -38,8 +38,6 @@ describe("BigBlindAction", () => {
 
         updateMock = {
             addAction: jest.fn(action => {
-                console.log("Action recorded:", action);
-                console.log("Pot will be updated with this amount");
             })
         };
 
@@ -47,7 +45,7 @@ describe("BigBlindAction", () => {
         player = new Player(
             "0x980b8D8A16f5891F41871d878a479d81Da52334c", // address
             undefined, // lastAction
-            1000000000000000000n, // chips
+            ONE_THOUSAND_TOKENS, // chips
             undefined, // holeCards
             PlayerStatus.ACTIVE // status
         );
@@ -66,12 +64,12 @@ describe("BigBlindAction", () => {
             const mockNextPlayer = {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
 
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(2);
 
             // Mock current round
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
 
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
@@ -99,11 +97,11 @@ describe("BigBlindAction", () => {
             });
         });
 
-        it("should throw error if not in PREFLOP round", () => {
+        it("should throw error if not in ANTE round", () => {
             // Override the current round mock to be FLOP instead of PREFLOP
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
 
-            expect(() => action.verify(player)).toThrow("Can only post big blind when preflop.");
+            expect(() => action.verify(player)).toThrow("Can only post big blind when in ante.");
         });
 
         it("should throw error if player is not in small blind position", () => {
