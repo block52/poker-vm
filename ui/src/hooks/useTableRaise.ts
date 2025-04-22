@@ -55,7 +55,7 @@ export function useTableRaise(tableId?: string): UseTableRaiseReturn {
                 console.log(`Raising on table ${tableId} with action index ${actionIndex} and amount ${amount}`);
                 
                 // Make API call to raise 
-                const response = await axios.post(`${PROXY_URL}/raise`, {
+                const response = await axios.post(`${PROXY_URL}/table/${tableId}/raise`, {
                     tableId,
                     privateKey,
                     actionIndex,

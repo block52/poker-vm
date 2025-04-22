@@ -6,6 +6,7 @@ import { useTableFold } from "../hooks/useTableFold";
 import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
 import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
 import { useTableRaise } from "../hooks/useTableRaise";
+import { useTableCheck } from "../hooks/useTableCheck";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { useState } from "react";
 import axios from "axios";
@@ -57,6 +58,9 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Initialize raise hook
     const { raiseHand, isRaising } = useTableRaise(effectiveTableId);
 
+    // Initialize check hook
+    const { checkHand, isChecking } = useTableCheck(effectiveTableId);
+
     // Check if fold action is available - MOVED UP before any conditionals
     const hasFoldAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "fold");
@@ -75,6 +79,11 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
     // Check if call action is available
     const hasCallAction = React.useMemo(() => {
         return legalActions?.some(action => action.action === "call");
+    }, [legalActions]);
+
+    // Check if check action is available
+    const hasCheckAction = React.useMemo(() => {
+        return legalActions?.some(action => action.action === "check");
     }, [legalActions]);
 
     // Check if raise action is available and get min/max
@@ -221,6 +230,23 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
         }
     };
 
+    // Handle check button click
+    const handleCheck = async () => {
+        if (!checkHand) return;
+
+        try {
+            await checkHand({
+                userAddress,
+                privateKey,
+                publicKey: userAddress,
+                actionIndex: actionTurnIndex
+            });
+            console.log("Check successful");
+        } catch (error) {
+            console.error("Error when checking:", error);
+        }
+    };
+
     // Simple display of the legal actions data now with more compact design
     return (
         <div className="w-full h-full bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-2 overflow-y-auto text-xs">
@@ -235,6 +261,17 @@ const Footer2: React.FC<Footer2Props> = ({ tableId: propTableId }) => {
                             disabled={isFolding}
                         >
                             {isFolding ? "Folding..." : "Fold"}
+                        </button>
+                    )}
+
+                    {/* Check button if available */}
+                    {hasCheckAction && (
+                        <button
+                            onClick={handleCheck}
+                            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+                            disabled={isChecking}
+                        >
+                            {isChecking ? "Checking..." : "Check"}
                         </button>
                     )}
 
