@@ -535,7 +535,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         if (this.currentRound === TexasHoldemRound.ANTE) {
-            if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
+            if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND && action !== NonPlayerActionType.JOIN) {
                 if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
