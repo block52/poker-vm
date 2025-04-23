@@ -31,6 +31,8 @@ import { toDisplaySeat } from "../../utils/tableUtils";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { usePlayerLegalActions } from "../../hooks/usePlayerLegalActions";
 import { useGameProgress } from "../../hooks/useGameProgress";
+import { useChipPositions } from "../../hooks/useChipPositions";
+import { usePlayerChipData } from "../../hooks/usePlayerChipData";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -167,8 +169,18 @@ const Table = () => {
     // Add the useGameProgress hook
     const { isGameInProgress, activePlayers } = useGameProgress(id);
     
-    // Add the useMinAndMaxBuyIns hook HERE at the top with other hooks
+    // Add the useMinAndMaxBuyIns hook
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
+    
+    // Add any variables we need
+    const [seat, setSeat] = useState<number>(0);
+    const [startIndex, setStartIndex] = useState<number>(0);
+    
+    // Add the useChipPositions hook AFTER startIndex is defined
+    const { chipPositionArray } = useChipPositions(id, startIndex);
+    
+    // Add the usePlayerChipData hook
+    const { getChipAmount } = usePlayerChipData(id);
     
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
@@ -219,18 +231,14 @@ const Table = () => {
         return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
     }
 
-    // Add any variables we need
-    const [seat, setSeat] = useState<number>(0);
     // Add dealerIndex state here at the top with other state hooks
     const [dealerIndex, setDealerIndex] = useState<number>(0);
 
     // Handle loading state
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     // const [type, setType] = useState<string | null>(null);
-    const [startIndex, setStartIndex] = useState<number>(0);
 
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
-    const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
@@ -268,11 +276,9 @@ const Table = () => {
     useEffect(() => {
         const reorderedPlayerArray = [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)];
         const reorderedDealerArray = [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)];
-        const reorderedChipArray = [...chipPositionArray.slice(startIndex), ...chipPositionArray.slice(0, startIndex)];
         setPlayerPositionArray(reorderedPlayerArray);
-        setChipPositionArray(reorderedChipArray);
         setDealerPositionArray(reorderedDealerArray);
-    }, [startIndex]);
+    }, [startIndex, playerPositionArray, dealerPositionArray]);
 
     function threeCardsTable() {
         setTimeout(() => {
@@ -328,17 +334,14 @@ const Table = () => {
         switch (tableSize) {
             case 6:
                 setPlayerPositionArray(playerPosition.six);
-                setChipPositionArray(chipPosition.six);
                 setDealerPositionArray(dealerPosition.six);
                 break;
             case 9:
                 setPlayerPositionArray(playerPosition.nine);
-                setChipPositionArray(chipPosition.nine);
                 setDealerPositionArray(dealerPosition.nine);
                 break;
             default:
                 setPlayerPositionArray([]);
-                setChipPositionArray([]);
                 setDealerPositionArray([]);
         }
     }, [tableSize]);
@@ -684,7 +687,10 @@ const Table = () => {
 
                                             {/*//! CHIP */}
                                             {chipPositionArray.map((position, index) => {
-                                                const player = tableData?.data?.players?.find((p: any) => p.seat === index + 1);
+                                                // Replace this with our hook
+                                                // const player = tableData?.data?.players?.find((p: any) => p.seat === index + 1);
+                                                // Get chip amount directly from our hook
+                                                const chipAmount = getChipAmount(index + 1);
 
                                                 return (
                                                     <div
@@ -695,7 +701,7 @@ const Table = () => {
                                                         }}
                                                         className="absolute"
                                                     >
-                                                        <Chip amount={parseFloat(formatWeiToDollars(player?.sumOfBets || "0"))} />
+                                                        <Chip amount={chipAmount} />
                                                     </div>
                                                 );
                                             })}
