@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
-import { useTableContext } from "../context/TableContext";
 import { PlayerActionType, LegalActionDTO } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 import { useTableState } from "../hooks/useTableState";
@@ -21,30 +20,9 @@ import { useTableCall } from "../hooks/useTableCall";
 import { useTableBet } from "../hooks/useTableBet";
 
 import axios from "axios";
-import { isPlayerTurnToPostBlind } from "../utils/tableUtils";
+
 import { ethers } from "ethers";
 
-// Define a type for the user status
-type UserTableStatus = {
-    isInTable: boolean;
-    isPlayerTurn: boolean;
-    seat: any;
-    stack: any;
-    status: any;
-    availableActions: any;
-    canPostSmallBlind: any;
-    canPostBigBlind: any;
-    canCheck: any;
-    canCall: any;
-    canBet: any;
-    canRaise: any;
-    canFold: any;
-    betLimits: any;
-    raiseLimits: any;
-    callAmount: any;
-    smallBlindAmount: any;
-    bigBlindAmount: any;
-} | null;
 
 const PokerActionPanel: React.FC = () => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -62,13 +40,8 @@ const PokerActionPanel: React.FC = () => {
     const { callHand } = useTableCall(tableId);
     const { betHand } = useTableBet(tableId);
     
-    // Add the useNextToActInfo hook
-    const { nextToActInfo } = useNextToActInfo(tableId);
-    
-    // We'll still use tableContext for now, but we'll gradually replace its functionalities
-    const { 
-        tableData,
-    } = useTableContext();
+    // Use the useNextToActInfo hook
+    const { nextToActInfo, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
     
     // Add the useTableState hook to get table state properties
     const { 
@@ -76,9 +49,9 @@ const PokerActionPanel: React.FC = () => {
         totalPot: tableTotalPot, 
         formattedTotalPot,
         tableType, 
-        roundType 
+        roundType,
     } = useTableState(tableId);
-    
+
     // Log info from our hooks for debugging
     useEffect(() => {
         console.log("🎮 NextToActInfo:", nextToActInfo);
@@ -113,10 +86,10 @@ const PokerActionPanel: React.FC = () => {
     // New flag to determine whether to hide other action buttons when deal is available
     const hideOtherButtons = shouldShowDealButton;
 
-    // Get current player's possible actions
-    const nextToAct = tableData?.nextToAct;
-    const currentPlayer = tableData?.players?.find((p: any) => p.seat === nextToAct);
-    const currentPlayerActions = currentPlayer?.legalActions || [];
+    // Get current player's possible actions using nextToActInfo instead of tableData
+    const nextToAct = nextToActInfo?.seat;
+    const currentPlayer = nextToActInfo?.player;
+    const currentPlayerActions = nextToActInfo?.availableActions || [];
 
     // Check if each action is available based on legalActions
     const canFold = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD);
@@ -147,16 +120,12 @@ const PokerActionPanel: React.FC = () => {
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
 
+    // Log if it's user's turn based on nextToActInfo
     useEffect(() => {
-        if (tableData) {
-            // Check if it's the current user's turn directly from tableData
-            const nextToActPlayer = tableData.players?.find((player: any) => player.seat === tableData.nextToAct);
-
-            if (nextToActPlayer && nextToActPlayer.address?.toLowerCase() === userAddress) {
-                console.log("It's your turn to act based on tableData!");
-            }
+        if (nextToActInfo?.isCurrentUserTurn) {
+            console.log("It's your turn to act based on nextToActInfo!");
         }
-    }, [tableData, userAddress]);
+    }, [nextToActInfo]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -170,10 +139,10 @@ const PokerActionPanel: React.FC = () => {
         // console.log("Footer - Player's legal actions:", {
         //     actions: playerLegalActions,
         //     isPlayerTurn,
-        //     nextToAct: tableData?.nextToAct,
-        //     userSeat
+        //     nextToAct: nextToActInfo?.seat,
+        //     userSeat: playerSeat
         // });
-    }, [legalActions, isPlayerTurn, tableData, playerSeat]);
+    }, [legalActions, isPlayerTurn, nextToActInfo, playerSeat]);
 
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
@@ -183,8 +152,8 @@ const PokerActionPanel: React.FC = () => {
     // Player action function to handle all game actions
     const handleSetPlayerAction = async (action: PlayerActionType, amount: string) => {
         console.log("Setting player action:", action, amount);
-        if (!userAddress || !tableData?.data?.address) {
-            console.error("Missing user address or table ID", { userAddress, tableId: tableData?.data?.address });
+        if (!userAddress || !tableId) {
+            console.error("Missing user address or table ID", { userAddress, tableId });
             return;
         }
 
@@ -203,7 +172,6 @@ const PokerActionPanel: React.FC = () => {
 
             // Create the message to sign - Add delimiters for clarity and reliability
             const timestamp = Math.floor(Date.now() / 1000).toString();
-            const tableId = tableData.data.address;
 
             // Ensure action is properly formatted and consistent with API expectations
             // Convert action to lowercase string as expected by the API
@@ -266,7 +234,6 @@ const PokerActionPanel: React.FC = () => {
             console.log("Full API payload:", JSON.stringify(payload, null, 2));
 
             // Send the action to the backend
-
             const response = await axios.post(`${PROXY_URL}/table/${tableId}/playeraction`, payload);
 
             console.log("Player action response:", response.data);
@@ -279,9 +246,11 @@ const PokerActionPanel: React.FC = () => {
             }
 
             // Reset UI states after action
-
             setIsCallAction(false);
             setIsCheckAction(false);
+            
+            // Refresh the next-to-act info to reflect the new state
+            refreshNextToActInfo?.();
         } catch (error: any) {
             console.error("Error executing player action:", error);
             // Log the error stack trace for debugging
@@ -456,23 +425,6 @@ const PokerActionPanel: React.FC = () => {
         });
     };
 
-    //Raise State snapshop for capturing edge cases and verify behaviour
-    useEffect(() => {
-        console.log("Raise State Snapshot", {
-            raiseAmount,
-            raiseInputRaw,
-            minBet,
-            maxBet,
-            minRaise,
-            maxRaise,
-            canBet,
-            canRaise,
-            isRaiseAmountInvalid
-        });
-    }, [raiseAmount, raiseInputRaw, minBet, maxBet, minRaise, maxRaise]);
-
-    // Make sure we're passing the actual table data object, not the wrapper
-    const actualTableData = tableData?.data;
 
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = legalActions?.some(action => action.action === "post-small-blind") && isUsersTurn;
@@ -509,66 +461,13 @@ const PokerActionPanel: React.FC = () => {
     // Show blinds buttons when needed
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
-    
-    // Add a more robust check for whether it's actually the player's turn
-    useEffect(() => {
-        // If there are no legal actions or all players except one have folded,
-        // we shouldn't show action buttons even if isPlayerTurn is true
-        const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
 
-        if (activePlayers?.length <= 1) {
-            console.log("Only one active player left - no actions needed");
-        }
-    }, [tableData, legalActions, isPlayerTurn, userAddress]);
+    const activePlayers = players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
+    const activePlayerCount = activePlayers?.length || 0;
+    const gameInProgress = activePlayerCount > 1;
 
-    // Update the showActionButtons logic to be more robust
-    const hasLegalActions = legalActions && legalActions.length > 0;
-    const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
-    const gameInProgress = activePlayers && activePlayers.length > 1;
 
-    // Add this function to handle big blind posting
-    const emergencyPostBigBlind = () => {
-        // console.log("Emergency Big Blind function called");
-
-        if (!tableData || !tableData.data) {
-            console.error("No table data available");
-            return;
-        }
-
-        const bigBlindAmount = tableData.data.bigBlind || "0";
-        // console.log("Big blind amount:", bigBlindAmount);
-
-        // Call the action handler directly
-        handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
-    };
-
-    // Add this at the top of your component
-    useEffect(() => {
-        // Create a global keyboard shortcut for posting big blind
-        const handleKeyPress = (event: KeyboardEvent) => {
-            if (event.key === "b" && shouldShowBigBlindButton) {
-                console.log("Big blind keyboard shortcut triggered");
-
-                if (!tableData || !tableData.data) {
-                    console.error("No table data available");
-                    return;
-                }
-
-                const bigBlindAmount = tableData.data.bigBlind || "0";
-                // console.log("Big blind amount:", bigBlindAmount);
-
-                // Call the action handler directly
-                handleSetPlayerAction(PlayerActionType.BIG_BLIND, bigBlindAmount);
-            }
-        };
-
-        window.addEventListener("keydown", handleKeyPress);
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyPress);
-        };
-    }, [tableData, shouldShowBigBlindButton]);
-
+   
     // Add a handler for the deal button
     const handleDeal = () => {
         console.log("Deal button clicked");
