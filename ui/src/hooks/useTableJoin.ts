@@ -60,10 +60,20 @@ export function useTableJoin(tableId: string | undefined) {
     joinTableFetcher
   );
 
-  return {
+  const result = {
     joinTable: tableId ? trigger : null,
     isJoining: isMutating,
     error,
     data
   };
+
+  console.log("[useTableJoin] Returns:", {
+    hasJoinFunction: !!result.joinTable,
+    isJoining: result.isJoining,
+    hasError: !!result.error,
+    hasData: !!result.data,
+    tableId
+  });
+
+  return result;
 }

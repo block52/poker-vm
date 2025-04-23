@@ -53,10 +53,20 @@ export function useTableLeave(tableId: string | undefined) {
     leaveTableFetcher
   );
 
-  return {
+  const result = {
     leaveTable: tableId ? trigger : null,
     isLeaving: isMutating,
     error,
     data
   };
+
+  console.log("[useTableLeave] Returns:", {
+    hasLeaveFunction: !!result.leaveTable,
+    isLeaving: result.isLeaving,
+    hasError: !!result.error,
+    hasData: !!result.data,
+    tableId
+  });
+
+  return result;
 }

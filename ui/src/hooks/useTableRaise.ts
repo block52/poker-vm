@@ -76,5 +76,14 @@ export function useTableRaise(tableId?: string): UseTableRaiseReturn {
         [tableId]
     );
 
-    return { raiseHand, isRaising, error };
+    const result = { raiseHand, isRaising, error };
+
+    console.log("[useTableRaise] Returns:", {
+        hasRaiseFunction: !!result.raiseHand,
+        isRaising: result.isRaising,
+        hasError: !!result.error,
+        tableId
+    });
+
+    return result;
 }

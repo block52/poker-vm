@@ -81,7 +81,7 @@ export const usePlayerTimer = (tableId?: string, playerIndex?: number) => {
     };
   }, [playerStatus, timeoutValue]);
 
-  return {
+  const result = {
     playerStatus,
     timeoutValue,
     progress,
@@ -90,4 +90,17 @@ export const usePlayerTimer = (tableId?: string, playerIndex?: number) => {
     isLoading,
     error
   };
+
+  console.log("[usePlayerTimer] Returns:", {
+    playerIndex,
+    playerStatus: result.playerStatus,
+    timeoutValue: result.timeoutValue,
+    progress: result.progress,
+    timeRemaining: result.timeRemaining,
+    isActive: result.isActive,
+    isLoading: result.isLoading,
+    hasError: !!result.error
+  });
+
+  return result;
 }; 

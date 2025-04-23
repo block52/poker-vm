@@ -120,7 +120,7 @@ export const usePlayerSeatInfo = (tableId?: string) => {
     }
   }, [currentUserSeat, tableId, fetchUserBySeat]);
 
-  return {
+  const result = {
     currentUserSeat,
     userDataBySeat: useMemo(() => {
       // Convert Record<number, CachedUserData> to Record<number, any> (just the data)
@@ -135,4 +135,14 @@ export const usePlayerSeatInfo = (tableId?: string) => {
     error,
     refresh: mutate
   };
+
+  console.log("[usePlayerSeatInfo] Returns:", {
+    currentUserSeat: result.currentUserSeat,
+    numCachedSeats: Object.keys(result.userDataBySeat).length,
+    cachedSeats: Object.keys(result.userDataBySeat),
+    isLoading: result.isLoading,
+    hasError: !!result.error
+  });
+
+  return result;
 };

@@ -116,7 +116,7 @@ const useUserWallet = (): UserWalletResult => {
         }
     }, [privateKey]);
 
-    return {
+    const result = {
         account,
         balance,
         privateKey,
@@ -125,6 +125,17 @@ const useUserWallet = (): UserWalletResult => {
         b52: client,
         refreshBalance
     };
+
+    console.log("[useUserWallet] Returns:", {
+        hasAccount: !!result.account,
+        balance: result.balance,
+        hasPrivateKey: !!result.privateKey,
+        hasClient: !!result.b52,
+        isLoading: result.isLoading,
+        hasError: !!result.error
+    });
+
+    return result;
 };
 
 export default useUserWallet;

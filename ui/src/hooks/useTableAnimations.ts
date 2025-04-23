@@ -49,11 +49,19 @@ export const useTableAnimations = (tableId?: string) => {
                       tableData.maxPlayers || 
                       defaultTableSize;
 
-    return {
+    const result = {
       tableSize,
       isLoading: false,
       error: null
     };
+
+    console.log("[useTableAnimations] Returns:", {
+      tableSize: result.tableSize,
+      isLoading: result.isLoading,
+      hasError: !!result.error
+    });
+
+    return result;
   } catch (err) {
     console.error("Error parsing table animations data:", err);
     return {

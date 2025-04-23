@@ -130,12 +130,22 @@ export const useWinnerInfo = (tableId?: string) => {
       console.log("🏆 Winners detected:", winners);
     }
 
-    return {
+    const result = {
       winnerInfo: winners,
       isLoading: false,
       error: null,
       refresh: mutate
     };
+
+    console.log("[useWinnerInfo] Returns:", {
+      hasWinners: !!winners && winners.length > 0,
+      numWinners: winners?.length || 0,
+      winnerSeats: winners?.map((w: {seat: number}) => w.seat) || [],
+      isLoading: false,
+      hasError: false
+    });
+
+    return result;
   } catch (err) {
     console.error("Error parsing winner information:", err);
     return {

@@ -89,6 +89,8 @@ export function useTableTurnIndex(tableId?: string): number {
     const nextIndex = latestAction.index + 1;
     console.log(`Latest action index: ${latestAction.index}, next index: ${nextIndex}`);
     
+    console.log("[useTableTurnIndex] Returns:", nextIndex);
+    
     return nextIndex;
   } catch (err) {
     console.error("Error calculating next turn index:", err);

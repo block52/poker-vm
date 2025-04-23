@@ -57,7 +57,7 @@ export const useMinAndMaxBuyIns = (tableId?: string) => {
     const minBuyInFormatted = ethers.formatUnits(minBuyInWei, 18);
     const maxBuyInFormatted = ethers.formatUnits(maxBuyInWei, 18);
 
-    return {
+    const result = {
       minBuyInWei,
       maxBuyInWei,
       minBuyInFormatted,
@@ -66,6 +66,17 @@ export const useMinAndMaxBuyIns = (tableId?: string) => {
       error,
       refresh: mutate
     };
+
+    console.log("[useMinAndMaxBuyIns] Returns:", {
+      minBuyInWei,
+      maxBuyInWei,
+      minBuyInFormatted,
+      maxBuyInFormatted,
+      isLoading,
+      hasError: !!error
+    });
+
+    return result;
   } catch (err) {
     console.error("Error parsing buy-in values:", err);
     return defaultValues;

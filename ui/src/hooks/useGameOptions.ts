@@ -78,12 +78,26 @@ export const useGameOptions = (tableId?: string) => {
       timeout: gameOptions.timeout || defaultOptions.timeout
     };
 
-    return {
+    const result = {
       gameOptions: options,
       isLoading,
       error,
       refresh: mutate
     };
+
+    console.log("[useGameOptions] Returns:", {
+      minBuyIn: options.minBuyIn.toString(),
+      maxBuyIn: options.maxBuyIn.toString(),
+      maxPlayers: options.maxPlayers,
+      minPlayers: options.minPlayers,
+      smallBlind: options.smallBlind.toString(),
+      bigBlind: options.bigBlind.toString(),
+      timeout: options.timeout,
+      isLoading,
+      hasError: !!error
+    });
+
+    return result;
   } catch (err) {
     console.error("Error parsing game options:", err);
     return {

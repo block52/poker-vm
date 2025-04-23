@@ -99,7 +99,7 @@ export function useTablePostBigBlind(tableId: string | undefined) {
   }
 
   // Return post big blind handler that accepts action index
-  return {
+  const result = {
     postBigBlind: tableId ? (options: Omit<PostBigBlindOptions, "actionIndex"> & { actionIndex?: number | null }) => 
       trigger({
         ...options,
@@ -110,4 +110,15 @@ export function useTablePostBigBlind(tableId: string | undefined) {
     error,
     data
   };
+
+  console.log("[useTablePostBigBlind] Returns:", {
+    hasPostBigBlindFunction: !!result.postBigBlind,
+    isPostingBigBlind: result.isPostingBigBlind,
+    hasError: !!result.error,
+    hasData: !!result.data,
+    bigBlindAmount: gameOptions.bigBlind.toString(),
+    tableId
+  });
+
+  return result;
 }

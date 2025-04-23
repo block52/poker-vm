@@ -99,7 +99,7 @@ export function useTablePostSmallBlind(tableId: string | undefined) {
   }
 
   // Return post small blind handler that accepts action index
-  return {
+  const result = { 
     postSmallBlind: tableId ? (options: Omit<PostSmallBlindOptions, "actionIndex"> & { actionIndex?: number | null }) => 
       trigger({
         ...options,
@@ -110,4 +110,15 @@ export function useTablePostSmallBlind(tableId: string | undefined) {
     error,
     data
   };
+  
+  console.log("[useTablePostSmallBlind] Returns:", {
+    hasPostSmallBlindFunction: !!result.postSmallBlind,
+    isPostingSmallBlind: result.isPostingSmallBlind,
+    hasError: !!result.error,
+    hasData: !!result.data,
+    smallBlindAmount: gameOptions.smallBlind.toString(),
+    tableId
+  });
+  
+  return result;
 }

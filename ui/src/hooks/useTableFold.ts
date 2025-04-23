@@ -91,11 +91,21 @@ export function useTableFold(tableId: string | undefined) {
   }
 
   // Return fold handler that accepts action index
-  return {
+  const result = {
     foldHand: tableId ? (options: Omit<FoldOptions, "actionIndex"> & { actionIndex?: number | null }) => 
       trigger(options) : null,
     isFolding: isMutating,
     error,
     data
   };
+
+  console.log("[useTableFold] Returns:", {
+    hasFoldFunction: !!result.foldHand,
+    isFolding: result.isFolding,
+    hasError: !!result.error,
+    hasData: !!result.data,
+    tableId
+  });
+
+  return result;
 }

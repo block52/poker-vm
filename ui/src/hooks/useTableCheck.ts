@@ -70,5 +70,14 @@ export function useTableCheck(tableId?: string): UseTableCheckReturn {
         [tableId]
     );
 
-    return { checkHand, isChecking, error };
+    const result = { checkHand, isChecking, error };
+
+    console.log("[useTableCheck] Returns:", {
+        hasCheckFunction: !!result.checkHand,
+        isChecking: result.isChecking,
+        hasError: !!result.error,
+        tableId
+    });
+
+    return result;
 }

@@ -79,7 +79,7 @@ export const useTableState = (tableId?: string) => {
     // Round type is the same as current round in this context
     const roundType = currentRound;
 
-    return {
+    const result = {
       currentRound,
       totalPot: totalPotWei,
       formattedTotalPot,
@@ -90,6 +90,18 @@ export const useTableState = (tableId?: string) => {
       error: null,
       refresh: mutate
     };
+
+    console.log("[useTableState] Returns:", {
+      currentRound,
+      formattedTotalPot,
+      tableSize,
+      tableType,
+      roundType,
+      isLoading: false,
+      hasError: false
+    });
+
+    return result;
   } catch (err) {
     console.error("Error parsing table state:", err);
     return {
