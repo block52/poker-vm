@@ -33,6 +33,7 @@ import { usePlayerLegalActions } from "../../hooks/usePlayerLegalActions";
 import { useGameProgress } from "../../hooks/useGameProgress";
 import { useChipPositions } from "../../hooks/useChipPositions";
 import { usePlayerChipData } from "../../hooks/usePlayerChipData";
+import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -168,6 +169,9 @@ const Table = () => {
     
     // Add the useGameProgress hook
     const { isGameInProgress, activePlayers } = useGameProgress(id);
+    
+    // Add the usePlayerDataAvailability hook
+    const { isPlayerDataAvailable } = usePlayerDataAvailability(id);
     
     // Add the useMinAndMaxBuyIns hook
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
@@ -687,9 +691,6 @@ const Table = () => {
 
                                             {/*//! CHIP */}
                                             {chipPositionArray.map((position, index) => {
-                                                // Replace this with our hook
-                                                // const player = tableData?.data?.players?.find((p: any) => p.seat === index + 1);
-                                                // Get chip amount directly from our hook
                                                 const chipAmount = getChipAmount(index + 1);
 
                                                 return (
@@ -848,7 +849,7 @@ const Table = () => {
                 </div>
             )}
             {/* Show a message when the hand is over */}
-            {tableData?.data?.players && !isGameInProgress && tableActivePlayers.length > 0 && (
+            {isPlayerDataAvailable && !isGameInProgress && tableActivePlayers.length > 0 && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
                     <span>Hand complete - waiting for next hand</span>
                 </div>
