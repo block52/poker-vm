@@ -16,9 +16,11 @@ import { useTableFold } from "../hooks/useTableFold";
 import { useTableRaise } from "../hooks/useTableRaise";
 import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
 import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
+import { useNextToActInfo } from "../hooks/useNextToActInfo";
+import { useTableCall } from "../hooks/useTableCall";
+import { useTableBet } from "../hooks/useTableBet";
 
 import axios from "axios";
-import { getUserTableStatus } from "../utils/accountUtils";
 import { isPlayerTurnToPostBlind } from "../utils/tableUtils";
 import { ethers } from "ethers";
 
@@ -57,17 +59,15 @@ const PokerActionPanel: React.FC = () => {
     const { raiseHand } = useTableRaise(tableId);
     const { postSmallBlind } = useTablePostSmallBlind(tableId);
     const { postBigBlind } = useTablePostBigBlind(tableId);
+    const { callHand } = useTableCall(tableId);
+    const { betHand } = useTableBet(tableId);
+    
+    // Add the useNextToActInfo hook
+    const { nextToActInfo } = useNextToActInfo(tableId);
     
     // We'll still use tableContext for now, but we'll gradually replace its functionalities
     const { 
         tableData,
-        // We can replace these with our custom hooks
-        // playerLegalActions, // replaced with legalActions from usePlayerLegalActions
-        // isPlayerTurn,       // replaced with isPlayerTurn from usePlayerLegalActions  
-        // canDeal,            // replaced with canDeal from useDealTable
-        // dealTable,          // replaced with dealTable from useDealTable
-        // nonce,              // replaced with nonce from useTableNonce
-        // refreshNonce,       // replaced with refreshNonce from useTableNonce
     } = useTableContext();
     
     // Add the useTableState hook to get table state properties
@@ -81,23 +81,26 @@ const PokerActionPanel: React.FC = () => {
     
     // Log info from our hooks for debugging
     useEffect(() => {
-        console.log("🔢 Current nonce from hook:", nonce);
-        console.log("💰 Account data from hook:", accountData);
-        console.log("👥 Players from usePlayerDTO:", players);
-        console.log("🎮 Legal actions from usePlayerLegalActions:", legalActions);
-        console.log("🎲 Can deal from useDealTable:", canDeal);
-    }, [nonce, accountData, players, legalActions, canDeal]);
+        console.log("🎮 NextToActInfo:", nextToActInfo);
+    }, [nextToActInfo]);
     
     const [publicKey, setPublicKey] = useState<string>();
     const [isCallAction, setIsCallAction] = useState(false);
     const [isCheckAction, setIsCheckAction] = useState(false);
     const [balance, setBalance] = useState(0);
 
-    // Get user's seat from localStorage or tableData
+    // Get user's address directly from localStorage
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-    const userPlayer = tableData?.data?.players?.find((player: any) => player.address?.toLowerCase() === userAddress?.toLowerCase());
-    const userSeat = userPlayer?.seat;
-
+    
+    // Determine if user is in the table using our hooks instead of accountUtils
+    const isUserInTable = !!players?.some(player => player.address?.toLowerCase() === userAddress);
+    
+    // Use nextToActInfo to determine if it's the user's turn
+    const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
+    
+    // Replace userPlayer with direct checks from our hook data
+    const userPlayer = players?.find(player => player.address?.toLowerCase() === userAddress);
+    
     // Check if fold action exists in legal actions
     const hasFoldAction = legalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
 
@@ -109,9 +112,6 @@ const PokerActionPanel: React.FC = () => {
 
     // New flag to determine whether to hide other action buttons when deal is available
     const hideOtherButtons = shouldShowDealButton;
-
-    // const { data } = useUserBySeat(publicKey || "", userSeat);
-    const [userStatus, setUserStatus] = useState<UserTableStatus>(null);
 
     // Get current player's possible actions
     const nextToAct = tableData?.nextToAct;
@@ -149,48 +149,14 @@ const PokerActionPanel: React.FC = () => {
 
     useEffect(() => {
         if (tableData) {
-            // console.log("Table Data:asdfasd", tableData);
-            const status = getUserTableStatus(tableData);
-            // console.log("User Status:", status);
-            setUserStatus(status || null);
-
             // Check if it's the current user's turn directly from tableData
             const nextToActPlayer = tableData.players?.find((player: any) => player.seat === tableData.nextToAct);
 
             if (nextToActPlayer && nextToActPlayer.address?.toLowerCase() === userAddress) {
-                // console.log("It's your turn to act!");
-
-                // Check if this is a small blind posting situation
-                const isSmallBlindPosition = tableData.smallBlindPosition === nextToActPlayer.seat;
-                // console.log("Is small blind position:", isSmallBlindPosition);
-
-                // Set minimal user status if needed
-                if (!status) {
-                    setUserStatus({
-                        isInTable: true,
-                        isPlayerTurn: true,
-                        seat: nextToActPlayer.seat,
-                        availableActions: nextToActPlayer.legalActions || [],
-                        // Add other necessary properties with default values
-                        stack: nextToActPlayer.stack || "0",
-                        status: "active",
-                        canPostSmallBlind: isSmallBlindPosition,
-                        canPostBigBlind: tableData.bigBlindPosition === nextToActPlayer.seat,
-                        canCheck: nextToActPlayer.legalActions?.some((a: any) => a.action === PlayerActionType.CHECK),
-                        canCall: nextToActPlayer.legalActions?.some((a: any) => a.action === PlayerActionType.CALL),
-                        canBet: nextToActPlayer.legalActions?.some((a: any) => a.action === PlayerActionType.BET),
-                        canRaise: nextToActPlayer.legalActions?.some((a: any) => a.action === PlayerActionType.RAISE),
-                        canFold: nextToActPlayer.legalActions?.some((a: any) => a.action === PlayerActionType.FOLD),
-                        betLimits: null,
-                        raiseLimits: null,
-                        callAmount: "0",
-                        smallBlindAmount: tableData.smallBlind || "0",
-                        bigBlindAmount: tableData.bigBlind || "0"
-                    });
-                }
+                console.log("It's your turn to act based on tableData!");
             }
         }
-    }, [tableData]);
+    }, [tableData, userAddress]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -207,7 +173,7 @@ const PokerActionPanel: React.FC = () => {
         //     nextToAct: tableData?.nextToAct,
         //     userSeat
         // });
-    }, [legalActions, isPlayerTurn, tableData, userSeat]);
+    }, [legalActions, isPlayerTurn, tableData, playerSeat]);
 
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
@@ -424,71 +390,70 @@ const PokerActionPanel: React.FC = () => {
 
     const handleCall = () => {
         console.log("Calling");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !callHand) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
         if (callAction) {
-            // Use the callAction.min value directly from the action object
-            // This ensures we're using the exact value expected by the contract
-            console.log("Calling with amount:", callAction.min);
-            handleSetPlayerAction(PlayerActionType.CALL, callAction.min.toString());
+            // Use our hook to call with the correct amount
+            callHand({
+                userAddress: publicKey,
+                privateKey,
+                publicKey,
+                actionIndex: callAction.index || 0,
+                amount: callAction.min.toString(),
+            });
         } else {
             console.error("Call action not available");
         }
     };
 
     const handleBet = () => {
-        console.log("Betting button clicked");
-        // Log the bet limits from the legal actions
-        console.log("Bet legal action:", betAction);
-        console.log("Min bet:", minBet, "Max bet:", maxBet);
-
-        // Set initial bet amount to minimum
-        console.log("betting");
-        submitBetOrRaise();
-
-        // Show the bet input modal/section
-        console.log("Showing bet input section");
+        console.log("Betting");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !betHand) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
+        // Use our hook to bet with the current raiseAmount
+        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+        
+        betHand({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: betAction?.index || 0,
+            amount: amountWei,
+        });
     };
 
     const handleRaise = () => {
         console.log("Raising");
-        submitBetOrRaise();
-    };
-
-    const submitBetOrRaise = () => {
-        if (raiseAmount <= 0) {
-            console.error("Cannot bet or raise with zero or negative amount");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !raiseHand) {
+            console.error("Wallet keys not available or hook not ready");
             return;
         }
-
+        
+        // Use our hook to raise with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
-
-        if (canRaise) {
-            if (raiseAmount < minRaise) {
-                console.warn(`Raise amount ${raiseAmount} < minRaise ${minRaise}. Forcing to min.`);
-                const minRaiseWei = ethers.parseUnits(minRaise.toString(), 18).toString();
-                handleSetPlayerAction(PlayerActionType.RAISE, minRaiseWei);
-            } else if (raiseAmount > maxRaise) {
-                console.warn(`Raise amount ${raiseAmount} > maxRaise ${maxRaise}. Forcing to max.`);
-                const maxRaiseWei = ethers.parseUnits(maxRaise.toString(), 18).toString();
-                handleSetPlayerAction(PlayerActionType.RAISE, maxRaiseWei);
-            } else {
-                handleSetPlayerAction(PlayerActionType.RAISE, amountWei);
-            }
-            return;
-        }
-
-        if (canBet) {
-            if (raiseAmount < minBet) {
-                console.warn(`Bet amount ${raiseAmount} < minBet ${minBet}. Forcing to min.`);
-                const minBetWei = ethers.parseUnits(minBet.toString(), 18).toString();
-                handleSetPlayerAction(PlayerActionType.BET, minBetWei);
-            } else if (raiseAmount > maxBet) {
-                console.warn(`Bet amount ${raiseAmount} > maxBet ${maxBet}. Forcing to max.`);
-                const maxBetWei = ethers.parseUnits(maxBet.toString(), 18).toString();
-                handleSetPlayerAction(PlayerActionType.BET, maxBetWei);
-            } else {
-                handleSetPlayerAction(PlayerActionType.BET, amountWei);
-            }
-        }
+        
+        raiseHand({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: raiseAction?.index || 0,
+            amount: amountWei,
+        });
     };
 
     //Raise State snapshop for capturing edge cases and verify behaviour
@@ -509,23 +474,44 @@ const PokerActionPanel: React.FC = () => {
     // Make sure we're passing the actual table data object, not the wrapper
     const actualTableData = tableData?.data;
 
-    // Use our helper functions to determine if blind buttons should be shown
-    const shouldShowSmallBlindButton = legalActions?.some(action => action.action === "post-small-blind") && isPlayerTurn;
-    const shouldShowBigBlindButton = legalActions?.some(action => action.action === "post-big-blind") && isPlayerTurn;
+    // Update to use our hook data for button visibility
+    const shouldShowSmallBlindButton = legalActions?.some(action => action.action === "post-small-blind") && isUsersTurn;
+    const shouldShowBigBlindButton = legalActions?.some(action => action.action === "post-big-blind") && isUsersTurn;
+    
+    // Find the specific actions we need
+    const smallBlindAction = legalActions?.find(action => action.action === "post-small-blind");
+    const bigBlindAction = legalActions?.find(action => action.action === "post-big-blind");
+    const foldAction = legalActions?.find(action => action.action === "fold");
+    
+    // Debug log to understand action button visibility
+    console.log("Action Button Debug:", {
+        isUserInTable,
+        nextToActSeat: nextToActInfo?.seat,
+        userPlayerSeat: playerSeat,
+        isUsersTurn,
+        legalActions,
+        hasPostSmallBlindAction: !!smallBlindAction,
+        hasPostBigBlindAction: !!bigBlindAction,
+        hasFoldAction: !!foldAction,
+        playerStatus
+    });
+    
+    // Only show action buttons if user is in the table
+    const showButtons = isUserInTable;
+    
+    // Only show fold button if the player has the fold action and is in the table
+    const canFoldAnytime = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold") && playerStatus !== "folded" && showButtons;
 
+    // Only show other action buttons if it's the player's turn, they have legal actions,
+    // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
+    const showActionButtons = isUsersTurn && legalActions && legalActions.length > 0 && showButtons;
+
+    // Show blinds buttons when needed
+    const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
+    const showBigBlindButton = shouldShowBigBlindButton && showButtons;
+    
     // Add a more robust check for whether it's actually the player's turn
     useEffect(() => {
-        // Log detailed information about the current game state
-        // console.log("Detailed game state check:", {
-        //     tableData,
-        //     playerLegalActions,
-        //     isPlayerTurn,
-        //     activePlayers: tableData?.data?.players?.filter((p: any) =>
-        //         p.status !== 'folded' && p.status !== 'sitting-out'),
-        //     userAddress,
-        //     nextToAct: tableData?.data?.nextToAct
-        // });
-
         // If there are no legal actions or all players except one have folded,
         // we shouldn't show action buttons even if isPlayerTurn is true
         const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
@@ -539,41 +525,6 @@ const PokerActionPanel: React.FC = () => {
     const hasLegalActions = legalActions && legalActions.length > 0;
     const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
     const gameInProgress = activePlayers && activePlayers.length > 1;
-
-    // Always show fold button regardless of other conditions if the player has legal actions
-    const canFoldAnytime = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold") && userPlayer?.status !== "folded";
-
-    console.log("canFoldAnytime calculation:", {
-        legalActions,
-        hasFoldAction: legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold"),
-        playerNotFolded: userPlayer?.status !== "folded",
-        result: canFoldAnytime
-    });
-
-    // Only show other action buttons if it's the player's turn, they have legal actions,
-    // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
-    const showActionButtons = isPlayerTurn && hasLegalActions && gameInProgress;
-
-    // Show blinds buttons when needed
-    const showSmallBlindButton = shouldShowSmallBlindButton;
-    const showBigBlindButton = shouldShowBigBlindButton;
-    
-    // Find the specific actions we need
-    const smallBlindAction = legalActions?.find(action => action.action === "post-small-blind");
-    const bigBlindAction = legalActions?.find(action => action.action === "post-big-blind");
-    const foldAction = legalActions?.find(action => action.action === "fold");
-    
-    // Debug log to understand small blind button visibility
-    console.log("Action Button Debug:", {
-        legalActions,
-        hasPostSmallBlindAction: !!smallBlindAction,
-        hasPostBigBlindAction: !!bigBlindAction,
-        hasFoldAction: !!foldAction,
-        isPlayerTurn,
-        showSmallBlindButton,
-        showBigBlindButton,
-        playerStatus
-    });
 
     // Add this function to handle big blind posting
     const emergencyPostBigBlind = () => {
@@ -755,7 +706,7 @@ const PokerActionPanel: React.FC = () => {
                                     )}
                                     {(canRaise || canBet) && (
                                         <button
-                                            onClick={submitBetOrRaise}
+                                            onClick={canRaise ? handleRaise : handleBet}
                                             disabled={isRaiseAmountInvalid || !isPlayerTurn}
                                             className={`${
                                                 isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
@@ -959,11 +910,11 @@ export default PokerActionPanel;
  * - Fold: useTableFold().foldHand
  * - Post Small Blind: useTablePostSmallBlind().postSmallBlind
  * - Post Big Blind: useTablePostBigBlind().postBigBlind
- * - Raise/Bet: useTableRaise().raiseHand (still using handleSetPlayerAction for raising/betting)
+ * - Call: useTableCall().callHand
+ * - Bet: useTableBet().betHand
+ * - Raise: useTableRaise().raiseHand
  * 
  * TO DO:
- * - Complete the raise/bet action migration to use the hooks
- * - Refactor the UI code to work entirely with hooks
  * - Remove the TableContext dependency completely
  * - Potentially consolidate these hooks into a more organized structure
  */
