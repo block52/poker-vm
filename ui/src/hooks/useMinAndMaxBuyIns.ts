@@ -54,8 +54,8 @@ export const useMinAndMaxBuyIns = (tableId?: string) => {
     const maxBuyInWei = gameOptions.maxBuyIn || defaultValues.maxBuyInWei;
 
     // Format values to human-readable form
-    const minBuyInFormatted = ethers.formatUnits(minBuyInWei, 18);
-    const maxBuyInFormatted = ethers.formatUnits(maxBuyInWei, 18);
+    const minBuyInFormatted = Number(ethers.formatUnits(minBuyInWei, 18)).toFixed(2);
+    const maxBuyInFormatted = Number(ethers.formatUnits(maxBuyInWei, 18)).toFixed(2);
 
     const result = {
       minBuyInWei,

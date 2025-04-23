@@ -10,6 +10,7 @@ import { toDisplaySeat } from "../../../utils/tableUtils";
 import { useTableJoin } from "../../../hooks/useTableJoin";
 import { useMinAndMaxBuyIns } from "../../../hooks/useMinAndMaxBuyIns";
 import { useTableTurnIndex } from "../../../hooks/useTableTurnIndex";
+import { useTableNonce } from "../../../hooks/useTableNonce";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -29,7 +30,8 @@ type VacantPlayerProps = {
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index }) => {
-        const { tableData, setTableData, nonce, refreshNonce, userPublicKey } = useTableContext();
+        const { tableData, setTableData, userPublicKey } = useTableContext();
+        const { nonce, refreshNonce } = useTableNonce();
         const [localTableData, setLocalTableData] = useState(tableData);
         const { id: tableId } = useParams();
         const userAddress = localStorage.getItem("user_eth_public_key");
@@ -159,7 +161,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             return result;
         }, [isSeatVacant, isUserAlreadyPlaying]);
 
-        const isNextAvailableSeat = index === nextAvailableSeat;
+ 
 
         // Get blind values from table data
         const smallBlindWei = localTableData?.data?.smallBlind || "0";
@@ -171,10 +173,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const dealerPosition = localTableData?.data?.dealer || 0;
         debugLog(`VacantPlayer ${index + 1} - Dealer position:`, dealerPosition + 1);
 
-        // Calculate small blind and big blind positions
-        const smallBlindPosition = (dealerPosition + 1) % 9; // Assuming 9 max seats
-        const bigBlindPosition = (dealerPosition + 2) % 9;
-
+       
 
         // Helper function to get position name
         const getPositionName = (index: number): string => {
@@ -201,8 +200,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             // Instead of joining immediately, show the buy-in modal
             setShowBuyInModal(true);
-            setBuyInAmount("");
-        }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index, actionIndex]);
+            setBuyInAmount(maxBuyInFormatted); // Set default to max buy-in
+        }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index, actionIndex, maxBuyInFormatted]);
 
         // Function to handle the actual join after user confirms buy-in amount
         const handleConfirmBuyIn = async () => {

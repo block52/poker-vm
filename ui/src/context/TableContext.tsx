@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import { getPublicKey, isUserPlaying, getSignature } from "../utils/accountUtils";
-import { getCurrentRound, getTotalPot, getWinnerInfo } from "../utils/tableUtils";
+
 import { getPlayersLegalActions, isPlayersTurn } from "../utils/playerUtils";
 import { AllPlayerActions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet"; // this is the browser wallet todo rename to useBrowserWallet
@@ -25,8 +25,6 @@ interface TableContextType {
     isLoading: boolean;
     error: Error | null;
     setTableData: (data: any) => void;
-    nonce: number | null;
-    refreshNonce: (address: string) => Promise<void>;
     userPublicKey: string | null;
     isCurrentUserPlaying: boolean;
     playerLegalActions: any[] | null;
@@ -360,8 +358,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 setTableData,
                 isLoading,
                 error,
-                nonce,
-                refreshNonce,
+              
+    
                 userPublicKey,
                 isCurrentUserPlaying,
                 playerLegalActions,
