@@ -47,14 +47,6 @@ interface TableContextType {
     getUserBySeat: (seat: number) => any;
     currentUserSeat: number;
     userDataBySeat: Record<number, any>;
-    winnerInfo:
-        | {
-              seat: number;
-              address: string;
-              amount: string | number;
-              formattedAmount: string;
-          }[]
-        | null;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -89,72 +81,9 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return address ? address.toLowerCase() : null;
     }, []);
 
-    // Add state for winner information
-    const [winnerInfo, setWinnerInfo] = useState<any[] | null>(null);
-
     // Calculate winner info whenever tableData changes
     useEffect(() => {
         if (tableData && tableData.data) {
-            // Get winner info if available
-            const winners = getWinnerInfo(tableData.data);
-
-            // Check for "win by fold" scenario - when all players except one have folded
-            if (!winners || winners.length === 0) {
-                // Add check to ensure players array exists before filtering
-                if (tableData.data.players && Array.isArray(tableData.data.players)) {
-                    // Only consider win by fold when there are multiple players at the table
-                    const totalPlayersAtTable = tableData.data.players.filter((p: any) => p).length;
-
-                    // Only proceed with win detection if there are at least 2 players
-                    if (totalPlayersAtTable >= 2) {
-                        const activePlayers = tableData.data.players.filter(
-                            (p: any) => p && p.status.toLowerCase() !== "folded" && p.status.toLowerCase() !== "inactive"
-                        );
-
-                        // Check if this is a real win-by-fold situation
-                        const hasHandStarted = tableData.data.round !== "waiting"; // Make sure game has started
-                        const somePlayersHaveFolded = tableData.data.players.some((p: any) => p && p.status.toLowerCase() === "folded");
-                        const hasPreviousActions = tableData.data.previousActions?.length > 0;
-
-                        // Only declare a winner if:
-                        // 1. Only one player remains active AND
-                        // 2. The hand has started AND
-                        // 3. Either some players folded OR there were previous actions
-                        if (activePlayers.length === 1 && hasHandStarted && (somePlayersHaveFolded || hasPreviousActions)) {
-                            const potAmount = getTotalPot(tableData.data);
-                            const formattedAmount = formatWeiToDollars(potAmount);
-
-                            const winByFold = [
-                                {
-                                    seat: activePlayers[0].seat,
-                                    address: activePlayers[0].address,
-                                    amount: potAmount,
-                                    formattedAmount,
-                                    winType: "fold" // Add this to distinguish win by fold
-                                }
-                            ];
-
-                            console.log("🏆 Winner by fold detected:", winByFold);
-                            setWinnerInfo(winByFold);
-                        } else {
-                            setWinnerInfo(null); // No winners yet
-                        }
-                    } else {
-                        // Not enough players for a win condition
-                        setWinnerInfo(null);
-                    }
-                } else {
-                    // No players array yet
-                    setWinnerInfo(null);
-                }
-            } else {
-                setWinnerInfo(winners);
-
-                if (winners && winners.length > 0) {
-                    console.log("🏆 Winners detected:", winners);
-                }
-            }
-
             // Special case: if dealer position is 9, treat it as 0 for UI purposes
             if (tableData.data.dealer === 9) {
                 tableData.data.dealer = 0;
@@ -533,8 +462,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 getUserBySeat,
                 currentUserSeat,
                 userDataBySeat,
-                // Winner information
-                winnerInfo
             }}
         >
             {children}

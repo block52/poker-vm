@@ -4,6 +4,8 @@ import ProgressBar from "../common/ProgressBar";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import PlayerCard from "./PlayerCard";
 import { useTableContext } from "../../../context/TableContext";
+import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
+import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
 
 // Enable this to see verbose logging
@@ -29,7 +31,9 @@ type OppositePlayerProps = {
 };
 
 const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
-    const { tableData, winnerInfo } = useTableContext();
+    const { id } = useParams<{ id: string }>();
+    const { tableData } = useTableContext();
+    const { winnerInfo } = useWinnerInfo(id);
 
     // Add more detailed debugging
     React.useEffect(() => {
@@ -40,13 +44,13 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
         if (!winnerInfo) return false;
-        return winnerInfo.some(winner => winner.seat === index);
+        return winnerInfo.some((winner: any) => winner.seat === index);
     }, [winnerInfo, index]);
 
     // Get winner amount if this player is a winner
     const winnerAmount = React.useMemo(() => {
         if (!isWinner || !winnerInfo) return null;
-        const winner = winnerInfo.find(w => w.seat === index);
+        const winner = winnerInfo.find((w: any) => w.seat === index);
         return winner ? winner.formattedAmount : null;
     }, [isWinner, winnerInfo, index]);
 

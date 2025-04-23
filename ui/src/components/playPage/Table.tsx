@@ -20,6 +20,7 @@ import { RxExit } from "react-icons/rx";
 import { ethers } from "ethers";
 import { useTableContext } from "../../context/TableContext";
 import { useTableState } from "../../hooks/useTableState";
+import { useWinnerInfo } from "../../hooks/useWinnerInfo";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
@@ -137,6 +138,9 @@ const Table = () => {
         currentUserSeat,
         tableData,
     } = useTableContext();
+    
+    // Add the useWinnerInfo hook
+    const { winnerInfo } = useWinnerInfo(id);
     
     // Add the useTableState hook to get table state properties
     const { 
