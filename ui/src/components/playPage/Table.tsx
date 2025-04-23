@@ -23,6 +23,7 @@ import { useTableState } from "../../hooks/useTableState";
 import { useWinnerInfo } from "../../hooks/useWinnerInfo";
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";
+import { useDealerPosition } from "../../hooks/useDealerPosition";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
@@ -159,6 +160,9 @@ const Table = () => {
         roundType 
     } = useTableState(id);
     
+    // Add the useDealerPosition hook
+    const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
+    
     // Add the useMinAndMaxBuyIns hook HERE at the top with other hooks
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
     
@@ -236,9 +240,6 @@ const Table = () => {
 
     const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
 
-    const [dealerButtonPosition, setDealerButtonPosition] = useState({ left: "0px", top: "0px" });
-    const [isDealerButtonVisible, setIsDealerButtonVisible] = useState(false);
-
     // Update the showPlayerBets to use the hook's currentRound value
     const showPlayerBets = ["preflop", "flop", "turn", "river"].includes(currentRound);
 
@@ -257,29 +258,6 @@ const Table = () => {
         window.addEventListener("mousemove", handleMouseMove);
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, []);
-
-    useEffect(() => {
-        if (tableData?.data) {
-            try {
-                // Handle dealer button
-                if (tableData.data.dealer !== undefined && tableData.data.dealer !== null) {
-                    const dealerSeat = tableData.data.dealer === 9 ? 0 : tableData.data.dealer;
-                    const dealerPos = dealerPosition.nine[dealerSeat];
-
-                    if (dealerPos) {
-                        // Just set the original position
-                        setDealerButtonPosition({
-                            left: dealerPos.left,
-                            top: dealerPos.top
-                        });
-                        setIsDealerButtonVisible(true);
-                    }
-                }
-            } catch (error) {
-                console.error("Error setting position indicators:", error);
-            }
-        }
-    }, [tableData?.data?.address, tableData?.data?.dealer, tableData?.data?.smallBlindPosition, tableData?.data?.bigBlindPosition]); // Only update when important positions change
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
