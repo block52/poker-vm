@@ -42,7 +42,7 @@ async function joinTableFetcher(
     buyInAmount,
     signature,
     publicKey: publicKey || userAddress,
-    nonce: nonce || timestamp,
+    nonce: nonce,
     timestamp,
     index
   };
