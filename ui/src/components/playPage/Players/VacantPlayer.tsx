@@ -3,7 +3,6 @@ import { memo, useEffect, useState } from "react";
 import PokerProfile from "../../../assets/PokerProfile.svg"
 import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
-import { useTableContext } from "../../../context/TableContext";
 import useUserWallet from "../../../hooks/useUserWallet";
 import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 import { toDisplaySeat } from "../../../utils/tableUtils";
@@ -11,6 +10,7 @@ import { useTableJoin } from "../../../hooks/useTableJoin";
 import { useMinAndMaxBuyIns } from "../../../hooks/useMinAndMaxBuyIns";
 import { useTableTurnIndex } from "../../../hooks/useTableTurnIndex";
 import { useTableNonce } from "../../../hooks/useTableNonce";
+import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -30,9 +30,15 @@ type VacantPlayerProps = {
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index }) => {
-        const { tableData, setTableData } = useTableContext();
+        const { 
+            isUserAlreadyPlaying, 
+            tableInfo, 
+            isSeatVacant: checkSeatVacant, 
+            canJoinSeat: checkCanJoinSeat 
+        } = useVacantSeatData(useParams<{id: string}>().id);
+        
         const { nonce, refreshNonce } = useTableNonce();
-        const [localTableData, setLocalTableData] = useState(tableData);
+        const [localTableData, setLocalTableData] = useState(null);
         const { id: tableId } = useParams();
         const userAddress = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
@@ -52,128 +58,25 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         // Debug logs for initial state
         debugLog(`VacantPlayer ${index} initial state:`, {
             userAddress,
-            hasTableData: !!tableData,
             hasLocalTableData: !!localTableData,
             tableId,
             actionIndex
         });
 
-        // Update local table data with debounce
-        useEffect(() => {
-            const timer = setTimeout(() => {
-                setLocalTableData(tableData);
-                debugLog(`VacantPlayer ${index} updated localTableData:`, {
-                    hasData: !!tableData,
-                    players: tableData?.data?.players?.map((p: any) => ({
-                        address: p.address,
-                        seat: p.seat // No need to add 1 since backend is already using 1-based
-                    })),
-                    actionIndex
-                });
-            }, 1000); // 1 second debounce
-
-            return () => clearTimeout(timer);
-        }, [tableData, index, actionIndex]);
-
-        // First, check if user is already playing
-        // First, check if user is already playing
-        const isUserAlreadyPlaying = React.useMemo(() => {
-            if (!userAddress) {
-                debugLog(`VacantPlayer ${index} - No user address found`);
-                return false;
-            }
-
-            if (!localTableData?.data?.players) {
-                debugLog(`VacantPlayer ${index} - No players data found`);
-                return false;
-            }
-
-            // Log each player for comparison
-            localTableData.data.players.forEach((player: any, idx: number) => {
-            });
-
-            const result = localTableData.data.players.some((player: any) => player.address?.toLowerCase() === userAddress?.toLowerCase());
-
-            debugLog(`VacantPlayer ${index} - isUserAlreadyPlaying:`, result);
-            return result;
-        }, [localTableData?.data?.players, userAddress, index]);
-
-        // Calculate next available seat
-        const nextAvailableSeat = React.useMemo(() => {
-            if (isUserAlreadyPlaying) {
-                debugLog(`VacantPlayer ${index} - User already playing, no available seat`);
-                return -1;
-            }
-
-            // Get occupied seats
-            const occupiedSeats = new Set();
-            if (localTableData?.data?.players) {
-                localTableData.data.players.forEach((player: any) => {
-                    if (player.address && player.address !== "0x0000000000000000000000000000000000000000") {
-                        occupiedSeats.add(player.seat);
-                    }
-                });
-            }
-
-            debugLog(`VacantPlayer ${index} - Occupied seats:`, Array.from(occupiedSeats));
-
-            // Find the first available seat (1-9)
-            for (let i = 1; i <= 9; i++) {
-                if (!occupiedSeats.has(i)) {
-                    debugLog(`VacantPlayer ${index} - First available seat:`, i);
-                    return i;
-                }
-            }
-
-            debugLog(`VacantPlayer ${index} - No available seats found`);
-            return -1;
-        }, [isUserAlreadyPlaying, localTableData?.data?.players, index]);
-
-        // Check if this seat is vacant (not occupied by any player)
-        const isSeatVacant = React.useMemo(() => {
-            if (!localTableData?.data?.players) {
-                return true; // If no player data, assume seat is vacant
-            }
-
-            // Check if any player occupies this seat
-            const isOccupied = localTableData.data.players.some(
-                (player: any) => player.seat === index && player.address && player.address !== "0x0000000000000000000000000000000000000000"
-            );
-
-            debugLog(`VacantPlayer ${index} - isSeatVacant:`, !isOccupied);
-            return !isOccupied;
-        }, [localTableData?.data?.players, index]);
-
-        // Check if this seat is available to join
-        // Allow joining at any vacant seat
-        const canJoinThisSeat = React.useMemo(() => {
-            // User can join if:
-            // 1. The seat is vacant
-            // 2. The user is not already playing
-            const result = isSeatVacant && !isUserAlreadyPlaying;
-
-            debugLog(`VacantPlayer ${index + 1} - canJoinThisSeat:`, {
-                isSeatVacant,
-                isUserAlreadyPlaying,
-                result
-            });
-
-            return result;
-        }, [isSeatVacant, isUserAlreadyPlaying]);
-
- 
-
-        // Get blind values from table data
-        const smallBlindWei = localTableData?.data?.smallBlind || "0";
-        const bigBlindWei = localTableData?.data?.bigBlind || "0";
-        const smallBlindDisplay = ethers.formatUnits(smallBlindWei, 18);
-        const bigBlindDisplay = ethers.formatUnits(bigBlindWei, 18);
-
-        // Get dealer position from table data
-        const dealerPosition = localTableData?.data?.dealer || 0;
-        debugLog(`VacantPlayer ${index + 1} - Dealer position:`, dealerPosition + 1);
-
-       
+        // Use the hook values directly
+        // const isSeatVacant = checkSeatVacant(index);
+        // const canJoinThisSeat = checkCanJoinSeat(index);
+        
+        // For backwards compatibility, keep using these variable names
+        const isSeatVacant = React.useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
+        const canJoinThisSeat = React.useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
+        
+        // Get blinds directly from the tableInfo
+        const smallBlindDisplay = tableInfo.smallBlindDisplay;
+        const bigBlindDisplay = tableInfo.bigBlindDisplay;
+        const dealerPosition = tableInfo.dealerPosition;
+        const smallBlindPosition = tableInfo.smallBlindPosition;
+        const bigBlindPosition = tableInfo.bigBlindPosition;
 
         // Helper function to get position name
         const getPositionName = (index: number): string => {
@@ -201,7 +104,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             // Instead of joining immediately, show the buy-in modal
             setShowBuyInModal(true);
             setBuyInAmount(maxBuyInFormatted); // Set default to max buy-in
-        }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, localTableData, index, actionIndex, maxBuyInFormatted]);
+        }, [canJoinThisSeat, isUserAlreadyPlaying, tableId, index, actionIndex, maxBuyInFormatted]);
 
         // Function to handle the actual join after user confirms buy-in amount
         const handleConfirmBuyIn = async () => {
@@ -257,7 +160,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 
                 // Handle success (setting table data)
                 if (result?.result?.data) {
-                    setTableData({ data: result.result.data });
+                    // This will force the hooks to refetch data
+                    window.location.reload();
                     
                     // Wait for backend to process the join, then refresh nonce
                     setTimeout(async () => {
@@ -286,22 +190,22 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     <img src={PokerProfile} className="w-12 h-12" />
                 </div>
                 <div className="text-white text-center">
-    <div className="text-sm mb-1 whitespace-nowrap">
-        {isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}
-    </div>
+                    <div className="text-sm mb-1 whitespace-nowrap">
+                        {isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}
+                    </div>
 
-    {!isUserAlreadyPlaying && (
-        <div className="whitespace-nowrap">
-            {canJoinThisSeat
-                ? index === localTableData?.data?.bigBlindPosition
-                    ? `Click to Join ($${bigBlindDisplay})`
-                    : index === localTableData?.data?.smallBlindPosition
-                        ? `Click to Join ($${smallBlindDisplay})`
-                        : "Click to Join"
-                : "Seat Taken"}
-        </div>
-    )}
-</div>
+                    {!isUserAlreadyPlaying && (
+                        <div className="whitespace-nowrap">
+                            {canJoinThisSeat
+                                ? index === bigBlindPosition
+                                    ? `Click to Join ($${bigBlindDisplay})`
+                                    : index === smallBlindPosition
+                                        ? `Click to Join ($${smallBlindDisplay})`
+                                        : "Click to Join"
+                                : "Seat Taken"}
+                        </div>
+                    )}
+                </div>
                 {/* Position indicator */}
                 {getPositionName(index) && (
                     <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">

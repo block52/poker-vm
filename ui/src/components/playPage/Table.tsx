@@ -18,7 +18,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 
 import { ethers } from "ethers";
-import { useTableContext } from "../../context/TableContext";
 import { useTableState } from "../../hooks/useTableState";
 import { useWinnerInfo } from "../../hooks/useWinnerInfo";
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
@@ -34,6 +33,8 @@ import { useGameProgress } from "../../hooks/useGameProgress";
 import { useChipPositions } from "../../hooks/useChipPositions";
 import { usePlayerChipData } from "../../hooks/usePlayerChipData";
 import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
+import { useCardAnimations } from "../../hooks/useCardAnimations";
+import { useTableData } from "../../hooks/useTableData";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -75,72 +76,16 @@ const calculateZoom = () => {
     return Math.min(calculatedScale, 2); // Cap at 2x
 };
 
-const useTableData = () => {
-    const { tableData, isLoading, error } = useTableContext();
-
-    // Default empty state
-    const emptyState = {
-        isLoading: false,
-        error: null,
-        tableDataType: "cash",
-        tableDataAddress: "",
-        tableDataSmallBlind: "0.00",
-        tableDataBigBlind: "0.00",
-        tableDataSmallBlindPosition: 0,
-        tableDataBigBlindPosition: 0,
-        tableDataDealer: 0,
-        tableDataPlayers: [],
-        tableDataCommunityCards: [],
-        tableDataDeck: "",
-        tableDataPots: ["0"],
-        tableDataNextToAct: -1,
-        tableDataRound: "preflop",
-        tableDataWinners: [],
-        tableDataSignature: ""
-    };
-
-    if (isLoading) {
-        return { ...emptyState, isLoading: true };
-    }
-
-    if (error) {
-        return { ...emptyState, error };
-    }
-
-    const data = tableData?.data;
-    if (!data || data.type !== "cash") {
-        return emptyState;
-    }
-
-    return {
-        isLoading: false,
-        error: null,
-        tableDataType: data.type,
-        tableDataAddress: data.address,
-        tableDataSmallBlind: formatWeiToSimpleDollars(data.smallBlind),
-        tableDataBigBlind: formatWeiToSimpleDollars(data.bigBlind),
-        tableDataSmallBlindPosition: data.smallBlindPosition,
-        tableDataBigBlindPosition: data.bigBlindPosition,
-        tableDataDealer: data.dealer,
-        tableDataPlayers: data.players || [],
-        tableDataCommunityCards: data.communityCards || [],
-        tableDataDeck: data.deck || "",
-        tableDataPots: data.pots || ["0"],
-        tableDataNextToAct: data.nextToAct ?? -1,
-        tableDataRound: data.round || "preflop",
-        tableDataWinners: data.winners || [],
-        tableDataSignature: data.signature || ""
-    };
-};
-
 // Helper function to format Wei to USD with commas
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const { 
-        showThreeCards, 
-        tableData,
-    } = useTableContext();
+    
+    // Remove TableContext usage
+    // const { 
+    //     showThreeCards, 
+    //     tableData,
+    // } = useTableContext();
     
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
@@ -173,6 +118,9 @@ const Table = () => {
     // Add the usePlayerDataAvailability hook
     const { isPlayerDataAvailable } = usePlayerDataAvailability(id);
     
+    // Add the useCardAnimations hook
+    const { flipped1, flipped2, flipped3, showThreeCards } = useCardAnimations(id);
+    
     // Add the useMinAndMaxBuyIns hook
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
     
@@ -195,8 +143,8 @@ const Table = () => {
         return currentUserAddress ? currentUserAddress.toLowerCase() : null;
     }, [currentUserAddress]);
 
-    // Use the hook to get activePlayers, rename the local definition to tableActivePlayers
-    const tableDataValues = useTableData();
+    // Update to use the imported hook
+    const tableDataValues = useTableData(id);
     
     // Replace useUserBySeat with getUserBySeat from our new hook
     // Get the user data for the current seat
@@ -247,9 +195,6 @@ const Table = () => {
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
 
-    const [flipped1, setFlipped1] = useState(false);
-    const [flipped2, setFlipped2] = useState(false);
-    const [flipped3, setFlipped3] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
 
     const navigate = useNavigate();
@@ -284,24 +229,7 @@ const Table = () => {
         setDealerPositionArray(reorderedDealerArray);
     }, [startIndex, playerPositionArray, dealerPositionArray]);
 
-    function threeCardsTable() {
-        setTimeout(() => {
-            setFlipped1(true);
-        }, 1000);
-        setTimeout(() => {
-            setFlipped2(true);
-        }, 1100);
-        setTimeout(() => {
-            setFlipped3(true);
-        }, 1200);
-    }
-
-    useEffect(() => {
-        if (showThreeCards) {
-            threeCardsTable();
-        }
-    }, [showThreeCards]);
-
+    // Restore the useEffect for the timer
     useEffect(() => {
         const timer = setTimeout(() => {
             setCurrentIndex(prevIndex => {
