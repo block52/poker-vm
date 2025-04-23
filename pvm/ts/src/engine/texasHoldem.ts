@@ -193,26 +193,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Check minimum players
         if (this.getActivePlayerCount() < this._gameOptions.minPlayers) throw new Error("Not enough active players");
 
-        if (![TexasHoldemRound.PREFLOP, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
+        if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
         // Make sure small blind and big blind have been posted
-        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
-        if (!preFlopActions || preFlopActions.length < 2) {
+        const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        if (!anteActions || anteActions.length < 2) {
             throw new Error("Blinds must be posted before dealing.");
         }
 
-        const hasSmallBlind = preFlopActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
-        const hasBigBlind = preFlopActions.some(a => a.action === PlayerActionType.BIG_BLIND);
-
-        if (!hasSmallBlind || !hasBigBlind) {
-            throw new Error("Both small and big blinds must be posted before dealing.");
-        }
-
         // Check if cards have already been dealt
-        const hasDealt = preFlopActions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
-        if (hasDealt || anyPlayerHasCards) {
+        if (anyPlayerHasCards) {
             throw new Error("Cards have already been dealt for this hand.");
         }
 
@@ -239,8 +231,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 player.holeCards[1] = secondCard; // Replace second card
             }
         }
-
-        console.log("Cards dealt successfully");
     }
 
     private join(address: string, chips: bigint) {
@@ -333,15 +323,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     private findNextPlayerToAct(): Player | undefined {
         // Has the small blind posted?
-        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
-        const hasSmallBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
+        const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        const hasSmallBlindPosted = anteActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
 
         if (!hasSmallBlindPosted) {
             return this.getPlayerAtSeat(this._smallBlindPosition);
         }
 
         // Has the big blind posted?
-        const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
+        const hasBigBlindPosted = anteActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
         if (!hasBigBlindPosted) {
             return this.getPlayerAtSeat(this._bigBlindPosition);
         }

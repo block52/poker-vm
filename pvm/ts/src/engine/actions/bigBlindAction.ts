@@ -19,7 +19,7 @@ class BigBlindAction extends BaseAction implements IAction {
             throw new Error("Only the big blind player can post the big blind.");
         }
 
-        const actions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
+        const actions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
 
         // Check if small blind has been posted first
         const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);

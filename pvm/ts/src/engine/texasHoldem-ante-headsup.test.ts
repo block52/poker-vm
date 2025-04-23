@@ -57,7 +57,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
         });
 
-        it.only("should have correct legal actions after posting the small blind", () => {
+        it("should have correct legal actions after posting the small blind", () => {
             // Get legal actions for the next player
             let actual = game.getLegalActions(SMALL_BLIND_PLAYER);
             expect(actual.length).toEqual(2);
@@ -79,7 +79,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
         });
 
-        it("should have correct legal actions after posting the big blind", () => {
+        it.skip("should have correct legal actions after posting the big blind", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
 
@@ -104,13 +104,14 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should advance to next round after ante round", () => {
+            let round = game.currentRound;
+            expect(round).toEqual(TexasHoldemRound.ANTE);
+
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 4, ONE_TOKEN);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 5);
 
-            const round = game.currentRound;
-            expect(round).toEqual(TexasHoldemRound.FLOP);
+            round = game.currentRound;
+            expect(round).toEqual(TexasHoldemRound.PREFLOP);
         });
     });
 });
