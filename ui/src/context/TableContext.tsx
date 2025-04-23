@@ -20,7 +20,6 @@ interface TableContextType {
     isLoading: boolean;
     error: Error | null;
     setTableData: (data: any) => void;
-    userPublicKey: string | null;
 
 
 
@@ -200,13 +199,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 setTableData,
                 isLoading,
                 error,
-              
-    
-                userPublicKey,
-  
-
-
-          
                 openOneMore,
                 openTwoMore,
                 showThreeCards,

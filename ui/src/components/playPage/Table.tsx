@@ -28,7 +28,6 @@ import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
-import Footer2 from "../Footer2";
 import { usePlayerLegalActions } from "../../hooks/usePlayerLegalActions";
 
 // Enable this to see verbose logging

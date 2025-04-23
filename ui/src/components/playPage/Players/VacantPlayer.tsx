@@ -30,7 +30,7 @@ type VacantPlayerProps = {
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index }) => {
-        const { tableData, setTableData, userPublicKey } = useTableContext();
+        const { tableData, setTableData } = useTableContext();
         const { nonce, refreshNonce } = useTableNonce();
         const [localTableData, setLocalTableData] = useState(tableData);
         const { id: tableId } = useParams();
@@ -251,7 +251,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     buyInAmount: buyInWei,
                     userAddress,
                     privateKey,
-                    publicKey: userPublicKey,
+                    publicKey: userAddress,
                     index: actionIndex
                 });
                 
