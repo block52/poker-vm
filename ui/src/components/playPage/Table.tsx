@@ -30,6 +30,7 @@ import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "..
 import { toDisplaySeat } from "../../utils/tableUtils";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { usePlayerLegalActions } from "../../hooks/usePlayerLegalActions";
+import { useGameProgress } from "../../hooks/useGameProgress";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -163,6 +164,9 @@ const Table = () => {
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
     
+    // Add the useGameProgress hook
+    const { isGameInProgress, activePlayers } = useGameProgress(id);
+    
     // Add the useMinAndMaxBuyIns hook HERE at the top with other hooks
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
     
@@ -175,7 +179,7 @@ const Table = () => {
         return currentUserAddress ? currentUserAddress.toLowerCase() : null;
     }, [currentUserAddress]);
 
-    // Add the new hook usage here with prefixed names - directly at top level, not inside useMemo
+    // Use the hook to get activePlayers, rename the local definition to tableActivePlayers
     const tableDataValues = useTableData();
     
     // Replace useUserBySeat with getUserBySeat from our new hook
@@ -187,28 +191,28 @@ const Table = () => {
         return null;
     }, [currentUserSeat, getUserBySeat]);
 
-    // Define activePlayers only once
-    const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+    // Define activePlayers only once - rename to tableActivePlayers since we now get activePlayers from the hook
+    const tableActivePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
 
     useEffect(() => {
         if (!DEBUG_MODE) return; // Skip logging if not in debug mode
 
-        debugLog("Active Players:", activePlayers);
+        debugLog("Active Players:", tableActivePlayers);
         // If there are active players, set their positions
-        if (activePlayers.length > 0) {
+        if (tableActivePlayers.length > 0) {
             // Player in seat 1
-            if (activePlayers.find((p: any) => p.seat === 1)) {
-                const player1 = activePlayers.find((p: any) => p.seat === 1);
+            if (tableActivePlayers.find((p: any) => p.seat === 1)) {
+                const player1 = tableActivePlayers.find((p: any) => p.seat === 1);
                 debugLog("Player 1:", player1);
             }
 
             // Player in seat 2
-            if (activePlayers.find((p: any) => p.seat === 2)) {
-                const player2 = activePlayers.find((p: any) => p.seat === 2);
+            if (tableActivePlayers.find((p: any) => p.seat === 2)) {
+                const player2 = tableActivePlayers.find((p: any) => p.seat === 2);
                 debugLog("Player 2:", player2);
             }
         }
-    }, [activePlayers]);
+    }, [tableActivePlayers]);
 
     // Early return if no id
     if (!id) {
@@ -371,12 +375,6 @@ const Table = () => {
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         // You could add a toast notification here if you want
-    };
-
-    // Add this function to check if the game is still in progress
-    const isGameInProgress = () => {
-        const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
-        return activePlayers && activePlayers.length > 1;
     };
 
     // NOW you can have your conditional returns
@@ -718,7 +716,7 @@ const Table = () => {
                                     </div>
                                     <div className="absolute inset-0 z-30">
                                         {playerPositionArray.map((position, positionIndex) => {
-                                            const playerAtThisSeat = activePlayers.find((p: any) => p.seat === positionIndex + 1);
+                                            const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === positionIndex + 1);
                                             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
 
                                             if (DEBUG_MODE && playerAtThisSeat) {
@@ -820,7 +818,7 @@ const Table = () => {
             </div>
 
             {/* Add a message for empty table if needed */}
-            {activePlayers.length === 0 && (
+            {tableActivePlayers.length === 0 && (
                 <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">Waiting for players to join...</div>
             )}
             {/* Add a message for the current user's seat */}
@@ -830,7 +828,7 @@ const Table = () => {
                 </div>
             )}
             {/* Add an indicator for whose turn it is */}
-            {nextToActInfo && isGameInProgress() && (
+            {nextToActInfo && isGameInProgress && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
                     {nextToActInfo.isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
                         <span className="text-white">Your turn to act!</span>
@@ -844,7 +842,7 @@ const Table = () => {
                 </div>
             )}
             {/* Show a message when the hand is over */}
-            {tableData?.data?.players && !isGameInProgress() && activePlayers.length > 0 && (
+            {tableData?.data?.players && !isGameInProgress && tableActivePlayers.length > 0 && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
                     <span>Hand complete - waiting for next hand</span>
                 </div>
