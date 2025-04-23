@@ -2,11 +2,12 @@ import useSWR from "swr";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import { useCallback, useEffect, useState } from "react";
+import { PlayerDTO } from "@bitcoinbrisbane/block52";
 
 // Define the nextToActInfo type
 export interface NextToActInfo {
   seat: number;
-  player: any;
+  player: PlayerDTO;
   isCurrentUserTurn: boolean;
   availableActions: any[];
   timeRemaining: number;
@@ -100,10 +101,22 @@ export const useNextToActInfo = (tableId?: string) => {
     return mutate();
   }, [mutate]);
 
-  return {
+  const result = {
     nextToActInfo,
     isLoading,
     error,
     refresh
   };
+
+  console.log("[useNextToActInfo] Returns:", {
+    nextToActSeat: nextToActInfo?.seat,
+    playerAddress: nextToActInfo?.player?.address,
+    isCurrentUserTurn: nextToActInfo?.isCurrentUserTurn,
+    numAvailableActions: nextToActInfo?.availableActions?.length,
+    timeRemaining: nextToActInfo?.timeRemaining,
+    isLoading,
+    hasError: !!error
+  });
+
+  return result;
 }; 

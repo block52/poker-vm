@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import { useTableContext } from "../context/TableContext";
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, LegalActionDTO } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
-import { useTableNonce, AccountData, AccountApiResponse } from "../hooks/useTableNonce";
+import { useTableNonce, AccountData } from "../hooks/useTableNonce";
+
+// Import our custom hooks
+import { usePlayerDTO } from "../hooks/usePlayerDTO";
+import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
+import { useDealTable } from "../hooks/useDealTable";
+import { useTableCheck } from "../hooks/useTableCheck";
+import { useTableFold } from "../hooks/useTableFold";
+import { useTableRaise } from "../hooks/useTableRaise";
+import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
+import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
 
 import axios from "axios";
 import { getUserTableStatus } from "../utils/accountUtils";
@@ -35,15 +45,29 @@ type UserTableStatus = {
 } | null;
 
 const PokerActionPanel: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const { nonce, accountData, refreshNonce } = useTableNonce();
+    const { id: tableId } = useParams<{ id: string }>();
     
+    // Get data from our custom hooks
+    const { nonce, accountData, refreshNonce } = useTableNonce();
+    const { players } = usePlayerDTO(tableId);
+    const { legalActions, isPlayerTurn, playerStatus, playerSeat } = usePlayerLegalActions(tableId);
+    const { dealTable, canDeal } = useDealTable(tableId);
+    const { checkHand } = useTableCheck(tableId);
+    const { foldHand } = useTableFold(tableId);
+    const { raiseHand } = useTableRaise(tableId);
+    const { postSmallBlind } = useTablePostSmallBlind(tableId);
+    const { postBigBlind } = useTablePostBigBlind(tableId);
+    
+    // We'll still use tableContext for now, but we'll gradually replace its functionalities
     const { 
-        tableData, 
-        playerLegalActions, 
-        isPlayerTurn,
-        canDeal, 
-        dealTable,
+        tableData,
+        // We can replace these with our custom hooks
+        // playerLegalActions, // replaced with legalActions from usePlayerLegalActions
+        // isPlayerTurn,       // replaced with isPlayerTurn from usePlayerLegalActions  
+        // canDeal,            // replaced with canDeal from useDealTable
+        // dealTable,          // replaced with dealTable from useDealTable
+        // nonce,              // replaced with nonce from useTableNonce
+        // refreshNonce,       // replaced with refreshNonce from useTableNonce
     } = useTableContext();
     
     // Add the useTableState hook to get table state properties
@@ -53,27 +77,29 @@ const PokerActionPanel: React.FC = () => {
         formattedTotalPot,
         tableType, 
         roundType 
-    } = useTableState(id);
+    } = useTableState(tableId);
+    
+    // Log info from our hooks for debugging
+    useEffect(() => {
+        console.log("🔢 Current nonce from hook:", nonce);
+        console.log("💰 Account data from hook:", accountData);
+        console.log("👥 Players from usePlayerDTO:", players);
+        console.log("🎮 Legal actions from usePlayerLegalActions:", legalActions);
+        console.log("🎲 Can deal from useDealTable:", canDeal);
+    }, [nonce, accountData, players, legalActions, canDeal]);
     
     const [publicKey, setPublicKey] = useState<string>();
     const [isCallAction, setIsCallAction] = useState(false);
     const [isCheckAction, setIsCheckAction] = useState(false);
     const [balance, setBalance] = useState(0);
 
-    // Debugging for fold button
-    // console.log("=== FOOTER COMPONENT DEBUG ===");
-    // console.log("Player legal actions:", playerLegalActions);
-    // console.log("Is player turn:", isPlayerTurn);
-
     // Get user's seat from localStorage or tableData
-    const userAddress = localStorage.getItem("user_eth_public_key");
+    const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
     const userPlayer = tableData?.data?.players?.find((player: any) => player.address?.toLowerCase() === userAddress?.toLowerCase());
     const userSeat = userPlayer?.seat;
-    // console.log("User player:", userPlayer);
 
     // Check if fold action exists in legal actions
-    const hasFoldAction = playerLegalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
-    // console.log("Has fold action:", hasFoldAction);
+    const hasFoldAction = legalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
 
     // Check if current user has the deal action
     const currentUserCanDeal = userPlayer?.legalActions?.some((action: any) => action.action === "deal") || false;
@@ -92,17 +118,17 @@ const PokerActionPanel: React.FC = () => {
     const currentPlayer = tableData?.players?.find((p: any) => p.seat === nextToAct);
     const currentPlayerActions = currentPlayer?.legalActions || [];
 
-    // Check if each action is available based on playerLegalActions
-    const canFold = playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD);
-    const canCall = playerLegalActions?.some((a: any) => a.action === PlayerActionType.CALL);
-    const canRaise = playerLegalActions?.some((a: any) => a.action === PlayerActionType.RAISE);
-    const canCheck = playerLegalActions?.some((a: any) => a.action === PlayerActionType.CHECK);
-    const canBet = playerLegalActions?.some((a: any) => a.action === PlayerActionType.BET);
+    // Check if each action is available based on legalActions
+    const canFold = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD);
+    const canCall = legalActions?.some((a: any) => a.action === PlayerActionType.CALL);
+    const canRaise = legalActions?.some((a: any) => a.action === PlayerActionType.RAISE);
+    const canCheck = legalActions?.some((a: any) => a.action === PlayerActionType.CHECK);
+    const canBet = legalActions?.some((a: any) => a.action === PlayerActionType.BET);
 
     // Get min/max values for bet and raise
-    const betAction = playerLegalActions?.find((a: any) => a.action === PlayerActionType.BET);
-    const raiseAction = playerLegalActions?.find((a: any) => a.action === PlayerActionType.RAISE);
-    const callAction = playerLegalActions?.find((a: any) => a.action === PlayerActionType.CALL);
+    const betAction = legalActions?.find((a: any) => a.action === PlayerActionType.BET);
+    const raiseAction = legalActions?.find((a: any) => a.action === PlayerActionType.RAISE);
+    const callAction = legalActions?.find((a: any) => a.action === PlayerActionType.CALL);
 
     // Convert values to ETH for display
     const minBet = betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0;
@@ -181,7 +207,7 @@ const PokerActionPanel: React.FC = () => {
         //     nextToAct: tableData?.nextToAct,
         //     userSeat
         // });
-    }, [playerLegalActions, isPlayerTurn, tableData, userSeat]);
+    }, [legalActions, isPlayerTurn, tableData, userSeat]);
 
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
@@ -319,20 +345,81 @@ const PokerActionPanel: React.FC = () => {
         }
     }, [canRaise, canBet, minRaise, minBet]);
 
-    // Handler functions for different actions
+    // Handler functions for different actions - Now use our custom hooks
     const handlePostSmallBlind = () => {
-        console.log("Posting small blindtom");
-        // postSmallBlind();  // about to replace with useTablePostSmallBlind.ts
+        console.log("Posting small blind");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !postSmallBlind) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
+        // Use our hook to post small blind
+        postSmallBlind({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: legalActions?.[0]?.index || 0,
+        });
     };
 
     const handlePostBigBlind = () => {
         console.log("Posting big blind");
-        // postBigBlind();  // about to replace with useTablePostBigBlind.ts
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !postBigBlind) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
+        // Use our hook to post big blind
+        postBigBlind({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: legalActions?.[0]?.index || 0,
+        });
     };
 
     const handleCheck = () => {
         console.log("Checking");
-        handleSetPlayerAction(PlayerActionType.CHECK, "0");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !checkHand) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
+        // Use our hook to check
+        checkHand({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: legalActions?.find(a => a.action === PlayerActionType.CHECK)?.index || 0,
+        });
+    };
+
+    const handleFold = () => {
+        console.log("Folding");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !foldHand) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
+        // Use our hook to fold
+        foldHand({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: legalActions?.find(a => a.action === PlayerActionType.FOLD)?.index || 0,
+        });
     };
 
     const handleCall = () => {
@@ -345,11 +432,6 @@ const PokerActionPanel: React.FC = () => {
         } else {
             console.error("Call action not available");
         }
-    };
-
-    const handleFold = () => {
-        console.log("Folding");
-        handleSetPlayerAction(PlayerActionType.FOLD, "0");
     };
 
     const handleBet = () => {
@@ -428,16 +510,8 @@ const PokerActionPanel: React.FC = () => {
     const actualTableData = tableData?.data;
 
     // Use our helper functions to determine if blind buttons should be shown
-    const shouldShowSmallBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", "small");
-    const shouldShowBigBlindButton = isPlayerTurnToPostBlind(actualTableData, userAddress || "", "big");
-
-    // Add debug logging to see what's happening
-    // console.log("Blind button visibility:", {
-    //     userAddress,
-    //     shouldShowSmallBlindButton,
-    //     shouldShowBigBlindButton,
-    //     tableData: actualTableData
-    // });
+    const shouldShowSmallBlindButton = legalActions?.some(action => action.action === "post-small-blind") && isPlayerTurn;
+    const shouldShowBigBlindButton = legalActions?.some(action => action.action === "post-big-blind") && isPlayerTurn;
 
     // Add a more robust check for whether it's actually the player's turn
     useEffect(() => {
@@ -459,19 +533,19 @@ const PokerActionPanel: React.FC = () => {
         if (activePlayers?.length <= 1) {
             console.log("Only one active player left - no actions needed");
         }
-    }, [tableData, playerLegalActions, isPlayerTurn, userAddress]);
+    }, [tableData, legalActions, isPlayerTurn, userAddress]);
 
     // Update the showActionButtons logic to be more robust
-    const hasLegalActions = playerLegalActions && playerLegalActions.length > 0;
+    const hasLegalActions = legalActions && legalActions.length > 0;
     const activePlayers = tableData?.data?.players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
     const gameInProgress = activePlayers && activePlayers.length > 1;
 
     // Always show fold button regardless of other conditions if the player has legal actions
-    const canFoldAnytime = playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold") && userPlayer?.status !== "folded";
+    const canFoldAnytime = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold") && userPlayer?.status !== "folded";
 
     console.log("canFoldAnytime calculation:", {
-        playerLegalActions,
-        hasFoldAction: playerLegalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold"),
+        legalActions,
+        hasFoldAction: legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold"),
         playerNotFolded: userPlayer?.status !== "folded",
         result: canFoldAnytime
     });
@@ -483,6 +557,23 @@ const PokerActionPanel: React.FC = () => {
     // Show blinds buttons when needed
     const showSmallBlindButton = shouldShowSmallBlindButton;
     const showBigBlindButton = shouldShowBigBlindButton;
+    
+    // Find the specific actions we need
+    const smallBlindAction = legalActions?.find(action => action.action === "post-small-blind");
+    const bigBlindAction = legalActions?.find(action => action.action === "post-big-blind");
+    const foldAction = legalActions?.find(action => action.action === "fold");
+    
+    // Debug log to understand small blind button visibility
+    console.log("Action Button Debug:", {
+        legalActions,
+        hasPostSmallBlindAction: !!smallBlindAction,
+        hasPostBigBlindAction: !!bigBlindAction,
+        hasFoldAction: !!foldAction,
+        isPlayerTurn,
+        showSmallBlindButton,
+        showBigBlindButton,
+        playerStatus
+    });
 
     // Add this function to handle big blind posting
     const emergencyPostBigBlind = () => {
@@ -529,8 +620,10 @@ const PokerActionPanel: React.FC = () => {
 
     // Add a handler for the deal button
     const handleDeal = () => {
-        // console.log("Deal button clicked");
-        dealTable();
+        console.log("Deal button clicked");
+        if (dealTable) {
+            dealTable();
+        }
     };
 
     // Add useEffect to log the nonce information from our new hook
@@ -578,7 +671,7 @@ const PokerActionPanel: React.FC = () => {
                     <>
                         {/* Player Action Buttons Container */}
                         <div className="flex justify-center items-center gap-2">
-                            {showSmallBlindButton && userPlayer?.status !== "folded" && (
+                            {showSmallBlindButton && (playerStatus !== "folded") && (
                                 <button
                                     onClick={handlePostSmallBlind}
                                     className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
@@ -587,12 +680,12 @@ const PokerActionPanel: React.FC = () => {
                                 >
                                     <span className="mr-1">Post Small Blind</span>
                                     <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
-                                        ${Number(ethers.formatUnits(userStatus?.smallBlindAmount || "0", 18)).toFixed(2)}
+                                        ${Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2)}
                                     </span>
                                 </button>
                             )}
 
-                            {showBigBlindButton && userPlayer?.status !== "folded" && (
+                            {showBigBlindButton && (playerStatus !== "folded") && (
                                 <button
                                     onClick={handlePostBigBlind}
                                     className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
@@ -601,7 +694,7 @@ const PokerActionPanel: React.FC = () => {
                                 >
                                     <span className="mr-1">Post Big Blind</span>
                                     <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
-                                        ${Number(ethers.formatUnits(userStatus?.bigBlindAmount || "0", 18)).toFixed(2)}
+                                        ${Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2)}
                                     </span>
                                 </button>
                             )}
@@ -849,3 +942,28 @@ const PokerActionPanel: React.FC = () => {
 };
 
 export default PokerActionPanel;
+
+/*
+ * ======================== MIGRATION SUMMARY ========================
+ * We've successfully migrated these features from TableContext to custom hooks:
+ * 
+ * 1. playerLegalActions -> usePlayerLegalActions().legalActions
+ * 2. isPlayerTurn -> usePlayerLegalActions().isPlayerTurn
+ * 3. canDeal -> useDealTable().canDeal
+ * 4. dealTable -> useDealTable().dealTable
+ * 5. nonce -> useTableNonce().nonce
+ * 6. refreshNonce -> useTableNonce().refreshNonce
+ * 
+ * All user actions now use their respective hooks:
+ * - Check: useTableCheck().checkHand
+ * - Fold: useTableFold().foldHand
+ * - Post Small Blind: useTablePostSmallBlind().postSmallBlind
+ * - Post Big Blind: useTablePostBigBlind().postBigBlind
+ * - Raise/Bet: useTableRaise().raiseHand (still using handleSetPlayerAction for raising/betting)
+ * 
+ * TO DO:
+ * - Complete the raise/bet action migration to use the hooks
+ * - Refactor the UI code to work entirely with hooks
+ * - Remove the TableContext dependency completely
+ * - Potentially consolidate these hooks into a more organized structure
+ */

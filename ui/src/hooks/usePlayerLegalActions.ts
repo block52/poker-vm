@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
-import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 
 
 // Define the fetcher function
@@ -25,7 +25,7 @@ interface PlayerLegalActionsResult {
   isBigBlindPosition: boolean;
   isDealerPosition: boolean;
   isPlayerTurn: boolean;
-  playerStatus: string | null;
+  playerStatus: PlayerStatus | null;
   playerSeat: number | null;
   isLoading: boolean;
   error: any;
@@ -243,6 +243,21 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     };
     
     console.log("⚠️ FINAL RESULT:", JSON.stringify(result, null, 2));
+    console.log("[usePlayerLegalActions] Returns:", {
+      numLegalActions: result.legalActions.length,
+      isSmallBlindPosition: result.isSmallBlindPosition,
+      isBigBlindPosition: result.isBigBlindPosition, 
+      isDealerPosition: result.isDealerPosition,
+      isPlayerTurn: result.isPlayerTurn,
+      playerStatus: result.playerStatus,
+      playerSeat: result.playerSeat,
+      foldActionIndex: result.foldActionIndex,
+      actionTurnIndex: result.actionTurnIndex,
+      isPlayerInGame: result.isPlayerInGame,
+      isLoading: result.isLoading,
+      hasError: !!result.error
+    });
+    
     return result;
   } catch (err) {
     console.error("⚠️ Error parsing player legal actions:", err);
