@@ -22,6 +22,7 @@ import { useTableContext } from "../../context/TableContext";
 import { useTableState } from "../../hooks/useTableState";
 import { useWinnerInfo } from "../../hooks/useWinnerInfo";
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
+import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
@@ -134,10 +135,11 @@ const Table = () => {
     const { 
         playerLegalActions, 
         showThreeCards, 
-        getUserBySeat, 
-        currentUserSeat,
         tableData,
     } = useTableContext();
+    
+    // Add the usePlayerSeatInfo hook
+    const { currentUserSeat, userDataBySeat, getUserBySeat } = usePlayerSeatInfo(id);
     
     // Add the useNextToActInfo hook
     const { nextToActInfo } = useNextToActInfo(id);
@@ -170,8 +172,8 @@ const Table = () => {
     // Add the new hook usage here with prefixed names - directly at top level, not inside useMemo
     const tableDataValues = useTableData();
     
-    // Replace useUserBySeat with getUserBySeat from context
-    // Get the user data for the current seat from context instead of hook
+    // Replace useUserBySeat with getUserBySeat from our new hook
+    // Get the user data for the current seat
     const userData = React.useMemo(() => {
         if (currentUserSeat >= 0) {
             return getUserBySeat(currentUserSeat);

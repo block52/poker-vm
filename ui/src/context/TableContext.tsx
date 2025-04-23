@@ -36,10 +36,6 @@ interface TableContextType {
     openOneMore: boolean;
     openTwoMore: boolean;
     showThreeCards: boolean;
-   
-    getUserBySeat: (seat: number) => any;
-    currentUserSeat: number;
-    userDataBySeat: Record<number, any>;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -59,9 +55,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [openOneMore, setOpenOneMore] = useState<boolean>(false);
     const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
     const [showThreeCards, setShowThreeCards] = useState<boolean>(false);
-    // Add state for user data by seat
-    const [userDataBySeat, setUserDataBySeat] = useState<Record<number, any>>({});
-    const [currentUserSeat, setCurrentUserSeat] = useState<number>(-1);
 
     const [canDeal, setCanDeal] = useState<boolean>(false);
 
@@ -80,64 +73,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (tableData.data.dealer === 9) {
                 tableData.data.dealer = 0;
             }
-
-            // Update current user's seat when table data changes
-            if (userWalletAddress && tableData.data.players) {
-                const player = tableData.data.players.find((player: any) => player.address?.toLowerCase() === userWalletAddress);
-                setCurrentUserSeat(player ? player.seat : -1);
-            }
         }
-    }, [tableData, userWalletAddress]);
-
-    // Fetch user data by seat when needed
-    const fetchUserBySeat = useCallback(
-        async (seat: number) => {
-            if (!tableId || seat < 0 || !tableData?.data?.players?.[seat]) return null;
-
-            try {
-                // Check if we already have cached data and it's not stale
-                const cachedData = userDataBySeat[seat];
-                const isStale = !cachedData || (cachedData.lastFetched && Date.now() - cachedData.lastFetched > 30000); // Refresh every 30 seconds
-
-                // If we have non-stale data, use it
-                if (cachedData && !isStale) {
-                    return cachedData.data;
-                }
-
-                const response = await axios.get(`${PROXY_URL}/table/${tableId}/player/${seat}`);
-
-                // Update the cache with new data and timestamp
-                setUserDataBySeat(prev => ({
-                    ...prev,
-                    [seat]: {
-                        data: response.data,
-                        lastFetched: Date.now()
-                    }
-                }));
-
-                return response.data;
-            } catch (error) {
-                if (DEBUG_MODE) console.error(`Error fetching user data for seat ${seat}:`, error);
-                return null;
-            }
-        },
-        [tableId, tableData?.data?.players, userDataBySeat]
-    );
-
-    // Helper function to get user data by seat (from cache or fetch if needed)
-    const getUserBySeat = useCallback(
-        (seat: number) => {
-            const cachedData = userDataBySeat[seat];
-
-            // If we don't have data or it's stale, trigger a fetch
-            if (!cachedData || (cachedData.lastFetched && Date.now() - cachedData.lastFetched > 30000)) {
-                fetchUserBySeat(seat);
-            }
-
-            return cachedData?.data || null;
-        },
-        [userDataBySeat, fetchUserBySeat]
-    );
+    }, [tableData]);
 
     // Update polling logic to run regardless of WebSocket status
     useEffect(() => {
@@ -339,14 +276,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, [tableData]);
 
-    // When the user has joined a table, fetch their seat data
-    useEffect(() => {
-        if (currentUserSeat >= 0 && tableId) {
-            fetchUserBySeat(currentUserSeat);
-        }
-    }, [currentUserSeat, tableId, fetchUserBySeat]);
-
-    
     const dealTable = async (): Promise<void> => {
         if (!tableId) {
             console.error("No table ID available");
@@ -442,11 +371,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 openOneMore,
                 openTwoMore,
                 showThreeCards,
-       
-                // New user data functionality
-                getUserBySeat,
-                currentUserSeat,
-                userDataBySeat,
             }}
         >
             {children}
