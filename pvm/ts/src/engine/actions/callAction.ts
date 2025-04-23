@@ -11,6 +11,12 @@ class CallAction extends BaseAction implements IAction {
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Can only call when in a round.");
         }
+
+        // Hack for UTG on preflop
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
+            // this is valid for the small blind player
+            return { minAmount: this.game.smallBlind, maxAmount: this.game.smallBlind };
+        }
         
         const lastAction = this.game.getLastRoundAction();
 

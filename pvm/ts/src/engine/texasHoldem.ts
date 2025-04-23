@@ -478,7 +478,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     getLastRoundAction(): TurnWithSeat | undefined {
-        const round = this._currentRound; // or previous round?
+        const round = this._currentRound;
         const actions = this._rounds.get(round);
 
         if (!actions || actions.length === 0) {

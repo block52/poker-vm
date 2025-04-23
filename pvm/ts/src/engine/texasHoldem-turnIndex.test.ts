@@ -12,7 +12,6 @@ import { Player } from "../models/player";
  * The fix ensures that the turn index is incremented exactly once per game action, maintaining
  * the correct sequence of turns throughout the game lifecycle.
  */
-
 describe("Texas Holdem - Turn Index", () => {
     let game: TexasHoldemGame;
     // Use ONE_HUNDRED_TOKENS to match minBuyIn value
