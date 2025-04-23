@@ -29,6 +29,7 @@ import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "..
 import { toDisplaySeat } from "../../utils/tableUtils";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import Footer2 from "../Footer2";
+import { usePlayerLegalActions } from "../../hooks/usePlayerLegalActions";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -133,10 +134,12 @@ const useTableData = () => {
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const { 
-        playerLegalActions, 
         showThreeCards, 
         tableData,
     } = useTableContext();
+    
+    // Use the hook directly instead of getting it from context
+    const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
     
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat, userDataBySeat, getUserBySeat } = usePlayerSeatInfo(id);

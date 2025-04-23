@@ -4,11 +4,6 @@ import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import { getPublicKey, isUserPlaying, getSignature } from "../utils/accountUtils";
 
-import { getPlayersLegalActions, isPlayersTurn } from "../utils/playerUtils";
-import { AllPlayerActions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
-import useUserWallet from "../hooks/useUserWallet"; // this is the browser wallet todo rename to useBrowserWallet
-import { formatWeiToDollars } from "../utils/numberUtils";
-
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -26,11 +21,9 @@ interface TableContextType {
     error: Error | null;
     setTableData: (data: any) => void;
     userPublicKey: string | null;
-    isCurrentUserPlaying: boolean;
-    playerLegalActions: any[] | null;
-    isPlayerTurn: boolean;
-    dealTable: () => Promise<void>;
-    canDeal: boolean;
+
+
+
     openOneMore: boolean;
     openTwoMore: boolean;
     showThreeCards: boolean;
@@ -44,19 +37,15 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [tableData, setTableData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
-    const [nonce, setNonce] = useState<number | null>(null);
+
     const [userPublicKey, setUserPublicKey] = useState<string | null>(null);
-    const [isCurrentUserPlaying, setIsCurrentUserPlaying] = useState<boolean>(false);
-    const [playerLegalActions, setPlayerLegalActions] = useState<any[] | null>(null);
-    const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false);
 
     const [openOneMore, setOpenOneMore] = useState<boolean>(false);
     const [openTwoMore, setOpenTwoMore] = useState<boolean>(false);
     const [showThreeCards, setShowThreeCards] = useState<boolean>(false);
 
-    const [canDeal, setCanDeal] = useState<boolean>(false);
 
-    const { b52 } = useUserWallet();
+
 
     // Helper to get user address from storage once
     const userWalletAddress = React.useMemo(() => {
@@ -201,155 +190,8 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         calculatePublicKey();
     }, []);
 
-    // Refresh nonce with debounce
-    const refreshNonce = useCallback(
-        async (address: string) => {
-            try {
-                const response = await axios.get(`${PROXY_URL}/nonce/${address}`);
-                debugLog("Nonce Data:", response.data.result.data.nonce);
 
-                if (response.data?.result?.data?.nonce !== undefined) {
-                    console.log("🔄 Nonce updated:", {
-                        previous: nonce,
-                        new: response.data.result.data.nonce,
-                        address,
-                        timestamp: new Date().toISOString()
-                    });
-                    setNonce(response.data.result.data.nonce);
-                    return response.data.result.data.nonce;
-                }
-                return null;
-            } catch (error) {
-                console.error("Error fetching nonce:", error);
-                return null;
-            }
-        },
-        [nonce]
-    );
 
-    // Optimize nonce refresh - less frequent polling
-    useEffect(() => {
-        const address = localStorage.getItem("user_eth_public_key");
-        if (address) {
-            console.log("✅ Initial nonce refresh for address:", address);
-            refreshNonce(address);
-            // Reduce frequency from 10s to 15s - still fast enough for gameplay
-            const interval = setInterval(() => {
-                console.log("🔄 Scheduled nonce refresh for address:", address);
-                refreshNonce(address);
-            }, 15000);
-            return () => clearInterval(interval);
-        }
-    }, [refreshNonce]);
-
-    // Update isCurrentUserPlaying when tableData changes
-    useEffect(() => {
-        if (tableData && tableData.data) {
-            setIsCurrentUserPlaying(isUserPlaying(tableData.data));
-        }
-    }, [tableData]);
-
-    // Update player legal actions when tableData changes
-    useEffect(() => {
-        if (tableData && tableData.data) {
-            const userAddress = localStorage.getItem("user_eth_public_key");
-            console.log("=== TABLE CONTEXT DEBUG ===");
-            console.log("User address from localStorage:", userAddress);
-
-            const currentPlayer = tableData.data.players?.find((p: any) => p.address?.toLowerCase() === userAddress?.toLowerCase());
-            console.log("Current player data:", currentPlayer);
-
-            if (userAddress) {
-                const actions = getPlayersLegalActions(tableData.data, userAddress);
-                console.log("Legal actions from utility:", actions);
-                setPlayerLegalActions(actions);
-
-                const isTurn = isPlayersTurn(tableData.data, userAddress);
-                console.log("Is player's turn:", isTurn);
-                setIsPlayerTurn(isTurn);
-            } else {
-                setPlayerLegalActions(null);
-                setIsPlayerTurn(false);
-            }
-        }
-    }, [tableData]);
-
-    const dealTable = async (): Promise<void> => {
-        if (!tableId) {
-            console.error("No table ID available");
-            return;
-        }
-
-        try {
-            debugLog("Dealing cards for table:", tableId);
-            
-            // Get wallet info
-            const publicKey = localStorage.getItem("user_eth_public_key");
-            const privateKey = localStorage.getItem("user_eth_private_key");
-            
-            if (!publicKey || !privateKey) {
-                throw new Error("Wallet keys not available");
-            }
-            
-            // Use timestamp as the nonce
-            const timestamp = Math.floor(Date.now() / 1000);
-            
-            // Get signature using the utility function
-            const signature = await getSignature(
-                privateKey,
-                timestamp,       // Using timestamp as nonce
-                publicKey,       // from
-                tableId,         // to
-                "0",             // amount (0 for deal action)
-                "deal"           // action
-            );
-            
-            // Use the new perform endpoint
-            const response = await axios.post(`${PROXY_URL}/table/${tableId}/perform`, {
-                userAddress: publicKey,
-                actionType: NonPlayerActionType.DEAL,
-                signature,
-                publicKey,
-                timestamp,
-                data: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-            });
-            
-            debugLog("Deal response:", response.data);
-            
-            if (response.data?.result?.data) {
-                setTableData({ data: response.data.result.data });
-            }
-        } catch (error) {
-            console.error("Error dealing cards:", error);
-        }
-    };
-
-    // Add effect to determine if dealing is allowed
-    useEffect(() => {
-        if (tableData?.data) {
-            // Check if any active player has the "deal" action in their legal actions
-            const anyPlayerCanDeal =
-                tableData.data.players?.some((player: any) => {
-                    return player.legalActions?.some((action: any) => action.action === "deal");
-                }) || false;
-
-            // Update canDeal state based on the presence of the deal action
-            setCanDeal(anyPlayerCanDeal);
-
-            if (DEBUG_MODE) {
-                debugLog("Deal button visibility check:", {
-                    anyPlayerCanDeal,
-                    players: tableData.data.players?.map((p: any) => ({
-                        seat: p.seat,
-                        address: p.address,
-                        legalActions: p.legalActions
-                    }))
-                });
-            }
-        } else {
-            setCanDeal(false);
-        }
-    }, [tableData]);
 
     return (
         <TableContext.Provider
@@ -361,11 +203,10 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               
     
                 userPublicKey,
-                isCurrentUserPlaying,
-                playerLegalActions,
-                isPlayerTurn,
-                dealTable,
-                canDeal,
+  
+
+
+          
                 openOneMore,
                 openTwoMore,
                 showThreeCards,
