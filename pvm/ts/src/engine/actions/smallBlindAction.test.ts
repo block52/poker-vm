@@ -31,7 +31,7 @@ describe("SmallBlindAction", () => {
             0, // dealer
             1, // nextToAct
             previousActions, // previousActions
-            TexasHoldemRound.PREFLOP, // Changed from ANTE to PREFLOP to match new implementation
+            TexasHoldemRound.ANTE, // Changed from ANTE to PREFLOP to match new implementation
             [], // communityCards
             0n, // pot
             playerStates
@@ -70,7 +70,7 @@ describe("SmallBlindAction", () => {
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
 
             // Mock current round
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
 
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
@@ -87,11 +87,11 @@ describe("SmallBlindAction", () => {
             });
         });
 
-        it("should throw error if not in PREFLOP round", () => {
-            // Override the current round mock to be FLOP instead of PREFLOP
+        it("should throw error if not in ANTE round", () => {
+            // Override the current round mock to be FLOP instead of ANTE
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
 
-            expect(() => action.verify(player)).toThrow("Can only bet small blind amount when preflop.");
+            expect(() => action.verify(player)).toThrow("Can only bet small blind amount when in ante.");
         });
     });
 
@@ -111,7 +111,7 @@ describe("SmallBlindAction", () => {
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
 
             // Mock current round
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
 
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);

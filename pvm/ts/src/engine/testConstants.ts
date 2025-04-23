@@ -24,7 +24,7 @@ export const baseGameConfig = {
     address: ethers.ZeroAddress,
     dealer: 0,
     nextToAct: 1,
-    currentRound: "preflop",
+    currentRound: "ante",
     communityCards: [],
     pot: 0n,
     players: []

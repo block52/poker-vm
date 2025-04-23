@@ -8,6 +8,10 @@ class CheckAction extends BaseAction implements IAction {
 
     verify(player: Player): Range | undefined {
 
+        if (this.game.currentRound === TexasHoldemRound.ANTE) {
+            throw new Error("Cannot check in the ante round.");
+        }
+
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             const preflopRoundBets = this.game.getBets();
 

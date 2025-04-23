@@ -12,8 +12,8 @@ describe("Texas Holdem - Join and Leave", () => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
-        it("should start in PREFLOP round", () => {
-            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
+        it("should start in ANTE round", () => {
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
         });
 
         it("should not progress rounds without minimum players", () => {

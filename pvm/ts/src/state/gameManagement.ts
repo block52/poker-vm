@@ -5,7 +5,7 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IGameStateDocument, IJSONModel } from "../models/interfaces";
 import { ContractSchema } from "../models/contractSchema";
 import crypto from "crypto";
-import { GameOptions } from "@bitcoinbrisbane/block52";
+import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ContractSchemaManagement, getContractSchemaManagement } from "./contractSchemaManagement";
 
 export class GameManagement extends StateManager {
@@ -60,7 +60,7 @@ export class GameManagement extends StateManager {
                 communityCards: [],
                 pots: ["0"],
                 nextToAct: -1,
-                round: "preflop",
+                round: TexasHoldemRound.ANTE,
                 winners: [],
                 signature: ethers.ZeroHash
             };
@@ -91,7 +91,7 @@ export class GameManagement extends StateManager {
                 communityCards: [],
                 pots: ["0"],
                 nextToAct: -1,
-                round: "preflop",
+                round: TexasHoldemRound.ANTE,
                 winners: [],
                 signature: ethers.ZeroHash
             }

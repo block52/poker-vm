@@ -60,7 +60,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         private _dealer: number,
         private _lastToAct: number,
         private previousActions: ActionDTO[] = [],
-        private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
+        private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private communityCards: string[],
         private currentPot: bigint = 0n, // todo: this can be removed
         playerStates: Map<number, Player | null>,
@@ -98,7 +98,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._bigBlindPosition = this._dealer === gameOptions.maxPlayers ? 2 : this._dealer + 2;
         this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
 
-        this._rounds.set(TexasHoldemRound.PREFLOP, []);
+        this._rounds.set(TexasHoldemRound.ANTE, []);
         this._lastActedSeat = _lastToAct; // Need to recalculate this
 
         for (const action of previousActions) {
@@ -193,26 +193,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Check minimum players
         if (this.getActivePlayerCount() < this._gameOptions.minPlayers) throw new Error("Not enough active players");
 
-        if (![TexasHoldemRound.PREFLOP, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
+        if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
         // Make sure small blind and big blind have been posted
-        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
-        if (!preFlopActions || preFlopActions.length < 2) {
+        const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        if (!anteActions || anteActions.length < 2) {
             throw new Error("Blinds must be posted before dealing.");
         }
 
-        const hasSmallBlind = preFlopActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
-        const hasBigBlind = preFlopActions.some(a => a.action === PlayerActionType.BIG_BLIND);
-
-        if (!hasSmallBlind || !hasBigBlind) {
-            throw new Error("Both small and big blinds must be posted before dealing.");
-        }
-
         // Check if cards have already been dealt
-        const hasDealt = preFlopActions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
-        if (hasDealt || anyPlayerHasCards) {
+        if (anyPlayerHasCards) {
             throw new Error("Cards have already been dealt for this hand.");
         }
 
@@ -239,8 +231,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 player.holeCards[1] = secondCard; // Replace second card
             }
         }
-
-        console.log("Cards dealt successfully");
     }
 
     private join(address: string, chips: bigint) {
@@ -333,15 +323,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     private findNextPlayerToAct(): Player | undefined {
         // Has the small blind posted?
-        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
-        const hasSmallBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
+        const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        const hasSmallBlindPosted = anteActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
 
         if (!hasSmallBlindPosted) {
             return this.getPlayerAtSeat(this._smallBlindPosition);
         }
 
         // Has the big blind posted?
-        const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
+        const hasBigBlindPosted = anteActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
         if (!hasBigBlindPosted) {
             return this.getPlayerAtSeat(this._bigBlindPosition);
         }
@@ -535,7 +525,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         if (this.currentRound === TexasHoldemRound.ANTE) {
-            if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
+            if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND && action !== NonPlayerActionType.JOIN) {
                 if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
@@ -851,15 +841,24 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Deal community cards based on the CURRENT round
         // before advancing to the next round
         if (this._currentRound === TexasHoldemRound.PREFLOP) {
+            this.deal();
+            this._communityCards.length = 0; // Clear community cards for the next round
+        }
+        if (this._currentRound === TexasHoldemRound.FLOP) {
             // Deal the flop (3 cards)
             this._communityCards.push(...this._deck.deal(3));
         }
-        if (this._currentRound === TexasHoldemRound.FLOP || this._currentRound === TexasHoldemRound.TURN) {
+            
+        if (this._currentRound === TexasHoldemRound.TURN) {
             // Deal turn or river (1 card)
             this._communityCards.push(...this._deck.deal(1));
         }
+
         if (this._currentRound === TexasHoldemRound.RIVER) {
-            // Next is showdown, calculate winner
+            this._communityCards.push(...this._deck.deal(1));
+        }
+
+        if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
             this.calculateWinner();
         }
 
@@ -971,6 +970,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return false;
         }
 
+        if (round === TexasHoldemRound.ANTE) {
+            const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
+            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
+
+            if (!hasSmallBlind || !hasBigBlind) {
+                return false; // Round not over if blinds haven't been posted
+            }
+
+            this.deal();
+            return true; // Round over after dealing
+        }
+
         // Check if cards have been dealt, which is required before ending the round
         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
@@ -1064,8 +1075,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     private getNextRound(): TexasHoldemRound {
         switch (this._currentRound) {
-            // case TexasHoldemRound.ANTE:
-            //     return TexasHoldemRound.PREFLOP;
+            case TexasHoldemRound.ANTE:
+                return TexasHoldemRound.PREFLOP;
             case TexasHoldemRound.PREFLOP:
                 return TexasHoldemRound.FLOP;
             case TexasHoldemRound.FLOP:
