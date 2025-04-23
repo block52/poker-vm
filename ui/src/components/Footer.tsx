@@ -5,6 +5,7 @@ import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
+import { useTableNonce, AccountData, AccountApiResponse } from "../hooks/useTableNonce";
 
 import axios from "axios";
 import { getUserTableStatus } from "../utils/accountUtils";
@@ -35,6 +36,8 @@ type UserTableStatus = {
 
 const PokerActionPanel: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const { nonce, accountData, refreshNonce } = useTableNonce();
+    
     const { 
         tableData, 
         playerLegalActions, 
@@ -529,6 +532,12 @@ const PokerActionPanel: React.FC = () => {
         // console.log("Deal button clicked");
         dealTable();
     };
+
+    // Add useEffect to log the nonce information from our new hook
+    useEffect(() => {
+        console.log("🔢 Current nonce from hook:", nonce);
+        console.log("💰 Account data from hook:", accountData);
+    }, [nonce, accountData]);
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-4 pb-6 flex justify-center items-center border-t-2 border-[#3a546d] relative">
