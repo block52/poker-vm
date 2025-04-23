@@ -12,7 +12,6 @@ import Dashboard from "./components/Dashboard";
 
 import QRDeposit from "./components/QRDeposit";
 import { PROXY_URL } from "./config/constants";
-import { TableProvider } from "./context/TableContext";
 // TODO: Remove TableProvider once all hooks are fully implemented and tested
 
 console.log("PROXY_URL in App:", PROXY_URL); // Debug log
@@ -45,9 +44,7 @@ function App() {
                             <Route
                                 path="/table/:id"
                                 element={
-                                    <TableProvider>
                                         <Table />
-                                    </TableProvider>
                                 }
                             />
                             <Route path="/deposit" element={<Deposit />} />
