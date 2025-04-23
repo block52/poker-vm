@@ -502,7 +502,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
 
         // Check if the provided index matches the current turn index (without incrementing)
-        if (index !== this.getTurnIndex()) {
+        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN) { // hack, to roll back
             throw new Error("Invalid action index.");
         }
 
@@ -586,6 +586,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         player.addAction({ playerId: address, action, amount, index });
         this._lastActedSeat = seat;
+        
         if (this.hasRoundEnded(this._currentRound) === true) {
             this.nextRound();
         }
