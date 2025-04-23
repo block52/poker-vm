@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import { getPublicKey, isUserPlaying, getSignature } from "../utils/accountUtils";
-import { whoIsNextToAct, getCurrentRound, getTotalPot, getWinnerInfo } from "../utils/tableUtils";
+import { getCurrentRound, getTotalPot, getWinnerInfo } from "../utils/tableUtils";
 import { getPlayersLegalActions, isPlayersTurn } from "../utils/playerUtils";
 import { AllPlayerActions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import useUserWallet from "../hooks/useUserWallet"; // this is the browser wallet todo rename to useBrowserWallet
@@ -29,13 +29,6 @@ interface TableContextType {
     refreshNonce: (address: string) => Promise<void>;
     userPublicKey: string | null;
     isCurrentUserPlaying: boolean;
-    nextToActInfo: {
-        seat: number;
-        player: any;
-        isCurrentUserTurn: boolean;
-        availableActions: any[];
-        timeRemaining: number;
-    } | null;
     playerLegalActions: any[] | null;
     isPlayerTurn: boolean;
     dealTable: () => Promise<void>;
@@ -60,7 +53,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [nonce, setNonce] = useState<number | null>(null);
     const [userPublicKey, setUserPublicKey] = useState<string | null>(null);
     const [isCurrentUserPlaying, setIsCurrentUserPlaying] = useState<boolean>(false);
-    const [nextToActInfo, setNextToActInfo] = useState<any>(null);
     const [playerLegalActions, setPlayerLegalActions] = useState<any[] | null>(null);
     const [isPlayerTurn, setIsPlayerTurn] = useState<boolean>(false);
 
@@ -81,17 +73,13 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return address ? address.toLowerCase() : null;
     }, []);
 
-    // Calculate winner info whenever tableData changes
+    // Update tableData effect
     useEffect(() => {
         if (tableData && tableData.data) {
             // Special case: if dealer position is 9, treat it as 0 for UI purposes
             if (tableData.data.dealer === 9) {
                 tableData.data.dealer = 0;
             }
-
-            // Use the utility function to determine who is next to act
-            const nextToActData = whoIsNextToAct(tableData.data);
-            setNextToActInfo(nextToActData);
 
             // Update current user's seat when table data changes
             if (userWalletAddress && tableData.data.players) {
@@ -220,13 +208,12 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
                     // Check if any critical game state has changed
                     const hasPlayerChanges = JSON.stringify(tableState.players) !== JSON.stringify(prevData.data.players);
-                    const hasNextToActChanged = tableState.nextToAct !== prevData.data.nextToAct;
                     const hasRoundChanged = tableState.round !== prevData.data.round;
                     const hasBoardChanged =
                         JSON.stringify(tableState.board || tableState.communityCards) !== JSON.stringify(prevData.data.board || prevData.data.communityCards);
                     const hasPotChanged = JSON.stringify(tableState.pots) !== JSON.stringify(prevData.data.pots);
 
-                    const hasImportantChanges = hasPlayerChanges || hasNextToActChanged || hasRoundChanged || hasBoardChanged || hasPotChanged;
+                    const hasImportantChanges = hasPlayerChanges || hasRoundChanged || hasBoardChanged || hasPotChanged;
 
                     if (hasImportantChanges) {
                         debugLog("Polling detected changes, updating table data");
@@ -333,7 +320,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const userAddress = localStorage.getItem("user_eth_public_key");
             console.log("=== TABLE CONTEXT DEBUG ===");
             console.log("User address from localStorage:", userAddress);
-            console.log("Next to act seat:", tableData.data.nextToAct);
 
             const currentPlayer = tableData.data.players?.find((p: any) => p.address?.toLowerCase() === userAddress?.toLowerCase());
             console.log("Current player data:", currentPlayer);
@@ -449,7 +435,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 refreshNonce,
                 userPublicKey,
                 isCurrentUserPlaying,
-                nextToActInfo,
                 playerLegalActions,
                 isPlayerTurn,
                 dealTable,

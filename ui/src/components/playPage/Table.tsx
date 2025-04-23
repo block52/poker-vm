@@ -21,6 +21,7 @@ import { ethers } from "ethers";
 import { useTableContext } from "../../context/TableContext";
 import { useTableState } from "../../hooks/useTableState";
 import { useWinnerInfo } from "../../hooks/useWinnerInfo";
+import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
@@ -131,13 +132,15 @@ const useTableData = () => {
 const Table = () => {
     const { id } = useParams<{ id: string }>();
     const { 
-        nextToActInfo, 
         playerLegalActions, 
         showThreeCards, 
         getUserBySeat, 
         currentUserSeat,
         tableData,
     } = useTableContext();
+    
+    // Add the useNextToActInfo hook
+    const { nextToActInfo } = useNextToActInfo(id);
     
     // Add the useWinnerInfo hook
     const { winnerInfo } = useWinnerInfo(id);

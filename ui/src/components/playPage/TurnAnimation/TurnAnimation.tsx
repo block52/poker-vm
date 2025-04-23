@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useTableContext } from "../../../context/TableContext";
 import { useTableAnimations } from "../../../hooks/useTableAnimations";
+import { useNextToActInfo } from "../../../hooks/useNextToActInfo";
 import { useParams } from "react-router-dom";
 import { turnAnimationPosition } from "../../../utils/PositionArray";
 
@@ -10,8 +10,8 @@ interface TurnAnimationProps {
 
 const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
     const { id } = useParams<{ id: string }>();
-    const { nextToActInfo } = useTableContext();
     const { tableSize } = useTableAnimations(id);
+    const { nextToActInfo } = useNextToActInfo(id);
     const [isCurrentPlayersTurn, setIsCurrentPlayersTurn] = useState(false);
     const [position, setPosition] = useState<any>(null);
 
