@@ -12,6 +12,12 @@ class CheckAction extends BaseAction implements IAction {
             throw new Error("Cannot check in the ante round.");
         }
 
+        // Hack for UTG on preflop
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
+            // this is valid for the small blind player
+            return { minAmount: this.game.bigBlind, maxAmount: this.game.bigBlind };
+        }
+
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             const preflopRoundBets = this.game.getBets();
 
