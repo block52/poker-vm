@@ -14,11 +14,7 @@ export class NextCommand implements ICommand<ISignedResponse<any>> {
     private readonly mempool: Mempool;
     private readonly seed: number[];
 
-    constructor(
-        private readonly gameAddress: string,
-        private readonly privateKey: string,
-        _seed: string | undefined = undefined
-    ) {
+    constructor(private readonly gameAddress: string, private readonly privateKey: string, _seed: string | undefined = undefined) {
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
@@ -60,28 +56,28 @@ export class NextCommand implements ICommand<ISignedResponse<any>> {
                 const deck = new Deck();
                 deck.shuffle(this.seed);
                 game.reInit(deck.toString());
-                
+
                 // Save the updated game state
                 const updatedJson = game.toJson();
                 await this.gameManagement.saveFromJSON(updatedJson);
 
                 // Create a transaction record for this action
                 const dealTx: Transaction = await Transaction.create(
-                    this.gameAddress, 
-                    "", 
+                    this.gameAddress,
+                    "",
                     0n, // No value transfer
-                    0n, 
-                    this.privateKey, 
-                    "next"
+                    0n,
+                    this.privateKey,
+                    `next,${deck.toString()}` // 
                 );
-                
+
                 // Add the transaction to the mempool
                 await this.mempool.add(dealTx);
 
                 // Return the signed transaction like in TransferCommand
                 return signResult(dealTx, this.privateKey);
             } else {
-                throw new Error("Address is not a valid game contract");
+                throw new Error(`Address ${this.gameAddress} is not a valid game contract`);
             }
         } catch (e) {
             console.error(`Error in deal command:`, e);
@@ -90,9 +86,7 @@ export class NextCommand implements ICommand<ISignedResponse<any>> {
     }
 
     private async isGameContract(address: string): Promise<boolean> {
-        // console.log(`Checking if ${address} is a game contract...`);
         const existingContractSchema = await contractSchemas.find({ address: address });
-        // console.log(`Contract schema found:`, existingContractSchema);
         return existingContractSchema !== undefined;
     }
-} 
+}
