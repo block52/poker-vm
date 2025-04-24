@@ -143,12 +143,12 @@ describe("CheckAction", () => {
 
         it("should not change player's chips", () => {
             const initialChips = player.chips;
-            action.execute(player, 0);
+            action.execute(player, 0, 0n);
             expect(player.chips).toBe(initialChips);
         });
 
         it("should add CHECK action with 0 amount", () => {
-            action.execute(player, 0);
+            action.execute(player, 0, 0n);
 
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,

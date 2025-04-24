@@ -277,12 +277,20 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, amount.toString(), "join", signature]
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, signature]
         });
 
         return body.result.data;
     }
 
+    /**
+     * Perform an action in a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param action 
+     * @param amount 
+     * @param nonce 
+     * @returns 
+     */
     public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any> {
         const signature = await this.getSignature(nonce);
         const address = this.getAddress();

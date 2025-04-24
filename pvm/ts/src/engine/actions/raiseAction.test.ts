@@ -282,7 +282,7 @@ describe("Raise Action", () => {
         });
 
         it("should throw error if required amount is not provided", () => {
-            expect(() => action.execute(player, 0)).toThrow(`Amount needs to be specified for ${PlayerActionType.RAISE}`);
+            expect(() => action.execute(player, 0, 0n)).toThrow(`Amount needs to be specified for ${PlayerActionType.RAISE}`);
         });
     });
 });

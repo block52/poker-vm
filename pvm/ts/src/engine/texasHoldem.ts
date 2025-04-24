@@ -485,6 +485,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Invalid action index.");
         }
 
+        // Hack
+        const _amount = amount ? BigInt(amount) : 0n;
+
         switch (action) {
             case NonPlayerActionType.JOIN:
                 this.join(address, amount!);
@@ -528,16 +531,16 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 new FoldAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.CHECK:
-                new CheckAction(this, this._update).execute(player, index);
+                new CheckAction(this, this._update).execute(player, index, 0n);
                 break;
             case PlayerActionType.BET:
-                new BetAction(this, this._update).execute(player, index, amount);
+                new BetAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.CALL:
                 new CallAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.RAISE:
-                new RaiseAction(this, this._update).execute(player, index, amount);
+                new RaiseAction(this, this._update).execute(player, index, _amount);
                 break;
             default:
                 // do we need to roll back last acted seat?
@@ -1081,7 +1084,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             json.dealer as number,
             json.lastToAct as number,
             json.previousActions,
-            json.round, // todo: this should be the "currentround"
+            json.round, // todo: this should be the "current round"
             json.communityCards,
             json.pots,
             players,
@@ -1139,6 +1142,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 isSmallBlind: seat === this._smallBlindPosition,
                 isBigBlind: seat === this._bigBlindPosition,
                 isDealer: seat === this._dealer,
+                deck: this._deck.toString(),
                 holeCards: holeCardsDto,
                 status: player.status,
                 lastAction: lastAction,
