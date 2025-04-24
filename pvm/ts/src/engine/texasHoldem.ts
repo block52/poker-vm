@@ -189,17 +189,17 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._deck.shuffle(seed);
     }
 
-    deal(seed: number[] = []): void {
+    deal(): void {
         // Check minimum players
         if (this.getActivePlayerCount() < this._gameOptions.minPlayers) throw new Error("Not enough active players");
 
         if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
-        // Make sure small blind and big blind have been posted
-        const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
-        if (!anteActions || anteActions.length < 2) {
-            throw new Error("Blinds must be posted before dealing.");
-        }
+        // // Make sure small blind and big blind have been posted
+        // const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        // if (!anteActions || anteActions.length < 2) {
+        //     throw new Error("Blinds must be posted before dealing.");
+        // }
 
         // Check if cards have already been dealt
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
@@ -207,9 +207,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (anyPlayerHasCards) {
             throw new Error("Cards have already been dealt for this hand.");
         }
-
-        // Reset the deck and shuffle
-        this.shuffle(seed);
 
         // Deal 2 cards to each player
         const players = this.getSeatedPlayers();
@@ -515,7 +512,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
                 return;
             case NonPlayerActionType.DEAL:
-                this.deal(data);
+                this.shuffle(data);
+                this.deal();
                 this.incrementTurnIndex();
                 break;
         }
