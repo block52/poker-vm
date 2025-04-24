@@ -499,9 +499,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return;
             case NonPlayerActionType.DEAL:
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
-                // this.incrementTurnIndex();
-
-                break;
+                return;
         }
 
         if (!this.exists(address)) {
@@ -806,7 +804,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Deal community cards based on the CURRENT round
         // before advancing to the next round
         if (this._currentRound === TexasHoldemRound.PREFLOP) {
-            this.deal();
             this._communityCards.length = 0; // Clear community cards for the next round
         }
         if (this._currentRound === TexasHoldemRound.FLOP) {
@@ -940,7 +937,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return false; // Round not over if blinds haven't been posted
             }
 
-            this.deal();
             return true; // Round over after dealing
         }
 
