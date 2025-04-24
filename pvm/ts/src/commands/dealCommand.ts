@@ -59,7 +59,7 @@ export class DealCommand implements ICommand<ISignedResponse<any>> {
                     game.shuffle(this.seed);
                     
                     // Deal the cards
-                    game.deal(this.seed);
+                    game.deal();
                 } catch (error: any) {
                     console.error("Error dealing cards:", error);
                     return signResult({ 
