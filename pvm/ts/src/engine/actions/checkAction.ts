@@ -15,7 +15,7 @@ class CheckAction extends BaseAction implements IAction {
         // Hack for UTG on preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
             // this is valid for the small blind player
-            return { minAmount: this.game.bigBlind, maxAmount: this.game.bigBlind };
+            return { minAmount: 0n, maxAmount: 0n };
         }
 
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
