@@ -35,7 +35,7 @@ class CheckAction extends BaseAction implements IAction {
         }
 
         super.verify(player);
-        return undefined
+        return { minAmount: 0n, maxAmount: 0n };
     }
 }
 
