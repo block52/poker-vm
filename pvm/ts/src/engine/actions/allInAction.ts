@@ -6,11 +6,11 @@ import { IAction, Range } from "../types";
 class AllInAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.ALL_IN }
 
-    verify(player: Player): Range | undefined {
+    verify(player: Player): Range {
         super.verify(player);
         if (player.chips === 0n) // !! check this as what happens if run out of chips in middle of game.  Answer, you sit out.
             throw new Error("Player has no chips so can't go all-in.");
-        return undefined;
+        return { minAmount: player.chips, maxAmount: player.chips };
     }
 
     protected getDeductAmount(player: Player, _amount: bigint): bigint {

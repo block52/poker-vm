@@ -1,15 +1,15 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
-import { Range } from "../types";
+import { IAction, Range } from "../types";
 
-class FoldAction extends BaseAction {
+class FoldAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.FOLD }
     
     // Override verify method to allow folding anytime
-    verify(player: Player): Range | undefined {
+    verify(player: Player): Range {
         // Remove all status checks - allow any player to fold regardless of status
-        return undefined;
+        return { minAmount: 0n, maxAmount: 0n };
     }
     
     // Override execute to set player's status to FOLDED

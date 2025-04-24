@@ -14,9 +14,9 @@ class TestAction extends BaseAction {
 
     public shouldReturnRange: boolean = false;
 
-    verify(player: Player): Range | undefined {
-        const baseResult = super.verify(player);
-        return this.shouldReturnRange ? { minAmount: 10n, maxAmount: 100n } : baseResult;
+    verify(player: Player) {
+        //const baseResult = super.verify(player);
+        // return this.shouldReturnRange ? { minAmount: 10n, maxAmount: 100n } : baseResult;
     }
 
     public testGetDeductAmount(player: Player, amount?: bigint): bigint {
@@ -37,11 +37,11 @@ describe.skip("BaseAction", () => {
 
         // Create player with correct constructor parameters
         const initialPlayer = new Player(
-            "0x980b8D8A16f5891F41871d878a479d81Da52334c",             // address
-            undefined,           // lastAction
-            1000n,              // chips
-            undefined,          // holeCards
-            PlayerStatus.ACTIVE  // status
+            "0x980b8D8A16f5891F41871d878a479d81Da52334c", // address
+            undefined, // lastAction
+            1000n, // chips
+            undefined, // holeCards
+            PlayerStatus.ACTIVE // status
         );
         playerStates.set(0, initialPlayer);
 
@@ -50,12 +50,12 @@ describe.skip("BaseAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            0,           // dealer
-            1,           // nextToAct
+            0, // dealer
+            1, // nextToAct
             previousActions,
             TexasHoldemRound.PREFLOP,
-            [],          // communityCards
-            0n,          // pot
+            [], // communityCards
+            0n, // pot
             playerStates,
             mnemonic
         );
@@ -68,13 +68,7 @@ describe.skip("BaseAction", () => {
         };
 
         action = new TestAction(game, updateMock);
-        player = new Player(
-            "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-            undefined,
-            1000n,
-            undefined,
-            PlayerStatus.ACTIVE
-        );
+        player = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 1000n, undefined, PlayerStatus.ACTIVE);
     });
 
     describe("verify", () => {
@@ -158,13 +152,7 @@ describe.skip("BaseAction", () => {
         describe("chip handling", () => {
             it("should throw error if player has insufficient chips", () => {
                 action.shouldReturnRange = true;
-                const poorPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    5n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
+                const poorPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 5n, undefined, PlayerStatus.ACTIVE);
 
                 expect(() => action.execute(poorPlayer, 0, 50n)).toThrow("Player has insufficient chips to check.");
             });
@@ -178,13 +166,7 @@ describe.skip("BaseAction", () => {
 
             it("should handle all-in scenario", () => {
                 action.shouldReturnRange = true;
-                const allInPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    50n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
+                const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 50n, undefined, PlayerStatus.ACTIVE);
                 action.execute(allInPlayer, 0, 50n);
 
                 expect(allInPlayer.chips).toBe(0n);
@@ -257,13 +239,7 @@ describe.skip("BaseAction", () => {
 
         describe("betting sequence validation", () => {
             it("should handle all-in situations correctly", () => {
-                const shortStackPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    25n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
+                const shortStackPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 25n, undefined, PlayerStatus.ACTIVE);
                 action.shouldReturnRange = true;
                 action.execute(shortStackPlayer, 0, 25n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
@@ -313,13 +289,7 @@ describe.skip("BaseAction", () => {
 
             it("should check if player has sufficient chips", () => {
                 action.shouldReturnRange = true;
-                const poorPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    5n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
+                const poorPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 5n, undefined, PlayerStatus.ACTIVE);
                 expect(() => action.execute(poorPlayer, 0, 50n)).toThrow("Player has insufficient chips to check");
             });
 
@@ -332,13 +302,7 @@ describe.skip("BaseAction", () => {
 
             it("should convert to ALL_IN when player uses all chips", () => {
                 action.shouldReturnRange = true;
-                const allInPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    50n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
+                const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 50n, undefined, PlayerStatus.ACTIVE);
                 action.execute(allInPlayer, 0, 50n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
             });

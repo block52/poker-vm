@@ -8,7 +8,7 @@ abstract class BaseAction {
 
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
-    verify(player: Player): Range | undefined {
+    verify(player: Player) {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) throw new Error("Hand has ended.");
 
         // Skip turn check for fold actions
@@ -19,31 +19,27 @@ abstract class BaseAction {
 
         // if (this.game.getPlayerStatus(player.address) !== PlayerStatus.ACTIVE )
         //     throw new Error(`Only active player can ${this.type}.`);
-
-        return undefined;
     }
 
     execute(player: Player, index: number, amount: bigint): void {
-        const range = this.verify(player);
+        // const range = this.verify(player);
 
-        if (range) {
-            if (!amount) throw new Error(`Amount needs to be specified for ${this.type}`);
-            if (amount < range.minAmount) throw new Error("Amount is less than minimum allowed.");
-            if (amount > range.maxAmount) throw new Error("Amount is greater than maximum allowed.");
+        // if (range) {
+        //     if (!amount) throw new Error(`Amount needs to be specified for ${this.type}`);
+        //     if (amount < range.minAmount) throw new Error("Amount is less than minimum allowed.");
+        //     if (amount > range.maxAmount) throw new Error("Amount is greater than maximum allowed.");
+        // }
+
+        // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
+        // the amount only specifies that over the existing maximum which the player may not yet have covered
+        const deductAmount = this.getDeductAmount(player, amount);
+        if (deductAmount) {
+            if (player.chips < deductAmount) throw new Error(`Player has insufficient chips to ${this.type}.`);
+
+            player.chips -= deductAmount;
         }
 
-        if (amount) {
-            // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
-            // the amount only specifies that over the existing maximum which the player may not yet have covered
-            const deductAmount = this.getDeductAmount(player, amount);
-            if (deductAmount) {
-                if (player.chips < deductAmount) throw new Error(`Player has insufficient chips to ${this.type}.`);
-
-                player.chips -= deductAmount;
-            }
-
-            amount = deductAmount;
-        }
+        amount = deductAmount;
 
         const round = this.game.currentRound;
         this.game.addAction(
@@ -71,15 +67,15 @@ abstract class BaseAction {
     }
 
     protected getSumBets(playerId: string): bigint {
-        let totalBet = 0n;
+        let amount = 0n;
         const roundBets = this.game.getBets(this.game.currentRound);
 
         // If the player made a bet in this round, add it to the total
         if (roundBets.has(playerId)) {
-            totalBet += roundBets.get(playerId) || 0n;
+            amount += roundBets.get(playerId) || 0n;
         }
 
-        return totalBet;
+        return amount;
     }
 }
 

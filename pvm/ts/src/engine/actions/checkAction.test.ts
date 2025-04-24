@@ -135,7 +135,7 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
             // Mock verify to return undefined (no range)
-            jest.spyOn(action, "verify").mockReturnValue(undefined);
+            jest.spyOn(action, "verify").mockReturnValue( { minAmount: 0n, maxAmount: 0n } as any);
 
             // Mock game's addAction method
             game.addAction = jest.fn();

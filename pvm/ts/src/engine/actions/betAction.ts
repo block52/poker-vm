@@ -8,7 +8,7 @@ class BetAction extends BaseAction implements IAction {
         return PlayerActionType.BET;
     }
 
-    verify(player: Player): Range | undefined {
+    verify(player: Player): Range {
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot bet in the ante round.");
         }

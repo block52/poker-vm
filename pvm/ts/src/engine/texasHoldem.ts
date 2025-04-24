@@ -25,7 +25,7 @@ import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
+import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers, N } from "ethers";
 import LeaveAction from "./actions/leaveAction";
 
@@ -46,7 +46,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
-    private _actions: BaseAction[];
+    private _actions: IAction[];
     private readonly _gameOptions: GameOptions;
 
     private seed: number[] = [];
@@ -428,13 +428,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
             ];
         }
 
-        const verifyAction = (action: BaseAction): LegalActionDTO | undefined => {
+        const verifyAction = (action: IAction): LegalActionDTO | undefined => {
             try {
                 const range = action.verify(player);
                 return {
                     action: action.type,
-                    min: range ? range.minAmount.toString() : "0",
-                    max: range ? range.maxAmount.toString() : "0",
+                    min: range.minAmount.toString(),
+                    max: range.maxAmount.toString(),
                     index: this.getTurnIndex()
                 };
             } catch {
@@ -549,7 +549,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         player.addAction({ playerId: address, action, amount, index });
         this._lastActedSeat = seat;
-        
+
         if (this.hasRoundEnded(this._currentRound) === true) {
             this.nextRound();
         }
@@ -558,7 +558,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
         // We already validated the index in performAction, so no need to check again here
         // This prevents the double incrementing problem
-        
+
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
@@ -596,7 +596,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Create a new array with this turn as the first element
             this._rounds.set(round, [turnWithSeat]);
         }
-        
+
         // Now explicitly increment the turn index once
         this.incrementTurnIndex();
     }
@@ -812,7 +812,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Deal the flop (3 cards)
             this._communityCards.push(...this._deck.deal(3));
         }
-            
+
         if (this._currentRound === TexasHoldemRound.TURN) {
             // Deal turn or river (1 card)
             this._communityCards.push(...this._deck.deal(1));

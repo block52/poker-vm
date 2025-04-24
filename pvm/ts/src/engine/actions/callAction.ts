@@ -6,7 +6,7 @@ import { IAction, Range } from "../types";
 class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CALL }
 
-    verify(player: Player): Range | undefined {
+    verify(player: Player): Range {
 
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Can only call when in a round.");

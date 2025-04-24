@@ -3,7 +3,7 @@ import { Player } from "../models/player";
 
 export interface IAction {
     readonly type: PlayerActionType | NonPlayerActionType;
-    verify(player: Player): Range | undefined;
+    verify(player: Player): Range;
     execute(player: Player, index: number, amount?: bigint): void;
 }
 

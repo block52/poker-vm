@@ -6,7 +6,7 @@ import { IAction, Range, Turn } from "../types";
 class CheckAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CHECK }
 
-    verify(player: Player): Range | undefined {
+    verify(player: Player): Range {
 
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot check in the ante round.");

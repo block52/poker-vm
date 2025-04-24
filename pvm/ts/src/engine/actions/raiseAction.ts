@@ -8,7 +8,7 @@ class RaiseAction extends BaseAction implements IAction {
         return PlayerActionType.RAISE;
     }
 
-    verify(player: Player): Range | undefined {
+    verify(player: Player): Range {
         // Cannot call in the ANTE round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot call in the ante round. Small blind must post.");
@@ -24,7 +24,7 @@ class RaiseAction extends BaseAction implements IAction {
             }
         }
 
-        super.verify(player);
+        // super.verify(player);
 
         const lastBet = this.game.getLastRoundAction();
         if (!lastBet) throw new Error("No previous bet to raise.");
