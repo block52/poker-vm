@@ -60,6 +60,13 @@ class CallAction extends BaseAction implements IAction {
     }
 
     protected getDeductAmount(player: Player): bigint {
+
+        // Hack for UTG on preflop
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
+            // this is valid for the small blind player
+            return this.game.smallBlind;
+        }
+
         const sumBets = this.getSumBets(player.address);
         
         // Get the largest bet in the current round
