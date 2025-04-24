@@ -73,13 +73,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         } else {
             this._deck = new Deck();
 
-            // Create a seed number for the deck
-            // this.seed = Array.from({ length: 52 }, () => crypto.randomInt(0, 1000000));
-            this.seed = Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
+            // // Create a seed number for the deck
+            // // this.seed = Array.from({ length: 52 }, () => crypto.randomInt(0, 1000000));
+            // this.seed = Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
 
-            // Shuffle the deck
-            // console.log("About to shuffle deck with seed array:", this.seed);
-            this._deck.shuffle(this.seed);
+            // // Shuffle the deck
+            // // console.log("About to shuffle deck with seed array:", this.seed);
+            // this._deck.shuffle(this.seed);
         }
 
         // TODO: Make this a map
