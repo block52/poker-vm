@@ -7,6 +7,8 @@ import { ContractSchema } from "../models/contractSchema";
 import crypto from "crypto";
 import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ContractSchemaManagement, getContractSchemaManagement } from "./contractSchemaManagement";
+import { ShuffleCommand } from "../commands/shuffleCommand";
+import { Deck } from "../models";
 
 export class GameManagement extends StateManager {
     private readonly mempool: Mempool;
@@ -75,6 +77,10 @@ export class GameManagement extends StateManager {
         const digest = `${owner}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
         const hash = crypto.createHash("sha256").update(digest).digest("hex");
 
+        // Todo: Add deck
+        const deck = new Deck();
+        deck.shuffle();
+
         const game = new GameState({
             address: hash,
             state: {
@@ -88,6 +94,7 @@ export class GameManagement extends StateManager {
                 bigBlind: gameOptions.bigBlind.toString(),
                 dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
                 players: [],
+                deck: deck.toString(),
                 communityCards: [],
                 pots: ["0"],
                 nextToAct: -1,
