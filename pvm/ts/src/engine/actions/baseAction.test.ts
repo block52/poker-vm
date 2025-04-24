@@ -4,7 +4,7 @@ import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
 import { ethers } from "ethers";
-import { gameOptions } from "../testConstants";
+import { gameOptions, mnemonic } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -56,7 +56,8 @@ describe.skip("BaseAction", () => {
             TexasHoldemRound.PREFLOP,
             [],          // communityCards
             0n,          // pot
-            playerStates
+            playerStates,
+            mnemonic
         );
 
         addedActions = [];

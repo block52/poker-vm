@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
+import { gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
 
 describe("BigBlindAction", () => {
     let game: TexasHoldemGame;
@@ -33,7 +33,8 @@ describe("BigBlindAction", () => {
             TexasHoldemRound.ANTE,
             [], // communityCards
             0n, // pot
-            playerStates
+            playerStates,
+            mnemonic
         );
 
         updateMock = {

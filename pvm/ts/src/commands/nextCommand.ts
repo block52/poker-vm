@@ -1,5 +1,5 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import { Transaction } from "../models";
+import { Deck, Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
@@ -23,7 +23,7 @@ export class NextCommand implements ICommand<ISignedResponse<any>> {
         this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
 
-                // Convert the seed string to a number array for shuffling
+        // Convert the seed string to a number array for shuffling
         // If seed is provided, use it to create a deterministic shuffle
         if (!_seed) {
             // Create a random seed if not provided
@@ -57,7 +57,9 @@ export class NextCommand implements ICommand<ISignedResponse<any>> {
                     throw new Error("Game has not finished yet");
                 }
 
-                game.reInit(this.seed);
+                const deck = new Deck();
+                deck.shuffle(this.seed);
+                game.reInit(deck.toString());
                 
                 // Save the updated game state
                 const updatedJson = game.toJson();

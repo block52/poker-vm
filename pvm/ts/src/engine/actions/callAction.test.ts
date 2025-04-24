@@ -5,7 +5,7 @@ import { IUpdate, Turn, TurnWithSeat } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 // Assuming you have a constants file, otherwise define TEN_TOKENS in this file
-import { gameOptions, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
+import { gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
 
 describe("CallAction", () => {
     let action: CallAction;
@@ -36,7 +36,8 @@ describe("CallAction", () => {
             TexasHoldemRound.PREFLOP,
             [], // communityCards
             0n, // pot
-            playerStates
+            playerStates,
+            mnemonic
         );
 
         updateMock = {

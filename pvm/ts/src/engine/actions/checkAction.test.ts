@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("CheckAction", () => {
@@ -35,7 +35,8 @@ describe("CheckAction", () => {
             TexasHoldemRound.PREFLOP,
             [], // communityCards
             0n, // pot
-            playerStates
+            playerStates,
+            mnemonic
         );
 
         updateMock = {

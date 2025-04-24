@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions } from "../testConstants";
+import { gameOptions, mnemonic } from "../testConstants";
 
 describe("FoldAction", () => {
     let game: TexasHoldemGame;
@@ -34,7 +34,8 @@ describe("FoldAction", () => {
             TexasHoldemRound.PREFLOP,
             [], // communityCards
             0n, // pot
-            playerStates
+            playerStates,
+            mnemonic
         );
 
         updateMock = {
