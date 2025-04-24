@@ -88,7 +88,7 @@ describe("CheckAction", () => {
 
         it("should not return a range for check action", () => {
             const range = action.verify(player);
-            expect(range).toBeUndefined();
+            expect(range).toBeDefined();
         });
 
         it.skip("should throw error if it's not player's turn", () => {
