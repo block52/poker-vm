@@ -176,7 +176,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Check minimum players
         if (this.getActivePlayerCount() < this._gameOptions.minPlayers) throw new Error("Not enough active players");
 
-        if (![TexasHoldemRound.ANTE, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
+        if (![TexasHoldemRound.PREFLOP, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
 
         // // Make sure small blind and big blind have been posted
         // const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
@@ -832,14 +832,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     reInit(deck: string): void {
         if (!this._playersMap.size) throw new Error("No players in game.");
-        if (this._currentRound !== TexasHoldemRound.PREFLOP) throw new Error("Hand currently in progress.");
+        if (this._currentRound !== TexasHoldemRound.ANTE) throw new Error("Hand currently in progress.");
 
         this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
         this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
         this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
 
         this._rounds.clear();
-        this._rounds.set(TexasHoldemRound.PREFLOP, []);
+        this._rounds.set(TexasHoldemRound.ANTE, []);
 
         this._lastActedSeat = 0;
         this._deck = new Deck(deck);
