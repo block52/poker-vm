@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { Wallet } from "ethers";
 import { ethers } from "ethers";
 
-import { TexasHoldemStateDTO, NodeRpcClient, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO, NodeRpcClient, PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -634,8 +634,6 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
         actions.push({ action, value: legalAction.action });
     }
 
-    actions.push({ action: "Fold", value: "fold" });
-
     return actions;
 };
 
@@ -662,27 +660,27 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
         ]);
 
         switch (action) {
-            case "check":
+            case PlayerActionType.CHECK:
                 console.log(chalk.green("Checking..."));
                 await client.playerAction(tableAddress, PlayerActionType.CHECK, "", nonce);
                 break;
-            case "post small blind":
+            case PlayerActionType.SMALL_BLIND:
                 console.log(chalk.green("Posting small blind..."));
                 await client.playerAction(tableAddress, PlayerActionType.SMALL_BLIND, "", nonce);
                 break;
-            case "post big blind":
+            case PlayerActionType.BIG_BLIND:
                 console.log(chalk.green("Posting big blind..."));
                 await client.playerAction(tableAddress, PlayerActionType.BIG_BLIND, "", nonce);
                 break;
-            case "bet":
+            case PlayerActionType.BET:
                 console.log(chalk.green("Betting..."));
                 await client.playerAction(tableAddress, PlayerActionType.BET, "", nonce);
                 break;
-            case "call":
+            case PlayerActionType.CALL:
                 console.log(chalk.green("Calling..."));
                 await client.playerAction(tableAddress, PlayerActionType.CALL, "", nonce);
                 break;
-            case "deal":
+            case NonPlayerActionType.DEAL:
                 console.log(chalk.green("Deal..."));
 
                 // use native crypto functions to generate a seed
@@ -690,17 +688,17 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
                 const publicKey = getPublicKeyDetails(pk);
                 await client.deal(tableAddress, seed, publicKey)
                 break;
-            case "fold":
+            case PlayerActionType.FOLD:
                 console.log(chalk.green("Folding..."));
                 await client.playerAction(tableAddress, PlayerActionType.FOLD, "", nonce);
                 break;
-            case "raise":
+            case PlayerActionType.RAISE:
                 console.log(chalk.green("Raising..."));
                 break;
             case "all-in":
                 console.log(chalk.green("Going all-in..."));
                 break;
-            case "leave_game":
+            case NonPlayerActionType.LEAVE:
                 console.log(chalk.green("Leaving game..."));
                 await leave(tableAddress);
                 continueSession = false;
