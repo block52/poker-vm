@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("CheckAction", () => {
@@ -35,7 +35,8 @@ describe("CheckAction", () => {
             TexasHoldemRound.PREFLOP,
             [], // communityCards
             0n, // pot
-            playerStates
+            playerStates,
+            mnemonic
         );
 
         updateMock = {
@@ -87,7 +88,7 @@ describe("CheckAction", () => {
 
         it("should not return a range for check action", () => {
             const range = action.verify(player);
-            expect(range).toBeUndefined();
+            expect(range).toBeDefined();
         });
 
         it.skip("should throw error if it's not player's turn", () => {

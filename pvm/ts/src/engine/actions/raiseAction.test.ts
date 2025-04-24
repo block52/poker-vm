@@ -7,6 +7,7 @@ import { IUpdate, Turn } from "../types";
 import {
     FIFTY_TOKENS,
     gameOptions,
+    mnemonic,
     ONE_HUNDRED_TOKENS,
     ONE_THOUSAND_TOKENS,
     ONE_TOKEN,
@@ -45,7 +46,8 @@ describe("Raise Action", () => {
             TexasHoldemRound.PREFLOP,
             [], // communityCards
             0n, // pot
-            playerStates
+            playerStates,
+            mnemonic
         );
 
         updateMock = {

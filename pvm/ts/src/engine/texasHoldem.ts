@@ -64,23 +64,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
         private communityCards: string[],
         private currentPot: bigint = 0n, // todo: this can be removed
         playerStates: Map<number, Player | null>,
-        deck?: string
+        deck: string
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
-
-        if (deck) {
-            this._deck = new Deck(deck);
-        } else {
-            this._deck = new Deck();
-
-            // // Create a seed number for the deck
-            // // this.seed = Array.from({ length: 52 }, () => crypto.randomInt(0, 1000000));
-            // this.seed = Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
-
-            // // Shuffle the deck
-            // // console.log("About to shuffle deck with seed array:", this.seed);
-            // this._deck.shuffle(this.seed);
-        }
+        this._deck = new Deck(deck);
 
         // TODO: Make this a map
         for (let i = 0; i < communityCards.length; i++) {
@@ -183,10 +170,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
     getPlayerCount() {
         const count = Array.from(this._playersMap.values()).filter((player): player is Player => player !== null).length;
         return count;
-    }
-
-    shuffle(seed: number[] = []): void {
-        this._deck.shuffle(seed);
     }
 
     deal(): void {
@@ -299,7 +282,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Check if we haven't dealt
         if (autoPostBlinds) {
             if (this.getPlayerCount() === this._gameOptions.minPlayers && this.currentRound === TexasHoldemRound.PREFLOP) {
-                this.shuffle();
                 this.deal();
             }
         }
@@ -512,9 +494,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
                 return;
             case NonPlayerActionType.DEAL:
-                this.shuffle(data);
-                this.deal();
-                this.incrementTurnIndex();
+                new DealAction(this, this._update).execute(this.getPlayer(address), index);
+                // this.incrementTurnIndex();
+
                 break;
         }
 
@@ -556,26 +538,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             case PlayerActionType.RAISE:
                 new RaiseAction(this, this._update).execute(player, index, amount);
-                break;
-            case NonPlayerActionType.DEAL:
-                // First verify the deal is valid via the DealAction
-                try {
-                    new DealAction(this, this._update).execute(player, index);
-
-                    // For 3+ player games, set the last acted seat to the big blind position
-                    // so that the next player to act will be the one after the big blind
-                    const activePlayerCount = this.getActivePlayerCount();
-                    if (activePlayerCount > 2) {
-                        console.log("Deal action: Setting last acted seat to big blind position:", this._bigBlindPosition);
-                        this._lastActedSeat = this._bigBlindPosition;
-                    } else {
-                        // For 2-player games, set to dealer position so small blind acts next
-                        console.log("Deal action: Setting last acted seat to dealer position:", this._dealer);
-                        this._lastActedSeat = this._dealer;
-                    }
-                } catch (error) {
-                    console.error("Error performing deal action:", error);
-                }
                 break;
             default:
                 // do we need to roll back last acted seat?
@@ -865,7 +827,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this.setNextRound();
     }
 
-    reInit(seed: number[]): void {
+    reInit(deck: string): void {
         if (!this._playersMap.size) throw new Error("No players in game.");
         if (this._currentRound !== TexasHoldemRound.PREFLOP) throw new Error("Hand currently in progress.");
 
@@ -877,10 +839,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._rounds.set(TexasHoldemRound.PREFLOP, []);
 
         this._lastActedSeat = 0;
-        this._deck = new Deck();
-        // this should come from another source
-        this.seed = seed || Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
-        this._deck.shuffle(this.seed);
+        this._deck = new Deck(deck);
         this._pot = 0n;
         this._communityCards.length = 0;
         this._winners?.clear();

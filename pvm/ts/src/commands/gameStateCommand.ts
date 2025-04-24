@@ -7,7 +7,6 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { Transaction } from "../models";
 
-
 type OrderedTransaction = {
     from: string;
     to: string;

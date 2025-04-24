@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions } from "../testConstants";
+import { gameOptions, mnemonic } from "../testConstants";
 
 describe("SmallBlindAction", () => {
     let game: TexasHoldemGame;
@@ -34,7 +34,8 @@ describe("SmallBlindAction", () => {
             TexasHoldemRound.ANTE, // Changed from ANTE to PREFLOP to match new implementation
             [], // communityCards
             0n, // pot
-            playerStates
+            playerStates,
+            mnemonic
         );
 
         updateMock = {
