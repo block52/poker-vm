@@ -1,6 +1,6 @@
 {
     "name": "@bitcoinbrisbane/block52",
-    "version": "1.0.78",
+    "version": "1.0.79",
     "author": "@bitcoinbrisbane",
     "license": "MIT",
     "description": "SDK for interacting with the Block52 Node",
