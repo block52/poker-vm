@@ -7,7 +7,7 @@ export class DeployContractCommand implements ISignedCommand<string> {
     private readonly gameManagement: GameManagement;
     private readonly gameOptions: GameOptions;
     
-    constructor(private nonce: bigint, private owner: string, private data: string, private readonly privateKey: string) {
+    constructor(private readonly nonce: bigint, private readonly owner: string, private readonly data: string, private readonly privateKey: string) {
         const params = data.split(",");
 
         const gameOptions: GameOptions = {

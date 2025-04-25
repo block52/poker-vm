@@ -13,7 +13,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
 
-    constructor(private from: string, private to: string, private index: number, private amount: bigint, private action: PlayerActionType | NonPlayerActionType, private readonly privateKey: string) {
+    constructor(private readonly from: string, private readonly to: string, private readonly index: number, private readonly amount: bigint, private readonly action: PlayerActionType | NonPlayerActionType, private readonly nonce: number, private readonly privateKey: string) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
@@ -38,7 +38,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
         game.performAction(this.from, this.action, this.index, this.amount);
 
-        const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, `${this.action},${this.index}`); // Use comma to separate action and index
+        const nonce = BigInt(this.nonce);
+        const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, nonce, this.privateKey, `${this.action},${this.index}`); // Use comma to separate action and index
         await this.mempool.add(tx);
         return signResult(tx, this.privateKey);
     }

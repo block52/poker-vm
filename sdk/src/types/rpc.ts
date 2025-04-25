@@ -42,6 +42,7 @@ export enum RPCMethods {
     MINE = "mine",
     MINED_BLOCK_HASH = "mined_block_hash",
     MINT = "mint",
+    NEW = "new",
     PERFORM_ACTION = "perform_action",
     PURGE = "purge",
     RESET_BLOCKCHAIN = "reset_blockchain",
@@ -75,6 +76,7 @@ export type RPCRequestParams = {
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
     [RPCMethods.MINT]: [string]; // [depositIndex]
+    [RPCMethods.NEW]: [string, string]; // [to, data]
     [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number]; // [from, to, action, amount, nonce, index]
     [RPCMethods.PURGE]: [string, string]; // [username, password]
     [RPCMethods.RESET_BLOCKCHAIN]: [string, string]; // [username, password]

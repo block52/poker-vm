@@ -15,7 +15,6 @@ export enum PlayerActionType {
 export enum NonPlayerActionType {
     DEAL = "deal",
     JOIN = "join",
-    NEXT = "next-round",
     LEAVE = "leave"
 }
 
@@ -99,6 +98,26 @@ export type PlayerDTO = {
     legalActions: LegalActionDTO[];
     sumOfBets: string;
     timeout: number;
+    signature: string;
+};
+
+export type TexasHoldemGameState = {
+    type: string;
+    address: string;
+    minBuyIn: string;
+    maxBuyIn: string;
+    minPlayers: number;
+    maxPlayers: number;
+    smallBlind: string;
+    bigBlind: string;
+    dealer: number;
+    players: string[];
+    deck: string;
+    communityCards: string[];
+    pots: string[];
+    nextToAct: number;
+    round: TexasHoldemRound;
+    winners: string[];
     signature: string;
 };
 
