@@ -321,7 +321,7 @@ app.post("/table/:tableId/fold", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "fold", // action
+                PlayerActionType.FOLD, // action
                 "0", // amount (folding doesn't require an amount)
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index // data/index - use the provided index or default to 1 based on game state
@@ -370,7 +370,7 @@ app.post("/table/:tableId/raise", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "raise", // action
+                PlayerActionType.RAISE, // action
                 req.body.amount, // amount to raise
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index || req.body.actionIndex // data/index - use the provided index
@@ -419,7 +419,7 @@ app.post("/table/:tableId/bet", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "bet", // action
+                PlayerActionType.BET, // action
                 req.body.amount, // amount to bet
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index || req.body.actionIndex // data/index - use the provided index
@@ -468,7 +468,7 @@ app.post("/table/:tableId/call", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "call", // action
+                PlayerActionType.CALL, // action
                 req.body.amount, // amount to call
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index || req.body.actionIndex // data/index - use the provided index
@@ -516,7 +516,7 @@ app.post("/table/:tableId/check", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "check", // action
+                PlayerActionType.CHECK, // action
                 "0", // amount (check doesn't require an amount)
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index || req.body.actionIndex // data/index - use the provided index
