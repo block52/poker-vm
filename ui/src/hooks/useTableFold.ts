@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../config/constants";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 
 interface FoldOptions {
   userAddress: string | null;
@@ -52,7 +53,7 @@ async function foldFetcher(
     userAddress: normalizedAddress, // Use the normalized (lowercase) address
     signature,
     publicKey: (publicKey || userAddress).toLowerCase(), // Also normalize publicKey
-    action: "fold", // Explicitly specify the action
+    action: PlayerActionType.FOLD, // Explicitly specify the action
     amount: "0", // Fold has no amount, but explicitly set to 0
     nonce: nonce || timestamp,
     timestamp,

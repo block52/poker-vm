@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
+import { PlayerActionType } from "@bitcoinbrisbane/block52"
 import { ethers } from "ethers";
 
 // Define the parameter type for callHand function
@@ -52,7 +53,7 @@ export const useTableCall = (tableId?: string) => {
       // Prepare the request payload
       const payload = {
         userAddress: params.userAddress,
-        action: "call",
+        action: PlayerActionType.CALL,
         amount: params.amount,
         signature,
         publicKey: params.publicKey,
