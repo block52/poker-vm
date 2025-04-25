@@ -3,6 +3,7 @@ import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../config/constants";
 import { useGameOptions, DEFAULT_SMALL_BLIND } from "./useGameOptions";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 
 
 interface PostSmallBlindOptions {
@@ -56,7 +57,7 @@ async function postSmallBlindFetcher(
     userAddress: normalizedAddress, // Use the normalized (lowercase) address
     signature,
     publicKey: (publicKey || userAddress).toLowerCase(), // Also normalize publicKey
-    action: "post-small-blind", // Explicitly specify the action
+    action: PlayerActionType.SMALL_BLIND, // Explicitly specify the action
     amount, // Small blind amount
     smallBlindAmount: amount, // Include as both for flexibility in the server
     nonce: nonce,

@@ -321,7 +321,7 @@ app.post("/table/:tableId/fold", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "fold", // action
+                PlayerActionType.FOLD, // action
                 "0", // amount (folding doesn't require an amount)
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index // data/index - use the provided index or default to 1 based on game state
@@ -370,7 +370,7 @@ app.post("/table/:tableId/raise", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "raise", // action
+                PlayerActionType.RAISE, // action
                 req.body.amount, // amount to raise
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index || req.body.actionIndex // data/index - use the provided index
@@ -419,7 +419,7 @@ app.post("/table/:tableId/bet", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "bet", // action
+                PlayerActionType.BET, // action
                 req.body.amount, // amount to bet
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index || req.body.actionIndex // data/index - use the provided index
@@ -468,7 +468,7 @@ app.post("/table/:tableId/call", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "call", // action
+                PlayerActionType.CALL, // action
                 req.body.amount, // amount to call
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index || req.body.actionIndex // data/index - use the provided index
@@ -516,7 +516,7 @@ app.post("/table/:tableId/check", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (table ID)
-                "check", // action
+                PlayerActionType.CHECK, // action
                 "0", // amount (check doesn't require an amount)
                 req.body.nonce || 0, // nonce (optional)
                 req.body.index || req.body.actionIndex // data/index - use the provided index
@@ -694,49 +694,48 @@ app.get("/nonce/:address", async (req, res) => {
 // Deal cards endpoint
 // ===================================
 app.post("/table/:tableId/deal", async (req, res) => {
-    // console.log("=== DEAL CARDS REQUEST ===");
-    // console.log("Request body:", req.body);
-    // console.log("Route params:", req.params);
+    console.log("=== DEAL ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
 
     try {
-        // Format the RPC call to match the SDK client structure
+        // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
-            version: "2.0",
-            method: "deal",
+            method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.params.tableId, // table address
-                req.body.seed || "randomseed123", // random seed (use provided or default) todo: this should be the seed from the game
-                req.body.publicKey // public key
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                NonPlayerActionType.DEAL, // action
+                "0", // amount (deal doesn't require an amount)
+                req.body.nonce || 0, // nonce (optional)
+                req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
-            signature: req.body.signature
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
         };
 
-        // console.log("=== FORMATTED RPC CALL ===");
-        // console.log(JSON.stringify(rpcCall, null, 2));
-        // console.log("=== NODE_URL ===");
-        // console.log(process.env.NODE_URL);
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
 
-        // Make the actual RPC call to node1
+        // Make the actual RPC call to the node
         const response = await axios.post(NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
         });
 
-        // console.log("=== NODE1 RESPONSE ===");
-        // console.log(response.data);
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
 
         res.json(response.data);
-
-        // // Also broadcast this update to WebSocket clients
-        // if (tableSubscriptions.has(req.params.tableId)) {
-        //     console.log(`Broadcasting table update after deal to ${tableSubscriptions.get(req.params.tableId).size} WebSocket clients`);
-        //     await broadcastTableUpdate(req.params.tableId);
-        // }
     } catch (error) {
-        // console.error("=== ERROR ===");
-        // console.error("Error details:", error);
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
         res.status(500).json({ error: "Failed to deal cards", details: error.message });
     }
 });

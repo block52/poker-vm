@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
-import { PlayerActionType, LegalActionDTO } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, LegalActionDTO, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
@@ -9,7 +9,7 @@ import { useTableNonce, AccountData } from "../hooks/useTableNonce";
 // Import our custom hooks
 import { usePlayerDTO } from "../hooks/usePlayerDTO";
 import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
-import { useDealTable } from "../hooks/useDealTable";
+import { useTableDeal } from "../hooks/useTableDeal";
 import { useTableCheck } from "../hooks/useTableCheck";
 import { useTableFold } from "../hooks/useTableFold";
 import { useTableRaise } from "../hooks/useTableRaise";
@@ -31,7 +31,7 @@ const PokerActionPanel: React.FC = () => {
     const { nonce, accountData, refreshNonce } = useTableNonce();
     const { players } = usePlayerDTO(tableId);
     const { legalActions, isPlayerTurn, playerStatus, playerSeat } = usePlayerLegalActions(tableId);
-    const { dealTable, canDeal } = useDealTable(tableId);
+    const { dealCards, isDealing } = useTableDeal(tableId);
     const { checkHand } = useTableCheck(tableId);
     const { foldHand } = useTableFold(tableId);
     const { raiseHand } = useTableRaise(tableId);
@@ -80,8 +80,8 @@ const PokerActionPanel: React.FC = () => {
     // Check if current user has the deal action
     const currentUserCanDeal = userPlayer?.legalActions?.some((action: any) => action.action === "deal") || false;
 
-    // Only show deal button if global canDeal is true AND current user has the deal action
-    const shouldShowDealButton = canDeal && currentUserCanDeal;
+    // Only show deal button if current user has the deal action
+    const shouldShowDealButton = currentUserCanDeal;
 
     // New flag to determine whether to hide other action buttons when deal is available
     const hideOtherButtons = shouldShowDealButton;
@@ -466,14 +466,27 @@ const PokerActionPanel: React.FC = () => {
     const activePlayerCount = activePlayers?.length || 0;
     const gameInProgress = activePlayerCount > 1;
 
-
    
     // Add a handler for the deal button
     const handleDeal = () => {
         console.log("Deal button clicked");
-        if (dealTable) {
-            dealTable();
+        
+        // Get public and private keys
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !dealCards) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
         }
+        
+        // Use the new hook to deal cards
+        dealCards({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: legalActions?.find(a => a.action === "deal")?.index || 0,
+        });
     };
 
     // Add useEffect to log the nonce information from our new hook
@@ -501,6 +514,7 @@ const PokerActionPanel: React.FC = () => {
                             text-white font-bold py-3 px-8 rounded-lg shadow-lg 
                             border-2 border-[#3a9188] transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
+                            disabled={isDealing}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -511,7 +525,7 @@ const PokerActionPanel: React.FC = () => {
                                 />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            DEAL
+                            {isDealing ? "DEALING..." : "DEAL"}
                         </button>
                     </div>
                 )}
@@ -799,8 +813,8 @@ export default PokerActionPanel;
  * 
  * 1. playerLegalActions -> usePlayerLegalActions().legalActions
  * 2. isPlayerTurn -> usePlayerLegalActions().isPlayerTurn
- * 3. canDeal -> useDealTable().canDeal
- * 4. dealTable -> useDealTable().dealTable
+ * 3. canDeal -> Now uses currentUserCanDeal (from legalActions)
+ * 4. dealCards -> useTableDeal().dealCards (replaced dealTable)
  * 5. nonce -> useTableNonce().nonce
  * 6. refreshNonce -> useTableNonce().refreshNonce
  * 
@@ -812,6 +826,7 @@ export default PokerActionPanel;
  * - Call: useTableCall().callHand
  * - Bet: useTableBet().betHand
  * - Raise: useTableRaise().raiseHand
+ * - Deal: useTableDeal().dealCards
  * 
  * TO DO:
  * - Remove the TableContext dependency completely

@@ -3,6 +3,7 @@ import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../config/constants";
 import { DEFAULT_BIG_BLIND, useGameOptions } from "./useGameOptions";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 
 
 interface PostBigBlindOptions {
@@ -56,7 +57,7 @@ async function postBigBlindFetcher(
     userAddress: normalizedAddress, // Use the normalized (lowercase) address
     signature,
     publicKey: (publicKey || userAddress).toLowerCase(), // Also normalize publicKey
-    action: "post-big-blind", // Explicitly specify the action
+    action: PlayerActionType.BIG_BLIND, // Explicitly specify the action
     amount, // Big blind amount
     bigBlindAmount: amount, // Include as both for flexibility in the server
     nonce: nonce,
