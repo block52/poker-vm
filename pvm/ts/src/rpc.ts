@@ -8,7 +8,6 @@ import {
     BurnCommand,
     CreateAccountCommand,
     CreateContractSchemaCommand,
-    DealCommand,
     DeployContractCommand,
     GameStateCommand,
     GetAllContractSchemasCommand,
