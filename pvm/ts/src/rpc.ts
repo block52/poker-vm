@@ -35,6 +35,7 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
+import { NewCommand } from "./commands/newCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -334,7 +335,12 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.: {
+                case RPCMethods.NEW: {
+                    const [to, data] = request.params as RPCRequestParams[RPCMethods.NEW];
+                    const command = new NewCommand(to, validatorPrivateKey, data);
+                    result = await command.execute();
+                    break;
+                }
 
                 case RPCMethods.DEPLOY_CONTRACT: {
                     const [nonce, owner, data] = request.params as RPCRequestParams[RPCMethods.DEPLOY_CONTRACT];
