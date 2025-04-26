@@ -7,6 +7,7 @@ import crypto from "crypto";
 import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ContractSchemaManagement, getContractSchemaManagement } from "./contractSchemaManagement";
 import { Deck } from "../models";
+import { TexasHoldemGameState } from "../types";
 
 export class GameManagement extends StateManager {
     private readonly mempool: Mempool;

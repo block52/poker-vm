@@ -8,6 +8,7 @@ import contractSchemas from "../schema/contractSchemas";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { TexasHoldemGameState } from "../types";
+import { ethers } from "ethers";
 
 export class NewCommand implements ICommand<ISignedResponse<any>> {
     private readonly gameManagement: GameManagement;
@@ -35,7 +36,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
         }
     }
 
-    public async execute(): Promise<ISignedResponse<any>> {
+    public async execute(): Promise<ISignedResponse<Transaction>> {
         try {
 
             const isGameContract = await this.isGameContract(this.address);
@@ -48,14 +49,23 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                 this.contractSchemas.getGameOptions(this.address)
             ]);
 
-            const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
+            if (!gameOptions) {
+                throw new Error(`Game options not found for address ${this.address}`);
+            }
 
-            if (!game) {
+            if (!json) {
 
                 // Do defaults for the game contract
-                const gameOptions: GameOptions = await this.contractSchemas.getGameOptions(address);
+                const gameOptions: GameOptions = await this.contractSchemas.getGameOptions(this.address);
 
                 if (gameOptions) {
+
+                    await this.gameManagement.create(
+                        0n, // Nonce is not used in this context
+                        this.address,
+                        gameOptions
+                    );
+
                     const json: TexasHoldemGameState = {
                         type: "cash",
                         address: address,
@@ -76,10 +86,11 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                         signature: ethers.ZeroHash
                     };
 
-                    return json;
-                }
 
+                }
             }
+
+            const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
             if (game.currentRound !== TexasHoldemRound.SHOWDOWN) {
                 throw new Error("Game has not finished yet");
