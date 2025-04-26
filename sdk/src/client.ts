@@ -24,7 +24,7 @@ export interface IClient {
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any>;
     playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
     deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
-    nextHand(gameAddress: string, nonce?: number): Promise<any>;
+    newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
 }
 
 /**
@@ -228,7 +228,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [from, to, amount, nonce, data]
+            params: [from, to, amount, nonce, data],
             signature: signature
         });
 
@@ -260,6 +260,26 @@ export class NodeRpcClient implements IClient {
             id: this.getRequestId(),
             method: RPCMethods.GET_GAME_STATE,
             params: [gameAddress]
+        });
+
+        return body.result.data;
+    }
+
+    /**
+     * Create a new game on the remote node
+     * @param gameAddress The address of the game
+     * @param data The game data
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async newHand(gameAddress: string, seed: string, nonce?: number): Promise<any> {
+        const signature = await this.getSignature(nonce);
+
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.NEW,
+            params: [gameAddress, seed, nonce], // [to, data, nonce]
+            signature: signature
         });
 
         return body.result.data;
@@ -299,7 +319,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, action, nonce, index], // [from, to, action, amount, nonce, index]
+            params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
             signature: signature
         });
 
@@ -317,7 +337,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [gameAddress, address, NonPlayerActionType.LEAVE, amount.toString(), nonce, index.toString()], // [from, to, action, amount, nonce, index]
+            params: [gameAddress, address, NonPlayerActionType.LEAVE, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
             signature: signature
         });
 
@@ -332,29 +352,19 @@ export class NodeRpcClient implements IClient {
      */
     public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<any> {
         const address = this.getAddress();
-        const signature = await this.getSignature();
+        const [signature, index] = await Promise.all([
+            this.getSignature(nonce),
+            this.getNextTurnIndex(gameAddress, address)
+        ]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            // params: [address, gameAddress, "deal", "", seed],
-            params: [address, gameAddress, NonPlayerActionType.NEXT, nonce, 0], // [from, to, action, amount, nonce, index]
+            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index], // [from, to, action, amount, nonce, index]
             data: publicKey,  // todo; work out what we will use data for
             signature: signature
         });
 
-        return body.result.data;
-    }
-
-    public async nextHand(gameAddress: string, nonce?: number): Promise<any> {
-        const address = this.getAddress();
-        const signature = await this.getSignature(nonce);
-        const { data: body } = await axios.post(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.NEXT, nonce, 0], // [from, to, action, amount, nonce, index]
-            signature: signature
-        });
         return body.result.data;
     }
 

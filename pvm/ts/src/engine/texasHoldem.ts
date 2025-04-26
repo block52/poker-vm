@@ -28,6 +28,7 @@ import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers, N } from "ethers";
 import LeaveAction from "./actions/leaveAction";
+import { NODATA } from "dns";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;

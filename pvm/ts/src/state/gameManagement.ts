@@ -3,11 +3,9 @@ import GameState from "../schema/gameState";
 import { ethers } from "ethers";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IGameStateDocument, IJSONModel } from "../models/interfaces";
-import { ContractSchema } from "../models/contractSchema";
 import crypto from "crypto";
 import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ContractSchemaManagement, getContractSchemaManagement } from "./contractSchemaManagement";
-import { ShuffleCommand } from "../commands/shuffleCommand";
 import { Deck } from "../models";
 
 export class GameManagement extends StateManager {
@@ -33,7 +31,8 @@ export class GameManagement extends StateManager {
         return states;
     }
 
-    async get(address: string): Promise<any> {
+    // This needs to be looser in the future as "any", use a generic type
+    async get(address: string): Promise<TexasHoldemGameState> {
         const gameState = await GameState.findOne({
             address
         });
@@ -42,32 +41,6 @@ export class GameManagement extends StateManager {
             // this is stored in MongoDB as an object / document
             const state = gameState.state;
             return state;
-        }
-
-        // Do defaults for the game contract
-        const gameOptions: GameOptions = await this.contractSchemas.getGameOptions(address);
-
-        if (gameOptions) {
-            const json = {
-                type: "cash",
-                address: address,
-                minBuyIn: gameOptions.minBuyIn.toString(),
-                maxBuyIn: gameOptions.maxBuyIn.toString(),
-                minPlayers: gameOptions.minPlayers,
-                maxPlayers: gameOptions.maxPlayers,
-                smallBlind: gameOptions.smallBlind.toString(),
-                bigBlind: gameOptions.bigBlind.toString(),
-                dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
-                players: [],
-                communityCards: [],
-                pots: ["0"],
-                nextToAct: -1,
-                round: TexasHoldemRound.ANTE,
-                winners: [],
-                signature: ethers.ZeroHash
-            };
-
-            return json;
         }
 
         throw new Error("Game not found");
@@ -81,27 +54,29 @@ export class GameManagement extends StateManager {
         const deck = new Deck();
         deck.shuffle();
 
+        const state: TexasHoldemGameState = {
+            type: "cash",
+            address: hash,
+            minBuyIn: gameOptions.minBuyIn.toString(),
+            maxBuyIn: gameOptions.maxBuyIn.toString(),
+            minPlayers: gameOptions.minPlayers,
+            maxPlayers: gameOptions.maxPlayers,
+            smallBlind: gameOptions.smallBlind.toString(),
+            bigBlind: gameOptions.bigBlind.toString(),
+            dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
+            players: [],
+            deck: deck.toString(),
+            communityCards: [],
+            pots: ["0"],
+            nextToAct: -1,
+            round: TexasHoldemRound.ANTE,
+            winners: [],
+            signature: ethers.ZeroHash
+        }
+
         const game = new GameState({
             address: hash,
-            state: {
-                type: "cash",
-                address: hash,
-                minBuyIn: gameOptions.minBuyIn.toString(),
-                maxBuyIn: gameOptions.maxBuyIn.toString(),
-                minPlayers: gameOptions.minPlayers,
-                maxPlayers: gameOptions.maxPlayers,
-                smallBlind: gameOptions.smallBlind.toString(),
-                bigBlind: gameOptions.bigBlind.toString(),
-                dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
-                players: [],
-                deck: deck.toString(),
-                communityCards: [],
-                pots: ["0"],
-                nextToAct: -1,
-                round: TexasHoldemRound.ANTE,
-                winners: [],
-                signature: ethers.ZeroHash
-            }
+            state
         });
 
         await game.save();

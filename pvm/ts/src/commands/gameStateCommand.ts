@@ -44,25 +44,6 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 try {
                     game.performAction(tx.from, tx.type, tx.index, tx.value);
                     console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
-                    // // For join actions, check if player is already in the game
-                    // if (tx.data === "join" && playerSeats.has(tx.from)) {
-                    //     console.log(`Skipping join for already seated player: ${tx.from}`);
-                    //     return;
-                    // }
-
-                    // switch (tx.data) {
-                    //     case "deal":
-                    //         console.log(`Processing deal action from ${tx.from}`);
-                    //         try {
-                    //             game.deal();
-                    //         } catch (error) {
-                    //             console.error("Error dealing cards:", error);
-                    //             // Don't rethrow the error - continue processing other actions
-                    //         }
-                    //         break;
-                    //     default:
-                    //         throw new Error("Invalid action");
-                    // };
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                     // Continue with other transactions, don't let this error propagate up

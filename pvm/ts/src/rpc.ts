@@ -35,7 +35,6 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
-import { NextCommand } from "./commands/nextCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -219,7 +218,7 @@ export class RPC {
 
                 case RPCMethods.GET_TRANSACTIONS: {
                     const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
-                    const blockHash = ""; // todo: need to redploy sdk
+                    const blockHash = "";
                     const command = new GetTransactionsCommand(Number(count), blockHash, validatorPrivateKey);
                     result = await command.execute();
                     break;
@@ -277,16 +276,6 @@ export class RPC {
         try {
             switch (method) {
                 // Write methods
-
-                // case RPCMethods.GET_BLOCK: {
-                //     const blockHash = request.params[0] as string;
-                //     const blockJSON = request.params[1] as string;
-                //     const blockDTO: BlockDTO = JSON.parse(blockJSON);
-                //     const command = new ReceiveMinedBlockCommand(blockHash, blockDTO, validatorPrivateKey);
-                //     result = await command.execute();
-                //     break;
-                // }
-
                 case RPCMethods.BURN: {
                     if (request.params?.length !== 3) {
                         return makeErrorRPCResponse(id, "Invalid params");
@@ -338,11 +327,14 @@ export class RPC {
 
                 case RPCMethods.PERFORM_ACTION: {
                     const [from, to, action, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
+                    const index = Number(data);
                     const _action = action as PlayerActionType | NonPlayerActionType;
-                    const command = new PerformActionCommand(from, to, Number(data), BigInt(amount || "0"), _action, validatorPrivateKey);
+                    const command = new PerformActionCommand(from, to, index, BigInt(amount || "0"), _action, nonce, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
+
+                case RPCMethods.: {
 
                 case RPCMethods.DEPLOY_CONTRACT: {
                     const [nonce, owner, data] = request.params as RPCRequestParams[RPCMethods.DEPLOY_CONTRACT];
