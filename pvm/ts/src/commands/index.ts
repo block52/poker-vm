@@ -31,6 +31,7 @@ import { ShutdownCommand } from "./shutdownCommand";
 import { StartServerCommand } from "./startServerCommand";
 import { StopServerCommand } from "./stopServerCommand";
 import { ISignedResponse } from "./interfaces";
+import { NewCommand } from "./newCommand";
 
 export {
     AccountCommand,
@@ -65,5 +66,6 @@ export {
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
-    ISignedResponse
+    ISignedResponse,
+    NewCommand
 };

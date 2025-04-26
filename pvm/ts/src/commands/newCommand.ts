@@ -8,6 +8,7 @@ import contractSchemas from "../schema/contractSchemas";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { TexasHoldemGameState } from "../types";
+import { ZeroHash } from "ethers";
 
 export class NewCommand implements ICommand<ISignedResponse<any>> {
     private readonly gameManagement: GameManagement;
@@ -53,12 +54,12 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
             if (!game) {
 
                 // Do defaults for the game contract
-                const gameOptions: GameOptions = await this.contractSchemas.getGameOptions(address);
+                const gameOptions: GameOptions = await this.contractSchemas.getGameOptions(this.address);
 
                 if (gameOptions) {
                     const json: TexasHoldemGameState = {
                         type: "cash",
-                        address: address,
+                        address: this.address,
                         minBuyIn: gameOptions.minBuyIn.toString(),
                         maxBuyIn: gameOptions.maxBuyIn.toString(),
                         minPlayers: gameOptions.minPlayers,
@@ -73,10 +74,10 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                         nextToAct: -1,
                         round: TexasHoldemRound.ANTE,
                         winners: [],
-                        signature: ethers.ZeroHash
+                        signature: ZeroHash
                     };
 
-                    return json;
+                    return signResult(json, this.privateKey);
                 }
 
             }
