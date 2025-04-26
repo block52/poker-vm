@@ -55,39 +55,33 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
 
             if (!json) {
 
-                // Do defaults for the game contract
-                const gameOptions: GameOptions = await this.contractSchemas.getGameOptions(this.address);
+                const address = await this.gameManagement.create(
+                    0n, // Nonce is not used in this context
+                    this.address,
+                    gameOptions
+                );
 
-                if (gameOptions) {
+                const json: TexasHoldemGameState = {
+                    type: "cash",
+                    address: address,
+                    minBuyIn: gameOptions.minBuyIn.toString(),
+                    maxBuyIn: gameOptions.maxBuyIn.toString(),
+                    minPlayers: gameOptions.minPlayers,
+                    maxPlayers: gameOptions.maxPlayers,
+                    smallBlind: gameOptions.smallBlind.toString(),
+                    bigBlind: gameOptions.bigBlind.toString(),
+                    dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
+                    players: [],
+                    deck: "",
+                    communityCards: [],
+                    pots: ["0"],
+                    nextToAct: -1,
+                    round: TexasHoldemRound.ANTE,
+                    winners: [],
+                    signature: ethers.ZeroHash
+                };
 
-                    await this.gameManagement.create(
-                        0n, // Nonce is not used in this context
-                        this.address,
-                        gameOptions
-                    );
-
-                    const json: TexasHoldemGameState = {
-                        type: "cash",
-                        address: address,
-                        minBuyIn: gameOptions.minBuyIn.toString(),
-                        maxBuyIn: gameOptions.maxBuyIn.toString(),
-                        minPlayers: gameOptions.minPlayers,
-                        maxPlayers: gameOptions.maxPlayers,
-                        smallBlind: gameOptions.smallBlind.toString(),
-                        bigBlind: gameOptions.bigBlind.toString(),
-                        dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
-                        players: [],
-                        deck: "",
-                        communityCards: [],
-                        pots: ["0"],
-                        nextToAct: -1,
-                        round: TexasHoldemRound.ANTE,
-                        winners: [],
-                        signature: ethers.ZeroHash
-                    };
-
-
-                }
+                await this.gameManagement.saveFromJSON(json);
             }
 
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
