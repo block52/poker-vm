@@ -33,7 +33,7 @@ export class GameManagement extends StateManager {
     }
 
     // This needs to be looser in the future as "any", use a generic type
-    async get(address: string): Promise<TexasHoldemGameState> {
+    async get(address: string): Promise<TexasHoldemGameState | null> {
         const gameState = await GameState.findOne({
             address
         });
@@ -44,12 +44,25 @@ export class GameManagement extends StateManager {
             return state;
         }
 
-        throw new Error("Game not found");
+        // Return null instead of throwing an error
+        return null;
     }
 
-    async create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {
-        const digest = `${owner}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
-        const hash = crypto.createHash("sha256").update(digest).digest("hex");
+    async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
+        // TODO: Eventually we should generate a unique table address here, but for now
+        // the game address needs to be the same as the contractSchema address for the system
+        // to work correctly. We're keeping the original hash generation code commented out
+        // until we can properly separate game instances from contract schemas.
+        
+        // const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
+        // const hash = crypto.createHash("sha256").update(digest).digest("hex");
+
+        // Instead of creating a new hash, using the contractSchema address 
+        // This ensures the game address matches the contract address
+        const address = contractSchemaAddress;
+        
+        // Creating a log to confirm what's happening
+        console.log(`Creating game with address: ${address} (using contract schema address directly)`);
 
         // Todo: Add deck
         const deck = new Deck();
@@ -57,7 +70,7 @@ export class GameManagement extends StateManager {
 
         const state: TexasHoldemGameState = {
             type: "cash",
-            address: hash,
+            address: address,
             minBuyIn: gameOptions.minBuyIn.toString(),
             maxBuyIn: gameOptions.maxBuyIn.toString(),
             minPlayers: gameOptions.minPlayers,
@@ -76,12 +89,12 @@ export class GameManagement extends StateManager {
         }
 
         const game = new GameState({
-            address: hash,
+            address: address,
             state
         });
 
         await game.save();
-        return hash;
+        return address;
     }
 
     async save(state: IJSONModel): Promise<void> {
