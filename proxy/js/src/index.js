@@ -783,8 +783,52 @@ app.get("/get_game_state/:tableId", async (req, res) => {
 });
 
 // ===================================
-// New endpoint for get_account
+// New endpoint for creating a new game
 // ===================================
+app.post("/create_new_game", async (req, res) => {
+    console.log("=== CREATE NEW GAME REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   address:", req.body.address);
+    console.log("   seed:", req.body.seed || "undefined");
+
+    try {
+        // Format the RPC call to match the NEW command structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: "new", // Lowercase "new" matches the SDK definition
+            params: [
+                "0x22dfa2150160484310c5163f280f49e23b8fd34326", // Hardcoded for now to match exactly what's expected
+                req.body.seed || ""
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ 
+            error: "Failed to create new game", 
+            details: error.message 
+        });
+    }
+});
 
 // ===================================
 // 14. Start Server
