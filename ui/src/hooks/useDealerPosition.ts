@@ -1,11 +1,5 @@
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
 import { dealerPosition } from "../utils/PositionArray";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
+import { useGameState } from "./useGameState";
 
 /**
  * Custom hook to fetch and provide dealer button position
@@ -13,15 +7,8 @@ const fetcher = (url: string) =>
  * @returns Object containing dealer button position and visibility state
  */
 export const useDealerPosition = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, isLoading, error } = useGameState(tableId);
 
   // Default values in case of error or loading
   const defaultState = {
@@ -32,27 +19,19 @@ export const useDealerPosition = (tableId?: string) => {
   };
 
   // If still loading or error occurred, return default values
-  if (isLoading || error || !data) {
+  if (isLoading || error || !gameState) {
     return defaultState;
   }
 
   try {
-    // Extract table data from the response (handling different API response structures)
-    const tableData = data.data || data;
-    
-    if (!tableData) {
-      console.warn("No table data found in API response");
-      return defaultState;
-    }
-
     // Default state if dealer position isn't set
     let dealerButtonPosition = { left: "0px", top: "0px" };
     let isDealerButtonVisible = false;
 
     // Handle dealer button
-    if (tableData.dealer !== undefined && tableData.dealer !== null) {
+    if (gameState.dealer !== undefined && gameState.dealer !== null) {
       // If dealer position is 9, treat it as 0 for UI consistency
-      const dealerSeat = tableData.dealer === 9 ? 0 : tableData.dealer;
+      const dealerSeat = gameState.dealer === 9 ? 0 : gameState.dealer;
       const dealerPos = dealerPosition.nine[dealerSeat];
 
       if (dealerPos) {

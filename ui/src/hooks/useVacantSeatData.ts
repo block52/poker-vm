@@ -1,12 +1,6 @@
 import React from "react";
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { useGameState } from "./useGameState";
 import { ethers } from "ethers";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
 
 /**
  * Custom hook to manage data for vacant seats
@@ -14,15 +8,8 @@ const fetcher = (url: string) =>
  * @returns Object containing seat vacancy data
  */
 export const useVacantSeatData = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, isLoading, error } = useGameState(tableId);
   
   const userAddress = React.useMemo(() => {
     return localStorage.getItem("user_eth_public_key")?.toLowerCase() || null;
@@ -30,19 +17,18 @@ export const useVacantSeatData = (tableId?: string) => {
   
   // Check if user is already playing at the table
   const isUserAlreadyPlaying = React.useMemo(() => {
-    if (!userAddress || !data) return false;
+    if (!userAddress || !gameState) return false;
     
-    const tableData = data.data || data;
-    if (!tableData?.players) return false;
+    if (!gameState.players) return false;
     
-    return tableData.players.some((player: any) => 
+    return gameState.players.some((player: any) => 
       player.address?.toLowerCase() === userAddress
     );
-  }, [data, userAddress]);
+  }, [gameState, userAddress]);
   
   // Get blind values from table data
   const tableInfo = React.useMemo(() => {
-    if (!data) return {
+    if (!gameState) return {
       smallBlindWei: "0",
       bigBlindWei: "0",
       smallBlindDisplay: "0.00",
@@ -53,32 +39,29 @@ export const useVacantSeatData = (tableId?: string) => {
       players: []
     };
     
-    const tableData = data.data || data;
-    
-    const smallBlindWei = tableData?.smallBlind || "0";
-    const bigBlindWei = tableData?.bigBlind || "0";
+    const smallBlindWei = gameState.smallBlind || "0";
+    const bigBlindWei = gameState.bigBlind || "0";
     
     return {
       smallBlindWei,
       bigBlindWei,
       smallBlindDisplay: ethers.formatUnits(smallBlindWei, 18),
       bigBlindDisplay: ethers.formatUnits(bigBlindWei, 18),
-      dealerPosition: tableData?.dealer || 0,
-      smallBlindPosition: tableData?.smallBlindPosition || 0,
-      bigBlindPosition: tableData?.bigBlindPosition || 0,
-      players: tableData?.players || []
+      dealerPosition: gameState.dealer || 0,
+      smallBlindPosition: gameState.smallBlindPosition || 0,
+      bigBlindPosition: gameState.bigBlindPosition || 0,
+      players: gameState.players || []
     };
-  }, [data]);
+  }, [gameState]);
   
   // Function to check if a specific seat is vacant
   const isSeatVacant = React.useCallback((seatIndex: number) => {
-    if (!data) return true;
+    if (!gameState) return true;
     
-    const tableData = data.data || data;
-    if (!tableData?.players) return true;
+    if (!gameState.players) return true;
     
     // Check if any player occupies this seat
-    const isOccupied = tableData.players.some(
+    const isOccupied = gameState.players.some(
       (player: any) => 
         player.seat === seatIndex && 
         player.address && 
@@ -86,7 +69,7 @@ export const useVacantSeatData = (tableId?: string) => {
     );
     
     return !isOccupied;
-  }, [data]);
+  }, [gameState]);
   
   // Function to check if a user can join a specific seat
   const canJoinSeat = React.useCallback((seatIndex: number) => {

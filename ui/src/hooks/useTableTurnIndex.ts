@@ -1,38 +1,4 @@
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => {
-    console.log("API Response for game state:", res.data);
-    return res.data;
-  });
-
-/**
- * Extracts game data from API response, handling different response structures
- */
-function extractGameData(data: any): any {
-  if (!data) return null;
-  
-  // Check for response.data.data structure
-  if (data.data?.previousActions) {
-    return data.data;
-  }
-  
-  // Check for response.data structure
-  if (data.previousActions) {
-    return data;
-  }
-  
-  // Check for response.result.data structure
-  if (data.result?.data?.previousActions) {
-    return data.result.data;
-  }
-  
-  console.log("⚠️ Unknown API response structure:", data);
-  return null;
-}
+import { useGameState } from "./useGameState";
 
 /**
  * Custom hook to get the next turn index for actions at a table
@@ -40,16 +6,8 @@ function extractGameData(data: any): any {
  * @returns The next turn index to use for actions
  */
 export function useTableTurnIndex(tableId?: string): number {
-  // Fetch game state using SWR
-  const { data, error } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000, // Refresh every 5 seconds
-      revalidateOnFocus: true,
-      dedupingInterval: 2000, // Dedupe similar requests within 2 seconds
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, error } = useGameState(tableId);
 
   // Handle loading and error states
   if (error) {
@@ -57,21 +15,14 @@ export function useTableTurnIndex(tableId?: string): number {
     return 0; // Default to 0 if there's an error
   }
   
-  if (!data) {
+  if (!gameState) {
     console.log("No data received from API for turn index");
     return 0; // Default to 0 if there's no data
-  }
-  
-  // Extract the game data from the response
-  const gameData = extractGameData(data);
-  if (!gameData) {
-    console.log("No game data found in API response for turn index");
-    return 0; // Default to 0 if no game data is found
   }
 
   try {
     // Get the previousActions array
-    const previousActions = gameData.previousActions || [];
+    const previousActions = gameState.previousActions || [];
     
     if (previousActions.length === 0) {
       console.log("No previous actions found, returning index 0");

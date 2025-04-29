@@ -1,12 +1,8 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import useSWR from "swr";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
+import { useGameState } from "./useGameState";
 
 // Type for cached user data
 interface CachedUserData {
@@ -30,28 +26,19 @@ export const usePlayerSeatInfo = (tableId?: string) => {
   const [userDataBySeat, setUserDataBySeat] = useState<Record<number, CachedUserData>>({});
   const [currentUserSeat, setCurrentUserSeat] = useState<number>(-1);
 
-  // Fetch table data using SWR
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, isLoading, error, refresh } = useGameState(tableId);
 
   // Update current user's seat when table data changes
   useEffect(() => {
-    if (!isLoading && !error && data && userWalletAddress) {
+    if (!isLoading && !error && gameState && userWalletAddress) {
       try {
-        const gameData = data.data || data;
-        
-        if (!gameData || !gameData.players) {
+        if (!gameState.players) {
           return;
         }
 
         // Find the player with matching address
-        const player = gameData.players.find(
+        const player = gameState.players.find(
           (p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress
         );
         
@@ -61,7 +48,7 @@ export const usePlayerSeatInfo = (tableId?: string) => {
         console.error("Error finding current user seat:", err);
       }
     }
-  }, [data, isLoading, error, userWalletAddress]);
+  }, [gameState, isLoading, error, userWalletAddress]);
 
   // Fetch user data by seat
   const fetchUserBySeat = useCallback(
@@ -133,7 +120,7 @@ export const usePlayerSeatInfo = (tableId?: string) => {
     getUserBySeat,
     isLoading,
     error,
-    refresh: mutate
+    refresh
   };
 
   console.log("[usePlayerSeatInfo] Returns:", {

@@ -1,11 +1,5 @@
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { useGameState } from "./useGameState";
 import { formatWeiToSimpleDollars } from "../utils/numberUtils";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
 
 /**
  * Custom hook to provide formatted table data
@@ -13,15 +7,8 @@ const fetcher = (url: string) =>
  * @returns Object containing formatted table data and loading/error states
  */
 export const useTableData = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, isLoading, error } = useGameState(tableId);
 
   // Default empty state
   const emptyState = {
@@ -55,31 +42,28 @@ export const useTableData = (tableId?: string) => {
   }
 
   try {
-    // Extract table data from the response (handling different API response structures)
-    const tableData = data?.data || data;
-    
-    if (!tableData || tableData.type !== "cash") {
+    if (!gameState || gameState.type !== "cash") {
       return emptyState;
     }
 
     return {
       isLoading: false,
       error: null,
-      tableDataType: tableData.type,
-      tableDataAddress: tableData.address,
-      tableDataSmallBlind: formatWeiToSimpleDollars(tableData.smallBlind),
-      tableDataBigBlind: formatWeiToSimpleDollars(tableData.bigBlind),
-      tableDataSmallBlindPosition: tableData.smallBlindPosition,
-      tableDataBigBlindPosition: tableData.bigBlindPosition,
-      tableDataDealer: tableData.dealer,
-      tableDataPlayers: tableData.players || [],
-      tableDataCommunityCards: tableData.communityCards || [],
-      tableDataDeck: tableData.deck || "",
-      tableDataPots: tableData.pots || ["0"],
-      tableDataNextToAct: tableData.nextToAct ?? -1,
-      tableDataRound: tableData.round || "preflop",
-      tableDataWinners: tableData.winners || [],
-      tableDataSignature: tableData.signature || ""
+      tableDataType: gameState.type,
+      tableDataAddress: gameState.address,
+      tableDataSmallBlind: formatWeiToSimpleDollars(gameState.smallBlind),
+      tableDataBigBlind: formatWeiToSimpleDollars(gameState.bigBlind),
+      tableDataSmallBlindPosition: gameState.smallBlindPosition,
+      tableDataBigBlindPosition: gameState.bigBlindPosition,
+      tableDataDealer: gameState.dealer,
+      tableDataPlayers: gameState.players || [],
+      tableDataCommunityCards: gameState.communityCards || [],
+      tableDataDeck: gameState.deck || "",
+      tableDataPots: gameState.pots || ["0"],
+      tableDataNextToAct: gameState.nextToAct ?? -1,
+      tableDataRound: gameState.round || "preflop",
+      tableDataWinners: gameState.winners || [],
+      tableDataSignature: gameState.signature || ""
     };
   } catch (err) {
     console.error("Error parsing table data:", err);

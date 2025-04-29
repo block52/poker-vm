@@ -1,8 +1,7 @@
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { useGameState } from "./useGameState";
 import { useCallback, useEffect, useState } from "react";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
+import useSWR from "swr";
 
 // Define the nextToActInfo type
 export interface NextToActInfo {
@@ -12,10 +11,6 @@ export interface NextToActInfo {
   availableActions: any[];
   timeRemaining: number;
 }
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
 
 /**
  * Determines who is next to act at the table
@@ -58,54 +53,54 @@ export function whoIsNextToAct(gameData: any): NextToActInfo | null {
  */
 export const useNextToActInfo = (tableId?: string) => {
   const [nextToActInfo, setNextToActInfo] = useState<NextToActInfo | null>(null);
+  const [lastRefresh, setLastRefresh] = useState(0);
 
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      // Refresh every 3 seconds and when window is focused
-      refreshInterval: 3000,
-      revalidateOnFocus: true
-    }
+  // Get game state from centralized hook
+  const { gameState, isLoading, error, refresh } = useGameState(tableId);
+
+  // Custom more frequent refresh for this critical hook
+  useSWR(
+    tableId ? `next-to-act-${tableId}` : null,
+    async () => {
+      const now = Date.now();
+      // Refresh if more than 3 seconds have elapsed
+      if (now - lastRefresh >= 3000) {
+        await refresh();
+        setLastRefresh(now);
+      }
+      return null;
+    },
+    { refreshInterval: 3000, revalidateOnFocus: true }
   );
 
   // Process the data whenever it changes
   useEffect(() => {
-    if (!isLoading && !error && data) {
+    if (!isLoading && !error && gameState) {
       try {
-        // Extract game data from the response
-        const gameData = data.data || data;
-        
-        if (!gameData) {
-          console.warn("No game data found in API response");
-          return;
-        }
-
         // Special case: if dealer position is 9, treat it as 0 for UI purposes
-        if (gameData.dealer === 9) {
-          gameData.dealer = 0;
+        if (gameState.dealer === 9) {
+          gameState.dealer = 0;
         }
 
         // Use the utility function to determine who is next to act
-        const nextToActData = whoIsNextToAct(gameData);
+        const nextToActData = whoIsNextToAct(gameState);
         setNextToActInfo(nextToActData);
       } catch (err) {
         console.error("Error parsing next-to-act info:", err);
       }
     }
-  }, [data, isLoading, error]);
+  }, [gameState, isLoading, error]);
 
   // Manual refresh function
-  const refresh = useCallback(() => {
-    return mutate();
-  }, [mutate]);
+  const manualRefresh = useCallback(() => {
+    return refresh();
+  }, [refresh]);
 
   const result = {
     nextToActInfo,
     isLoading,
     error,
-    refresh
+    refresh: manualRefresh
   };
 
   console.log("[useNextToActInfo] Returns:", {
