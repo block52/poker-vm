@@ -802,7 +802,7 @@ app.post("/create_new_game", async (req, res) => {
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
-        };
+        }; 
 
         console.log("=== FORMATTED RPC CALL ===");
         console.log(JSON.stringify(rpcCall, null, 2));
