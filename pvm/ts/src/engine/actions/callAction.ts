@@ -67,7 +67,10 @@ class CallAction extends BaseAction implements IAction {
     }
 
     execute(player: Player, index: number): void {
-        const deductAmount = this.getDeductAmount(player);
+        // Get the valid call amount from verify
+        const range = this.verify(player);
+        const deductAmount = range.minAmount;
+        
         if (deductAmount) {
             if (player.chips < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
