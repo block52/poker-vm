@@ -15,11 +15,13 @@ class CallAction extends BaseAction implements IAction {
             throw new Error("Call action is not allowed during ante round.");
         }
 
-        // 2. Round-specific checks
+        // 2. Round-specific checks for preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             // Special case for small blind position in PREFLOP
             if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
-                return { minAmount: this.game.smallBlind, maxAmount: this.game.smallBlind };
+                // Small blind needs to call the difference to match big blind
+                const diffToCall = this.game.bigBlind - this.game.smallBlind;
+                return { minAmount: diffToCall, maxAmount: diffToCall };
             }
         }
         
@@ -78,25 +80,24 @@ class CallAction extends BaseAction implements IAction {
     }
 
     protected getDeductAmount(player: Player): bigint {
-
-        // Hack for UTG on preflop
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
-            // this is valid for the small blind player
-            return this.game.smallBlind;
-        }
-
-        const sumBets = this.getSumBets(player.address);
-        
-        // Get the largest bet in the current round
+        const playerSeat = this.game.getPlayerSeatNumber(player.address);
+        const playerBet = this.getSumBets(player.address);
         const largestBet = this.getLargestBet();
         
-        // If player has already bet the same or more than the largest bet, return 0
-        if (sumBets >= largestBet) {
-            return 0n;
+        // Special case for small blind in preflop
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP && 
+            playerSeat === this.game.smallBlindPosition &&
+            playerBet === this.game.smallBlind) {
+            // Small blind calling the big blind (difference between BB and SB)
+            return this.game.bigBlind - this.game.smallBlind;
         }
         
-        // Otherwise return the difference needed to call
-        return largestBet - sumBets;
+        // General case: difference between largest bet and player's current bet
+        if (playerBet >= largestBet) {
+            return 0n; // Already matched or exceeded the largest bet
+        }
+        
+        return largestBet - playerBet;
     }
 }
 

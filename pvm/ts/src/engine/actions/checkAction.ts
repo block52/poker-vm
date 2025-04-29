@@ -15,22 +15,29 @@ class CheckAction extends BaseAction implements IAction {
             throw new Error("Cannot check in the ante round.");
         }
 
-        // 2. Bet matching check: Can only check if player has matched the largest bet
+        // 2. Bet matching check: Get the largest bet and player's current bet
         const largestBet = this.getLargestBet();
-        const sumBets = this.getSumBets(player.address);
+        const playerBet = this.getSumBets(player.address);
 
-        // 3. Special case for the big blind player in preflop
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP && 
-            this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
+        // 3. Special case for preflop round
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+            const playerSeat = this.game.getPlayerSeatNumber(player.address);
+            const isSmallBlind = playerSeat === this.game.smallBlindPosition;
+            const isBigBlind = playerSeat === this.game.bigBlindPosition;
             
-            // Big blind can check when no one has raised above the big blind amount
-            if (largestBet <= this.game.bigBlind) {
+            // Small blind CANNOT check in preflop (must call the difference to the big blind)
+            if (isSmallBlind && playerBet < this.game.bigBlind) {
+                throw new Error("Small blind must call to match the big blind.");
+            }
+            
+            // Big blind CAN check when no one has raised above the big blind
+            if (isBigBlind && largestBet <= this.game.bigBlind) {
                 return { minAmount: 0n, maxAmount: 0n };
             }
         }
 
-        // In all other cases, can only check if player has already matched the largest bet
-        if (largestBet > sumBets) {
+        // 4. General case: Can only check if player has matched the largest bet
+        if (playerBet < largestBet) {
             throw new Error("Player must match the largest bet to check.");
         }
 
