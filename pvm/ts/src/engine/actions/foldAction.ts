@@ -6,13 +6,31 @@ import { IAction, Range } from "../types";
 class FoldAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.FOLD }
     
-    // Override verify method to allow folding anytime
+    /**
+     * Verify if a player can fold. In poker, folding is always allowed regardless of player status
+     * or game state, as players can always choose to forfeit their hand.
+     * 
+     * Unlike other actions which have restrictions on when they can be performed,
+     * folding is universally permitted so that players can exit a hand that they 
+     * don't wish to continue playing.
+     * 
+     * @param player The player attempting to fold
+     * @returns A Range object with min and max amount both set to 0 (folding costs nothing)
+     */
     verify(player: Player): Range {
-        // Remove all status checks - allow any player to fold regardless of status
+        // No status checks needed - allow any player to fold regardless of status
+        // This overrides the base verify method which otherwise requires the player to be active
+        // and for it to be their turn to act
         return { minAmount: 0n, maxAmount: 0n };
     }
     
-    // Override execute to set player's status to FOLDED
+    /**
+     * Execute the fold action, setting the player's status to FOLDED
+     * 
+     * @param player The player performing the fold action
+     * @param index The sequential action index for this game
+     * @param amount Optional amount parameter (unused for fold)
+     */
     execute(player: Player, index: number, amount?: bigint): void {
         // First verify the action
         this.verify(player);

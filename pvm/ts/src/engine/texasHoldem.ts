@@ -480,6 +480,24 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return undefined;
     }
 
+    /**
+     * Performs a poker action for a specific player
+     * 
+     * This is the main entry point for all game actions and controls the game flow:
+     * 1. Validates the action index to prevent replay attacks
+     * 2. Handles non-player actions like JOIN, LEAVE, and DEAL
+     * 3. Verifies the player exists in the game
+     * 4. Executes the appropriate action via the corresponding Action class
+     * 5. Updates the game state to reflect the action
+     * 6. Checks if the round has ended and advances to the next round if needed
+     * 
+     * @param address The player's address
+     * @param action The action type to perform (bet, call, fold, etc.)
+     * @param index The sequential action index to prevent replay attacks
+     * @param amount Optional bet/raise amount if applicable
+     * @param data Additional optional data for the action
+     * @throws Error if the action cannot be performed
+     */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
 
         // Check if the provided index matches the current turn index (without incrementing)
@@ -487,9 +505,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Invalid action index.");
         }
 
-        // Hack
+        // Convert amount to BigInt if provided
         const _amount = amount ? BigInt(amount) : 0n;
 
+        // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN:
                 this.join(address, amount!);
@@ -508,10 +527,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return;
         }
 
+        // Verify player exists in the game
         if (!this.exists(address)) {
             throw new Error("Player not found.");
         }
 
+        // In ANTE round, only allow specific actions until minimum players joined
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND && action !== NonPlayerActionType.JOIN) {
                 if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
@@ -520,11 +541,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
             }
         }
 
+        // Get player and seat information
         const player = this.getPlayer(address);
         const seat = this.getPlayerSeatNumber(address);
 
+        // Execute the specific player action
         switch (action) {
-            // todo: ante
             case PlayerActionType.SMALL_BLIND:
                 new SmallBlindAction(this, this._update).execute(player, index, this._gameOptions.smallBlind);
                 break;
@@ -552,9 +574,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
         }
 
+        // Record the action in the player's history
         player.addAction({ playerId: address, action, amount, index });
+        
+        // Update the last player to act
         this._lastActedSeat = seat;
 
+        // Check if the round has ended and advance to the next round if needed
         if (this.hasRoundEnded(this._currentRound) === true) {
             this.nextRound();
         }
@@ -916,6 +942,23 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
+    /**
+     * Determines if the current betting round has ended
+     * 
+     * A round ends when all of these conditions are met:
+     * 1. For ANTE round: small blind, big blind are posted AND cards are dealt
+     * 2. For betting rounds: all non-folded, non-all-in players have acted
+     * 3. All active players have either matched the highest bet or folded
+     * 4. The last player to raise has been called by all remaining players
+     * 
+     * Edge cases handled:
+     * - If all players are folded or all-in, the round ends immediately
+     * - Players who folded or are all-in don't need to act again
+     * - Players must act after a bet/raise made after their last action
+     * 
+     * @param round The round to check
+     * @returns True if the round has ended, false otherwise
+     */
     hasRoundEnded(round: TexasHoldemRound): boolean {
         const players = this.getSeatedPlayers();
 
@@ -936,6 +979,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return false;
         }
 
+        // Special case for ANTE round: need small blind, big blind, and deal
         if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
@@ -1014,6 +1058,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 continue;
             }
 
+            // If the player has posted blinds but hasn't acted in the betting round yet
             if (lastAction.action === PlayerActionType.SMALL_BLIND || lastAction.action === PlayerActionType.BIG_BLIND) {
                 // There is still action to be had
                 return false;

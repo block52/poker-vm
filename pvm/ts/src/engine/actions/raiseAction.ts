@@ -8,16 +8,33 @@ class RaiseAction extends BaseAction implements IAction {
         return PlayerActionType.RAISE;
     }
 
+    /**
+     * Verify if a player can raise and determine the valid raise range
+     * 
+     * For a raise to be valid:
+     * 1. Player must be active and it must be their turn (checked in base verify)
+     * 2. Game must not be in the ANTE round (only small/big blinds allowed)
+     * 3. Blinds must be posted before raising is allowed in preflop
+     * 4. There must be a previous bet or raise to raise against
+     * 
+     * The minimum raise amount follows poker rules:
+     * - At least double the previous bet OR
+     * - At least the previous bet plus the big blind (whichever is larger)
+     * 
+     * @param player The player attempting to raise
+     * @returns Range object with minimum and maximum raise amounts
+     * @throws Error if raising conditions are not met
+     */
     verify(player: Player): Range {
-        // Basic validation
+        // 1. Perform basic validation (player active, player's turn, etc.)
         super.verify(player);
         
-        // Cannot raise in the ANTE round
+        // 2. Cannot raise in the ANTE round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot raise in the ante round. Small blind must post.");
         }
 
-        // For preflop, ensure blinds have been posted
+        // 3. For preflop, ensure blinds have been posted
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.SMALL_BLIND)) {
                 throw new Error("Small blind must post before raising.");
@@ -28,7 +45,7 @@ class RaiseAction extends BaseAction implements IAction {
             }
         }
 
-        // Need a previous bet or raise to raise
+        // 4. Need a previous bet or raise to raise
         const lastBetOrRaise = this.findLastBetOrRaise();
         if (!lastBetOrRaise) {
             throw new Error("No previous bet to raise.");
