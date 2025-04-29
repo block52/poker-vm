@@ -480,6 +480,24 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return undefined;
     }
 
+    /**
+     * Performs a poker action for a specific player
+     * 
+     * This is the main entry point for all game actions and controls the game flow:
+     * 1. Validates the action index to prevent replay attacks
+     * 2. Handles non-player actions like JOIN, LEAVE, and DEAL
+     * 3. Verifies the player exists in the game
+     * 4. Executes the appropriate action via the corresponding Action class
+     * 5. Updates the game state to reflect the action
+     * 6. Checks if the round has ended and advances to the next round if needed
+     * 
+     * @param address The player's address
+     * @param action The action type to perform (bet, call, fold, etc.)
+     * @param index The sequential action index to prevent replay attacks
+     * @param amount Optional bet/raise amount if applicable
+     * @param data Additional optional data for the action
+     * @throws Error if the action cannot be performed
+     */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
 
         // Check if the provided index matches the current turn index (without incrementing)
@@ -487,9 +505,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Invalid action index.");
         }
 
-        // Hack
+        // Convert amount to BigInt if provided
         const _amount = amount ? BigInt(amount) : 0n;
 
+        // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN:
                 this.join(address, amount!);
@@ -500,13 +519,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return;
             case NonPlayerActionType.DEAL:
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
+                // After dealing, we should advance to PREFLOP round
+                if (this._currentRound === TexasHoldemRound.ANTE) {
+                    this._currentRound = TexasHoldemRound.PREFLOP;
+                    this._rounds.set(TexasHoldemRound.PREFLOP, []);
+                }
                 return;
         }
 
+        // Verify player exists in the game
         if (!this.exists(address)) {
             throw new Error("Player not found.");
         }
 
+        // In ANTE round, only allow specific actions until minimum players joined
         if (this.currentRound === TexasHoldemRound.ANTE) {
             if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND && action !== NonPlayerActionType.JOIN) {
                 if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
@@ -515,11 +541,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
             }
         }
 
+        // Get player and seat information
         const player = this.getPlayer(address);
         const seat = this.getPlayerSeatNumber(address);
 
+        // Execute the specific player action
         switch (action) {
-            // todo: ante
             case PlayerActionType.SMALL_BLIND:
                 new SmallBlindAction(this, this._update).execute(player, index, this._gameOptions.smallBlind);
                 break;
@@ -547,9 +574,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
         }
 
+        // Record the action in the player's history
         player.addAction({ playerId: address, action, amount, index });
+        
+        // Update the last player to act
         this._lastActedSeat = seat;
 
+        // Check if the round has ended and advance to the next round if needed
         if (this.hasRoundEnded(this._currentRound) === true) {
             this.nextRound();
         }
@@ -805,28 +836,29 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Deal community cards based on the CURRENT round
         // before advancing to the next round
         if (this._currentRound === TexasHoldemRound.PREFLOP) {
-            this._communityCards.length = 0; // Clear community cards for the next round
-        }
-        if (this._currentRound === TexasHoldemRound.FLOP) {
-            // Deal the flop (3 cards)
+            // Moving to FLOP - deal 3 community cards
             this._communityCards.push(...this._deck.deal(3));
         }
-
-        if (this._currentRound === TexasHoldemRound.TURN) {
-            // Deal turn or river (1 card)
+        else if (this._currentRound === TexasHoldemRound.FLOP) {
+            // Moving to TURN - deal 1 card
             this._communityCards.push(...this._deck.deal(1));
         }
-
-        if (this._currentRound === TexasHoldemRound.RIVER) {
+        else if (this._currentRound === TexasHoldemRound.TURN) {
+            // Moving to RIVER - deal 1 card
             this._communityCards.push(...this._deck.deal(1));
         }
-
-        if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
+        else if (this._currentRound === TexasHoldemRound.RIVER) {
+            // Moving to SHOWDOWN - calculate winner
             this.calculateWinner();
         }
 
         // Advance to next round
         this.setNextRound();
+        
+        // Initialize the new round's action list if needed
+        if (!this._rounds.has(this._currentRound)) {
+            this._rounds.set(this._currentRound, []);
+        }
     }
 
     reInit(deck: string): void {
@@ -910,6 +942,23 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
+    /**
+     * Determines if the current betting round has ended
+     * 
+     * A round ends when all of these conditions are met:
+     * 1. For ANTE round: small blind, big blind are posted AND cards are dealt
+     * 2. For betting rounds: all non-folded, non-all-in players have acted
+     * 3. All active players have either matched the highest bet or folded
+     * 4. The last player to raise has been called by all remaining players
+     * 
+     * Edge cases handled:
+     * - If all players are folded or all-in, the round ends immediately
+     * - Players who folded or are all-in don't need to act again
+     * - Players must act after a bet/raise made after their last action
+     * 
+     * @param round The round to check
+     * @returns True if the round has ended, false otherwise
+     */
     hasRoundEnded(round: TexasHoldemRound): boolean {
         const players = this.getSeatedPlayers();
 
@@ -930,52 +979,53 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return false;
         }
 
+        // Special case for ANTE round: need small blind, big blind, and deal
         if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
+            const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
 
+            // Round is not over if blinds haven't been posted
             if (!hasSmallBlind || !hasBigBlind) {
-                return false; // Round not over if blinds haven't been posted
+                return false;
             }
 
-            return true; // Round over after dealing
+            // ANTE round is only over when blinds are posted AND cards are dealt
+            if (!hasDealt) {
+                return false;
+            }
+
+            return true; // Round over after blinds are posted and cards are dealt
         }
 
         // Check if cards have been dealt, which is required before ending the round
         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
-        // // In preflop round, make sure cards have been dealt before we can end the round
-        // if (round === TexasHoldemRound.PREFLOP && !hasDealt && !anyPlayerHasCards) {
-        //     return false;
-        // }
-
-        // Check if there's betting action yet
+        // If cards dealt but no betting actions yet, round is not over
         const bettingActions = actions.filter(
             a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
         );
 
-        // If cards dealt but no betting actions yet, round is not over
         if ((hasDealt || anyPlayerHasCards) && bettingActions.length === 0) {
             return false;
         }
 
         const largestBet = this.getLargestBet(round);
 
+        // Find the last bet or raise action
+        let lastBetOrRaiseIndex = -1;
+        for (let i = actions.length - 1; i >= 0; i--) {
+            if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
+                lastBetOrRaiseIndex = i;
+                break;
+            }
+        }
+
         // Check that all remaining active players have acted and matched the highest bet
         for (const player of activePlayers) {
             // Get this player's actions in this round
             const playerActions = actions.filter(a => a.playerId === player.address);
-
-            // // Filter to just betting actions (not blinds or deal)
-            // const playerBettingActions = playerActions.filter(
-            //     a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
-            // );
-
-            // // If no betting actions yet for this player after cards dealt, round not over
-            // if ((hasDealt || anyPlayerHasCards) && playerBettingActions.length === 0) {
-            //     return false;
-            // }
 
             // If a player hasn't acted yet, round is not over
             if (playerActions.length === 0) {
@@ -985,11 +1035,30 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Get the player's last action in this round
             const lastAction = playerActions[playerActions.length - 1];
 
-            // Skip players who have checked or called
-            if (lastAction.action === PlayerActionType.CALL || lastAction.action === PlayerActionType.CHECK || lastAction.action === PlayerActionType.FOLD) {
+            // Skip players who have checked, called, or folded as their final action
+            if (lastAction.action === PlayerActionType.CALL || 
+                lastAction.action === PlayerActionType.CHECK || 
+                lastAction.action === PlayerActionType.FOLD) {
+                
+                // For these players, check if they acted AFTER the last bet/raise
+                if (lastBetOrRaiseIndex >= 0) {
+                    // Find the index of this player's last action
+                    const playerLastActionIndex = actions.findIndex(
+                        a => a.playerId === player.address && 
+                             a.action === lastAction.action && 
+                             a.index === lastAction.index
+                    );
+                    
+                    // If player acted before the last bet/raise, they still need to act
+                    if (playerLastActionIndex < lastBetOrRaiseIndex) {
+                        return false;
+                    }
+                }
+                
                 continue;
             }
 
+            // If the player has posted blinds but hasn't acted in the betting round yet
             if (lastAction.action === PlayerActionType.SMALL_BLIND || lastAction.action === PlayerActionType.BIG_BLIND) {
                 // There is still action to be had
                 return false;
@@ -1005,12 +1074,29 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
             // If the last action was a bet or raise, other players need to respond
             if (lastAction.action === PlayerActionType.BET || lastAction.action === PlayerActionType.RAISE) {
-                // We need to check if this was the most recent betting action
-                // If it was, then the round isn't over because others need to respond
-
-                // A simple way to check: if this player was the last to act overall
-                if (player.address === this.currentPlayerId) {
-                    return false;
+                // Check if all other active players have acted after this bet/raise
+                const actionIndex = actions.findIndex(a => 
+                    a.playerId === player.address && 
+                    a.action === lastAction.action && 
+                    a.index === lastAction.index
+                );
+                
+                if (actionIndex >= 0) {
+                    // Check if all other active players have acted after this bet/raise
+                    for (const otherPlayer of activePlayers) {
+                        if (otherPlayer.address === player.address) continue;
+                        
+                        // Get this player's actions after the bet/raise
+                        const otherPlayerActionsAfterBet = actions.filter(
+                            a => a.playerId === otherPlayer.address && 
+                                 actions.indexOf(a) > actionIndex
+                        );
+                        
+                        // If no actions after the bet/raise, round is not over
+                        if (otherPlayerActionsAfterBet.length === 0) {
+                            return false;
+                        }
+                    }
                 }
             }
         }

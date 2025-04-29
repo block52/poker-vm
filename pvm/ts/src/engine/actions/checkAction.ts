@@ -7,34 +7,40 @@ class CheckAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CHECK }
 
     verify(player: Player): Range {
+        // Basic validation
+        super.verify(player);
 
+        // 1. Round state check: Cannot check in the ante round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot check in the ante round.");
         }
 
-        // Hack for UTG on preflop
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
-            // this is valid for the small blind player
-            return { minAmount: 0n, maxAmount: 0n };
-        }
+        // 2. Bet matching check: Get the largest bet and player's current bet
+        const largestBet = this.getLargestBet();
+        const playerBet = this.getSumBets(player.address);
 
+        // 3. Special case for preflop round
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            const preflopRoundBets = this.game.getBets();
-
-            if (preflopRoundBets.size === 0) {
-                throw new Error("Cannot check in the preflop round when there's been no action.");
+            const playerSeat = this.game.getPlayerSeatNumber(player.address);
+            const isSmallBlind = playerSeat === this.game.smallBlindPosition;
+            const isBigBlind = playerSeat === this.game.bigBlindPosition;
+            
+            // Small blind CANNOT check in preflop (must call the difference to the big blind)
+            if (isSmallBlind && playerBet < this.game.bigBlind) {
+                throw new Error("Small blind must call to match the big blind.");
+            }
+            
+            // Big blind CAN check when no one has raised above the big blind
+            if (isBigBlind && largestBet <= this.game.bigBlind) {
+                return { minAmount: 0n, maxAmount: 0n };
             }
         }
 
-        // Can never check if you haven't matched the largest bet of the round
-        const largestBet = this.getLargestBet();
-        const sumBets = this.getSumBets(player.address);
-
-        if (largestBet > sumBets) {
+        // 4. General case: Can only check if player has matched the largest bet
+        if (playerBet < largestBet) {
             throw new Error("Player must match the largest bet to check.");
         }
 
-        super.verify(player);
         return { minAmount: 0n, maxAmount: 0n };
     }
 }

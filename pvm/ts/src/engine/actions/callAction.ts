@@ -7,47 +7,70 @@ class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CALL }
 
     verify(player: Player): Range {
+        // Check base conditions (hand active, player's turn, player active)
+        super.verify(player);
 
+        // 1. Round state check: Cannot call during ANTE round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Can only call when in a round.");
+            throw new Error("Call action is not allowed during ante round.");
         }
 
-        // Hack for UTG on preflop
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
-            // this is valid for the small blind player
-            return { minAmount: this.game.smallBlind, maxAmount: this.game.smallBlind };
+        // 2. Round-specific checks for preflop
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+            // Special case for small blind position in PREFLOP
+            if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
+                // Small blind needs to call the difference to match big blind
+                const diffToCall = this.game.bigBlind - this.game.smallBlind;
+                return { minAmount: diffToCall, maxAmount: diffToCall };
+            }
         }
         
+        // 3. Action sequence check: Need a previous action with amount to call
         const lastAction = this.game.getLastRoundAction();
-
-        if (!lastAction)
+        if (!lastAction) {
             throw new Error("No previous action to call.");
+        }
 
-        if (lastAction?.amount === 0n || !lastAction?.amount)
+        // 4. Amount validation: Last action must have a non-zero amount
+        if (lastAction?.amount === 0n || !lastAction?.amount) {
             throw new Error("Should check instead.");
+        }
 
-        // Check if the last action was a bet or raise
-        if (lastAction.action !== PlayerActionType.BET && lastAction.action !== PlayerActionType.RAISE && lastAction.action !== PlayerActionType.SMALL_BLIND && lastAction.action !== PlayerActionType.BIG_BLIND)
+        // 5. Last action validation: Must be a bet or raise (or blind)
+        if (lastAction.action !== PlayerActionType.BET && 
+            lastAction.action !== PlayerActionType.RAISE && 
+            lastAction.action !== PlayerActionType.SMALL_BLIND && 
+            lastAction.action !== PlayerActionType.BIG_BLIND) {
             throw new Error("Last action was not a bet or raise.");
+        }
 
-        // Get the sum of my bets in this round.
+        // 6. Player bet check: Calculate the amount needed to call
         let deductAmount: bigint = this.getDeductAmount(player);
 
-        if (deductAmount === 0n)
+        // 7. Check if player already matched the bet
+        if (deductAmount === 0n) {
             throw new Error("Player has already met maximum so can check instead.");
+        }
 
         // Safety check to ensure we never have negative amounts
-        if (deductAmount < 0n)
+        if (deductAmount < 0n) {
             deductAmount = 0n;
+        }
 
-        if (player.chips < deductAmount)
+        // 8. Check player's chip stack
+        if (player.chips < deductAmount) {
             deductAmount = player.chips;
+        }
 
+        // Return the exact call amount required
         return { minAmount: deductAmount, maxAmount: deductAmount };
     }
 
     execute(player: Player, index: number): void {
-        const deductAmount = this.getDeductAmount(player);
+        // Get the valid call amount from verify
+        const range = this.verify(player);
+        const deductAmount = range.minAmount;
+        
         if (deductAmount) {
             if (player.chips < deductAmount)
                 throw new Error(`Player has insufficient chips to ${this.type}.`);
@@ -60,25 +83,24 @@ class CallAction extends BaseAction implements IAction {
     }
 
     protected getDeductAmount(player: Player): bigint {
-
-        // Hack for UTG on preflop
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
-            // this is valid for the small blind player
-            return this.game.smallBlind;
-        }
-
-        const sumBets = this.getSumBets(player.address);
-        
-        // Get the largest bet in the current round
+        const playerSeat = this.game.getPlayerSeatNumber(player.address);
+        const playerBet = this.getSumBets(player.address);
         const largestBet = this.getLargestBet();
         
-        // If player has already bet the same or more than the largest bet, return 0
-        if (sumBets >= largestBet) {
-            return 0n;
+        // Special case for small blind in preflop
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP && 
+            playerSeat === this.game.smallBlindPosition &&
+            playerBet === this.game.smallBlind) {
+            // Small blind calling the big blind (difference between BB and SB)
+            return this.game.bigBlind - this.game.smallBlind;
         }
         
-        // Otherwise return the difference needed to call
-        return largestBet - sumBets;
+        // General case: difference between largest bet and player's current bet
+        if (playerBet >= largestBet) {
+            return 0n; // Already matched or exceeded the largest bet
+        }
+        
+        return largestBet - playerBet;
     }
 }
 
