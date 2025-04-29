@@ -28,7 +28,7 @@ describe("FoldAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            0, // dealer
+            9, // dealer
             1, // nextToAct
             previousActions, // previousActions
             TexasHoldemRound.PREFLOP,
@@ -77,9 +77,13 @@ describe("FoldAction", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         });
 
-        it("should not return a range for fold action", () => {
+        it("should return a range for fold action", () => {
             const range = action.verify(player);
-            expect(range).toBeUndefined();
+            expect(range).toBeDefined();
+            expect(range).toEqual({
+                minAmount: 0n, // No chips are lost when folding
+                maxAmount: 0n
+            });
         });
 
         it.skip("should throw error if not player's turn", () => {
