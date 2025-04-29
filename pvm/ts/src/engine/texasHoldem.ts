@@ -810,28 +810,29 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Deal community cards based on the CURRENT round
         // before advancing to the next round
         if (this._currentRound === TexasHoldemRound.PREFLOP) {
-            this._communityCards.length = 0; // Clear community cards for the next round
-        }
-        if (this._currentRound === TexasHoldemRound.FLOP) {
-            // Deal the flop (3 cards)
+            // Moving to FLOP - deal 3 community cards
             this._communityCards.push(...this._deck.deal(3));
         }
-
-        if (this._currentRound === TexasHoldemRound.TURN) {
-            // Deal turn or river (1 card)
+        else if (this._currentRound === TexasHoldemRound.FLOP) {
+            // Moving to TURN - deal 1 card
             this._communityCards.push(...this._deck.deal(1));
         }
-
-        if (this._currentRound === TexasHoldemRound.RIVER) {
+        else if (this._currentRound === TexasHoldemRound.TURN) {
+            // Moving to RIVER - deal 1 card
             this._communityCards.push(...this._deck.deal(1));
         }
-
-        if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
+        else if (this._currentRound === TexasHoldemRound.RIVER) {
+            // Moving to SHOWDOWN - calculate winner
             this.calculateWinner();
         }
 
         // Advance to next round
         this.setNextRound();
+        
+        // Initialize the new round's action list if needed
+        if (!this._rounds.has(this._currentRound)) {
+            this._rounds.set(this._currentRound, []);
+        }
     }
 
     reInit(deck: string): void {
