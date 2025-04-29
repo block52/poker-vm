@@ -44,7 +44,6 @@ export {
     ResponseCommand,
     TransferCommand,
     BlockCommand,
-    BlockCommandParams,
     BurnCommand,
     CreateAccountCommand,
     CreateContractSchemaCommand,
@@ -65,5 +64,12 @@ export {
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
+};
+
+// TypeScript's isolatedModules flag requires type-only exports to use 'export type'
+// This separates types (which are erased at compile time) from values (which are preserved)
+// Classes and values like AccountCommand go in the normal export, while interfaces and type aliases go here
+export type {
+    BlockCommandParams,
     ISignedResponse
 };
