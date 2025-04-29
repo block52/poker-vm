@@ -15,8 +15,8 @@ class TestAction extends BaseAction {
     public shouldReturnRange: boolean = false;
 
     verify(player: Player) {
-        //const baseResult = super.verify(player);
-        // return this.shouldReturnRange ? { minAmount: 10n, maxAmount: 100n } : baseResult;
+        const baseResult = super.verify(player);
+        return this.shouldReturnRange ? { minAmount: 10n, maxAmount: 100n } : baseResult;
     }
 
     public testGetDeductAmount(player: Player, amount?: bigint): bigint {
@@ -71,7 +71,7 @@ describe.skip("BaseAction", () => {
         player = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 1000n, undefined, PlayerStatus.ACTIVE);
     });
 
-    describe("verify", () => {
+    describe.skip("verify", () => {
         describe("game state validation", () => {
             it("should throw error if game is in showdown", () => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
@@ -119,7 +119,7 @@ describe.skip("BaseAction", () => {
         });
     });
 
-    describe("execute", () => {
+    describe.skip("execute", () => {
         beforeEach(() => {
             // Setup for successful verification
             jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
@@ -199,7 +199,7 @@ describe.skip("BaseAction", () => {
         });
     });
 
-    describe("getDeductAmount", () => {
+    describe.skip("getDeductAmount", () => {
         it("should return 0n when no amount provided", () => {
             expect(action.testGetDeductAmount(player)).toBe(0n);
         });
@@ -209,7 +209,7 @@ describe.skip("BaseAction", () => {
         });
     });
 
-    describe("round-specific behavior", () => {
+    describe.skip("round-specific behavior", () => {
         beforeEach(() => {
             jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
@@ -247,7 +247,7 @@ describe.skip("BaseAction", () => {
         });
     });
 
-    describe("BaseAction core functions", () => {
+    describe.skip("BaseAction core functions", () => {
         describe("verify function", () => {
             it("should check game round is not SHOWDOWN", () => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);

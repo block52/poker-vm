@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range } from "../types";
@@ -8,17 +8,24 @@ abstract class BaseAction {
 
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
-    verify(player: Player) {
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) throw new Error("Hand has ended.");
+    verify(player: Player): Range | undefined {
+        // 1. Game state check: Hand must be active (not in showdown)
+        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) 
+            throw new Error("Hand has ended.");
 
-        // Skip turn check for fold actions
+        // 2. Turn order check: Must be player's turn (except for fold which can be done anytime)
         if (this.type !== PlayerActionType.FOLD) {
             const nextPlayerAddress = this.game.getNextPlayerToAct()?.address;
-            if (nextPlayerAddress !== player.address) throw new Error("Must be currently active player.");
+            if (nextPlayerAddress !== player.address) 
+                throw new Error("Must be currently active player.");
         }
 
-        // if (this.game.getPlayerStatus(player.address) !== PlayerStatus.ACTIVE )
-        //     throw new Error(`Only active player can ${this.type}.`);
+        // 3. Player status check: Player must be active (not folded/all-in)
+        const playerStatus = this.game.getPlayerStatus(player.address);
+        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
+            throw new Error(`Only active player can ${this.type}.`);
+
+        return undefined;
     }
 
     execute(player: Player, index: number, amount: bigint): void {

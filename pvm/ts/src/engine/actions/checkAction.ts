@@ -7,34 +7,33 @@ class CheckAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.CHECK }
 
     verify(player: Player): Range {
+        // Basic validation
+        super.verify(player);
 
+        // 1. Round state check: Cannot check in the ante round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot check in the ante round.");
         }
 
-        // Hack for UTG on preflop
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
-            // this is valid for the small blind player
-            return { minAmount: 0n, maxAmount: 0n };
-        }
-
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            const preflopRoundBets = this.game.getBets();
-
-            if (preflopRoundBets.size === 0) {
-                throw new Error("Cannot check in the preflop round when there's been no action.");
-            }
-        }
-
-        // Can never check if you haven't matched the largest bet of the round
+        // 2. Bet matching check: Can only check if player has matched the largest bet
         const largestBet = this.getLargestBet();
         const sumBets = this.getSumBets(player.address);
 
+        // 3. Special case for the big blind player in preflop
+        if (this.game.currentRound === TexasHoldemRound.PREFLOP && 
+            this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
+            
+            // Big blind can check when no one has raised above the big blind amount
+            if (largestBet <= this.game.bigBlind) {
+                return { minAmount: 0n, maxAmount: 0n };
+            }
+        }
+
+        // In all other cases, can only check if player has already matched the largest bet
         if (largestBet > sumBets) {
             throw new Error("Player must match the largest bet to check.");
         }
 
-        super.verify(player);
         return { minAmount: 0n, maxAmount: 0n };
     }
 }

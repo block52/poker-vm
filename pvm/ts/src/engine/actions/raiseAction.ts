@@ -9,34 +9,66 @@ class RaiseAction extends BaseAction implements IAction {
     }
 
     verify(player: Player): Range {
-        // Cannot call in the ANTE round
+        // Basic validation
+        super.verify(player);
+        
+        // Cannot raise in the ANTE round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Cannot call in the ante round. Small blind must post.");
+            throw new Error("Cannot raise in the ante round. Small blind must post.");
         }
 
+        // For preflop, ensure blinds have been posted
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            if (!this.game.getActionsForRound(TexasHoldemRound.PREFLOP).find((action) => action.action === PlayerActionType.SMALL_BLIND)) {
+            if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.SMALL_BLIND)) {
                 throw new Error("Small blind must post before raising.");
             }
 
-            if (!this.game.getActionsForRound(TexasHoldemRound.PREFLOP).find((action) => action.action === PlayerActionType.BIG_BLIND)) {
+            if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.BIG_BLIND)) {
                 throw new Error("Big blind must post before raising.");
             }
         }
 
-        // super.verify(player);
-
-        const lastBet = this.game.getLastRoundAction();
-        if (!lastBet) throw new Error("No previous bet to raise.");
-
-        const sumBets = this.getSumBets(player.address);
-        let minAmount = (lastBet?.amount || 0n) + this.game.bigBlind - sumBets;
-
-        if (player.chips < minAmount) {
-            minAmount = player.chips;
+        // Need a previous bet or raise to raise
+        const lastBetOrRaise = this.findLastBetOrRaise();
+        if (!lastBetOrRaise) {
+            throw new Error("No previous bet to raise.");
         }
 
-        return { minAmount: minAmount, maxAmount: player.chips };
+        // Calculate minimum raise amount
+        const largestBet = this.getLargestBet();
+        const playerCurrentBet = this.getSumBets(player.address);
+        
+        // Standard minimum raise is double the previous bet/raise
+        // But in all cases, a player must add at least the big blind
+        const doubleLastBet = largestBet * 2n;
+        const lastBetPlusBigBlind = largestBet + this.game.bigBlind;
+        
+        // Use the larger of the two options for minimum raise
+        const minRaise = doubleLastBet > lastBetPlusBigBlind ? doubleLastBet : lastBetPlusBigBlind;
+        
+        // Calculate how much more the player needs to add
+        let minAmountToAdd = minRaise - playerCurrentBet;
+        
+        // If player doesn't have enough for the minimum raise, they can go all-in
+        if (player.chips < minAmountToAdd) {
+            minAmountToAdd = player.chips;
+        }
+
+        return { 
+            minAmount: minAmountToAdd, 
+            maxAmount: player.chips 
+        };
+    }
+
+    // Find the last bet or raise in the current round
+    private findLastBetOrRaise() {
+        const actions = this.game.getActionsForRound(this.game.currentRound);
+        for (let i = actions.length - 1; i >= 0; i--) {
+            if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
+                return actions[i];
+            }
+        }
+        return undefined;
     }
 
     protected getDeductAmount(player: Player, amount?: bigint): bigint {
