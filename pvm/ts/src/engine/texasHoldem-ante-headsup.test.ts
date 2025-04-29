@@ -96,7 +96,12 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         it("should have correct legal actions after posting blinds", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 4, ONE_TOKEN);
+            
+            // Add a DEAL action to advance from ANTE to PREFLOP
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 4);
+            
+            // Now we're in PREFLOP round, so CALL is a valid action
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 5, ONE_TOKEN);
 
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
@@ -109,6 +114,9 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+            
+            // Add a DEAL action to advance from ANTE to PREFLOP
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 4);
 
             round = game.currentRound;
             expect(round).toEqual(TexasHoldemRound.PREFLOP);
