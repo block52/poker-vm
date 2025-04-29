@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
-import { PlayerActionType, LegalActionDTO, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, LegalActionDTO, NonPlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
@@ -66,13 +66,13 @@ const PokerActionPanel: React.FC = () => {
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
     
     // Determine if user is in the table using our hooks instead of accountUtils
-    const isUserInTable = !!players?.some(player => player.address?.toLowerCase() === userAddress);
+    const isUserInTable = !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
     
     // Use nextToActInfo to determine if it's the user's turn
     const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
     
     // Replace userPlayer with direct checks from our hook data
-    const userPlayer = players?.find(player => player.address?.toLowerCase() === userAddress);
+    const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
     
     // Check if fold action exists in legal actions
     const hasFoldAction = legalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
