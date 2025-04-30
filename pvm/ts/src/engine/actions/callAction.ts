@@ -20,8 +20,8 @@ class CallAction extends BaseAction implements IAction {
             // Special case for small blind position in PREFLOP
             if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
-                const diffToCall = this.game.bigBlind - this.game.smallBlind;
-                return { minAmount: diffToCall, maxAmount: diffToCall };
+                const amount = this.game.bigBlind - this.game.smallBlind;
+                return { minAmount: amount, maxAmount: amount };
             }
         }
         
@@ -82,7 +82,7 @@ class CallAction extends BaseAction implements IAction {
         this.game.addAction({ playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount, index: index }, round);
     }
 
-    protected getDeductAmount(player: Player): bigint {
+    getDeductAmount(player: Player): bigint {
         const playerSeat = this.game.getPlayerSeatNumber(player.address);
         const playerBet = this.getSumBets(player.address);
         const largestBet = this.getLargestBet();
