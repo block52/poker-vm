@@ -1,13 +1,7 @@
-import useSWR from "swr";
-import axios from "axios";
 import { ethers } from "ethers";
-import { PROXY_URL } from "../config/constants";
+import { useGameState } from "./useGameState";
 import { WinnerDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { formatWeiToDollars } from "../utils/numberUtils";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
 
 /**
  * Extract winner information from game state
@@ -84,16 +78,8 @@ export function getWinnerInfo(gameData: any) {
  * @returns Object containing winner information
  */
 export const useWinnerInfo = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      // Refresh every 5 seconds and when window is focused
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, isLoading, error, refresh } = useGameState(tableId);
 
   // Default values in case of error or loading
   const defaultState = {
@@ -106,25 +92,17 @@ export const useWinnerInfo = (tableId?: string) => {
     }[] | null,
     isLoading,
     error,
-    refresh: mutate
+    refresh
   };
 
   // If still loading or error occurred, return default values
-  if (isLoading || error || !data) {
+  if (isLoading || error || !gameState) {
     return defaultState;
   }
 
   try {
-    // Extract table data from the response (handling different API response structures)
-    const tableData = data.data || data;
-    
-    if (!tableData) {
-      console.warn("No table data found in API response");
-      return defaultState;
-    }
-
     // Process winner information
-    const winners = getWinnerInfo(tableData);
+    const winners = getWinnerInfo(gameState);
 
     if (winners && winners.length > 0) {
       console.log("🏆 Winners detected:", winners);
@@ -134,7 +112,7 @@ export const useWinnerInfo = (tableId?: string) => {
       winnerInfo: winners,
       isLoading: false,
       error: null,
-      refresh: mutate
+      refresh
     };
 
     console.log("[useWinnerInfo] Returns:", {

@@ -1,12 +1,6 @@
-import useSWR from "swr";
-import axios from "axios";
 import { ethers } from "ethers";
-import { PROXY_URL } from "../config/constants";
+import { useGameState } from "./useGameState";
 import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
 
 /**
  * Custom hook to fetch and provide table state information
@@ -14,16 +8,8 @@ const fetcher = (url: string) =>
  * @returns Object containing table state properties including round, pot, size, type
  */
 export const useTableState = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      // Refresh every 5 seconds and when window is focused
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, isLoading, error, refresh } = useGameState(tableId);
 
   // Default values in case of error or loading
   const defaultState = {
@@ -35,27 +21,19 @@ export const useTableState = (tableId?: string) => {
     roundType: TexasHoldemRound.PREFLOP,
     isLoading,
     error,
-    refresh: mutate
+    refresh
   };
 
   // If still loading or error occurred, return default values
-  if (isLoading || error || !data) {
+  if (isLoading || error || !gameState) {
     return defaultState;
   }
 
   try {
-    // Extract table data from the response (handling different API response structures)
-    const tableData = data.data || data;
-    
-    if (!tableData) {
-      console.warn("No table data found in API response");
-      return defaultState;
-    }
-
     // Calculate the total pot from all pots
     let totalPotWei = "0";
-    if (tableData.pots && Array.isArray(tableData.pots)) {
-      totalPotWei = tableData.pots.reduce((sum: string, pot: string) => {
+    if (gameState.pots && Array.isArray(gameState.pots)) {
+      totalPotWei = gameState.pots.reduce((sum: string, pot: string) => {
         const sumBigInt = BigInt(sum);
         const potBigInt = BigInt(pot);
         return (sumBigInt + potBigInt).toString();
@@ -66,15 +44,15 @@ export const useTableState = (tableId?: string) => {
     const formattedTotalPot = ethers.formatUnits(totalPotWei, 18);
 
     // Extract the current round
-    const currentRound = tableData.round || TexasHoldemRound.PREFLOP;
+    const currentRound = gameState.round || TexasHoldemRound.PREFLOP;
 
     // Extract table size (maximum players)
-    const tableSize = tableData.gameOptions?.maxPlayers || 
-                      tableData.maxPlayers || 
+    const tableSize = gameState.gameOptions?.maxPlayers || 
+                      gameState.maxPlayers || 
                       9;
 
     // Extract table type
-    const tableType = tableData.type || GameType.CASH;
+    const tableType = gameState.type || GameType.CASH;
 
     // Round type is the same as current round in this context
     const roundType = currentRound;
@@ -88,7 +66,7 @@ export const useTableState = (tableId?: string) => {
       roundType,
       isLoading: false,
       error: null,
-      refresh: mutate
+      refresh
     };
 
     console.log("[useTableState] Returns:", {

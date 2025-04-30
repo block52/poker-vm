@@ -8,6 +8,7 @@ import contractSchemas from "../schema/contractSchemas";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { TexasHoldemGameState } from "../types";
+import { ethers } from "ethers";
 
 export class NewCommand implements ICommand<ISignedResponse<any>> {
     private readonly gameManagement: GameManagement;
@@ -35,9 +36,8 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
         }
     }
 
-    public async execute(): Promise<ISignedResponse<any>> {
+    public async execute(): Promise<ISignedResponse<Transaction>> {
         try {
-
             const isGameContract = await this.isGameContract(this.address);
             if (!isGameContract) {
                 throw new Error(`Address ${this.address} is not a valid game contract`);
@@ -48,38 +48,65 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                 this.contractSchemas.getGameOptions(this.address)
             ]);
 
-            const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-
-            if (!game) {
-
-                // Do defaults for the game contract
-                const gameOptions: GameOptions = await this.contractSchemas.getGameOptions(address);
-
-                if (gameOptions) {
-                    const json: TexasHoldemGameState = {
-                        type: "cash",
-                        address: address,
-                        minBuyIn: gameOptions.minBuyIn.toString(),
-                        maxBuyIn: gameOptions.maxBuyIn.toString(),
-                        minPlayers: gameOptions.minPlayers,
-                        maxPlayers: gameOptions.maxPlayers,
-                        smallBlind: gameOptions.smallBlind.toString(),
-                        bigBlind: gameOptions.bigBlind.toString(),
-                        dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
-                        players: [],
-                        deck: "",
-                        communityCards: [],
-                        pots: ["0"],
-                        nextToAct: -1,
-                        round: TexasHoldemRound.ANTE,
-                        winners: [],
-                        signature: ethers.ZeroHash
-                    };
-
-                    return json;
-                }
-
+            if (!gameOptions) {
+                throw new Error(`Game options not found for address ${this.address}`);
             }
+
+            // Create new game if it doesn't exist
+            if (!json) {
+                console.log(`Creating new game for address: ${this.address}`);
+                
+                const address = await this.gameManagement.create(
+                    0n, // Nonce is not used in this context
+                    this.address,
+                    gameOptions
+                );
+
+                const newGameJson: TexasHoldemGameState = {
+                    type: "cash",
+                    address: address,
+                    minBuyIn: gameOptions.minBuyIn.toString(),
+                    maxBuyIn: gameOptions.maxBuyIn.toString(),
+                    minPlayers: gameOptions.minPlayers,
+                    maxPlayers: gameOptions.maxPlayers,
+                    smallBlind: gameOptions.smallBlind.toString(),
+                    bigBlind: gameOptions.bigBlind.toString(),
+                    dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
+                    players: [],
+                    deck: "",
+                    communityCards: [],
+                    pots: ["0"],
+                    nextToAct: -1,
+                    round: TexasHoldemRound.ANTE,
+                    winners: [],
+                    signature: ethers.ZeroHash
+                };
+
+                await this.gameManagement.saveFromJSON(newGameJson);
+                
+                // Create a deck for the new game
+                const deck = new Deck();
+                deck.shuffle(this.seed);
+                
+                // Create a transaction record for this action
+                const newGameTx: Transaction = await Transaction.create(
+                    this.address,
+                    "",
+                    0n, // No value transfer
+                    0n,
+                    this.privateKey,
+                    `create,${deck.toString()}`
+                );
+
+                // Add the transaction to the mempool
+                await this.mempool.add(newGameTx);
+
+                // Return the signed transaction
+                return signResult(newGameTx, this.privateKey);
+            }
+
+            // For existing games, handle reinitialization
+            const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
             if (game.currentRound !== TexasHoldemRound.SHOWDOWN) {
                 throw new Error("Game has not finished yet");

@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
+import { useGameState } from "./useGameState";
 
 /**
  * Custom hook to handle card animations
@@ -18,17 +12,11 @@ export const useCardAnimations = (tableId?: string) => {
   const [flipped3, setFlipped3] = useState(false);
   
   // Get the data to determine if we should show animations
-  const { data } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  const { gameState } = useGameState(tableId);
   
   // Derived state to replace showThreeCards
-  const showThreeCards = data?.data?.communityCards?.length >= 3 || data?.communityCards?.length >= 3;
+  const communityCards = gameState?.communityCards || [];
+  const showThreeCards = communityCards.length >= 3;
   
   // Function to animate card flipping
   const threeCardsTable = () => {

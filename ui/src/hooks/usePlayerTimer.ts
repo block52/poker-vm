@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { useGameState } from "./useGameState";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
+import useSWR from "swr";
 
 /**
  * Custom hook to manage player timer information
@@ -18,28 +13,35 @@ export const usePlayerTimer = (tableId?: string, playerIndex?: number) => {
   const [progress, setProgress] = useState(0);
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>(PlayerStatus.NOT_ACTED);
   const [timeoutValue, setTimeoutValue] = useState(30); // Default to 30 seconds
+  const [lastRefresh, setLastRefresh] = useState(0);
   
-  // Fetch table data using SWR
-  const { data, error, isLoading } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 1000, // Refresh every second for timer accuracy
-      revalidateOnFocus: true
-    }
+  // Get game state from centralized hook
+  const { gameState, isLoading, error, refresh } = useGameState(tableId);
+  
+  // Custom more frequent refresh for this critical hook - timer needs 1-second updates
+  useSWR(
+    tableId && playerIndex !== undefined ? `player-timer-${tableId}-${playerIndex}` : null,
+    async () => {
+      const now = Date.now();
+      // Refresh if more than 1 second has elapsed
+      if (now - lastRefresh >= 1000) {
+        await refresh();
+        setLastRefresh(now);
+      }
+      return null;
+    },
+    { refreshInterval: 1000, revalidateOnFocus: true }
   );
 
   // Update player status and timeout whenever data changes
   useEffect(() => {
-    if (!isLoading && !error && data && playerIndex !== undefined) {
+    if (!isLoading && !error && gameState && playerIndex !== undefined) {
       try {
-        const gameData = data.data || data;
-        
-        if (!gameData || !gameData.players || !gameData.players[playerIndex]) {
+        if (!gameState.players || !gameState.players[playerIndex]) {
           return;
         }
 
-        const player = gameData.players[playerIndex];
+        const player = gameState.players[playerIndex];
         
         // Update status
         if (player.status) {
@@ -56,7 +58,7 @@ export const usePlayerTimer = (tableId?: string, playerIndex?: number) => {
         console.error("Error getting player timer info:", err);
       }
     }
-  }, [data, isLoading, error, playerIndex]);
+  }, [gameState, isLoading, error, playerIndex]);
 
   // Handle timer progression
   useEffect(() => {

@@ -1,11 +1,5 @@
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { useGameState } from "./useGameState";
 import { PlayerDTO, PlayerStatus, ActionDTO, LegalActionDTO } from "@bitcoinbrisbane/block52";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
 
 /**
  * Extracts the player data from the API response
@@ -34,24 +28,17 @@ function extractPlayerData(data: any): PlayerDTO[] | null {
  * @returns Object containing players array and loading state
  */
 export function usePlayerDTO(tableId?: string) {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000, // Refresh every 5 seconds
-      revalidateOnFocus: true
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, isLoading, error, refresh } = useGameState(tableId);
 
-  // Extract player data from the response
-  const players = data ? extractPlayerData(data) : null;
+  // Extract player data directly
+  const players = gameState?.players || null;
 
   const result = {
     players,
     isLoading,
     error,
-    refresh: mutate
+    refresh
   };
 
   console.log("[usePlayerDTO] Returns:", {

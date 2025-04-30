@@ -55,11 +55,8 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             return await signResult(state, this.privateKey);
         } catch (error) {
-            console.error("Error in GameStateCommand:", error);
-
-            // Return the original state without changes instead of throwing an error
-            const originalState = await this.gameManagement.get(this.address);
-            return await signResult(originalState, this.privateKey);
+            console.error(`Error executing GameStateCommand: ${(error as Error).message}`);
+            throw error; // Rethrow the error to be handled by the caller
         }
     }
 

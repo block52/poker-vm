@@ -4,6 +4,7 @@ import { STORAGE_PUBLIC_KEY, STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet"
 import "./Dashboard.css";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; // Add this import
 import useUserWallet from "../hooks/useUserWallet"; // Add this import
+import useNewCommand from "../hooks/DashboardPage/useNewCommand"; // Import the new hook
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import { Wallet } from "ethers";
@@ -34,6 +35,51 @@ const Dashboard: React.FC = () => {
     const [importError, setImportError] = useState("");
     const [showPrivateKey, setShowPrivateKey] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
+    
+    // New game creation states
+    const [showCreateGameModal, setShowCreateGameModal] = useState(false);
+    const [selectedContractAddress, setSelectedContractAddress] = useState("");
+    const [isCreatingGame, setIsCreatingGame] = useState(false);
+    const [createGameError, setCreateGameError] = useState("");
+    const [newGameAddress, setNewGameAddress] = useState("");
+
+    // Game contract addresses - in a real app, these would come from the API
+    const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd343"; // Example address
+    
+    // Initialize the useNewCommand hook with the selected contract address
+    const { createNewGame, isCreating } = useNewCommand({ 
+        gameContractAddress: selectedContractAddress || DEFAULT_GAME_CONTRACT 
+    });
+
+    // Function to handle creating a new game
+    const handleCreateNewGame = async () => {
+        setIsCreatingGame(true);
+        setCreateGameError("");
+        
+        try {
+            // Generate a random seed for the game (optional)
+            const randomSeed = Math.random().toString(36).substring(2, 15);
+            
+            const result = await createNewGame(randomSeed);
+            
+            if (result.success && result.gameAddress) {
+                setNewGameAddress(result.gameAddress);
+                setShowCreateGameModal(false);
+                
+                // Show success message
+                alert(`Game created successfully! Game address: ${result.gameAddress}`);
+                
+                // You could automatically navigate to the game or update the UI
+                // navigate(`/table/${result.gameAddress}`);
+            } else {
+                setCreateGameError(result.error || "Failed to create game");
+            }
+        } catch (error: any) {
+            setCreateGameError(error.message || "An unexpected error occurred");
+        } finally {
+            setIsCreatingGame(false);
+        }
+    };
 
     // Add function to reset blockchain
     const resetBlockchain = async () => {
@@ -176,6 +222,9 @@ const Dashboard: React.FC = () => {
     };
 
     const buildUrl = () => {
+        if (newGameAddress) {
+            return `/table/${newGameAddress}`;
+        }
         // return `/table/${typeSelected}?variant=${variantSelected}&seats=${seatSelected}`;
         return "/table/0x22dfa2150160484310c5163f280f49e23b8fd34326";
     };
@@ -291,6 +340,57 @@ const Dashboard: React.FC = () => {
                 </div>
             )}
 
+            {/* Create New Game Modal */}
+            {showCreateGameModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-gray-800 p-6 rounded-xl w-96">
+                        <h3 className="text-xl font-bold text-white mb-4">Create New Game</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-white text-sm mb-1">Game Contract</label>
+                                <select 
+                                    value={selectedContractAddress}
+                                    onChange={(e) => setSelectedContractAddress(e.target.value)}
+                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-pink-500 focus:outline-none"
+                                >
+                                    <option value={DEFAULT_GAME_CONTRACT}>Default Texas Hold'em</option>
+                                    {/* Additional contracts could be added here */}
+                                </select>
+                            </div>
+                            
+                            {createGameError && <p className="text-red-500 text-sm">{createGameError}</p>}
+                            
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => {
+                                        setShowCreateGameModal(false);
+                                        setCreateGameError("");
+                                    }}
+                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleCreateNewGame}
+                                    disabled={isCreatingGame}
+                                    className={`px-4 py-2 text-sm ${isCreatingGame ? "bg-gray-500" : "bg-pink-600 hover:bg-pink-700"} text-white rounded-lg transition duration-300 flex items-center`}
+                                >
+                                    {isCreatingGame ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Creating...
+                                        </>
+                                    ) : "Create Game"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-xl">
                 <h1 className="text-4xl font-extrabold text-center text-white mb-8">Start Playing Now</h1>
 
@@ -354,12 +454,20 @@ const Dashboard: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-                            <Link
-                                to="/qr-deposit"
-                                className="block mt-2 text-center text-white bg-green-600 hover:bg-green-700 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-lg"
-                            >
-                                Deposit
-                            </Link>
+                            <div className="flex gap-2">
+                                <Link
+                                    to="/qr-deposit"
+                                    className="block flex-1 text-center text-white bg-green-600 hover:bg-green-700 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-lg"
+                                >
+                                    Deposit
+                                </Link>
+                                <button
+                                    onClick={() => setShowCreateGameModal(true)}
+                                    className="block flex-1 text-center text-white bg-blue-600 hover:bg-blue-700 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-lg"
+                                >
+                                    Create New Game
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -422,6 +530,30 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Display new game address if available */}
+                {newGameAddress && (
+                    <div className="bg-gray-700 p-4 rounded-lg mb-6">
+                        <h3 className="text-lg font-bold text-white mb-2">New Game Created!</h3>
+                        <p className="text-white text-sm mb-2">
+                            Game Address: <span className="font-mono text-pink-500">{formatAddress(newGameAddress)}</span>
+                        </p>
+                        <div className="flex justify-between">
+                            <button
+                                onClick={() => navigator.clipboard.writeText(newGameAddress)}
+                                className="text-blue-400 hover:text-blue-300 text-sm transition"
+                            >
+                                Copy Address
+                            </button>
+                            <Link
+                                to={`/table/${newGameAddress}`}
+                                className="text-green-400 hover:text-green-300 text-sm transition"
+                            >
+                                Go to Game
+                            </Link>
+                        </div>
+                    </div>
+                )}
 
                 <div className="space-y-6">
                     {/* Game options always visible */}

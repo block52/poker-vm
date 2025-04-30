@@ -1,7 +1,6 @@
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { useGameState } from "./useGameState";
 import { GameOptions } from "@bitcoinbrisbane/block52"
+import { useEffect, useState } from "react";
 
 // Define default values
 export const DEFAULT_SMALL_BLIND = "100000000000000000"; // 0.1 ETH
@@ -9,29 +8,12 @@ export const DEFAULT_BIG_BLIND = "200000000000000000"; // 0.2 ETH
 export const DEFAULT_MIN_BUY_IN = "10000000000000000"; // 0.01 ETH
 export const DEFAULT_MAX_BUY_IN = "1000000000000000000"; // 1 ETH
 
-
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
-
 /**
  * Custom hook to fetch game options for a table
  * @param tableId The table ID to fetch options for
  * @returns Object containing game options and loading state
  */
 export const useGameOptions = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      // Refresh every 30 seconds and when window is focused
-      refreshInterval: 30000,
-      revalidateOnFocus: true
-    }
-  );
-
   // Default values in case of error or loading
   const defaultOptions: GameOptions = {
     minBuyIn: BigInt(DEFAULT_MIN_BUY_IN),
@@ -43,68 +25,59 @@ export const useGameOptions = (tableId?: string) => {
     timeout: 300
   };
 
-  // If still loading or error occurred, return default values
-  if (isLoading || error || !data || !data.data) {
-    return {
-      gameOptions: defaultOptions,
-      isLoading,
-      error,
-      refresh: mutate
-    };
-  }
+  // Use centralized game state but with custom refresh values
+  const [options, setOptions] = useState<GameOptions>(defaultOptions);
+  const { gameState, isLoading, error, refresh } = useGameState(tableId);
 
-  try {
-    // Extract game options from the data
-    const gameOptions = data.data.gameOptions;
-    
-    if (!gameOptions) {
-      console.warn("No game options found in table data");
-      return {
-        gameOptions: defaultOptions,
-        isLoading,
-        error,
-        refresh: mutate
-      };
+  // Store refresh time to limit how often we check for game option changes
+  const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  
+  // Process game options when game state changes
+  useEffect(() => {
+    // Only update if we have gameState and enough time has passed (30s interval)
+    const now = Date.now();
+    if (gameState && (!lastRefreshTime || now - lastRefreshTime > 30000)) {
+      try {
+        const gameOptions = gameState.gameOptions;
+        
+        if (!gameOptions) {
+          console.warn("No game options found in table data");
+          return;
+        }
+
+        // Use the game options from the API with fallbacks to defaults
+        const newOptions: GameOptions = {
+          minBuyIn: gameOptions.minBuyIn || defaultOptions.minBuyIn,
+          maxBuyIn: gameOptions.maxBuyIn || defaultOptions.maxBuyIn,
+          maxPlayers: gameOptions.maxPlayers || defaultOptions.maxPlayers,
+          minPlayers: gameOptions.minPlayers || defaultOptions.minPlayers,
+          smallBlind: gameOptions.smallBlind || defaultOptions.smallBlind,
+          bigBlind: gameOptions.bigBlind || defaultOptions.bigBlind,
+          timeout: gameOptions.timeout || defaultOptions.timeout
+        };
+
+        setOptions(newOptions);
+        setLastRefreshTime(now);
+      } catch (err) {
+        console.error("Error parsing game options:", err);
+      }
     }
+  }, [gameState, lastRefreshTime]);
 
-    // Use the game options from the API with fallbacks to defaults
-    const options: GameOptions = {
-      minBuyIn: gameOptions.minBuyIn || defaultOptions.minBuyIn,
-      maxBuyIn: gameOptions.maxBuyIn || defaultOptions.maxBuyIn,
-      maxPlayers: gameOptions.maxPlayers || defaultOptions.maxPlayers,
-      minPlayers: gameOptions.minPlayers || defaultOptions.minPlayers,
-      smallBlind: gameOptions.smallBlind || defaultOptions.smallBlind,
-      bigBlind: gameOptions.bigBlind || defaultOptions.bigBlind,
-      timeout: gameOptions.timeout || defaultOptions.timeout
-    };
-
-    const result = {
-      gameOptions: options,
-      isLoading,
-      error,
-      refresh: mutate
-    };
-
-    console.log("[useGameOptions] Returns:", {
-      minBuyIn: options.minBuyIn.toString(),
-      maxBuyIn: options.maxBuyIn.toString(),
-      maxPlayers: options.maxPlayers,
-      minPlayers: options.minPlayers,
-      smallBlind: options.smallBlind.toString(),
-      bigBlind: options.bigBlind.toString(),
-      timeout: options.timeout,
-      isLoading,
-      hasError: !!error
-    });
-
-    return result;
-  } catch (err) {
-    console.error("Error parsing game options:", err);
+  // If still loading or error occurred, return default values
+  if (isLoading || error || !gameState) {
     return {
       gameOptions: defaultOptions,
       isLoading,
       error,
-      refresh: mutate
+      refresh
     };
   }
+
+  return {
+    gameOptions: options,
+    isLoading,
+    error,
+    refresh
+  };
 }; 

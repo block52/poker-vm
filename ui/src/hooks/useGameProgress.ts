@@ -1,10 +1,4 @@
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
-
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
+import { useGameState } from "./useGameState";
 
 /**
  * Custom hook to check if a game is in progress
@@ -12,15 +6,8 @@ const fetcher = (url: string) =>
  * @returns Object containing isGameInProgress flag and loading/error states
  */
 export const useGameProgress = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  // Get game state from centralized hook
+  const { gameState, isLoading, error } = useGameState(tableId);
 
   // Default values in case of error or loading
   const defaultState = {
@@ -32,21 +19,18 @@ export const useGameProgress = (tableId?: string) => {
   };
 
   // If still loading or error occurred, return default values
-  if (isLoading || error || !data) {
+  if (isLoading || error || !gameState) {
     return defaultState;
   }
 
   try {
-    // Extract table data from the response (handling different API response structures)
-    const tableData = data.data || data;
-    
-    if (!tableData || !tableData.players) {
+    if (!gameState.players) {
       console.warn("No players data found in API response");
       return defaultState;
     }
 
     // Filter for active players (not folded and not sitting out)
-    const activePlayers = tableData.players.filter(
+    const activePlayers = gameState.players.filter(
       (player: any) => player.status !== "folded" && player.status !== "sitting-out"
     );
 
