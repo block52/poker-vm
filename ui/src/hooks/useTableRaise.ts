@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
+import { ethers } from "ethers";
 
 // Types for the raise parameters
 interface RaiseHandArgs {
@@ -48,18 +49,40 @@ export function useTableRaise(tableId?: string): UseTableRaiseReturn {
                 return Promise.reject(noAmountError);
             }
 
+            if (!userAddress) {
+                const noAddressError = new Error("User address is required");
+                setError(noAddressError);
+                return Promise.reject(noAddressError);
+            }
+
             setIsRaising(true);
             setError(null);
 
             try {
                 console.log(`Raising on table ${tableId} with action index ${actionIndex} and amount ${amount}`);
                 
+                // Create a wallet instance to sign the message
+                const wallet = new ethers.Wallet(privateKey);
+                
+                // Create the message to sign - Add delimiters for clarity and reliability
+                const timestamp = Math.floor(Date.now() / 1000).toString();
+                const nonce = Date.now().toString(); // Use timestamp as nonce
+                const message = `raise:${amount}:${tableId}:${timestamp}`;
+                
+                // Sign the message
+                const signature = await wallet.signMessage(message);
+                
                 // Make API call to raise 
                 const response = await axios.post(`${PROXY_URL}/table/${tableId}/raise`, {
                     tableId,
                     privateKey,
                     actionIndex,
-                    amount
+                    amount,
+                    userAddress,
+                    publicKey,
+                    signature,
+                    timestamp,
+                    nonce
                 });
 
                 console.log("Raise response:", response.data);
