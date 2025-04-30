@@ -28,7 +28,7 @@ class BetAction extends BaseAction implements IAction {
                 return { minAmount: this.game.bigBlind, maxAmount: player.chips };
             }
 
-            if (largestBet === this.game.bigBlind) {
+            if (largestBet === this.game.smallBlind) {
                 // Player can reopen the betting with a minimum of big blind
                 return { minAmount: this.game.bigBlind, maxAmount: player.chips };
             }
