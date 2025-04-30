@@ -9,7 +9,8 @@ export enum PlayerActionType {
     ALL_IN = "all-in",
     MUCK = "muck",
     SIT_IN = "sit-in",
-    SIT_OUT = "sit-out"
+    SIT_OUT = "sit-out",
+    SHOW = "show"
 }
 
 export enum NonPlayerActionType {
@@ -31,7 +32,9 @@ export enum PlayerStatus {
     ACTIVE = "active",
     FOLDED = "folded",
     ALL_IN = "all-in",
-    SITTING_OUT = "sitting-out"
+    SITTING_OUT = "sitting-out",
+    SITTING_IN = "sitting-in",
+    SHOWING = "showing"
 }
 
 export enum TexasHoldemRound {
