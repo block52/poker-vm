@@ -9,10 +9,6 @@ abstract class BaseAction {
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
-        // 1. Game state check: Hand must be active (not in showdown)
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) 
-            throw new Error("Hand has ended.");
-
         // 2. Turn order check: Must be player's turn (except for fold which can be done anytime)
         if (this.type !== PlayerActionType.FOLD) {
             const nextPlayerAddress = this.game.getNextPlayerToAct()?.address;

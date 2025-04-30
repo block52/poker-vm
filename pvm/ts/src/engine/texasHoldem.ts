@@ -28,7 +28,7 @@ import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers, N } from "ethers";
 import LeaveAction from "./actions/leaveAction";
-import { NODATA } from "dns";
+import MuckAction from "./actions/muckAction";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
@@ -113,7 +113,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new CheckAction(this, this._update),
             new BetAction(this, this._update),
             new CallAction(this, this._update),
-            new RaiseAction(this, this._update)
+            new RaiseAction(this, this._update),
+            new MuckAction(this, this._update),
         ];
     }
 
@@ -568,6 +569,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             case PlayerActionType.RAISE:
                 new RaiseAction(this, this._update).execute(player, index, _amount);
+                break;
+            case PlayerActionType.MUCK:
+                new MuckAction(this, this._update).execute(player, index, _amount);
                 break;
             default:
                 // do we need to roll back last acted seat?
