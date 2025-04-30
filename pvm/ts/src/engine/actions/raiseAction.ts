@@ -36,12 +36,21 @@ class RaiseAction extends BaseAction implements IAction {
 
         // 3. For preflop, ensure blinds have been posted
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.SMALL_BLIND)) {
-                throw new Error("Small blind must post before raising.");
-            }
+            // if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.SMALL_BLIND)) {
+            //     throw new Error("Small blind must post before raising.");
+            // }
 
-            if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.BIG_BLIND)) {
-                throw new Error("Big blind must post before raising.");
+            // if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.BIG_BLIND)) {
+            //     throw new Error("Big blind must post before raising.");
+            // }
+
+            const playerSeat = this.game.getPlayerSeatNumber(player.address);
+            const isSmallBlind = playerSeat === this.game.smallBlindPosition;
+            // const playerBet = this.getSumBets(player.address);
+
+            if (isSmallBlind) {
+                // Can reopen the betting with a minimum of big blind
+                return { minAmount: this.game.smallBlind + this.game.bigBlind, maxAmount: player.chips };
             }
         }
 
