@@ -20,23 +20,18 @@ class BetAction extends BaseAction implements IAction {
         // 2. Bet matching check: Player must match existing bets before betting
         const largestBet = this.getLargestBet();
         const sumBets = this.getSumBets(player.address);
-        
-        if (largestBet > sumBets && largestBet > 0n) {
-            console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${sumBets}`);
-            throw new Error("Player must call or raise.");
-        }
 
         // 3. Round-specific checks for preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            // In preflop, the blind counts as the first bet
-            // If there's already a bet (the big blind), then the player should raise instead
-            const roundBets = this.game.getBets(this.game.currentRound);
-            const hasBigBlind = this.game.getActionsForRound(TexasHoldemRound.ANTE)
-                .some(a => a.action === PlayerActionType.BIG_BLIND);
-                
-            if (hasBigBlind && sumBets < this.game.bigBlind) {
-                throw new Error("Must match the big blind before betting.");
+            if (largestBet === 0n) {
+                // No bets yet, player can bet any amount
+                return { minAmount: this.game.bigBlind, maxAmount: player.chips };
             }
+        }
+
+        if (largestBet > sumBets && largestBet > 0n) {
+            console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${sumBets}`);
+            throw new Error("Player must call or raise.");
         }
 
         // 4. Chip stack check: Determine betting range based on player's chips
