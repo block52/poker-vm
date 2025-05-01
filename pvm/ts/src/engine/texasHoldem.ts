@@ -103,8 +103,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) {}
-            addAction(action: Turn): void {}
+            constructor(public game: TexasHoldemGame) { }
+            addAction(action: Turn): void { }
         })(this);
 
         this._actions = [
@@ -116,7 +116,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new BetAction(this, this._update),
             new CallAction(this, this._update),
             new RaiseAction(this, this._update),
-            new MuckAction(this, this._update)
+            new MuckAction(this, this._update),
+            new ShowAction(this, this._update),
         ];
     }
 

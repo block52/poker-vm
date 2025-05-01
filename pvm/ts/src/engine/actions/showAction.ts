@@ -10,6 +10,10 @@ class ShowAction extends BaseAction implements IAction {
         // Basic validation
         super.verify(player);
 
+        if (this.game.currentRound !== TexasHoldemRound.SHOWDOWN) {
+            throw new Error("Game is not in showdown round.");
+        }
+
         return { minAmount: 0n, maxAmount: 0n };
     }
 
