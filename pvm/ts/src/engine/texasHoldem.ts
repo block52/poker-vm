@@ -67,10 +67,16 @@ class TexasHoldemGame implements IPoker, IUpdate {
         private currentPot: bigint = 0n, // todo: this can be removed
         playerStates: Map<number, Player | null>,
         deck: string,
+        winners: WinnerDTO[] = [],
         private readonly caller?: string
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
         this._deck = new Deck(deck);
+
+        this._winners = new Map<string, bigint>();
+        for (const winner of winners) {
+            this._winners.set(winner.address, BigInt(winner.amount));
+        }
 
         // TODO: Make this a map
         for (let i = 0; i < communityCards.length; i++) {
@@ -291,10 +297,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this.deal();
             }
         }
-    }
-
-    private incrementHandNumber(): void {
-        this._handNumber++;
     }
 
     private incrementTurnIndex(): void {
@@ -1194,7 +1196,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             json.communityCards,
             json.pots,
             players,
-            json.deck
+            json.deck,
+            json.winners
         );
     }
 

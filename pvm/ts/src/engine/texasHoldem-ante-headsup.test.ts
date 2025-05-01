@@ -146,18 +146,11 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should do end to end", () => {
-            // Get legal actions for the next player
-            // let actual = game.getLegalActions(SMALL_BLIND_PLAYER);
-            // expect(actual.length).toEqual(2);
-            // expect(actual[0].action).toEqual(PlayerActionType.SMALL_BLIND);
-            // expect(actual[1].action).toEqual(PlayerActionType.FOLD);
-
             // Do the small blind
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            const nextToAct = game.getNextPlayerToAct();
-            expect(nextToAct).toBeDefined();
+            let nextToAct = game.getNextPlayerToAct();
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
 
             // Do the big blind
