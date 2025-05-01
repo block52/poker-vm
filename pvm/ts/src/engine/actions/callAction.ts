@@ -23,6 +23,10 @@ class CallAction extends BaseAction implements IAction {
                 const amount = this.game.bigBlind - this.game.smallBlind;
                 return { minAmount: amount, maxAmount: amount };
             }
+
+            if (this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
+                throw new Error("Big blind cannot call in preflop round.");
+            }
         }
         
         // 3. Action sequence check: Need a previous action with amount to call
