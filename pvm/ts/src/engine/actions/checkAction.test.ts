@@ -112,11 +112,18 @@ describe("CheckAction", () => {
             expect(() => action.verify(player)).toThrow("Only active player can check.");
         });
 
+        it("should throw error if game is in ante", () => {
+            // Mock game in showdown state
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
+
+            expect(() => action.verify(player)).toThrow("Cannot check in the ante round.");
+        });
+
         it("should throw error if game is in showdown", () => {
             // Mock game in showdown state
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
 
-            expect(() => action.verify(player)).toThrow("Hand has ended.");
+            expect(() => action.verify(player)).toThrow("Cannot check in the showdown round.");
         });
     });
 

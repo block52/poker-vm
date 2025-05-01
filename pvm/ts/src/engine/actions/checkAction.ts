@@ -15,6 +15,11 @@ class CheckAction extends BaseAction implements IAction {
             throw new Error("Cannot check in the ante round.");
         }
 
+        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error("Cannot check in the showdown round.");
+        }
+
+
         // 2. Bet matching check: Get the largest bet and player's current bet
         const largestBet = this.getLargestBet();
         const playerBet = this.getSumBets(player.address);
