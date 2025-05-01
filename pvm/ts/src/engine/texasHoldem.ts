@@ -912,7 +912,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
 
-        const active = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+        const active = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
         this._winners = new Map<string, bigint>();
 
@@ -1016,9 +1016,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
             const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
             if (showingPlayers.length === players.length) {
+                this.calculateWinner();
                 return true; // Round is over if only one player is active
             }
         }
+
+        // if (round === TexasHoldemRound.END) {
+        //     this.calculateWinner();
+        //     return true; // Round is over if only one player is active
+        // }
 
         // Check if cards have been dealt, which is required before ending the round
         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
@@ -1262,7 +1268,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const winners: WinnerDTO[] = [];
 
         // Populate winners array from _winners Map if in showdown
-        if (this._currentRound === TexasHoldemRound.SHOWDOWN && this._winners) {
+        if (this._winners) {
             for (const [address, amount] of this._winners.entries()) {
                 winners.push({
                     address: address,
