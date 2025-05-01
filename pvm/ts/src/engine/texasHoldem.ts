@@ -855,7 +855,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
             this._communityCards.push(...this._deck.deal(1));
         } else if (this._currentRound === TexasHoldemRound.RIVER) {
             // Moving to SHOWDOWN - calculate winner
+            //this.calculateWinner();
+        } else if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
+
             this.calculateWinner();
+
+            // Moving to ANTE - reset the game
+
+            // this.reInit(this._deck.toString());
         }
 
         // Advance to next round
@@ -1002,6 +1009,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
             }
 
             return true; // Round over after blinds are posted and cards are dealt
+        }
+
+        if (round === TexasHoldemRound.SHOWDOWN) {
+            const players = this.getSeatedPlayers();
+            const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+            if (activePlayers.length === 0) {
+                return true; // Round is over if only one player is active
+            }
         }
 
         // Check if cards have been dealt, which is required before ending the round
@@ -1240,11 +1255,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         const previousActions: ActionDTO[] = this.getActionDTOs();
         const winners: WinnerDTO[] = [];
-
-        // If we're in showdown and winners haven't been calculated yet, calculate them now
-        if (this._currentRound === TexasHoldemRound.SHOWDOWN && (!this._winners || this._winners.size === 0)) {
-            this.calculateWinner();
-        }
 
         // Populate winners array from _winners Map if in showdown
         if (this._currentRound === TexasHoldemRound.SHOWDOWN && this._winners) {
