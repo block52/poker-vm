@@ -34,6 +34,10 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise in the ante round. Small blind must post.");
         }
 
+        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error("Cannot raise in the showdown round.");
+        }
+
         // 3. For preflop, ensure blinds have been posted
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             // if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.SMALL_BLIND)) {

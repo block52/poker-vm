@@ -199,7 +199,7 @@ describe("Raise Action", () => {
         it("should throw error if round is SHOWDOWN", () => {
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
 
-            expect(() => action.verify(player)).toThrow("Hand has ended.");
+            expect(() => action.verify(player)).toThrow("Cannot raise in the showdown round.");
         });
 
         it.skip("should throw error if player is not active", () => {
