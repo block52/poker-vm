@@ -6,14 +6,7 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { Transaction } from "../models";
-
-type OrderedTransaction = {
-    from: string;
-    to: string;
-    value: bigint;
-    type: PlayerActionType;
-    index: number;
-};
+import { OrderedTransaction } from "../engine/types";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: GameManagement;

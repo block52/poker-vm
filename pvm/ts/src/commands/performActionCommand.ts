@@ -7,6 +7,7 @@ import contractSchemas from "../schema/contractSchemas";
 import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
+import { OrderedTransaction } from "../engine/types";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly gameManagement: GameManagement;
@@ -36,6 +37,25 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         ]);
 
         const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
+
+        // Get mempool transactions for the game
+        const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.to && tx.data !== undefined);
+        console.log(`Found ${mempoolTransactions.length} mempool transactions`);
+
+        // Sort transactions by index
+        const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx))
+            .sort((a, b) => a.index - b.index);
+
+        orderedTransactions.forEach(tx => {
+            try {
+                game.performAction(tx.from, tx.type, tx.index, tx.value);
+                console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+            } catch (error) {
+                console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
+                // Continue with other transactions, don't let this error propagate up
+            }
+        });
+
         game.performAction(this.from, this.action, this.index, this.amount);
 
         const nonce = BigInt(this.nonce);
@@ -53,5 +73,23 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         console.log(`Is game transaction: ${found}`);
         return found;
+    }
+
+    private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
+        if (!tx.data) {
+            throw new Error("Transaction data is undefined");
+        }
+
+        const params = tx.data.split(",");
+        const action = params[0].trim() as PlayerActionType;
+        const index = parseInt(params[1].trim());
+
+        return {
+            from: tx.from,
+            to: tx.to,
+            value: tx.value,
+            type: action,
+            index: index
+        };
     }
 }

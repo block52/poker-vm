@@ -49,3 +49,11 @@ export interface IGame extends IUpdate {
     getPlayerStatus(): PlayerStatus;
     join(player: Player, chips: bigint): void;
 }
+
+export type OrderedTransaction = {
+    from: string;
+    to: string;
+    value: bigint;
+    type: PlayerActionType;
+    index: number;
+};
