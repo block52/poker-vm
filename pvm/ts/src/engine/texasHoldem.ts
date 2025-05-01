@@ -1014,7 +1014,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (round === TexasHoldemRound.SHOWDOWN) {
             const players = this.getSeatedPlayers();
             const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
-            if (activePlayers.length === 0) {
+            if (activePlayers.length <= 1) {
                 return true; // Round is over if only one player is active
             }
         }
@@ -1233,7 +1233,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     holeCardsDto = player.holeCards.map(card => card.mnemonic);
                 }
             }
-            
+
             return {
                 address: player.address,
                 seat: seat,
