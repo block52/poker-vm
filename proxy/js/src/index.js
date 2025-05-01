@@ -932,6 +932,73 @@ app.post("/table/:tableId/show", async (req, res) => {
 });
 
 // ===================================
+// New endpoint for creating a new hand
+// ===================================
+app.post("/create_new_hand/:tableId", async (req, res) => {
+    console.log("=== CREATE NEW HAND REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   table address:", req.params.tableId);
+    console.log("   user address:", req.body.userAddress);
+
+    try {
+        // Format the RPC call to match the NEW command structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: "new", // Lowercase "new" matches the SDK definition
+            params: [
+                req.params.tableId, // Use the table ID from the URL
+                "" // Empty seed for random shuffling
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        }; 
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        // After successful creation, trigger a game state refresh
+        setTimeout(async () => {
+            try {
+                console.log("=== TRIGGERING GAME STATE REFRESH ===");
+                const gameStateCall = {
+                    id: getNextRpcId(),
+                    method: "getGameState",
+                    params: [req.params.tableId],
+                    publicKey: req.body.publicKey
+                };
+                
+                await axios.post(NODE_URL, gameStateCall, {
+                    headers: { "Content-Type": "application/json" }
+                });
+                
+                console.log("Game state refresh triggered successfully");
+            } catch (refreshError) {
+                console.error("Error refreshing game state:", refreshError);
+            }
+        }, 1000); // Short delay to ensure the change has propagated
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ 
+            error: "Failed to create new hand", 
+            details: error.message 
+        });
+    }
+});
+
+// ===================================
 // 14. Start Server
 // ===================================
 server.listen(port, "0.0.0.0", () => {

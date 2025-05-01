@@ -118,7 +118,7 @@ const Table = () => {
         tableSize, 
         tableType, 
         roundType 
-    } = useTableState(id);
+    } = useTableState(id, 5000);
     
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);

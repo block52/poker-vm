@@ -5,11 +5,12 @@ import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
 /**
  * Custom hook to fetch and provide table state information
  * @param tableId The ID of the table to fetch state for
+ * @param autoRefreshIntervalMs Optional refresh interval in ms, default value to pass to useGameState
  * @returns Object containing table state properties including round, pot, size, type
  */
-export const useTableState = (tableId?: string) => {
+export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number) => {
   // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh } = useGameState(tableId);
+  const { gameState, isLoading, error, refresh } = useGameState(tableId, autoRefreshIntervalMs);
 
   // Default values in case of error or loading
   const defaultState = {
