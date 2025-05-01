@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.81",
+    "@bitcoinbrisbane/block52": "1.0.82",
     "@reown/appkit": "1.6.7",
     "@reown/appkit-adapter-ethers": "1.6.7",
     "@reown/appkit-adapter-wagmi": "1.6.7",
@@ -33,6 +33,7 @@
     "dev:lint": "eslint . --fix && vite --host 0.0.0.0 --port 3002",
     "dev:nocheck": "vite --host 0.0.0.0 --port 3002",
     "build": "tsc -b && vite build",
+    "start": "vite preview --host 0.0.0.0 --port 3002",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:warn": "eslint . --fix --max-warnings=100",
