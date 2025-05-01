@@ -18,6 +18,7 @@ import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
 import { useNextToActInfo } from "../hooks/useNextToActInfo";
 import { useTableCall } from "../hooks/useTableCall";
 import { useTableBet } from "../hooks/useTableBet";
+import { useTableMuck } from "../hooks/useTableMuck";
 
 import axios from "axios";
 
@@ -39,6 +40,7 @@ const PokerActionPanel: React.FC = () => {
     const { postBigBlind } = useTablePostBigBlind(tableId);
     const { callHand } = useTableCall(tableId);
     const { betHand } = useTableBet(tableId);
+    const { muckCards, isMucking } = useTableMuck(tableId);
     
     // Use the useNextToActInfo hook
     const { nextToActInfo, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
@@ -495,6 +497,29 @@ const PokerActionPanel: React.FC = () => {
         console.log("💰 Account data from hook:", accountData);
     }, [nonce, accountData]);
 
+    // Check if muck action exists in legal actions
+    const hasMuckAction = legalActions?.some((a: any) => a.action === "muck" || a.action === PlayerActionType.MUCK);
+
+    // Handler for muck action
+    const handleMuck = () => {
+        console.log("Mucking cards");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !muckCards) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
+        // Use our hook to muck cards
+        muckCards({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: legalActions?.find(a => a.action === PlayerActionType.MUCK || a.action === "muck")?.index || 0,
+        });
+    };
+
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-4 pb-6 flex justify-center items-center border-t-2 border-[#3a546d] relative">
             {/* Animated light effects */}
@@ -526,6 +551,30 @@ const PokerActionPanel: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             {isDealing ? "DEALING..." : "DEAL"}
+                        </button>
+                    </div>
+                )}
+
+                {/* Muck Button - Show when action is available */}
+                {hasMuckAction && (
+                    <div className="flex justify-center mb-3">
+                        <button
+                            onClick={handleMuck}
+                            className="bg-gradient-to-r from-[#4b5563] to-[#374151] hover:from-[#374151] hover:to-[#1f2937] 
+                            text-white font-bold py-3 px-8 rounded-lg shadow-lg 
+                            border-2 border-[#6b7280] transition-all duration-300 
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                            disabled={isMucking}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                            </svg>
+                            {isMucking ? "MUCKING..." : "MUCK CARDS"}
                         </button>
                     </div>
                 )}

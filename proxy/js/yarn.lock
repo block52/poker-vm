@@ -39,10 +39,10 @@
     call-me-maybe "^1.0.1"
     z-schema "^5.0.1"
 
-"@bitcoinbrisbane/block52@1.0.79":
-  version "1.0.79"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.79.tgz#e4abe0d785cca321474e9ff7cb3342bcd59bdd61"
-  integrity sha512-TGGxcf0mmcAMyLxRDvoe5HkfEUo5DREjSfjbEvbzGtyBiLsu0UdXJKmrlShXQOReyqw8pSo+spQT+x8JL+4yQA==
+"@bitcoinbrisbane/block52@1.0.81":
+  version "1.0.81"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.81.tgz#c60f88f4fa27b7471f5223d1ccc2c49da5922b30"
+  integrity sha512-hHTW2d32jCufhfItWyb0TcwtpGt+OLPofYwEseZDEb2aocpaEab5r+HMPg5/MUtnsfE0bGVbm/iYHdT7uogASw==
   dependencies:
     axios "^1.8.1"
     bigunit "^1.2.5"

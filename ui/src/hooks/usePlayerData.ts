@@ -5,9 +5,11 @@ import { PROXY_URL } from "../config/constants";
 import { ethers } from "ethers";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
+// Define the fetcher function that includes the user address as a query parameter
+const fetcher = (url: string) => {
+  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+  return axios.get(`${url}?userAddress=${userAddress}`).then(res => res.data);
+};
 
 /**
  * Custom hook to fetch player data for a specific seat
@@ -16,6 +18,8 @@ const fetcher = (url: string) =>
  * @returns Object with player data and utility functions
  */
 export const usePlayerData = (tableId?: string, seatIndex?: number) => {
+  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+  
   // Skip the request if no tableId is provided
   const { data, error, isLoading } = useSWR(
     tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,

@@ -744,8 +744,9 @@ app.post("/table/:tableId/deal", async (req, res) => {
 // New endpoint for get_game_state
 // ===================================
 app.get("/get_game_state/:tableId", async (req, res) => {
-    // console.log("=== GET GAME STATE REQUEST ===");
-    // console.log("Table ID:", req.params.tableId);
+    console.log("=== GET GAME STATE REQUEST ===");
+    console.log("Table ID:", req.params.tableId);
+    console.log("User Address:", req.query.userAddress);
 
     try {
         // Format the RPC call according to the specified structure
@@ -753,13 +754,13 @@ app.get("/get_game_state/:tableId", async (req, res) => {
             id: getNextRpcId(),
             method: "get_game_state",
             version: "2.0",
-            params: [req.params.tableId]
+            params: [req.params.tableId, req.query.userAddress]
         };
 
-        // console.log("=== FORMATTED RPC CALL ===");
-        // console.log(JSON.stringify(rpcCall, null, 2));
-        // console.log("=== NODE_URL ===");
-        // console.log(process.env.NODE_URL);
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
         const response = await axios.post(NODE_URL, rpcCall, {
@@ -768,13 +769,13 @@ app.get("/get_game_state/:tableId", async (req, res) => {
             }
         });
 
-        // console.log("=== NODE RESPONSE ===");
-        // console.log(response.data.result);
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data.result);
 
         res.json(response.data.result);
     } catch (error) {
-        // console.error("=== ERROR ===");
-        // console.error("Error details:", error);
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
         res.status(500).json({
             error: "Failed to get game state",
             details: error.message
@@ -827,6 +828,56 @@ app.post("/create_new_game", async (req, res) => {
             error: "Failed to create new game", 
             details: error.message 
         });
+    }
+});
+
+// ===================================
+// New endpoint for mucking cards
+// ===================================
+app.post("/table/:tableId/muck", async (req, res) => {
+    console.log("=== MUCK ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
+
+    try {
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.MUCK, // action
+                "0", // amount (muck doesn't require an amount)
+                req.body.nonce || 0, // nonce (optional)
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to muck cards", details: error.message });
     }
 });
 
