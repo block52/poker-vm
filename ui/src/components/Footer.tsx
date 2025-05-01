@@ -20,6 +20,7 @@ import { useTableCall } from "../hooks/playerActions/useTableCall";
 import { useTableBet } from "../hooks/playerActions/useTableBet";
 import { useTableMuck } from "../hooks/playerActions/useTableMuck";
 import { useTableShow } from "../hooks/playerActions/useTableShow";
+import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 
 import axios from "axios";
 
@@ -28,6 +29,9 @@ import { ethers } from "ethers";
 
 const PokerActionPanel: React.FC = () => {
     const { id: tableId } = useParams<{ id: string }>();
+    
+    // Add the useStartNewHand hook
+    const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
     
     // Get data from our custom hooks
     const { nonce, accountData, refreshNonce } = useTableNonce();
@@ -541,6 +545,25 @@ const PokerActionPanel: React.FC = () => {
         });
     };
 
+    // Add the handleStartNewHand function after the other handler functions
+    const handleStartNewHand = () => {
+        console.log("Starting new hand");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !startNewHand) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
+        // Use our hook to start a new hand
+        startNewHand({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+        });
+    };
+
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-4 pb-6 flex justify-center items-center border-t-2 border-[#3a546d] relative">
             {/* Animated light effects */}
@@ -572,6 +595,30 @@ const PokerActionPanel: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             {isDealing ? "DEALING..." : "DEAL"}
+                        </button>
+                    </div>
+                )}
+
+                {/* New Hand Button - Show when the round is "end" */}
+                {currentRound === "end" && (
+                    <div className="flex justify-center mb-3">
+                        <button
+                            onClick={handleStartNewHand}
+                            className="bg-gradient-to-r from-[#6366f1] to-[#4f46e5] hover:from-[#4f46e5] hover:to-[#4338ca] 
+                            text-white font-bold py-3 px-8 rounded-lg shadow-lg 
+                            border-2 border-[#818cf8] transition-all duration-300 
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                            disabled={isStartingNewHand}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                            </svg>
+                            {isStartingNewHand ? "STARTING NEW HAND..." : "START NEW HAND"}
                         </button>
                     </div>
                 )}

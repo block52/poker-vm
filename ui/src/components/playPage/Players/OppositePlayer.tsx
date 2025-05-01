@@ -6,6 +6,7 @@ import PlayerCard from "./PlayerCard";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
+import { useShowingCardsByAddress } from "../../../hooks/useShowingCardsByAddress";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -33,6 +34,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
     const { winnerInfo } = useWinnerInfo(id);
+    const { showingPlayers, isShowdown } = useShowingCardsByAddress(id);
 
     // Add more detailed debugging
     React.useEffect(() => {
@@ -52,12 +54,25 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
         return winner ? winner.formattedAmount : null;
     }, [isWinner, winnerInfo, index]);
 
+    // Check if this player is showing cards
+    const isShowingCards = React.useMemo(() => {
+        if (!showingPlayers || !playerData) return false;
+        return showingPlayers.some((p: { seat: number }) => p.seat === index);
+    }, [showingPlayers, playerData, index]);
+
+    // Get the showing cards for this player if available
+    const showingCards = React.useMemo(() => {
+        if (!isShowingCards || !showingPlayers) return null;
+        const playerShowingCards = showingPlayers.find((p: { seat: number; holeCards: string[] }) => p.seat === index);
+        return playerShowingCards ? playerShowingCards.holeCards : null;
+    }, [isShowingCards, showingPlayers, index]);
+
     if (!playerData) {
         debugLog("OppositePlayer component has no player data for seat", index);
         return <></>;
     }
 
-    debugLog("Rendering OppositePlayer UI for seat", index, "with stack", playerData.stack);
+    debugLog("Rendering OppositePlayer UI for seat", index, "with stack", playerData.stack, "showing cards:", showingCards);
 
     return (
         <>
@@ -74,10 +89,19 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
             >
                 <div className="flex justify-center gap-1">
                     {holeCards && holeCards.length === 2 ? (
-                        <>
-                            <img src="/cards/Back.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
-                            <img src="/cards/Back.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
-                        </>
+                        isShowingCards && showingCards ? (
+                            // Show the actual cards if player is showing
+                            <>
+                                <img src={`/cards/${showingCards[0]}.svg`} alt="Player Card 1" className="w-[35%] h-[auto]" />
+                                <img src={`/cards/${showingCards[1]}.svg`} alt="Player Card 2" className="w-[35%] h-[auto]" />
+                            </>
+                        ) : (
+                            // Show card backs if not showing
+                            <>
+                                <img src="/cards/Back.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                                <img src="/cards/Back.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                            </>
+                        )
                     ) : (
                         <div className="w-[120px] h-[80px]"></div>
                     )}
@@ -95,6 +119,11 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                         {!isWinner && isAllIn && (
                             <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
                                 ALL IN
+                            </span>
+                        )}
+                        {isShowingCards && !isWinner && (
+                            <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
+                                SHOWING
                             </span>
                         )}
                         {isWinner && winnerAmount && (
