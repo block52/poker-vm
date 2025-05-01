@@ -4,6 +4,9 @@ import axios from "axios";
 import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 
+// Key for storing last API call time in localStorage
+const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
+
 interface UserWalletResult {
     b52: NodeRpcClient | null;
     account: string | null;
@@ -29,8 +32,25 @@ const useUserWallet = (): UserWalletResult => {
     const fetchBalance = useCallback(async () => {
         if (!account) return;
 
+        // Rate limiting: Only allow API calls once every 10 seconds across all hooks
+        const now = Date.now();
+        const lastApiCallStr = localStorage.getItem(LAST_ACCOUNT_API_CALL_KEY);
+        const lastApiCallTime = lastApiCallStr ? parseInt(lastApiCallStr, 10) : 0;
+        const timeSinceLastCall = now - lastApiCallTime;
+        const minInterval = 10000; // 10 seconds
+
+        // If it's been less than 10 seconds since the last call and we have balance data, use cached data
+        if (timeSinceLastCall < minInterval && balance !== null) {
+            console.log(`[useUserWallet] Rate limiting: Using cached balance data (${Math.floor(timeSinceLastCall/1000)}s since last call)`);
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
+        
+        // Update shared last API call time
+        localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
+        console.log(`[useUserWallet] Making API call to /get_account/ (${Math.floor(timeSinceLastCall/1000)}s since last call)`);
         console.log("⚡ useUserWallet: Fetching balance for account", account);
 
         try {

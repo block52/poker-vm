@@ -18,6 +18,9 @@ export interface AccountApiResponse {
   };
 }
 
+// Key for storing last API call time in localStorage
+const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
+
 /**
  * Custom hook for managing nonce values from the API
  * @returns Object containing nonce value and refresh function
@@ -42,9 +45,26 @@ export function useTableNonce() {
       return null;
     }
 
+    // Rate limiting: Only allow API calls once every 10 seconds across all hooks
+    const now = Date.now();
+    const lastApiCallStr = localStorage.getItem(LAST_ACCOUNT_API_CALL_KEY);
+    const lastApiCallTime = lastApiCallStr ? parseInt(lastApiCallStr, 10) : 0;
+    const timeSinceLastCall = now - lastApiCallTime;
+    const minInterval = 10000; // 10 seconds
+
+    // If it's been less than 10 seconds since the last call, use cached data
+    if (timeSinceLastCall < minInterval && nonce !== null) {
+      console.log(`[useTableNonce] Rate limiting: Using cached nonce data (${Math.floor(timeSinceLastCall/1000)}s since last call)`);
+      return nonce;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Update shared last API call time
+      localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
+      console.log(`[useTableNonce] Making API call to /get_account/ (${Math.floor(timeSinceLastCall/1000)}s since last call)`);
 
       const response = await axios.get<AccountApiResponse>(`${PROXY_URL}/get_account/${address}`);
       console.log("Nonce response:", response.data);
@@ -66,7 +86,7 @@ export function useTableNonce() {
       console.error("Error fetching nonce:", err);
       return null;
     }
-  }, []);
+  }, [nonce]);
 
   /**
    * Function to refresh the nonce
