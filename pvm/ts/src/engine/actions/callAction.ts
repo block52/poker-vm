@@ -31,19 +31,6 @@ class CallAction extends BaseAction implements IAction {
             throw new Error("No previous action to call.");
         }
 
-        // 4. Amount validation: Last action must have a non-zero amount
-        if (lastAction?.amount === 0n || !lastAction?.amount) {
-            throw new Error("Should check instead.");
-        }
-
-        // 5. Last action validation: Must be a bet or raise (or blind)
-        if (lastAction.action !== PlayerActionType.BET && 
-            lastAction.action !== PlayerActionType.RAISE && 
-            lastAction.action !== PlayerActionType.SMALL_BLIND && 
-            lastAction.action !== PlayerActionType.BIG_BLIND) {
-            throw new Error("Last action was not a bet or raise.");
-        }
-
         // 6. Player bet check: Calculate the amount needed to call
         let deductAmount: bigint = this.getDeductAmount(player);
 
