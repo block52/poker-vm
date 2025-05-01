@@ -35,7 +35,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             ]);
 
             // Get the games view with respect to the caller (shared secret)
-            const game = TexasHoldemGame.fromJson(json, gameOptions, this.caller);
+            const game = TexasHoldemGame.fromJson(json, gameOptions);
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
@@ -53,7 +53,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             });
 
             // update game state
-            const state = game.toJson();
+            const state = game.toJson(this.caller);
 
             return await signResult(state, this.privateKey);
         } catch (error) {

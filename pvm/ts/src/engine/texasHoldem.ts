@@ -1148,7 +1148,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = this.getNextRound();
     }
 
-    public static fromJson(json: any, gameOptions: GameOptions, caller?: string): TexasHoldemGame {
+    public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
         json?.players.map((p: any) => {
@@ -1158,18 +1158,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
             let holeCards: [Card, Card] | undefined = undefined;
 
             // Only show the callers world view of their hole.  Use zero address for God mode.
-            if ((caller && p.address.toLowerCase() === caller.toLowerCase()) || caller === ethers.ZeroAddress || p.status === PlayerStatus.SHOWING) {
-                if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
-                    try {
-                        // Use Deck.fromString to create Card objects
-                        const card1 = Deck.fromString(p.holeCards[0]);
-                        const card2 = Deck.fromString(p.holeCards[1]);
-                        holeCards = [card1, card2] as [Card, Card];
-                    } catch (e) {
-                        console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
-                    }
+            // if ((caller && p.address.toLowerCase() === caller.toLowerCase()) || caller === ethers.ZeroAddress || p.status === PlayerStatus.SHOWING) {
+            if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
+                try {
+                    // Use Deck.fromString to create Card objects
+                    const card1 = Deck.fromString(p.holeCards[0]);
+                    const card2 = Deck.fromString(p.holeCards[1]);
+                    holeCards = [card1, card2] as [Card, Card];
+                } catch (e) {
+                    console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
                 }
             }
+            // }
 
             const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
             players.set(p.seat, player);
@@ -1189,7 +1189,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         );
     }
 
-    public toJson(): TexasHoldemStateDTO {
+    public toJson(caller?: string): TexasHoldemStateDTO {
         const players: PlayerDTO[] = Array.from(this._playersMap.entries()).map(([seat, player]) => {
             if (!player) {
                 return {
@@ -1228,10 +1228,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
             // Ensure hole cards are properly included if they exist
             let holeCardsDto: string[] | undefined = undefined;
-            if (player.holeCards) {
-                holeCardsDto = player.holeCards.map(card => card.mnemonic);
+            if ((caller && player.address.toLowerCase() === caller.toLowerCase()) || caller === ethers.ZeroAddress || player.status === PlayerStatus.SHOWING) {
+                if (player.holeCards) {
+                    holeCardsDto = player.holeCards.map(card => card.mnemonic);
+                }
             }
-
             return {
                 address: player.address,
                 seat: seat,
