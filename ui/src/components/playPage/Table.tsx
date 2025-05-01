@@ -35,6 +35,7 @@ import { usePlayerChipData } from "../../hooks/usePlayerChipData";
 import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
 import { useCardAnimations } from "../../hooks/useCardAnimations";
 import { useTableData } from "../../hooks/useTableData";
+import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -96,6 +97,16 @@ const Table = () => {
     // Add the useNextToActInfo hook
     const { nextToActInfo } = useNextToActInfo(id);
     
+    // Add the useShowingCardsByAddress hook
+    const { showingPlayers, isShowdown, refresh: refreshShowingCards } = useShowingCardsByAddress(id);
+    
+    // Log when cards are being shown
+    useEffect(() => {
+        if (isShowdown && showingPlayers.length > 0) {
+            console.log("Showdown detected! Players showing cards:", showingPlayers);
+        }
+    }, [isShowdown, showingPlayers]);
+
     // Add the useWinnerInfo hook
     const { winnerInfo } = useWinnerInfo(id);
     
@@ -228,6 +239,14 @@ const Table = () => {
         setPlayerPositionArray(reorderedPlayerArray);
         setDealerPositionArray(reorderedDealerArray);
     }, [startIndex, playerPositionArray, dealerPositionArray]);
+
+    // Add useEffect to refresh showing cards when the round is showdown or end
+    useEffect(() => {
+        if (currentRound === "showdown" || currentRound === "end") {
+            console.log("Round changed to", currentRound, "- refreshing showing cards");
+            refreshShowingCards();
+        }
+    }, [currentRound, refreshShowingCards]);
 
     // Restore the useEffect for the timer
     useEffect(() => {
