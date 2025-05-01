@@ -876,7 +876,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     reInit(deck: string): void {
         if (!this._playersMap.size) throw new Error("No players in game.");
-        if (this._currentRound !== TexasHoldemRound.ANTE) throw new Error("Hand currently in progress.");
+        if (this._currentRound !== TexasHoldemRound.END) throw new Error("Hand currently in progress.");
 
         this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
         this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;

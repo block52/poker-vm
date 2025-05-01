@@ -20,6 +20,7 @@ import {
     MempoolCommand,
     MineCommand,
     MintCommand,
+    NewCommand,
     PerformActionCommand,
     PurgeMempoolCommand,
     ReceiveMinedBlockHashCommand,
@@ -35,7 +36,6 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
-import { NewCommand } from "./commands/newCommand";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {

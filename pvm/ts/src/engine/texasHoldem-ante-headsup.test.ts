@@ -1,7 +1,6 @@
-import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TEN_TOKENS, TWO_TOKENS } from "./testConstants";
-import { Player } from "../models/player";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Ante - Heads Up", () => {
@@ -132,6 +131,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+            expect(game.handNumber).toEqual(0);
             game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
             game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
         });
@@ -202,6 +202,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             const gameState = game.toJson();
             expect(gameState.winners).toBeDefined();
             expect(gameState.winners.length).toEqual(1);
+
+            game.reInit(mnemonic);
+
+            expect(game.handNumber).toEqual(1);
         });
     });
 });

@@ -4,6 +4,7 @@ import { ChallengeCommand } from "./challengeCommand";
 import { GetTransactionsCommand } from "./getTransactionsCommand";
 import { MeCommand } from "./meCommand";
 import { MintCommand } from "./mintCommand";
+import { NewCommand } from "./newCommand";
 import { RandomCommand } from "./randomCommand";
 import { ResponseCommand } from "./responseCommand";
 import { TransferCommand } from "./transferCommand";
@@ -40,6 +41,7 @@ export {
     DeployContractCommand,
     MeCommand,
     MintCommand,
+    NewCommand,
     RandomCommand,
     ResponseCommand,
     TransferCommand,
