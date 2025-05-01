@@ -2,9 +2,11 @@ import useSWR from "swr";
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 
-// Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
+// Define the fetcher function that includes the user address as a query parameter
+const fetcher = (url: string) => {
+  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+  return axios.get(`${url}?userAddress=${userAddress}`).then(res => res.data);
+};
 
 /**
  * Central hook for fetching game state data
@@ -13,6 +15,8 @@ const fetcher = (url: string) =>
  * @returns Object containing game state data and SWR utilities
  */
 export const useGameState = (tableId?: string) => {
+  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+  
   // Skip the request if no tableId is provided
   const { data, error, isLoading, mutate } = useSWR(
     tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
