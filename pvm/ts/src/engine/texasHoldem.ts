@@ -29,6 +29,7 @@ import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers, N } from "ethers";
 import LeaveAction from "./actions/leaveAction";
 import MuckAction from "./actions/muckAction";
+import ShowAction from "./actions/showAction";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
@@ -574,6 +575,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case PlayerActionType.MUCK:
                 new MuckAction(this, this._update).execute(player, index, _amount);
                 break;
+            case PlayerActionType.SHOW:
+                new ShowAction(this, this._update).execute(player, index, _amount);
             default:
                 // do we need to roll back last acted seat?
                 break;
