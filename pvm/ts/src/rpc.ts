@@ -233,8 +233,8 @@ export class RPC {
                 }
 
                 case RPCMethods.GET_GAME_STATE: {
-                    const [address] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
-                    const command = new GameStateCommand(address, validatorPrivateKey);
+                    const [address, caller] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
+                    const command = new GameStateCommand(address, validatorPrivateKey, caller);
                     result = await command.execute();
                     break;
                 }

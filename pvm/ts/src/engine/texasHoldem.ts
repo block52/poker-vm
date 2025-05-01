@@ -65,7 +65,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         private communityCards: string[],
         private currentPot: bigint = 0n, // todo: this can be removed
         playerStates: Map<number, Player | null>,
-        deck: string
+        deck: string,
+        private readonly caller?: string
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
         this._deck = new Deck(deck);
@@ -101,8 +102,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) { }
-            addAction(action: Turn): void { }
+            constructor(public game: TexasHoldemGame) {}
+            addAction(action: Turn): void {}
         })(this);
 
         this._actions = [
@@ -114,7 +115,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new BetAction(this, this._update),
             new CallAction(this, this._update),
             new RaiseAction(this, this._update),
-            new MuckAction(this, this._update),
+            new MuckAction(this, this._update)
         ];
     }
 
@@ -483,7 +484,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     /**
      * Performs a poker action for a specific player
-     * 
+     *
      * This is the main entry point for all game actions and controls the game flow:
      * 1. Validates the action index to prevent replay attacks
      * 2. Handles non-player actions like JOIN, LEAVE, and DEAL
@@ -491,7 +492,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * 4. Executes the appropriate action via the corresponding Action class
      * 5. Updates the game state to reflect the action
      * 6. Checks if the round has ended and advances to the next round if needed
-     * 
+     *
      * @param address The player's address
      * @param action The action type to perform (bet, call, fold, etc.)
      * @param index The sequential action index to prevent replay attacks
@@ -500,9 +501,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * @throws Error if the action cannot be performed
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
-
         // Check if the provided index matches the current turn index (without incrementing)
-        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN) { // hack, to roll back
+        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN) {
+            // hack, to roll back
             throw new Error("Invalid action index.");
         }
 
@@ -580,7 +581,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Record the action in the player's history
         player.addAction({ playerId: address, action, amount, index });
-        
+
         // Update the last player to act
         this._lastActedSeat = seat;
 
@@ -842,23 +843,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (this._currentRound === TexasHoldemRound.PREFLOP) {
             // Moving to FLOP - deal 3 community cards
             this._communityCards.push(...this._deck.deal(3));
-        }
-        else if (this._currentRound === TexasHoldemRound.FLOP) {
+        } else if (this._currentRound === TexasHoldemRound.FLOP) {
             // Moving to TURN - deal 1 card
             this._communityCards.push(...this._deck.deal(1));
-        }
-        else if (this._currentRound === TexasHoldemRound.TURN) {
+        } else if (this._currentRound === TexasHoldemRound.TURN) {
             // Moving to RIVER - deal 1 card
             this._communityCards.push(...this._deck.deal(1));
-        }
-        else if (this._currentRound === TexasHoldemRound.RIVER) {
+        } else if (this._currentRound === TexasHoldemRound.RIVER) {
             // Moving to SHOWDOWN - calculate winner
             this.calculateWinner();
         }
 
         // Advance to next round
         this.setNextRound();
-        
+
         // Initialize the new round's action list if needed
         if (!this._rounds.has(this._currentRound)) {
             this._rounds.set(this._currentRound, []);
@@ -948,18 +946,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     /**
      * Determines if the current betting round has ended
-     * 
+     *
      * A round ends when all of these conditions are met:
      * 1. For ANTE round: small blind, big blind are posted AND cards are dealt
      * 2. For betting rounds: all non-folded, non-all-in players have acted
      * 3. All active players have either matched the highest bet or folded
      * 4. The last player to raise has been called by all remaining players
-     * 
+     *
      * Edge cases handled:
      * - If all players are folded or all-in, the round ends immediately
      * - Players who folded or are all-in don't need to act again
      * - Players must act after a bet/raise made after their last action
-     * 
+     *
      * @param round The round to check
      * @returns True if the round has ended, false otherwise
      */
@@ -1040,25 +1038,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
             const lastAction = playerActions[playerActions.length - 1];
 
             // Skip players who have checked, called, or folded as their final action
-            if (lastAction.action === PlayerActionType.CALL || 
-                lastAction.action === PlayerActionType.CHECK || 
-                lastAction.action === PlayerActionType.FOLD) {
-                
+            if (lastAction.action === PlayerActionType.CALL || lastAction.action === PlayerActionType.CHECK || lastAction.action === PlayerActionType.FOLD) {
                 // For these players, check if they acted AFTER the last bet/raise
                 if (lastBetOrRaiseIndex >= 0) {
                     // Find the index of this player's last action
                     const playerLastActionIndex = actions.findIndex(
-                        a => a.playerId === player.address && 
-                             a.action === lastAction.action && 
-                             a.index === lastAction.index
+                        a => a.playerId === player.address && a.action === lastAction.action && a.index === lastAction.index
                     );
-                    
+
                     // If player acted before the last bet/raise, they still need to act
                     if (playerLastActionIndex < lastBetOrRaiseIndex) {
                         return false;
                     }
                 }
-                
+
                 continue;
             }
 
@@ -1079,23 +1072,16 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // If the last action was a bet or raise, other players need to respond
             if (lastAction.action === PlayerActionType.BET || lastAction.action === PlayerActionType.RAISE) {
                 // Check if all other active players have acted after this bet/raise
-                const actionIndex = actions.findIndex(a => 
-                    a.playerId === player.address && 
-                    a.action === lastAction.action && 
-                    a.index === lastAction.index
-                );
-                
+                const actionIndex = actions.findIndex(a => a.playerId === player.address && a.action === lastAction.action && a.index === lastAction.index);
+
                 if (actionIndex >= 0) {
                     // Check if all other active players have acted after this bet/raise
                     for (const otherPlayer of activePlayers) {
                         if (otherPlayer.address === player.address) continue;
-                        
+
                         // Get this player's actions after the bet/raise
-                        const otherPlayerActionsAfterBet = actions.filter(
-                            a => a.playerId === otherPlayer.address && 
-                                 actions.indexOf(a) > actionIndex
-                        );
-                        
+                        const otherPlayerActionsAfterBet = actions.filter(a => a.playerId === otherPlayer.address && actions.indexOf(a) > actionIndex);
+
                         // If no actions after the bet/raise, round is not over
                         if (otherPlayerActionsAfterBet.length === 0) {
                             return false;
@@ -1143,7 +1129,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = this.getNextRound();
     }
 
-    public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
+    public static fromJson(json: any, gameOptions: GameOptions, caller?: string): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
         json?.players.map((p: any) => {
@@ -1151,14 +1137,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
             // Create hole cards if they exist in the JSON
             let holeCards: [Card, Card] | undefined = undefined;
-            if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
-                try {
-                    // Use Deck.fromString to create Card objects
-                    const card1 = Deck.fromString(p.holeCards[0]);
-                    const card2 = Deck.fromString(p.holeCards[1]);
-                    holeCards = [card1, card2] as [Card, Card];
-                } catch (e) {
-                    console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+
+            // Only show the callers world view of their hole cards
+            if (caller && p.address.toLowerCase() === caller.toLowerCase()) {
+                if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
+                    try {
+                        // Use Deck.fromString to create Card objects
+                        const card1 = Deck.fromString(p.holeCards[0]);
+                        const card2 = Deck.fromString(p.holeCards[1]);
+                        holeCards = [card1, card2] as [Card, Card];
+                    } catch (e) {
+                        console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                    }
                 }
             }
 

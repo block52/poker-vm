@@ -20,7 +20,8 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly mempool: Mempool;
     private readonly contractSchemaManagement: ContractSchemaManagement;
 
-    constructor(readonly address: string, private readonly privateKey: string) {
+    // This will be shared secret later
+    constructor(readonly address: string, private readonly privateKey: string, private readonly caller?: string | undefined) {
         this.gameManagement = new GameManagement();
         this.mempool = getMempoolInstance();
         this.contractSchemaManagement = getContractSchemaManagement();
@@ -33,7 +34,8 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 this.contractSchemaManagement.getGameOptions(this.address)
             ]);
 
-            const game = TexasHoldemGame.fromJson(json, gameOptions);
+            // Get the games view with respect to the caller (shared secret)
+            const game = TexasHoldemGame.fromJson(json, gameOptions, this.caller);
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 

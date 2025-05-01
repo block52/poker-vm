@@ -66,7 +66,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_BLOCKS]: [string]; // [count]
     [RPCMethods.GET_CLIENT]: []; // No parameters
     [RPCMethods.GET_CONTRACT_SCHEMA]: [string]; // [hash]
-    [RPCMethods.GET_GAME_STATE]: [string]; // [address]
+    [RPCMethods.GET_GAME_STATE]: [string, string]; // [address, sharedSecret]
     [RPCMethods.GET_LAST_BLOCK]: []; // No parameters
     [RPCMethods.GET_MEMPOOL]: []; // No parameters
     [RPCMethods.GET_NODES]: []; // No parameters
