@@ -858,12 +858,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
             //this.calculateWinner();
         } else if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
 
-            this.calculateWinner();
+            // this.calculateWinner();
 
             // Moving to ANTE - reset the game
 
             // this.reInit(this._deck.toString());
-        }
+        } 
 
         // Advance to next round
         this.setNextRound();
@@ -1140,8 +1140,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return TexasHoldemRound.RIVER;
             case TexasHoldemRound.RIVER:
                 return TexasHoldemRound.SHOWDOWN;
+            case TexasHoldemRound.SHOWDOWN:
+                return TexasHoldemRound.END;
             default:
-                return TexasHoldemRound.PREFLOP;
+                return TexasHoldemRound.ANTE
         }
     }
 

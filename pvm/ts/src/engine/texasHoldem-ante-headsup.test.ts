@@ -196,6 +196,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SHOW, 13, 0n);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SHOW, 14, 0n);
 
+            expect(game.currentRound).toEqual(TexasHoldemRound.END);
+            
             // Check the winner
             const gameState = game.toJson();
         });
