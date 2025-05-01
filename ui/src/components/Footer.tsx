@@ -19,6 +19,7 @@ import { useNextToActInfo } from "../hooks/useNextToActInfo";
 import { useTableCall } from "../hooks/useTableCall";
 import { useTableBet } from "../hooks/useTableBet";
 import { useTableMuck } from "../hooks/useTableMuck";
+import { useTableShow } from "../hooks/useTableShow";
 
 import axios from "axios";
 
@@ -41,6 +42,7 @@ const PokerActionPanel: React.FC = () => {
     const { callHand } = useTableCall(tableId);
     const { betHand } = useTableBet(tableId);
     const { muckCards, isMucking } = useTableMuck(tableId);
+    const { showCards, isShowing } = useTableShow(tableId);
     
     // Use the useNextToActInfo hook
     const { nextToActInfo, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
@@ -499,6 +501,9 @@ const PokerActionPanel: React.FC = () => {
 
     // Check if muck action exists in legal actions
     const hasMuckAction = legalActions?.some((a: any) => a.action === "muck" || a.action === PlayerActionType.MUCK);
+    
+    // Check if show action exists in legal actions
+    const hasShowAction = legalActions?.some((a: any) => a.action === "show" || a.action === PlayerActionType.SHOW);
 
     // Handler for muck action
     const handleMuck = () => {
@@ -517,6 +522,26 @@ const PokerActionPanel: React.FC = () => {
             privateKey,
             publicKey,
             actionIndex: legalActions?.find(a => a.action === PlayerActionType.MUCK || a.action === "muck")?.index || 0,
+        });
+    };
+    
+    // Handler for show action
+    const handleShow = () => {
+        console.log("Showing cards");
+        const publicKey = localStorage.getItem("user_eth_public_key");
+        const privateKey = localStorage.getItem("user_eth_private_key");
+        
+        if (!publicKey || !privateKey || !showCards) {
+            console.error("Wallet keys not available or hook not ready");
+            return;
+        }
+        
+        // Use our hook to show cards
+        showCards({
+            userAddress: publicKey,
+            privateKey,
+            publicKey,
+            actionIndex: legalActions?.find(a => a.action === PlayerActionType.SHOW || a.action === "show")?.index || 0,
         });
     };
 
@@ -575,6 +600,36 @@ const PokerActionPanel: React.FC = () => {
                                 />
                             </svg>
                             {isMucking ? "MUCKING..." : "MUCK CARDS"}
+                        </button>
+                    </div>
+                )}
+                
+                {/* Show Button - Show when action is available */}
+                {hasShowAction && (
+                    <div className="flex justify-center mb-3">
+                        <button
+                            onClick={handleShow}
+                            className="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#60a5fa] 
+                            text-white font-bold py-3 px-8 rounded-lg shadow-lg 
+                            border-2 border-[#3b82f6] transition-all duration-300 
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                            disabled={isShowing}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                            </svg>
+                            {isShowing ? "SHOWING..." : "SHOW CARDS"}
                         </button>
                     </div>
                 )}
