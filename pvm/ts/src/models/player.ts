@@ -26,6 +26,12 @@ export class Player implements IJSONModel {
         this.status = status;
     }
 
+    reinit(): void {
+        this.holeCards = undefined;
+        this.lastAction = undefined;
+        this.status = PlayerStatus.ACTIVE;
+    }
+
     updateStatus(status: PlayerStatus): void {
         this.status = status;
     }
