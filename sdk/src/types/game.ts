@@ -43,7 +43,8 @@ export enum TexasHoldemRound {
     FLOP = "flop",
     TURN = "turn",
     RIVER = "river",
-    SHOWDOWN = "showdown"
+    SHOWDOWN = "showdown",
+    END = "end"
 }
 
 export type GameOptions = {

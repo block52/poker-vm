@@ -1013,8 +1013,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         if (round === TexasHoldemRound.SHOWDOWN) {
             const players = this.getSeatedPlayers();
-            const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
-            if (activePlayers.length <= 1) {
+            // const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+            const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
+            if (showingPlayers.length === players.length) {
                 return true; // Round is over if only one player is active
             }
         }
