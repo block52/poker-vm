@@ -8,18 +8,18 @@ import { useTableNonce, AccountData } from "../hooks/useTableNonce";
 
 // Import our custom hooks
 import { usePlayerDTO } from "../hooks/usePlayerDTO";
-import { usePlayerLegalActions } from "../hooks/usePlayerLegalActions";
-import { useTableDeal } from "../hooks/useTableDeal";
-import { useTableCheck } from "../hooks/useTableCheck";
-import { useTableFold } from "../hooks/useTableFold";
-import { useTableRaise } from "../hooks/useTableRaise";
-import { useTablePostSmallBlind } from "../hooks/useTablePostSmallBlind";
-import { useTablePostBigBlind } from "../hooks/useTablePostBigBlind";
+import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
+import { useTableDeal } from "../hooks/playerActions/useTableDeal";
+import { useTableCheck } from "../hooks/playerActions/useTableCheck";
+import { useTableFold } from "../hooks/playerActions/useTableFold";
+import { useTableRaise } from "../hooks/playerActions/useTableRaise";
+import { useTablePostSmallBlind } from "../hooks/playerActions/useTablePostSmallBlind";
+import { useTablePostBigBlind } from "../hooks/playerActions/useTablePostBigBlind";
 import { useNextToActInfo } from "../hooks/useNextToActInfo";
-import { useTableCall } from "../hooks/useTableCall";
-import { useTableBet } from "../hooks/useTableBet";
-import { useTableMuck } from "../hooks/useTableMuck";
-import { useTableShow } from "../hooks/useTableShow";
+import { useTableCall } from "../hooks/playerActions/useTableCall";
+import { useTableBet } from "../hooks/playerActions/useTableBet";
+import { useTableMuck } from "../hooks/playerActions/useTableMuck";
+import { useTableShow } from "../hooks/playerActions/useTableShow";
 
 import axios from "axios";
 
@@ -90,10 +90,6 @@ const PokerActionPanel: React.FC = () => {
     // New flag to determine whether to hide other action buttons when deal is available
     const hideOtherButtons = shouldShowDealButton;
 
-    // Get current player's possible actions using nextToActInfo instead of tableData
-    const nextToAct = nextToActInfo?.seat;
-    const currentPlayer = nextToActInfo?.player;
-    const currentPlayerActions = nextToActInfo?.availableActions || [];
 
     // Check if each action is available based on legalActions
     const canFold = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD);

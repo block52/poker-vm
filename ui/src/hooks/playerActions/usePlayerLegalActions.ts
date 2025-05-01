@@ -1,4 +1,4 @@
-import { useGameState } from "./useGameState";
+import { useGameState } from "../useGameState";
 import { PlayerActionType, NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useEffect, useState } from "react";
 import useSWR from "swr";

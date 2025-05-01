@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { PROXY_URL } from "../../config/constants";
 import { ethers } from "ethers";
 
 // Types for the raise parameters

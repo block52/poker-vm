@@ -4,8 +4,14 @@ import { ethers } from "ethers";
 import { PROXY_URL } from "../config/constants";
 
 // Define the fetcher function
-const fetcher = (url: string) => 
-  axios.get(url).then(res => res.data);
+const fetcher = (url: string) => {
+  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+  console.log(`[useMinAndMaxBuyIns] Fetching data at: ${new Date().toISOString()}`);
+  return axios.get(`${url}?userAddress=${userAddress}`).then(res => {
+    console.log(`[useMinAndMaxBuyIns] Received response at: ${new Date().toISOString()}`);
+    return res.data;
+  });
+};
 
 /**
  * Custom hook to fetch min and max buy-in values for a table
