@@ -1,11 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { PROXY_URL } from "../../config/constants";
 import { PlayerActionType } from "@bitcoinbrisbane/block52"
 import { ethers } from "ethers";
 
-// Define the parameter type for betHand function
-interface BetHandParams {
+// Define the parameter type for callHand function
+interface CallHandParams {
   userAddress: string;
   privateKey: string;
   publicKey: string;
@@ -14,22 +14,22 @@ interface BetHandParams {
 }
 
 /**
- * Custom hook to handle betting in a poker game
+ * Custom hook to handle calling in a poker game
  * @param tableId The ID of the table where the action will be performed
- * @returns Object containing functions for performing bet action
+ * @returns Object containing functions for performing call action
  */
-export const useTableBet = (tableId?: string) => {
+export const useTableCall = (tableId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Executes a bet action on the specified table
-   * @param params Parameters needed for the bet action
-   * @returns Promise resolving to the result of the bet action
+   * Executes a call action on the specified table
+   * @param params Parameters needed for the call action
+   * @returns Promise resolving to the result of the call action
    */
-  const betHand = async (params: BetHandParams) => {
+  const callHand = async (params: CallHandParams) => {
     if (!tableId) {
-      console.error("Table ID is required to bet");
+      console.error("Table ID is required to call");
       setError("Table ID is required");
       return;
     }
@@ -38,14 +38,14 @@ export const useTableBet = (tableId?: string) => {
     setError(null);
 
     try {
-      console.log("Betting with amount:", params.amount);
+      console.log("Calling with amount:", params.amount);
       
       // Create wallet instance to sign the message
       const wallet = new ethers.Wallet(params.privateKey);
       
       // Create message to sign
       const timestamp = Math.floor(Date.now() / 1000).toString();
-      const message = `bet:${params.amount}:${tableId}:${timestamp}`;
+      const message = `call:${params.amount}:${tableId}:${timestamp}`;
       
       // Sign the message
       const signature = await wallet.signMessage(message);
@@ -53,7 +53,7 @@ export const useTableBet = (tableId?: string) => {
       // Prepare the request payload
       const payload = {
         userAddress: params.userAddress,
-        action: PlayerActionType.BET,
+        action: PlayerActionType.CALL,
         amount: params.amount,
         signature,
         publicKey: params.publicKey,
@@ -61,18 +61,18 @@ export const useTableBet = (tableId?: string) => {
         index: params.actionIndex,
       };
       
-      console.log("Bet payload:", payload);
+      console.log("Call payload:", payload);
       
       // Make the API call
-      const response = await axios.post(`${PROXY_URL}/table/${tableId}/bet`, payload);
+      const response = await axios.post(`${PROXY_URL}/table/${tableId}/call`, payload);
       
-      console.log("Bet response:", response.data);
+      console.log("Call response:", response.data);
       
       // Return the response data
       return response.data;
     } catch (err: any) {
-      console.error("Error betting:", err);
-      setError(err.message || "Failed to bet");
+      console.error("Error calling:", err);
+      setError(err.message || "Failed to call");
       throw err;
     } finally {
       setIsLoading(false);
@@ -80,7 +80,7 @@ export const useTableBet = (tableId?: string) => {
   };
 
   return {
-    betHand,
+    callHand,
     isLoading,
     error,
   };

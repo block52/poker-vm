@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import useUserWallet from "../../../hooks/useUserWallet";
 import LoadingPokerIcon from "../../common/LoadingPokerIcon";
 import { toDisplaySeat } from "../../../utils/tableUtils";
-import { useTableJoin } from "../../../hooks/useTableJoin";
+import { useTableJoin } from "../../../hooks/playerActions/useTableJoin"; 
 import { useMinAndMaxBuyIns } from "../../../hooks/useMinAndMaxBuyIns";
 import { useTableTurnIndex } from "../../../hooks/useTableTurnIndex";
 import { useTableNonce } from "../../../hooks/useTableNonce";

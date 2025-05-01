@@ -1,75 +1,68 @@
-// ui/src/hooks/useTableJoin.ts
 import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
-import { PROXY_URL } from "../config/constants";
+import { PROXY_URL } from "../../config/constants";
 
-interface JoinTableOptions {
-  buyInAmount: string;
+interface LeaveTableOptions {
+  amount: string;
   userAddress: string | null;
   privateKey: string | null;
   publicKey: string | null;
   nonce?: string | number;
-  index?: number;
 }
 
-async function joinTableFetcher(
+async function leaveTableFetcher(
   url: string,
-  { arg }: { arg: JoinTableOptions }
+  { arg }: { arg: LeaveTableOptions }
 ) {
-  const { buyInAmount, userAddress, privateKey, publicKey, nonce = Date.now().toString(), index = 0 } = arg;
+  const { amount, userAddress, privateKey, publicKey, nonce = Date.now().toString() } = arg;
   
   if (!userAddress || !privateKey) {
     throw new Error("Missing user address or private key");
   }
 
-  console.log("Joining table with index:", index);
-
   // Create a wallet to sign the message
   const wallet = new ethers.Wallet(privateKey);
   
   // Create message to sign in format that matches the action pattern
-  // Format: "join" + amount + tableId + timestamp
+  // Format: "leave" + amount + tableId + timestamp
   const timestamp = Math.floor(Date.now() / 1000);
-  const messageToSign = `join${buyInAmount}${url.split("/").pop()}${timestamp}`;
-
+  const messageToSign = `leave${amount}${url.split("/").pop()}${timestamp}`;
+  
   // Sign the message
   const signature = await wallet.signMessage(messageToSign);
 
   // Prepare request data that matches the proxy's expected format for PERFORM_ACTION
   const requestData = {
     userAddress,
-    buyInAmount,
+    amount,
     signature,
     publicKey: publicKey || userAddress,
-    nonce: nonce,
-    timestamp,
-    index
+    nonce: nonce || timestamp,
+    timestamp
   };
-
-  console.log("Join table request:", requestData);
 
   // Send the request to the proxy server
   const response = await axios.post(url, requestData);
   return response.data;
 }
 
-export function useTableJoin(tableId: string | undefined) {
+export function useTableLeave(tableId: string | undefined) {
   const { trigger, isMutating, error, data } = useSWRMutation(
-    tableId ? `${PROXY_URL}/table/${tableId}/join` : null,
-    joinTableFetcher
+    tableId ? `${PROXY_URL}/table/${tableId}/leave` : null,
+    leaveTableFetcher
   );
 
   const result = {
-    joinTable: tableId ? trigger : null,
-    isJoining: isMutating,
+    leaveTable: tableId ? trigger : null,
+    isLeaving: isMutating,
     error,
     data
   };
 
-  console.log("[useTableJoin] Returns:", {
-    hasJoinFunction: !!result.joinTable,
-    isJoining: result.isJoining,
+  console.log("[useTableLeave] Returns:", {
+    hasLeaveFunction: !!result.leaveTable,
+    isLeaving: result.isLeaving,
     hasError: !!result.error,
     hasData: !!result.data,
     tableId

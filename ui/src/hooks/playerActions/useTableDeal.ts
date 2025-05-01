@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
-import { PROXY_URL } from "../config/constants";
+import { PROXY_URL } from "../../config/constants";
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 
 interface DealOptions {

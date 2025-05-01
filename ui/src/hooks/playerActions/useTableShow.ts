@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ethers } from "ethers";
 import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { PROXY_URL } from "../../config/constants";
 
 interface ShowCardsParams {
   userAddress: string;

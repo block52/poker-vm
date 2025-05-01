@@ -28,7 +28,7 @@ import React from "react";
 import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
-import { usePlayerLegalActions } from "../../hooks/usePlayerLegalActions";
+import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameProgress } from "../../hooks/useGameProgress";
 import { useChipPositions } from "../../hooks/useChipPositions";
 import { usePlayerChipData } from "../../hooks/usePlayerChipData";

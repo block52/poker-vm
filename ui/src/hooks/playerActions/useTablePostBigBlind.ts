@@ -1,8 +1,8 @@
 import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
-import { PROXY_URL } from "../config/constants";
-import { DEFAULT_BIG_BLIND, useGameOptions } from "./useGameOptions";
+import { PROXY_URL } from "../../config/constants";
+import { DEFAULT_BIG_BLIND, useGameOptions } from "../useGameOptions";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 
 

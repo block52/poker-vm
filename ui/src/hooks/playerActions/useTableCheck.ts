@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { PROXY_URL } from "../../config/constants";
 
 // Types for the check parameters
 interface CheckHandArgs {

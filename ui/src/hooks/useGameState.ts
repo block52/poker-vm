@@ -22,9 +22,9 @@ export const useGameState = (tableId?: string) => {
     tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
     fetcher,
     {
-      refreshInterval: 5000,
+      refreshInterval: 10000,
       revalidateOnFocus: true,
-      dedupingInterval: 3000, // Prevent duplicate requests within 3 seconds
+      dedupingInterval: 10000, // Prevent duplicate requests within 3 seconds
     }
   );
 
