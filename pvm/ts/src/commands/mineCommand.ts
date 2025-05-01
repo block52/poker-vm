@@ -86,7 +86,8 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         // iterate over the unique addresses
         for (const address of uniqueAddresses) {
-            const command = new GameStateCommand(address, this.privateKey);
+            // Do in God mode
+            const command = new GameStateCommand(address, this.privateKey, ethers.ZeroAddress);
             commands.push(command);
         }
 

@@ -3,7 +3,6 @@ import GameState from "../schema/gameState";
 import { ethers } from "ethers";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IGameStateDocument, IJSONModel } from "../models/interfaces";
-import crypto from "crypto";
 import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ContractSchemaManagement, getContractSchemaManagement } from "./contractSchemaManagement";
 import { Deck } from "../models";

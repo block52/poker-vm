@@ -1233,6 +1233,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     holeCardsDto = player.holeCards.map(card => card.mnemonic);
                 }
             }
+            
             return {
                 address: player.address,
                 seat: seat,
