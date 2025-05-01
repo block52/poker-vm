@@ -1138,8 +1138,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Create hole cards if they exist in the JSON
             let holeCards: [Card, Card] | undefined = undefined;
 
-            // Only show the callers world view of their hole cards
-            if (caller && p.address.toLowerCase() === caller.toLowerCase()) {
+            // Only show the callers world view of their hole.  Use zero address for God mode.
+            if ((caller && p.address.toLowerCase() === caller.toLowerCase()) || caller === ethers.ZeroAddress || p.status === PlayerStatus.SHOWING) {
                 if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
                     try {
                         // Use Deck.fromString to create Card objects
