@@ -31,7 +31,8 @@ class CheckAction extends BaseAction implements IAction {
             }
             
             // Big blind CAN check when no one has raised above the big blind
-            if (isBigBlind && largestBet === this.game.bigBlind) {
+            // In this case, the largest bet is equal to the small blind
+            if (isBigBlind && largestBet === this.game.smallBlind) {
                 return { minAmount: 0n, maxAmount: 0n };
             }
         }
