@@ -235,7 +235,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             // Call from the small blind
             actions = game.getLegalActions(SMALL_BLIND_PLAYER);
-            expect(actions.length).toEqual(4);
+            expect(actions.length).toEqual(3);
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 5, ONE_TOKEN);
 
             actions = game.getLegalActions(BIG_BLIND_PLAYER);
