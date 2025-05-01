@@ -556,11 +556,28 @@ const PokerActionPanel: React.FC = () => {
             return;
         }
         
+        console.log(`Table ID for new hand: ${tableId}`);
+        
+        // Get current nonce from the hook
+        console.log("Using nonce:", nonce);
+        
         // Use our hook to start a new hand
         startNewHand({
             userAddress: publicKey,
             privateKey,
             publicKey,
+            nonce: nonce || Date.now().toString(), // Use nonce from useTableNonce if available
+            seed: Math.random().toString(36).substring(2, 15) // Generate a random seed
+        })
+        .then((result) => {
+            console.log("New hand started successfully:", result);
+            // Force refresh all game state
+            refreshNonce?.();
+            refreshNextToActInfo?.();
+        })
+        .catch(error => {
+            console.error("Failed to start new hand:", error);
+            alert("Failed to start new hand. Please try again.");
         });
     };
 
