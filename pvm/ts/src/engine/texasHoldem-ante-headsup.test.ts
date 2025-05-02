@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
 
@@ -197,8 +197,12 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(gameState.winners.length).toEqual(1);
 
             game.reInit(mnemonic);
-
             expect(game.handNumber).toEqual(1);
+
+            const json: TexasHoldemStateDTO = game.toJson();
+            expect(json).toBeDefined();
+            expect(json.players).toBeDefined();
+            expect(json.players.length).toEqual(2);
         });
     });
 });
