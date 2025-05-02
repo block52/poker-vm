@@ -900,7 +900,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._communityCards.length = 0;
         this._currentRound = TexasHoldemRound.ANTE;
         this._winners?.clear();
-        this._turnIndex = 0; // Reset the turn index to 0 when reinitializing the game
 
         this._handNumber += 1;
     }

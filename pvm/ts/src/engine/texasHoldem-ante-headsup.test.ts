@@ -203,6 +203,12 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(json).toBeDefined();
             expect(json.players).toBeDefined();
             expect(json.players.length).toEqual(2);
+
+            // Get the small blind player to leave
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.LEAVE, 15);
+            expect(game.getPlayerCount()).toEqual(1);
+            expect(game.exists(SMALL_BLIND_PLAYER)).toBeFalsy();
+            expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
         });
     });
 });
