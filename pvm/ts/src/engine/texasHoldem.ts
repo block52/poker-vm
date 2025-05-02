@@ -887,9 +887,48 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         this.previousActions.length = 0;
 
-        this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
+        
+        // this._dealer = this._dealer === maxPlayers ? 1 : this._dealer + 1;
+        // this._smallBlindPosition = this._dealer === maxPlayers ? 1 : this._dealer + 1;
+        // this._bigBlindPosition = this._dealer === maxPlayers ? 2 : this._dealer + 2;
+
+        // Cache the values
+        const dealer = this._dealer;
+        const sb = this._smallBlindPosition;
+        const bb = this._bigBlindPosition;
+
+        const activePlayers = this.getActivePlayers();
+        const activePlayerCount = activePlayers.length;
+
+        if (activePlayerCount < 2) {
+            throw new Error("Not enough active players to reinitialize the game.");
+        }
+
+        // Heads up
+        if (activePlayerCount === 2) {
+            // Swap the small blind and big blind positions
+            this._smallBlindPosition = bb;
+            this._bigBlindPosition = sb;
+            this._dealer = sb;
+        }
+
+        if (activePlayerCount > 2) {
+            for (let i = sb; i <= this._gameOptions.maxPlayers; i++) {
+                const player = this.getPlayerAtSeat(i);
+                if (player && player.status !== PlayerStatus.SITTING_OUT) {
+                    this._smallBlindPosition = i;
+                    break;
+                }
+            }
+
+            for (let i = bb; i <= this._gameOptions.maxPlayers; i++) {
+                const player = this.getPlayerAtSeat(i);
+                if (player && player.status !== PlayerStatus.SITTING_OUT) {
+                    this._bigBlindPosition = i;
+                    break;
+                }
+            }
+        }
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
