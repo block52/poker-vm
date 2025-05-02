@@ -229,14 +229,6 @@ const Dashboard: React.FC = () => {
         return "/table/0x22dfa2150160484310c5163f280f49e23b8fd34326";
     };
 
-    const handleNext = () => {
-        const url = buildUrl();
-        console.log("Next button clicked");
-
-        // Redirect to the sit page
-        navigate(url);
-    };
-
     // const [loading, setLoading] = useState(true);
     // const [gameType, setGameType] = useState<string | null>(null);
 
@@ -618,7 +610,7 @@ const Dashboard: React.FC = () => {
                         to={buildUrl()}
                         className="block text-center text-white bg-pink-600 hover:bg-pink-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
                     >
-                        Next
+                        Seat me
                     </Link>
                 </div>
             </div>
