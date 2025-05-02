@@ -8,15 +8,17 @@ interface StartNewHandOptions {
   privateKey: string | null;
   publicKey: string | null;
   nonce?: string | number;
+  seed?: string;
 }
 
 async function startNewHandFetcher(
   url: string,
   { arg }: { arg: StartNewHandOptions }
 ) {
-  const { userAddress, privateKey, publicKey, nonce = Date.now().toString() } = arg;
+  const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), seed = Math.random().toString(36).substring(2, 15) } = arg;
   
   console.log("🔄 Start new hand attempt for:", url);
+  console.log("🔄 Using nonce:", nonce);
   
   if (!userAddress || !privateKey) {
     console.error("🔄 Missing address or private key");
@@ -32,12 +34,12 @@ async function startNewHandFetcher(
   
   // Extract tableId correctly - grab the last segment of the URL
   const urlParts = url.split("/");
-  const tableId = urlParts[urlParts.length - 2]; // Get the table ID part
+  const tableId = urlParts[urlParts.length - 1]; // Get the table ID from the URL
   console.log("🔄 Table ID for new hand:", tableId);
   
-  // Create message to sign in format: new_hand + tableId + timestamp
+  // Create message to sign in format: new_hand + tableId + timestamp + nonce
   const timestamp = Math.floor(Date.now() / 1000);
-  const messageToSign = `new_hand${tableId}${timestamp}`;
+  const messageToSign = `new_hand${tableId}${timestamp}${nonce}`;
   console.log("🔄 Message to sign:", messageToSign);
   
   // Sign the message
@@ -49,9 +51,10 @@ async function startNewHandFetcher(
     userAddress: normalizedAddress,
     signature,
     publicKey: (publicKey || userAddress).toLowerCase(),
-    address: tableId,
+    tableId: tableId,
     nonce,
-    timestamp
+    timestamp,
+    seed: seed
   };
 
   console.log("🔄 Sending new hand request:", requestData);

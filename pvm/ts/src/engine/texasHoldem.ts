@@ -880,6 +880,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (!this._playersMap.size) throw new Error("No players in game.");
         if (this._currentRound !== TexasHoldemRound.END) throw new Error("Hand currently in progress.");
 
+        // Iterate through all players and reset their status
+        for (const player of this.getSeatedPlayers()) {
+            player.reinit();
+        }
+
+        this.previousActions.length = 0;
+
         this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
         this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
         this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
@@ -887,12 +894,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
 
-        this._lastActedSeat = 0;
+        this._lastActedSeat = this._dealer;
         this._deck = new Deck(deck);
         this._pot = 0n;
         this._communityCards.length = 0;
+        this._currentRound = TexasHoldemRound.ANTE;
         this._winners?.clear();
-        this._turnIndex = 0; // Reset the turn index to 0 when reinitializing the game
 
         this._handNumber += 1;
     }
