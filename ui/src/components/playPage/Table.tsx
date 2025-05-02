@@ -25,7 +25,7 @@ import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";
 import { useDealerPosition } from "../../hooks/useDealerPosition";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
-import { formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
+import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
@@ -36,6 +36,7 @@ import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability
 import { useCardAnimations } from "../../hooks/useCardAnimations";
 import { useTableData } from "../../hooks/useTableData";
 import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
+import { useGameOptions } from "../../hooks/useGameOptions";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -135,6 +136,13 @@ const Table = () => {
     // Add the useMinAndMaxBuyIns hook
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
     
+    // Add the useGameOptions hook
+    const { gameOptions } = useGameOptions(id);
+    
+    // Format small blind and big blind values
+    const smallBlindFormatted = gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10";
+    const bigBlindFormatted = gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20";
+    
     // Add any variables we need
     const [seat, setSeat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -212,8 +220,7 @@ const Table = () => {
 
     const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
 
-    // Update the showPlayerBets to use the hook's currentRound value
-    const showPlayerBets = ["preflop", "flop", "turn", "river"].includes(currentRound);
+
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -450,7 +457,7 @@ const Table = () => {
                     <div className="flex items-center z-10">
                         <div className="flex items-center space-x-2">
                             <span className="px-2 py-1 rounded text-[15px]">
-                            ${minBuyInFormatted} / ${maxBuyInFormatted}
+                            ${smallBlindFormatted} / ${bigBlindFormatted}
                             </span>
                            
                         </div>
