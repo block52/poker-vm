@@ -887,9 +887,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         this.previousActions.length = 0;
 
-        this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
+        const maxPlayers = this._gameOptions.maxPlayers;
+        this._dealer = this._dealer === maxPlayers ? 1 : this._dealer + 1;
+        this._smallBlindPosition = this._dealer === maxPlayers ? 1 : this._dealer + 1;
+        this._bigBlindPosition = this._dealer === maxPlayers ? 2 : this._dealer + 2;
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
