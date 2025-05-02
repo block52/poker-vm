@@ -134,6 +134,12 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.handNumber).toEqual(0);
             game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
             game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+
+            const json: TexasHoldemStateDTO = game.toJson();
+            expect(json).toBeDefined();
+
+            expect(json.smallBlindPosition).toEqual(1);
+            expect(json.bigBlindPosition).toEqual(2);
         });
 
         it("should have the correct players pre flop", () => {
@@ -143,6 +149,12 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.exists("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeTruthy();
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
+
+            // const json: TexasHoldemStateDTO = game.toJson();
+            // expect(json).toBeDefined();
+
+            // expect(json.smallBlindPosition).toEqual(1);
+            // expect(json.bigBlindPosition).toEqual(2);
         });
 
         it("should do end to end", () => {
@@ -209,6 +221,11 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.exists(SMALL_BLIND_PLAYER)).toBeFalsy();
             expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
+
+            // Check blind positions
+            expect(json.smallBlindPosition).toEqual(2);
+            expect(json.bigBlindPosition).toEqual(1);
+            expect(json.dealer).toEqual(1);
         });
     });
 

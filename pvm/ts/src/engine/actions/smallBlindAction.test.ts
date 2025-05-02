@@ -33,7 +33,7 @@ describe("SmallBlindAction", () => {
             previousActions, // previousActions
             TexasHoldemRound.ANTE, // Changed from ANTE to PREFLOP to match new implementation
             [], // communityCards
-            0n, // pot
+            [0n], // pot
             playerStates,
             mnemonic
         );

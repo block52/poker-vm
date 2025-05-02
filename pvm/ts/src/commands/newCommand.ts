@@ -56,8 +56,12 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
             if (!json) {
                 console.log(`Creating new game for address: ${this.address}`);
                 
+                // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern 
+                // of getting the next nonce from the account and validating it.
+                const timestampNonce = BigInt(Date.now());
+                
                 const address = await this.gameManagement.create(
-                    0n, // Nonce is not used in this context
+                    timestampNonce, // Using timestamp as nonce instead of 0n
                     this.address,
                     gameOptions
                 );
@@ -93,7 +97,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                     this.address,
                     "",
                     0n, // No value transfer
-                    0n,
+                    timestampNonce,
                     this.privateKey,
                     `create,${deck.toString()}`
                 );
@@ -108,9 +112,9 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
             // For existing games, handle reinitialization
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
-            if (game.currentRound !== TexasHoldemRound.END) {
-                throw new Error("Game has not finished yet");
-            }
+            // if (game.currentRound !== TexasHoldemRound.END) {
+            //     throw new Error("Game has not finished yet");
+            // }
 
             const deck = new Deck();
             deck.shuffle(this.seed);
@@ -120,12 +124,16 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
             const updatedJson = game.toJson();
             await this.gameManagement.saveFromJSON(updatedJson);
 
+            // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern
+            // of getting the next nonce from the account and validating it.
+            const timestampNonce = BigInt(Date.now());
+
             // Create a transaction record for this action
             const dealTx: Transaction = await Transaction.create(
                 this.address,
                 "",
                 0n, // No value transfer
-                0n,
+                timestampNonce, 
                 this.privateKey,
                 `next,${deck.toString()}` // 
             );

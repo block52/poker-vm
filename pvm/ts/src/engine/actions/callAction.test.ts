@@ -35,7 +35,7 @@ describe("CallAction", () => {
             previousActions, // previous
             TexasHoldemRound.PREFLOP,
             [], // communityCards
-            0n, // pot
+            [0n], // pot
             playerStates,
             mnemonic
         );

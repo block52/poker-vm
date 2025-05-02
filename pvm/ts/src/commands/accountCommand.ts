@@ -25,7 +25,8 @@ export class AccountCommand implements ISignedCommand<Account> {
         const from = fromTxs ? fromTxs.reduce((acc, tx) => acc + tx.value, 0n) : 0n;
         const to = toTxs.reduce((acc, tx) => acc + tx.value, 0n);
 
-        const _account = new Account(this.address, account.balance + to - from, account.nonce);
+        // Increment the nonce by 1
+        const _account = new Account(this.address, account.balance + to - from, account.nonce + 1);
 
         return signResult(_account, this.privateKey);
     }
