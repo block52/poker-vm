@@ -108,9 +108,9 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
             // For existing games, handle reinitialization
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
-            if (game.currentRound !== TexasHoldemRound.END) {
-                throw new Error("Game has not finished yet");
-            }
+            // if (game.currentRound !== TexasHoldemRound.END) {
+            //     throw new Error("Game has not finished yet");
+            // }
 
             const deck = new Deck();
             deck.shuffle(this.seed);
