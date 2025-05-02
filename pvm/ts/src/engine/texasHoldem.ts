@@ -42,7 +42,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private _lastActedSeat: number;
     private _deck!: Deck;
 
-    private _pot: bigint;
+    private _pots: [bigint] = [0n];
     private _sidePots!: Map<string, bigint>;
     private _winners?: Map<string, bigint>;
 
@@ -64,7 +64,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         private previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private communityCards: string[],
-        private currentPot: bigint = 0n, // todo: this can be removed
+        private pots: bigint[] = [0n],
         playerStates: Map<number, Player | null>,
         deck: string,
         winners: WinnerDTO[] = [],
@@ -86,7 +86,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // this._players = new FixedCircularList<Player>(this._maxPlayers, null);
 
-        this._pot = BigInt(currentPot);
+        for (let i = 0; i < pots.length; i++) {
+            this._pots[i] = BigInt(pots[i]);
+        }
+
         this._currentRound = _currentRound;
         this._gameOptions = gameOptions;
 
@@ -935,7 +938,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         this._lastActedSeat = this._dealer;
         this._deck = new Deck(deck);
-        this._pot = 0n;
+        this._pots = [0n];
         this._communityCards.length = 0;
         this._currentRound = TexasHoldemRound.ANTE;
         this._winners?.clear();

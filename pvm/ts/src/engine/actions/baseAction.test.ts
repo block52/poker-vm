@@ -55,7 +55,7 @@ describe.skip("BaseAction", () => {
             previousActions,
             TexasHoldemRound.PREFLOP,
             [], // communityCards
-            0n, // pot
+            [0n], // pot
             playerStates,
             mnemonic
         );

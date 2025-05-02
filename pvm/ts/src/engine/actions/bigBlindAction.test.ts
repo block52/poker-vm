@@ -32,7 +32,7 @@ describe("BigBlindAction", () => {
             previousActions, // previousActions
             TexasHoldemRound.ANTE,
             [], // communityCards
-            0n, // pot
+            [0n], // pot
             playerStates,
             mnemonic
         );
