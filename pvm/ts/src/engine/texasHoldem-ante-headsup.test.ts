@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
 
@@ -197,8 +197,18 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(gameState.winners.length).toEqual(1);
 
             game.reInit(mnemonic);
-
             expect(game.handNumber).toEqual(1);
+
+            const json: TexasHoldemStateDTO = game.toJson();
+            expect(json).toBeDefined();
+            expect(json.players).toBeDefined();
+            expect(json.players.length).toEqual(2);
+
+            // Get the small blind player to leave
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.LEAVE, 15);
+            expect(game.getPlayerCount()).toEqual(1);
+            expect(game.exists(SMALL_BLIND_PLAYER)).toBeFalsy();
+            expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
         });
     });
 

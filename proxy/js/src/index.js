@@ -939,19 +939,24 @@ app.post("/create_new_hand/:tableId", async (req, res) => {
     console.log("Request body:", req.body);
     console.log("   table address:", req.params.tableId);
     console.log("   user address:", req.body.userAddress);
+    console.log("   nonce:", req.body.nonce);
+    console.log("   seed:", req.body.seed);
 
     try {
+        // Use the tableId from URL parameters, not request body
+        const tableId = req.params.tableId;
+        
         // Format the RPC call to match the NEW command structure
         const rpcCall = {
             id: getNextRpcId(),
             method: "new", // Lowercase "new" matches the SDK definition
             params: [
-                req.params.tableId, // Use the table ID from the URL
-                "" // Empty seed for random shuffling
+                tableId, // Use tableId from URL params
+                req.body.seed || Math.random().toString(36).substring(2, 15) // Use provided seed or generate random one
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
-        }; 
+        };
 
         console.log("=== FORMATTED RPC CALL ===");
         console.log(JSON.stringify(rpcCall, null, 2));
@@ -973,7 +978,7 @@ app.post("/create_new_hand/:tableId", async (req, res) => {
                 const gameStateCall = {
                     id: getNextRpcId(),
                     method: "getGameState",
-                    params: [req.params.tableId],
+                    params: [tableId], // Use the tableId from URL params
                     publicKey: req.body.publicKey
                 };
                 
