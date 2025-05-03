@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react"; // Import React and useEffect
+import React, { useEffect, useState, useRef } from "react"; // Import React, useEffect, and useRef
 import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
 import { STORAGE_PUBLIC_KEY, STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
-import "./Dashboard.css";
+import "./Dashboard.css"; // Import the CSS file with animations
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; // Add this import
 import useUserWallet from "../hooks/useUserWallet"; // Add this import
 import useNewCommand from "../hooks/DashboardPage/useNewCommand"; // Import the new hook
@@ -72,18 +72,34 @@ const Dashboard: React.FC = () => {
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    
+    // Add a ref for the animation frame ID
+    const animationFrameRef = useRef<number | undefined>(undefined);
 
     // Add effect to track mouse movement
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
-            // Calculate mouse position as percentage of window
-            const x = (e.clientX / window.innerWidth) * 100;
-            const y = (e.clientY / window.innerHeight) * 100;
-            setMousePosition({ x, y });
+            // Only update if no animation frame is pending
+            if (!animationFrameRef.current) {
+                animationFrameRef.current = requestAnimationFrame(() => {
+                    // Calculate mouse position as percentage of window
+                    const x = (e.clientX / window.innerWidth) * 100;
+                    const y = (e.clientY / window.innerHeight) * 100;
+                    setMousePosition({ x, y });
+                    animationFrameRef.current = undefined;
+                });
+            }
         };
 
         window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
+        
+        // Cleanup function to remove event listener and cancel any pending animation frames
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
     }, []);
 
     // Game contract addresses - in a real app, these would come from the API
@@ -398,47 +414,6 @@ const Dashboard: React.FC = () => {
                     animation: "shimmer 8s infinite linear"
                 }}
             />
-
-            {/* Add the keyframe animations */}
-            <style>{`
-                @keyframes gradient {
-                    0% {
-                        background-position: 0% 50%;
-                    }
-                    50% {
-                        background-position: 100% 50%;
-                    }
-                    100% {
-                        background-position: 0% 50%;
-                    }
-                }
-                @keyframes shimmer {
-                    0% { background-position: 0% 0; }
-                    100% { background-position: 200% 0; }
-                }
-                @keyframes float {
-                    0% { transform: translateY(0px); }
-                    50% { transform: translateY(-10px); }
-                    100% { transform: translateY(0px); }
-                }
-                @keyframes pulse {
-                    0% { opacity: 0.6; }
-                    50% { opacity: 1; }
-                    100% { opacity: 0.6; }
-                }
-                .text-gradient {
-                    background-clip: text;
-                    -webkit-background-clip: text;
-                    color: transparent;
-                    background-size: 200% auto;
-                    animation: textShine 3s linear infinite;
-                }
-                @keyframes textShine {
-                    to {
-                        background-position: 200% center;
-                    }
-                }
-            `}</style>
 
             {/* Import Private Key Modal */}
             {showImportModal && (
