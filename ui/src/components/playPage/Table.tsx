@@ -837,6 +837,19 @@ const Table = () => {
                 </div>
             )}
 
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10">
+                <div className="flex flex-col items-start bg-gray-800/80 px-3 py-2 rounded-lg backdrop-blur-sm border border-purple-400/30 shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-gradient bg-gradient-to-r from-purple-500 via-blue-400 to-purple-500 font-medium tracking-wide">POWERED BY</span>
+                    </div>
+                    <img 
+                        src="/logo1080.png" 
+                        alt="Block52 Logo" 
+                        className="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                    />
+                </div>
+            </div>
             
         </div>
     );
