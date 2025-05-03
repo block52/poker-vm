@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import "./QRDeposit.css"; // Import the CSS file with animations
 import { QRCodeSVG } from "qrcode.react";
 import { Eip1193Provider, ethers, parseUnits } from "ethers";
 import axios from "axios";
@@ -45,6 +46,23 @@ const USDC_ABI = [
     "function balanceOf(address account) view returns (uint256)"
 ];
 
+// Add hexagon pattern SVG background
+const HexagonPattern = () => {
+    return (
+        <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
+                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" 
+                              stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#hexagons)" />
+            </svg>
+        </div>
+    );
+};
+
 const QRDeposit: React.FC = () => {
     const { balance: b52Balance, refreshBalance } = useUserWallet();
     const { isConnected, open, address: web3Address } = useUserWalletConnect();
@@ -65,6 +83,38 @@ const QRDeposit: React.FC = () => {
     const [progressPercentage, setProgressPercentage] = useState<number>(0);
     const [completionCountdown, setCompletionCountdown] = useState<number>(0);
     const [isDepositCompleted, setIsDepositCompleted] = useState<boolean>(false);
+
+    // Add state for mouse position
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    
+    // Add a ref for the animation frame ID
+    const animationFrameRef = useRef<number | undefined>(undefined);
+
+    // Add effect to track mouse movement
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            // Only update if no animation frame is pending
+            if (!animationFrameRef.current) {
+                animationFrameRef.current = requestAnimationFrame(() => {
+                    // Calculate mouse position as percentage of window
+                    const x = (e.clientX / window.innerWidth) * 100;
+                    const y = (e.clientY / window.innerHeight) * 100;
+                    setMousePosition({ x, y });
+                    animationFrameRef.current = undefined;
+                });
+            }
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        
+        // Cleanup function to remove event listener and cancel any pending animation frames
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, []);
 
     // Get progress percentage based on transaction status
     const getProgressFromStatus = (status: TransactionStatus): number => {
@@ -526,8 +576,58 @@ const QRDeposit: React.FC = () => {
     }, [loggedInAccount]);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-800 via-gray-900 to-black p-4">
-            <div className="max-w-md w-full bg-gray-800 rounded-xl shadow-2xl p-6 relative">
+        <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+            {/* Background animations */}
+            <div 
+                className="fixed inset-0 z-0"
+                style={{
+                    backgroundImage: `
+                        radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
+                        radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
+                        radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%)
+                    `,
+                    backgroundColor: "#111827",
+                    filter: "blur(40px)",
+                    transition: "all 0.3s ease-out"
+                }}
+            />
+
+            {/* Add hexagon pattern overlay */}
+            <HexagonPattern />
+
+            {/* Animated pattern overlay */}
+            <div 
+                className="fixed inset-0 z-0 opacity-20"
+                style={{
+                    backgroundImage: `
+                        repeating-linear-gradient(
+                            ${45 + mousePosition.x / 10}deg,
+                            rgba(42, 72, 143, 0.1) 0%,
+                            rgba(61, 89, 161, 0.1) 25%,
+                            rgba(30, 52, 107, 0.1) 50%,
+                            rgba(50, 79, 151, 0.1) 75%,
+                            rgba(42, 72, 143, 0.1) 100%
+                        )
+                    `,
+                    backgroundSize: "400% 400%",
+                    animation: "gradient 15s ease infinite",
+                    transition: "background 0.5s ease"
+                }}
+            />
+
+            {/* Moving light animation */}
+            <div 
+                className="fixed inset-0 z-0 opacity-30"
+                style={{
+                    backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
+                    backgroundSize: "200% 100%",
+                    animation: "shimmer 8s infinite linear"
+                }}
+            />
+
+            <div className="max-w-md w-full bg-gray-800/80 backdrop-blur-md rounded-xl shadow-2xl p-6 relative z-10 border border-blue-400/20 transition-all duration-300 hover:shadow-blue-500/10">
                 {/* Back Button */}
                 <Link 
                     to="/" 
@@ -541,9 +641,9 @@ const QRDeposit: React.FC = () => {
 
                 <h1 className="text-2xl font-extrabold text-center text-white mb-6 mt-5">Deposit USDC in to Block52</h1>
 
-                <div className="bg-gray-700 rounded-lg p-4 mb-6">
+                <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                     <p className="text-lg mb-2 text-white">Block 52 Balance:</p>
-                    <p className="text-xl font-bold text-pink-500">${formatBalance(displayBalance || "0")} USDC</p>
+                    <p className="text-xl font-bold text-blue-400">${formatBalance(displayBalance || "0")} USDC</p>
                 </div>
 
                 {/* Transaction Progress Bar */}
@@ -576,7 +676,7 @@ const QRDeposit: React.FC = () => {
 
                 {/* Session Status */}
                 {currentSession && !transactionStatus && (
-                    <div className="bg-gray-700 rounded-lg p-4 mb-6">
+                    <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                         <h2 className="text-lg font-semibold mb-2 text-white">Session Status</h2>
                         <p className="text-sm text-gray-300">Status: {currentSession.status}</p>
                         <p className="text-sm text-gray-300">Session ID: {currentSession._id}</p>
@@ -591,7 +691,7 @@ const QRDeposit: React.FC = () => {
                         <div className="text-sm text-gray-400">
                             Session will expire in {Math.floor(timeLeft / 60)} minutes and {timeLeft % 60} seconds
                         </div>
-                        <div className="mt-2 p-2 bg-yellow-800 bg-opacity-40 border border-yellow-600 rounded-md">
+                        <div className="mt-2 p-2 bg-gray-700/90 backdrop-blur-sm rounded-lg border border-yellow-600/50">
                             <div className="flex items-center text-yellow-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -604,7 +704,7 @@ const QRDeposit: React.FC = () => {
 
                 {/* Block52 Account Display */}
                 {!showQR && (
-                    <div className="bg-gray-700 rounded-lg p-4 mb-6">
+                    <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                         <h2 className="text-lg font-semibold mb-2 text-white">Block52 Account</h2>
                         <p className="text-sm text-gray-300 break-all">{loggedInAccount || "Not logged in"}</p>
                     </div>
@@ -615,7 +715,7 @@ const QRDeposit: React.FC = () => {
                     <button
                         onClick={handleGenerateQR}
                         disabled={!loggedInAccount}
-                        className="w-full py-3 px-4 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300"
+                        className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300 shadow-md"
                     >
                         Generate Deposit QR Code
                     </button>
@@ -624,14 +724,14 @@ const QRDeposit: React.FC = () => {
                         {/* Only show QR if no transaction is in progress */}
                         {!transactionStatus && (
                             <>
-                                <div className="bg-gray-700 rounded-lg p-4 mb-6">
+                                <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                                     <h2 className="text-lg font-semibold mb-2 text-white">Pay with USDC ERC20</h2>
                                     <p className="text-sm text-gray-300 mb-4">Only send USDC using the Ethereum network</p>
                                 </div>
 
                                 {/* QR Code */}
                                 <div className="flex justify-center mb-6">
-                                    <div className="bg-white p-4 rounded-lg">
+                                    <div className="bg-white p-4 rounded-lg shadow-lg">
                                         <QRCodeSVG value={`ethereum:${DEPOSIT_ADDRESS}`} size={200} level="H" />
                                     </div>
                                 </div>
@@ -641,7 +741,7 @@ const QRDeposit: React.FC = () => {
                                     <div>
                                         <label className="text-sm text-gray-400">Payment address</label>
                                         <div
-                                            className="flex items-center justify-between bg-gray-700 p-2 rounded cursor-pointer"
+                                            className="flex items-center justify-between bg-gray-700/90 p-2 rounded cursor-pointer border border-blue-500/10"
                                             onClick={() => copyToClipboard(DEPOSIT_ADDRESS)}
                                         >
                                             <span className="text-sm text-white">{`${DEPOSIT_ADDRESS}`}</span>
@@ -660,7 +760,7 @@ const QRDeposit: React.FC = () => {
                                         {isQuerying ? "🔄 Checking for new transactions..." : "Last checked just now"}
                                     </span>
                                 </div>
-                                <div className="bg-gray-700 p-3 rounded text-sm text-white">
+                                <div className="bg-gray-700/90 p-3 rounded text-sm text-white border border-blue-500/10">
                                     <p>
                                         Hash: {latestTransaction.hash.slice(0, 10)}...{latestTransaction.hash.slice(-8)}
                                     </p>
@@ -681,12 +781,12 @@ const QRDeposit: React.FC = () => {
                         <span className="text-gray-400 text-sm">OR</span>
                     </div>
                     
-                    <div className="bg-gray-700 rounded-lg p-4">
+                    <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                         <h2 className="text-lg font-semibold mb-4 text-white">Deposit with Web3 Wallet</h2>
                         <p className="text-sm text-gray-400 mb-4">Alternative method using your connected Web3 wallet</p>
 
                         {!isConnected ? (
-                            <button onClick={open} className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
+                            <button onClick={open} className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">
                                 Connect Wallet
                             </button>
                         ) : (
@@ -704,7 +804,7 @@ const QRDeposit: React.FC = () => {
                                         value={depositAmount}
                                         onChange={e => setDepositAmount(e.target.value)}
                                         placeholder="Enter USDC amount"
-                                        className="w-full p-2 bg-gray-600 rounded border border-gray-500 text-white"
+                                        className="w-full p-2 bg-gray-600 rounded border border-blue-500/10 text-white"
                                         min="0"
                                         step="0.01"
                                     />
@@ -713,7 +813,7 @@ const QRDeposit: React.FC = () => {
                                         onClick={handleDirectTransfer}
                                         disabled={!depositAmount || isTransferring || !currentSession || transactionStatus !== null}
                                         className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-                                                disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300"
+                                                disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300 shadow-md"
                                     >
                                         {isTransferring ? "Processing..." : "Deposit USDC"}
                                     </button>
@@ -725,7 +825,25 @@ const QRDeposit: React.FC = () => {
             </div>
 
             {/* Error message display */}
-            {error && <div className="mt-4 p-3 bg-red-500 text-white rounded">Error: {error}</div>}
+            {error && (
+                <div className="mt-4 p-3 bg-red-600/90 backdrop-blur-md text-white rounded-lg border border-red-800 shadow-lg z-10">
+                    Error: {error}
+                </div>
+            )}
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10">
+                <div className="flex flex-col items-start bg-gray-800/80 px-3 py-2 rounded-lg backdrop-blur-sm border border-purple-400/30 shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-gradient bg-gradient-to-r from-purple-500 via-blue-400 to-purple-500 font-medium tracking-wide">POWERED BY</span>
+                    </div>
+                    <img 
+                        src="/logo1080.png" 
+                        alt="Block52 Logo" 
+                        className="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                    />
+                </div>
+            </div>
         </div>
     );
 };
