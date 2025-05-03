@@ -442,19 +442,19 @@ const Table = () => {
                 </div>
 
                 {/* SUB HEADER */}
-                <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg">
+                <div className="bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg">
                     {/* Animated background overlay */}
                     <div
                         className="absolute inset-0 z-0 opacity-30 shimmer-animation"
                         style={{
                             backgroundImage:
-                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
+                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
                             backgroundSize: "200% 100%"
                         }}
                     />
 
                     {/* Bottom edge shadow */}
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-50"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#3b82f6] to-transparent opacity-50"></div>
 
                     {/* Left Section */}
                     <div className="flex items-center z-10">
@@ -471,7 +471,7 @@ const Table = () => {
 
                     {/* Right Section */}
                     <div className="flex items-center z-10 mr-3">
-                        <span className="cursor-pointer hover:text-green-400 transition-colors duration-200 text-gray-400" onClick={onCloseSideBar}>
+                        <span className="cursor-pointer hover:text-blue-400 transition-colors duration-200 text-gray-400" onClick={onCloseSideBar}>
                             {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                         </span>
                         <span
@@ -509,29 +509,41 @@ const Table = () => {
                 >
                     {/*//! TABLE */}
                     <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
+                        {/* Hexagon pattern overlay */}
+                        <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
+                            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
+                                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" 
+                                              stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
+                                    </pattern>
+                                </defs>
+                                <rect width="100%" height="100%" fill="url(#hexagons)" />
+                            </svg>
+                        </div>
+                        
                         {/* Animated background overlay */}
                         <div
-                            className="absolute inset-0 z-0 opacity-30"
+                            className="absolute inset-0 z-0 opacity-30 shimmer-animation"
                             style={{
                                 backgroundImage:
-                                    "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
-                                backgroundSize: "200% 100%",
-                                animation: "shimmer 3s infinite linear"
+                                    "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
+                                backgroundSize: "200% 100%"
                             }}
                         />
 
                         {/* Animated overlay */}
                         <div
-                            className="absolute inset-0 z-0"
+                            className="absolute inset-0 z-0 opacity-20"
                             style={{
                                 backgroundImage: `
                                     repeating-linear-gradient(
                                         ${45 + mousePosition.x / 10}deg,
-                                        rgba(42, 72, 65, 0.1) 0%,
-                                        rgba(61, 89, 80, 0.1) 25%,
-                                        rgba(30, 52, 47, 0.1) 50%,
-                                        rgba(50, 79, 71, 0.1) 75%,
-                                        rgba(42, 72, 65, 0.1) 100%
+                                        rgba(42, 72, 143, 0.1) 0%,
+                                        rgba(61, 89, 161, 0.1) 25%,
+                                        rgba(30, 52, 107, 0.1) 50%,
+                                        rgba(50, 79, 151, 0.1) 75%,
+                                        rgba(42, 72, 143, 0.1) 100%
                                     )
                                 `,
                                 backgroundSize: "400% 400%",
@@ -545,12 +557,13 @@ const Table = () => {
                             className="absolute inset-0 z-0"
                             style={{
                                 backgroundImage: `
-                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(42, 72, 65, 0.9) 0%, transparent 60%),
-                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 65, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 0%, rgba(61, 89, 80, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 47, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 71, 0.7) 0%, transparent 50%)
+                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
+                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
+                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%)
                                 `,
+                                backgroundColor: "#111827",
                                 filter: "blur(60px)",
                                 transition: "all 0.3s ease-out"
                             }}
