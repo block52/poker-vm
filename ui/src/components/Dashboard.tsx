@@ -43,6 +43,22 @@ const Dashboard: React.FC = () => {
     const [createGameError, setCreateGameError] = useState("");
     const [newGameAddress, setNewGameAddress] = useState("");
 
+    // Add state for mouse position
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+    // Add effect to track mouse movement
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            // Calculate mouse position as percentage of window
+            const x = (e.clientX / window.innerWidth) * 100;
+            const y = (e.clientY / window.innerHeight) * 100;
+            setMousePosition({ x, y });
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
+    }, []);
+
     // Game contract addresses - in a real app, these would come from the API
     const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd343"; // Example address
     
@@ -302,14 +318,85 @@ const Dashboard: React.FC = () => {
     };
 
     // CSS for disabled buttons
-    const disabledButtonClass = "text-gray-400 bg-gray-600 cursor-not-allowed opacity-60";
+    const disabledButtonClass = "text-gray-300 bg-gradient-to-br from-gray-600 to-gray-700 cursor-not-allowed shadow-inner border border-gray-600/30";
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black relative">
+        <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
+            {/* Background animations */}
+            <div 
+                className="fixed inset-0 z-0"
+                style={{
+                    backgroundImage: `
+                        radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
+                        radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
+                        radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%)
+                    `,
+                    backgroundColor: "#111827",
+                    filter: "blur(40px)",
+                    transition: "all 0.3s ease-out"
+                }}
+            />
+
+            {/* Animated pattern overlay */}
+            <div 
+                className="fixed inset-0 z-0 opacity-20"
+                style={{
+                    backgroundImage: `
+                        repeating-linear-gradient(
+                            ${45 + mousePosition.x / 10}deg,
+                            rgba(42, 72, 143, 0.1) 0%,
+                            rgba(61, 89, 161, 0.1) 25%,
+                            rgba(30, 52, 107, 0.1) 50%,
+                            rgba(50, 79, 151, 0.1) 75%,
+                            rgba(42, 72, 143, 0.1) 100%
+                        )
+                    `,
+                    backgroundSize: "400% 400%",
+                    animation: "gradient 15s ease infinite",
+                    transition: "background 0.5s ease"
+                }}
+            />
+
+            {/* Moving light animation */}
+            <div 
+                className="fixed inset-0 z-0 opacity-30"
+                style={{
+                    backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
+                    backgroundSize: "200% 100%",
+                    animation: "shimmer 8s infinite linear"
+                }}
+            />
+
+            {/* Add the keyframe animations */}
+            <style>{`
+                @keyframes gradient {
+                    0% {
+                        background-position: 0% 50%;
+                    }
+                    50% {
+                        background-position: 100% 50%;
+                    }
+                    100% {
+                        background-position: 0% 50%;
+                    }
+                }
+                @keyframes shimmer {
+                    0% { background-position: 0% 0; }
+                    100% { background-position: 200% 0; }
+                }
+                @keyframes float {
+                    0% { transform: translateY(0px); }
+                    50% { transform: translateY(-10px); }
+                    100% { transform: translateY(0px); }
+                }
+            `}</style>
+
             {/* Import Private Key Modal */}
             {showImportModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 p-6 rounded-xl w-96">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+                    <div className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20">
                         <h3 className="text-xl font-bold text-white mb-4">Import Private Key</h3>
                         <div className="space-y-4">
                             <input
@@ -317,7 +404,7 @@ const Dashboard: React.FC = () => {
                                 placeholder="Enter private key (0x...)"
                                 value={importKey}
                                 onChange={e => setImportKey(e.target.value)}
-                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-pink-500 focus:outline-none"
+                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                             />
                             {importError && <p className="text-red-500 text-sm">{importError}</p>}
                             <div className="flex justify-end space-x-3">
@@ -327,13 +414,13 @@ const Dashboard: React.FC = () => {
                                         setImportKey("");
                                         setImportError("");
                                     }}
-                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300"
+                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleImportPrivateKey}
-                                    className="px-4 py-2 text-sm bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition duration-300"
+                                    className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300 shadow-md"
                                 >
                                     Import
                                 </button>
@@ -345,8 +432,8 @@ const Dashboard: React.FC = () => {
 
             {/* Create New Game Modal */}
             {showCreateGameModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 p-6 rounded-xl w-96">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+                    <div className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20">
                         <h3 className="text-xl font-bold text-white mb-4">Create New Game</h3>
                         <div className="space-y-4">
                             <div>
@@ -354,7 +441,7 @@ const Dashboard: React.FC = () => {
                                 <select 
                                     value={selectedContractAddress}
                                     onChange={(e) => setSelectedContractAddress(e.target.value)}
-                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-pink-500 focus:outline-none"
+                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                 >
                                     <option value={DEFAULT_GAME_CONTRACT}>Default Texas Hold'em</option>
                                     {/* Additional contracts could be added here */}
@@ -369,14 +456,14 @@ const Dashboard: React.FC = () => {
                                         setShowCreateGameModal(false);
                                         setCreateGameError("");
                                     }}
-                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300"
+                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleCreateNewGame}
                                     disabled={isCreatingGame}
-                                    className={`px-4 py-2 text-sm ${isCreatingGame ? "bg-gray-500" : "bg-pink-600 hover:bg-pink-700"} text-white rounded-lg transition duration-300 flex items-center`}
+                                    className={`px-4 py-2 text-sm ${isCreatingGame ? "bg-gray-500" : "bg-blue-600 hover:bg-blue-700"} text-white rounded-lg transition duration-300 shadow-md flex items-center`}
                                 >
                                     {isCreatingGame ? (
                                         <>
@@ -394,11 +481,11 @@ const Dashboard: React.FC = () => {
                 </div>
             )}
 
-            <div className="bg-gray-800 p-10 rounded-xl shadow-2xl w-full max-w-xl">
-                <h1 className="text-4xl font-extrabold text-center text-white mb-8">Start Playing Now</h1>
+            <div className="bg-gray-800/80 backdrop-blur-md p-10 rounded-xl shadow-2xl w-full max-w-xl border border-blue-400/20 z-10 transition-all duration-300 hover:shadow-blue-500/10">
+                <h1 className="text-4xl font-extrabold text-center text-white mb-8 text-shadow">Start Playing Now</h1>
 
                 {/* Block52 Wallet Section */}
-                <div className="bg-gray-700 p-4 rounded-lg mb-6">
+                <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                     <div className="flex items-center gap-2 mb-2">
                         <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
                         <div className="relative group">
@@ -415,19 +502,21 @@ const Dashboard: React.FC = () => {
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
-                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                <p className="mb-2">This is your Layer 2 gaming wallet, automatically created for you. No Web3 wallet required!</p>
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 border border-blue-500/20">
+                                <h3 className="text-blue-400 font-bold mb-2">Layer 2 Gaming Wallet</h3>
+                                <p className="mb-2">This is your Layer 2 gaming wallet, automatically created for you with no Web3 wallet required!</p>
                                 <p className="mb-2">You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.</p>
-                                <p>All your in-game funds are secured and can be withdrawn at any time.</p>
+                                <p>All your in-game funds are secured on the blockchain and can be withdrawn at any time.</p>
                                 <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
                             </div>
                         </div>
                     </div>
+                    
                     {publicKey && (
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
                                 <p className="text-white text-sm">
-                                    Address: <span className="font-mono text-pink-500">{formatAddress(publicKey)}</span>
+                                    Address: <span className="font-mono text-blue-400">{formatAddress(publicKey)}</span>
                                 </p>
                                 <button onClick={() => setShowImportModal(true)} className="text-sm text-blue-400 hover:text-blue-300 transition duration-300">
                                     Import Private Key
@@ -435,7 +524,7 @@ const Dashboard: React.FC = () => {
                             </div>
                             <div className="flex justify-between items-center">
                                 <p className="text-white text-sm">
-                                    Balance: <span className="font-bold text-pink-500">${formatBalance(b52Balance || "0")} USDC</span>
+                                    Balance: <span className="font-bold text-blue-400">${formatBalance(b52Balance || "0")} USDC</span>
                                 </p>
                                 <button
                                     onClick={() => setShowPrivateKey(!showPrivateKey)}
@@ -445,7 +534,7 @@ const Dashboard: React.FC = () => {
                                 </button>
                             </div>
                             {showPrivateKey && (
-                                <div className="mt-2 p-2 bg-gray-800 rounded-lg">
+                                <div className="mt-2 p-2 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-blue-500/10">
                                     <div className="flex justify-between items-center">
                                         <p className="text-white text-sm font-mono break-all">{localStorage.getItem(STORAGE_PRIVATE_KEY)}</p>
                                         <button
@@ -457,16 +546,16 @@ const Dashboard: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 pt-2">
                                 <Link
                                     to="/qr-deposit"
-                                    className="block flex-1 text-center text-white bg-green-600 hover:bg-green-700 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-lg"
+                                    className="block flex-1 text-center text-white bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
                                 >
                                     Deposit
                                 </Link>
                                 <button
                                     onClick={() => setShowCreateGameModal(true)}
-                                    className="block flex-1 text-center text-white bg-blue-600 hover:bg-blue-700 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-lg"
+                                    className="block flex-1 text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
                                 >
                                     Create New Game
                                 </button>
@@ -476,9 +565,9 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Web3 Wallet Section */}
-                <div className="bg-gray-700 p-4 rounded-lg mb-6">
+                <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300 opacity-80">
                     <div className="flex items-center gap-2 mb-2">
-                        <h2 className="text-xl font-bold text-white">Web3 Wallet</h2>
+                        <h2 className="text-xl font-bold text-white">Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span></h2>
                         <div className="relative group">
                             <svg
                                 className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
@@ -493,24 +582,27 @@ const Dashboard: React.FC = () => {
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
-                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                <p className="mb-2">Optional: Connect your Web3 wallet (like MetaMask) for additional features.</p>
-                                <p>Not required to play - you can use the Block52 Game Wallet instead!</p>
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 border border-blue-500/20">
+                                <h3 className="text-blue-400 font-bold mb-2">External Web3 Wallet</h3>
+                                <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
+                                <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
+                                <p>Having a connected wallet provides additional features and easier withdrawals in the future.</p>
                                 <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
                             </div>
                         </div>
                     </div>
+                    
                     <div className="flex justify-between items-center">
                         <div>
                             <p className="text-white text-sm">
                                 Status:{" "}
-                                <span className={`font-bold ${isConnected ? "text-green-500" : "text-red-500"}`}>
+                                <span className={`font-bold ${isConnected ? "text-green-500" : "text-blue-400"}`}>
                                     {isConnected ? "Connected" : "Not Connected"}
                                 </span>
                             </p>
                             {isConnected && address && (
                                 <p className="text-white text-sm">
-                                    Address: <span className="font-mono text-pink-500">{formatAddress(address)}</span>
+                                    Address: <span className="font-mono text-blue-400">{formatAddress(address)}</span>
                                 </p>
                             )}
                         </div>
@@ -518,14 +610,14 @@ const Dashboard: React.FC = () => {
                             {!isConnected ? (
                                 <button
                                     onClick={open}
-                                    className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300"
+                                    className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500/70 to-blue-600/70 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 shadow-md"
                                 >
                                     Connect
                                 </button>
                             ) : (
                                 <button
                                     onClick={disconnect}
-                                    className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-300"
+                                    className="px-4 py-2 text-sm bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
                                 >
                                     Disconnect
                                 </button>
@@ -536,10 +628,10 @@ const Dashboard: React.FC = () => {
 
                 {/* Display new game address if available */}
                 {newGameAddress && (
-                    <div className="bg-gray-700 p-4 rounded-lg mb-6">
+                    <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                         <h3 className="text-lg font-bold text-white mb-2">New Game Created!</h3>
                         <p className="text-white text-sm mb-2">
-                            Game Address: <span className="font-mono text-pink-500">{formatAddress(newGameAddress)}</span>
+                            Game Address: <span className="font-mono text-blue-400">{formatAddress(newGameAddress)}</span>
                         </p>
                         <div className="flex justify-between">
                             <button
@@ -563,60 +655,57 @@ const Dashboard: React.FC = () => {
                     <div className="flex justify-between gap-6">
                         <button
                             onClick={() => handleGameType(GameType.CASH)}
-                            className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                typeSelected === "cash" ? "bg-pink-600" : "bg-gray-600"
+                            className={`text-white hover:bg-blue-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
+                                typeSelected === "cash" ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
                             }`}
                         >
                             Cash
                         </button>
                         <button
                             disabled={true}
-                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center shadow-md relative`}
+                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}
                         >
                             Tournament
-                            <div className="absolute top-1 right-1 bg-yellow-600 text-xs rounded px-1 text-white">Coming Soon</div>
                         </button>
                     </div>
 
                     <div className="flex justify-between gap-6">
                         <button
                             onClick={() => handleGameVariant(Variant.TEXAS_HOLDEM)}
-                            className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                variantSelected === "texas-holdem" ? "bg-pink-600" : "bg-gray-600"
+                            className={`text-white hover:bg-blue-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
+                                variantSelected === "texas-holdem" ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
                             }`}
                         >
                             Texas Holdem
                         </button>
                         <button
                             disabled={true}
-                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center shadow-md relative`}
+                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}
                         >
                             Omaha
-                            <div className="absolute top-1 right-1 bg-yellow-600 text-xs rounded px-1 text-white">Coming Soon</div>
                         </button>
                     </div>
 
                     <div className="flex justify-between gap-6">
                         <button
                             onClick={() => handleSeat(2)}
-                            className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                seatSelected === 2 ? "bg-pink-600" : "bg-gray-600"
+                            className={`text-white hover:bg-blue-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
+                                seatSelected === 2 ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
                             }`}
                         >
                             2 Seats
                         </button>
                         <button
                             disabled={true}
-                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center shadow-md relative`}
+                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}
                         >
                             6-9 Seats
-                            <div className="absolute top-1 right-1 bg-yellow-600 text-xs rounded px-1 text-white">Coming Soon</div>
                         </button>
                     </div>
 
                     <Link
                         to={buildUrl()}
-                        className="block text-center text-white bg-pink-600 hover:bg-pink-700 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md"
+                        className="block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
                     >
                         Next
                     </Link>
@@ -624,11 +713,11 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Reset Blockchain Button */}
-            <div className="fixed bottom-4 right-4 flex flex-col items-end">
+            {/* <div className="fixed bottom-4 right-4 flex flex-col items-end z-10">
                 <button
                     onClick={resetBlockchain}
                     disabled={isResetting}
-                    className={`px-3 py-2 text-xs ${isResetting ? "bg-gray-600" : "bg-red-600 hover:bg-red-700"} text-white rounded-lg transition duration-300 opacity-70 hover:opacity-100 flex items-center`}
+                    className={`px-3 py-2 text-xs ${isResetting ? "bg-gray-600" : "bg-red-600 hover:bg-red-700"} text-white rounded-lg transition duration-300 opacity-70 hover:opacity-100 flex items-center shadow-md border border-red-500/20`}
                 >
                     {isResetting ? (
                         <>
@@ -643,7 +732,7 @@ const Dashboard: React.FC = () => {
                     )}
                 </button>
                 {isResetting && (
-                    <div className="mt-2 p-2 bg-gray-800 bg-opacity-90 rounded text-xs text-white max-w-xs">
+                    <div className="mt-2 p-2 bg-gray-800 bg-opacity-90 rounded text-xs text-white max-w-xs backdrop-blur-sm border border-red-500/20 shadow-lg">
                         <p className="font-bold mb-1">Reset in progress:</p>
                         <ul className="list-disc list-inside space-y-1 text-gray-300">
                             <li>Clearing database collections</li>
@@ -654,7 +743,7 @@ const Dashboard: React.FC = () => {
                         <p className="mt-1 text-yellow-300 text-[10px]">Please wait, this may take a minute...</p>
                     </div>
                 )}
-            </div>
+            </div> */}
         </div>
     );
 };
