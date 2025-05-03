@@ -230,7 +230,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     private join(address: string, chips: bigint) {
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
-        const seat = this.findNextSeat();
+        const seat = this.findNextEmptySeat();
         this.joinAtSeat(player, seat);
     }
 
@@ -311,7 +311,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return player;
     }
 
-    private findNextPlayerToAct(): Player | undefined {
+    findNextPlayerToAct(): Player | undefined {
         // Has the small blind posted?
         const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
         const hasSmallBlindPosted = anteActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
@@ -325,66 +325,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (!hasBigBlindPosted) {
             return this.getPlayerAtSeat(this._bigBlindPosition);
         }
-
-        // // Check if cards have been dealt
-        // const hasDealt = preFlopActions?.some(a => a.action === NonPlayerActionType.DEAL);
-        // const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
-
-        // // If blinds are posted but cards haven't been dealt yet,
-        // // then deal action is next - small blind player typically does this
-        // if (!hasDealt && !anyPlayerHasCards) {
-        //     return this.getPlayerAtSeat(this._smallBlindPosition);
-        // }
-
-        // // If cards have been dealt, determine who acts first in the betting round
-        // if (anyPlayerHasCards) {
-        //     // Check if there have been any betting actions yet
-        //     const bettingActionsCount =
-        //         preFlopActions?.filter(
-        //             a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
-        //         ).length || 0;
-
-        //     if (bettingActionsCount === 0) {
-        //         // Count active players
-        //         const activePlayerCount = this.getActivePlayerCount();
-
-        //         if (activePlayerCount === 2) {
-        //             // In 2-player games, small blind acts first
-        //             return this.getPlayerAtSeat(this._smallBlindPosition);
-        //         } else {
-        //             // In 3+ player games, player after big blind acts first
-        //             // Find the next active player after the big blind position
-        //             let nextSeat = this._bigBlindPosition + 1;
-        //             if (nextSeat > this._gameOptions.maxPlayers) {
-        //                 nextSeat = 1;
-        //             }
-
-        //             // First look specifically for seat 3 (common case) for efficiency
-        //             if (nextSeat === 3) {
-        //                 const player = this.getPlayerAtSeat(3);
-        //                 if (player && player.status === PlayerStatus.ACTIVE) {
-        //                     return player;
-        //                 }
-        //             }
-
-        //             // Search for the next active player, starting from the seat after big blind
-        //             for (let i = 0; i < this._gameOptions.maxPlayers; i++) {
-        //                 const seatToCheck = ((nextSeat + i - 1) % this._gameOptions.maxPlayers) + 1;
-
-        //                 // Skip checking seat 3 again if we already did
-        //                 if (seatToCheck === 3 && nextSeat === 3) continue;
-
-        //                 const player = this.getPlayerAtSeat(seatToCheck);
-        //                 if (player && player.status === PlayerStatus.ACTIVE) {
-        //                     return player;
-        //                 }
-        //             }
-
-        //             // If no active players found after big blind, return small blind
-        //             return this.getPlayerAtSeat(this._smallBlindPosition);
-        //         }
-        //     }
-        // }
 
         // For subsequent actions in the round, find the next player after the last acted player
         let next = this._lastActedSeat + 1;
@@ -827,7 +767,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
     }
 
-    findNextSeat(start: number = 1): number {
+    findNextEmptySeat(start: number = 1): number {
         const maxSeats = this._gameOptions.maxPlayers;
 
         // Iterate through all seat numbers to find next available (empty) seat
@@ -941,9 +881,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         this.previousActions.length = 0;
 
-        this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
+        // cache player positions
+        const dealer = this._dealer;
+        const sb = this._smallBlindPosition;
+        const bb = this._bigBlindPosition;
+
+        this._bigBlindPosition = this.findNextEmptySeat(bb);
+        this._smallBlindPosition = this.findNextEmptySeat(sb);
+        this._dealer = this.findNextEmptySeat(dealer);
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
