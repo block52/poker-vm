@@ -66,6 +66,10 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                     gameOptions
                 );
 
+                // Create a deck for the new game
+                const deck = new Deck();
+                deck.shuffle(this.seed);
+
                 const newGameJson: TexasHoldemGameState = {
                     type: "cash",
                     address: address,
@@ -77,7 +81,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                     bigBlind: gameOptions.bigBlind.toString(),
                     dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
                     players: [],
-                    deck: "",
+                    deck: deck.toString(),
                     communityCards: [],
                     pots: ["0"],
                     nextToAct: -1,
@@ -87,10 +91,6 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                 };
 
                 await this.gameManagement.saveFromJSON(newGameJson);
-                
-                // Create a deck for the new game
-                const deck = new Deck();
-                deck.shuffle(this.seed);
                 
                 // Create a transaction record for this action
                 const newGameTx: Transaction = await Transaction.create(

@@ -33,7 +33,7 @@ describe("Texas Holdem - Join and Leave", () => {
         });
 
         it("should not be able to join more than once", () => {
-            expect(game.findNextSeat()).toEqual(1);
+            expect(game.findNextEmptySeat()).toEqual(1);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
             expect(() => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);

@@ -27,6 +27,10 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 this.contractSchemaManagement.getGameOptions(this.address)
             ]);
 
+            if (!json) {
+                throw new Error(`Game state not found for address: ${this.address}`);
+            }
+
             // Get the games view with respect to the caller (shared secret)
             const game = TexasHoldemGame.fromJson(json, gameOptions);
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
