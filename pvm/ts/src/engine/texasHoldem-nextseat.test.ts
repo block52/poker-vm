@@ -14,7 +14,7 @@ describe("Texas Holdem Game - Next seat", () => {
 
         it("should find the first seat when table is empty", () => {
             // When the table is empty, seat 1 should be available
-            expect(game.findNextSeat()).toBe(1);
+            expect(game.findNextEmptySeat()).toBe(1);
         });
 
         it("should find the next available seat in sequential order", () => {
@@ -23,7 +23,7 @@ describe("Texas Holdem Game - Next seat", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
 
             // Next available seat should be 3
-            expect(game.findNextSeat()).toBe(3);
+            expect(game.findNextEmptySeat()).toBe(3);
         });
 
         it("should find seat 1 when only higher-numbered seats are filled", () => {
@@ -42,7 +42,7 @@ describe("Texas Holdem Game - Next seat", () => {
             gameAsAny._playersMap = players;
 
             // Should find seat 1 as available
-            expect(game.findNextSeat()).toBe(1);
+            expect(game.findNextEmptySeat()).toBe(1);
         });
 
         it("should find gaps between occupied seats", () => {
@@ -60,7 +60,7 @@ describe("Texas Holdem Game - Next seat", () => {
             gameAsAny._playersMap = customPlayers;
 
             // Next available seat should be 3
-            expect(game.findNextSeat()).toBe(3);
+            expect(game.findNextEmptySeat()).toBe(3);
         });
 
         it("should return -1 when the table is full", () => {
@@ -78,7 +78,7 @@ describe("Texas Holdem Game - Next seat", () => {
             gameAsAny._playersMap = customPlayers;
 
             // Should return -1 when no seats are available
-            expect(game.findNextSeat()).toBe(-1);
+            expect(game.findNextEmptySeat()).toBe(-1);
         });
 
         it("should handle null player entries correctly", () => {
@@ -96,7 +96,7 @@ describe("Texas Holdem Game - Next seat", () => {
             gameAsAny._playersMap = customPlayers;
 
             // Should find seat 3 as available even though it's explicitly null
-            expect(game.findNextSeat()).toBe(3);
+            expect(game.findNextEmptySeat()).toBe(3);
         });
     });
 });

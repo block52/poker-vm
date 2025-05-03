@@ -24,7 +24,7 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
             expect(game.getPlayer("0x3333333333333333333333333333333333333333")).toBeDefined();
 
-            expect(game.findNextSeat()).toEqual(4);
+            expect(game.findNextEmptySeat()).toEqual(4);
         });
     });
 });

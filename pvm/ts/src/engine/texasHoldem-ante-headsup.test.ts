@@ -12,7 +12,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should find next seat", () => {
-            expect(game.findNextSeat()).toEqual(1);
+            expect(game.findNextEmptySeat()).toEqual(1);
         });
 
         it("should not have player", () => {
@@ -30,7 +30,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
-            expect(game.findNextSeat()).toEqual(2);
+            expect(game.findNextEmptySeat()).toEqual(2);
         });
     });
 
@@ -233,6 +233,17 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should do end to end with legal actions", () => {
+            // Check the initial state and positions
+            expect(game.getPlayerCount()).toEqual(2);
+            expect(game.exists(SMALL_BLIND_PLAYER)).toBeTruthy();
+            expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
+            expect(game.getPlayer(SMALL_BLIND_PLAYER)).toBeDefined();
+            expect(game.getPlayer(BIG_BLIND_PLAYER)).toBeDefined();
+            expect(game.smallBlindPosition).toEqual(1);
+            expect(game.bigBlindPosition).toEqual(2);
+            expect(game.dealerPosition).toEqual(9);
+            expect(game.handNumber).toEqual(0);
+
             // Do the small blind
             let actions = game.getLegalActions(SMALL_BLIND_PLAYER);
             expect(actions.length).toEqual(2);
@@ -294,7 +305,16 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             game.reInit(mnemonic);
 
+            // Check the game state after re-initialization
             expect(game.handNumber).toEqual(1);
+
+            expect(game.getPlayerCount()).toEqual(2);
+            expect(game.exists(SMALL_BLIND_PLAYER)).toBeTruthy();
+            expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
+            expect(game.getPlayer(SMALL_BLIND_PLAYER)).toBeDefined();
+            expect(game.getPlayer(BIG_BLIND_PLAYER)).toBeDefined();
+            expect(game.smallBlindPosition).toEqual(2);
+            expect(game.bigBlindPosition).toEqual(1);
         });
     });
 });
