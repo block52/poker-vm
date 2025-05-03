@@ -311,7 +311,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return player;
     }
 
-    findNextPlayerToAct(): Player | undefined {
+    private findNextPlayerToAct(): Player | undefined {
         // Has the small blind posted?
         const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
         const hasSmallBlindPosted = anteActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
@@ -841,54 +841,44 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // this._bigBlindPosition = this._dealer === maxPlayers ? 2 : this._dealer + 2;
 
         // Cache the values
-        // const dealer = this._dealer;
-        // const sb = this._smallBlindPosition;
-        // const bb = this._bigBlindPosition;
-
-        // const activePlayers = this.getActivePlayers();
-        // const activePlayerCount = activePlayers.length;
-
-        // if (activePlayerCount < 2) {
-        //     throw new Error("Not enough active players to reinitialize the game.");
-        // }
-
-        // Heads up
-        // if (activePlayerCount === 2) {
-        //     // Swap the small blind and big blind positions
-        //     this._smallBlindPosition = bb;
-        //     this._bigBlindPosition = sb;
-        //     this._dealer = sb;
-        // }
-
-        // if (activePlayerCount > 2) {
-        //     for (let i = sb; i <= this._gameOptions.maxPlayers; i++) {
-        //         const player = this.getPlayerAtSeat(i);
-        //         if (player && player.status !== PlayerStatus.SITTING_OUT) {
-        //             this._smallBlindPosition = i;
-        //             break;
-        //         }
-        //     }
-
-        //     for (let i = bb; i <= this._gameOptions.maxPlayers; i++) {
-        //         const player = this.getPlayerAtSeat(i);
-        //         if (player && player.status !== PlayerStatus.SITTING_OUT) {
-        //             this._bigBlindPosition = i;
-        //             break;
-        //         }
-        //     }
-        // }
-
-
-        this.previousActions.length = 0;
-
-        // cache player positions
         const dealer = this._dealer;
         const sb = this._smallBlindPosition;
         const bb = this._bigBlindPosition;
 
-        this._bigBlindPosition = this.findNextEmptySeat(bb);
-        this._smallBlindPosition = this.findNextEmptySeat(sb);
-        this._dealer = this.findNextEmptySeat(dealer);
+        const activePlayers = this.findActivePlayers();
+        const activePlayerCount = activePlayers.length;
+
+        if (activePlayerCount < this._gameOptions.minPlayers) {
+            throw new Error("Not enough active players to reinitialize the game.");
+        }
+
+        // Heads up
+        if (activePlayerCount === 2) {
+            // Swap the small blind and big blind positions
+            this._smallBlindPosition = bb;
+            this._bigBlindPosition = sb;
+            this._dealer = sb;
+        }
+
+        if (activePlayerCount > 2) {
+            for (let i = sb; i <= this._gameOptions.maxPlayers; i++) {
+                const player = this.getPlayerAtSeat(i);
+                if (player && player.status !== PlayerStatus.SITTING_OUT) {
+                    this._smallBlindPosition = i;
+                    break;
+                }
+            }
+
+            for (let i = bb; i <= this._gameOptions.maxPlayers; i++) {
+                const player = this.getPlayerAtSeat(i);
+                if (player && player.status !== PlayerStatus.SITTING_OUT) {
+                    this._bigBlindPosition = i;
+                    break;
+                }
+            }
+        }
+
+        this.previousActions.length = 0;
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);

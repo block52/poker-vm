@@ -6,7 +6,7 @@ import { Turn } from "./types";
 
 describe("Texas Holdem Game - Next seat", () => {
 
-    describe("findNextPlayerToAct", () => {
+    describe("getNextPlayerToAct", () => {
         let game: TexasHoldemGame;
       
         beforeEach(() => {
@@ -23,7 +23,7 @@ describe("Texas Holdem Game - Next seat", () => {
           const smallBlindPlayer = game.getPlayerAtSeat(smallBlindPosition);
           
           // Next player to act should be the small blind
-          const nextPlayer = game.findNextPlayerToAct();
+          const nextPlayer = game.getNextPlayerToAct();
           expect(nextPlayer?.address).toEqual(smallBlindPlayer?.address);
         });
       
@@ -40,7 +40,7 @@ describe("Texas Holdem Game - Next seat", () => {
           const bigBlindPlayer = game.getPlayerAtSeat(bigBlindPosition);
           
           // Next player to act should be the big blind
-          const nextPlayer = game.findNextPlayerToAct();
+          const nextPlayer = game.getNextPlayerToAct();
           expect(nextPlayer?.address).toEqual(bigBlindPlayer?.address);
         });
       
@@ -56,7 +56,7 @@ describe("Texas Holdem Game - Next seat", () => {
           
           // Last acted player is at seat 2 (big blind)
           // Next player should be at seat 3
-          const nextPlayer = game.findNextPlayerToAct();
+          const nextPlayer = game.getNextPlayerToAct();
           expect(nextPlayer?.address).toEqual("0x3333333333333333333333333333333333333333");
         });
       
@@ -85,7 +85,7 @@ describe("Texas Holdem Game - Next seat", () => {
           gameAsAny._lastActedSeat = 6;
           
           // Next player should wrap around to seat 1
-          const nextPlayer = game.findNextPlayerToAct();
+          const nextPlayer = game.getNextPlayerToAct();
           expect(nextPlayer?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
         });
       
@@ -108,7 +108,7 @@ describe("Texas Holdem Game - Next seat", () => {
           gameAsAny._lastActedSeat = 1;
           
           // Next player should be seat 3, skipping the folded player at seat 2
-          const nextPlayer = game.findNextPlayerToAct();
+          const nextPlayer = game.getNextPlayerToAct();
           expect(nextPlayer?.address).toEqual("0x3333333333333333333333333333333333333333");
         });
       
@@ -126,7 +126,7 @@ describe("Texas Holdem Game - Next seat", () => {
           game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3);
           
           // Next player should skip seat 2 (sitting out) and go to seat 3
-          const nextPlayer = game.findNextPlayerToAct();
+          const nextPlayer = game.getNextPlayerToAct();
           expect(nextPlayer?.address).toEqual("0x3333333333333333333333333333333333333333");
         });
       
@@ -149,7 +149,7 @@ describe("Texas Holdem Game - Next seat", () => {
           gameAsAny._lastActedSeat = 3;
           
           // Next player should be seat 2 (NOT_ACTED) even though we've passed it
-          const nextPlayer = game.findNextPlayerToAct();
+          const nextPlayer = game.getNextPlayerToAct();
           expect(nextPlayer?.address).toEqual("0x980b8D8A16f5891F41871d878a479d81Da52334c");
         });
       
@@ -183,7 +183,7 @@ describe("Texas Holdem Game - Next seat", () => {
           game.addAction(turn2, TexasHoldemRound.ANTE);
           
           // Should return undefined as no eligible players
-          const nextPlayer = game.findNextPlayerToAct();
+          const nextPlayer = game.getNextPlayerToAct();
           expect(nextPlayer).toBeUndefined();
         });
       });
