@@ -20,13 +20,13 @@ enum Variant {
 }
 
 const Dashboard: React.FC = () => {
-    const seats = [6, 8];
+    const seats = [2, 6, 8];
 
     const navigate = useNavigate();
     const [publicKey, setPublicKey] = useState<string>();
     const [typeSelected, setTypeSelected] = useState<string>("cash");
     const [variantSelected, setVariantSelected] = useState<string>("texas-holdem");
-    const [seatSelected, setSeatSelected] = useState<number>(6);
+    const [seatSelected, setSeatSelected] = useState<number>(2);
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
     const { balance: b52Balance } = useUserWallet();
     const [games, setGames] = useState([]);
@@ -301,6 +301,9 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    // CSS for disabled buttons
+    const disabledButtonClass = "text-gray-400 bg-gray-600 cursor-not-allowed opacity-60";
+
     return (
         <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-gray-800 via-gray-900 to-black relative">
             {/* Import Private Key Modal */}
@@ -567,12 +570,11 @@ const Dashboard: React.FC = () => {
                             Cash
                         </button>
                         <button
-                            onClick={() => handleGameType(GameType.TOURNAMENT)}
-                            className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                typeSelected === "tournament" ? "bg-pink-600" : "bg-gray-600"
-                            }`}
+                            disabled={true}
+                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center shadow-md relative`}
                         >
                             Tournament
+                            <div className="absolute top-1 right-1 bg-yellow-600 text-xs rounded px-1 text-white">Coming Soon</div>
                         </button>
                     </div>
 
@@ -586,31 +588,29 @@ const Dashboard: React.FC = () => {
                             Texas Holdem
                         </button>
                         <button
-                            onClick={() => handleGameVariant(Variant.OMAHA)}
-                            className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                variantSelected === "omaha" ? "bg-pink-600" : "bg-gray-600"
-                            }`}
+                            disabled={true}
+                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center shadow-md relative`}
                         >
                             Omaha
+                            <div className="absolute top-1 right-1 bg-yellow-600 text-xs rounded px-1 text-white">Coming Soon</div>
                         </button>
                     </div>
 
                     <div className="flex justify-between gap-6">
                         <button
-                            onClick={() => handleSeat(6)}
+                            onClick={() => handleSeat(2)}
                             className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                seatSelected === 6 ? "bg-pink-600" : "bg-gray-600"
+                                seatSelected === 2 ? "bg-pink-600" : "bg-gray-600"
                             }`}
                         >
-                            6 Seats
+                            2 Seats
                         </button>
                         <button
-                            onClick={() => handleSeat(9)}
-                            className={`text-white hover:bg-gray-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                seatSelected === 8 ? "bg-pink-600" : "bg-gray-600"
-                            }`}
+                            disabled={true}
+                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center shadow-md relative`}
                         >
-                            8 Seats
+                            6-9 Seats
+                            <div className="absolute top-1 right-1 bg-yellow-600 text-xs rounded px-1 text-white">Coming Soon</div>
                         </button>
                     </div>
 
