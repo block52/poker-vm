@@ -35,7 +35,7 @@ describe("CallAction", () => {
             previousActions, // previous
             TexasHoldemRound.PREFLOP,
             [], // communityCards
-            0n, // pot
+            [0n], // pot
             playerStates,
             mnemonic
         );
@@ -90,7 +90,7 @@ describe("CallAction", () => {
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
 
-            expect(() => action.verify(player)).toThrow("Should check instead.");
+            expect(() => action.verify(player)).toThrow("Player has already met maximum so can check instead.");
         });
 
         it("should throw error if player has already met maximum", () => {

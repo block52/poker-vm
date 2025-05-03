@@ -11,7 +11,7 @@ const express = require("express");
 const cors = require("cors");
 const ethers = require("ethers");
 const dotenv = require("dotenv");
-// const connectDB = require("./db");
+const connectDB = require("./db");
 const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
@@ -68,13 +68,13 @@ app.use(express.json());
 // ===================================
 // 6. Database Connection
 // ===================================
-// connectDB()
-//     .then(() => {
-//         console.log("MongoDB connection established");
-//     })
-//     .catch(err => {
-//         console.error("MongoDB connection error:", err);
-//     });
+connectDB()
+    .then(() => {
+        console.log("MongoDB connection established");
+    })
+    .catch(err => {
+        console.error("MongoDB connection error:", err);
+    });
 
 // ===================================
 // 7. Configure API Documentation
@@ -163,6 +163,9 @@ app.post("/table/:tableId/join", async (req, res) => {
     console.log("Buy in amount on join:", req.body.buyInAmount);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -172,7 +175,7 @@ app.post("/table/:tableId/join", async (req, res) => {
                 req.params.tableId, // to (using the tableId from URL params)
                 NonPlayerActionType.JOIN, // action
                 req.body.buyInAmount, // amount
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index
             ],
             signature: req.body.signature,
@@ -212,10 +215,10 @@ app.post("/table/:tableId/post_small_blind", async (req, res) => {
     console.log("Small blind amount:", req.body.amount || req.body.smallBlindAmount);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
-        // Parameter order in RPC call must match:
-        // 1. The RPC creates PerformActionCommand(from, to, data/index, amount, action, ...)
-        // 2. Then PerformActionCommand calls game.performAction(from, action, index, amount)
         const rpcCall = {
             id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
@@ -224,7 +227,7 @@ app.post("/table/:tableId/post_small_blind", async (req, res) => {
                 req.params.tableId, // to (using the tableId from URL params)
                 PlayerActionType.SMALL_BLIND, // action
                 req.body.amount || req.body.smallBlindAmount || "0", // amount (use amount or smallBlindAmount)
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -264,10 +267,10 @@ app.post("/table/:tableId/post_big_blind", async (req, res) => {
     console.log("Big blind amount:", req.body.amount || req.body.bigBlindAmount);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
-        // Parameter order in RPC call must match:
-        // 1. The RPC creates PerformActionCommand(from, to, data/index, amount, action, ...)
-        // 2. Then PerformActionCommand calls game.performAction(from, action, index, amount)
         const rpcCall = {
             id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
@@ -276,7 +279,7 @@ app.post("/table/:tableId/post_big_blind", async (req, res) => {
                 req.params.tableId, // to (using the tableId from URL params)
                 PlayerActionType.BIG_BLIND, // action
                 req.body.amount || req.body.bigBlindAmount || "0", // amount (use amount or bigBlindAmount)
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -314,6 +317,9 @@ app.post("/table/:tableId/fold", async (req, res) => {
     console.log("   action index:", req.body.index);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -323,7 +329,7 @@ app.post("/table/:tableId/fold", async (req, res) => {
                 req.params.tableId, // to (table ID)
                 PlayerActionType.FOLD, // action
                 "0", // amount (folding doesn't require an amount)
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index // data/index - use the provided index or default to 1 based on game state
             ],
             signature: req.body.signature,
@@ -363,6 +369,9 @@ app.post("/table/:tableId/raise", async (req, res) => {
     console.log("   raise amount:", req.body.amount);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -372,7 +381,7 @@ app.post("/table/:tableId/raise", async (req, res) => {
                 req.params.tableId, // to (table ID)
                 PlayerActionType.RAISE, // action
                 req.body.amount, // amount to raise
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -412,6 +421,9 @@ app.post("/table/:tableId/bet", async (req, res) => {
     console.log("   bet amount:", req.body.amount);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -421,7 +433,7 @@ app.post("/table/:tableId/bet", async (req, res) => {
                 req.params.tableId, // to (table ID)
                 PlayerActionType.BET, // action
                 req.body.amount, // amount to bet
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -461,6 +473,9 @@ app.post("/table/:tableId/call", async (req, res) => {
     console.log("   call amount:", req.body.amount);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -470,7 +485,7 @@ app.post("/table/:tableId/call", async (req, res) => {
                 req.params.tableId, // to (table ID)
                 PlayerActionType.CALL, // action
                 req.body.amount, // amount to call
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -509,6 +524,9 @@ app.post("/table/:tableId/check", async (req, res) => {
     console.log("   action index:", req.body.index || req.body.actionIndex);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -518,7 +536,7 @@ app.post("/table/:tableId/check", async (req, res) => {
                 req.params.tableId, // to (table ID)
                 PlayerActionType.CHECK, // action
                 "0", // amount (check doesn't require an amount)
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -556,6 +574,9 @@ app.post("/table/:tableId/leave", async (req, res) => {
     console.log("Amount to withdraw on leave:", req.body.amount);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -565,7 +586,7 @@ app.post("/table/:tableId/leave", async (req, res) => {
                 req.params.tableId, // to (using the tableId from URL params)
                 NonPlayerActionType.LEAVE, // action
                 req.body.amount || "0", // amount
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index
             ],
             signature: req.body.signature,
@@ -701,6 +722,9 @@ app.post("/table/:tableId/deal", async (req, res) => {
     console.log("   action index:", req.body.index || req.body.actionIndex);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -710,7 +734,7 @@ app.post("/table/:tableId/deal", async (req, res) => {
                 req.params.tableId, // to (table ID)
                 NonPlayerActionType.DEAL, // action
                 "0", // amount (deal doesn't require an amount)
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -793,6 +817,8 @@ app.post("/create_new_game", async (req, res) => {
     console.log("   seed:", req.body.seed || "undefined");
 
     try {
+        // TODO: HACK - This endpoint should also follow proper nonce handling in the future
+        
         // Format the RPC call to match the NEW command structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -842,6 +868,9 @@ app.post("/table/:tableId/muck", async (req, res) => {
     console.log("   action index:", req.body.index || req.body.actionIndex);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -851,7 +880,7 @@ app.post("/table/:tableId/muck", async (req, res) => {
                 req.params.tableId, // to (table ID)
                 PlayerActionType.MUCK, // action
                 "0", // amount (muck doesn't require an amount)
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -892,6 +921,9 @@ app.post("/table/:tableId/show", async (req, res) => {
     console.log("   action index:", req.body.index || req.body.actionIndex);
 
     try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -901,7 +933,7 @@ app.post("/table/:tableId/show", async (req, res) => {
                 req.params.tableId, // to (table ID)
                 PlayerActionType.SHOW, // action
                 "0", // amount (show doesn't require an amount)
-                req.body.nonce || 0, // nonce (optional)
+                timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
             signature: req.body.signature,
@@ -943,6 +975,8 @@ app.post("/create_new_hand/:tableId", async (req, res) => {
     console.log("   seed:", req.body.seed);
 
     try {
+        // TODO: HACK - This endpoint should follow proper nonce handling in the future
+        
         // Use the tableId from URL parameters, not request body
         const tableId = req.params.tableId;
         

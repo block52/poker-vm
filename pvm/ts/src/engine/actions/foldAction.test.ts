@@ -33,7 +33,7 @@ describe("FoldAction", () => {
             previousActions, // previousActions
             TexasHoldemRound.PREFLOP,
             [], // communityCards
-            0n, // pot
+            [0n], // pot
             playerStates,
             mnemonic
         );

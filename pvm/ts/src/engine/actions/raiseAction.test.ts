@@ -45,7 +45,7 @@ describe("Raise Action", () => {
             previousActions, // previousActions
             TexasHoldemRound.PREFLOP,
             [], // communityCards
-            0n, // pot
+            [0n], // pot
             playerStates,
             mnemonic
         );
