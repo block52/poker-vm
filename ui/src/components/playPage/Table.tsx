@@ -14,7 +14,7 @@ import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 import "./Table.css"; // Import the Table CSS file
 
@@ -324,6 +324,7 @@ const Table = () => {
     };
 
     const onGoToDashboard = () => {
+        console.log("onGoToDashboard called");
         // Find the current user's player data
         const currentUserPlayer = tableDataValues.tableDataPlayers?.find((p: any) => p.address?.toLowerCase() === userWalletAddress);
 
@@ -336,13 +337,16 @@ const Table = () => {
 
         // If they've folded or aren't in the game, call leave function and then navigate
         if (currentUserPlayer) {
+            console.log("Player exists, navigating with delay");
             // leave(); // Call the leave function from TableContext
             // Small delay to allow leave action to be processed
             setTimeout(() => {
+                console.log("Timeout complete, navigating to /");
                 navigate("/");
             }, 500);
         } else {
             // If not in game at all, just navigate
+            console.log("Player does not exist, navigating immediately");
             navigate("/");
         }
     };
@@ -381,7 +385,10 @@ const Table = () => {
                     <div className="flex items-center space-x-3 z-10">
                         <span
                             className="text-gray-400 text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300"
-                            onClick={() => navigate("/")}
+                            onClick={() => {
+                                console.log("Navigating to lobby with direct reload");
+                                window.location.href = "/";
+                            }}
                         >
                             Lobby
                         </span>
@@ -419,11 +426,16 @@ const Table = () => {
                             )}
                         </div>
 
-                        <div className="flex items-center justify-center w-10 h-10 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300">
+                        <div 
+                            className="flex items-center justify-center w-10 h-10 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300"
+                            onClick={() => {
+                                console.log("Navigating to deposit page with direct reload");
+                                window.location.href = "/qr-deposit";
+                            }}
+                        >
                             <RiMoneyDollarCircleLine
                                 className="text-[#ffffff] hover:scale-110 transition-transform duration-200"
                                 size={24}
-                                onClick={() => navigate("/deposit")}
                             />
                         </div>
                     </div>
@@ -462,14 +474,26 @@ const Table = () => {
                         <span className="cursor-pointer hover:text-green-400 transition-colors duration-200 text-gray-400" onClick={onCloseSideBar}>
                             {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                         </span>
-                        <button
+                        <span
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
-                            onClick={onGoToDashboard}
+                            onClick={() => {
+                                // Check player status
+                                if (tableDataValues.tableDataPlayers?.some((p: any) => 
+                                    p.address?.toLowerCase() === userWalletAddress && 
+                                    p.status !== "folded" && 
+                                    p.status !== "sitting-out")
+                                ) {
+                                    alert("You must fold your hand before leaving the table.");
+                                } else {
+                                    console.log("Leaving table with direct reload");
+                                    window.location.href = "/";
+                                }
+                            }}
                             title="Return to Lobby"
                         >
                             Leave Table
                             <RxExit size={15} />
-                        </button>
+                        </span>
                     </div>
                 </div>
             </div>
