@@ -19,6 +19,33 @@ enum Variant {
     OMAHA = "omaha"
 }
 
+// Add network display component
+const NetworkDisplay = ({ isMainnet = false }) => {
+    return (
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-800/60 rounded-full text-xs border border-blue-500/20">
+            <div className={`w-2 h-2 rounded-full ${isMainnet ? 'bg-green-500' : 'bg-blue-400'}`}></div>
+            <span className="text-gray-300">{isMainnet ? 'Mainnet' : 'Testnet'}</span>
+        </div>
+    );
+};
+
+// Add hexagon pattern SVG background
+const HexagonPattern = () => {
+    return (
+        <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
+                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" 
+                              stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#hexagons)" />
+            </svg>
+        </div>
+    );
+};
+
 const Dashboard: React.FC = () => {
     const seats = [2, 6, 8];
 
@@ -339,6 +366,9 @@ const Dashboard: React.FC = () => {
                 }}
             />
 
+            {/* Add hexagon pattern overlay */}
+            <HexagonPattern />
+
             {/* Animated pattern overlay */}
             <div 
                 className="fixed inset-0 z-0 opacity-20"
@@ -390,6 +420,11 @@ const Dashboard: React.FC = () => {
                     0% { transform: translateY(0px); }
                     50% { transform: translateY(-10px); }
                     100% { transform: translateY(0px); }
+                }
+                @keyframes pulse {
+                    0% { opacity: 0.6; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0.6; }
                 }
             `}</style>
 
@@ -482,7 +517,10 @@ const Dashboard: React.FC = () => {
             )}
 
             <div className="bg-gray-800/80 backdrop-blur-md p-10 rounded-xl shadow-2xl w-full max-w-xl border border-blue-400/20 z-10 transition-all duration-300 hover:shadow-blue-500/10">
-                <h1 className="text-4xl font-extrabold text-center text-white mb-8 text-shadow">Start Playing Now</h1>
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
+                    <NetworkDisplay isMainnet={false} />
+                </div>
 
                 {/* Block52 Wallet Section */}
                 <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
@@ -513,35 +551,61 @@ const Dashboard: React.FC = () => {
                     </div>
                     
                     {publicKey && (
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <p className="text-white text-sm">
-                                    Address: <span className="font-mono text-blue-400">{formatAddress(publicKey)}</span>
-                                </p>
-                                <button onClick={() => setShowImportModal(true)} className="text-sm text-blue-400 hover:text-blue-300 transition duration-300">
-                                    Import Private Key
-                                </button>
+                        <div className="space-y-3">
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center">
+                                    <span className="text-gray-400 text-xs mr-2">Address</span>
+                                    <div className="flex-1"></div>
+                                </div>
+                                <div className="flex items-center justify-between p-2 bg-gray-800/60 rounded-lg border border-blue-500/10">
+                                    <p className="font-mono text-blue-400 text-sm tracking-wider">{formatAddress(publicKey)}</p>
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(publicKey || "");
+                                        }}
+                                        className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                        title="Copy address"
+                                    >
+                                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <p className="text-white text-sm">
-                                    Balance: <span className="font-bold text-blue-400">${formatBalance(b52Balance || "0")} USDC</span>
-                                </p>
-                                <button
-                                    onClick={() => setShowPrivateKey(!showPrivateKey)}
-                                    className="text-sm text-blue-400 hover:text-blue-300 transition duration-300"
-                                >
-                                    {showPrivateKey ? "Hide Private Key" : "Show Private Key"}
-                                </button>
+                            
+                            <div className="flex items-center justify-between p-3 bg-gray-800/60 rounded-lg border border-blue-500/10">
+                                <div className="flex items-center">
+                                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
+                                        <span className="text-blue-400 font-bold">$</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-white text-sm font-bold">USDC</p>
+                                        <p className="text-gray-400 text-xs">USD Coin</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-white font-bold">${formatBalance(b52Balance || "0")}</p>
+                                    <button
+                                        onClick={() => setShowPrivateKey(!showPrivateKey)}
+                                        className="text-xs text-blue-400 hover:text-blue-300 transition duration-300"
+                                    >
+                                        {showPrivateKey ? "Hide Private Key" : "Show Private Key"}
+                                    </button>
+                                </div>
                             </div>
+                            
                             {showPrivateKey && (
-                                <div className="mt-2 p-2 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-blue-500/10">
+                                <div className="p-2 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-blue-500/10">
                                     <div className="flex justify-between items-center">
                                         <p className="text-white text-sm font-mono break-all">{localStorage.getItem(STORAGE_PRIVATE_KEY)}</p>
                                         <button
                                             onClick={handleCopyPrivateKey}
-                                            className="ml-2 px-2 py-1 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded transition duration-300"
+                                            className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                            title="Copy private key"
                                         >
-                                            Copy
+                                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                            </svg>
                                         </button>
                                     </div>
                                 </div>
@@ -594,31 +658,47 @@ const Dashboard: React.FC = () => {
                     
                     <div className="flex justify-between items-center">
                         <div>
-                            <p className="text-white text-sm">
-                                Status:{" "}
-                                <span className={`font-bold ${isConnected ? "text-green-500" : "text-blue-400"}`}>
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-400 text-sm">Status:</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${isConnected ? "bg-green-500/20 text-green-400" : "bg-blue-500/10 text-blue-400"}`}>
                                     {isConnected ? "Connected" : "Not Connected"}
                                 </span>
-                            </p>
+                            </div>
                             {isConnected && address && (
-                                <p className="text-white text-sm">
-                                    Address: <span className="font-mono text-blue-400">{formatAddress(address)}</span>
-                                </p>
+                                <div className="flex items-center mt-2 bg-gray-800/40 rounded p-1.5 border border-blue-500/10">
+                                    <span className="font-mono text-blue-400 text-xs">{formatAddress(address)}</span>
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(address || "");
+                                        }}
+                                        className="ml-2 p-0.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                                    >
+                                        <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>
+                                    </button>
+                                </div>
                             )}
                         </div>
                         <div>
                             {!isConnected ? (
                                 <button
                                     onClick={open}
-                                    className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500/70 to-blue-600/70 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 shadow-md"
+                                    className="flex items-center gap-1.5 px-4 py-2 text-sm bg-gradient-to-br from-blue-500/70 to-blue-600/70 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 shadow-md"
                                 >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
                                     Connect
                                 </button>
                             ) : (
                                 <button
                                     onClick={disconnect}
-                                    className="px-4 py-2 text-sm bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
+                                    className="flex items-center gap-1.5 px-4 py-2 text-sm bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
                                 >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
                                     Disconnect
                                 </button>
                             )}
@@ -630,22 +710,38 @@ const Dashboard: React.FC = () => {
                 {newGameAddress && (
                     <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                         <h3 className="text-lg font-bold text-white mb-2">New Game Created!</h3>
-                        <p className="text-white text-sm mb-2">
-                            Game Address: <span className="font-mono text-blue-400">{formatAddress(newGameAddress)}</span>
-                        </p>
-                        <div className="flex justify-between">
-                            <button
-                                onClick={() => navigator.clipboard.writeText(newGameAddress)}
-                                className="text-blue-400 hover:text-blue-300 text-sm transition"
-                            >
-                                Copy Address
-                            </button>
-                            <Link
-                                to={`/table/${newGameAddress}`}
-                                className="text-green-400 hover:text-green-300 text-sm transition"
-                            >
-                                Go to Game
-                            </Link>
+                        <div className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center animate-pulse">
+                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-gray-300 text-xs">Contract</p>
+                                    <p className="font-mono text-blue-400 text-sm">{formatAddress(newGameAddress)}</p>
+                                </div>
+                            </div>
+                            <div className="flex">
+                                <button
+                                    onClick={() => navigator.clipboard.writeText(newGameAddress)}
+                                    className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+                                    title="Copy address"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                    </svg>
+                                </button>
+                                <Link
+                                    to={`/table/${newGameAddress}`}
+                                    className="p-2 text-green-400 hover:text-green-300 transition-colors ml-2"
+                                    title="Go to game"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 )}
