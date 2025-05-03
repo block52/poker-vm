@@ -23,8 +23,8 @@ enum Variant {
 const NetworkDisplay = ({ isMainnet = false }) => {
     return (
         <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-800/60 rounded-full text-xs border border-blue-500/20">
-            <div className={`w-2 h-2 rounded-full ${isMainnet ? 'bg-green-500' : 'bg-blue-400'}`}></div>
-            <span className="text-gray-300">{isMainnet ? 'Mainnet' : 'Testnet'}</span>
+            <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : "bg-blue-400"}`}></div>
+            <span className="text-gray-300">Block52 Chain</span>
         </div>
     );
 };
@@ -426,6 +426,18 @@ const Dashboard: React.FC = () => {
                     50% { opacity: 1; }
                     100% { opacity: 0.6; }
                 }
+                .text-gradient {
+                    background-clip: text;
+                    -webkit-background-clip: text;
+                    color: transparent;
+                    background-size: 200% auto;
+                    animation: textShine 3s linear infinite;
+                }
+                @keyframes textShine {
+                    to {
+                        background-position: 200% center;
+                    }
+                }
             `}</style>
 
             {/* Import Private Key Modal */}
@@ -808,38 +820,21 @@ const Dashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Reset Blockchain Button */}
-            {/* <div className="fixed bottom-4 right-4 flex flex-col items-end z-10">
-                <button
-                    onClick={resetBlockchain}
-                    disabled={isResetting}
-                    className={`px-3 py-2 text-xs ${isResetting ? "bg-gray-600" : "bg-red-600 hover:bg-red-700"} text-white rounded-lg transition duration-300 opacity-70 hover:opacity-100 flex items-center shadow-md border border-red-500/20`}
-                >
-                    {isResetting ? (
-                        <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Resetting Blockchain...
-                        </>
-                    ) : (
-                        "Developer Testing Tool: Reset Blockchain"
-                    )}
-                </button>
-                {isResetting && (
-                    <div className="mt-2 p-2 bg-gray-800 bg-opacity-90 rounded text-xs text-white max-w-xs backdrop-blur-sm border border-red-500/20 shadow-lg">
-                        <p className="font-bold mb-1">Reset in progress:</p>
-                        <ul className="list-disc list-inside space-y-1 text-gray-300">
-                            <li>Clearing database collections</li>
-                            <li>Purging transaction mempool</li>
-                            <li>Creating genesis block</li>
-                            <li>Reprocessing deposits</li>
-                        </ul>
-                        <p className="mt-1 text-yellow-300 text-[10px]">Please wait, this may take a minute...</p>
+            {/* Reset blockchain button was here, now commented out by user */}
+            
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10">
+                <div className="flex flex-col items-start bg-gray-800/80 px-3 py-2 rounded-lg backdrop-blur-sm border border-purple-400/30 shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-gradient bg-gradient-to-r from-purple-500 via-blue-400 to-purple-500 font-medium tracking-wide">POWERED BY</span>
                     </div>
-                )}
-            </div> */}
+                    <img 
+                        src="/logo1080.png" 
+                        alt="Block52 Logo" 
+                        className="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                    />
+                </div>
+            </div>
         </div>
     );
 };
