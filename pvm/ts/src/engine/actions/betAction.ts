@@ -24,6 +24,11 @@ class BetAction extends BaseAction implements IAction {
         // 3. Round-specific checks for preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             if (largestBet === 0n) {
+                // Special case for small blind position in PREFLOP
+                if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
+                    throw new Error("Can only post small blind.");
+                }
+
                 // No bets yet, player can bet any amount
                 return { minAmount: this.game.bigBlind, maxAmount: player.chips };
             }

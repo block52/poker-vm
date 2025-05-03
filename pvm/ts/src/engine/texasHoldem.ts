@@ -819,7 +819,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return actions.filter(action => action.playerId === player.address);
     }
 
-    private getActivePlayers(): Player[] {
+    private findActivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.status === PlayerStatus.ACTIVE);
     }
 
@@ -827,11 +827,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
     }
 
-    findNextSeat(): number {
+    findNextSeat(start: number = 1): number {
         const maxSeats = this._gameOptions.maxPlayers;
 
         // Iterate through all seat numbers to find next available (empty) seat
-        for (let seatNumber = 1; seatNumber <= maxSeats; seatNumber++) {
+        for (let seatNumber = start; seatNumber <= maxSeats; seatNumber++) {
+            // Check if seat is empty (null) or doesn't exist in the map
+            if (!this._playersMap.has(seatNumber) || this._playersMap.get(seatNumber) === null) {
+                return seatNumber; // return first available seat.
+            }
+        }
+
+        // Do the other half
+        for (let seatNumber = 1; seatNumber < start; seatNumber++) {
             // Check if seat is empty (null) or doesn't exist in the map
             if (!this._playersMap.has(seatNumber) || this._playersMap.get(seatNumber) === null) {
                 return seatNumber; // return first available seat.
@@ -888,9 +896,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             player.reinit();
         }
 
-        this.previousActions.length = 0;
-
-        
         // this._dealer = this._dealer === maxPlayers ? 1 : this._dealer + 1;
         // this._smallBlindPosition = this._dealer === maxPlayers ? 1 : this._dealer + 1;
         // this._bigBlindPosition = this._dealer === maxPlayers ? 2 : this._dealer + 2;
@@ -932,6 +937,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         //         }
         //     }
         // }
+
+
+        this.previousActions.length = 0;
+
+        this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
+        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
+        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);

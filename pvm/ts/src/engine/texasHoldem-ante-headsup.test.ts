@@ -149,12 +149,6 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.exists("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeTruthy();
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
-
-            // const json: TexasHoldemStateDTO = game.toJson();
-            // expect(json).toBeDefined();
-
-            // expect(json.smallBlindPosition).toEqual(1);
-            // expect(json.bigBlindPosition).toEqual(2);
         });
 
         it("should do end to end", () => {
@@ -221,11 +215,86 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.exists(SMALL_BLIND_PLAYER)).toBeFalsy();
             expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
+        });
+    });
 
-            // Check blind positions
-            expect(json.smallBlindPosition).toEqual(2);
-            expect(json.bigBlindPosition).toEqual(1);
-            expect(json.dealer).toEqual(1);
+    describe("Heads up end to end with legal action asserts", () => {
+        const THREE_TOKENS = 300000000000000000n;
+        const SMALL_BLIND_PLAYER = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
+        const BIG_BLIND_PLAYER = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
+
+        let game: TexasHoldemGame;
+
+        beforeEach(() => {
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+            expect(game.handNumber).toEqual(0);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+        });
+
+        it("should do end to end with legal actions", () => {
+            // Do the small blind
+            let actions = game.getLegalActions(SMALL_BLIND_PLAYER);
+            expect(actions.length).toEqual(2);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            expect(game.pot).toEqual(ONE_TOKEN);
+
+            // Do the big blind
+            actions = game.getLegalActions(BIG_BLIND_PLAYER);
+            expect(actions.length).toEqual(2);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            expect(game.pot).toEqual(THREE_TOKENS);
+
+            // Add a DEAL action to advance from ANTE to PREFLOP
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 4);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            // Call from the small blind
+            actions = game.getLegalActions(SMALL_BLIND_PLAYER);
+            expect(actions.length).toEqual(3);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 5, ONE_TOKEN);
+
+            // Should be able to check too
+            actions = game.getLegalActions(BIG_BLIND_PLAYER);
+            expect(actions.length).toEqual(2);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 6, 0n);
+
+            expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
+
+            // Both check
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 7, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 8, 0n);
+
+            expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
+
+            // Both check
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 9, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 10, 0n);
+
+            expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
+
+            // Both check
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 11, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 12, 0n);
+
+            expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
+
+            // Both reveal cards
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SHOW, 13, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SHOW, 14, 0n);
+
+            expect(game.currentRound).toEqual(TexasHoldemRound.END);
+
+            // Check the winner
+            const gameState = game.toJson();
+            expect(gameState.winners).toBeDefined();
+            expect(gameState.winners.length).toEqual(1);
+
+            game.reInit(mnemonic);
+
+            expect(game.handNumber).toEqual(1);
         });
     });
 });

@@ -51,7 +51,7 @@ export const useChipPositions = (tableId?: string, startIndex: number = 0) => {
     ];
     
     setChipPositionArray(reorderedChipArray);
-  }, [startIndex, chipPositionArray.length]);
+  }, [startIndex, chipPositionArray.length, chipPositionArray]);
   
   return {
     chipPositionArray,
