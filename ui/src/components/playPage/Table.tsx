@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { playerPosition, chipPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
@@ -16,6 +16,7 @@ import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
 import { useNavigate, useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
+import "./Table.css"; // Import the Table CSS file
 
 import { ethers } from "ethers";
 import { useTableState } from "../../hooks/useTableState";
@@ -220,22 +221,36 @@ const Table = () => {
 
     const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
 
-
-
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    
+    // Add a ref for the animation frame ID
+    const animationFrameRef = useRef<number | undefined>(undefined);
 
     // Add effect to track mouse movement
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
-            // Calculate mouse position as percentage of window
-            const x = (e.clientX / window.innerWidth) * 100;
-            const y = (e.clientY / window.innerHeight) * 100;
-            setMousePosition({ x, y });
+            // Only update if no animation frame is pending
+            if (!animationFrameRef.current) {
+                animationFrameRef.current = requestAnimationFrame(() => {
+                    // Calculate mouse position as percentage of window
+                    const x = (e.clientX / window.innerWidth) * 100;
+                    const y = (e.clientY / window.innerHeight) * 100;
+                    setMousePosition({ x, y });
+                    animationFrameRef.current = undefined;
+                });
+            }
         };
 
         window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
+        
+        // Cleanup function to remove event listener and cancel any pending animation frames
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
     }, []);
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
@@ -353,21 +368,6 @@ const Table = () => {
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
-            {/* Add the keyframe animation */}
-            <style>{`
-                @keyframes gradient {
-                    0% {
-                        background-position: 0% 50%;
-                    }
-                    50% {
-                        background-position: 100% 50%;
-                    }
-                    100% {
-                        background-position: 0% 50%;
-                    }
-                }
-            `}</style>
-
             {/*//! HEADER - CASINO STYLE */}
             <div className="flex-shrink-0">
                 <div className="w-[100vw] h-[65px] bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-center flex items-center justify-between px-4 z-10 relative overflow-hidden border-b-2 border-[#3a546d]">
@@ -433,25 +433,16 @@ const Table = () => {
                 <div className="bg-gray-900 text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg">
                     {/* Animated background overlay */}
                     <div
-                        className="absolute inset-0 z-0 opacity-30"
+                        className="absolute inset-0 z-0 opacity-30 shimmer-animation"
                         style={{
                             backgroundImage:
                                 "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,205,50,0.1) 25%, rgba(0,0,0,0) 50%, rgba(50,205,50,0.1) 75%, rgba(0,0,0,0) 100%)",
-                            backgroundSize: "200% 100%",
-                            animation: "shimmer 3s infinite linear"
+                            backgroundSize: "200% 100%"
                         }}
                     />
 
                     {/* Bottom edge shadow */}
                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-50"></div>
-
-                    {/* Add the keyframe animation */}
-                    <style>{`
-                        @keyframes shimmer {
-                            0% { background-position: 0% 0; }
-                            100% { background-position: 200% 0; }
-                        }
-                    `}</style>
 
                     {/* Left Section */}
                     <div className="flex items-center z-10">
