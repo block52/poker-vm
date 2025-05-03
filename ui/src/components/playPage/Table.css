@@ -1,0 +1,61 @@
+/* Table animations */
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: 0% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+/* Custom Table styles */
+.bg-custom-table {
+    position: relative;
+    background-color: transparent;
+}
+
+.bg-custom-footer {
+    background-color: #1a202c;
+    border-top: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* Animation for card falling */
+@keyframes fall {
+    0% {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-fall {
+    animation: fall 0.5s ease-out forwards;
+}
+
+/* Animation classes */
+.shimmer-animation {
+    animation: shimmer 3s infinite linear;
+} 
