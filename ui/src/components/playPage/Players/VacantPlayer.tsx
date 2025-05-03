@@ -1,6 +1,6 @@
 import * as React from "react";
 import { memo, useEffect, useState } from "react";
-import PokerProfile from "../../../assets/PokerProfile.svg"
+// Import SVG as a component instead of an image
 import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import useUserWallet from "../../../hooks/useUserWallet";
@@ -27,6 +27,26 @@ type VacantPlayerProps = {
     top?: string; // Back side image source
     index: number;
 };
+
+// Clean, crisp vacant player icon as an SVG component
+const CleanPlayerIcon: React.FC = () => (
+    <div className="w-12 h-12 relative flex items-center justify-center">
+        {/* White circle with subtle shadow */}
+        <div className="absolute inset-0 rounded-full bg-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.25)]"></div>
+        
+        {/* User silhouette */}
+        <svg width="24" height="24" viewBox="0 0 24 24" className="relative z-10">
+            <path 
+                d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" 
+                fill="#111827"
+            />
+            <path 
+                d="M12 14C7.03172 14 3 18.0317 3 23H21C21 18.0317 16.9683 14 12 14Z" 
+                fill="#111827"
+            />
+        </svg>
+    </div>
+);
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index }) => {
@@ -185,17 +205,22 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         }, []);
 
         return (
-            <div className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`} style={{ left, top }} onClick={canJoinThisSeat ? handleJoinClick : undefined}>
-                <div className={`flex justify-center gap-4 mb-2 ${canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"}`}>
-                    <img src={PokerProfile} className="w-12 h-12" />
+            <div 
+                className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`} 
+                style={{ left, top }} 
+                onClick={canJoinThisSeat ? handleJoinClick : undefined}
+            >
+                <div className={`flex justify-center mb-2 ${canJoinThisSeat ? "transition-transform hover:translate-y-[-2px] duration-200" : ""}`}>
+                    {/* Replace the img with our new clean player icon */}
+                    <CleanPlayerIcon />
                 </div>
                 <div className="text-white text-center">
-                    <div className="text-sm mb-1 whitespace-nowrap">
+                    <div className="text-sm font-medium mb-1 text-shadow-sm">
                         {isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}
                     </div>
 
                     {!isUserAlreadyPlaying && (
-                        <div className="whitespace-nowrap">
+                        <div className="text-xs text-shadow-sm">
                             {canJoinThisSeat
                                 ? index === bigBlindPosition
                                     ? `Click to Join ($${bigBlindDisplay})`

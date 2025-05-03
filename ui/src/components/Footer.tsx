@@ -582,12 +582,24 @@ const PokerActionPanel: React.FC = () => {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1e2a3a] via-[#2c3e50] to-[#1e2a3a] text-white p-4 pb-6 flex justify-center items-center border-t-2 border-[#3a546d] relative">
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white p-4 pb-6 flex justify-center items-center border-t-2 border-[#3a546d] relative">
             {/* Animated light effects */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#64ffda] to-transparent opacity-70"></div>
-                <div className="absolute top-[10%] left-[1%] w-[1px] h-[80%] bg-[#64ffda] opacity-20 animate-pulse"></div>
-                <div className="absolute top-[10%] right-[1%] w-[1px] h-[80%] bg-[#64ffda] opacity-20 animate-pulse" style={{ animationDelay: "0.7s" }}></div>
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#3b82f6] to-transparent opacity-70"></div>
+                
+                {/* Hexagon pattern overlay with reduced opacity */}
+                <div className="absolute inset-0 opacity-5 hexagon-pattern"></div>
+                
+                {/* Blue shimmer effect */}
+                <div className="absolute inset-0 opacity-20 shimmer-animation"
+                    style={{
+                        backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
+                        backgroundSize: "200% 100%"
+                    }}
+                ></div>
+                
+                <div className="absolute top-[10%] left-[1%] w-[1px] h-[80%] bg-[#3b82f6] opacity-20 animate-pulse"></div>
+                <div className="absolute top-[10%] right-[1%] w-[1px] h-[80%] bg-[#3b82f6] opacity-20 animate-pulse" style={{ animationDelay: "0.7s" }}></div>
             </div>
 
             <div className="flex flex-col w-[600px] space-y-3 justify-center rounded-lg relative z-10">
@@ -596,10 +608,10 @@ const PokerActionPanel: React.FC = () => {
                     <div className="flex justify-center mb-3">
                         <button
                             onClick={handleDeal}
-                            className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                            text-white font-bold py-3 px-8 rounded-lg shadow-lg 
-                            border-2 border-[#3a9188] transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105"
+                            className="bg-gradient-to-r from-[#1e40af]/90 to-[#3b82f6]/90 hover:from-[#1e40af] hover:to-[#60a5fa] 
+                            text-white font-bold py-3 px-8 rounded-lg shadow-md 
+                            border border-[#3b82f6]/50 backdrop-blur-sm transition-all duration-300 
+                            flex items-center justify-center gap-2 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                             disabled={isDealing}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -707,7 +719,7 @@ const PokerActionPanel: React.FC = () => {
                                     border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
                                 >
                                     <span className="mr-1">Post Small Blind</span>
-                                    <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
+                                    <span className="bg-[#0f172a80] backdrop-blur-sm px-2 py-1 rounded text-[#60a5fa] text-sm border border-[#3a9188]/20">
                                         ${Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2)}
                                     </span>
                                 </button>
@@ -721,7 +733,7 @@ const PokerActionPanel: React.FC = () => {
                                     border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
                                 >
                                     <span className="mr-1">Post Big Blind</span>
-                                    <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#64ffda] text-sm">
+                                    <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#60a5fa] text-sm">
                                         ${Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2)}
                                     </span>
                                 </button>
@@ -763,9 +775,9 @@ const PokerActionPanel: React.FC = () => {
 
                                     {canCheck && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] hover:from-[#1e40af] hover:to-[#2563eb]
-                                            px-4 py-2 rounded-lg w-full border border-[#1e3a8a] hover:border-[#3b82f6] shadow-md
-                                            transition-all duration-200 font-medium transform hover:scale-105"
+                                            className="cursor-pointer bg-gradient-to-r from-[#1e3a8a]/90 to-[#1e40af]/90 hover:from-[#1e40af] hover:to-[#2563eb]
+                                            px-4 py-2 rounded-lg w-full border border-[#1e3a8a]/50 hover:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
+                                            transition-all duration-200 font-medium transform hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCheck}
                                         >
                                             CHECK
@@ -773,12 +785,12 @@ const PokerActionPanel: React.FC = () => {
                                     )}
                                     {canCall && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#065f46] to-[#047857] hover:from-[#047857] hover:to-[#059669]
-                                            px-4 py-2 rounded-lg w-full border border-[#065f46] hover:border-[#10b981] shadow-md
-                                            transition-all duration-200 font-medium transform hover:scale-105"
+                                            className="cursor-pointer bg-gradient-to-r from-[#1e40af]/90 to-[#3b82f6]/90 hover:from-[#3b82f6] hover:to-[#60a5fa]
+                                            px-4 py-2 rounded-lg w-full border border-[#1e40af]/50 hover:border-[#60a5fa]/70 shadow-md backdrop-blur-sm
+                                            transition-all duration-200 font-medium transform hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCall}
                                         >
-                                            CALL <span className="text-[#64ffda]">${callAmount.toFixed(2)}</span>
+                                            CALL <span className="text-[#93c5fd]">${callAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                     {(canRaise || canBet) && (
@@ -787,11 +799,11 @@ const PokerActionPanel: React.FC = () => {
                                             disabled={isRaiseAmountInvalid || !isPlayerTurn}
                                             className={`${
                                                 isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
-                                            } bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-    px-4 py-2 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-    transition-all duration-200 font-medium`}
+                                            } bg-gradient-to-r from-[#7e22ce]/90 to-[#9333ea]/90 hover:from-[#9333ea] hover:to-[#a855f7]
+    px-4 py-2 rounded-lg w-full border border-[#7e22ce]/50 hover:border-[#c084fc]/70 shadow-md backdrop-blur-sm
+    transition-all duration-200 font-medium hover:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
                                         >
-                                            {canRaise ? "RAISE" : "BET"} <span className="text-[#64ffda]">${raiseAmount.toFixed(2)}</span>
+                                            {canRaise ? "RAISE" : "BET"} <span className="text-[#93c5fd]">${raiseAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
@@ -800,7 +812,7 @@ const PokerActionPanel: React.FC = () => {
                                 {(canBet || canRaise) && (
                                     <>
                                         {/* Slider and Controls */}
-                                        <div className="flex items-center space-x-4 bg-[#0f172a40] p-2 rounded-lg border border-[#3a546d]">
+                                        <div className="flex items-center space-x-4 bg-[#0f172a40] backdrop-blur-sm p-3 rounded-lg border border-[#3a546d]/50 shadow-inner">
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
