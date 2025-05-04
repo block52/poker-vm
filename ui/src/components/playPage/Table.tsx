@@ -464,9 +464,6 @@ const Table = () => {
                             </span>
                            
                         </div>
-                        <span className="ml-2 text-[15px]">
-                            Game Type: <span className="text-[15px] text-yellow-400">{tableDataValues.tableDataType}</span>
-                        </span>
                     </div>
 
                     {/* Right Section */}
