@@ -134,17 +134,17 @@ export const vacantPlayerPosition = {
         {
             //* 5 violet
             left: "240px",
-            top: "-100px"
+            top: "-110px"
         },
         {
             //* 6 black
             left: "580px",
-            top: "-100px"
+            top: "-110px"
         },
         {
             //* 7 yellow
             left: "880px",
-            top: "-20px"
+            top: "-30px"
         },
         {
             //* 8 pink

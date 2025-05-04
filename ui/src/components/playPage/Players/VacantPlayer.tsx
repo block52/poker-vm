@@ -215,12 +215,12 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     <CleanPlayerIcon />
                 </div>
                 <div className="text-white text-center">
-                    <div className="text-sm font-medium mb-1 text-shadow-sm">
+                    <div className="text-sm font-medium mb-1 text-shadow-sm whitespace-nowrap">
                         {isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}
                     </div>
 
                     {!isUserAlreadyPlaying && (
-                        <div className="text-xs text-shadow-sm">
+                        <div className="text-xs text-shadow-sm whitespace-nowrap"> 
                             {canJoinThisSeat
                                 ? index === bigBlindPosition
                                     ? `Click to Join ($${bigBlindDisplay})`

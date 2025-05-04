@@ -67,7 +67,7 @@ interface PositionArray {
 }
 
 const calculateZoom = () => {
-    const baseWidth = 1600;
+    const baseWidth = 2000;
     const baseHeight = 850;
     const headerFooterHeight = 550; // Updated to account for both footers (250px + 300px)
 
@@ -75,7 +75,7 @@ const calculateZoom = () => {
     const scaleWidth = window.innerWidth / baseWidth;
     const scaleHeight = availableHeight / baseHeight;
 
-    const calculatedScale = Math.min(scaleWidth, scaleHeight);
+    const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7 ;
     return Math.min(calculatedScale, 2); // Cap at 2x
 };
 
@@ -568,7 +568,6 @@ const Table = () => {
                                 transition: "all 0.3s ease-out"
                             }}
                         />
-
                         <div
                             className="zoom-wrapper"
                             style={{
@@ -778,7 +777,7 @@ const Table = () => {
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
                             {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>}
-                        </div>
+                        </div> 
                     </div>
 
                     {/*//! FOOTER */}
