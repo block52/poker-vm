@@ -67,7 +67,7 @@ interface PositionArray {
 }
 
 const calculateZoom = () => {
-    const baseWidth = 1600;
+    const baseWidth = 2000;
     const baseHeight = 850;
     const headerFooterHeight = 550; // Updated to account for both footers (250px + 300px)
 
