@@ -846,7 +846,7 @@ const Dashboard: React.FC = () => {
                                 seatSelected === 2 ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
                             }`}
                         >
-                            2 Seats
+                            Heads Up
                         </button>
                         <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
                             6 Max
