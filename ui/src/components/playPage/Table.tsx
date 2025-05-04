@@ -503,11 +503,7 @@ const Table = () => {
                     style={{
                         transition: "margin 0.3s ease"
                     }}
-                >
-                    {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
-                        {/* Hexagon pattern overlay */}
-                        <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
+                >                        <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
                             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
                                     <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
@@ -565,6 +561,10 @@ const Table = () => {
                                 transition: "all 0.3s ease-out"
                             }}
                         />
+                    {/*//! TABLE */}
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
+                        {/* Hexagon pattern overlay */}
+
                         <div
                             className="zoom-wrapper"
                             style={{
@@ -778,8 +778,8 @@ const Table = () => {
                     </div>
 
                     {/*//! FOOTER */}
-                    <div className="flex-shrink-0 w-full h-[250px] bg-custom-footer text-center z-[10] flex justify-center">
-                        <div className="w-full h-[250px] flex justify-center">
+                    <div className="w-full flex justify-center items-center h-[250px] bg-transparent z-[10]">
+                        <div className="max-w-[700px] w-full flex justify-center items-center h-full">
                             <PokerActionPanel />
                         </div>
                         {/* <div className="w-full h-[400px] flex justify-center overflow-y-auto">
@@ -834,15 +834,15 @@ const Table = () => {
             )}
 
             {/* Powered by Block52 */}
-            <div className="fixed bottom-4 left-4 flex items-center z-10">
-                <div className="flex flex-col items-start bg-gray-800/80 px-3 py-2 rounded-lg backdrop-blur-sm border border-purple-400/30 shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
                     <div className="text-left mb-1">
-                        <span className="text-xs text-gradient bg-gradient-to-r from-purple-500 via-blue-400 to-purple-500 font-medium tracking-wide">POWERED BY</span>
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
                     </div>
                     <img 
-                        src="/logo1080.png" 
+                        src="/block52.png" 
                         alt="Block52 Logo" 
-                        className="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+                        className="h-12 w-auto object-contain interaction-none"
                     />
                 </div>
             </div>
