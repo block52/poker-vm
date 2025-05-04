@@ -8,6 +8,7 @@ import {
     PlayerActionType,
     PlayerDTO,
     PlayerStatus,
+    Positions,
     TexasHoldemRound,
     TexasHoldemStateDTO,
     WinnerDTO
@@ -46,6 +47,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private _sidePots!: Map<string, bigint>;
     private _winners?: Map<string, bigint>;
 
+    private _dealer: number;
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
     private _actions: IAction[];
@@ -59,7 +61,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     constructor(
         private readonly _address: string,
         private gameOptions: GameOptions,
-        private _dealer: number,
+        private positions: Positions,
         private _lastToAct: number,
         private previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
@@ -93,9 +95,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = _currentRound;
         this._gameOptions = gameOptions;
 
-        this._smallBlindPosition = this._dealer === gameOptions.maxPlayers ? 1 : this._dealer + 1;
-        this._bigBlindPosition = this._dealer === gameOptions.maxPlayers ? 2 : this._dealer + 2;
-        this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
+        // this._smallBlindPosition = this._dealer === gameOptions.maxPlayers ? 1 : this._dealer + 1;
+        // this._bigBlindPosition = this._dealer === gameOptions.maxPlayers ? 2 : this._dealer + 2;
+        // this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
+
+        this._smallBlindPosition = this.positions.smallBlind ?? 1;
+        this._bigBlindPosition = this.positions.bigBlind ?? 2;
+        this._dealer = this.positions.dealer ?? 9;
 
         this._rounds.set(TexasHoldemRound.ANTE, []);
         this._lastActedSeat = _lastToAct; // Need to recalculate this
@@ -1182,10 +1188,16 @@ class TexasHoldemGame implements IPoker, IUpdate {
             players.set(p.seat, player);
         });
 
+        const positions: Positions = {
+            dealer: json.dealer,
+            smallBlind: json.smallBlindPosition,
+            bigBlind: json.bigBlindPosition
+        };
+
         return new TexasHoldemGame(
             json.address,
             gameOptions,
-            json.dealer as number,
+            positions,
             json.lastToAct as number,
             json.previousActions,
             json.round, // todo: this should be the "current round"
@@ -1293,7 +1305,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             timeout: this._gameOptions.timeout
         };
 
-        return {
+
+        const state: TexasHoldemStateDTO = {
             type: "cash",
             address: this._address,
             gameOptions: gameOptions,
@@ -1311,6 +1324,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             winners: winners,
             signature: ethers.ZeroHash
         };
+
+        return state;
     }
 }
 
