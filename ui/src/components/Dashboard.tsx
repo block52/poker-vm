@@ -8,6 +8,7 @@ import useNewCommand from "../hooks/DashboardPage/useNewCommand"; // Import the 
 import axios from "axios";
 import { PROXY_URL } from "../config/constants";
 import { Wallet } from "ethers";
+import BuyInModal from "./playPage/BuyInModal";
 // Create an enum of game types
 enum GameType {
     CASH = "cash",
@@ -36,8 +37,7 @@ const HexagonPattern = () => {
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
-                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" 
-                              stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
+                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
                     </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#hexagons)" />
@@ -54,6 +54,8 @@ const Dashboard: React.FC = () => {
     const [typeSelected, setTypeSelected] = useState<string>("cash");
     const [variantSelected, setVariantSelected] = useState<string>("texas-holdem");
     const [seatSelected, setSeatSelected] = useState<number>(2);
+    const [limitTypeSelected, setLimitTypeSelected] = useState("no-limit");
+
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
     const { balance: b52Balance } = useUserWallet();
     const [games, setGames] = useState([]);
@@ -62,7 +64,7 @@ const Dashboard: React.FC = () => {
     const [importError, setImportError] = useState("");
     const [showPrivateKey, setShowPrivateKey] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
-    
+
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
     const [selectedContractAddress, setSelectedContractAddress] = useState("");
@@ -70,9 +72,13 @@ const Dashboard: React.FC = () => {
     const [createGameError, setCreateGameError] = useState("");
     const [newGameAddress, setNewGameAddress] = useState("");
 
+    // Buy In Modal
+    const [showBuyInModal, setShowBuyInModal] = useState(false);
+    const [buyInTableId, setBuyInTableId] = useState(""); // Optional, if needed later
+
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    
+
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
@@ -92,7 +98,7 @@ const Dashboard: React.FC = () => {
         };
 
         window.addEventListener("mousemove", handleMouseMove);
-        
+
         // Cleanup function to remove event listener and cancel any pending animation frames
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
@@ -104,30 +110,30 @@ const Dashboard: React.FC = () => {
 
     // Game contract addresses - in a real app, these would come from the API
     const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd343"; // Example address
-    
+
     // Initialize the useNewCommand hook with the selected contract address
-    const { createNewGame, isCreating } = useNewCommand({ 
-        gameContractAddress: selectedContractAddress || DEFAULT_GAME_CONTRACT 
+    const { createNewGame, isCreating } = useNewCommand({
+        gameContractAddress: selectedContractAddress || DEFAULT_GAME_CONTRACT
     });
 
     // Function to handle creating a new game
     const handleCreateNewGame = async () => {
         setIsCreatingGame(true);
         setCreateGameError("");
-        
+
         try {
             // Generate a random seed for the game (optional)
             const randomSeed = Math.random().toString(36).substring(2, 15);
-            
+
             const result = await createNewGame(randomSeed);
-            
+
             if (result.success && result.gameAddress) {
                 setNewGameAddress(result.gameAddress);
                 setShowCreateGameModal(false);
-                
+
                 // Show success message
                 alert(`Game created successfully! Game address: ${result.gameAddress}`);
-                
+
                 // You could automatically navigate to the game or update the UI
                 // navigate(`/table/${result.gameAddress}`);
             } else {
@@ -149,24 +155,27 @@ const Dashboard: React.FC = () => {
         setIsResetting(true);
         try {
             // Determine API endpoint based on current URL
-            const apiUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-                ? "http://localhost:3000"
-                : "https://node1.block52.xyz";
-            
+            const apiUrl =
+                window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://localhost:3000" : "https://node1.block52.xyz";
+
             // According to the SDK, RESET_BLOCKCHAIN expects [username, password] params
             // but our implementation doesn't currently require them
-            const response = await axios.post(apiUrl, {
-                id: 1,
-                method: "reset_blockchain",
-                params: ["admin", "admin"] // Using placeholder values since our implementation ignores them
-            }, {
-                headers: {
-                    "Content-Type": "application/json"
+            const response = await axios.post(
+                apiUrl,
+                {
+                    id: 1,
+                    method: "reset_blockchain",
+                    params: ["admin", "admin"] // Using placeholder values since our implementation ignores them
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
                 }
-            });
-            
+            );
+
             console.log("Reset response:", response.data);
-            
+
             // Check if the response indicates success - could be in various formats
             // Look for error first, then check if data is true, or if there's a result object at all
             if (response.data.error) {
@@ -184,7 +193,7 @@ const Dashboard: React.FC = () => {
             } else {
                 alert("Blockchain reset response format unexpected. Check console for details.");
             }
-            
+
             // Refresh the page to update any UI components
             window.location.reload();
         } catch (error: any) {
@@ -355,10 +364,18 @@ const Dashboard: React.FC = () => {
     // CSS for disabled buttons
     const disabledButtonClass = "text-gray-300 bg-gradient-to-br from-gray-600 to-gray-700 cursor-not-allowed shadow-inner border border-gray-600/30";
 
+    function handleCashLimitType(arg0: number): void {
+        throw new Error("Function not implemented.");
+    }
+
+    useEffect(() => {
+        setLimitTypeSelected("no-limit"); // Default when changing variant
+    }, [variantSelected]);
+
     return (
         <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
             {/* Background animations */}
-            <div 
+            <div
                 className="fixed inset-0 z-0"
                 style={{
                     backgroundImage: `
@@ -378,7 +395,7 @@ const Dashboard: React.FC = () => {
             <HexagonPattern />
 
             {/* Animated pattern overlay */}
-            <div 
+            <div
                 className="fixed inset-0 z-0 opacity-20"
                 style={{
                     backgroundImage: `
@@ -398,10 +415,11 @@ const Dashboard: React.FC = () => {
             />
 
             {/* Moving light animation */}
-            <div 
+            <div
                 className="fixed inset-0 z-0 opacity-30"
                 style={{
-                    backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
+                    backgroundImage:
+                        "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
                     backgroundSize: "200% 100%",
                     animation: "shimmer 8s infinite linear"
                 }}
@@ -452,18 +470,18 @@ const Dashboard: React.FC = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-white text-sm mb-1">Game Contract</label>
-                                <select 
+                                <select
                                     value={selectedContractAddress}
-                                    onChange={(e) => setSelectedContractAddress(e.target.value)}
+                                    onChange={e => setSelectedContractAddress(e.target.value)}
                                     className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                 >
                                     <option value={DEFAULT_GAME_CONTRACT}>Default Texas Hold'em</option>
                                     {/* Additional contracts could be added here */}
                                 </select>
                             </div>
-                            
+
                             {createGameError && <p className="text-red-500 text-sm">{createGameError}</p>}
-                            
+
                             <div className="flex justify-end space-x-3">
                                 <button
                                     onClick={() => {
@@ -477,17 +495,30 @@ const Dashboard: React.FC = () => {
                                 <button
                                     onClick={handleCreateNewGame}
                                     disabled={isCreatingGame}
-                                    className={`px-4 py-2 text-sm ${isCreatingGame ? "bg-gray-500" : "bg-blue-600 hover:bg-blue-700"} text-white rounded-lg transition duration-300 shadow-md flex items-center`}
+                                    className={`px-4 py-2 text-sm ${
+                                        isCreatingGame ? "bg-gray-500" : "bg-blue-600 hover:bg-blue-700"
+                                    } text-white rounded-lg transition duration-300 shadow-md flex items-center`}
                                 >
                                     {isCreatingGame ? (
                                         <>
-                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <svg
+                                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                ></path>
                                             </svg>
                                             Creating...
                                         </>
-                                    ) : "Create Game"}
+                                    ) : (
+                                        "Create Game"
+                                    )}
                                 </button>
                             </div>
                         </div>
@@ -528,7 +559,7 @@ const Dashboard: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     {publicKey && (
                         <div className="space-y-3">
                             <div className="flex flex-col gap-1">
@@ -538,7 +569,7 @@ const Dashboard: React.FC = () => {
                                 </div>
                                 <div className="flex items-center justify-between p-2 bg-gray-800/60 rounded-lg border border-blue-500/10">
                                     <p className="font-mono text-blue-400 text-sm tracking-wider">{formatAddress(publicKey)}</p>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(publicKey || "");
                                         }}
@@ -546,12 +577,17 @@ const Dashboard: React.FC = () => {
                                         title="Copy address"
                                     >
                                         <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                            />
                                         </svg>
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center justify-between p-3 bg-gray-800/60 rounded-lg border border-blue-500/10">
                                 <div className="flex items-center">
                                     <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
@@ -572,7 +608,7 @@ const Dashboard: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
-                            
+
                             {showPrivateKey && (
                                 <div className="p-2 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-blue-500/10">
                                     <div className="flex justify-between items-center">
@@ -583,7 +619,12 @@ const Dashboard: React.FC = () => {
                                             title="Copy private key"
                                         >
                                             <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                                />
                                             </svg>
                                         </button>
                                     </div>
@@ -610,7 +651,9 @@ const Dashboard: React.FC = () => {
                 {/* Web3 Wallet Section */}
                 <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300 opacity-80">
                     <div className="flex items-center gap-2 mb-2">
-                        <h2 className="text-xl font-bold text-white">Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span></h2>
+                        <h2 className="text-xl font-bold text-white">
+                            Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span>
+                        </h2>
                         <div className="relative group">
                             <svg
                                 className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
@@ -634,26 +677,35 @@ const Dashboard: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-center">
                         <div>
                             <div className="flex items-center gap-2">
                                 <span className="text-gray-400 text-sm">Status:</span>
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${isConnected ? "bg-green-500/20 text-green-400" : "bg-blue-500/10 text-blue-400"}`}>
+                                <span
+                                    className={`text-xs px-2 py-0.5 rounded-full ${
+                                        isConnected ? "bg-green-500/20 text-green-400" : "bg-blue-500/10 text-blue-400"
+                                    }`}
+                                >
                                     {isConnected ? "Connected" : "Not Connected"}
                                 </span>
                             </div>
                             {isConnected && address && (
                                 <div className="flex items-center mt-2 bg-gray-800/40 rounded p-1.5 border border-blue-500/10">
                                     <span className="font-mono text-blue-400 text-xs">{formatAddress(address)}</span>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(address || "");
                                         }}
                                         className="ml-2 p-0.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
                                     >
                                         <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                            />
                                         </svg>
                                     </button>
                                 </div>
@@ -676,7 +728,12 @@ const Dashboard: React.FC = () => {
                                     className="flex items-center gap-1.5 px-4 py-2 text-sm bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                        />
                                     </svg>
                                     Disconnect
                                 </button>
@@ -693,7 +750,12 @@ const Dashboard: React.FC = () => {
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center animate-pulse">
                                     <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+                                        />
                                     </svg>
                                 </div>
                                 <div>
@@ -708,7 +770,12 @@ const Dashboard: React.FC = () => {
                                     title="Copy address"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                        />
                                     </svg>
                                 </button>
                                 <Link
@@ -736,10 +803,7 @@ const Dashboard: React.FC = () => {
                         >
                             Cash
                         </button>
-                        <button
-                            disabled={true}
-                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}
-                        >
+                        <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
                             Tournament
                         </button>
                     </div>
@@ -753,14 +817,28 @@ const Dashboard: React.FC = () => {
                         >
                             Texas Holdem
                         </button>
-                        <button
-                            disabled={true}
-                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}
-                        >
+                        <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
                             Omaha
                         </button>
                     </div>
-
+                    <div className="flex justify-between gap-6">
+                        {["no-limit", "pot-limit", "fixed-limit"].map(limit => (
+                            <button
+                                key={limit}
+                                onClick={() => {
+                                    console.log("=== Limit Type Selected ===");
+                                    console.log("Limit:", limit);
+                                    setLimitTypeSelected(limit);
+                                    // TODO: Wire limitTypeSelected into game creation logic
+                                }}
+                                className={`text-white capitalize hover:bg-blue-700 rounded-xl py-3 px-4 w-[33%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
+                                    limitTypeSelected === limit ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
+                                }`}
+                            >
+                                {limit.replace("-", " ")}
+                            </button>
+                        ))}
+                    </div>
                     <div className="flex justify-between gap-6">
                         <button
                             onClick={() => handleSeat(2)}
@@ -770,38 +848,49 @@ const Dashboard: React.FC = () => {
                         >
                             2 Seats
                         </button>
-                        <button
-                            disabled={true}
-                            className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}
-                        >
-                            6-9 Seats
+                        <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
+                            6 Max
+                        </button>
+                        <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
+                            Full Ring
                         </button>
                     </div>
-
-                    <Link
-                        to={buildUrl()}
+                    <div className="flex justify-between gap-6">
+                    <button
+                        onClick={() => {
+                            setShowBuyInModal(true);
+                            setBuyInTableId("0x22dfa2150160484310c5163f280f49e23b8fd34326"); //Change to selected Contract for dynamic
+                        }}
                         className="block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
                     >
-                        Seat me
-                    </Link>
+                        Choose Table
+                    </button>
+                    </div>
                 </div>
             </div>
 
             {/* Reset blockchain button was here, now commented out by user */}
-            
+
             {/* Powered by Block52 */}
-            <div className="fixed bottom-4 left-4 flex items-center z-10">
-                <div className="flex flex-col items-start bg-gray-800/80 px-3 py-2 rounded-lg backdrop-blur-sm border border-purple-400/30 shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
                     <div className="text-left mb-1">
-                        <span className="text-xs text-gradient bg-gradient-to-r from-purple-500 via-blue-400 to-purple-500 font-medium tracking-wide">POWERED BY</span>
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
                     </div>
-                    <img 
-                        src="/logo1080.png" 
-                        alt="Block52 Logo" 
-                        className="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
-                    />
+                    <img src="/block52.png" alt="Block52 Logo" className="h-12 w-auto object-contain interaction-none" />
                 </div>
             </div>
+            {showBuyInModal && (
+                <BuyInModal
+                    tableId={buyInTableId}
+                    onClose={() => setShowBuyInModal(false)}
+                    onJoin={(buyInAmount, waitForBigBlind) => {
+                        localStorage.setItem("buy_in_amount", buyInAmount);
+                        localStorage.setItem("wait_for_big_blind", JSON.stringify(waitForBigBlind));
+                        navigate(`/table/${buyInTableId}`);
+                    }}
+                />
+            )}
         </div>
     );
 };
