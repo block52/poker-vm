@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions, mnemonic } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
 
 describe("FoldAction", () => {
     let game: TexasHoldemGame;
@@ -28,7 +28,7 @@ describe("FoldAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            9, // dealer
+            defaultPositions, // dealer
             1, // nextToAct
             previousActions, // previousActions
             TexasHoldemRound.PREFLOP,
