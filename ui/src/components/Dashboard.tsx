@@ -846,7 +846,7 @@ const Dashboard: React.FC = () => {
                                 seatSelected === 2 ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
                             }`}
                         >
-                            2 Seats
+                            Heads Up
                         </button>
                         <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
                             6 Max
@@ -861,7 +861,7 @@ const Dashboard: React.FC = () => {
                             setShowBuyInModal(true);
                             setBuyInTableId("0x22dfa2150160484310c5163f280f49e23b8fd34326"); //Change to selected Contract for dynamic
                         }}
-                        className="block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
+                        className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
                     >
                         Choose Table
                     </button>
