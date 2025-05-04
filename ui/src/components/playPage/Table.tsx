@@ -835,7 +835,7 @@ const Table = () => {
 
             {/* Powered by Block52 */}
             <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
-                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border0">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
                     <div className="text-left mb-1">
                         <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
                     </div>
