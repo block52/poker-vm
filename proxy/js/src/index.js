@@ -68,13 +68,13 @@ app.use(express.json());
 // ===================================
 // 6. Database Connection
 // ===================================
-// connectDB()
-//     .then(() => {
-//         console.log("MongoDB connection established");
-//     })
-//     .catch(err => {
-//         console.error("MongoDB connection error:", err);
-//     });
+connectDB()
+    .then(() => {
+        console.log("MongoDB connection established");
+    })
+    .catch(err => {
+        console.error("MongoDB connection error:", err);
+    });
 
 // ===================================
 // 7. Configure API Documentation
