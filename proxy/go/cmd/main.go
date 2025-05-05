@@ -6,11 +6,12 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
 	"math/big"
 	"net/http"
 	"net/rpc"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Response struct {
@@ -78,7 +79,6 @@ func helloHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, response)
 }
-
 
 func accountHandler(c *gin.Context) {
 	response := Response{
