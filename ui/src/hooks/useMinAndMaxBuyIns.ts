@@ -1,34 +1,15 @@
-import useSWR from "swr";
-import axios from "axios";
 import { ethers } from "ethers";
-import { PROXY_URL } from "../config/constants";
-
-// Define the fetcher function
-const fetcher = (url: string) => {
-  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-  console.log(`[useMinAndMaxBuyIns] Fetching data at: ${new Date().toISOString()}`);
-  return axios.get(`${url}?userAddress=${userAddress}`).then(res => {
-    console.log(`[useMinAndMaxBuyIns] Received response at: ${new Date().toISOString()}`);
-    return res.data;
-  });
-};
+import { useGameState } from "./useGameState";
 
 /**
  * Custom hook to fetch min and max buy-in values for a table
+ * Uses the central useGameState hook to avoid multiple requests
  * @param tableId The table ID to fetch limits for
  * @returns Object containing min/max buy-in values in both wei and formatted values
  */
 export const useMinAndMaxBuyIns = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      // Refresh every 30 seconds and when window is focused
-      refreshInterval: 30000,
-      revalidateOnFocus: true
-    }
-  );
+  // Use the central gameState hook instead of making a separate request
+  const { gameState, isLoading, error, refresh } = useGameState(tableId, 30000);
 
   // Default values in case of error or loading
   const defaultValues = {
@@ -38,17 +19,17 @@ export const useMinAndMaxBuyIns = (tableId?: string) => {
     maxBuyInFormatted: "1.0",
     isLoading,
     error,
-    refresh: mutate
+    refresh
   };
 
   // If still loading or error occurred, return default values
-  if (isLoading || error || !data || !data.data) {
+  if (isLoading || error || !gameState) {
     return defaultValues;
   }
 
   try {
     // Extract game options from the data
-    const gameOptions = data.data.gameOptions;
+    const gameOptions = gameState.gameOptions;
     
     if (!gameOptions) {
       console.warn("No game options found in table data");
@@ -70,7 +51,7 @@ export const useMinAndMaxBuyIns = (tableId?: string) => {
       maxBuyInFormatted,
       isLoading,
       error,
-      refresh: mutate
+      refresh
     };
 
     console.log("[useMinAndMaxBuyIns] Returns:", {
