@@ -39,6 +39,10 @@ class CheckAction extends BaseAction implements IAction {
             if (isBigBlind && largestBet === this.game.smallBlind) {
                 return { minAmount: 0n, maxAmount: 0n };
             }
+
+            if (isBigBlind && playerBet < largestBet) {
+                throw new Error("Big blind must call to match the big blind.");
+            }
         }
 
         // 4. General case: Can only check if player has matched the largest bet
