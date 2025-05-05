@@ -1252,6 +1252,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 if (player.holeCards) {
                     holeCardsDto = player.holeCards.map(card => card.mnemonic);
                 }
+            } else {
+                if (player.holeCards) {
+                    holeCardsDto = player.holeCards.map(() => "??");
+                }
             }
 
             return {
