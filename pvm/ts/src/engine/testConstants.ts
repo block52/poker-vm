@@ -34,7 +34,6 @@ export const defaultPositions: Positions = {
 
 export const baseGameConfig = {
     address: ethers.ZeroAddress,
-    dealer: 0,
     positions: defaultPositions,
     nextToAct: 1,
     currentRound: "ante",

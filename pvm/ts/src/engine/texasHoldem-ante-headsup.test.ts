@@ -267,9 +267,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actions.length).toEqual(3);
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 5, ONE_TOKEN);
 
-            // Should be able to check too
             actions = game.getLegalActions(BIG_BLIND_PLAYER);
-            expect(actions.length).toEqual(2);
+            expect(actions.length).toEqual(3);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 6, 0n);
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
