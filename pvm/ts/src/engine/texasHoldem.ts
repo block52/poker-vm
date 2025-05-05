@@ -1285,7 +1285,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         const pot = this.getPot();
         // const deckAsString = caller === ethers.ZeroAddress ? this._deck.toString() : this._deck.hash;
-        const deck = this._deck.toString();
+        const deckAsString = this._deck.toString();
         const communityCards: string[] = [];
         for (let i = 0; i < this._communityCards.length; i++) {
             communityCards.push(this._communityCards[i].mnemonic);
