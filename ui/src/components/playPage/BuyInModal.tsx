@@ -113,7 +113,6 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                     <input
                         type="checkbox"
                         className="mr-2"
-                        checked={waitForBigBlind}
                         onChange={() => setWaitForBigBlind(!waitForBigBlind)}
                     />
                     <label className="text-gray-300 text-sm">Wait for Big Blind</label>
