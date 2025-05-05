@@ -477,7 +477,10 @@ const Table = () => {
                                     
                                     if (leaveTable && playerData) {
                                         console.log("Leaving table via action...");
-                                        leaveTable({ amount: playerData.stack || "0" })
+                                        leaveTable({ 
+                                            amount: playerData.stack || "0",
+                                            actionIndex: 0 // Adding action index of 0 as default
+                                        })
                                             .then(() => {
                                                 console.log("Successfully left table");
                                                 window.location.href = "/";
