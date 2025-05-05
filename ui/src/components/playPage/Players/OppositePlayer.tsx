@@ -98,8 +98,8 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                         ) : (
                             // Show card backs if not showing
                             <>
-                                <img src="/cards/Back.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
-                                <img src="/cards/Back.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                                <img src="/cards/b52CardBack.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                                <img src="/cards/b52CardBack.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
                             </>
                         )
                     ) : (

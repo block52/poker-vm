@@ -668,7 +668,7 @@ const Table = () => {
                                                               <div key={index} className="card animate-fall">
                                                                   <OppositePlayerCards
                                                                       frontSrc={`/cards/${card}.svg`}
-                                                                      backSrc="/cards/Back.svg"
+                                                                      backSrc="/cards/b52CardBack.svg"
                                                                       flipped={true}
                                                                   />
                                                               </div>
