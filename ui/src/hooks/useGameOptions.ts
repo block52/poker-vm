@@ -62,7 +62,7 @@ export const useGameOptions = (tableId?: string) => {
                 console.error("Error parsing game options:", err);
             }
         }
-    }, [gameState, lastRefreshTime]);
+    }, [defaultOptions.bigBlind, defaultOptions.maxBuyIn, defaultOptions.maxPlayers, defaultOptions.minBuyIn, defaultOptions.minPlayers, defaultOptions.smallBlind, defaultOptions.timeout, gameState, lastRefreshTime]);
 
     // If still loading or error occurred, return default values
     if (isLoading || error || !gameState) {

@@ -4,9 +4,9 @@ import { useGameState } from "./useGameState";
  * Interface for showing cards data
  */
 interface ShowingCardData {
-  address: string;
-  holeCards: string[];
-  seat: number;
+    address: string;
+    holeCards: string[];
+    seat: number;
 }
 
 /**
@@ -15,54 +15,51 @@ interface ShowingCardData {
  * @returns Object containing all players with "showing" status and their cards
  */
 export const useShowingCardsByAddress = (tableId?: string) => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh } = useGameState(tableId);
-  
-  // Default return value
-  const defaultValue = {
-    showingPlayers: [] as ShowingCardData[],
-    isShowdown: false,
-    isLoading,
-    error,
-    refresh
-  };
-  
-  // If still loading or error occurred, return default values
-  if (isLoading || error || !gameState) {
-    return defaultValue;
-  }
-  
-  try {
-    // Check if round is showdown or end
-    const isShowdown = gameState.round === "showdown" || gameState.round === "end";
-    
-    // Find all players with status "showing"
-    const showingPlayers = gameState.players
-      ?.filter((player: any) => 
-        player.status === "showing" && 
-        player.holeCards && 
-        player.holeCards.length === 2
-      )
-      .map((player: any) => ({
-        address: player.address,
-        holeCards: player.holeCards,
-        seat: player.seat
-      })) || [];
-    
-    console.log("Players showing cards:", showingPlayers);
-    
-    return {
-      showingPlayers,
-      isShowdown,
-      isLoading: false,
-      error: null,
-      refresh
+    // Get game state from centralized hook
+    const { gameState, isLoading, error, refresh } = useGameState(tableId);
+
+    // Default return value
+    const defaultValue = {
+        showingPlayers: [] as ShowingCardData[],
+        isShowdown: false,
+        isLoading,
+        error,
+        refresh
     };
-  } catch (err) {
-    console.error("Error getting showing cards:", err);
-    return {
-      ...defaultValue,
-      error: err
-    };
-  }
-}; 
+
+    // If still loading or error occurred, return default values
+    if (isLoading || error || !gameState) {
+        return defaultValue;
+    }
+
+    try {
+        // Check if round is showdown or end
+        const isShowdown = gameState.round === "showdown" || gameState.round === "end";
+
+        // Find all players with status "showing"
+        const showingPlayers =
+            gameState.players
+                ?.filter((player: any) => player.status === "showing" && player.holeCards && player.holeCards.length === 2)
+                .map((player: any) => ({
+                    address: player.address,
+                    holeCards: player.holeCards,
+                    seat: player.seat
+                })) || [];
+
+        console.log("Players showing cards:", showingPlayers);
+
+        return {
+            showingPlayers,
+            isShowdown,
+            isLoading: false,
+            error: null,
+            refresh
+        };
+    } catch (err) {
+        console.error("Error getting showing cards:", err);
+        return {
+            ...defaultValue,
+            error: err
+        };
+    }
+};

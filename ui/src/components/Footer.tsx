@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
-import { PlayerActionType, LegalActionDTO, NonPlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
-import { useTableNonce, AccountData } from "../hooks/useTableNonce";
+import { useTableNonce } from "../hooks/useTableNonce";
 
 // Import our custom hooks
 import { usePlayerDTO } from "../hooks/usePlayerDTO";
@@ -56,8 +56,6 @@ const PokerActionPanel: React.FC = () => {
         currentRound, 
         totalPot: tableTotalPot, 
         formattedTotalPot,
-        tableType, 
-        roundType,
     } = useTableState(tableId);
 
     // Log info from our hooks for debugging
@@ -68,7 +66,6 @@ const PokerActionPanel: React.FC = () => {
     const [publicKey, setPublicKey] = useState<string>();
     const [isCallAction, setIsCallAction] = useState(false);
     const [isCheckAction, setIsCheckAction] = useState(false);
-    const [balance, setBalance] = useState(0);
 
     // Get user's address directly from localStorage
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
@@ -81,9 +78,6 @@ const PokerActionPanel: React.FC = () => {
     
     // Replace userPlayer with direct checks from our hook data
     const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
-    
-    // Check if fold action exists in legal actions
-    const hasFoldAction = legalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
 
     // Check if current user has the deal action
     const currentUserCanDeal = userPlayer?.legalActions?.some((action: any) => action.action === "deal") || false;
@@ -151,126 +145,6 @@ const PokerActionPanel: React.FC = () => {
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
         setRaiseInputRaw(newAmount.toFixed(2));
-    };
-
-    // Player action function to handle all game actions
-    const handleSetPlayerAction = async (action: PlayerActionType, amount: string) => {
-        console.log("Setting player action:", action, amount);
-        if (!userAddress || !tableId) {
-            console.error("Missing user address or table ID", { userAddress, tableId });
-            return;
-        }
-
-        try {
-            console.log(`Executing player action: ${action} with amount: ${amount}`);
-
-            // Get the private key from localStorage
-            const privateKey = localStorage.getItem("user_eth_private_key");
-            if (!privateKey) {
-                console.error("Private key not found");
-                return;
-            }
-
-            // Create a wallet instance to sign the message
-            const wallet = new ethers.Wallet(privateKey);
-
-            // Create the message to sign - Add delimiters for clarity and reliability
-            const timestamp = Math.floor(Date.now() / 1000).toString();
-
-            // Ensure action is properly formatted and consistent with API expectations
-            // Convert action to lowercase string as expected by the API
-            let formattedAction = "";
-
-            // Handle the action format based on the type
-            if (typeof action === "string") {
-                formattedAction = action.toLowerCase();
-            } else if (typeof action === "number") {
-                // If it's a numeric enum, map it to the expected string
-                switch (action) {
-                    case PlayerActionType.FOLD:
-                        formattedAction = "fold";
-                        break;
-                    case PlayerActionType.CHECK:
-                        formattedAction = "check";
-                        break;
-                    case PlayerActionType.CALL:
-                        formattedAction = "call";
-                        break;
-                    case PlayerActionType.BET:
-                        formattedAction = "bet";
-                        break;
-                    case PlayerActionType.RAISE:
-                        formattedAction = "raise";
-                        break;
-                    case PlayerActionType.SMALL_BLIND:
-                        formattedAction = "post small blind";
-                        break;
-                    case PlayerActionType.BIG_BLIND:
-                        formattedAction = "post big blind";
-                        break;
-                    default:
-                        formattedAction = (action as any).toString().toLowerCase();
-                }
-            } else {
-                formattedAction = (action as any).toString().toLowerCase();
-            }
-
-            console.log(`Formatted action: ${formattedAction}`);
-
-            const message = `${formattedAction}:${amount}:${tableId}:${timestamp}`;
-
-            // Sign the message
-            const signature = await wallet.signMessage(message);
-
-            console.log("Message signed:", message);
-            console.log("Signature:", signature);
-
-            // Debug log for the entire payload we're about to send
-            const payload = {
-                userAddress,
-                action: formattedAction,
-                amount,
-                signature,
-                publicKey: userAddress, // Add publicKey which is needed by the API
-                timestamp
-            };
-
-            console.log("Full API payload:", JSON.stringify(payload, null, 2));
-
-            // Send the action to the backend
-            const response = await axios.post(`${PROXY_URL}/table/${tableId}/playeraction`, payload);
-
-            console.log("Player action response:", response.data);
-
-            // Check if there is an error in the response
-            if (response.data.error) {
-                console.error(`Action error: ${response.data.error}`);
-                // You could also display this error to the user via a toast notification
-                alert(`Action failed: ${response.data.error}`);
-            }
-
-            // Reset UI states after action
-            setIsCallAction(false);
-            setIsCheckAction(false);
-            
-            // Refresh the next-to-act info to reflect the new state
-            refreshNextToActInfo?.();
-        } catch (error: any) {
-            console.error("Error executing player action:", error);
-            // Log the error stack trace for debugging
-            console.error("Error stack:", error.stack);
-
-            // Show the detailed error
-            if (error.response) {
-                console.error("Error response data:", error.response.data);
-                console.error("Error response status:", error.response.status);
-                // Display a more detailed error message to the user
-                alert(`Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
-            } else {
-                // Generic error message
-                alert(`Error executing action: ${error.message}`);
-            }
-        }
     };
 
     //Min Raise Text Prefill
@@ -465,11 +339,6 @@ const PokerActionPanel: React.FC = () => {
     // Show blinds buttons when needed
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
-
-    const activePlayers = players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
-    const activePlayerCount = activePlayers?.length || 0;
-    const gameInProgress = activePlayerCount > 1;
-
    
     // Add a handler for the deal button
     const handleDeal = () => {
