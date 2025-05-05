@@ -9,6 +9,7 @@ interface LeaveTableOptions {
   privateKey?: string | null;
   publicKey?: string | null;
   nonce?: string | number;
+  actionIndex?: number | null;
 }
 
 async function leaveTableFetcher(
@@ -19,7 +20,7 @@ async function leaveTableFetcher(
   const userAddress = arg.userAddress || localStorage.getItem("user_eth_public_key");
   const privateKey = arg.privateKey || localStorage.getItem("user_eth_private_key");
   const publicKey = arg.publicKey || localStorage.getItem("user_eth_public_key");
-  const { amount = "0", nonce = Date.now().toString() } = arg;
+  const { amount = "0", nonce = Date.now().toString(), actionIndex } = arg;
   
   if (!userAddress || !privateKey) {
     throw new Error("Missing user address or private key");
@@ -43,7 +44,8 @@ async function leaveTableFetcher(
     signature,
     publicKey: publicKey || userAddress,
     nonce: nonce || timestamp,
-    timestamp
+    timestamp,
+    index: actionIndex !== undefined && actionIndex !== null ? actionIndex : undefined
   };
 
   // Send the request to the proxy server
