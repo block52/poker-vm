@@ -44,11 +44,18 @@ describe("Texas Holdem - Preflop - Heads Up", () => {
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
 
             const legalActions = game.getLegalActions(BIG_BLIND_PLAYER);
-            expect(legalActions).toEqual([
-                PlayerActionType.CALL,
-                PlayerActionType.RAISE,
-                PlayerActionType.FOLD,
-            ]);
+            expect(legalActions.length).toEqual(3);
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.CALL
+            }));
+
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.RAISE
+            }));
+
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.FOLD
+            }));
         });
     });
 });
