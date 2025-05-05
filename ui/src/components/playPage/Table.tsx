@@ -448,9 +448,6 @@ const Table = () => {
                             ${smallBlindFormatted} / ${bigBlindFormatted}
                             </span>
                         </div>
-                        <span className="ml-2 text-[15px]">
-                            Game Type: <span className="text-[15px] text-gradient bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-400">{tableDataValues.tableDataType}</span>
-                        </span>
                     </div>
 
                     {/* Right Section */}
