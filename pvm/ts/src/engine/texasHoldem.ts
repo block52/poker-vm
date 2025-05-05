@@ -94,11 +94,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         this._currentRound = _currentRound;
         this._gameOptions = gameOptions;
-
-        // this._smallBlindPosition = this._dealer === gameOptions.maxPlayers ? 1 : this._dealer + 1;
-        // this._bigBlindPosition = this._dealer === gameOptions.maxPlayers ? 2 : this._dealer + 2;
-        // this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
-
         this._smallBlindPosition = this.positions.smallBlind ?? 1;
         this._bigBlindPosition = this.positions.bigBlind ?? 2;
         this._dealer = this.positions.dealer ?? 9;
@@ -841,11 +836,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
         }
-
-        // this._dealer = this._dealer === maxPlayers ? 1 : this._dealer + 1;
-        // this._smallBlindPosition = this._dealer === maxPlayers ? 1 : this._dealer + 1;
-        // this._bigBlindPosition = this._dealer === maxPlayers ? 2 : this._dealer + 2;
-
+        
         // Cache the values
         const dealer = this._dealer;
         const sb = this._smallBlindPosition;
