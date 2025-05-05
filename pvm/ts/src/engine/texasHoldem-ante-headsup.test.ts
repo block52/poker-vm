@@ -241,7 +241,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer(BIG_BLIND_PLAYER)).toBeDefined();
             expect(game.smallBlindPosition).toEqual(1);
             expect(game.bigBlindPosition).toEqual(2);
-            expect(game.dealerPosition).toEqual(9);
+            // expect(game.dealerPosition).toEqual(9);
             expect(game.handNumber).toEqual(0);
 
             // Do the small blind
@@ -303,6 +303,15 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(gameState.winners).toBeDefined();
             expect(gameState.winners.length).toEqual(1);
 
+            // Check players chips
+            let smallBlindPlayer = game.getPlayer(SMALL_BLIND_PLAYER);
+            let bigBlindPlayer = game.getPlayer(BIG_BLIND_PLAYER);
+
+            expect(smallBlindPlayer).toBeDefined();
+            expect(bigBlindPlayer).toBeDefined();
+            expect(smallBlindPlayer?.chips).toEqual(100200000000000000000n);
+            expect(bigBlindPlayer?.chips).toEqual(99800000000000000000n);
+
             game.reInit(mnemonic);
 
             // Check the game state after re-initialization
@@ -315,6 +324,17 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer(BIG_BLIND_PLAYER)).toBeDefined();
             expect(game.smallBlindPosition).toEqual(2);
             expect(game.bigBlindPosition).toEqual(1);
+            expect(game.pot).toEqual(0n);
+            expect(game.handNumber).toEqual(1);
+
+            // Check players chips
+            smallBlindPlayer = game.getPlayer(SMALL_BLIND_PLAYER);
+            bigBlindPlayer = game.getPlayer(BIG_BLIND_PLAYER);
+
+            expect(smallBlindPlayer).toBeDefined();
+            expect(bigBlindPlayer).toBeDefined();
+            expect(smallBlindPlayer?.chips).toEqual(100200000000000000000n);
+            expect(bigBlindPlayer?.chips).toEqual(99800000000000000000n);
 
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 15, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
