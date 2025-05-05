@@ -38,6 +38,7 @@ import { useCardAnimations } from "../../hooks/useCardAnimations";
 import { useTableData } from "../../hooks/useTableData";
 import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
+import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -109,6 +110,9 @@ const Table = () => {
     
     // Add the useShowingCardsByAddress hook
     const { showingPlayers, isShowdown, refresh: refreshShowingCards } = useShowingCardsByAddress(id);
+    
+    // Add the useTableLeave hook
+    const { leaveTable, isLeaving } = useTableLeave(id);
     
     // Log when cards are being shown
     useEffect(() => {
@@ -466,13 +470,31 @@ const Table = () => {
                                 ) {
                                     alert("You must fold your hand before leaving the table.");
                                 } else {
-                                    console.log("Leaving table with direct reload");
-                                    window.location.href = "/";
+                                    // Get player's current stack if they are seated
+                                    const playerData = tableDataValues.tableDataPlayers?.find(
+                                        (p: any) => p.address?.toLowerCase() === userWalletAddress
+                                    );
+                                    
+                                    if (leaveTable && playerData) {
+                                        console.log("Leaving table via action...");
+                                        leaveTable({ amount: playerData.stack || "0" })
+                                            .then(() => {
+                                                console.log("Successfully left table");
+                                                window.location.href = "/";
+                                            })
+                                            .catch(err => {
+                                                console.error("Error leaving table:", err);
+                                                window.location.href = "/";
+                                            });
+                                    } else {
+                                        console.log("Leaving table with direct reload");
+                                        window.location.href = "/";
+                                    }
                                 }
                             }}
                             title="Return to Lobby"
                         >
-                            Leave Table
+                            {isLeaving ? "Leaving..." : "Leave Table"}
                             <RxExit size={15} />
                         </span>
                     </div>
