@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
 
 describe("BigBlindAction", () => {
     let game: TexasHoldemGame;
@@ -27,7 +27,7 @@ describe("BigBlindAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            9, // dealer
+            defaultPositions, // dealer
             1, // nextToAct
             previousActions, // previousActions
             TexasHoldemRound.ANTE,

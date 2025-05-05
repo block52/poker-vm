@@ -4,7 +4,7 @@ import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
 import { ethers } from "ethers";
-import { gameOptions, mnemonic } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -50,7 +50,7 @@ describe.skip("BaseAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            0, // dealer
+            defaultPositions, // dealer
             1, // nextToAct
             previousActions,
             TexasHoldemRound.PREFLOP,

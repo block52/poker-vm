@@ -79,7 +79,15 @@ const calculateZoom = () => {
     return Math.min(calculatedScale, 2); // Cap at 2x
 };
 
-// Helper function to format Wei to USD with commas
+// Add NetworkDisplay component
+const NetworkDisplay = ({ isMainnet = false }) => {
+    return (
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-800/60 rounded-full text-xs border border-blue-500/20">
+            <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : "bg-blue-400"}`}></div>
+            <span className="text-gray-300">Block52 Chain</span>
+        </div>
+    );
+};
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
@@ -323,34 +331,6 @@ const Table = () => {
         setOpenSidebar(!openSidebar);
     };
 
-    const onGoToDashboard = () => {
-        console.log("onGoToDashboard called");
-        // Find the current user's player data
-        const currentUserPlayer = tableDataValues.tableDataPlayers?.find((p: any) => p.address?.toLowerCase() === userWalletAddress);
-
-        // Check if the player exists and has not folded
-        if (currentUserPlayer && currentUserPlayer.status !== "folded" && currentUserPlayer.status !== "sitting-out") {
-            // Alert the user they need to fold first
-            alert("You must fold your hand before leaving the table.");
-            return;
-        }
-
-        // If they've folded or aren't in the game, call leave function and then navigate
-        if (currentUserPlayer) {
-            console.log("Player exists, navigating with delay");
-            // leave(); // Call the leave function from TableContext
-            // Small delay to allow leave action to be processed
-            setTimeout(() => {
-                console.log("Timeout complete, navigating to /");
-                navigate("/");
-            }, 500);
-        } else {
-            // If not in game at all, just navigate
-            console.log("Player does not exist, navigating immediately");
-            navigate("/");
-        }
-    };
-
     // Add this helper function for copying to clipboard
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -381,10 +361,10 @@ const Table = () => {
                         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#64ffda] to-transparent opacity-50"></div>
                     </div>
 
-                    {/* Left Section - Lobby button */}
-                    <div className="flex items-center space-x-3 z-10">
+                    {/* Left Section - Lobby button and Network display */}
+                    <div className="flex items-center space-x-4 z-10">
                         <span
-                            className="text-gray-400 text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300"
+                            className="text-white text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
                             onClick={() => {
                                 console.log("Navigating to lobby with direct reload");
                                 window.location.href = "/";
@@ -392,42 +372,47 @@ const Table = () => {
                         >
                             Lobby
                         </span>
+                        <NetworkDisplay isMainnet={false} />
                     </div>
 
                     {/* Right Section - Wallet info */}
                     <div className="flex items-center z-10">
-                        <div className="flex flex-col items-end justify-center text-white mr-3">
+                        <div className="flex items-center bg-gray-800/60 rounded-lg border border-blue-500/10 py-1 px-2 mr-3">
                             {walletLoading ? (
                                 <span>Loading...</span>
                             ) : (
                                 <>
-                                    <div className="flex items-center gap-1 text-gray-300">
-                                        <span className="opacity-75 text-[14px]">Account:</span>
-                                        <span className=" text-[14px] text-[#ffffff]">
+                                    {/* Address */}
+                                    <div className="flex items-center mr-4">
+                                        <span className="font-mono text-blue-400 text-xs">
                                             {`${localStorage.getItem("user_eth_public_key")?.slice(0, 6)}...${localStorage
                                                 .getItem("user_eth_public_key")
                                                 ?.slice(-4)}`}
                                         </span>
                                         <FaCopy
-                                            className="ml-1 cursor-pointer text-gray-400 hover:text-[#ffffff] transition-colors duration-200"
-                                            size={13}
+                                            className="ml-1.5 cursor-pointer text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                                            size={11}
                                             onClick={() => copyToClipboard(localStorage.getItem("user_eth_public_key") || "")}
                                             title="Copy full address"
                                         />
                                     </div>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <span className="opacity-75 text-[13px]">Balance:</span>
-                                        <span className="font-medium text-[#ffffff] text-[14px]">
+                                    
+                                    {/* Balance */}
+                                    <div className="flex items-center">
+                                        <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center mr-1.5">
+                                            <span className="text-blue-400 font-bold text-[10px]">$</span>
+                                        </div>
+                                        <p className="text-white font-medium text-xs">
                                             ${balance ? formatWeiToUSD(balance) : "0.00"}
-                                            <span className="text-[13px] ml-1 text-gray-400">USDC</span>
-                                        </span>
+                                            <span className="text-[10px] ml-1 text-gray-400">USDC</span>
+                                        </p>
                                     </div>
                                 </>
                             )}
                         </div>
 
                         <div 
-                            className="flex items-center justify-center w-10 h-10 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300"
+                            className="flex items-center justify-center w-8 h-8 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300"
                             onClick={() => {
                                 console.log("Navigating to deposit page with direct reload");
                                 window.location.href = "/qr-deposit";
@@ -435,7 +420,7 @@ const Table = () => {
                         >
                             <RiMoneyDollarCircleLine
                                 className="text-[#ffffff] hover:scale-110 transition-transform duration-200"
-                                size={24}
+                                size={20}
                             />
                         </div>
                     </div>
@@ -459,10 +444,9 @@ const Table = () => {
                     {/* Left Section */}
                     <div className="flex items-center z-10">
                         <div className="flex items-center space-x-2">
-                            <span className="px-2 py-1 rounded text-[15px]">
+                            <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                             ${smallBlindFormatted} / ${bigBlindFormatted}
                             </span>
-                           
                         </div>
                     </div>
 

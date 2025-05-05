@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("CheckAction", () => {
@@ -29,7 +29,7 @@ describe("CheckAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            9, // dealer
+            defaultPositions, // dealer
             1, // nextToAct
             previousActions, // previous
             TexasHoldemRound.PREFLOP,

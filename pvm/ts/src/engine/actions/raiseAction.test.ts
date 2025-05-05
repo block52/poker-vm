@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
 import { IUpdate, Turn } from "../types";
 import {
+    defaultPositions,
     FIFTY_TOKENS,
     gameOptions,
     mnemonic,
@@ -40,7 +41,7 @@ describe("Raise Action", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            9, // dealer
+            defaultPositions, // dealer
             1, // nextToAct
             previousActions, // previousActions
             TexasHoldemRound.PREFLOP,

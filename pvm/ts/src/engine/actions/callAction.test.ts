@@ -5,7 +5,7 @@ import { IUpdate, Turn, TurnWithSeat } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 // Assuming you have a constants file, otherwise define TEN_TOKENS in this file
-import { gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
 
 describe("CallAction", () => {
     let action: CallAction;
@@ -30,7 +30,7 @@ describe("CallAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            9, // dealer
+            defaultPositions, // dealer
             1, // nextToAct
             previousActions, // previous
             TexasHoldemRound.PREFLOP,

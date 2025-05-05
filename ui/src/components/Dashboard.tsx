@@ -644,6 +644,14 @@ const Dashboard: React.FC = () => {
                                     Create New Game
                                 </button>
                             </div>
+                            <div className="mt-2 flex justify-center">
+                                <button
+                                    onClick={() => setShowImportModal(true)}
+                                    className="text-blue-400 hover:text-blue-300 text-sm underline transition duration-300"
+                                >
+                                    Import Private Key
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -846,7 +854,7 @@ const Dashboard: React.FC = () => {
                                 seatSelected === 2 ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
                             }`}
                         >
-                            2 Seats
+                            Heads Up
                         </button>
                         <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
                             6 Max

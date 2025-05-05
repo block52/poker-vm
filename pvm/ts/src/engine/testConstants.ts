@@ -1,4 +1,4 @@
-import { GameOptions } from "@bitcoinbrisbane/block52";
+import { GameOptions, Positions } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 
 // Constants for testing
@@ -26,13 +26,21 @@ export const gameOptions: GameOptions = {
     timeout: 60000,
 };
 
+export const defaultPositions: Positions = {
+    dealer: 9,
+    smallBlind: 1,
+    bigBlind: 2,
+}
+
 export const baseGameConfig = {
     address: ethers.ZeroAddress,
     dealer: 0,
+    positions: defaultPositions,
     nextToAct: 1,
     currentRound: "ante",
     communityCards: [],
     pot: 0n,
     players: []
 };
+
 
