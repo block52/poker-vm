@@ -324,6 +324,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer(BIG_BLIND_PLAYER)).toBeDefined();
             expect(game.smallBlindPosition).toEqual(2);
             expect(game.bigBlindPosition).toEqual(1);
+            expect(game.pot).toEqual(0n);
+            expect(game.handNumber).toEqual(1);
 
             // Check players chips
             smallBlindPlayer = game.getPlayer(SMALL_BLIND_PLAYER);
