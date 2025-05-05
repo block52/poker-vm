@@ -17,11 +17,11 @@ const debugLog = (...args: any[]) => {
 type VacantPlayerProps = {
     left?: string;
     top?: string;
-    index: number;
+    seat: number;
 };
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
-    ({ left, top, index }) => {
+    ({ left, top, seat }) => {
         const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData(useParams<{ id: string }>().id);
         const { id: tableId } = useParams<{ id: string }>();
         const userAddress = localStorage.getItem("user_eth_public_key");
@@ -29,16 +29,17 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const actionIndex = useTableTurnIndex(tableId);
 
         const [showConfirmModal, setShowConfirmModal] = useState(false);
-        const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
-        const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
+        const isSeatVacant = useMemo(() => checkSeatVacant(seat), [checkSeatVacant, seat]);
+        const canJoinThisSeat = useMemo(() => checkCanJoinSeat(seat), [checkCanJoinSeat, seat]);
 
-        const { joinTable } = tableId ? useTableJoin(tableId) : { joinTable: null };
+        const tableJoin = useTableJoin(tableId || "");
+        const joinTable = tableId ? tableJoin.joinTable : null;
 
         const handleJoinClick = useCallback(() => {
-            debugLog("Join click:", { index, tableId });
+            debugLog("Join click:", { seat, tableId });
             if (!canJoinThisSeat) return;
             setShowConfirmModal(true);
-        }, [canJoinThisSeat, index, tableId]);
+        }, [canJoinThisSeat, seat, tableId]);
 
         const handleConfirmSeat = async () => {
             setShowConfirmModal(false);
@@ -57,7 +58,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     userAddress,
                     privateKey,
                     publicKey: userAddress,
-                    index: actionIndex
+                    index: actionIndex,
+                    seat
                 });
                 window.location.reload();
             } catch (err) {
@@ -66,8 +68,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         };
 
         useEffect(() => {
-            debugLog("VacantPlayer mounted:", { left, top, index });
-        }, [left, top, index]);
+            debugLog("VacantPlayer mounted:", { left, top, seat });
+        }, [left, top, seat]);
 
         return (
             <div className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`} style={{ left, top }} onClick={canJoinThisSeat ? handleJoinClick : undefined}>
@@ -75,7 +77,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
                 </div>
                 <div className="text-white text-center">
-                    <div className="text-sm mb-1 whitespace-nowrap">{isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}</div>
+                    <div className="text-sm mb-1 whitespace-nowrap">{isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(seat)}`}</div>
                     {!isUserAlreadyPlaying && <div className="whitespace-nowrap">{canJoinThisSeat ? "Click to Join" : "Seat Taken"}</div>}
                 </div>
 
@@ -106,7 +108,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             </div>
         );
     },
-    (prev, next) => prev.left === next.left && prev.top === next.top && prev.index === next.index
+    (prev, next) => prev.left === next.left && prev.top === next.top && prev.seat === next.seat
 );
 
 VacantPlayer.displayName = "VacantPlayer";
