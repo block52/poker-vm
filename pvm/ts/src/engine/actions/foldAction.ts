@@ -18,6 +18,12 @@ class FoldAction extends BaseAction implements IAction {
      * @returns A Range object with min and max amount both set to 0 (folding costs nothing)
      */
     verify(player: Player): Range {
+
+        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+            // Muck cards instead of folding
+            throw new Error("Fold action is not allowed during showdown round.");
+        }
+
         // No status checks needed - allow any player to fold regardless of status
         // This overrides the base verify method which otherwise requires the player to be active
         // and for it to be their turn to act

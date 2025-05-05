@@ -15,6 +15,10 @@ class CallAction extends BaseAction implements IAction {
             throw new Error("Call action is not allowed during ante round.");
         }
 
+        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error("Call action is not allowed during showdown round.");
+        }
+
         // 2. Round-specific checks for preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             // Special case for small blind position in PREFLOP

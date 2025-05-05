@@ -17,6 +17,10 @@ class BetAction extends BaseAction implements IAction {
             throw new Error("Cannot bet in the ante round.");
         }
 
+        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error("Cannot bet in the showdown round.");
+        }
+
         // 2. Bet matching check: Player must match existing bets before betting
         const largestBet = this.getLargestBet();
         const sumBets = this.getSumBets(player.address);
