@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
 import { PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
-import { PROXY_URL } from "../config/constants";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 import { useTableNonce } from "../hooks/useTableNonce";
