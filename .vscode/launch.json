@@ -8,7 +8,6 @@
       "name": "Debug PVM",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "/Users/alexmiller/.nvm/versions/node/v20.18.2/bin/node",
       "runtimeArgs": ["-r", "ts-node/register"],
       "program": "${workspaceFolder}/pvm/ts/src/index.ts",
       "preLaunchTask": "",
