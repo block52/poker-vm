@@ -9,6 +9,21 @@ import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { OrderedTransaction } from "../engine/types";
 
+/**
+ * PerformActionCommand handles all game actions (JOIN, BET, CALL, etc.)
+ * 
+ * The lifecycle of a game action is:
+ * 1. Client sends action request to the proxy server
+ * 2. Proxy calls the node with formatted RPC request
+ * 3. RPC.ts creates PerformActionCommand and executes it
+ * 4. PerformActionCommand loads current game state
+ * 5. PerformActionCommand performs the action on game
+ * 6. PerformActionCommand MUST SAVE the updated state back to storage
+ * 7. Result is returned to client
+ * 
+ * For seat selection to work correctly, the updated game state with the
+ * player's chosen seat MUST be saved back to storage after JOIN.
+ */
 export class PerformActionCommand implements ICommand<ISignedResponse<Transaction>> {
     private readonly gameManagement: GameManagement;
     private readonly contractSchemas: ContractSchemaManagement;
@@ -88,6 +103,11 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         // Perform the action with the parsed data
         game.performAction(this.from, this.action, actionIndex, this.amount, seatNumber);
+
+        // NOTE: We're removing the explicit save to match how other actions work
+        // Game state changes are captured in the transaction below and will be
+        // reapplied when the game state is requested via GameStateCommand.execute()
+        // Eventually all transactions will be persisted when blocks are mined
 
         const nonce = BigInt(this.nonce);
         

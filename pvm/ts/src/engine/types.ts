@@ -12,7 +12,7 @@ export interface IPoker {
     // joinAtSeat(player: Player, seat: number): void;
     // leave(address: string): void;
     getLastRoundAction(): Turn | undefined;
-    performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void;
+    performAction(playerId: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;
 }
 
@@ -36,12 +36,15 @@ export type Turn = {
 };
 
 // Timestamp in milliseconds is required for auto folding etc
-export type TurnWithSeat = Turn & { seat: number, timestamp: number };
+export type TurnWithSeat = Turn & {
+    seat: number;
+    timestamp: number;
+};
 
 export type LegalAction = ActionDTO;
 
 export interface IUpdate {
-    addAction(action: Turn): void;
+    addAction(turn: Turn): void;
 }
 
 export interface IGame extends IUpdate {
@@ -54,6 +57,7 @@ export type OrderedTransaction = {
     from: string;
     to: string;
     value: bigint;
-    type: PlayerActionType;
+    type: PlayerActionType | NonPlayerActionType;
     index: number;
+    seatNumber?: number; // Optional seat number for JOIN actions
 };
