@@ -811,12 +811,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Moving to SHOWDOWN - calculate winner
             //this.calculateWinner();
         } else if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
-
-            // this.calculateWinner();
-
-            // Moving to ANTE - reset the game
-
-            // this.reInit(this._deck.toString());
+            // If we have gotten here, check the community cards have been dealt.  This could happen if players are all in etc on prior rounds
+            // If not, deal the board.
+            const dealtCards = this._communityCards.length;
+            if (dealtCards < 5) {
+                const cardsToDeal = 5 - dealtCards;
+                this._communityCards.push(...this._deck.deal(cardsToDeal));
+            }
         } 
 
         // Advance to next round
@@ -838,7 +839,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
         
         // Cache the values
-        const dealer = this._dealer;
         const sb = this._smallBlindPosition;
         const bb = this._bigBlindPosition;
 
@@ -971,14 +971,26 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const players = this.getSeatedPlayers();
 
         // Only consider players who are active and not all-in
-        const activePlayers = players.filter(p => {
+        const nonActivePlayers = players.filter(p => {
             const status = this.getPlayerStatus(p.address);
             return status !== PlayerStatus.FOLDED && status !== PlayerStatus.ALL_IN && status !== PlayerStatus.SITTING_OUT;
         });
 
         // If no active players left (all folded or all-in), the round ends
-        if (activePlayers.length === 0) {
+        if (nonActivePlayers.length === 0) {
+            // Not sure if we ever reach this point
             return true;
+        }
+
+        // Get the active players for this round
+        const activePlayers = this.findActivePlayers();
+        
+        // If all players are folded or all-in, the round ends, or if only one player is left to act
+        if (activePlayers.length === 1 && this.currentRound !== TexasHoldemRound.ANTE) {
+            // Run community cards
+
+            // Set the round to SHOWDOWN
+            this._currentRound = TexasHoldemRound.SHOWDOWN;
         }
 
         // Get actions for this round
@@ -1008,18 +1020,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         if (round === TexasHoldemRound.SHOWDOWN) {
             const players = this.getSeatedPlayers();
-            // const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
             const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
             if (showingPlayers.length === players.length) {
                 this.calculateWinner();
                 return true; // Round is over if only one player is active
             }
         }
-
-        // if (round === TexasHoldemRound.END) {
-        //     this.calculateWinner();
-        //     return true; // Round is over if only one player is active
-        // }
 
         // Check if cards have been dealt, which is required before ending the round
         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
