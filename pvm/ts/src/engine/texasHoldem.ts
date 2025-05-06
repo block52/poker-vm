@@ -15,22 +15,24 @@ import {
 } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
-import BaseAction from "./actions/baseAction";
+
 import BetAction from "./actions/betAction";
 import BigBlindAction from "./actions/bigBlindAction";
 import CallAction from "./actions/callAction";
 import CheckAction from "./actions/checkAction";
 import DealAction from "./actions/dealAction";
 import FoldAction from "./actions/foldAction";
+import LeaveAction from "./actions/leaveAction";
+import MuckAction from "./actions/muckAction";
 import RaiseAction from "./actions/raiseAction";
+import ShowAction from "./actions/showAction";
 import SmallBlindAction from "./actions/smallBlindAction";
+
 // @ts-ignore
 import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
-import { ethers, N } from "ethers";
-import LeaveAction from "./actions/leaveAction";
-import MuckAction from "./actions/muckAction";
-import ShowAction from "./actions/showAction";
+import { ethers } from "ethers";
+
 
 class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
@@ -450,7 +452,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check if the provided index matches the current turn index (without incrementing)
-        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN) {
+        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE) {
             // hack, to roll back
             throw new Error("Invalid action index.");
         }
@@ -817,7 +819,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Moving to ANTE - reset the game
 
             // this.reInit(this._deck.toString());
-        } 
+        }
 
         // Advance to next round
         this.setNextRound();
@@ -836,7 +838,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
         }
-        
+
         // Cache the values
         const dealer = this._dealer;
         const sb = this._smallBlindPosition;
