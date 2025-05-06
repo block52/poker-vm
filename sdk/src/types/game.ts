@@ -1,6 +1,6 @@
 export enum PlayerActionType {
-    SMALL_BLIND = "post small blind",
-    BIG_BLIND = "post big blind",
+    SMALL_BLIND = "post-small-blind",
+    BIG_BLIND = "post-big-blind",
     FOLD = "fold",
     CHECK = "check",
     BET = "bet",
@@ -8,9 +8,22 @@ export enum PlayerActionType {
     RAISE = "raise",
     ALL_IN = "all-in",
     MUCK = "muck",
+    SIT_IN = "sit-in",
+    SIT_OUT = "sit-out",
+    SHOW = "show"
+}
+
+export enum NonPlayerActionType {
+    DEAL = "deal",
     JOIN = "join",
-    LEAVE = "leave",
-    DEAL = "deal"
+    LEAVE = "leave"
+}
+
+export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
+
+export enum GameType {
+    CASH = "cash",
+    TOURNAMENT = "tournament"
 }
 
 export enum PlayerStatus {
@@ -19,7 +32,9 @@ export enum PlayerStatus {
     ACTIVE = "active",
     FOLDED = "folded",
     ALL_IN = "all-in",
-    SITTING_OUT = "sitting-out"
+    SITTING_OUT = "sitting-out",
+    SITTING_IN = "sitting-in",
+    SHOWING = "showing"
 }
 
 export enum TexasHoldemRound {
@@ -28,7 +43,14 @@ export enum TexasHoldemRound {
     FLOP = "flop",
     TURN = "turn",
     RIVER = "river",
-    SHOWDOWN = "showdown"
+    SHOWDOWN = "showdown",
+    END = "end"
+}
+
+export type Positions = {
+    dealer?: number;
+    smallBlind?: number;
+    bigBlind?: number;
 }
 
 export type GameOptions = {
@@ -38,6 +60,7 @@ export type GameOptions = {
     maxPlayers: number;
     smallBlind: bigint;
     bigBlind: bigint;
+    timeout: number;
 };
 
 export type GameOptionsDTO = {
@@ -47,21 +70,24 @@ export type GameOptionsDTO = {
     maxPlayers: number;
     smallBlind: string;
     bigBlind: string;
+    timeout: number;
 };
 
 // This is the type of the last action of a player
 export type ActionDTO = {
     playerId: string,
     seat: number,
-    action: PlayerActionType;
+    action: PlayerActionType | NonPlayerActionType;
     amount: string;
     round: TexasHoldemRound;
+    index: number;
 };
 
 export type LegalActionDTO = {
-    action: PlayerActionType;
+    action: PlayerActionType | NonPlayerActionType;
     min: string | undefined;
     max: string | undefined;
+    index: number;
 };
 
 export type WinnerDTO = {
@@ -82,6 +108,26 @@ export type PlayerDTO = {
     legalActions: LegalActionDTO[];
     sumOfBets: string;
     timeout: number;
+    signature: string;
+};
+
+export type TexasHoldemGameState = {
+    type: string;
+    address: string;
+    minBuyIn: string;
+    maxBuyIn: string;
+    minPlayers: number;
+    maxPlayers: number;
+    smallBlind: string;
+    bigBlind: string;
+    positions: Positions;
+    players: string[];
+    deck: string;
+    communityCards: string[];
+    pots: string[];
+    nextToAct: number;
+    round: TexasHoldemRound;
+    winners: string[];
     signature: string;
 };
 

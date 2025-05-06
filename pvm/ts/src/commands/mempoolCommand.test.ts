@@ -31,7 +31,7 @@ describe("MempoolCommand", () => {
         }
     ];
 
-    const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0, undefined, "mock-data-1");
+    const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0n, 0, "mock-data-1");
 
     const txs: Transaction[] = [tx];
 

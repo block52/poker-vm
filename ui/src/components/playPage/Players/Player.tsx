@@ -1,10 +1,10 @@
 import * as React from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
-
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
-import { useTableContext } from "../../../context/TableContext";
-import { ethers } from "ethers";
+import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
+import { usePlayerData } from "../../../hooks/usePlayerData";
+import { useParams } from "react-router-dom";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -26,9 +26,9 @@ type PlayerProps = {
 };
 
 const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
-    const { tableData, winnerInfo } = useTableContext();
-
-
+    const { id } = useParams<{ id: string }>();
+    const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
+    const { winnerInfo } = useWinnerInfo(id);
 
     // // Add debugging
     // React.useEffect(() => {
@@ -36,29 +36,20 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     //     console.log("Player component tableData:", tableData);
     // }, [index, tableData]);
 
-    // Get player data directly from the table data
-    const playerData = React.useMemo(() => {
-        if (!tableData?.data?.players) return null;
-        return tableData.data.players.find((p: any) => p.seat === index);
-    }, [tableData, index]);
-
     if (!playerData) {
         return <></>;
     }
 
-    // Format stack value with ethers.js (more accurate for large numbers)
-    const stackValue = playerData.stack ? Number(ethers.formatUnits(playerData.stack, 18)) : 0;
-
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
         if (!winnerInfo) return false;
-        return winnerInfo.some(winner => winner.seat === index);
+        return winnerInfo.some((winner: any) => winner.seat === index);
     }, [winnerInfo, index]);
 
     // Get winner amount if this player is a winner
     const winnerAmount = React.useMemo(() => {
         if (!isWinner || !winnerInfo) return null;
-        const winner = winnerInfo.find(w => w.seat === index);
+        const winner = winnerInfo.find((w: any) => w.seat === index);
         return winner ? winner.formattedAmount : null;
     }, [isWinner, winnerInfo, index]);
 
@@ -66,8 +57,8 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
         <div
             key={index}
             className={`${
-                playerData.status === PlayerStatus.FOLDED ? "opacity-60" : ""
-            } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
+                isFolded ? "opacity-60" : ""
+            } absolute flex flex-col justify-center text-gray-600 w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
             style={{
                 left: left,
                 top: top,
@@ -75,10 +66,10 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
             }}
         >
             <div className="flex justify-center gap-1">
-                {playerData.holeCards && playerData.holeCards.length === 2 ? (
+                {holeCards && holeCards.length === 2 ? (
                     <>
-                        <img src={`/cards/${playerData.holeCards[0]}.svg`} width={60} height={80} className="mb-[11px]"/>
-                        <img src={`/cards/${playerData.holeCards[1]}.svg`} width={60} height={80} className="mb-[11px]"/>
+                        <img src={`/cards/${holeCards[0]}.svg`} width={60} height={80} className="mb-[11px]"/>
+                        <img src={`/cards/${holeCards[1]}.svg`} width={60} height={80} className="mb-[11px]"/>
                     </>
                 ) : (
                     // Render nothing when no cards have been dealt yet
@@ -91,11 +82,11 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
                     className={`b-[0%] mt-[auto] w-full h-[55px]  shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${isWinner ? "animate-pulse" : ""}`}
                 >
                     {/* Progress bar is not shown in showdown */}
-                    {!isWinner && tableData?.data?.round !== "showdown" && <ProgressBar index={index} />}
-                    {!isWinner && playerData.status === PlayerStatus.FOLDED && (
+                    {!isWinner && round !== "showdown" && <ProgressBar index={index} />}
+                    {!isWinner && isFolded && (
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">FOLD</span>
                     )}
-                    {!isWinner && playerData.status === PlayerStatus.ALL_IN && (
+                    {!isWinner && isAllIn && (
                         <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">All In</span>
                     )}
                     {isWinner && winnerAmount && (

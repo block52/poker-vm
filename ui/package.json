@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.68",
+    "@bitcoinbrisbane/block52": "1.0.84",
     "@reown/appkit": "1.6.7",
     "@reown/appkit-adapter-ethers": "1.6.7",
     "@reown/appkit-adapter-wagmi": "1.6.7",
@@ -22,6 +22,7 @@
     "react-icons": "^5.3.0",
     "react-router-dom": "^7.0.2",
     "react-toastify": "^10.0.6",
+    "swr": "^2.3.3",
     "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss": "^3.4.14",
     "viem": "2.x",
@@ -29,8 +30,13 @@
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3002",
+    "dev:lint": "eslint . --fix && vite --host 0.0.0.0 --port 3002",
+    "dev:nocheck": "vite --host 0.0.0.0 --port 3002",
     "build": "tsc -b && vite build",
+    "start": "vite preview --host 0.0.0.0 --port 3002",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:warn": "eslint . --fix --max-warnings=100",
     "preview": "vite preview"
   },
   "eslintConfig": {

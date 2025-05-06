@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { gameOptions } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
 
 describe("FoldAction", () => {
     let game: TexasHoldemGame;
@@ -28,13 +28,14 @@ describe("FoldAction", () => {
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            0, // dealer
+            defaultPositions, // dealer
             1, // nextToAct
             previousActions, // previousActions
             TexasHoldemRound.PREFLOP,
             [], // communityCards
-            0n, // pot
-            playerStates
+            [0n], // pot
+            playerStates,
+            mnemonic
         );
 
         updateMock = {
@@ -76,9 +77,13 @@ describe("FoldAction", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         });
 
-        it("should not return a range for fold action", () => {
+        it("should return a range for fold action", () => {
             const range = action.verify(player);
-            expect(range).toBeUndefined();
+            expect(range).toBeDefined();
+            expect(range).toEqual({
+                minAmount: 0n, // No chips are lost when folding
+                maxAmount: 0n
+            });
         });
 
         it.skip("should throw error if not player's turn", () => {
@@ -126,12 +131,12 @@ describe("FoldAction", () => {
 
         it("should not change player's chips", () => {
             const initialChips = player.chips;
-            action.execute(player);
+            action.execute(player, 0);
             expect(player.chips).toBe(initialChips);
         });
 
         it.skip("should add FOLD action with 0 amount", () => {
-            action.execute(player);
+            action.execute(player, 0);
 
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,

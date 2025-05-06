@@ -9,6 +9,7 @@ export type RPCRequest = {
     method: RPCMethods;
     params: RPCRequestParams[RPCMethods];
     data?: string;
+    signature?: string;
 };
 
 export type RPCResponse<T> = {
@@ -41,6 +42,7 @@ export enum RPCMethods {
     MINE = "mine",
     MINED_BLOCK_HASH = "mined_block_hash",
     MINT = "mint",
+    NEW = "new",
     PERFORM_ACTION = "perform_action",
     PURGE = "purge",
     RESET_BLOCKCHAIN = "reset_blockchain",
@@ -64,7 +66,7 @@ export type RPCRequestParams = {
     [RPCMethods.GET_BLOCKS]: [string]; // [count]
     [RPCMethods.GET_CLIENT]: []; // No parameters
     [RPCMethods.GET_CONTRACT_SCHEMA]: [string]; // [hash]
-    [RPCMethods.GET_GAME_STATE]: [string]; // [address]
+    [RPCMethods.GET_GAME_STATE]: [string, string]; // [address, sharedSecret]
     [RPCMethods.GET_LAST_BLOCK]: []; // No parameters
     [RPCMethods.GET_MEMPOOL]: []; // No parameters
     [RPCMethods.GET_NODES]: []; // No parameters
@@ -74,11 +76,12 @@ export type RPCRequestParams = {
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
     [RPCMethods.MINT]: [string]; // [depositIndex]
-    [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string | null]; // [from, to, action, amount, data]
+    [RPCMethods.NEW]: [string, string]; // [to, data]
+    [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number]; // [from, to, action, amount, nonce, index]
     [RPCMethods.PURGE]: [string, string]; // [username, password]
     [RPCMethods.RESET_BLOCKCHAIN]: [string, string]; // [username, password]
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
-    [RPCMethods.TRANSFER]: [string, string, string, string | null]; // [from, to, amount, data]
+    [RPCMethods.TRANSFER]: [string, string, string, number, string | null]; // [from, to, amount, nonce, data]
 };

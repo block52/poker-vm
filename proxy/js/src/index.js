@@ -16,12 +16,11 @@ const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
 
-const { NodeRpcClient, RPCMethods } = require("@bitcoinbrisbane/block52");
+const { RPCMethods, PlayerActionType, NonPlayerActionType } = require("@bitcoinbrisbane/block52");
 
 const { getUnixTime } = require("./utils/helpers");
 
 // Add WebSocket support
-const WebSocket = require("ws");
 const http = require("http");
 
 // ===================================
@@ -35,14 +34,16 @@ const port = process.env.PORT || 8080;
 const NODE_URL = process.env.NODE_URL || "https://node1.block52.xyz";
 console.log("Using NODE API URL:", NODE_URL);
 
+// Helper function to generate incrementing RPC IDs
+let rpcIdCounter = 0;
+const getNextRpcId = () => {
+    rpcIdCounter++;
+    return rpcIdCounter.toString();
+};
+
 // ===================================
 // 3. Initialize Client (Singleton)
 // ===================================
-let clientInstance = null;
-
-
-
-
 
 // ===================================
 // 4. Initialize Express Application
@@ -56,7 +57,7 @@ const app = express();
 app.use(
     cors({
         origin: ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
-        methods: ["GET", "POST", "OPTIONS"],
+        methods: ["GET", "POST", "OPTIONS", "PUT"],
         credentials: true,
         allowedHeaders: ["Content-Type", "Authorization"]
     })
@@ -67,13 +68,13 @@ app.use(express.json());
 // ===================================
 // 6. Database Connection
 // ===================================
-// connectDB()
-//     .then(() => {
-//         console.log("MongoDB connection established");
-//     })
-//     .catch(err => {
-//         console.error("MongoDB connection error:", err);
-//     }); 
+connectDB()
+    .then(() => {
+        console.log("MongoDB connection established");
+    })
+    .catch(err => {
+        console.error("MongoDB connection error:", err);
+    });
 
 // ===================================
 // 7. Configure API Documentation
@@ -91,8 +92,6 @@ app.get("/", (req, res) => {
 
 // Mount feature-specific routes
 app.use("/deposit-sessions", depositSessionsRouter);
-
-
 
 // ===================================
 // 10. Game lobby-related endpoints
@@ -116,9 +115,6 @@ app.get("/games", (req, res) => {
 // 11. Table-related endpoints
 // ===================================
 app.get("/tables", async (req, res) => {
-   
-   
-
     res.send("todo: you need to wire this up");
 });
 
@@ -127,8 +123,6 @@ app.get("/table/:id/player/:seat", async (req, res) => {
         const id = req.params.id;
         const seat = req.params.seat;
 
-        
-        
         const rpc_request = {
             jsonrpc: "2.0",
             method: "get_player",
@@ -150,7 +144,7 @@ app.get("/table/:id/player/:seat", async (req, res) => {
 
         res.send(data.result);
     } catch (error) {
-        console.error('Error fetching player:', error);
+        console.error("Error fetching player:", error);
         res.send(null);
     }
 });
@@ -158,452 +152,40 @@ app.get("/table/:id/player/:seat", async (req, res) => {
 // Create HTTP server instead of directly using app.listen
 const server = http.createServer(app);
 
-// Create WebSocket server with proper CORS handling
-// const wss = new WebSocket.Server({
-//     server,
-//     path: "/ws",
-//     // Add proper verification for CORS
-//     verifyClient: info => {
-//         const origin = info.origin || info.req.headers.origin;
-//         const allowedOrigins = ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080"];
-
-//         if (allowedOrigins.includes(origin)) {
-//             console.log(`Accepted WebSocket connection from origin: ${origin}`);
-//             return true;
-//         }
-
-//         console.log(`Rejected WebSocket connection from origin: ${origin}`);
-//         return false;
-//     }
-// });
-
-// Add more detailed error logging
-// wss.on("error", error => {
-//     console.error("WebSocket server error:", error);
-// });
-
-// Keep track of table subscriptions
-// const tableSubscriptions = new Map();
-
-// Function to send table state to a specific client
-// async function sendTableState(tableId, ws) {
-//     try {
-//         console.log(`Fetching table state for ${tableId} to send via WebSocket`);
-        
-//         // Use the existing client instance instead of creating a new one
-//         const client = getClient();
-        
-//         // Or if you need to use NodeRpcClient specifically, add proper error handling:
-//         // const client = new NodeRpcClient(
-//         //     process.env.NODE_URL || "https://node1.block52.xyz/", 
-//         //     process.env.VALIDATOR_KEY || ""
-//         // );
-        
-//         const table = await client.getGameState(tableId);
-//         console.log("=== TABLE STATE ===");
-//         console.log(table);
-
-//         if (ws.readyState === WebSocket.OPEN) {
-//             ws.send(
-//                 JSON.stringify({
-//                     type: "tableUpdate",
-//                     data: table
-//                 })
-//             );
-//             console.log(`Sent table state for ${tableId} via WebSocket`);
-//         } else {
-//             console.log(`WebSocket not open, skipping table state send for ${tableId}`);
-//         }
-//     } catch (error) {
-//         console.error("Error fetching table state for WebSocket:", error);
-        
-//         // Send an error message to the client so they know to fall back to polling
-//         if (ws.readyState === WebSocket.OPEN) {
-//             ws.send(JSON.stringify({
-//                 type: "error",
-//                 message: "Failed to fetch table state"
-//             }));
-//         }
-//     }
-// }
-
-// WebSocket connection handler - simplified for debugging
-// wss.on("connection", (ws, req) => {
-//     console.log("WebSocket client connected from", req.socket.remoteAddress);
-//     console.log("WebSocket connection headers:", req.headers);
-
-//     // Send a welcome message immediately
-//     try {
-//         ws.send(
-//             JSON.stringify({
-//                 type: "welcome",
-//                 message: "Connected to WebSocket server"
-//             })
-//         );
-//         console.log("Sent welcome message");
-//     } catch (error) {
-//         console.error("Error sending welcome message:", error);
-//     }
-
-//     let subscribedTableId = null;
-
-//     // Handle messages from clients
-//     ws.on("message", message => {
-//         try {
-//             console.log("Raw message received:", message.toString());
-//             const data = JSON.parse(message.toString());
-//             console.log("WebSocket message received:", data);
-
-//             // Handle subscription requests
-//             if (data.type === "subscribe" && data.tableId) {
-//                 subscribedTableId = data.tableId;
-//                 console.log(`Client subscribed to table: ${subscribedTableId}`);
-
-//                 // Add this connection to the table's subscription list
-//                 if (!tableSubscriptions.has(subscribedTableId)) {
-//                     tableSubscriptions.set(subscribedTableId, new Set());
-//                 }
-//                 tableSubscriptions.get(subscribedTableId).add(ws);
-
-//                 // Send confirmation to client
-//                 ws.send(
-//                     JSON.stringify({
-//                         type: "subscribed",
-//                         tableId: subscribedTableId
-//                     })
-//                 );
-
-//                 // Send initial table state
-//                 sendTableState(subscribedTableId, ws);
-//             }
-//         } catch (error) {
-//             console.error("Error processing WebSocket message:", error);
-//         }
-//     });
-
-//     // Handle disconnection
-//     ws.on("close", (code, reason) => {
-//         console.log("WebSocket client disconnected with code:", code, "reason:", reason || "No reason provided");
-//         if (subscribedTableId && tableSubscriptions.has(subscribedTableId)) {
-//             tableSubscriptions.get(subscribedTableId).delete(ws);
-
-//             // Clean up empty subscription sets
-//             if (tableSubscriptions.get(subscribedTableId).size === 0) {
-//                 tableSubscriptions.delete(subscribedTableId);
-//             }
-//         }
-//     });
-
-//     // Handle errors
-//     ws.on("error", error => {
-//         console.error("WebSocket connection error:", error);
-//     });
-// });
-
-// Heartbeat interval to keep connections alive
-// const interval = setInterval(function ping() {
-//     wss.clients.forEach(function each(ws) {
-//         if (ws.isAlive === false) {
-//             console.log("Terminating inactive WebSocket connection");
-//             return ws.terminate();
-//         }
-
-//         ws.isAlive = false;
-//         ws.ping();
-//     });
-// }, 30000);
-
-// Clean up interval on server close
-// wss.on("close", function close() {
-//     clearInterval(interval);
-// });
-
-// Function to broadcast table updates to all subscribed clients
-// async function broadcastTableUpdate(tableId) {
-//     if (!tableSubscriptions.has(tableId)) return;
-
-//     try {
-//         const client = new NodeRpcClient(process.env.NODE_URL || "http://localhost:3000", process.env.VALIDATOR_KEY || "");
-//         const table = await client.getGameState(tableId);
-
-//         const subscribers = tableSubscriptions.get(tableId);
-//         const message = JSON.stringify({
-//             type: "tableUpdate",
-//             data: table
-//         });
-
-//         for (const client of subscribers) {
-//             if (client.readyState === WebSocket.OPEN) {
-//                 client.send(message);
-//             }
-//         }
-//     } catch (error) {
-//         console.error("Error broadcasting table update:", error);
-//     }
-// }
-
-
-// Add a new endpoint to trigger table updates (can be called by the game server when state changes)
-// app.post("/notify-table-update/:id", async (req, res) => {
-//     const tableId = req.params.id;
-//     console.log(`Received update notification for table: ${tableId}`);
-
-//     // Broadcast the update to all subscribed clients
-//     await broadcastTableUpdate(tableId);
-
-//     res.status(200).json({ success: true });
-// });
-
 // ===================================
 // 12. Join table endpoint
 // ===================================
 app.post("/table/:tableId/join", async (req, res) => {
-    // console.log("=== JOIN TABLE REQUEST ===");
-    // console.log("Request body:", req.body);
-    // console.log("   signature:", req.body.signature);
-    // console.log("   publicKey:", req.body.publicKey);
-    // console.log("Buy in amount on join:", req.body.buyInAmount);
+    console.log("=== JOIN TABLE REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("Buy in amount on join:", req.body.buyInAmount);
 
     try {
-        // Format the RPC call to match the SDK client structure
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
-            id: "1",
-            method: RPCMethods.TRANSFER,
-            params: [req.body.userAddress, req.body.tableId, req.body.buyInAmount, "join"],
-            signature: req.body.signature,
-            publicKey: req.body.publicKey
-        };
-
-        // console.log("=== FORMATTED RPC CALL ===");
-        // console.log(JSON.stringify(rpcCall, null, 2));
-        // console.log("=== NODE_URL ===");
-        // console.log(process.env.NODE_URL);
-
-        // Make the actual RPC call to node1
-        const response = await axios.post(NODE_URL, rpcCall, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        // console.log("=== NODE1 RESPONSE ===");
-        // console.log(response.data);
-
-        res.json(response.data);
-    } catch (error) {
-        // console.error("=== ERROR ===");
-        // console.error("Error details:", error);
-        res.status(500).json({ error: "Failed to join table", details: error.message });
-    }
-});
-
-// ===================================
-// Player action endpoint
-// ===================================
-app.post("/table/:tableId/playeraction", async (req, res) => {
-    console.log("=== PLAYER ACTION REQUEST ===");
-    console.log("Request body:", JSON.stringify(req.body, null, 2));
-    console.log("Route params:", req.params);
-    console.log("Request headers:", req.headers);
-
-    try {
-        // Special handling for leave action
-        if (req.body.action === "leave") {
-            console.log("📤 PROCESSING LEAVE ACTION");
-            console.log("Leave action for player:", req.body.userAddress);
-            console.log("From table:", req.params.tableId);
-            console.log("Amount to return:", req.body.amount);
-            
-            // Always try to process leave requests, even if there are issues
-            let canProceed = true;
-            let warningMessage = "";
-            
-            try {
-                // Check if player is in folded state by getting table info
-                const tableInfoResponse = await axios.get(`${NODE_URL}/get_game_state/${req.params.tableId}`);
-                
-                if (!tableInfoResponse.data || !tableInfoResponse.data.result || !tableInfoResponse.data.result.data) {
-                    console.warn("⚠️ Unable to get table info for leave check");
-                    warningMessage = "Unable to verify player status, but attempting leave anyway.";
-                } else {
-                    const tableData = tableInfoResponse.data.result.data;
-                    console.log(`Got table data with ${tableData.players?.length || 0} players`);
-                    
-                    // Check if player exists in the table
-                    const player = tableData.players?.find(p => p.address?.toLowerCase() === req.body.userAddress?.toLowerCase());
-                    
-                    if (!player) {
-                        console.warn(`⚠️ Player ${req.body.userAddress} not found in table`);
-                        // Don't stop - player might already be partially removed
-                        warningMessage = "Player not found in table - might already be in the process of leaving.";
-                    } else {
-                        console.log(`Player status: ${player.status}`);
-                        if (player.status !== "folded" && player.status !== "sitting-out") {
-                            console.warn(`⚠️ Player ${req.body.userAddress} trying to leave without folding first. Status: ${player.status}`);
-                            // Only in this case do we return an error to tell the player they need to fold first
-                            return res.status(400).json({ 
-                                error: "Player must fold before leaving", 
-                                details: "Your hand must be folded before you can leave the table.",
-                                playerStatus: player.status
-                            });
-                        }
-                        
-                        console.log(`Player can leave - status is ${player.status}`);
-                    }
-                }
-            } catch (err) {
-                console.warn("Unable to verify player status before leave:", err.message);
-                warningMessage = "Error checking player status, but attempting leave anyway.";
-                // Continue with leave attempt even if we can't verify - the game engine will enforce rules
-            }
-            
-            // Add warning to the RPC call if applicable
-            if (warningMessage) {
-                req.body.warning = warningMessage;
-            }
-        }
-        
-        // Log the expected signed message format for debugging
-        console.log(`Expected signature format: ${req.body.action}${req.body.amount}${req.params.tableId}${req.body.timestamp}`);
-        
-        // Log the action and amount in detail
-        console.log(`Player ${req.body.userAddress} is attempting to perform action: ${req.body.action}`);
-        console.log(`Action amount: ${req.body.amount} (${ethers.formatUnits(req.body.amount || "0", 18)} ETH)`);
-        
-        // Format the RPC call to match the SDK client structure
-        const rpcCall = {
-            id: "1",
-            method: RPCMethods.TRANSFER,
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.body.userAddress,
-                req.params.tableId,
-                req.body.amount,
-                req.body.action
+                req.body.userAddress, // from
+                req.params.tableId, // to (using the tableId from URL params)
+                NonPlayerActionType.JOIN, // action
+                req.body.buyInAmount, // amount
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index
             ],
             signature: req.body.signature,
-            publicKey: req.body.publicKey || req.body.userAddress,
-            timestamp: req.body.timestamp  // Include timestamp if needed
+            publicKey: req.body.publicKey
         };
 
         console.log("=== FORMATTED RPC CALL ===");
         console.log(JSON.stringify(rpcCall, null, 2));
         console.log("=== NODE_URL ===");
-        console.log(NODE_URL);
-
-        // Make the actual RPC call to node1
-        console.log("Sending request to node...");
-        const response = await axios.post(NODE_URL, rpcCall, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        console.log("=== NODE1 RESPONSE ===");
-        console.log(JSON.stringify(response.data, null, 2));
-
-        res.json(response.data);
-    } catch (error) {
-        console.error("=== ERROR ===");
-        console.error("Error details:", error);
-        
-        // Special handling for leave errors
-        if (req.body.action === "leave") {
-            console.error("❌ ERROR PROCESSING LEAVE ACTION");
-            // If the error has a response, log more details about it
-            if (error.response) {
-                console.error(`Status: ${error.response.status}`);
-                console.error(`Status Text: ${error.response.statusText}`);
-                console.error(`Request URL: ${error.config?.url || 'Unknown URL'}`);
-                console.error(`Request Data: ${JSON.stringify(error.config?.data || {})}`);
-                console.error(`Response Data: ${JSON.stringify(error.response.data || {})}`);
-            }
-        }
-        
-        // Log more detailed error information
-        if (error.response) {
-            console.error("Error response data:", error.response.data);
-            console.error("Error response status:", error.response.status);
-        }
-        
-        res.status(500).json({ error: "Failed to perform player action", details: error.message });
-    }
-});
-
-// ===================================
-// Perform action endpoint
-// ===================================
-app.post("/table/:tableId/perform", async (req, res) => {
-    console.log("=== PERFORM ACTION REQUEST ===");
-    console.log("Request body:", JSON.stringify(req.body, null, 2));
-    console.log("Route params:", req.params);
-
-    try {
-        // Format the RPC call to match the SDK client structure
-        const rpcCall = {
-            id: "1",
-            method: RPCMethods.PERFORM_ACTION,
-            params: [
-                req.body.userAddress,         // from (player address)
-                req.params.tableId,           // to (table address)
-                req.body.actionType,          // action type (fold, check, bet, etc.)
-                req.body.amount || null,      // amount (if needed for the action)
-                req.body.data || null         // additional data (if needed)
-            ],
-            signature: req.body.signature,
-            publicKey: req.body.publicKey || req.body.userAddress
-        };
-
-        console.log("=== FORMATTED RPC CALL ===");
-        console.log(JSON.stringify(rpcCall, null, 2));
-
-        // Make the actual RPC call to node
-        const response = await axios.post(NODE_URL, rpcCall, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        console.log("=== NODE RESPONSE ===");
-        console.log(JSON.stringify(response.data, null, 2));
-
-        res.json(response.data);
-    } catch (error) {
-        console.error("=== ERROR ===");
-        console.error("Error details:", error);
-        
-        // If the error has a response, log more details about it
-        if (error.response) {
-            console.error("Error response data:", error.response.data);
-            console.error("Error response status:", error.response.status);
-        }
-        
-        res.status(500).json({ 
-            error: "Failed to perform action", 
-            details: error.message 
-        });
-    }
-});
-
-// ===================================
-// 13. Account-related endpoints
-// ===================================
-app.get("/get_account/:accountId", async (req, res) => {
-    // console.log("=== GET ACCOUNT REQUEST ===");
-    // console.log("Account ID:", req.params.accountId);
-
-    try {
-        // Format the RPC call according to the specified structure
-        const rpcCall = {
-            id: "1",
-            method: "get_account",
-            version: "2.0",
-            params: [req.params.accountId]
-        };
-
-        // console.log("=== FORMATTED RPC CALL ===");
-        // console.log(JSON.stringify(rpcCall, null, 2));
-        // console.log("=== NODE_URL ===");
-        // console.log(process.env.NODE_URL);
+        console.log(process.env.NODE_URL);
 
         // Make the actual RPC call to the node
         const response = await axios.post(NODE_URL, rpcCall, {
@@ -612,16 +194,453 @@ app.get("/get_account/:accountId", async (req, res) => {
             }
         });
 
-        // console.log("=== NODE RESPONSE ===");
-        // console.log(response.data);
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
 
         res.json(response.data);
     } catch (error) {
-        // console.error("=== ERROR ===");
-        // console.error("Error details:", error);
-        res.status(500).json({ 
-            error: "Failed to get account", 
-            details: error.message 
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to join table", details: error.message });
+    }
+});
+
+// Post small blind endpoint
+app.post("/table/:tableId/post_small_blind", async (req, res) => {
+    console.log("=== POST SMALL BLIND REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index);
+    console.log("Small blind amount:", req.body.amount || req.body.smallBlindAmount);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (using the tableId from URL params)
+                PlayerActionType.SMALL_BLIND, // action
+                req.body.amount || req.body.smallBlindAmount || "0", // amount (use amount or smallBlindAmount)
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to post small blind", details: error.message });
+    }
+});
+
+// Post big blind endpoint
+app.post("/table/:tableId/post_big_blind", async (req, res) => {
+    console.log("=== POST BIG BLIND REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index);
+    console.log("Big blind amount:", req.body.amount || req.body.bigBlindAmount);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (using the tableId from URL params)
+                PlayerActionType.BIG_BLIND, // action
+                req.body.amount || req.body.bigBlindAmount || "0", // amount (use amount or bigBlindAmount)
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to post big blind", details: error.message });
+    }
+});
+
+app.post("/table/:tableId/fold", async (req, res) => {
+    console.log("=== FOLD ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.FOLD, // action
+                "0", // amount (folding doesn't require an amount)
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index // data/index - use the provided index or default to 1 based on game state
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to fold", details: error.message });
+    }
+});
+
+// Add new raise endpoint
+app.post("/table/:tableId/raise", async (req, res) => {
+    console.log("=== RAISE ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
+    console.log("   raise amount:", req.body.amount);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.RAISE, // action
+                req.body.amount, // amount to raise
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to raise", details: error.message });
+    }
+});
+
+// Add bet endpoint
+app.post("/table/:tableId/bet", async (req, res) => {
+    console.log("=== BET ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
+    console.log("   bet amount:", req.body.amount);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.BET, // action
+                req.body.amount, // amount to bet
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to bet", details: error.message });
+    }
+});
+
+// Add call endpoint
+app.post("/table/:tableId/call", async (req, res) => {
+    console.log("=== CALL ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
+    console.log("   call amount:", req.body.amount);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.CALL, // action
+                req.body.amount, // amount to call
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to call", details: error.message });
+    }
+});
+
+// Add check endpoint
+app.post("/table/:tableId/check", async (req, res) => {
+    console.log("=== CHECK ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.CHECK, // action
+                "0", // amount (check doesn't require an amount)
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to check", details: error.message });
+    }
+});
+
+app.post("/table/:tableId/leave", async (req, res) => {
+    console.log("=== LEAVE TABLE REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("Amount to withdraw on leave:", req.body.amount);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (using the tableId from URL params)
+                NonPlayerActionType.LEAVE, // action
+                req.body.amount || "0", // amount
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to leave table", details: error.message });
+    }
+});
+
+// ===================================
+// 13. Account-related endpoints
+// ===================================
+app.get("/get_account/:accountId", async (req, res) => {
+    try {
+        // Format the RPC call using the shared type
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.GET_ACCOUNT,
+            version: "2.0",
+            params: [req.params.accountId]
+        };
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({
+            error: "Failed to get account",
+            details: error.message
         });
     }
 });
@@ -643,7 +662,7 @@ app.get("/nonce/:address", async (req, res) => {
     try {
         // Format the RPC call according to the specified structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             method: "get_account",
             version: "2.0",
             params: [req.params.address]
@@ -692,101 +711,55 @@ app.get("/nonce/:address", async (req, res) => {
     }
 });
 
-// Add a test endpoint to check WebSocket functionality
-app.get("/websocket-test", (req, res) => {
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>WebSocket Test</title>
-    </head>
-    <body>
-      <h1>WebSocket Test</h1>
-      <div id="status">Connecting...</div>
-      <div id="messages"></div>
-      <script>
-        const status = document.getElementById('status');
-        const messages = document.getElementById('messages');
-        
-        // Create WebSocket connection
-        const socket = new WebSocket('${req.protocol === "https" ? "wss" : "ws"}://${req.headers.host}/ws');
-        
-        // Connection opened
-        socket.addEventListener('open', (event) => {
-          status.textContent = 'Connected';
-          socket.send(JSON.stringify({type: 'ping'}));
-        });
-        
-        // Listen for messages
-        socket.addEventListener('message', (event) => {
-          const msg = document.createElement('div');
-          msg.textContent = 'Received: ' + event.data;
-          messages.appendChild(msg);
-        });
-        
-        // Connection closed
-        socket.addEventListener('close', (event) => {
-          status.textContent = 'Disconnected: ' + event.code;
-        });
-        
-        // Connection error
-        socket.addEventListener('error', (event) => {
-          status.textContent = 'Error';
-          console.error('WebSocket error:', event);
-        });
-      </script>
-    </body>
-    </html>
-  `);
-});
-
 // ===================================
 // Deal cards endpoint
 // ===================================
 app.post("/table/:tableId/deal", async (req, res) => {
-    // console.log("=== DEAL CARDS REQUEST ===");
-    // console.log("Request body:", req.body);
-    // console.log("Route params:", req.params);
+    console.log("=== DEAL ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
 
     try {
-        // Format the RPC call to match the SDK client structure
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
-            id: "1",
-            version: "2.0",
-            method: "deal",
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.params.tableId,                // table address
-                req.body.seed || "randomseed123",  // random seed (use provided or default) todo: this should be the seed from the game
-                req.body.publicKey                 // public key
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                NonPlayerActionType.DEAL, // action
+                "0", // amount (deal doesn't require an amount)
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index || req.body.actionIndex // data/index - use the provided index
             ],
-            signature: req.body.signature
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
         };
 
-        // console.log("=== FORMATTED RPC CALL ===");
-        // console.log(JSON.stringify(rpcCall, null, 2));
-        // console.log("=== NODE_URL ===");
-        // console.log(process.env.NODE_URL);
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
 
-        // Make the actual RPC call to node1
+        // Make the actual RPC call to the node
         const response = await axios.post(NODE_URL, rpcCall, {
             headers: {
                 "Content-Type": "application/json"
             }
         });
 
-        // console.log("=== NODE1 RESPONSE ===");
-        // console.log(response.data);
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
 
         res.json(response.data);
-        
-        // // Also broadcast this update to WebSocket clients
-        // if (tableSubscriptions.has(req.params.tableId)) {
-        //     console.log(`Broadcasting table update after deal to ${tableSubscriptions.get(req.params.tableId).size} WebSocket clients`);
-        //     await broadcastTableUpdate(req.params.tableId);
-        // }
     } catch (error) {
-        // console.error("=== ERROR ===");
-        // console.error("Error details:", error);
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
         res.status(500).json({ error: "Failed to deal cards", details: error.message });
     }
 });
@@ -795,16 +768,17 @@ app.post("/table/:tableId/deal", async (req, res) => {
 // New endpoint for get_game_state
 // ===================================
 app.get("/get_game_state/:tableId", async (req, res) => {
-    // console.log("=== GET GAME STATE REQUEST ===");
+    console.log("=== GET GAME STATE REQUEST ===");
     // console.log("Table ID:", req.params.tableId);
+    // console.log("User Address:", req.query.userAddress);
 
     try {
         // Format the RPC call according to the specified structure
         const rpcCall = {
-            id: "1",
+            id: getNextRpcId(),
             method: "get_game_state",
             version: "2.0",
-            params: [req.params.tableId]
+            params: [req.params.tableId, req.query.userAddress]
         };
 
         // console.log("=== FORMATTED RPC CALL ===");
@@ -824,19 +798,244 @@ app.get("/get_game_state/:tableId", async (req, res) => {
 
         res.json(response.data.result);
     } catch (error) {
-        // console.error("=== ERROR ===");
-        // console.error("Error details:", error);
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({
+            error: "Failed to get game state",
+            details: error.message
+        });
+    }
+});
+
+// ===================================
+// New endpoint for creating a new game
+// ===================================
+app.post("/create_new_game", async (req, res) => {
+    console.log("=== CREATE NEW GAME REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   address:", req.body.address);
+    console.log("   seed:", req.body.seed || "undefined");
+
+    try {
+        // TODO: HACK - This endpoint should also follow proper nonce handling in the future
+        
+        // Format the RPC call to match the NEW command structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: "new", // Lowercase "new" matches the SDK definition
+            params: [
+                "0x22dfa2150160484310c5163f280f49e23b8fd34326", // Hardcoded for now to match exactly what's expected
+                req.body.seed || ""
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        }; 
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
         res.status(500).json({ 
-            error: "Failed to get game state", 
+            error: "Failed to create new game", 
             details: error.message 
         });
     }
 });
 
 // ===================================
-// New endpoint for get_account
+// New endpoint for mucking cards
 // ===================================
+app.post("/table/:tableId/muck", async (req, res) => {
+    console.log("=== MUCK ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
 
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.MUCK, // action
+                "0", // amount (muck doesn't require an amount)
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to muck cards", details: error.message });
+    }
+});
+
+// ===================================
+// New endpoint for showing cards
+// ===================================
+app.post("/table/:tableId/show", async (req, res) => {
+    console.log("=== SHOW ACTION REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   signature:", req.body.signature);
+    console.log("   publicKey:", req.body.publicKey);
+    console.log("   action index:", req.body.index || req.body.actionIndex);
+
+    try {
+        // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
+        const timestampNonce = Date.now().toString();
+        
+        // Format the RPC call to match the PERFORM_ACTION structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [
+                req.body.userAddress, // from
+                req.params.tableId, // to (table ID)
+                PlayerActionType.SHOW, // action
+                "0", // amount (show doesn't require an amount)
+                timestampNonce, // nonce - using timestamp for uniqueness
+                req.body.index || req.body.actionIndex // data/index - use the provided index
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+        console.log("=== NODE_URL ===");
+        console.log(process.env.NODE_URL);
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ error: "Failed to show cards", details: error.message });
+    }
+});
+
+// ===================================
+// New endpoint for creating a new hand
+// ===================================
+app.post("/create_new_hand/:tableId", async (req, res) => {
+    console.log("=== CREATE NEW HAND REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("   table address:", req.params.tableId);
+    console.log("   user address:", req.body.userAddress);
+    console.log("   nonce:", req.body.nonce);
+    console.log("   seed:", req.body.seed);
+
+    try {
+        // TODO: HACK - This endpoint should follow proper nonce handling in the future
+        
+        // Use the tableId from URL parameters, not request body
+        const tableId = req.params.tableId;
+        
+        // Format the RPC call to match the NEW command structure
+        const rpcCall = {
+            id: getNextRpcId(),
+            method: "new", // Lowercase "new" matches the SDK definition
+            params: [
+                tableId, // Use tableId from URL params
+                req.body.seed || Math.random().toString(36).substring(2, 15) // Use provided seed or generate random one
+            ],
+            signature: req.body.signature,
+            publicKey: req.body.publicKey
+        };
+
+        console.log("=== FORMATTED RPC CALL ===");
+        console.log(JSON.stringify(rpcCall, null, 2));
+
+        // Make the actual RPC call to the node
+        const response = await axios.post(NODE_URL, rpcCall, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log("=== NODE RESPONSE ===");
+        console.log(response.data);
+
+        // After successful creation, trigger a game state refresh
+        setTimeout(async () => {
+            try {
+                console.log("=== TRIGGERING GAME STATE REFRESH ===");
+                const gameStateCall = {
+                    id: getNextRpcId(),
+                    method: "getGameState",
+                    params: [tableId], // Use the tableId from URL params
+                    publicKey: req.body.publicKey
+                };
+                
+                await axios.post(NODE_URL, gameStateCall, {
+                    headers: { "Content-Type": "application/json" }
+                });
+                
+                console.log("Game state refresh triggered successfully");
+            } catch (refreshError) {
+                console.error("Error refreshing game state:", refreshError);
+            }
+        }, 1000); // Short delay to ensure the change has propagated
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("=== ERROR ===");
+        console.error("Error details:", error);
+        res.status(500).json({ 
+            error: "Failed to create new hand", 
+            details: error.message 
+        });
+    }
+});
 
 // ===================================
 // 14. Start Server
@@ -846,7 +1045,6 @@ server.listen(port, "0.0.0.0", () => {
     // ====================================
     // 🚀 Server is running
     // 📡 Port: ${port}
-
     // 🌍 URL: http://localhost:${port}
     // 📚 Docs: http://localhost:${port}/docs
     // ====================================

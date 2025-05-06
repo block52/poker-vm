@@ -23,9 +23,11 @@ export const WRITE_METHODS = [
     RPCMethods.BURN,
     RPCMethods.CREATE_ACCOUNT,
     RPCMethods.CREATE_CONTRACT_SCHEMA,
+    RPCMethods.DEPLOY_CONTRACT,
     RPCMethods.MINE,
     RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.MINT,
+    RPCMethods.NEW,
     RPCMethods.PERFORM_ACTION,
     RPCMethods.TRANSFER
 ];

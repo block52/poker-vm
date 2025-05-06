@@ -7,8 +7,8 @@ export class DeployContractCommand implements ISignedCommand<string> {
     private readonly gameManagement: GameManagement;
     private readonly gameOptions: GameOptions;
     
-    constructor(private nonce: bigint, private owner: string, private data: string, private readonly privateKey: string) {
-        const params = data.split("-");
+    constructor(private readonly nonce: bigint, private readonly owner: string, private readonly data: string, private readonly privateKey: string) {
+        const params = data.split(",");
 
         const gameOptions: GameOptions = {
             minBuyIn: BigInt(params[0]),
@@ -16,7 +16,8 @@ export class DeployContractCommand implements ISignedCommand<string> {
             minPlayers: parseInt(params[2]),
             maxPlayers: parseInt(params[3]),
             smallBlind: BigInt(params[4]),
-            bigBlind: BigInt(params[5])
+            bigBlind: BigInt(params[5]),
+            timeout: params[6] ? parseInt(params[6]) : 60000, // Default timeout if not provided
         };
 
         this.gameOptions = gameOptions;

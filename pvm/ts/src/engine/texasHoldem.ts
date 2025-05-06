@@ -4,9 +4,11 @@ import {
     GameOptions,
     GameOptionsDTO,
     LegalActionDTO,
+    NonPlayerActionType,
     PlayerActionType,
     PlayerDTO,
     PlayerStatus,
+    Positions,
     TexasHoldemRound,
     TexasHoldemStateDTO,
     WinnerDTO
@@ -24,12 +26,13 @@ import RaiseAction from "./actions/raiseAction";
 import SmallBlindAction from "./actions/smallBlindAction";
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IPoker, IUpdate, Turn } from "./types";
-import { ethers } from "ethers";
+import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
+import { ethers, N } from "ethers";
+import LeaveAction from "./actions/leaveAction";
+import MuckAction from "./actions/muckAction";
+import ShowAction from "./actions/showAction";
 
-type TurnWithSeat = Turn & { seat: number };
-
-class TexasHoldemGame implements IPoker {
+class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
 
     // Players should be a map of player to seat index
@@ -40,56 +43,42 @@ class TexasHoldemGame implements IPoker {
     private _lastActedSeat: number;
     private _deck!: Deck;
 
-    private _pot: bigint;
+    private _pots: [bigint] = [0n];
     private _sidePots!: Map<string, bigint>;
     private _winners?: Map<string, bigint>;
 
+    private _dealer: number;
     private _bigBlindPosition: number;
     private _smallBlindPosition: number;
-    private _actions: BaseAction[];
-
-    // // Table options
-    // private readonly _minBuyIn: bigint;
-    // private readonly _maxBuyIn: bigint;
-    // private readonly _minPlayers: number;
-    // private readonly _maxPlayers: number;
-    // private readonly _smallBlind: bigint;
-    // private readonly _bigBlind: bigint;
-
+    private _actions: IAction[];
     private readonly _gameOptions: GameOptions;
 
     private seed: number[] = [];
     private readonly _communityCards: Card[] = [];
     private _handNumber: number = 0;
+    private _turnIndex: number = 0;
 
     constructor(
         private readonly _address: string,
         private gameOptions: GameOptions,
-        private _dealer: number,
+        private positions: Positions,
         private _lastToAct: number,
         private previousActions: ActionDTO[] = [],
-        private _currentRound: TexasHoldemRound = TexasHoldemRound.PREFLOP,
+        private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private communityCards: string[],
-        private currentPot: bigint = 0n, // todo: this can be removed
+        private pots: bigint[] = [0n],
         playerStates: Map<number, Player | null>,
-        deck?: string
+        deck: string,
+        winners: WinnerDTO[] = [],
+        private readonly caller?: string
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
+        this._deck = new Deck(deck);
 
-        if (deck) {
-            this._deck = new Deck(deck);
-        } else {
-            this._deck = new Deck();
-
-            // Create a seed number for the deck
-            // this.seed = Array.from({ length: 52 }, () => crypto.randomInt(0, 1000000));
-            this.seed = Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
-
-            // Shuffle the deck
-            // console.log("About to shuffle deck with seed array:", this.seed);
-            this._deck.shuffle(this.seed);
-            // console.log("Deck shuffled successfully");
-        };
+        this._winners = new Map<string, bigint>();
+        for (const winner of winners) {
+            this._winners.set(winner.address, BigInt(winner.amount));
+        }
 
         // TODO: Make this a map
         for (let i = 0; i < communityCards.length; i++) {
@@ -99,23 +88,25 @@ class TexasHoldemGame implements IPoker {
 
         // this._players = new FixedCircularList<Player>(this._maxPlayers, null);
 
-        this._pot = BigInt(currentPot);
+        for (let i = 0; i < pots.length; i++) {
+            this._pots[i] = BigInt(pots[i]);
+        }
+
         this._currentRound = _currentRound;
         this._gameOptions = gameOptions;
+        this._smallBlindPosition = this.positions.smallBlind ?? 1;
+        this._bigBlindPosition = this.positions.bigBlind ?? 2;
+        this._dealer = this.positions.dealer ?? 9;
 
-        // this was is causing the 10 & 11
-        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
-
-        this._rounds.set(TexasHoldemRound.PREFLOP, []);
-        this._dealer = _dealer === 0 ? this._gameOptions.maxPlayers : _dealer;
+        this._rounds.set(TexasHoldemRound.ANTE, []);
         this._lastActedSeat = _lastToAct; // Need to recalculate this
 
         for (const action of previousActions) {
-            const turn = {
+            const turn: Turn = {
                 playerId: action.playerId,
                 action: action.action,
-                amount: BigInt(action.amount)
+                amount: BigInt(action.amount),
+                index: action.index
             };
 
             this.addAction(turn, action.round);
@@ -123,9 +114,7 @@ class TexasHoldemGame implements IPoker {
 
         this._update = new (class implements IUpdate {
             constructor(public game: TexasHoldemGame) { }
-
-            addAction(action: Turn): void {
-            }
+            addAction(action: Turn): void { }
         })(this);
 
         this._actions = [
@@ -136,7 +125,9 @@ class TexasHoldemGame implements IPoker {
             new CheckAction(this, this._update),
             new BetAction(this, this._update),
             new CallAction(this, this._update),
-            new RaiseAction(this, this._update)
+            new RaiseAction(this, this._update),
+            new MuckAction(this, this._update),
+            new ShowAction(this, this._update),
         ];
     }
 
@@ -160,7 +151,6 @@ class TexasHoldemGame implements IPoker {
     }
     get currentPlayerId() {
         const player = this.getPlayerAtSeat(this._lastActedSeat);
-
         return player?.address ?? ethers.ZeroAddress;
     }
     get currentRound() {
@@ -176,9 +166,15 @@ class TexasHoldemGame implements IPoker {
         return this._handNumber;
     }
 
+    // Returns the current turn index without incrementing it
+    getTurnIndex(): number {
+        return this._turnIndex;
+    }
+
     exists(playerId: string): boolean {
+        const normalizedPlayerId = playerId.toLowerCase();
         for (const [seat, player] of this._playersMap.entries()) {
-            if (player?.address === playerId) {
+            if (player?.address.toLowerCase() === normalizedPlayerId) {
                 return true;
             }
         }
@@ -191,40 +187,25 @@ class TexasHoldemGame implements IPoker {
         return count;
     }
 
-    shuffle(seed: number[] = []): void {
-        this._deck.shuffle(seed);
-    }
-
-    deal(seed: number[] = []): void {
+    deal(): void {
         // Check minimum players
         if (this.getActivePlayerCount() < this._gameOptions.minPlayers) throw new Error("Not enough active players");
 
-        if (![TexasHoldemRound.PREFLOP, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
+        // if (![TexasHoldemRound.PREFLOP, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
+        if (this._currentRound !== TexasHoldemRound.ANTE) throw new Error("Can only deal in preflop round.");
 
-        // Make sure small blind and big blind have been posted
-        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
-        if (!preFlopActions || preFlopActions.length < 2) {
-            throw new Error("Blinds must be posted before dealing.");
-        }
-
-        const hasSmallBlind = preFlopActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
-        const hasBigBlind = preFlopActions.some(a => a.action === PlayerActionType.BIG_BLIND);
-
-        if (!hasSmallBlind || !hasBigBlind) {
-            throw new Error("Both small and big blinds must be posted before dealing.");
-        }
+        // // Make sure small blind and big blind have been posted
+        // const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        // if (!anteActions || anteActions.length < 2) {
+        //     throw new Error("Blinds must be posted before dealing.");
+        // }
 
         // Check if cards have already been dealt
-        const hasDealt = preFlopActions.some(a => a.action === PlayerActionType.DEAL);
-        const anyPlayerHasCards = Array.from(this._playersMap.values())
-            .some(p => p !== null && p.holeCards !== undefined);
+        const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
-        if (hasDealt || anyPlayerHasCards) {
+        if (anyPlayerHasCards) {
             throw new Error("Cards have already been dealt for this hand.");
         }
-
-        // Reset the deck and shuffle
-        this.shuffle(seed);
 
         // Deal 2 cards to each player
         const players = this.getSeatedPlayers();
@@ -246,22 +227,15 @@ class TexasHoldemGame implements IPoker {
                 player.holeCards[1] = secondCard; // Replace second card
             }
         }
-
-        console.log("Cards dealt successfully");
     }
 
-    join(player: Player) {
-        const seat = this.findNextSeat();
-        this.joinAtSeat(player, seat);
-    }
-
-    join2(address: string, chips: bigint) {
+    private join(address: string, chips: bigint) {
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
-        const seat = this.findNextSeat();
+        const seat = this.findNextEmptySeat();
         this.joinAtSeat(player, seat);
     }
 
-    joinAtSeat(player: Player, seat: number) {
+    private joinAtSeat(player: Player, seat: number) {
         // Check if the player is already in the game
         if (this.exists(player.address)) {
             throw new Error("Player already joined.");
@@ -273,27 +247,33 @@ class TexasHoldemGame implements IPoker {
             throw new Error("Table full."); // This must be thrown
         }
 
+        if (player.chips < this._gameOptions.minBuyIn || player.chips > this._gameOptions.maxBuyIn) {
+            throw new Error("Player does not have enough or too many chips to join.");
+        }
+
         this._playersMap.set(seat, player);
 
         // TODO: Need to consider the work flow here, but make active for now
         player.updateStatus(PlayerStatus.ACTIVE);
 
-        if (player.chips < this._gameOptions.minBuyIn) {
-            throw new Error("Player does not have enough chips to join.");
-        }
-
         const autoPostBlinds = false;
+        // These should be done via the add action function
         if (autoPostBlinds) {
             // Auto join the first player
             if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.PREFLOP) {
                 // post small blind
-                new SmallBlindAction(this, this._update).execute(player, this._gameOptions.smallBlind);
+                new SmallBlindAction(this, this._update).execute(player, 0, this._gameOptions.smallBlind);
 
                 // This is the last player to act
                 this._lastActedSeat = seat;
 
                 // Add to bets to preflop round
-                const turn: Turn = { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: this._gameOptions.smallBlind };
+                const turn: Turn = {
+                    playerId: player.address,
+                    action: PlayerActionType.SMALL_BLIND,
+                    amount: this._gameOptions.smallBlind,
+                    index: this._turnIndex
+                };
 
                 player.addAction(turn);
                 player.updateStatus(PlayerStatus.ACTIVE);
@@ -302,13 +282,13 @@ class TexasHoldemGame implements IPoker {
             // Auto join the second player
             if (this.getPlayerCount() === 2 && this.currentRound === TexasHoldemRound.PREFLOP) {
                 // post big blind
-                new BigBlindAction(this, this._update).execute(player, this._gameOptions.bigBlind);
+                new BigBlindAction(this, this._update).execute(player, 0, this._gameOptions.bigBlind);
 
                 // This is the last player to act
                 this._lastActedSeat = seat;
 
                 // Add to bets to pre-flop round
-                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind };
+                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind, index: this._turnIndex };
 
                 player.addAction(turn);
                 player.updateStatus(PlayerStatus.ACTIVE);
@@ -318,29 +298,13 @@ class TexasHoldemGame implements IPoker {
         // Check if we haven't dealt
         if (autoPostBlinds) {
             if (this.getPlayerCount() === this._gameOptions.minPlayers && this.currentRound === TexasHoldemRound.PREFLOP) {
-                this.shuffle();
                 this.deal();
             }
         }
     }
 
-    leave(address: string): bigint {
-        const player = this.getPlayer(address);
-        const seat = this.getPlayerSeatNumber(address);
-
-        // Check if player has folded
-        if (player.status !== PlayerStatus.FOLDED && player.status !== PlayerStatus.SITTING_OUT) {
-            throw new Error("Player must fold before leaving the table");
-        }
-
-        // Get their current stack before removing them
-        const currentStack = player.chips;
-
-        // Remove player from seat
-        this._playersMap.set(seat, null);
-
-        // Return their stack amount
-        return currentStack;
+    private incrementTurnIndex(): void {
+        this._turnIndex++;
     }
 
     getNextPlayerToAct(): Player | undefined {
@@ -350,83 +314,20 @@ class TexasHoldemGame implements IPoker {
 
     private findNextPlayerToAct(): Player | undefined {
         // Has the small blind posted?
-        const preFlopActions = this._rounds.get(TexasHoldemRound.PREFLOP);
-        const hasSmallBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
+        const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
+        const hasSmallBlindPosted = anteActions?.some(a => a.action === PlayerActionType.SMALL_BLIND);
 
         if (!hasSmallBlindPosted) {
             return this.getPlayerAtSeat(this._smallBlindPosition);
         }
 
         // Has the big blind posted?
-        const hasBigBlindPosted = preFlopActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
+        const hasBigBlindPosted = anteActions?.some(a => a.action === PlayerActionType.BIG_BLIND);
         if (!hasBigBlindPosted) {
             return this.getPlayerAtSeat(this._bigBlindPosition);
         }
 
-        // Check if cards have been dealt
-        const hasDealt = preFlopActions?.some(a => a.action === PlayerActionType.DEAL);
-        const anyPlayerHasCards = Array.from(this._playersMap.values())
-            .some(p => p !== null && p.holeCards !== undefined);
-        
-        // If blinds are posted but cards haven't been dealt yet,
-        // then deal action is next - small blind player typically does this
-        if (!hasDealt && !anyPlayerHasCards) {
-            return this.getPlayerAtSeat(this._smallBlindPosition);
-        }
-
-        // If cards have been dealt, determine who acts first in the betting round
-        if (anyPlayerHasCards) {
-            // Check if there have been any betting actions yet
-            const bettingActionsCount = preFlopActions?.filter(a =>
-                a.action !== PlayerActionType.SMALL_BLIND &&
-                a.action !== PlayerActionType.BIG_BLIND &&
-                a.action !== PlayerActionType.DEAL
-            ).length || 0;
-
-
-            if (bettingActionsCount === 0) {
-                // Count active players
-                const activePlayerCount = this.getActivePlayerCount();
-
-                if (activePlayerCount === 2) {
-                    // In 2-player games, small blind acts first
-                    return this.getPlayerAtSeat(this._smallBlindPosition);
-                } else {
-                    // In 3+ player games, player after big blind acts first
-                    // Find the next active player after the big blind position
-                    let nextSeat = this._bigBlindPosition + 1;
-                    if (nextSeat > this._gameOptions.maxPlayers) {
-                        nextSeat = 1;
-                    }
-
-                    // First look specifically for seat 3 (common case) for efficiency
-                    if (nextSeat === 3) {
-                        const player = this.getPlayerAtSeat(3);
-                        if (player && player.status === PlayerStatus.ACTIVE) {
-                            return player;
-                        }
-                    }
-
-                    // Search for the next active player, starting from the seat after big blind
-                    for (let i = 0; i < this._gameOptions.maxPlayers; i++) {
-                        const seatToCheck = (nextSeat + i - 1) % this._gameOptions.maxPlayers + 1;
-
-                        // Skip checking seat 3 again if we already did
-                        if (seatToCheck === 3 && nextSeat === 3) continue;
-
-                        const player = this.getPlayerAtSeat(seatToCheck);
-                        if (player && player.status === PlayerStatus.ACTIVE) {
-                            return player;
-                        }
-                    }
-
-                    // If no active players found after big blind, return small blind
-                    return this.getPlayerAtSeat(this._smallBlindPosition);
-                }
-            }
-        }
-
-        // For subsequent actions in the round, find the next player after the last acted player   
+        // For subsequent actions in the round, find the next player after the last acted player
         let next = this._lastActedSeat + 1;
 
         if (next > this._gameOptions.maxPlayers) {
@@ -469,21 +370,25 @@ class TexasHoldemGame implements IPoker {
         // If it's not this player's turn, they can only fold if they are active
         if (nextToAct && nextToAct.address !== player.address) {
             // Even if it's not their turn, active players can fold
-            return [{
-                action: PlayerActionType.FOLD,
-                min: "0",
-                max: "0"
-            }];
+            return [
+                {
+                    action: PlayerActionType.FOLD,
+                    min: "0",
+                    max: "0",
+                    index: this.getTurnIndex()
+                }
+            ];
         }
 
-        const verifyAction = (action: BaseAction): LegalActionDTO | undefined => {
+        const verifyAction = (action: IAction): LegalActionDTO | undefined => {
             try {
                 const range = action.verify(player);
                 return {
                     action: action.type,
-                    min: range ? range.minAmount.toString() : "0",
-                    max: range ? range.maxAmount.toString() : "0"
-                }
+                    min: range.minAmount.toString(),
+                    max: range.maxAmount.toString(),
+                    index: this.getTurnIndex()
+                };
             } catch {
                 return undefined;
             }
@@ -493,19 +398,18 @@ class TexasHoldemGame implements IPoker {
         const actions = this._actions.map(verifyAction).filter(a => a) as LegalActionDTO[];
 
         // Check if cards have been dealt already (any player has hole cards)
-        const anyPlayerHasCards = Array.from(this._playersMap.values())
-            .some(p => p !== null && p.holeCards !== undefined);
+        const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
         // If cards have been dealt, remove the deal action
         if (anyPlayerHasCards) {
-            return actions.filter(a => a.action !== PlayerActionType.DEAL);
+            return actions.filter(a => a.action !== NonPlayerActionType.DEAL);
         }
 
         return actions;
     }
 
-    getLastRoundAction(): Turn | undefined {
-        const round = this._currentRound; // or previous round?
+    getLastRoundAction(): TurnWithSeat | undefined {
+        const round = this._currentRound;
         const actions = this._rounds.get(round);
 
         if (!actions || actions.length === 0) {
@@ -515,107 +419,135 @@ class TexasHoldemGame implements IPoker {
         return actions.at(-1);
     }
 
-    // Should be get last players action
     getPlayersLastAction(address: string): Turn | undefined {
         const player = this.getPlayer(address);
         const status = this.getPlayerStatus(address);
 
         if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
-        if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN };
-        if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD };
+        if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN, index: 0 }; // Todo: fix this
+        if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD, index: 0 }; // Todo: fix this
 
         return undefined;
     }
 
-    performAction(address: string, action: PlayerActionType, amount?: bigint): void {
+    /**
+     * Performs a poker action for a specific player
+     *
+     * This is the main entry point for all game actions and controls the game flow:
+     * 1. Validates the action index to prevent replay attacks
+     * 2. Handles non-player actions like JOIN, LEAVE, and DEAL
+     * 3. Verifies the player exists in the game
+     * 4. Executes the appropriate action via the corresponding Action class
+     * 5. Updates the game state to reflect the action
+     * 6. Checks if the round has ended and advances to the next round if needed
+     *
+     * @param address The player's address
+     * @param action The action type to perform (bet, call, fold, etc.)
+     * @param index The sequential action index to prevent replay attacks
+     * @param amount Optional bet/raise amount if applicable
+     * @param data Additional optional data for the action
+     * @throws Error if the action cannot be performed
+     */
+    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
+        // Check if the provided index matches the current turn index (without incrementing)
+        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN) {
+            // hack, to roll back
+            throw new Error("Invalid action index.");
+        }
+
+        // Convert amount to BigInt if provided
+        const _amount = amount ? BigInt(amount) : 0n;
+
+        // Handle non-player actions first (JOIN, LEAVE, DEAL)
+        switch (action) {
+            case NonPlayerActionType.JOIN:
+                this.join(address, amount!);
+                this.incrementTurnIndex();
+                break;
+            case NonPlayerActionType.LEAVE:
+                new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
+                return;
+            case NonPlayerActionType.DEAL:
+                new DealAction(this, this._update).execute(this.getPlayer(address), index);
+                // After dealing, we should advance to PREFLOP round
+                if (this._currentRound === TexasHoldemRound.ANTE) {
+                    this._currentRound = TexasHoldemRound.PREFLOP;
+                    this._rounds.set(TexasHoldemRound.PREFLOP, []);
+                }
+                return;
+        }
+
+        // Verify player exists in the game
+        if (!this.exists(address)) {
+            throw new Error("Player not found.");
+        }
+
+        // In ANTE round, only allow specific actions until minimum players joined
         if (this.currentRound === TexasHoldemRound.ANTE) {
-            if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND) {
+            if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND && action !== NonPlayerActionType.JOIN) {
                 if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
             }
         }
 
-        if (!this.exists(address)) {
-            throw new Error("Player not found.");
-        }
-
+        // Get player and seat information
         const player = this.getPlayer(address);
-        const nextToAct = this.getNextPlayerToAct();
-
-        // TODO: ADD TO ACTION CLASSES
-        // Allow folding even if it's not the player's turn
-        if (action === PlayerActionType.FOLD) {
-            // No status checks - allow any player to fold
-        } else if (nextToAct !== player) {
-            // For all other actions, it must be the player's turn
-            throw new Error("Not player's turn.");
-        }
-
         const seat = this.getPlayerSeatNumber(address);
 
+        // Execute the specific player action
         switch (action) {
-            // todo: ante
             case PlayerActionType.SMALL_BLIND:
-                new SmallBlindAction(this, this._update).execute(player, this._gameOptions.smallBlind);
+                new SmallBlindAction(this, this._update).execute(player, index, this._gameOptions.smallBlind);
                 break;
             case PlayerActionType.BIG_BLIND:
-                new BigBlindAction(this, this._update).execute(player, this._gameOptions.bigBlind);
-                break;
-            case PlayerActionType.DEAL:
-                // First verify the deal is valid via the DealAction
-                try {
-                    new DealAction(this, this._update).execute(player);
-
-                    // For 3+ player games, set the last acted seat to the big blind position
-                    // so that the next player to act will be the one after the big blind
-                    const activePlayerCount = this.getActivePlayerCount();
-                    if (activePlayerCount > 2) {
-                        console.log("Deal action: Setting last acted seat to big blind position:", this._bigBlindPosition);
-                        this._lastActedSeat = this._bigBlindPosition;
-                    } else {
-                        // For 2-player games, set to dealer position so small blind acts next
-                        console.log("Deal action: Setting last acted seat to dealer position:", this._dealer);
-                        this._lastActedSeat = this._dealer;
-                    }
-                } catch (error) {
-                    console.error("Error performing deal action:", error);
-                }
+                new BigBlindAction(this, this._update).execute(player, index, this._gameOptions.bigBlind);
                 break;
             case PlayerActionType.FOLD:
                 // Don't update player status before executing fold
-                new FoldAction(this, this._update).execute(player);
+                new FoldAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.CHECK:
-                new CheckAction(this, this._update).execute(player);
+                new CheckAction(this, this._update).execute(player, index, 0n);
                 break;
             case PlayerActionType.BET:
-                new BetAction(this, this._update).execute(player, amount);
+                new BetAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.CALL:
-                new CallAction(this, this._update).execute(player);
+                new CallAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.RAISE:
-                if (!amount) throw new Error("Amount must be provided for raise.");
-                new RaiseAction(this, this._update).execute(player, amount);
+                new RaiseAction(this, this._update).execute(player, index, _amount);
                 break;
+            case PlayerActionType.MUCK:
+                new MuckAction(this, this._update).execute(player, index, _amount);
+                break;
+            case PlayerActionType.SHOW:
+                new ShowAction(this, this._update).execute(player, index, _amount);
             default:
                 // do we need to roll back last acted seat?
-                throw new Error("Invalid action.");
+                break;
         }
 
-        player.addAction({ playerId: address, action, amount });
+        // Record the action in the player's history
+        player.addAction({ playerId: address, action, amount, index });
+
+        // Update the last player to act
         this._lastActedSeat = seat;
 
+        // Check if the round has ended and advance to the next round if needed
         if (this.hasRoundEnded(this._currentRound) === true) {
             this.nextRound();
         }
     }
 
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
+        // We already validated the index in performAction, so no need to check again here
+        // This prevents the double incrementing problem
 
         const seat = this.getPlayerSeatNumber(turn.playerId);
-        const turnWithSeat: TurnWithSeat = { ...turn, seat };
+        const timestamp = Date.now();
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
@@ -628,20 +560,45 @@ class TexasHoldemGame implements IPoker {
             // Create a new array with this turn as the first element
             this._rounds.set(round, [turnWithSeat]);
         }
+
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
+    }
+
+    addNonPlayerAction(turn: Turn): void {
+        const timestamp = Date.now();
+        const round = this._currentRound;
+        const seat = -1;
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+
+        // Check if the round already exists in the map
+        if (this._rounds.has(round)) {
+            // Get the existing actions array
+            const actions = this._rounds.get(round)!;
+            // Push the new turn to it
+            actions.push(turnWithSeat);
+            this._rounds.set(round, actions);
+        } else {
+            // Create a new array with this turn as the first element
+            this._rounds.set(round, [turnWithSeat]);
+        }
+
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
     }
 
     getActionDTOs(): ActionDTO[] {
         const actions: ActionDTO[] = [];
 
         for (const [round, turns] of this._rounds) {
-
             for (const turn of turns) {
                 const action: ActionDTO = {
                     playerId: turn.playerId,
                     seat: turn.seat,
                     action: turn.action,
                     amount: turn.amount ? turn.amount.toString() : "",
-                    round
+                    round,
+                    index: turn.index
                 };
 
                 actions.push(action);
@@ -665,7 +622,8 @@ class TexasHoldemGame implements IPoker {
                 seat: this.getPlayerSeatNumber(turn.playerId),
                 action: turn.action,
                 amount: turn.amount ? turn.amount.toString() : "",
-                round
+                round,
+                index: turn.index
             };
 
             actions.push(action);
@@ -679,8 +637,9 @@ class TexasHoldemGame implements IPoker {
             throw new Error("Player not found.");
         }
 
+        const normalizedAddress = address.toLowerCase();
         for (const [seat, player] of this._playersMap.entries()) {
-            if (player?.address === address) {
+            if (player?.address.toLowerCase() === normalizedAddress) {
                 return player;
             }
         }
@@ -703,8 +662,9 @@ class TexasHoldemGame implements IPoker {
             throw new Error("Player not found.");
         }
 
+        const normalizedAddress = address.toLowerCase();
         for (const [seat, player] of this._playersMap.entries()) {
-            if (player?.address === address) {
+            if (player?.address.toLowerCase() === normalizedAddress) {
                 return seat;
             }
         }
@@ -741,7 +701,7 @@ class TexasHoldemGame implements IPoker {
         }
 
         return bets;
-    };
+    }
 
     getBets(round: TexasHoldemRound = this._currentRound): Map<string, bigint> {
         const bets = new Map<string, bigint>();
@@ -787,7 +747,7 @@ class TexasHoldemGame implements IPoker {
         return pot;
     }
 
-    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): Turn[] {
+    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): TurnWithSeat[] {
         // Get the actions for the specified round
         const actions = this._rounds.get(round);
 
@@ -800,7 +760,7 @@ class TexasHoldemGame implements IPoker {
         return actions.filter(action => action.playerId === player.address);
     }
 
-    private getActivePlayers(): Player[] {
+    private findActivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.status === PlayerStatus.ACTIVE);
     }
 
@@ -808,11 +768,19 @@ class TexasHoldemGame implements IPoker {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
     }
 
-    findNextSeat(): number {
+    findNextEmptySeat(start: number = 1): number {
         const maxSeats = this._gameOptions.maxPlayers;
 
         // Iterate through all seat numbers to find next available (empty) seat
-        for (let seatNumber = 1; seatNumber <= maxSeats; seatNumber++) {
+        for (let seatNumber = start; seatNumber <= maxSeats; seatNumber++) {
+            // Check if seat is empty (null) or doesn't exist in the map
+            if (!this._playersMap.has(seatNumber) || this._playersMap.get(seatNumber) === null) {
+                return seatNumber; // return first available seat.
+            }
+        }
+
+        // Do the other half
+        for (let seatNumber = 1; seatNumber < start; seatNumber++) {
             // Check if seat is empty (null) or doesn't exist in the map
             if (!this._playersMap.has(seatNumber) || this._playersMap.get(seatNumber) === null) {
                 return seatNumber; // return first available seat.
@@ -831,40 +799,92 @@ class TexasHoldemGame implements IPoker {
         // Deal community cards based on the CURRENT round
         // before advancing to the next round
         if (this._currentRound === TexasHoldemRound.PREFLOP) {
-            // Deal the flop (3 cards)
+            // Moving to FLOP - deal 3 community cards
             this._communityCards.push(...this._deck.deal(3));
-        }
-        if (this._currentRound === TexasHoldemRound.FLOP || this._currentRound === TexasHoldemRound.TURN) {
-            // Deal turn or river (1 card)
+        } else if (this._currentRound === TexasHoldemRound.FLOP) {
+            // Moving to TURN - deal 1 card
             this._communityCards.push(...this._deck.deal(1));
-        }
-        if (this._currentRound === TexasHoldemRound.RIVER) {
-            // Next is showdown, calculate winner
-            this.calculateWinner();
-        }
+        } else if (this._currentRound === TexasHoldemRound.TURN) {
+            // Moving to RIVER - deal 1 card
+            this._communityCards.push(...this._deck.deal(1));
+        } else if (this._currentRound === TexasHoldemRound.RIVER) {
+            // Moving to SHOWDOWN - calculate winner
+            //this.calculateWinner();
+        } else if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
+
+            // this.calculateWinner();
+
+            // Moving to ANTE - reset the game
+
+            // this.reInit(this._deck.toString());
+        } 
 
         // Advance to next round
         this.setNextRound();
+
+        // Initialize the new round's action list if needed
+        if (!this._rounds.has(this._currentRound)) {
+            this._rounds.set(this._currentRound, []);
+        }
     }
 
-    reInit(seed: number[]): void {
-        if (!this._playersMap.size) throw new Error("No players in game.");
-        if (this._currentRound !== TexasHoldemRound.PREFLOP) throw new Error("Hand currently in progress.");
+    reInit(deck: string): void {
+        // if (!this._playersMap.size) throw new Error("No players in game.");
+        // if (this._currentRound !== TexasHoldemRound.END) throw new Error("Hand currently in progress.");
 
-        this._dealer = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._smallBlindPosition = this._dealer === 9 ? 1 : this._dealer + 1;
-        this._bigBlindPosition = this._dealer === 9 ? 2 : this._dealer + 2;
+        // Iterate through all players and reset their status
+        for (const player of this.getSeatedPlayers()) {
+            player.reinit();
+        }
+        
+        // Cache the values
+        const dealer = this._dealer;
+        const sb = this._smallBlindPosition;
+        const bb = this._bigBlindPosition;
+
+        const activePlayers = this.findActivePlayers();
+        const activePlayerCount = activePlayers.length;
+
+        if (activePlayerCount < this._gameOptions.minPlayers) {
+            throw new Error("Not enough active players to reinitialize the game.");
+        }
+
+        // Heads up
+        if (activePlayerCount === 2) {
+            // Swap the small blind and big blind positions
+            this._smallBlindPosition = bb;
+            this._bigBlindPosition = sb;
+            this._dealer = sb;
+        }
+
+        if (activePlayerCount > 2) {
+            for (let i = sb; i <= this._gameOptions.maxPlayers; i++) {
+                const player = this.getPlayerAtSeat(i);
+                if (player && player.status !== PlayerStatus.SITTING_OUT) {
+                    this._smallBlindPosition = i;
+                    break;
+                }
+            }
+
+            for (let i = bb; i <= this._gameOptions.maxPlayers; i++) {
+                const player = this.getPlayerAtSeat(i);
+                if (player && player.status !== PlayerStatus.SITTING_OUT) {
+                    this._bigBlindPosition = i;
+                    break;
+                }
+            }
+        }
+
+        this.previousActions.length = 0;
 
         this._rounds.clear();
-        this._rounds.set(TexasHoldemRound.PREFLOP, []);
+        this._rounds.set(TexasHoldemRound.ANTE, []);
 
-        this._lastActedSeat = 0;
-        this._deck = new Deck();
-        // this should come from another source
-        this.seed = seed || Array.from({ length: 52 }, () => Math.floor(1000000 * Math.random()));
-        this._deck.shuffle(this.seed);
-        this._pot = 0n;
+        this._lastActedSeat = this._dealer;
+        this._deck = new Deck(deck);
+        this._pots = [0n];
         this._communityCards.length = 0;
+        this._currentRound = TexasHoldemRound.ANTE;
         this._winners?.clear();
 
         this._handNumber += 1;
@@ -873,9 +893,7 @@ class TexasHoldemGame implements IPoker {
     private calculateSidePots(): void {
         // const startingPot = this.getStartingPot();
         // const numActive = this.getSeatedPlayers().filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE).length;
-
         // TODO: ROLL BACK
-
         // // TODO: Check this will work in all cases when multiple side pots in same round
         // this._players
         //     .filter(p => this.getPlayerStatus(p) == PlayerStatus.ALL_IN && !this._sidePots.has(p.id))
@@ -889,7 +907,7 @@ class TexasHoldemGame implements IPoker {
             players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
 
-        const active = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+        const active = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
         // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
         this._winners = new Map<string, bigint>();
 
@@ -932,6 +950,23 @@ class TexasHoldemGame implements IPoker {
         }
     }
 
+    /**
+     * Determines if the current betting round has ended
+     *
+     * A round ends when all of these conditions are met:
+     * 1. For ANTE round: small blind, big blind are posted AND cards are dealt
+     * 2. For betting rounds: all non-folded, non-all-in players have acted
+     * 3. All active players have either matched the highest bet or folded
+     * 4. The last player to raise has been called by all remaining players
+     *
+     * Edge cases handled:
+     * - If all players are folded or all-in, the round ends immediately
+     * - Players who folded or are all-in don't need to act again
+     * - Players must act after a bet/raise made after their last action
+     *
+     * @param round The round to check
+     * @returns True if the round has ended, false otherwise
+     */
     hasRoundEnded(round: TexasHoldemRound): boolean {
         const players = this.getSeatedPlayers();
 
@@ -952,46 +987,68 @@ class TexasHoldemGame implements IPoker {
             return false;
         }
 
-        // Check if cards have been dealt, which is required before ending the round
-        const hasDealt = actions.some(a => a.action === PlayerActionType.DEAL);
-        const anyPlayerHasCards = Array.from(this._playersMap.values())
-            .some(p => p !== null && p.holeCards !== undefined);
+        // Special case for ANTE round: need small blind, big blind, and deal
+        if (round === TexasHoldemRound.ANTE) {
+            const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
+            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
+            const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
 
-        // In preflop round, make sure cards have been dealt before we can end the round
-        if (round === TexasHoldemRound.PREFLOP && !hasDealt && !anyPlayerHasCards) {
-            return false;
+            // Round is not over if blinds haven't been posted
+            if (!hasSmallBlind || !hasBigBlind) {
+                return false;
+            }
+
+            // ANTE round is only over when blinds are posted AND cards are dealt
+            if (!hasDealt) {
+                return false;
+            }
+
+            return true; // Round over after blinds are posted and cards are dealt
         }
 
-        // Check if there's betting action yet
-        const bettingActions = actions.filter(a =>
-            a.action !== PlayerActionType.SMALL_BLIND &&
-            a.action !== PlayerActionType.BIG_BLIND &&
-            a.action !== PlayerActionType.DEAL
-        );
+        if (round === TexasHoldemRound.SHOWDOWN) {
+            const players = this.getSeatedPlayers();
+            // const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+            const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
+            if (showingPlayers.length === players.length) {
+                this.calculateWinner();
+                return true; // Round is over if only one player is active
+            }
+        }
+
+        // if (round === TexasHoldemRound.END) {
+        //     this.calculateWinner();
+        //     return true; // Round is over if only one player is active
+        // }
+
+        // Check if cards have been dealt, which is required before ending the round
+        const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
+        const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
         // If cards dealt but no betting actions yet, round is not over
+        const bettingActions = actions.filter(
+            a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
+        );
+
         if ((hasDealt || anyPlayerHasCards) && bettingActions.length === 0) {
             return false;
         }
 
         const largestBet = this.getLargestBet(round);
 
+        // Find the last bet or raise action
+        let lastBetOrRaiseIndex = -1;
+        for (let i = actions.length - 1; i >= 0; i--) {
+            if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
+                lastBetOrRaiseIndex = i;
+                break;
+            }
+        }
+
         // Check that all remaining active players have acted and matched the highest bet
         for (const player of activePlayers) {
             // Get this player's actions in this round
             const playerActions = actions.filter(a => a.playerId === player.address);
-
-            // Filter to just betting actions (not blinds or deal)
-            const playerBettingActions = playerActions.filter(a =>
-                a.action !== PlayerActionType.SMALL_BLIND &&
-                a.action !== PlayerActionType.BIG_BLIND &&
-                a.action !== PlayerActionType.DEAL
-            );
-
-            // If no betting actions yet for this player after cards dealt, round not over 
-            if ((hasDealt || anyPlayerHasCards) && playerBettingActions.length === 0) {
-                return false;
-            }
 
             // If a player hasn't acted yet, round is not over
             if (playerActions.length === 0) {
@@ -1001,11 +1058,25 @@ class TexasHoldemGame implements IPoker {
             // Get the player's last action in this round
             const lastAction = playerActions[playerActions.length - 1];
 
-            // Skip players who have checked or called
-            if (lastAction.action === PlayerActionType.CALL || lastAction.action === PlayerActionType.CHECK) {
+            // Skip players who have checked, called, or folded as their final action
+            if (lastAction.action === PlayerActionType.CALL || lastAction.action === PlayerActionType.CHECK || lastAction.action === PlayerActionType.FOLD) {
+                // For these players, check if they acted AFTER the last bet/raise
+                if (lastBetOrRaiseIndex >= 0) {
+                    // Find the index of this player's last action
+                    const playerLastActionIndex = actions.findIndex(
+                        a => a.playerId === player.address && a.action === lastAction.action && a.index === lastAction.index
+                    );
+
+                    // If player acted before the last bet/raise, they still need to act
+                    if (playerLastActionIndex < lastBetOrRaiseIndex) {
+                        return false;
+                    }
+                }
+
                 continue;
             }
 
+            // If the player has posted blinds but hasn't acted in the betting round yet
             if (lastAction.action === PlayerActionType.SMALL_BLIND || lastAction.action === PlayerActionType.BIG_BLIND) {
                 // There is still action to be had
                 return false;
@@ -1021,12 +1092,22 @@ class TexasHoldemGame implements IPoker {
 
             // If the last action was a bet or raise, other players need to respond
             if (lastAction.action === PlayerActionType.BET || lastAction.action === PlayerActionType.RAISE) {
-                // We need to check if this was the most recent betting action
-                // If it was, then the round isn't over because others need to respond
+                // Check if all other active players have acted after this bet/raise
+                const actionIndex = actions.findIndex(a => a.playerId === player.address && a.action === lastAction.action && a.index === lastAction.index);
 
-                // A simple way to check: if this player was the last to act overall
-                if (player.address === this.currentPlayerId) {
-                    return false;
+                if (actionIndex >= 0) {
+                    // Check if all other active players have acted after this bet/raise
+                    for (const otherPlayer of activePlayers) {
+                        if (otherPlayer.address === player.address) continue;
+
+                        // Get this player's actions after the bet/raise
+                        const otherPlayerActionsAfterBet = actions.filter(a => a.playerId === otherPlayer.address && actions.indexOf(a) > actionIndex);
+
+                        // If no actions after the bet/raise, round is not over
+                        if (otherPlayerActionsAfterBet.length === 0) {
+                            return false;
+                        }
+                    }
                 }
             }
         }
@@ -1046,12 +1127,12 @@ class TexasHoldemGame implements IPoker {
         }
 
         return highestBet;
-    };
+    }
 
     private getNextRound(): TexasHoldemRound {
         switch (this._currentRound) {
-            // case TexasHoldemRound.ANTE:
-            //     return TexasHoldemRound.PREFLOP;
+            case TexasHoldemRound.ANTE:
+                return TexasHoldemRound.PREFLOP;
             case TexasHoldemRound.PREFLOP:
                 return TexasHoldemRound.FLOP;
             case TexasHoldemRound.FLOP:
@@ -1060,8 +1141,10 @@ class TexasHoldemGame implements IPoker {
                 return TexasHoldemRound.RIVER;
             case TexasHoldemRound.RIVER:
                 return TexasHoldemRound.SHOWDOWN;
+            case TexasHoldemRound.SHOWDOWN:
+                return TexasHoldemRound.END;
             default:
-                return TexasHoldemRound.PREFLOP;
+                return TexasHoldemRound.ANTE
         }
     }
 
@@ -1072,11 +1155,14 @@ class TexasHoldemGame implements IPoker {
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
-        json.players.map((p: any) => {
+        json?.players.map((p: any) => {
             const stack: bigint = BigInt(p.stack);
 
             // Create hole cards if they exist in the JSON
             let holeCards: [Card, Card] | undefined = undefined;
+
+            // Only show the callers world view of their hole.  Use zero address for God mode.
+            // if ((caller && p.address.toLowerCase() === caller.toLowerCase()) || caller === ethers.ZeroAddress || p.status === PlayerStatus.SHOWING) {
             if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
                 try {
                     // Use Deck.fromString to create Card objects
@@ -1087,26 +1173,34 @@ class TexasHoldemGame implements IPoker {
                     console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
                 }
             }
+            // }
 
             const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
             players.set(p.seat, player);
         });
 
+        const positions: Positions = {
+            dealer: json.dealer,
+            smallBlind: json.smallBlindPosition,
+            bigBlind: json.bigBlindPosition
+        };
+
         return new TexasHoldemGame(
             json.address,
             gameOptions,
-            json.dealer as number,
+            positions,
             json.lastToAct as number,
             json.previousActions,
-            json.round, // todo: this should be the "currentround"
+            json.round, // todo: this should be the "current round"
             json.communityCards,
             json.pots,
             players,
-            json.deck
+            json.deck,
+            json.winners
         );
     }
 
-    public toJson(): TexasHoldemStateDTO {
+    public toJson(caller?: string): TexasHoldemStateDTO {
         const players: PlayerDTO[] = Array.from(this._playersMap.entries()).map(([seat, player]) => {
             if (!player) {
                 return {
@@ -1135,7 +1229,8 @@ class TexasHoldemGame implements IPoker {
                     seat: seat,
                     action: turn.action,
                     amount: (turn.amount ?? 0n).toString(),
-                    round: this._currentRound // todo: check this, it should be the current round but not always
+                    round: this._currentRound, // todo: check this, it should be the current round but not always
+                    index: turn.index
                 };
             }
 
@@ -1144,8 +1239,14 @@ class TexasHoldemGame implements IPoker {
 
             // Ensure hole cards are properly included if they exist
             let holeCardsDto: string[] | undefined = undefined;
-            if (player.holeCards) {
-                holeCardsDto = player.holeCards.map(card => card.mnemonic);
+            if ((caller && player.address.toLowerCase() === caller.toLowerCase()) || caller === ethers.ZeroAddress || player.status === PlayerStatus.SHOWING) {
+                if (player.holeCards) {
+                    holeCardsDto = player.holeCards.map(card => card.mnemonic);
+                }
+            } else {
+                if (player.holeCards) {
+                    holeCardsDto = player.holeCards.map(() => "??");
+                }
             }
 
             return {
@@ -1155,6 +1256,7 @@ class TexasHoldemGame implements IPoker {
                 isSmallBlind: seat === this._smallBlindPosition,
                 isBigBlind: seat === this._bigBlindPosition,
                 isDealer: seat === this._dealer,
+                deck: this._deck.toString(),
                 holeCards: holeCardsDto,
                 status: player.status,
                 lastAction: lastAction,
@@ -1171,13 +1273,8 @@ class TexasHoldemGame implements IPoker {
         const previousActions: ActionDTO[] = this.getActionDTOs();
         const winners: WinnerDTO[] = [];
 
-        // If we're in showdown and winners haven't been calculated yet, calculate them now
-        if (this._currentRound === TexasHoldemRound.SHOWDOWN && (!this._winners || this._winners.size === 0)) {
-            this.calculateWinner();
-        }
-
         // Populate winners array from _winners Map if in showdown
-        if (this._currentRound === TexasHoldemRound.SHOWDOWN && this._winners) {
+        if (this._winners) {
             for (const [address, amount] of this._winners.entries()) {
                 winners.push({
                     address: address,
@@ -1187,6 +1284,7 @@ class TexasHoldemGame implements IPoker {
         }
 
         const pot = this.getPot();
+        // const deckAsString = caller === ethers.ZeroAddress ? this._deck.toString() : this._deck.hash;
         const deckAsString = this._deck.toString();
         const communityCards: string[] = [];
         for (let i = 0; i < this._communityCards.length; i++) {
@@ -1199,10 +1297,11 @@ class TexasHoldemGame implements IPoker {
             maxPlayers: this._gameOptions.maxPlayers,
             minPlayers: this._gameOptions.minPlayers,
             smallBlind: this._gameOptions.smallBlind.toString(),
-            bigBlind: this._gameOptions.bigBlind.toString()
+            bigBlind: this._gameOptions.bigBlind.toString(),
+            timeout: this._gameOptions.timeout
         };
 
-        return {
+        const state: TexasHoldemStateDTO = {
             type: "cash",
             address: this._address,
             gameOptions: gameOptions,
@@ -1220,6 +1319,8 @@ class TexasHoldemGame implements IPoker {
             winners: winners,
             signature: ethers.ZeroHash
         };
+
+        return state;
     }
 }
 

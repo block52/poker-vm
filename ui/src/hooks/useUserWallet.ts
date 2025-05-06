@@ -1,8 +1,12 @@
-import { useState, useEffect } from "react";
-import { Wallet, ethers } from "ethers";
+import { useState, useEffect, useCallback } from "react";
+import { Wallet } from "ethers";
 import axios from "axios";
 import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
+
+// Key for storing last API call time in localStorage
+const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
+
 interface UserWalletResult {
     b52: NodeRpcClient | null;
     account: string | null;
@@ -10,6 +14,7 @@ interface UserWalletResult {
     privateKey: string | null;
     isLoading: boolean;
     error: Error | null;
+    refreshBalance: () => Promise<void>;
 }
 
 export const STORAGE_PRIVATE_KEY = "user_eth_private_key";
@@ -22,25 +27,47 @@ const useUserWallet = (): UserWalletResult => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const [client, setClient] = useState<NodeRpcClient | null>(null);
+    const [refreshCounter, setRefreshCounter] = useState(0);
 
-    const fetchBalance = async () => {
+    const fetchBalance = useCallback(async () => {
         if (!account) return;
+
+        // Rate limiting: Only allow API calls once every 10 seconds across all hooks
+        const now = Date.now();
+        const lastApiCallStr = localStorage.getItem(LAST_ACCOUNT_API_CALL_KEY);
+        const lastApiCallTime = lastApiCallStr ? parseInt(lastApiCallStr, 10) : 0;
+        const timeSinceLastCall = now - lastApiCallTime;
+        const minInterval = 10000; // 10 seconds
+
+        // If it's been less than 10 seconds since the last call and we have balance data, use cached data
+        if (timeSinceLastCall < minInterval && balance !== null) {
+            console.log(`[useUserWallet] Rate limiting: Using cached balance data (${Math.floor(timeSinceLastCall/1000)}s since last call)`);
+            return;
+        }
 
         setIsLoading(true);
         setError(null);
+        
+        // Update shared last API call time
+        localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
+        console.log(`[useUserWallet] Making API call to /get_account/ (${Math.floor(timeSinceLastCall/1000)}s since last call)`);
+        console.log("⚡ useUserWallet: Fetching balance for account", account);
 
         try {
             const url = PROXY_URL;
+            console.log("⚡ useUserWallet: API URL", url);
+            
             const response = await axios.get(`${url}/get_account/${account}`);
-            // console.log("=== BALANCE RESPONSE ===", response.data);
-            // console.log(response.data);
+            console.log("⚡ useUserWallet: Balance response", response.data);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             if (response.data?.result?.data?.balance) {
-                setBalance(response.data.result.data.balance);
+                const newBalance = response.data.result.data.balance;
+                console.log("⚡ useUserWallet: New balance", newBalance, "Old balance", balance);
+                setBalance(newBalance);
             } else {
                 console.error("Balance not found in response:", response.data);
                 setBalance("0");
@@ -52,7 +79,18 @@ const useUserWallet = (): UserWalletResult => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [account, balance]);
+
+    // Manual refresh function
+    const refreshBalance = useCallback(async () => {
+        console.log("⚡ useUserWallet: Manual refresh requested");
+        setRefreshCounter(prev => prev + 1);
+    }, []);
+
+    useEffect(() => {
+        console.log("⚡ useUserWallet: Refresh counter changed", refreshCounter);
+        fetchBalance();
+    }, [fetchBalance, refreshCounter]);
 
     useEffect(() => {
         const initializeWallet = async () => {
@@ -88,8 +126,7 @@ const useUserWallet = (): UserWalletResult => {
         };
 
         initializeWallet();
-        fetchBalance();
-    }, [account]);
+    }, []);
 
     useEffect(() => {
         if (privateKey) {
@@ -99,14 +136,26 @@ const useUserWallet = (): UserWalletResult => {
         }
     }, [privateKey]);
 
-    return {
+    const result = {
         account,
         balance,
         privateKey,
         isLoading,
         error,
-        b52: client
+        b52: client,
+        refreshBalance
     };
+
+    console.log("[useUserWallet] Returns:", {
+        hasAccount: !!result.account,
+        balance: result.balance,
+        hasPrivateKey: !!result.privateKey,
+        hasClient: !!result.b52,
+        isLoading: result.isLoading,
+        hasError: !!result.error
+    });
+
+    return result;
 };
 
 export default useUserWallet;

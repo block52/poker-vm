@@ -27,58 +27,134 @@ export const playerPosition = {
     ],
     nine: [
         {
-            //* 1 orange
-            left: "430px",
-            top: "420px",
+            //* 1 green
+            left: "450px",
+            top: "390px",
             color: "#4ade80"
         },
         {
-            //* 2 green
-            left: "90px",
-            top: "400px",
+            //* 2 orange
+            left: "155px",
+            top: "374px",
             color: "#f97316"
         },
         {
             //* 3 red
-            left: "-120px",
+            left: "-100px",
             top: "230px",
             color: "#ef4444"
         },
         {
             //* 4 blue
-            left: "-120px",
-            top: "20px",
+            left: "-55px",
+            top: "-20px",
             color: "#3b82f6"
         },
         {
             //* 5 violet
-            left: "200px",
-            top: "-110px",
+            left: "270px",
+            top: "-100px",
             color: "#8b5cf6"
         },
         {
             //* 6 black
             left: "600px",
-            top: "-110px",
+            top: "-100px",
             color: "#212529"
         },
         {
             //* 7 yellow
-            left: "930px",
-            top: "30px",
+            left: "965px",
+            top: "-20px",
             color: "#FFD700"
         },
         {
             //* 8 pink
-            left: "930px",
+            left: "999px",
             top: "230px",
             color: "#ec4899"
         },
         {
             //* 9 gray
-            left: "700px",
-            top: "400px",
+            left: "745px",
+            top: "374px",
             color: "#6b7280"
+        }
+    ]
+};
+
+export const vacantPlayerPosition = {
+    six: [
+        {
+            left: "40%",
+            top: "100%"
+        },
+        {
+            left: "17%",
+            top: "32%"
+        },
+        {
+            left: "40%",
+            top: "-35%"
+        },
+        {
+            left: "60%",
+            top: "-35%"
+        },
+        {
+            left: "83%",
+            top: "32%"
+        },
+        {
+            left: "60%",
+            top: "100%"
+        }
+    ],
+    nine: [
+        {
+            //* 1 orange
+            left: "414px",
+            top: "399px"
+        },
+        {
+            //* 2 green
+            left: "130px",
+            top: "374px"
+        },
+        {
+            //* 3 red
+            left: "-110px",
+            top: "220px"
+        },
+        {
+            //* 4 blue
+            left: "-55px",
+            top: "-30px"
+        },
+        {
+            //* 5 violet
+            left: "240px",
+            top: "-110px"
+        },
+        {
+            //* 6 black
+            left: "580px",
+            top: "-110px"
+        },
+        {
+            //* 7 yellow
+            left: "880px",
+            top: "-30px"
+        },
+        {
+            //* 8 pink
+            left: "929px",
+            top: "220px"
+        },
+        {
+            //* 9 gray
+            left: "700px",
+            top: "374px"
         }
     ]
 };
@@ -114,47 +190,47 @@ export const chipPosition = {
         {
             // 1
             bottom: "10px",
-            left: "410px"
+            left: "430px"
         },
         {
             // 2
-            bottom: "20px",
-            left: "150px"
+            bottom: "12px",
+            left: "130px"
         },
         {
             // 3
             bottom: "110px",
-            left: "40px"
+            left: "-20px"
         },
         {
             // 4
-            bottom: "210px",
-            left: "-5px"
+            bottom: "255px",
+            left: "39px"
         },
         {
             // 5
-            bottom: "290px",
-            left: "175px"
+            bottom: "310px",
+            left: "245px"
         },
         {
             // 6
-            bottom: "290px",
+            bottom: "310px",
             left: "575px"
         },
         {
             // 7
-            bottom: "210px",
-            left: "755px"
+            bottom: "255px",
+            left: "810px"
         },
         {
             // 8
-            bottom: "60px",
-            left: "750px"
+            bottom: "110px",
+            left: "873px"
         },
         {
             // 9
-            bottom: "-10px",
-            left: "620px"
+            bottom: "12px",
+            left: "720px"
         }
     ]
 };
@@ -188,49 +264,49 @@ export const dealerPosition = {
     ],
     nine: [
         {
-            // 1
-            left: "300px",
-            top: "340px"
+            // In gameState schema -- Dealer Position: 9
+            left: "320px",
+            top: "350px"
         },
         {
-            // 2
-            left: "215px",
-            top: "340px"
+            // In gameState schema -- Dealer Position: 1
+            left: "25px",
+            top: "335px"
+        },
+        {
+            // In gameState schema -- Dealer Position: 2
+            left: "-215px",
+            top: "265px"
         },
         {
             // 3
-            left: "-35px",
-            top: "255px"
+            left: "-169px",
+            top: "28px"
         },
         {
             // 4
-            left: "-35px",
-            top: "80px"
+            left: "150px",
+            top: "-50px"
         },
         {
             // 5
-            left: "280px",
-            top: "-15px"
+            left: "285px",
+            top: "-50px"
         },
         {
             // 6
-            left: "495px",
-            top: "-15px"
+            left: "635px",
+            top: "30px"
         },
         {
             // 7
-            left: "825px",
-            top: "80px"
+            left: "680px",
+            top: "265px"
         },
         {
             // 8
-            left: "825px",
-            top: "255px"
-        },
-        {
-            // 9
-            left: "560px",
-            top: "340px"
+            left: "445px",
+            top: "331px"
         }
     ]
 };
@@ -264,41 +340,40 @@ export const turnAnimationPosition = {
     ],
     nine: [
         {
-            left: "430px",
-            top: "509px"
+            left: "450px",
+            top: "470px"
         },
         {
-            left: "90px",
-            top: "487px"
+            left: "155px",
+            top: "460px"
         },
         {
-            left: "-122px",
-            top: "317px"
+            left: "-104px",
+            top: "320px"
         },
         {
-            left: "-120px",
-            top: "30px"
+            left: "-59px",
+            top: "69px"
         },
         {
-            left: "200px",
-            top: "-110px"
+            left: "267px",
+            top: "-10px"
         },
         {
             left: "600px",
-            top: "-110px"
+            top: "-10px"
         },
         {
-            left: "930px",
-            top: "30px"
+            left: "960px",
+            top: "69px"
         },
         {
-            left: "930px",
-            top: "230px"
+            left: "999px",
+            top: "320px"
         },
         {
-            left: "650px",
-            top: "380px"
+            left: "740px",
+            top: "460px"
         }
     ]
 };
-

@@ -1,18 +1,18 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import Deposit from "./components/Deposit";
 import Table from "./components/playPage/Table";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiProvider } from "wagmi";
-
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { projectId, metadata, networks, wagmiAdapter } from "./config";
 import { mainnet } from "@reown/appkit/networks";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
-import useUserWallet from "./hooks/useUserWallet";
+
 import QRDeposit from "./components/QRDeposit";
 import { PROXY_URL } from "./config/constants";
-import { TableProvider } from "./context/TableContext";
+// TODO: Remove TableProvider once all hooks are fully implemented and tested
 
 console.log("PROXY_URL in App:", PROXY_URL); // Debug log
 
@@ -34,42 +34,55 @@ createAppKit({
     allWallets: "SHOW"
 });
 
+// Route change monitoring component
+function RouteChangeMonitor() {
+    const location = useLocation();
+    
+    useEffect(() => {
+        console.log("Route changed to:", location.pathname);
+    }, [location]);
+    
+    return null;
+}
+
+// Main App content to be wrapped with providers
+function AppContent() {
+    return (
+        <div className="bg-[#2c3245] min-h-screen">
+            <RouteChangeMonitor />
+            <Routes>
+                <Route path="/table/:id" element={<Table />} />
+                <Route path="/deposit" element={<Deposit />} />
+                <Route path="/qr-deposit" element={<QRDeposit />} />
+                <Route path="/" element={<Dashboard />} />
+            </Routes>
+            <ToastContainer
+                position="top-right"
+                autoClose={false}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss={false}
+                draggable
+                pauseOnHover={false}
+                closeButton={true}
+                theme={"dark"}
+            />
+        </div>
+    );
+}
+
 function App() {
     return (
-        <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+        // Router should be the outermost wrapper
+        <Router>
             <QueryClientProvider client={queryClient}>
-                <Router>
-                    <div className="bg-[#2c3245] min-h-screen">
-                        <Routes>
-                            <Route
-                                path="/table/:id"
-                                element={
-                                    <TableProvider>
-                                        <Table />
-                                    </TableProvider>
-                                }
-                            />
-                            <Route path="/deposit" element={<Deposit />} />
-                            <Route path="/" element={<Dashboard />} />
-                            <Route path="/qr-deposit" element={<QRDeposit />} />
-                        </Routes>
-                    </div>
-                </Router>
-                <ToastContainer
-                    position="top-right"
-                    autoClose={false}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick={false}
-                    rtl={false}
-                    pauseOnFocusLoss={false}
-                    draggable
-                    pauseOnHover={false}
-                    closeButton={true}
-                    theme={"dark"}
-                />
+                <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+                    <AppContent />
+                </WagmiProvider>
             </QueryClientProvider>
-        </WagmiProvider>
+        </Router>
     );
 }
 

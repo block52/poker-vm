@@ -116,8 +116,14 @@ export class Server {
     }
 
     public async mine() {
+        // Check environment variable to disable mining
+        if (process.env.DISABLE_MINING === "true") {
+            console.log("Mining disabled by configuration, skipping mine");
+            return;
+        }
+
         if (!this.isValidator) {
-            // console.log("Not a validator, skipping mine");
+            console.log("Not a validator, skipping mine");
             return;
         }
 
@@ -155,7 +161,7 @@ export class Server {
                 }
             }
         } else {
-            // console.log(`I ${this.publicKey} am not a validator, looking for ${validatorAddress}. Waiting for next block...`);
+            console.log(`I ${this.publicKey} am not a validator, looking for ${validatorAddress}. Waiting for next block...`);
         }
     }
 

@@ -45,9 +45,9 @@ describe("Should get new mempool", () => {
 
     it("should only allow one transaction in mempool", async () => {
         const mempool = new Mempool(1);
-        const tx1: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0, undefined, "mock-data-1");
+        const tx1: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0n, undefined, "mock-data-1");
 
-        const tx2: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 2n, "tx2", ethers.ZeroHash, 10000, 0, undefined, "mock-data-2");
+        const tx2: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 2n, "tx2", ethers.ZeroHash, 10000, 0n, undefined, "mock-data-2");
 
         await mempool.add(tx1);
         await mempool.add(tx2);
@@ -57,7 +57,7 @@ describe("Should get new mempool", () => {
 
     it("should not allow duplicate transactions in mempool", async () => {
         const mempool = new Mempool(10);
-        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0, undefined, "mock-data-1");
+        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0n, undefined, "mock-data-1");
 
         await mempool.add(tx);
         await mempool.add(tx);
@@ -67,7 +67,7 @@ describe("Should get new mempool", () => {
 
     it("should find transaction in mempool", async () => {
         const mempool = new Mempool(10);
-        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0, undefined, "mock-data-1");
+        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0n, undefined, "mock-data-1");
 
         await mempool.add(tx);
 
@@ -77,7 +77,7 @@ describe("Should get new mempool", () => {
 
     it("should clear mempool", async () => {
         const mempool = new Mempool(10);
-        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0, undefined, "mock-data-1");
+        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0n, undefined, "mock-data-1");
 
         await mempool.add(tx);
         mempool.clear();
@@ -90,7 +90,7 @@ describe("Should get new mempool", () => {
         mockTransactionManagement.exists.mockResolvedValueOnce(true);
 
         const mempool = new Mempool(10);
-        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0, undefined, "mock-data-1");
+        const tx: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0n, undefined, "mock-data-1");
 
         await mempool.add(tx);
 
@@ -100,9 +100,9 @@ describe("Should get new mempool", () => {
 
     it("should purge transactions that exist in blockchain", async () => {
         const mempool = new Mempool(10);
-        const tx1: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0, undefined, "mock-data-1");
+        const tx1: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 1n, "tx1", ethers.ZeroHash, 10000, 0n, undefined, "mock-data-1");
 
-        const tx2: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 2n, "tx2", ethers.ZeroHash, 10000, 0, undefined, "mock-data-2");
+        const tx2: Transaction = new Transaction(ethers.ZeroAddress, ethers.ZeroAddress, 2n, "tx2", ethers.ZeroHash, 10000, 0n, undefined, "mock-data-2");
 
         await mempool.add(tx1);
         await mempool.add(tx2);

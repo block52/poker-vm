@@ -4,10 +4,10 @@ import { ChallengeCommand } from "./challengeCommand";
 import { GetTransactionsCommand } from "./getTransactionsCommand";
 import { MeCommand } from "./meCommand";
 import { MintCommand } from "./mintCommand";
+import { NewCommand } from "./newCommand";
 import { RandomCommand } from "./randomCommand";
 import { ResponseCommand } from "./responseCommand";
 import { TransferCommand } from "./transferCommand";
-import { DealCommand } from "./dealCommand";
 import { DeployContractCommand } from "./deployContractCommand";
 import { ResetCommand } from "./resetCommand";
 
@@ -23,6 +23,7 @@ import { GetNodesCommand } from "./getNodesCommand";
 import { GetTransactionCommand } from "./getTransactionCommand";
 import { MempoolCommand } from "./mempoolCommand";
 import { MineCommand } from "./mineCommand";
+import { PerformActionCommand } from "./performActionCommand";
 import { PurgeMempoolCommand } from "./purgeMempoolCommand";
 import { ReceiveMinedBlockCommand } from "./receiveMinedBlockCommand";
 import { ReceiveMinedBlockHashCommand } from "./receiveMinedBlockHashCommand";
@@ -37,15 +38,14 @@ export {
     BalanceCommand,
     ChallengeCommand,
     GetTransactionsCommand,
-    DealCommand,
     DeployContractCommand,
     MeCommand,
     MintCommand,
+    NewCommand,
     RandomCommand,
     ResponseCommand,
     TransferCommand,
     BlockCommand,
-    BlockCommandParams,
     BurnCommand,
     CreateAccountCommand,
     CreateContractSchemaCommand,
@@ -57,6 +57,7 @@ export {
     GetTransactionCommand,
     MempoolCommand,
     MineCommand,
+    PerformActionCommand,
     PurgeMempoolCommand,
     ResetCommand,
     ReceiveMinedBlockCommand,
@@ -65,5 +66,12 @@ export {
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
+};
+
+// TypeScript's isolatedModules flag requires type-only exports to use 'export type'
+// This separates types (which are erased at compile time) from values (which are preserved)
+// Classes and values like AccountCommand go in the normal export, while interfaces and type aliases go here
+export type {
+    BlockCommandParams,
     ISignedResponse
 };

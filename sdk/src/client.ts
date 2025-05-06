@@ -1,14 +1,36 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { PlayerActionType, TexasHoldemStateDTO } from "./types/game";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
 import { Wallet } from "ethers";
 
+export interface IClient {
+    getAccount(address: string): Promise<AccountDTO>;
+    getMempool(): Promise<TransactionDTO[]>;
+    getNodes(): Promise<string[]>;
+    getLastBlock(): Promise<BlockDTO>;
+    getBlocks(count?: number): Promise<BlockDTO[]>;
+    getBlock(index: number): Promise<BlockDTO>;
+    getBlockByHash(hash: string): Promise<BlockDTO>;
+    getBlockHeight(): Promise<number>;
+    sendBlock(blockHash: string, block: string): Promise<void>;
+    sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
+    getTransactions(): Promise<TransactionDTO[]>;
+    transfer(to: string, amount: string, nonce?: number, data?: string): Promise<any>;
+    mint(address: string, amount: string, transactionId: string): Promise<void>;
+    getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
+    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
+    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any>;
+    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
+    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
+    newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
+}
+
 /**
  * NodeRpcClient class for interacting with a remote node via RPC
  */
-export class NodeRpcClient {
+export class NodeRpcClient implements IClient {
     private readonly wallet: Wallet | undefined;
     private requestId: number = 0;
     constructor(private url: string, private privateKey: string) {
@@ -206,7 +228,8 @@ export class NodeRpcClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [from, to, amount, nonce, data, signature]
+            params: [from, to, amount, nonce, data],
+            signature: signature
         });
 
         return body.result.data;
@@ -242,27 +265,62 @@ export class NodeRpcClient {
         return body.result.data;
     }
 
+    /**
+     * Create a new game on the remote node
+     * @param gameAddress The address of the game
+     * @param data The game data
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async newHand(gameAddress: string, seed: string, nonce?: number): Promise<any> {
+        const signature = await this.getSignature(nonce);
+
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.NEW,
+            params: [gameAddress, seed, nonce], // [to, data, nonce]
+            signature: signature
+        });
+
+        return body.result.data;
+    }
+
+    /**
+     * Create a new account on the remote node
+     * @param gameAddress The address of the game
+     * @returns A Promise that resolves to the address of the new account
+     */
     public async playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
         const address = this.getAddress();
         const signature = await this.getSignature(nonce);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
-            params: [address, gameAddress, amount.toString(), "join", signature]
+            method: RPCMethods.PERFORM_ACTION,
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, signature]
         });
 
         return body.result.data;
     }
 
+    /**
+     * Perform an action in a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param action 
+     * @param amount 
+     * @param nonce 
+     * @returns 
+     */
     public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any> {
         const signature = await this.getSignature(nonce);
         const address = this.getAddress();
+        const index = await this.getNextTurnIndex(gameAddress, address);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
-            params: [address, gameAddress, amount.toString(), action, signature]
+            method: RPCMethods.PERFORM_ACTION,
+            params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
+            signature: signature
         });
 
         return body.result.data;
@@ -270,24 +328,43 @@ export class NodeRpcClient {
 
     public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
         const address = this.getAddress();
-        const signature = await this.getSignature(nonce);
+
+        const [signature, index] = await Promise.all([
+            this.getSignature(nonce),
+            this.getNextTurnIndex(gameAddress, address)
+        ]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.TRANSFER,
-            params: [gameAddress, address, amount.toString(), "leave", signature]
+            method: RPCMethods.PERFORM_ACTION,
+            params: [gameAddress, address, NonPlayerActionType.LEAVE, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
+            signature: signature
         });
 
         return body.result.data;
     }
 
-    public async nextHand(gameAddress: string, nonce?: number): Promise<any> {
-        const signature = await this.getSignature(nonce);
+    /**
+     * Deal cards in a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param seed Optional seed for shuffling
+     * @returns A Promise that resolves to the transaction
+     */
+    public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<any> {
+        const address = this.getAddress();
+        const [signature, index] = await Promise.all([
+            this.getSignature(nonce),
+            this.getNextTurnIndex(gameAddress, address)
+        ]);
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [gameAddress, "next-hand", signature]
+            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index], // [from, to, action, amount, nonce, index]
+            data: publicKey,  // todo; work out what we will use data for
+            signature: signature
         });
+
         return body.result.data;
     }
 
@@ -307,24 +384,15 @@ export class NodeRpcClient {
         return signature;
     }
 
-    /**
-     * Deal cards in a Texas Holdem game
-     * @param gameAddress The address of the game
-     * @param seed Optional seed for shuffling
-     * @returns A Promise that resolves to the transaction
-     */
-    public async deal(gameAddress: string, seed: string = "", publicKey: string): Promise<any> {
-        const address = this.getAddress();
-        const signature = await this.getSignature();
+    private async getNextTurnIndex(gameAddress: string, playerId: string): Promise<number> {
+        const gameState = await this.getGameState(gameAddress);
+        const players = gameState.players;
 
-        const { data: body } = await axios.post(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, "deal", "", seed],
-            data: publicKey,  // todo; work out what we will use data for
-            signature: signature
-        });
+        if (!players) {
+            return 0;
+        }
 
-        return body.result.data;
+        // return players.findIndex((player) => player.id === playerId);
+        return 0;
     }
 }

@@ -1,22 +1,39 @@
-import React from "react";
-import { useTableContext } from "../../../context/TableContext";
+import React, { useEffect, useState } from "react";
+import { useTableAnimations } from "../../../hooks/useTableAnimations";
+import { useNextToActInfo } from "../../../hooks/useNextToActInfo";
+import { useParams } from "react-router-dom";
 import { turnAnimationPosition } from "../../../utils/PositionArray";
 
-type TurnAnimationProps = {
+interface TurnAnimationProps {
     index: number;
 }
 
 const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
-    const { tableData, nextToActInfo, tableSize } = useTableContext();
+    const { id } = useParams<{ id: string }>();
+    const { tableSize } = useTableAnimations(id);
+    const { nextToActInfo } = useNextToActInfo(id);
+    const [isCurrentPlayersTurn, setIsCurrentPlayersTurn] = useState(false);
+    const [position, setPosition] = useState<any>(null);
 
-    const visualIndex = tableData?.data?.players?.findIndex(
-        (p: any) => p.seat === nextToActInfo?.seat
-    );
-    const isNextToAct = index === visualIndex;
-    if (!isNextToAct) return null;
-    
-    const turnPos = turnAnimationPosition?.[tableSize === 6 ? "six" : "nine"]?.[visualIndex ?? index];
-    
+    useEffect(() => {
+        if (nextToActInfo?.seat === index + 1) {
+            setIsCurrentPlayersTurn(true);
+        } else {
+            setIsCurrentPlayersTurn(false);
+        }
+    }, [nextToActInfo, index]);
+
+    useEffect(() => {
+        if (tableSize === 9) {
+            setPosition(turnAnimationPosition.nine[index]);
+        } else {
+            setPosition(turnAnimationPosition.six[index]);
+        }
+    }, [tableSize, index]);
+
+    if (!isCurrentPlayersTurn || !position) {
+        return null;
+    }
 
     // Determine pulse speed
     const baseRingStyle = {
@@ -29,33 +46,32 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
         transform: "translate(-50%, -50%)",
         backgroundColor: "rgba(100, 255, 218, 0.1)",
         border: "2px solid rgba(100, 255, 218, 0.3)",
-        animation: `ripple 2.4s linear infinite`
+        animation: "ripple 2.4s linear infinite"
     };
 
     return (
         <>
             <style>{`
                 @keyframes ripple {
-                      0% {
-    transform: scale(0.6);
-    opacity: 0.4;
-  }
-  80% {
-    transform: scale(1.1);
-    opacity: 0.05;
-  }
-      100% {
-    transform: scale(1.1);
-    opacity: 0;
-  }
-}
+                    0% {
+                        transform: scale(0.6);
+                        opacity: 0.4;
+                    }
+                    80% {
+                        transform: scale(1.1);
+                        opacity: 0.05;
+                    }
+                    100% {
+                        transform: scale(1.1);
+                        opacity: 0;
+                    }
                 }
             `}</style>
             <div
                 className="absolute z-[0] pointer-events-none"
                 style={{
-                    left: turnPos.left,
-                    top: turnPos.top,
+                    left: position.left,
+                    top: position.top,
                     width: "220px",
                     height: "110px",
                     transform: "translate(-50%, calc(-50% - 20px))"
@@ -70,10 +86,8 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
                             height: "100%",
                             backgroundColor: "rgba(255, 255, 255, 0.6)",
                             borderRadius: "9999px",
-
-                            animation: `ripple 2000ms linear infinite`,
+                            animation: "ripple 2000ms linear infinite",
                             animationDelay: `${-i * 455}ms`
-
                         }}
                     />
                 ))}

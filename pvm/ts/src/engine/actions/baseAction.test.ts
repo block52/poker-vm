@@ -4,6 +4,7 @@ import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
 import { ethers } from "ethers";
+import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -13,7 +14,7 @@ class TestAction extends BaseAction {
 
     public shouldReturnRange: boolean = false;
 
-    verify(player: Player): Range | undefined {
+    verify(player: Player) {
         const baseResult = super.verify(player);
         return this.shouldReturnRange ? { minAmount: 10n, maxAmount: 100n } : baseResult;
     }
@@ -36,36 +37,27 @@ describe.skip("BaseAction", () => {
 
         // Create player with correct constructor parameters
         const initialPlayer = new Player(
-            "0x980b8D8A16f5891F41871d878a479d81Da52334c",             // address
-            undefined,           // lastAction
-            1000n,              // chips
-            undefined,          // holeCards
-            PlayerStatus.ACTIVE  // status
+            "0x980b8D8A16f5891F41871d878a479d81Da52334c", // address
+            undefined, // lastAction
+            1000n, // chips
+            undefined, // holeCards
+            PlayerStatus.ACTIVE // status
         );
         playerStates.set(0, initialPlayer);
-
-        // These need to be fetched from the contract in the future
-        const gameOptions: GameOptions = {
-            minBuyIn: 100000000000000000n,
-            maxBuyIn: 1000000000000000000n,
-            minPlayers: 2,
-            maxPlayers: 9,
-            smallBlind: 10000000000000000n,
-            bigBlind: 20000000000000000n,
-        };
 
         const previousActions: ActionDTO[] = [];
 
         game = new TexasHoldemGame(
             ethers.ZeroAddress,
             gameOptions,
-            0,           // dealer
-            1,           // nextToAct
+            defaultPositions, // dealer
+            1, // nextToAct
             previousActions,
             TexasHoldemRound.PREFLOP,
-            [],          // communityCards
-            0n,          // pot
-            playerStates
+            [], // communityCards
+            [0n], // pot
+            playerStates,
+            mnemonic
         );
 
         addedActions = [];
@@ -76,16 +68,10 @@ describe.skip("BaseAction", () => {
         };
 
         action = new TestAction(game, updateMock);
-        player = new Player(
-            "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-            undefined,
-            1000n,
-            undefined,
-            PlayerStatus.ACTIVE
-        );
+        player = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 1000n, undefined, PlayerStatus.ACTIVE);
     });
 
-    describe("verify", () => {
+    describe.skip("verify", () => {
         describe("game state validation", () => {
             it("should throw error if game is in showdown", () => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
@@ -133,7 +119,7 @@ describe.skip("BaseAction", () => {
         });
     });
 
-    describe("execute", () => {
+    describe.skip("execute", () => {
         beforeEach(() => {
             // Setup for successful verification
             jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
@@ -144,56 +130,44 @@ describe.skip("BaseAction", () => {
         describe("amount validation", () => {
             it("should throw error if amount provided but not required", () => {
                 action.shouldReturnRange = false;
-                expect(() => action.execute(player, 50n)).toThrow("Amount should not be specified for check");
+                expect(() => action.execute(player, 0, 50n)).toThrow("Amount should not be specified for check");
             });
 
             it("should throw error if amount is less than minimum", () => {
                 action.shouldReturnRange = true;
-                expect(() => action.execute(player, 5n)).toThrow("Amount is less than minimum allowed.");
+                expect(() => action.execute(player, 0, 5n)).toThrow("Amount is less than minimum allowed.");
             });
 
             it("should throw error if amount is greater than maximum", () => {
                 action.shouldReturnRange = true;
-                expect(() => action.execute(player, 150n)).toThrow("Amount is greater than maximum allowed.");
+                expect(() => action.execute(player, 0, 150n)).toThrow("Amount is greater than maximum allowed.");
             });
 
             it("should accept amount within valid range", () => {
                 action.shouldReturnRange = true;
-                expect(() => action.execute(player, 50n)).not.toThrow();
+                expect(() => action.execute(player, 0, 50n)).not.toThrow();
             });
         });
 
         describe("chip handling", () => {
             it("should throw error if player has insufficient chips", () => {
                 action.shouldReturnRange = true;
-                const poorPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    5n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
+                const poorPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 5n, undefined, PlayerStatus.ACTIVE);
 
-                expect(() => action.execute(poorPlayer, 50n)).toThrow("Player has insufficient chips to check.");
+                expect(() => action.execute(poorPlayer, 0, 50n)).toThrow("Player has insufficient chips to check.");
             });
 
             it("should deduct correct amount from player chips", () => {
                 action.shouldReturnRange = true;
                 const initialChips = player.chips;
-                action.execute(player, 50n);
+                action.execute(player, 0, 50n);
                 expect(player.chips).toBe(initialChips - 50n);
             });
 
             it("should handle all-in scenario", () => {
                 action.shouldReturnRange = true;
-                const allInPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    50n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
-                action.execute(allInPlayer, 50n);
+                const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 50n, undefined, PlayerStatus.ACTIVE);
+                action.execute(allInPlayer, 0, 50n);
 
                 expect(allInPlayer.chips).toBe(0n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
@@ -203,7 +177,7 @@ describe.skip("BaseAction", () => {
         describe("action recording", () => {
             it("should record normal action", () => {
                 action.shouldReturnRange = true;
-                action.execute(player, 50n);
+                action.execute(player, 0, 50n);
 
                 expect(addedActions[0]).toEqual({
                     playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
@@ -214,7 +188,7 @@ describe.skip("BaseAction", () => {
 
             it("should record action without amount when not required", () => {
                 action.shouldReturnRange = false;
-                action.execute(player, 0n);
+                action.execute(player, 0, 0n);
 
                 expect(addedActions[0]).toEqual({
                     playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
@@ -225,7 +199,7 @@ describe.skip("BaseAction", () => {
         });
     });
 
-    describe("getDeductAmount", () => {
+    describe.skip("getDeductAmount", () => {
         it("should return 0n when no amount provided", () => {
             expect(action.testGetDeductAmount(player)).toBe(0n);
         });
@@ -235,7 +209,7 @@ describe.skip("BaseAction", () => {
         });
     });
 
-    describe("round-specific behavior", () => {
+    describe.skip("round-specific behavior", () => {
         beforeEach(() => {
             jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
@@ -265,21 +239,15 @@ describe.skip("BaseAction", () => {
 
         describe("betting sequence validation", () => {
             it("should handle all-in situations correctly", () => {
-                const shortStackPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    25n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
+                const shortStackPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 25n, undefined, PlayerStatus.ACTIVE);
                 action.shouldReturnRange = true;
-                action.execute(shortStackPlayer, 25n);
+                action.execute(shortStackPlayer, 0, 25n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
             });
         });
     });
 
-    describe("BaseAction core functions", () => {
+    describe.skip("BaseAction core functions", () => {
         describe("verify function", () => {
             it("should check game round is not SHOWDOWN", () => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
@@ -311,43 +279,31 @@ describe.skip("BaseAction", () => {
 
             it("should validate amount when range is provided", () => {
                 action.shouldReturnRange = true;
-                expect(() => action.execute(player, 5n)).toThrow("Amount is less than minimum allowed.");
+                expect(() => action.execute(player, 0, 5n)).toThrow("Amount is less than minimum allowed.");
             });
 
             it("should not allow amount when range is undefined", () => {
                 action.shouldReturnRange = false;
-                expect(() => action.execute(player, 50n)).toThrow("Amount should not be specified for check");
+                expect(() => action.execute(player, 0, 50n)).toThrow("Amount should not be specified for check");
             });
 
             it("should check if player has sufficient chips", () => {
                 action.shouldReturnRange = true;
-                const poorPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    5n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
-                expect(() => action.execute(poorPlayer, 50n)).toThrow("Player has insufficient chips to check");
+                const poorPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 5n, undefined, PlayerStatus.ACTIVE);
+                expect(() => action.execute(poorPlayer, 0, 50n)).toThrow("Player has insufficient chips to check");
             });
 
             it("should deduct chips correctly", () => {
                 action.shouldReturnRange = true;
                 const initialChips = player.chips;
-                action.execute(player, 50n);
+                action.execute(player, 0, 50n);
                 expect(player.chips).toBe(initialChips - 50n);
             });
 
             it("should convert to ALL_IN when player uses all chips", () => {
                 action.shouldReturnRange = true;
-                const allInPlayer = new Player(
-                    "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    undefined,
-                    50n,
-                    undefined,
-                    PlayerStatus.ACTIVE
-                );
-                action.execute(allInPlayer, 50n);
+                const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 50n, undefined, PlayerStatus.ACTIVE);
+                action.execute(allInPlayer, 0, 50n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
             });
         });
