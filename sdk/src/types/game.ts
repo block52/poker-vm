@@ -163,3 +163,8 @@ export type Card = {
     value: number;
     mnemonic: string;
 };
+
+export type GameOptionsResponse = {
+    address: string;
+    gameOptions: GameOptionsDTO;
+};

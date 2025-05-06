@@ -1,5 +1,5 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
+import { GameOptionsDTO, NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
@@ -7,7 +7,7 @@ import { Wallet } from "ethers";
 
 export interface IClient {
     deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
-    findGames(min?: bigint, max?: bigint): Promise<TexasHoldemStateDTO[]>;
+    findGames(min?: bigint, max?: bigint): Promise<GameOptionsDTO[]>;
     getAccount(address: string): Promise<AccountDTO>;
     getBlock(index: number): Promise<BlockDTO>;
     getBlockByHash(hash: string): Promise<BlockDTO>;
@@ -34,10 +34,21 @@ export interface IClient {
 export class NodeRpcClient implements IClient {
     private readonly wallet: Wallet | undefined;
     private requestId: number = 0;
+
     constructor(private url: string, private privateKey: string) {
         if (privateKey.length === 66) {
             this.wallet = new Wallet(privateKey);
         }
+    }
+
+    /**
+     * Find games on the remote node
+     * @param min The minimum buy-in amount
+     * @param max The maximum buy-in amount
+     * @returns A Promise resolving to an array of GameOptionsDTO objects
+     */
+    public findGames(min?: bigint, max?: bigint): Promise<GameOptionsDTO[]> {
+        throw new Error("Method not implemented.");
     }
 
     /**
