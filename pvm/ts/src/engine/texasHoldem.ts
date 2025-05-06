@@ -231,9 +231,26 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
-    private join(address: string, chips: bigint) {
+    private join(address: string, chips: bigint, preferredSeat?: number) {
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
-        const seat = this.findNextEmptySeat();
+        
+        // Use the preferred seat if provided and available, otherwise find the next empty seat
+        let seat: number;
+        
+        if (preferredSeat !== undefined) {
+            // Check if the preferred seat is valid and empty
+            if (preferredSeat >= 1 && preferredSeat <= this._gameOptions.maxPlayers &&
+                (!this._playersMap.has(preferredSeat) || this._playersMap.get(preferredSeat) === null)) {
+                console.log(`Using preferred seat ${preferredSeat} for player ${address}`);
+                seat = preferredSeat;
+            } else {
+                console.log(`Preferred seat ${preferredSeat} is not available, finding next empty seat`);
+                seat = this.findNextEmptySeat();
+            }
+        } else {
+            seat = this.findNextEmptySeat();
+        }
+        
         this.joinAtSeat(player, seat);
     }
 
@@ -463,7 +480,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN:
-                this.join(address, amount!);
+                // Handle preferred seat number if provided in data parameter
+                const preferredSeat = typeof data === 'number' ? data : undefined;
+                this.join(address, amount!, preferredSeat);
                 this.incrementTurnIndex();
                 break;
             case NonPlayerActionType.LEAVE:

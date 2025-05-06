@@ -161,10 +161,16 @@ app.post("/table/:tableId/join", async (req, res) => {
     console.log("   signature:", req.body.signature);
     console.log("   publicKey:", req.body.publicKey);
     console.log("Buy in amount on join:", req.body.buyInAmount);
+    console.log("Seat number requested:", req.body.seatNumber);
 
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
+        
+        // Format the data parameter as [actionIndex, seatNumber]
+        const dataParam = req.body.seatNumber !== undefined 
+            ? [req.body.index, req.body.seatNumber].toString() 
+            : req.body.index;
         
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
@@ -176,7 +182,7 @@ app.post("/table/:tableId/join", async (req, res) => {
                 NonPlayerActionType.JOIN, // action
                 req.body.buyInAmount, // amount
                 timestampNonce, // nonce - using timestamp for uniqueness
-                req.body.index
+                dataParam // data parameter now includes both action index and seat number
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey

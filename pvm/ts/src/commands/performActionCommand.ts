@@ -14,8 +14,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
 
-    constructor(private readonly from: string, private readonly to: string, private readonly index: number, private readonly amount: bigint, private readonly action: PlayerActionType | NonPlayerActionType, private readonly nonce: number, private readonly privateKey: string) {
-        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
+    constructor(private readonly from: string, private readonly to: string, private readonly data: any, private readonly amount: bigint, private readonly action: PlayerActionType | NonPlayerActionType, private readonly nonce: number, private readonly privateKey: string) {
+        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, action=${action}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
@@ -29,7 +29,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error("Not a game transaction");
         }
 
-        console.log(`Processing game transaction: data=${this.action}, to=${this.to}`);
+        console.log(`Processing game transaction: action=${this.action}, to=${this.to}, data=${this.data}`);
 
         const [json, gameOptions] = await Promise.all([
             this.gameManagement.get(this.to),
@@ -56,10 +56,48 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
-        game.performAction(this.from, this.action, this.index, this.amount);
+        // Parse the data parameter
+        let actionIndex = 0;
+        let seatNumber = undefined;
+        
+        // Handle JOIN action with special data format from proxy
+        if (this.action === NonPlayerActionType.JOIN) {
+            // Check if data might contain a seat number
+            if (typeof this.data === 'string' && this.data.includes(',')) {
+                try {
+                    const parts = this.data.split(',');
+                    if (parts.length === 2) {
+                        actionIndex = parseInt(parts[0].trim());
+                        seatNumber = parseInt(parts[1].trim());
+                        console.log(`Parsed seat number ${seatNumber} from data parameter`);
+                    } else {
+                        actionIndex = parseInt(this.data);
+                    }
+                } catch (error) {
+                    console.warn(`Error parsing data parameter: ${this.data}`, error);
+                    actionIndex = 0; // Default to 0 if parsing fails
+                }
+            } else {
+                actionIndex = typeof this.data === 'number' ? this.data : 0;
+            }
+            console.log(`JOIN action with index ${actionIndex} and preferred seat ${seatNumber}`);
+        } else {
+            // For other actions, just use the data as the index
+            actionIndex = typeof this.data === 'number' ? this.data : parseInt(String(this.data));
+        }
+
+        // Perform the action with the parsed data
+        game.performAction(this.from, this.action, actionIndex, this.amount, seatNumber);
 
         const nonce = BigInt(this.nonce);
-        const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, nonce, this.privateKey, `${this.action},${this.index}`); // Use comma to separate action and index
+        
+        // Create transaction data string
+        let txData = `${this.action},${actionIndex}`;
+        if (seatNumber !== undefined) {
+            txData += `,${seatNumber}`;
+        }
+        
+        const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, nonce, this.privateKey, txData);
         await this.mempool.add(tx);
         return signResult(tx, this.privateKey);
     }

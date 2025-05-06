@@ -57,7 +57,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     userAddress,
                     privateKey,
                     publicKey: userAddress,
-                    index: actionIndex
+                    index: 0,
+                    seatNumber: index
                 });
                 window.location.reload();
             } catch (err) {
