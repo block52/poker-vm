@@ -42,16 +42,6 @@ export class NodeRpcClient implements IClient {
     }
 
     /**
-     * Find games on the remote node
-     * @param min The minimum buy-in amount
-     * @param max The maximum buy-in amount
-     * @returns A Promise resolving to an array of GameOptionsDTO objects
-     */
-    public findGames(min?: bigint, max?: bigint): Promise<GameOptionsDTO[]> {
-        throw new Error("Method not implemented.");
-    }
-
-    /**
      * Get a random request ID
      * @returns The request ID
      */
@@ -69,6 +59,28 @@ export class NodeRpcClient implements IClient {
             throw new Error("Cannot get address without a private key");
         }
         return this.wallet.address;
+    }
+
+    /**
+     * Find games on the remote node
+     * @param min The minimum buy-in amount
+     * @param max The maximum buy-in amount
+     * @returns A Promise resolving to an array of GameOptionsDTO objects
+     */
+    public async findGames(min?: bigint, max?: bigint): Promise<GameOptionsDTO[]> {
+        const query = "" + (min ? `minBuyIn=${min}` : "") + (max ? `,maxBuyIn=${max}` : "");
+
+        // If no query is provided, return an empty array
+        if (!query) {
+            return [];
+        }
+
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<GameOptionsDTO[]> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.FIND_CONTRACT,
+            params: [query]
+        });
+        return body.result.data;
     }
 
     /**
@@ -266,7 +278,7 @@ export class NodeRpcClient implements IClient {
      * Get the state of a Texas Holdem game
      * @param gameAddress The address of the game
      * @returns A Promise that resolves to a TexasHoldemState object
-    */
+     */
     public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),
@@ -318,10 +330,10 @@ export class NodeRpcClient implements IClient {
     /**
      * Perform an action in a Texas Holdem game
      * @param gameAddress The address of the game
-     * @param action 
-     * @param amount 
-     * @param nonce 
-     * @returns 
+     * @param action
+     * @param amount
+     * @param nonce
+     * @returns
      */
     public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any> {
         const signature = await this.getSignature(nonce);
@@ -341,10 +353,7 @@ export class NodeRpcClient implements IClient {
     public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
         const address = this.getAddress();
 
-        const [signature, index] = await Promise.all([
-            this.getSignature(nonce),
-            this.getNextTurnIndex(gameAddress, address)
-        ]);
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -364,16 +373,13 @@ export class NodeRpcClient implements IClient {
      */
     public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<any> {
         const address = this.getAddress();
-        const [signature, index] = await Promise.all([
-            this.getSignature(nonce),
-            this.getNextTurnIndex(gameAddress, address)
-        ]);
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index], // [from, to, action, amount, nonce, index]
-            data: publicKey,  // todo; work out what we will use data for
+            data: publicKey, // todo; work out what we will use data for
             signature: signature
         });
 
