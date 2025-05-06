@@ -100,7 +100,7 @@ const Table = () => {
     // } = useTableContext();
 
     // Use the hook directly instead of getting it from context
-    const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
+    const { legalActions: playerLegalActions, actionTurnIndex } = usePlayerLegalActions(id);
 
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat, userDataBySeat, getUserBySeat } = usePlayerSeatInfo(id);
@@ -465,9 +465,13 @@ const Table = () => {
 
                                     if (leaveTable && playerData) {
                                         console.log("Leaving table via action...");
-                                        leaveTable({
+                                        // Get the action index correctly from the usePlayerLegalActions hook
+                                        const actionIndex = actionTurnIndex || 1; // Use the common action turn index, default to 1 if not available
+                                        console.log("Using action index for leave:", actionIndex);
+                                        
+                                        leaveTable({ 
                                             amount: playerData.stack || "0",
-                                            actionIndex: 0 // Adding action index of 0 as default
+                                            actionIndex: actionIndex
                                         })
                                             .then(() => {
                                                 console.log("Successfully left table");
@@ -723,31 +727,6 @@ const Table = () => {
                                                 status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === positionIndex + 1)?.status
                                             };
 
-                                            const componentToRender = !playerAtThisSeat ? (
-                                                <VacantPlayer
-                                                    index={positionIndex + 1}
-                                                    left={
-                                                        tableSize === 6
-                                                            ? vacantPlayerPosition.six[positionIndex].left
-                                                            : vacantPlayerPosition.nine[positionIndex].left
-                                                    }
-                                                    top={
-                                                        tableSize === 6
-                                                            ? vacantPlayerPosition.six[positionIndex].top
-                                                            : vacantPlayerPosition.nine[positionIndex].top
-                                                    }
-                                                />
-                                            ) : isCurrentUser ? (
-                                                <Player {...componentProps} />
-                                            ) : (
-                                                <OppositePlayer
-                                                    {...componentProps}
-                                                    setStartIndex={(index: number) => setStartIndex(index)}
-                                                    isCardVisible={isCardVisible}
-                                                    setCardVisible={setCardVisible}
-                                                />
-                                            );
-
                                             if (DEBUG_MODE) {
                                                 debugLog(`Rendering component for seat ${positionIndex + 1}:`, {
                                                     isVacant: !playerAtThisSeat,
@@ -759,10 +738,34 @@ const Table = () => {
 
                                             return (
                                                 <div key={positionIndex} className="z-[10]">
-                                                    <div>
-                                                        <TurnAnimation index={positionIndex} />
-                                                    </div>
-                                                    {componentToRender}
+                                                    {/* Render TurnAnimation separately */}
+                                                    <TurnAnimation index={positionIndex} />
+                                                    
+                                                    {/* Render player components separately */}
+                                                    {!playerAtThisSeat ? (
+                                                        <VacantPlayer
+                                                            seat={positionIndex + 1}
+                                                            left={
+                                                                tableSize === 6
+                                                                    ? vacantPlayerPosition.six[positionIndex].left
+                                                                    : vacantPlayerPosition.nine[positionIndex].left
+                                                            }
+                                                            top={
+                                                                tableSize === 6
+                                                                    ? vacantPlayerPosition.six[positionIndex].top
+                                                                    : vacantPlayerPosition.nine[positionIndex].top
+                                                            }
+                                                        />
+                                                    ) : isCurrentUser ? (
+                                                        <Player {...componentProps} />
+                                                    ) : (
+                                                        <OppositePlayer
+                                                            {...componentProps}
+                                                            setStartIndex={(index: number) => setStartIndex(index)}
+                                                            isCardVisible={isCardVisible}
+                                                            setCardVisible={setCardVisible}
+                                                        />
+                                                    )}
                                                 </div>
                                             );
                                         })}
