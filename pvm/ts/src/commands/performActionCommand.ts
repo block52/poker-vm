@@ -14,8 +14,12 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
 
-    constructor(private readonly from: string, private readonly to: string, private readonly index: number, private readonly amount: bigint, private readonly action: PlayerActionType | NonPlayerActionType, private readonly nonce: number, private readonly privateKey: string) {
-        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
+    constructor(private readonly from: string, private readonly to: string, private readonly index: number, private readonly amount: bigint, private readonly action: PlayerActionType | NonPlayerActionType, private readonly nonce: number, private readonly privateKey: string, private readonly data?: any) {
+        // Log the original data parameter which may contain both action index and seat information
+        // Data format is typically "actionIndex,seatNumber" where:
+        // - Position 0: action index
+        // - Position 1: seat number (for JOIN actions)
+        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, action=${action}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
@@ -29,7 +33,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error("Not a game transaction");
         }
 
-        console.log(`Processing game transaction: data=${this.action}, to=${this.to}`);
+        console.log(`Processing game transaction: action=${this.action}, to=${this.to}, data=${JSON.stringify(this.data)}`);
 
         const [json, gameOptions] = await Promise.all([
             this.gameManagement.get(this.to),
@@ -56,7 +60,9 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
-        game.performAction(this.from, this.action, this.index, this.amount);
+        // For JOIN action, this.data contains both index and seat as a string: "index,seat"
+        // Make sure to pass this.data to ensure the seat information is available
+        game.performAction(this.from, this.action, this.index, this.amount, this.data);
 
         const nonce = BigInt(this.nonce);
         const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, nonce, this.privateKey, `${this.action},${this.index}`); // Use comma to separate action and index

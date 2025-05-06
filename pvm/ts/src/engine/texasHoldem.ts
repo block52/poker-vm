@@ -229,9 +229,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
-    private join(address: string, chips: bigint) {
+    private join(address: string, chips: bigint, preferredSeat?: number) {
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
-        const seat = this.findNextEmptySeat();
+        const seat = preferredSeat !== undefined ? preferredSeat : this.findNextEmptySeat();
         this.joinAtSeat(player, seat);
     }
 
@@ -241,6 +241,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Player already joined.");
         }
 
+
+        //todo: seat nubmer is betwen 1 and 9
         // ensure the seat is valid
         if (seat === -1) {
             console.log(`Table full. Current players: ${this.getPlayerCount()}, Max players: ${this._gameOptions.maxPlayers}`);
@@ -461,7 +463,21 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN:
-                this.join(address, amount!);
+                // For JOIN action, extract seat from data string (0,2) - position 2 contains the seat
+                let preferredSeat: number | undefined = undefined;
+                
+                console.log("JOIN action with data:", data);
+                
+                // Parse seat from format "index,seat" where seat is in position 2
+                if (typeof data === 'string' && data.includes(',')) {
+                    const parts = data.split(',');
+                    if (parts.length > 1 && parts[1] !== '') {
+                        preferredSeat = Number(parts[1]);
+                        console.log(`Extracted seat ${preferredSeat} from data "${data}"`);
+                    }
+                }
+                
+                this.join(address, amount!, preferredSeat);
                 this.incrementTurnIndex();
                 break;
             case NonPlayerActionType.LEAVE:

@@ -22,6 +22,7 @@ async function joinTableFetcher(url: string, { arg }: { arg: JoinTableOptions })
     }
 
     console.log("Joining table with index:", index);
+    console.log("Joining at seat:", seat);
 
     // Create a wallet to sign the message
     const wallet = new ethers.Wallet(privateKey);
