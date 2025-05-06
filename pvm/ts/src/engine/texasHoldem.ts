@@ -113,8 +113,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) { }
-            addAction(action: Turn): void { }
+            constructor(public game: TexasHoldemGame) {}
+            addAction(action: Turn): void {}
         })(this);
 
         this._actions = [
@@ -127,7 +127,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new CallAction(this, this._update),
             new RaiseAction(this, this._update),
             new MuckAction(this, this._update),
-            new ShowAction(this, this._update),
+            new ShowAction(this, this._update)
         ];
     }
 
@@ -818,7 +818,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 const cardsToDeal = 5 - dealtCards;
                 this._communityCards.push(...this._deck.deal(cardsToDeal));
             }
-        } 
+        }
 
         // Advance to next round
         this.setNextRound();
@@ -837,7 +837,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
         }
-        
+
         // Cache the values
         const sb = this._smallBlindPosition;
         const bb = this._bigBlindPosition;
@@ -907,17 +907,27 @@ class TexasHoldemGame implements IPoker, IUpdate {
             players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
 
-        const active = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
-        // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
+        const activePlayers = this.findActivePlayers();
+        // If only one player is active, they win the pot
+        if (activePlayers.length === 1) {
+            this._winners = new Map<string, bigint>();
+            const winner = activePlayers[0];
+            this._winners.set(winner.address, this.getPot());
+            winner.chips += this.getPot();
+            return;
+        }
+
         this._winners = new Map<string, bigint>();
+        const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
+        // const orderedPots = Array.from(this._sidePots.entries()).sort(([_k1, v1], [_k2, v2]) => v1 - v2);
 
         const pot: bigint = this.getPot();
-        const winningHands = PokerSolver.Hand.winners(active.map(a => hands.get(a.id)));
+        const winningHands = PokerSolver.Hand.winners(showingPlayers.map(a => hands.get(a.id)));
 
         // Convert winningHands.length to BigInt to avoid type mismatch
         const winnersCount = BigInt(winningHands.length);
 
-        for (const player of active) {
+        for (const player of showingPlayers) {
             if (winningHands.includes(hands.get(player.id))) {
                 // Use BigInt division with the converted count
                 const winAmount = pot / winnersCount;
@@ -984,11 +994,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Get the active players for this round
         const activePlayers = this.findActivePlayers();
-        
+
         // If all players are folded or all-in, the round ends, or if only one player is left to act
         if (activePlayers.length === 1 && this.currentRound !== TexasHoldemRound.ANTE) {
-            // Run community cards
-
             // Set the round to SHOWDOWN
             this._currentRound = TexasHoldemRound.SHOWDOWN;
         }
@@ -1019,6 +1027,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         if (round === TexasHoldemRound.SHOWDOWN) {
+
+            // If everyone else has folded, the round is over and payout the winner
+            const activePlayers = this.findActivePlayers();
+            if (activePlayers.length === 1) {
+                this.calculateWinner();
+                return true; // Round is over if only one player is active
+            }
+
             const players = this.getSeatedPlayers();
             const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
             if (showingPlayers.length === players.length) {
@@ -1150,7 +1166,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case TexasHoldemRound.SHOWDOWN:
                 return TexasHoldemRound.END;
             default:
-                return TexasHoldemRound.ANTE
+                return TexasHoldemRound.ANTE;
         }
     }
 
