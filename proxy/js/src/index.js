@@ -93,29 +93,21 @@ app.get("/", (req, res) => {
 // Mount feature-specific routes
 app.use("/deposit-sessions", depositSessionsRouter);
 
-// ===================================
-// 10. Game lobby-related endpoints
-// ===================================
-app.get("/games", (req, res) => {
-    const id1 = ethers.ZeroAddress;
-    const id2 = ethers.ZeroAddress;
-
-    const min = BigUnit.from("0.01", 18).toString();
-    const max = BigUnit.from("1", 18).toString();
-
-    const response = [
-        { id: id1, variant: "Texas Holdem", type: "Cash", limit: "No Limit", max_players: 9, min, max },
-        { id: id2, variant: "Texas Holdem", type: "Cash", limit: "No Limit", max_players: 6, min, max }
-    ];
-
-    res.send(response);
-});
 
 // ===================================
 // 11. Table-related endpoints
 // ===================================
 app.get("/tables", async (req, res) => {
+    const type = req.query.type || "cash";
+    const min = req.query.minBuyIn || "1000000000000000";
+    const max = req.query.maxBuyIn || 1000000;
+    
+    
+    
+
     res.send("todo: you need to wire this up");
+
+
 });
 
 app.get("/table/:id/player/:seat", async (req, res) => {
