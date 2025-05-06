@@ -1,3 +1,5 @@
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+
 /**
  * Gets the legal actions for a specific player from the table data
  * @param tableData The table data from context
@@ -30,7 +32,7 @@ export const getPlayersLegalActions = (tableData: any, playerAddress?: string): 
     let actions = player.legalActions || [];
 
     // Ensure fold action is available for all active players
-    if (isPlayerActive && !actions.some((a: any) => a.action === "fold")) {
+    if (isPlayerActive && !actions.some((a: any) => a.action === PlayerActionType.FOLD)) {
         // Add fold as a legal action if it's not already there
         actions = [...actions, { action: "fold", min: "0", max: "0" }];
     }
