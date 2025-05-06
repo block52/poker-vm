@@ -6,25 +6,26 @@ import axios from "axios";
 import { Wallet } from "ethers";
 
 export interface IClient {
+    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
+    findGames(min?: bigint, max?: bigint): Promise<TexasHoldemStateDTO[]>;
     getAccount(address: string): Promise<AccountDTO>;
-    getMempool(): Promise<TransactionDTO[]>;
-    getNodes(): Promise<string[]>;
-    getLastBlock(): Promise<BlockDTO>;
-    getBlocks(count?: number): Promise<BlockDTO[]>;
     getBlock(index: number): Promise<BlockDTO>;
     getBlockByHash(hash: string): Promise<BlockDTO>;
     getBlockHeight(): Promise<number>;
+    getBlocks(count?: number): Promise<BlockDTO[]>;
+    getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
+    getLastBlock(): Promise<BlockDTO>;
+    getMempool(): Promise<TransactionDTO[]>;
+    getNodes(): Promise<string[]>;
+    getTransactions(): Promise<TransactionDTO[]>;
+    mint(address: string, amount: string, transactionId: string): Promise<void>;
+    newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
+    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any>;
+    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
+    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
-    getTransactions(): Promise<TransactionDTO[]>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<any>;
-    mint(address: string, amount: string, transactionId: string): Promise<void>;
-    getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
-    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
-    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any>;
-    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
-    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
-    newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
 }
 
 /**
