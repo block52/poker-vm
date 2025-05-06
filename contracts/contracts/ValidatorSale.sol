@@ -9,11 +9,13 @@ import { IValidator } from "./IValidator.sol";
 
 contract ValidatorSale is Ownable {
 
-    private address public immutable nft;
-    private address public immutable underlying;
-    public int8 public totalSold;
+    address public immutable nft;
+    address public immutable underlying;
+    int8 public totalSold;
 
     constructor(address nft_, address underlying_) Ownable(msg.sender) {
+        require(nft_ != address(0), "NFT address cannot be zero");
+        require(underlying_ != address(0), "Underlying address cannot be zero");
         nft = nft_;
         IERC20(nft).approve(address(this), type(uint256).max);
     }

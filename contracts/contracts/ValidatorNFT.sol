@@ -13,9 +13,9 @@ contract ValidatorNFT is Ownable, ERC721 {
         _mint(msg.sender, 0);
     }
 
-    // function mint(address to, uint256 tokenId) external onlyOwner {
-    //     _mint(to, tokenId);
-    // }
+    function mint(address to, uint256 tokenId) external onlyOwner {
+        _safeMint(to, tokenId);
+    }
 
     function isValidator(address account) external view returns (bool) {
         return super.balanceOf(account) > 0;
