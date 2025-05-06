@@ -113,8 +113,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) {}
-            addAction(action: Turn): void {}
+            constructor(public game: TexasHoldemGame) { }
+            addAction(action: Turn): void { }
         })(this);
 
         this._actions = [
@@ -764,6 +764,31 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.status === PlayerStatus.ACTIVE);
     }
 
+    private findLivePlayers(): Player[] {
+
+        const livePlayers: Player[] = [];
+
+        // Iterate through all players and check their status
+        for (const player of this._playersMap.values()) {
+            if (player) {
+                const status = this.getPlayerStatus(player.address);
+                if (status === PlayerStatus.SHOWING || status === PlayerStatus.ACTIVE || status === PlayerStatus.ALL_IN) {
+                    livePlayers.push(player);
+                }
+            }
+        }
+
+        // const livePlayers = Array.from(this._playersMap.values()).filter(p => {
+        //     if (p) {
+        //         const status = this.getPlayerStatus(p.address);
+        //         return status !== PlayerStatus.FOLDED && status !== PlayerStatus.SITTING_OUT;
+        //     }
+        //     return false;
+        // });
+
+        return livePlayers;
+    }
+
     getSeatedPlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
     }
@@ -907,7 +932,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
 
-        const activePlayers = this.findActivePlayers();
+        const activePlayers = this.findLivePlayers();
+
         // If only one player is active, they win the pot
         if (activePlayers.length === 1) {
             this._winners = new Map<string, bigint>();
@@ -981,22 +1007,22 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const players = this.getSeatedPlayers();
 
         // Only consider players who are active and not all-in
-        const nonActivePlayers = players.filter(p => {
+        const notFoldedPlayers = players.filter(p => {
             const status = this.getPlayerStatus(p.address);
-            return status !== PlayerStatus.FOLDED && status !== PlayerStatus.ALL_IN && status !== PlayerStatus.SITTING_OUT;
+            return status !== PlayerStatus.FOLDED && status !== PlayerStatus.SITTING_OUT;
         });
 
         // If no active players left (all folded or all-in), the round ends
-        if (nonActivePlayers.length === 0) {
+        if (notFoldedPlayers.length === 0) {
             // Not sure if we ever reach this point
             return true;
         }
 
-        // Get the active players for this round
-        const activePlayers = this.findActivePlayers();
+        // Get the live players for this round
+        const livePlayers = this.findLivePlayers();
 
         // If all players are folded or all-in, the round ends, or if only one player is left to act
-        if (activePlayers.length === 1 && this.currentRound !== TexasHoldemRound.ANTE) {
+        if (livePlayers.length === 1 && this.currentRound !== TexasHoldemRound.ANTE) {
             // Set the round to SHOWDOWN
             this._currentRound = TexasHoldemRound.SHOWDOWN;
         }
@@ -1029,8 +1055,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (round === TexasHoldemRound.SHOWDOWN) {
 
             // If everyone else has folded, the round is over and payout the winner
-            const activePlayers = this.findActivePlayers();
-            if (activePlayers.length === 1) {
+            const livePlayers = this.findLivePlayers();
+            if (livePlayers.length === 1) {
                 this.calculateWinner();
                 return true; // Round is over if only one player is active
             }
@@ -1068,7 +1094,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // Check that all remaining active players have acted and matched the highest bet
-        for (const player of activePlayers) {
+        for (const player of livePlayers) {
             // Get this player's actions in this round
             const playerActions = actions.filter(a => a.playerId === player.address);
 
@@ -1119,7 +1145,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
                 if (actionIndex >= 0) {
                     // Check if all other active players have acted after this bet/raise
-                    for (const otherPlayer of activePlayers) {
+                    for (const otherPlayer of livePlayers) {
                         if (otherPlayer.address === player.address) continue;
 
                         // Get this player's actions after the bet/raise
