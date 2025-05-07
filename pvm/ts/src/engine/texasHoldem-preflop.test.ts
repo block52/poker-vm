@@ -15,7 +15,7 @@ describe("Texas Holdem - Preflop - Heads Up", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
         });
 
         it("should have the correct players pre flop", () => {
@@ -28,16 +28,23 @@ describe("Texas Holdem - Preflop - Heads Up", () => {
         });
 
         it("should have correct legal actions after raising the small blind", () => {
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+            // Use dynamic indices from the game state
+            const sbIndex = game.getTurnIndex();
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, sbIndex, ONE_TOKEN);
+            
+            const bbIndex = game.getTurnIndex();
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, bbIndex, TWO_TOKENS);
             
             // Add a DEAL action to advance from ANTE to PREFLOP
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 4);
+            
+            const dealIndex = game.getTurnIndex();
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, dealIndex);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
             
             // Now we're in PREFLOP round, so CALL is a valid action
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.RAISE, 5, THREE_TOKENS);
+            const raiseIndex = game.getTurnIndex();
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.RAISE, raiseIndex, THREE_TOKENS);
 
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
