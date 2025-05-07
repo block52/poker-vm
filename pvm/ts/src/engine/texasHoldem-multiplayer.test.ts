@@ -2,7 +2,7 @@ import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemSta
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
 
-// This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
+// This test suite is for the Texas Holdem game engine, specifically for a multiplayer scenario.
 describe("Texas Holdem - Multiplayer", () => {
     
     describe("Four way", () => {
@@ -64,8 +64,8 @@ describe("Texas Holdem - Multiplayer", () => {
 
             // Should have the deal action
             
-
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, ONE_TOKEN);
+            actual = game.getLegalActions(PLAYER_1);
 
             // Should be players 3 turn
         });

@@ -25,14 +25,6 @@ abstract class BaseAction {
     }
 
     execute(player: Player, index: number, amount: bigint): void {
-        // const range = this.verify(player);
-
-        // if (range) {
-        //     if (!amount) throw new Error(`Amount needs to be specified for ${this.type}`);
-        //     if (amount < range.minAmount) throw new Error("Amount is less than minimum allowed.");
-        //     if (amount > range.maxAmount) throw new Error("Amount is greater than maximum allowed.");
-        // }
-
         // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
         // the amount only specifies that over the existing maximum which the player may not yet have covered
         const deductAmount = this.getDeductAmount(player, amount);

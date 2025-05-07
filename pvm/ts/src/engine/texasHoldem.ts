@@ -463,11 +463,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return;
             case NonPlayerActionType.DEAL:
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
-                // After dealing, we should advance to PREFLOP round
-                if (this._currentRound === TexasHoldemRound.ANTE) {
-                    this._currentRound = TexasHoldemRound.PREFLOP;
-                    this._rounds.set(TexasHoldemRound.PREFLOP, []);
-                }
+                this.setNextRound();
                 return;
         }
 
@@ -543,17 +539,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
-        // Check if the round already exists in the map
-        if (this._rounds.has(round)) {
-            // Get the existing actions array
-            const actions = this._rounds.get(round)!;
-            // Push the new turn to it
-            actions.push(turnWithSeat);
-            this._rounds.set(round, actions);
-        } else {
-            // Create a new array with this turn as the first element
-            this._rounds.set(round, [turnWithSeat]);
-        }
+        // Set the action for the current round
+        this.setAction(turnWithSeat, round);
 
         // Now explicitly increment the turn index once
         this.incrementTurnIndex();
@@ -561,24 +548,27 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     addNonPlayerAction(turn: Turn): void {
         const timestamp = Date.now();
-        const round = this._currentRound;
         const seat = -1;
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
+        this.setAction(turnWithSeat, this._currentRound);
+
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
+    }
+
+    private setAction(turn: TurnWithSeat, round: TexasHoldemRound): void {
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
             // Get the existing actions array
             const actions = this._rounds.get(round)!;
             // Push the new turn to it
-            actions.push(turnWithSeat);
+            actions.push(turn);
             this._rounds.set(round, actions);
         } else {
             // Create a new array with this turn as the first element
-            this._rounds.set(round, [turnWithSeat]);
+            this._rounds.set(round, [turn]);
         }
-
-        // Now explicitly increment the turn index once
-        this.incrementTurnIndex();
     }
 
     getActionDTOs(): ActionDTO[] {
