@@ -468,15 +468,29 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 
                 console.log("JOIN action with data:", data);
                 
-                // Parse seat from format "index,seat" where seat is in position 2
-                if (typeof data === 'string' && data.includes(',')) {
+                // Parse seat from data which could be:
+                // 1. Format "0,2" passed directly from client
+                // 2. Format "join,2" from mempool transaction replay
+                if (typeof data === 'string') {
                     const parts = data.split(',');
-                    if (parts.length > 1 && parts[1] !== '') {
+                    
+                    // Format: "0,2" from client
+                    if (parts.length > 1 && !isNaN(Number(parts[1]))) {
                         preferredSeat = Number(parts[1]);
                         console.log(`Extracted seat ${preferredSeat} from data "${data}"`);
                     }
+                    // Format: "join,2" from mempool replay (would be index 1 after splitting)
+                    else if (parts.length > 1 && parts[0] === 'join' && !isNaN(Number(parts[1]))) {
+                        preferredSeat = Number(parts[1]);
+                        console.log(`Extracted seat ${preferredSeat} from mempool format "${data}"`);
+                    }
+                } else if (typeof data === 'number') {
+                    // Direct number format
+                    preferredSeat = data;
+                    console.log(`Using direct seat number: ${preferredSeat}`);
                 }
                 
+                console.log(`Joining with preferred seat: ${preferredSeat !== undefined ? preferredSeat : 'none'}`);
                 this.join(address, amount!, preferredSeat);
                 this.incrementTurnIndex();
                 break;
