@@ -15,22 +15,24 @@ import {
 } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
-import BaseAction from "./actions/baseAction";
+
 import BetAction from "./actions/betAction";
 import BigBlindAction from "./actions/bigBlindAction";
 import CallAction from "./actions/callAction";
 import CheckAction from "./actions/checkAction";
 import DealAction from "./actions/dealAction";
 import FoldAction from "./actions/foldAction";
+import LeaveAction from "./actions/leaveAction";
+import MuckAction from "./actions/muckAction";
 import RaiseAction from "./actions/raiseAction";
+import ShowAction from "./actions/showAction";
 import SmallBlindAction from "./actions/smallBlindAction";
+
 // @ts-ignore
 import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
-import { ethers, N } from "ethers";
-import LeaveAction from "./actions/leaveAction";
-import MuckAction from "./actions/muckAction";
-import ShowAction from "./actions/showAction";
+import { ethers } from "ethers";
+
 
 class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
@@ -450,7 +452,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check if the provided index matches the current turn index (without incrementing)
-        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN) {
+        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE) {
             // hack, to roll back
             throw new Error("Invalid action index.");
         }
@@ -777,15 +779,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 }
             }
         }
-
-        // const livePlayers = Array.from(this._playersMap.values()).filter(p => {
-        //     if (p) {
-        //         const status = this.getPlayerStatus(p.address);
-        //         return status !== PlayerStatus.FOLDED && status !== PlayerStatus.SITTING_OUT;
-        //     }
-        //     return false;
-        // });
-
+        
         return livePlayers;
     }
 
@@ -836,13 +830,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Moving to SHOWDOWN - calculate winner
             //this.calculateWinner();
         } else if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
-            // If we have gotten here, check the community cards have been dealt.  This could happen if players are all in etc on prior rounds
-            // If not, deal the board.
-            const dealtCards = this._communityCards.length;
-            if (dealtCards < 5) {
-                const cardsToDeal = 5 - dealtCards;
-                this._communityCards.push(...this._deck.deal(cardsToDeal));
-            }
+
+            // this.calculateWinner();
+
+            // Moving to ANTE - reset the game
+
+            // this.reInit(this._deck.toString());
         }
 
         // Advance to next round
