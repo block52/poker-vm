@@ -55,13 +55,8 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
                     results.push({
                         address: game.address,
                         gameOptions: {
-                            minBuyIn: game.state?.minBuyIn.toString(),
-                            maxBuyIn: game.state?.maxBuyIn.toString(),
-                            minPlayers: game.state?.minPlayers,
-                            maxPlayers: game.state?.maxPlayers,
                             smallBlind: game.state?.smallBlind.toString(),
-                            bigBlind: game.state?.bigBlind.toString(),
-                            timeout: 0
+                            bigBlind: game.state?.bigBlind.toString()
                         }
                     });
                 }

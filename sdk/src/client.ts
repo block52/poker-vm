@@ -63,12 +63,12 @@ export class NodeRpcClient implements IClient {
 
     /**
      * Find games on the remote node
-     * @param min The minimum buy-in amount
-     * @param max The maximum buy-in amount
+     * @param smallBlind The minimum smallBlind amount
+     * @param bigBlind The maximum bigBlind amount
      * @returns A Promise resolving to an array of GameOptionsDTO objects
      */
-    public async findGames(min?: bigint, max?: bigint): Promise<GameOptionsDTO[]> {
-        const query = "" + (min ? `minBuyIn=${min}` : "") + (max ? `,maxBuyIn=${max}` : "");
+    public async findGames(smallBlind?: bigint, bigBlind?: bigint): Promise<GameOptionsDTO[]> {
+        const query = "" + (smallBlind ? `sb=${smallBlind}` : "") + (bigBlind ? `,bb=${bigBlind}` : "");
 
         // If no query is provided, return an empty array
         if (!query) {
