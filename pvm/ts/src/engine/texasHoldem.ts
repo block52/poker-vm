@@ -258,6 +258,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // TODO: Need to consider the work flow here, but make active for now
         player.updateStatus(PlayerStatus.ACTIVE);
 
+        // If this is the first player, set them as dealer and small blind
+        if (this.getPlayerCount() === 1) {
+            this._dealer = seat;
+            this._smallBlindPosition = seat;
+            this._bigBlindPosition = seat; // Will be updated when second player joins
+            this._lastActedSeat = seat; // Set them as last acted
+        }
+        // If this is the second player, update big blind position
+        else if (this.getPlayerCount() === 2) {
+            this._bigBlindPosition = seat;
+        }
+
         const autoPostBlinds = false;
         // These should be done via the add action function
         if (autoPostBlinds) {
@@ -492,7 +504,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 
                 console.log(`Joining with preferred seat: ${preferredSeat !== undefined ? preferredSeat : 'none'}`);
                 this.join(address, amount!, preferredSeat);
-                this.incrementTurnIndex();
                 break;
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
