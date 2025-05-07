@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import "./QRDeposit.css"; // Import the CSS file with animations
 import { QRCodeSVG } from "qrcode.react";
 import { Eip1193Provider, ethers, parseUnits } from "ethers";
@@ -229,7 +229,7 @@ const QRDeposit: React.FC = () => {
     }, []);
 
     // Function to get USDC balance of connected wallet
-    const fetchWeb3Balance = async () => {
+    const fetchWeb3Balance = useCallback(async () => {
         if (!web3Address) return;
 
         try {
@@ -240,14 +240,14 @@ const QRDeposit: React.FC = () => {
         } catch (error) {
             console.error("Error fetching USDC balance:", error);
         }
-    };
+    }, [web3Address]);
 
     // Fetch balance when wallet connects
     useEffect(() => {
         if (web3Address) {
             fetchWeb3Balance();
         }
-    }, [web3Address]);
+    }, [fetchWeb3Balance, web3Address]);
 
     const handleGenerateQR = async () => {
         console.log("Generate QR button clicked");
@@ -287,7 +287,7 @@ const QRDeposit: React.FC = () => {
     };
 
     // Function to check session status periodically
-    const checkSessionStatus = async () => {
+    const checkSessionStatus = useCallback(async () => {
         if (!sessionId || !currentSession || isDepositCompleted) return;
 
         try {
@@ -332,7 +332,7 @@ const QRDeposit: React.FC = () => {
                 console.error("Failed to check session status:", error);
             }
         }
-    };
+    }, [currentSession, isDepositCompleted, loggedInAccount, refreshBalance, sessionId, transactionStatus]);
 
     // Poll for session status updates - stop when completed
     useEffect(() => {
@@ -344,7 +344,7 @@ const QRDeposit: React.FC = () => {
             console.log("🔷 QRDeposit: Stopping session polling");
             clearInterval(interval);
         };
-    }, [currentSession, sessionId, loggedInAccount, isDepositCompleted]);
+    }, [currentSession, sessionId, loggedInAccount, isDepositCompleted, checkSessionStatus]);
 
     // Reset completion state when starting a new QR code session
     useEffect(() => {
@@ -353,7 +353,7 @@ const QRDeposit: React.FC = () => {
         }
     }, [showQR, currentSession]);
 
-    const completeSession = async (amount: number) => {
+    const completeSession = useCallback(async (amount: number) => {
         if (!sessionId) return;
 
         try {
@@ -374,9 +374,9 @@ const QRDeposit: React.FC = () => {
         } catch (error) {
             console.error("Failed to complete session:", error);
         }
-    };
+    }, [sessionId]);
 
-    const startPolling = () => {
+    const startPolling = useCallback(() => {
         console.log("Starting transaction polling");
 
         const interval = setInterval(async () => {
@@ -403,7 +403,7 @@ const QRDeposit: React.FC = () => {
         }, 5000);
 
         return () => clearInterval(interval);
-    };
+    }, [completeSession, currentSession?.status]);
 
     // Function to copy text to clipboard
     const copyToClipboard = async (text: string) => {
@@ -416,57 +416,57 @@ const QRDeposit: React.FC = () => {
         }
     };
 
-    // Add function to check for token transfers
-    const checkForTransfer = async () => {
-        if (!currentSession || currentSession.status !== "PENDING") return;
-
-        try {
-            setIsQuerying(true);
-            const provider = new ethers.JsonRpcProvider(RPC_URL);
-
-            // Get token contract
-            const tokenContract = new ethers.Contract(TOKEN_ADDRESS, ["event Transfer(address indexed from, address indexed to, uint256 value)"], provider);
-
-            // Get latest block number
-            const latestBlock = await provider.getBlockNumber();
-
-            // Look for Transfer events in last few blocks
-            const events = await tokenContract.queryFilter(tokenContract.filters.Transfer(null, DEPOSIT_ADDRESS), latestBlock - 10, latestBlock);
-
-            if (events.length > 0) {
-                const lastTransfer = events[events.length - 1] as ethers.EventLog;
-                if (!lastTransfer.args) return;
-                const [from, to, value] = lastTransfer.args;
-
-                console.log("=== Transfer Detected ===");
-                console.log("From:", from);
-                console.log("To:", to);
-                console.log("Value:", value.toString());
-                console.log("Session ID:", currentSession._id);
-
-                setTransactionStatus("DETECTED");
-                
-                const response = await axios.put(`${PROXY_URL}/deposit-sessions/${currentSession._id}/complete`, { amount: value.toString() });
-
-                if (response.data) {
-                    setCurrentSession(response.data);
-                    if (response.data.txStatus) {
-                        setTransactionStatus(response.data.txStatus);
-                    } else {
-                        setTransactionStatus("PROCESSING");
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Error checking for transfers:", error);
-        } finally {
-            setIsQuerying(false);
-        }
-    };
-
     // Add polling effect
     useEffect(() => {
         if (!showQR || !currentSession || currentSession.status !== "PENDING") return;
+
+        // Add function to check for token transfers
+        const checkForTransfer = async () => {
+            if (!currentSession || currentSession.status !== "PENDING") return;
+
+            try {
+                setIsQuerying(true);
+                const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+                // Get token contract
+                const tokenContract = new ethers.Contract(TOKEN_ADDRESS, ["event Transfer(address indexed from, address indexed to, uint256 value)"], provider);
+
+                // Get latest block number
+                const latestBlock = await provider.getBlockNumber();
+
+                // Look for Transfer events in last few blocks
+                const events = await tokenContract.queryFilter(tokenContract.filters.Transfer(null, DEPOSIT_ADDRESS), latestBlock - 10, latestBlock);
+
+                if (events.length > 0) {
+                    const lastTransfer = events[events.length - 1] as ethers.EventLog;
+                    if (!lastTransfer.args) return;
+                    const [from, to, value] = lastTransfer.args;
+
+                    console.log("=== Transfer Detected ===");
+                    console.log("From:", from);
+                    console.log("To:", to);
+                    console.log("Value:", value.toString());
+                    console.log("Session ID:", currentSession._id);
+
+                    setTransactionStatus("DETECTED");
+                    
+                    const response = await axios.put(`${PROXY_URL}/deposit-sessions/${currentSession._id}/complete`, { amount: value.toString() });
+
+                    if (response.data) {
+                        setCurrentSession(response.data);
+                        if (response.data.txStatus) {
+                            setTransactionStatus(response.data.txStatus);
+                        } else {
+                            setTransactionStatus("PROCESSING");
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking for transfers:", error);
+            } finally {
+                setIsQuerying(false);
+            }
+        };
 
         const interval = setInterval(checkForTransfer, 5000); // Check every 5 seconds
 
@@ -573,7 +573,7 @@ const QRDeposit: React.FC = () => {
         };
 
         checkExistingSession();
-    }, [loggedInAccount]);
+    }, [loggedInAccount, startPolling]);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">

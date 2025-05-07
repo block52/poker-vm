@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { playerPosition, chipPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
@@ -14,7 +14,7 @@ import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 import "./Table.css"; // Import the Table CSS file
 
@@ -181,7 +181,9 @@ const Table = () => {
     }, [currentUserSeat, getUserBySeat]);
 
     // Define activePlayers only once - rename to tableActivePlayers since we now get activePlayers from the hook
-    const tableActivePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+    const tableActivePlayers = useMemo(() => {
+        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+    }, [tableDataValues]);
 
     useEffect(() => {
         if (!DEBUG_MODE) return; // Skip logging if not in debug mode
@@ -202,11 +204,6 @@ const Table = () => {
             }
         }
     }, [tableActivePlayers]);
-
-    // Early return if no id
-    if (!id) {
-        return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
-    }
 
     // Add dealerIndex state here at the top with other state hooks
     const [dealerIndex, setDealerIndex] = useState<number>(0);
@@ -333,6 +330,11 @@ const Table = () => {
         navigator.clipboard.writeText(text);
         // You could add a toast notification here if you want
     };
+
+    // Early return if no id
+    if (!id) {
+        return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
+    }
 
     // NOW you can have your conditional returns
     if (tableDataValues.isLoading) {

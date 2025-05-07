@@ -54,9 +54,9 @@ const Deposit: React.FC = () => {
         if (isDepositConfirmed) {
             toast.success(`You have deposited ${amount}USDC to address(${BRIDGE_ADDRESS}) successfully`, { autoClose: 5000 });
             setAmount("0");
-            setWalletAllowance(walletAllowance - tmpDepositAmount);
+            setWalletAllowance(w => w - tmpDepositAmount);
         }
-    }, [isDepositConfirmed]);
+    }, [BRIDGE_ADDRESS, amount, isDepositConfirmed, tmpDepositAmount]);
 
     useEffect(() => {
         if (isApproveConfirmed) {
@@ -64,7 +64,7 @@ const Deposit: React.FC = () => {
             setAmount("0");
             setWalletAllowance(tmpWalletAllowance);
         }
-    }, [isApproveConfirmed]);
+    }, [amount, isApproveConfirmed, tmpWalletAllowance]);
 
     useEffect(() => {
         if (depositError) {
@@ -82,7 +82,7 @@ const Deposit: React.FC = () => {
         if (!walletAllowance || !decimals || !+amount) return false;
         const amountInBigInt = BigUnit.from(+amount, decimals).toBigInt();
         return walletAllowance >= amountInBigInt;
-    }, [amount, walletAllowance, decimals, isApproveConfirmed, isDepositConfirmed]);
+    }, [amount, walletAllowance, decimals]);
 
     // Format balance like in Dashboard component
     const formatBalance = (rawBalance: string | number) => {
@@ -175,7 +175,9 @@ const Deposit: React.FC = () => {
 
                     <span
                         onClick={() => {
-                            balance && setAmount(BigUnit.from(BigInt(balance), decimals).toString());
+                            if (balance) {
+                                setAmount(BigUnit.from(BigInt(balance), decimals).toString());
+                            }
                         }}
                         className="cursor-pointer bg-gray-700 py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"
                     >

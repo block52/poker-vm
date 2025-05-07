@@ -1,7 +1,6 @@
 import * as React from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
-import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import PlayerCard from "./PlayerCard";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
