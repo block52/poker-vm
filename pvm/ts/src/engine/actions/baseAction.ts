@@ -9,8 +9,7 @@ abstract class BaseAction {
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
-        // 2. Turn order check: Must be player's turn (except for fold which can be done anytime)
-        if (this.type !== PlayerActionType.FOLD) {
+        if (this.type !== PlayerActionType.FOLD && this.type !== NonPlayerActionType.DEAL) {
             const nextPlayerAddress = this.game.getNextPlayerToAct();
             if (nextPlayerAddress?.address !== player.address) 
                 throw new Error("Must be currently active player.");
