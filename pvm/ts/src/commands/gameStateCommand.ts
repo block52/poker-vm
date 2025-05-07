@@ -37,27 +37,42 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
+            // Sort transactions by index to ensure they're processed in the correct order
             const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx))
                 .sort((a, b) => a.index - b.index);
 
-            orderedTransactions.forEach(tx => {
+            // Process all mempool transactions first to update the game state
+            let processedAtLeastOne = false;
+            for (const tx of orderedTransactions) {
                 try {
                     // For JOIN actions, pass the original data string which includes seat information
-                    if (tx.type === 'join') {
+                    if (tx.type === NonPlayerActionType.JOIN) {
                         console.log(`Processing JOIN action with data: ${tx.data}`);
-                        game.performAction(tx.from, tx.type as NonPlayerActionType, tx.index, tx.value, tx.data);
+                        game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
                     } else {
                         game.performAction(tx.from, tx.type, tx.index, tx.value);
                     }
                     console.log(`Processed action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                    processedAtLeastOne = true;
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                     // Continue with other transactions, don't let this error propagate up
                 }
-            });
+            }
+
+            // If we processed any transactions, log the current turn index
+            if (processedAtLeastOne) {
+                console.log(`Current turn index after processing mempool transactions: ${game.getTurnIndex()}`);
+            }
 
             // update game state
             const state = game.toJson(this.caller);
+            
+            // Add the current turn index to the response for debugging
+            const debugInfo = { 
+                currentTurnIndex: game.getTurnIndex() 
+            };
+            console.log(`Returning game state with turn index: ${debugInfo.currentTurnIndex}`);
 
             return await signResult(state, this.privateKey);
         } catch (error) {
@@ -112,7 +127,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
         } else if (parts.length >= 2 && !isNaN(Number(parts[0])) && !isNaN(Number(parts[1]))) {
             // This looks like "0,2" format from client for JOIN
             action = NonPlayerActionType.JOIN;
-            index = 0;
+            index = Number(parts[0]); // Use the actual index from the data
             
             console.log(`Found JOIN transaction with client format data: ${tx.data} for ${tx.from}`);
             return {
@@ -128,6 +143,14 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             try {
                 action = parts[0].trim() as PlayerActionType | NonPlayerActionType;
                 index = parseInt(parts[1].trim());
+                
+                // Log extracted action and index for debugging
+                console.log(`Parsed standard action: ${action}, index: ${index}`);
+                
+                if (isNaN(index)) {
+                    console.warn(`Invalid index in transaction data: ${tx.data}`);
+                    index = 0; // Default to 0 if parsing fails
+                }
             } catch (error) {
                 console.error(`Error parsing transaction data: ${tx.data}`, error);
                 throw new Error(`Invalid transaction data format: ${tx.data}`);
