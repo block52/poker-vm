@@ -4,29 +4,38 @@ import { Player } from "../../models/player";
 import { Range } from "../types";
 
 class LeaveAction extends BaseAction {
-    get type(): NonPlayerActionType { return NonPlayerActionType.LEAVE }
-    
-    // Override verify method to allow folding anytime
+    get type(): NonPlayerActionType {
+        return NonPlayerActionType.LEAVE;
+    }
+
+    // Override verify method to allow leaving anytime
     verify(player: Player): Range | undefined {
         return { minAmount: player.chips, maxAmount: player.chips };
     }
-    
-    // Override execute to set player's status to FOLDED
+
+    // Override execute to handle player leaving
     execute(player: Player, index: number, amount?: bigint): void {
         // First verify the action
         this.verify(player);
-        
-        // Set player status to FOLDED
-        player.updateStatus(PlayerStatus.SITTING_OUT);
 
-        // Get their current stack before removing them
-        const seat = this.game.getPlayerSeatNumber(player.id);
+        // Get player seat BEFORE changing any state
+        const seat = this.game.getPlayerSeatNumber(player.address);
+        const playerAddress = player.address;
+        const playerChips = player.chips;
 
-        // Remove player from seat
+        console.log(`Player ${playerAddress} at seat ${seat} leaving with ${playerChips} chips...`);
+
+        // Add leave action to history BEFORE removing the player
+        this.game.addNonPlayerAction({ 
+            playerId: playerAddress, 
+            action: NonPlayerActionType.LEAVE, 
+            index: index,
+            amount: playerChips // Include chips amount in the action
+        });
+
+        // Now remove player completely from the game
+        console.log(`Removing player ${playerAddress} from seat ${seat}`);
         this.game.players.delete(seat);
-        
-        // Add the action to the game
-        this.game.addNonPlayerAction({ playerId: player.address, action: NonPlayerActionType.LEAVE, index: index });
     }
 }
 
