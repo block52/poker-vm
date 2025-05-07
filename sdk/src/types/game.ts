@@ -64,13 +64,12 @@ export type GameOptions = {
 };
 
 export type GameOptionsDTO = {
-    minBuyIn: string;
-    maxBuyIn: string;
-    minPlayers: number;
-    maxPlayers: number;
-    smallBlind: string;
-    bigBlind: string;
-    timeout: number;
+    minBuyIn?: string;
+    maxBuyIn?: string;
+    minPlayers?: number;
+    maxPlayers?: number;
+    smallBlind?: string;
+    bigBlind?: string;
 };
 
 // This is the type of the last action of a player

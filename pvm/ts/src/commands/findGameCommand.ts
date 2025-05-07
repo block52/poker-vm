@@ -1,12 +1,12 @@
 import { GameManagement } from "../state/gameManagement";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { signResult } from "./abstractSignedCommand";
-import { GameOptionsResponse } from "../types";
+import { GameOptionsResponse } from "@bitcoinbrisbane/block52";
 
 export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[]> {
     private readonly gameManagement: GameManagement;
-    private readonly min?: bigint;
-    private readonly max?: bigint;
+    private readonly sb?: bigint;
+    private readonly bb?: bigint;
 
     // TODO: Create more specific types for min and max
     constructor(private readonly privateKey: string, query: string) {
@@ -19,11 +19,11 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
         // Hack for now
         for (const param of params) {
             const [key, value] = param.split("=");
-            if (key === "minBuyIn") {
-                this.min = BigInt(value);
-            } 
-            if (key === "maxBuyIn") {
-                this.max = BigInt(value);
+            if (key === "sb") {
+                this.sb = BigInt(value);
+            }
+            if (key === "bb") {
+                this.bb = BigInt(value);
             }
         }
     }
@@ -34,26 +34,35 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
             const games = await this.gameManagement.getAll();
 
             for (const game of games) {
-                const gameOptions = game.state.gameOptions;
+                const sb = game.state?.smallBlind;
+                const bb = game.state?.bigBlind;
 
                 // Initialize shouldInclude to true - default to including the game
                 let shouldInclude = true;
 
-                // Check min only if it's defined (not null or undefined)
-                if (this.min !== undefined && this.min !== null) {
-                    shouldInclude = shouldInclude && gameOptions.minBuyIn >= this.min;
+                // Check sb only if it's defined (not null or undefined)
+                if (this.sb !== undefined && this.sb !== null) {
+                    shouldInclude = shouldInclude && sb >= this.sb;
                 }
 
-                // Check max only if it's defined (not null or undefined)
-                if (this.max !== undefined && this.max !== null) {
-                    shouldInclude = shouldInclude && gameOptions.maxBuyIn <= this.max;
+                // Check bb only if it's defined (not null or undefined)
+                if (this.bb !== undefined && this.bb !== null) {
+                    shouldInclude = shouldInclude && bb <= this.bb;
                 }
 
                 // Add to results if it passes all defined filters
                 if (shouldInclude) {
                     results.push({
                         address: game.address,
-                        gameOptions: game.state.gameOptions
+                        gameOptions: {
+                            minBuyIn: game.state?.minBuyIn.toString(),
+                            maxBuyIn: game.state?.maxBuyIn.toString(),
+                            minPlayers: game.state?.minPlayers,
+                            maxPlayers: game.state?.maxPlayers,
+                            smallBlind: game.state?.smallBlind.toString(),
+                            bigBlind: game.state?.bigBlind.toString(),
+                            timeout: 0
+                        }
                     });
                 }
             }

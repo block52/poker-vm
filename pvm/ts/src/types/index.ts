@@ -19,8 +19,3 @@ export type TexasHoldemGameState = {
     winners: unknown[];
     signature: string;
 };
-
-export type GameOptionsResponse = {
-    address: string;
-    gameOptions: GameOptions;
-};
