@@ -37,7 +37,7 @@ describe("Texas Holdem - Multiplayer", () => {
         });
 
         it("should have correct legal actions after posting the blinds", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // Get legal actions for the next player
@@ -52,8 +52,17 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(nextToAct?.address).toEqual(PLAYER_2);
 
             // Perform the big blind action
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
-            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 5, TWO_TOKENS);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+
+            // Now deal the cards
+            expect(() => {
+                game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 6);
+            }).toThrow("Only the dealer or small blind can initiate the deal.");
+
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, ONE_TOKEN);
+
+            // Should be players 3 turn
         });
     });
 });
