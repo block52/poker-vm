@@ -60,6 +60,11 @@ describe("Texas Holdem - Multiplayer", () => {
                 game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 6);
             }).toThrow("Only the dealer or small blind can initiate the deal.");
 
+            actual = game.getLegalActions(PLAYER_1);
+
+            // Should have the deal action
+            
+
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, ONE_TOKEN);
 
             // Should be players 3 turn
