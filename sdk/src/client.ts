@@ -1,30 +1,31 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
+import { GameOptionsDTO, NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
 import { Wallet } from "ethers";
 
 export interface IClient {
+    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
+    findGames(min?: bigint, max?: bigint): Promise<GameOptionsDTO[]>;
     getAccount(address: string): Promise<AccountDTO>;
-    getMempool(): Promise<TransactionDTO[]>;
-    getNodes(): Promise<string[]>;
-    getLastBlock(): Promise<BlockDTO>;
-    getBlocks(count?: number): Promise<BlockDTO[]>;
     getBlock(index: number): Promise<BlockDTO>;
     getBlockByHash(hash: string): Promise<BlockDTO>;
     getBlockHeight(): Promise<number>;
+    getBlocks(count?: number): Promise<BlockDTO[]>;
+    getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
+    getLastBlock(): Promise<BlockDTO>;
+    getMempool(): Promise<TransactionDTO[]>;
+    getNodes(): Promise<string[]>;
+    getTransactions(): Promise<TransactionDTO[]>;
+    mint(address: string, amount: string, transactionId: string): Promise<void>;
+    newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
+    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any>;
+    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
+    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
-    getTransactions(): Promise<TransactionDTO[]>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<any>;
-    mint(address: string, amount: string, transactionId: string): Promise<void>;
-    getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
-    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
-    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any>;
-    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
-    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
-    newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
 }
 
 /**
@@ -33,6 +34,7 @@ export interface IClient {
 export class NodeRpcClient implements IClient {
     private readonly wallet: Wallet | undefined;
     private requestId: number = 0;
+
     constructor(private url: string, private privateKey: string) {
         if (privateKey.length === 66) {
             this.wallet = new Wallet(privateKey);
@@ -57,6 +59,28 @@ export class NodeRpcClient implements IClient {
             throw new Error("Cannot get address without a private key");
         }
         return this.wallet.address;
+    }
+
+    /**
+     * Find games on the remote node
+     * @param smallBlind The minimum smallBlind amount
+     * @param bigBlind The maximum bigBlind amount
+     * @returns A Promise resolving to an array of GameOptionsDTO objects
+     */
+    public async findGames(smallBlind?: bigint, bigBlind?: bigint): Promise<GameOptionsDTO[]> {
+        const query = "" + (smallBlind ? `sb=${smallBlind}` : "") + (bigBlind ? `,bb=${bigBlind}` : "");
+
+        // If no query is provided, return an empty array
+        if (!query) {
+            return [];
+        }
+
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<GameOptionsDTO[]> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.FIND_CONTRACT,
+            params: [query]
+        });
+        return body.result.data;
     }
 
     /**
@@ -254,7 +278,7 @@ export class NodeRpcClient implements IClient {
      * Get the state of a Texas Holdem game
      * @param gameAddress The address of the game
      * @returns A Promise that resolves to a TexasHoldemState object
-    */
+     */
     public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),
@@ -306,10 +330,10 @@ export class NodeRpcClient implements IClient {
     /**
      * Perform an action in a Texas Holdem game
      * @param gameAddress The address of the game
-     * @param action 
-     * @param amount 
-     * @param nonce 
-     * @returns 
+     * @param action
+     * @param amount
+     * @param nonce
+     * @returns
      */
     public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any> {
         const signature = await this.getSignature(nonce);
@@ -329,10 +353,7 @@ export class NodeRpcClient implements IClient {
     public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
         const address = this.getAddress();
 
-        const [signature, index] = await Promise.all([
-            this.getSignature(nonce),
-            this.getNextTurnIndex(gameAddress, address)
-        ]);
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -352,16 +373,13 @@ export class NodeRpcClient implements IClient {
      */
     public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<any> {
         const address = this.getAddress();
-        const [signature, index] = await Promise.all([
-            this.getSignature(nonce),
-            this.getNextTurnIndex(gameAddress, address)
-        ]);
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index], // [from, to, action, amount, nonce, index]
-            data: publicKey,  // todo; work out what we will use data for
+            data: publicKey, // todo; work out what we will use data for
             signature: signature
         });
 

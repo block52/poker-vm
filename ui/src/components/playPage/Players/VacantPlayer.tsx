@@ -32,7 +32,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
 
-        const { joinTable } = tableId ? useTableJoin(tableId) : { joinTable: null };
+        const { joinTable } = useTableJoin(tableId);
 
         const handleJoinClick = useCallback(() => {
             debugLog("Join click:", { index, tableId });

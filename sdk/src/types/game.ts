@@ -64,13 +64,13 @@ export type GameOptions = {
 };
 
 export type GameOptionsDTO = {
-    minBuyIn: string;
-    maxBuyIn: string;
-    minPlayers: number;
-    maxPlayers: number;
-    smallBlind: string;
-    bigBlind: string;
-    timeout: number;
+    minBuyIn?: string;
+    maxBuyIn?: string;
+    minPlayers?: number;
+    maxPlayers?: number;
+    smallBlind?: string;
+    bigBlind?: string;
+    timeout?: number;
 };
 
 // This is the type of the last action of a player
@@ -162,4 +162,9 @@ export type Card = {
     rank: number;
     value: number;
     mnemonic: string;
+};
+
+export type GameOptionsResponse = {
+    address: string;
+    gameOptions: GameOptionsDTO;
 };
