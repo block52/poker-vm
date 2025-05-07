@@ -50,19 +50,39 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx))
             .sort((a, b) => a.index - b.index);
 
-        orderedTransactions.forEach(tx => {
+        // Process mempool transactions to update game state
+        for (const tx of orderedTransactions) {
             try {
-                game.performAction(tx.from, tx.type, tx.index, tx.value);
-                console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                // Handle JOIN actions with special data format
+                if (tx.type === NonPlayerActionType.JOIN && tx.data) {
+                    console.log(`Processing mempool JOIN action: ${tx.type} from ${tx.from} with value ${tx.value} and data ${tx.data}`);
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                } else {
+                    console.log(`Processing mempool action: ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                    game.performAction(tx.from, tx.type, tx.index, tx.value);
+                }
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 // Continue with other transactions, don't let this error propagate up
             }
-        });
+        }
+
+        // Get the current turn index AFTER processing mempool transactions
+        const currentTurnIndex = game.getTurnIndex();
+        console.log(`Current turn index after processing mempool transactions: ${currentTurnIndex}`);
+        
+        // Only override the index if this is not a JOIN action (JOIN actions always use index 0)
+        const actionIndex = this.action === NonPlayerActionType.JOIN ? this.index : currentTurnIndex;
+        
+        console.log(`Performing action ${this.action} with index ${actionIndex} (original index: ${this.index})`);
 
         // For JOIN action, this.data contains both index and seat as a string: "index,seat"
         // Make sure to pass this.data to ensure the seat information is available
-        game.performAction(this.from, this.action, this.index, this.amount, this.data);
+        if (this.action === NonPlayerActionType.JOIN) {
+            game.performAction(this.from, this.action, this.index, this.amount, this.data);
+        } else {
+            game.performAction(this.from, this.action, actionIndex, this.amount, this.data);
+        }
 
         const nonce = BigInt(this.nonce);
         
@@ -73,8 +93,9 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             transactionData = this.data;
             console.log(`Creating JOIN transaction with seat data: ${transactionData}`);
         } else {
-            // For other actions, use the normal format ///todo this is just a fallback for now check code is not reliant on transactionData = `${this.action},${this.index}`; and then lets remove
-            transactionData = `${this.action},${this.index}`;
+            // For other actions, use the format "action,index" with the CURRENT turn index
+            transactionData = `${this.action},${actionIndex}`;
+            console.log(`Creating standard transaction with data: ${transactionData}`);
         }
         
         const tx: Transaction = await Transaction.create(
@@ -107,15 +128,50 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         }
 
         const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType;
-        const index = parseInt(params[1].trim());
+        
+        // Handle special case for JOIN actions in format "0,2" or "join,2"
+        if ((params[0] === "join" || (params.length >= 2 && !isNaN(Number(params[0])))) && params.length >= 2) {
+            const action = NonPlayerActionType.JOIN;
+            const index = params[0] === "join" ? 0 : Number(params[0]);
+            
+            return {
+                from: tx.from,
+                to: tx.to,
+                value: tx.value,
+                type: action,
+                index: index,
+                data: tx.data // Keep original data for JOIN actions
+            };
+        }
+        
+        // Standard action format: "action,index"
+        try {
+            const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
+            const index = parseInt(params[1].trim());
+            
+            if (isNaN(index)) {
+                console.warn(`Invalid index in transaction data: ${tx.data}`);
+                return {
+                    from: tx.from,
+                    to: tx.to,
+                    value: tx.value,
+                    type: action,
+                    index: 0, // Default to 0 if parsing fails
+                    data: undefined
+                };
+            }
 
-        return {
-            from: tx.from,
-            to: tx.to,
-            value: tx.value,
-            type: action,
-            index: index
-        };
+            return {
+                from: tx.from,
+                to: tx.to,
+                value: tx.value,
+                type: action,
+                index: index,
+                data: action === NonPlayerActionType.JOIN ? tx.data : undefined
+            };
+        } catch (error) {
+            console.error(`Error parsing transaction data: ${tx.data}`, error);
+            throw new Error(`Invalid transaction data format: ${tx.data}`);
+        }
     }
 }
