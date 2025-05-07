@@ -63,11 +63,17 @@ describe("Texas Holdem - Multiplayer", () => {
             actual = game.getLegalActions(PLAYER_1);
 
             // Should have the deal action
-            
+            expect(actual).toContainEqual(
+              expect.objectContaining({ action: NonPlayerActionType.DEAL })
+            );
+
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, ONE_TOKEN);
             actual = game.getLegalActions(PLAYER_1);
 
             // Should be players 3 turn
+            const nextToActAfterDeal = game.getNextPlayerToAct();
+            expect(nextToActAfterDeal).toBeDefined();
+            expect(nextToActAfterDeal?.address).toEqual(PLAYER_3);
         });
     });
 });
