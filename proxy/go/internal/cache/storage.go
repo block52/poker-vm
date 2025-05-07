@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/tecbot/gorocksdb"
-	"github.com/yourusername/proxy-server/internal/models" // Update with your module path
+	"github.com/block52/proxy/internal/models" // Update with your module path
 )
 
 // BlockStore represents a RocksDB-backed block storage

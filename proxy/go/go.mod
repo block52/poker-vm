@@ -1,4 +1,4 @@
-module proxy
+module github.com/block52/proxy
 
 go 1.22.2
 

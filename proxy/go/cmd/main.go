@@ -12,10 +12,12 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"net/rpc"
 	"os"
+	"sync"
 	"time"
 
+	"github.com/block52/proxy/internal/cache"
+	"github.com/block52/proxy/internal/rpc"
 	"github.com/gin-gonic/gin"
 )
 

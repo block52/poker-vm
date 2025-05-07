@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/block52/proxy-server/internal/models" // Update with your module path
+	"github.com/block52/proxy/internal/models" // Update with your module path
 )
 
 // RPCClient represents a JSON-RPC client
