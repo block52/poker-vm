@@ -1,4 +1,3 @@
-import { GameOptions } from "@bitcoinbrisbane/block52";
 import { GameManagement } from "../state/gameManagement";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { signResult } from "./abstractSignedCommand";
@@ -6,10 +5,27 @@ import { GameOptionsResponse } from "../types";
 
 export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[]> {
     private readonly gameManagement: GameManagement;
+    private readonly min?: bigint;
+    private readonly max?: bigint;
 
     // TODO: Create more specific types for min and max
-    constructor(private readonly privateKey: string, readonly min?: bigint, readonly max?: bigint) {
+    constructor(private readonly privateKey: string, query: string) {
         this.gameManagement = new GameManagement();
+
+        const params = query.split(",");
+
+        // Parse min and max from the query string
+        // Example query: "min=100,max=1000"
+        // Hack for now
+        for (const param of params) {
+            const [key, value] = param.split("=");
+            if (key === "minBuyIn") {
+                this.min = BigInt(value);
+            } 
+            if (key === "maxBuyIn") {
+                this.max = BigInt(value);
+            }
+        }
     }
 
     public async execute(): Promise<ISignedResponse<GameOptionsResponse[]>> {
