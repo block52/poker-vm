@@ -231,9 +231,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
-    private join(address: string, chips: bigint) {
+    private join(address: string, chips: bigint, seat?: number): void {
         const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
-        const seat = this.findNextEmptySeat();
+        
+        // const seat = this.findNextEmptySeat();
+        if (seat) {
+            // Check if the seat is already occupied
+            if (this._playersMap.get(seat) !== null) {
+                throw new Error("Seat is already occupied.");
+            }
+        } else {
+            // Find the next empty seat
+            seat = this.findNextEmptySeat();
+        }
+
         this.joinAtSeat(player, seat);
     }
 
