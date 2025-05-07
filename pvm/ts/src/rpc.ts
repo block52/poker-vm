@@ -9,6 +9,7 @@ import {
     CreateAccountCommand,
     CreateContractSchemaCommand,
     DeployContractCommand,
+    FindGameStateCommand,
     GameStateCommand,
     GetAllContractSchemasCommand,
     GetBlocksCommand,
@@ -117,6 +118,17 @@ export class RPC {
 
         try {
             switch (method) {
+
+                case RPCMethods.FIND_CONTRACT: {
+                    if (!request.params) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [query] = request.params as RPCRequestParams[RPCMethods.FIND_CONTRACT];
+                    const command = new FindGameStateCommand(validatorPrivateKey, query);
+                    result = await command.execute();
+                    break;
+                }
+
                 case RPCMethods.GET_ACCOUNT: {
                     if (!request.params) {
                         return makeErrorRPCResponse(id, "Invalid params");
@@ -173,8 +185,6 @@ export class RPC {
                 }
 
                 case RPCMethods.GET_CONTRACT_SCHEMA: {
-                    // const [hash] = request.params as RPCRequestParams[RPCMethods.GET_CONTRACT_SCHEMA];
-                    // const command = new GetContractSchemaCommand(hash, validatorPrivateKey);
                     const command = new GetAllContractSchemasCommand(10, validatorPrivateKey);
                     result = await command.execute();
                     break;

@@ -1,4 +1,4 @@
-import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 
 export type TexasHoldemGameState = {
     type: string;
