@@ -1197,6 +1197,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
+        if (json?.gameOptions) {
+            gameOptions.minBuyIn = BigInt(json.gameOptions?.minBuyIn);
+            gameOptions.maxBuyIn = BigInt(json.gameOptions?.maxBuyIn);
+            gameOptions.maxPlayers = Number(json.gameOptions?.maxPlayers);
+            gameOptions.minPlayers = Number(json.gameOptions?.minPlayers);
+            gameOptions.smallBlind = BigInt(json.gameOptions?.smallBlind);
+            gameOptions.bigBlind = BigInt(json.gameOptions?.bigBlind);
+        }
+
         json?.players.map((p: any) => {
             const stack: bigint = BigInt(p.stack);
 
