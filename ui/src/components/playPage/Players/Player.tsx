@@ -36,10 +36,6 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
     //     console.log("Player component tableData:", tableData);
     // }, [index, tableData]);
 
-    if (!playerData) {
-        return <></>;
-    }
-
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
         if (!winnerInfo) return false;
@@ -52,6 +48,10 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
         const winner = winnerInfo.find((w: any) => w.seat === index);
         return winner ? winner.formattedAmount : null;
     }, [isWinner, winnerInfo, index]);
+
+    if (!playerData) {
+        return <></>;
+    }
 
     return (
         <div
