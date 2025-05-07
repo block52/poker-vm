@@ -104,9 +104,9 @@ app.get("/tables", async (req, res) => {
 
     const rpc_request = {
         jsonrpc: "2.0",
-        method: "get_player",
+        method: RPCMethods.FIND_CONTRACT,
         params: [query],
-        id: "1"
+        id: getNextRpcId()
     };
 
     const response = await axios.post(NODE_URL, rpc_request, {
@@ -133,7 +133,7 @@ app.get("/table/:id/player/:seat", async (req, res) => {
             jsonrpc: "2.0",
             method: "get_player",
             params: [id, seat],
-            id: "1"
+            id: getNextRpcId()
         };
 
         const response = await axios.post(NODE_URL, rpc_request, {
