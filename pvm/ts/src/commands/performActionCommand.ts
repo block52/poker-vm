@@ -65,7 +65,27 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         game.performAction(this.from, this.action, this.index, this.amount, this.data);
 
         const nonce = BigInt(this.nonce);
-        const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, nonce, this.privateKey, `${this.action},${this.index}`); // Use comma to separate action and index
+        
+        // For JOIN actions with seat selection, preserve the seat number in transaction data
+        let transactionData;
+        if (this.action === NonPlayerActionType.JOIN && this.data && typeof this.data === 'string') {
+            // Keep the original data format which includes seat information (e.g. "0,2")
+            transactionData = this.data;
+            console.log(`Creating JOIN transaction with seat data: ${transactionData}`);
+        } else {
+            // For other actions, use the normal format ///todo this is just a fallback for now check code is not reliant on transactionData = `${this.action},${this.index}`; and then lets remove
+            transactionData = `${this.action},${this.index}`;
+        }
+        
+        const tx: Transaction = await Transaction.create(
+            this.to, 
+            this.from, 
+            this.amount, 
+            nonce, 
+            this.privateKey, 
+            transactionData
+        );
+        
         await this.mempool.add(tx);
         return signResult(tx, this.privateKey);
     }
