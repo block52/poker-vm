@@ -8,23 +8,23 @@ export const DEFAULT_BIG_BLIND = "200000000000000000"; // 0.2 ETH
 export const DEFAULT_MIN_BUY_IN = "10000000000000000"; // 0.01 ETH
 export const DEFAULT_MAX_BUY_IN = "1000000000000000000"; // 1 ETH
 
+// Default values in case of error or loading
+const defaultOptions: GameOptions = {
+    minBuyIn: BigInt(DEFAULT_MIN_BUY_IN),
+    maxBuyIn: BigInt(DEFAULT_MAX_BUY_IN),
+    maxPlayers: 9,
+    minPlayers: 2,
+    smallBlind: BigInt(DEFAULT_SMALL_BLIND),
+    bigBlind: BigInt(DEFAULT_BIG_BLIND),
+    timeout: 300
+};
+
 /**
  * Custom hook to fetch game options for a table
  * @param tableId The table ID to fetch options for
  * @returns Object containing game options and loading state
  */
 export const useGameOptions = (tableId?: string) => {
-    // Default values in case of error or loading
-    const defaultOptions: GameOptions = {
-        minBuyIn: BigInt(DEFAULT_MIN_BUY_IN),
-        maxBuyIn: BigInt(DEFAULT_MAX_BUY_IN),
-        maxPlayers: 9,
-        minPlayers: 2,
-        smallBlind: BigInt(DEFAULT_SMALL_BLIND),
-        bigBlind: BigInt(DEFAULT_BIG_BLIND),
-        timeout: 300
-    };
-
     // Use centralized game state but with custom refresh values
     const [options, setOptions] = useState<GameOptions>(defaultOptions);
     const { gameState, isLoading, error, refresh } = useGameState(tableId);

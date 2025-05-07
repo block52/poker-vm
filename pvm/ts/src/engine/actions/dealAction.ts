@@ -12,6 +12,12 @@ class DealAction extends BaseAction implements IAction {
         // Check base conditions (hand active, player's turn, player active)
         super.verify(player);
 
+        // 6. Card state check: Make sure cards haven't been dealt already
+        const anyPlayerHasCards = Array.from(this.game.players.values()).some(p => p !== null && p.holeCards !== undefined);
+        if (anyPlayerHasCards) {
+            throw new Error("Cards have already been dealt for this hand.");
+        }
+
         // 1. Round state check: Can only deal when in ANTE round
         if (this.game.currentRound !== TexasHoldemRound.ANTE) {
             throw new Error("Dealing can only occur after blinds are posted in the ANTE round.");
@@ -46,18 +52,6 @@ class DealAction extends BaseAction implements IAction {
         
         if (!isDealer && !isSmallBlind) {
             throw new Error("Only the dealer or small blind can initiate the deal.");
-        }
-
-        // 5. Turn order check: Must be this player's turn to act
-        const nextToAct = this.game.getNextPlayerToAct();
-        if (!nextToAct || nextToAct.address !== player.address) {
-            throw new Error("It's not your turn to act.");
-        }
-
-        // 6. Card state check: Make sure cards haven't been dealt already
-        const anyPlayerHasCards = Array.from(this.game.players.values()).some(p => p !== null && p.holeCards !== undefined);
-        if (anyPlayerHasCards) {
-            throw new Error("Cards have already been dealt for this hand.");
         }
 
         return { minAmount: 0n, maxAmount: 0n };

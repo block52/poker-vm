@@ -59,6 +59,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
         }
     }
 
+    // Deprecated: use toOrderedTransaction instead
     private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
         if (!tx.data) {
             throw new Error("Transaction data is undefined");

@@ -196,12 +196,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // if (![TexasHoldemRound.PREFLOP, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
         if (this._currentRound !== TexasHoldemRound.ANTE) throw new Error("Can only deal in preflop round.");
 
-        // // Make sure small blind and big blind have been posted
-        // const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
-        // if (!anteActions || anteActions.length < 2) {
-        //     throw new Error("Blinds must be posted before dealing.");
-        // }
-
         // Check if cards have already been dealt
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
@@ -471,11 +465,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return;
             case NonPlayerActionType.DEAL:
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
-                // After dealing, we should advance to PREFLOP round
-                if (this._currentRound === TexasHoldemRound.ANTE) {
-                    this._currentRound = TexasHoldemRound.PREFLOP;
-                    this._rounds.set(TexasHoldemRound.PREFLOP, []);
-                }
+                this.setNextRound();
                 return;
         }
 
@@ -551,17 +541,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
-        // Check if the round already exists in the map
-        if (this._rounds.has(round)) {
-            // Get the existing actions array
-            const actions = this._rounds.get(round)!;
-            // Push the new turn to it
-            actions.push(turnWithSeat);
-            this._rounds.set(round, actions);
-        } else {
-            // Create a new array with this turn as the first element
-            this._rounds.set(round, [turnWithSeat]);
-        }
+        // Set the action for the current round
+        this.setAction(turnWithSeat, round);
 
         // Now explicitly increment the turn index once
         this.incrementTurnIndex();
@@ -569,24 +550,27 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     addNonPlayerAction(turn: Turn): void {
         const timestamp = Date.now();
-        const round = this._currentRound;
         const seat = -1;
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
+        this.setAction(turnWithSeat, this._currentRound);
+
+        // Now explicitly increment the turn index once
+        this.incrementTurnIndex();
+    }
+
+    private setAction(turn: TurnWithSeat, round: TexasHoldemRound): void {
         // Check if the round already exists in the map
         if (this._rounds.has(round)) {
             // Get the existing actions array
             const actions = this._rounds.get(round)!;
             // Push the new turn to it
-            actions.push(turnWithSeat);
+            actions.push(turn);
             this._rounds.set(round, actions);
         } else {
             // Create a new array with this turn as the first element
-            this._rounds.set(round, [turnWithSeat]);
+            this._rounds.set(round, [turn]);
         }
-
-        // Now explicitly increment the turn index once
-        this.incrementTurnIndex();
     }
 
     getActionDTOs(): ActionDTO[] {
@@ -1195,6 +1179,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
+
+        if (json?.gameOptions) {
+            gameOptions.minBuyIn = BigInt(json.gameOptions?.minBuyIn);
+            gameOptions.maxBuyIn = BigInt(json.gameOptions?.maxBuyIn);
+            gameOptions.maxPlayers = Number(json.gameOptions?.maxPlayers);
+            gameOptions.minPlayers = Number(json.gameOptions?.minPlayers);
+            gameOptions.smallBlind = BigInt(json.gameOptions?.smallBlind);
+            gameOptions.bigBlind = BigInt(json.gameOptions?.bigBlind);
+        }
 
         json?.players.map((p: any) => {
             const stack: bigint = BigInt(p.stack);
