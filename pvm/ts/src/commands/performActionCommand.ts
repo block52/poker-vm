@@ -56,10 +56,47 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
+        // Perform the current action
         game.performAction(this.from, this.action, this.index, this.amount);
 
+        // For leave actions, we need to save the updated game state to the database
+        // so that the player is completely removed from the game
+        if (this.action === NonPlayerActionType.LEAVE) {
+            console.log(`Player ${this.from} has left the game. Saving updated game state.`);
+            const updatedState = game.toJson();
+            await this.gameManagement.saveFromJSON(updatedState);
+        }
+
         const nonce = BigInt(this.nonce);
-        const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, nonce, this.privateKey, `${this.action},${this.index}`); // Use comma to separate action and index
+        
+        // Create transaction with correct direction of funds flow
+        let tx: Transaction;
+        if (this.action === NonPlayerActionType.LEAVE) {
+            // For LEAVE: funds flow from game back to player
+            // Transaction.create(to, from, amount, nonce, privateKey, data)
+            // For leave action: player (from) receives funds FROM game (to)
+            tx = await Transaction.create(
+                this.from, // player address - recipient
+                this.to,   // game address - sender
+                this.amount, 
+                nonce, 
+                this.privateKey, 
+                `${this.action},${this.index}`
+            );
+            
+            console.log(`Created LEAVE transaction: Game ${this.to} pays ${this.amount} to player ${this.from}`);
+        } else {
+            // For all other actions: funds flow from player to game
+            tx = await Transaction.create(
+                this.to,   // game receives funds (to)
+                this.from, // player sends funds (from)
+                this.amount, 
+                nonce, 
+                this.privateKey, 
+                `${this.action},${this.index}`
+            );
+        }
+        
         await this.mempool.add(tx);
         return signResult(tx, this.privateKey);
     }
