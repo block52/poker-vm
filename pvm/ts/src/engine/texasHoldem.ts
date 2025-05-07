@@ -447,7 +447,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * @param action The action type to perform (bet, call, fold, etc.)
      * @param index The sequential action index to prevent replay attacks
      * @param amount Optional bet/raise amount if applicable
-     * @param data Additional optional data for the action
+     * @param data Additional optional data for the action should be {actionIndex, seat}
      * @throws Error if the action cannot be performed
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
