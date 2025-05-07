@@ -1,5 +1,6 @@
 import { GameOptions, Positions } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
+import TexasHoldemGame from "./texasHoldem";
 
 // Constants for testing
 export const ONE_TOKEN = 100000000000000000n;
@@ -42,4 +43,9 @@ export const baseGameConfig = {
     players: []
 };
 
+export const fromTestJson = (json: any): TexasHoldemGame => {
+    const data = json.result.data;
+    const gameConfig = data.gameOptions;
 
+    return TexasHoldemGame.fromJson(data, gameConfig);
+}
