@@ -194,12 +194,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // if (![TexasHoldemRound.PREFLOP, TexasHoldemRound.SHOWDOWN].includes(this.currentRound)) throw new Error("Hand currently in progress.");
         if (this._currentRound !== TexasHoldemRound.ANTE) throw new Error("Can only deal in preflop round.");
 
-        // // Make sure small blind and big blind have been posted
-        // const anteActions = this._rounds.get(TexasHoldemRound.ANTE);
-        // if (!anteActions || anteActions.length < 2) {
-        //     throw new Error("Blinds must be posted before dealing.");
-        // }
-
         // Check if cards have already been dealt
         const anyPlayerHasCards = Array.from(this._playersMap.values()).some(p => p !== null && p.holeCards !== undefined);
 
