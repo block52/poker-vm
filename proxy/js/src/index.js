@@ -93,21 +93,35 @@ app.get("/", (req, res) => {
 // Mount feature-specific routes
 app.use("/deposit-sessions", depositSessionsRouter);
 
-
 // ===================================
 // 11. Table-related endpoints
 // ===================================
 app.get("/tables", async (req, res) => {
-    const type = req.query.type || "cash";
-    const min = req.query.minBuyIn || "1000000000000000";
-    const max = req.query.maxBuyIn || 1000000;
-    
-    
-    
+    const sb = req.query.bb;
+    const bb = req.query.sb;
 
-    res.send("todo: you need to wire this up");
+    const query = `sb=${sb}&bb=${bb}`;
 
+    const rpc_request = {
+        jsonrpc: "2.0",
+        method: "get_player",
+        params: [query],
+        id: "1"
+    };
 
+    const response = await axios.post(NODE_URL, rpc_request, {
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const data = response.data;
+
+    if (data.error) {
+        return res.send(null);
+    }
+
+    res.send(data.result);
 });
 
 app.get("/table/:id/player/:seat", async (req, res) => {
@@ -119,7 +133,7 @@ app.get("/table/:id/player/:seat", async (req, res) => {
             jsonrpc: "2.0",
             method: "get_player",
             params: [id, seat],
-            id: Math.floor(Math.random() * 10000) // Simple request ID for the time being
+            id: "1"
         };
 
         const response = await axios.post(NODE_URL, rpc_request, {
@@ -157,7 +171,7 @@ app.post("/table/:tableId/join", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -209,7 +223,7 @@ app.post("/table/:tableId/post_small_blind", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -261,7 +275,7 @@ app.post("/table/:tableId/post_big_blind", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -311,7 +325,7 @@ app.post("/table/:tableId/fold", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -363,7 +377,7 @@ app.post("/table/:tableId/raise", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -415,7 +429,7 @@ app.post("/table/:tableId/bet", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -467,7 +481,7 @@ app.post("/table/:tableId/call", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -518,7 +532,7 @@ app.post("/table/:tableId/check", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -568,7 +582,7 @@ app.post("/table/:tableId/leave", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -716,7 +730,7 @@ app.post("/table/:tableId/deal", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -810,7 +824,7 @@ app.post("/create_new_game", async (req, res) => {
 
     try {
         // TODO: HACK - This endpoint should also follow proper nonce handling in the future
-        
+
         // Format the RPC call to match the NEW command structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -821,7 +835,7 @@ app.post("/create_new_game", async (req, res) => {
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
-        }; 
+        };
 
         console.log("=== FORMATTED RPC CALL ===");
         console.log(JSON.stringify(rpcCall, null, 2));
@@ -842,9 +856,9 @@ app.post("/create_new_game", async (req, res) => {
     } catch (error) {
         console.error("=== ERROR ===");
         console.error("Error details:", error);
-        res.status(500).json({ 
-            error: "Failed to create new game", 
-            details: error.message 
+        res.status(500).json({
+            error: "Failed to create new game",
+            details: error.message
         });
     }
 });
@@ -862,7 +876,7 @@ app.post("/table/:tableId/muck", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -915,7 +929,7 @@ app.post("/table/:tableId/show", async (req, res) => {
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
-        
+
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -968,10 +982,10 @@ app.post("/create_new_hand/:tableId", async (req, res) => {
 
     try {
         // TODO: HACK - This endpoint should follow proper nonce handling in the future
-        
+
         // Use the tableId from URL parameters, not request body
         const tableId = req.params.tableId;
-        
+
         // Format the RPC call to match the NEW command structure
         const rpcCall = {
             id: getNextRpcId(),
@@ -1007,11 +1021,11 @@ app.post("/create_new_hand/:tableId", async (req, res) => {
                     params: [tableId], // Use the tableId from URL params
                     publicKey: req.body.publicKey
                 };
-                
+
                 await axios.post(NODE_URL, gameStateCall, {
                     headers: { "Content-Type": "application/json" }
                 });
-                
+
                 console.log("Game state refresh triggered successfully");
             } catch (refreshError) {
                 console.error("Error refreshing game state:", refreshError);
@@ -1022,9 +1036,9 @@ app.post("/create_new_hand/:tableId", async (req, res) => {
     } catch (error) {
         console.error("=== ERROR ===");
         console.error("Error details:", error);
-        res.status(500).json({ 
-            error: "Failed to create new hand", 
-            details: error.message 
+        res.status(500).json({
+            error: "Failed to create new hand",
+            details: error.message
         });
     }
 });
