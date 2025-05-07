@@ -11,7 +11,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.86",
+    "@bitcoinbrisbane/block52": "1.0.87",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",
     "axios": "^1.8.3",
