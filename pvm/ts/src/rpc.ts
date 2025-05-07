@@ -331,7 +331,7 @@ export class RPC {
                     
                     // Just use the data directly as index - simpler approach
                     // For JOIN action, seat is handled in performAction directly
-                    const index = Number(data);
+                    const index = Number(data); //todo; data contains e.gl "0,2" where index is 0 and seat is 2 fix so that it gets the index in position 0
                     
                     const _action = action as PlayerActionType | NonPlayerActionType;
                     const command = new PerformActionCommand(from, to, index, BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey, data);
