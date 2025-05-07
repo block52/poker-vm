@@ -9,11 +9,12 @@ abstract class BaseAction {
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
-        // if (this.type !== PlayerActionType.FOLD) {
-        //     const nextPlayerAddress = this.game.getNextPlayerToAct()?.address;
-        //     if (nextPlayerAddress !== player.address) 
-        //         throw new Error("Must be currently active player.");
-        // }
+        // 2. Turn order check: Must be player's turn (except for fold which can be done anytime)
+        if (this.type !== PlayerActionType.FOLD) {
+            const nextPlayerAddress = this.game.getNextPlayerToAct()?.address;
+            if (nextPlayerAddress !== player.address) 
+                throw new Error("Must be currently active player.");
+        }
 
         // 3. Player status check: Player must be active (not folded/all-in)
         const playerStatus = this.game.getPlayerStatus(player.address);
