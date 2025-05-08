@@ -86,6 +86,12 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getBets").mockReturnValue(new Map([["0x980b8D8A16f5891F41871d878a479d81Da52334c", 0n]]));
         });
 
+        it.skip("should throw error if no previous action exists", () => {
+            jest.spyOn(game, "getLastRoundAction").mockReturnValue(undefined);
+
+            expect(() => action.verify(player)).toThrow("No previous action to check.");
+        });
+
         it.skip("should return a range for check action", () => {
             // this should throw an error if the player has not matched the current bet
             const range = action.verify(player);
