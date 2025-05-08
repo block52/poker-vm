@@ -184,6 +184,7 @@ app.post("/table/:tableId/join", async (req, res) => {
                 timestampNonce, // nonce - using timestamp for uniqueness
                 req.body.index
             ],
+            data: {seat: req.body.seat},
             signature: req.body.signature,
             publicKey: req.body.publicKey
         };

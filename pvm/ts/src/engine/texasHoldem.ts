@@ -27,6 +27,7 @@ import MuckAction from "./actions/muckAction";
 import RaiseAction from "./actions/raiseAction";
 import ShowAction from "./actions/showAction";
 import SmallBlindAction from "./actions/smallBlindAction";
+import JoinAction from "./actions/joinAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
@@ -474,8 +475,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN:
-                this.join(address, amount!);
-                this.incrementTurnIndex();
+                if (!amount) {
+                    throw new Error("Amount required for JOIN action");
+                }
+                const player = new Player(address, undefined, amount, undefined, PlayerStatus.ACTIVE);
+                new JoinAction(this, this._update).execute(player, index, amount);
                 break;
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);

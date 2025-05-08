@@ -6,6 +6,8 @@ import checkAction from "./checkAction";
 import foldAction from "./foldAction";
 import raiseAction from "./raiseAction";
 import smallBlindAction from "./smallBlindAction";
+import leaveAction from "./leaveAction";
+import joinAction from "./joinAction";
 
 export const actions = {
     allInAction,
@@ -15,5 +17,7 @@ export const actions = {
     checkAction,
     foldAction,
     raiseAction,
-    smallBlindAction
+    smallBlindAction,
+    leaveAction,
+    joinAction
 };

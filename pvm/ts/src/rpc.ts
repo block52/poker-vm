@@ -337,10 +337,11 @@ export class RPC {
                 }
 
                 case RPCMethods.PERFORM_ACTION: {
-                    const [from, to, action, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
-                    const index = Number(data);
+                    const [from, to, action, amount, nonce, actionData] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
+                    // Handle action data which can be a number or an object with additional properties
+                    const actionIndex = typeof actionData === 'number' ? actionData : Number(actionData);
                     const _action = action as PlayerActionType | NonPlayerActionType;
-                    const command = new PerformActionCommand(from, to, index, BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey);
+                    const command = new PerformActionCommand(from, to, actionIndex, BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

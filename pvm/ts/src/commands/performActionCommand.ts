@@ -23,7 +23,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         private readonly nonce: number,
         private readonly privateKey: string
     ) {
-        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
+   
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
