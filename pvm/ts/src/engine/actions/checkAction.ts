@@ -1,4 +1,4 @@
-import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
@@ -34,9 +34,21 @@ class CheckAction extends BaseAction implements IAction {
                 throw new Error("Small blind must call to match the big blind.");
             }
             
+            // Special cast for after blinds and UTG.
+            const lastActions = this.game.getActionsForRound(this.game.currentRound);
+            
+            // Only do bets, calls or raises
+            const lastBettingActions = lastActions.filter((action: ActionDTO) => {
+                return action.action === PlayerActionType.BET || action.action === PlayerActionType.CALL || action.action === PlayerActionType.RAISE;
+            });
+
+            if (!lastBettingActions || lastBettingActions.length === 0) {
+                throw new Error("No previous action to check.");
+            }
+
             // Big blind CAN check when no one has raised above the big blind
             // In this case, the largest bet is equal to the small blind
-            if (isBigBlind && largestBet === this.game.smallBlind) {
+            if (isBigBlind && largestBet === this.game.smallBlind && !lastActions) {
                 return { minAmount: 0n, maxAmount: 0n };
             }
 
