@@ -1,4 +1,4 @@
-import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
@@ -27,6 +27,19 @@ class BetAction extends BaseAction implements IAction {
 
         // 3. Round-specific checks for preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+
+            // Special cast for after blinds and UTG.
+            const lastActions = this.game.getActionsForRound(this.game.currentRound);
+
+            // Only do bets, calls or raises
+            const lastBettingActions = lastActions.filter((action: ActionDTO) => {
+                return action.action === PlayerActionType.BET || action.action === PlayerActionType.CALL || action.action === PlayerActionType.RAISE;
+            });
+
+            if (!lastBettingActions || lastBettingActions.length === 0) {
+                throw new Error("Player is UTG and must call or raise.");
+            }
+
             if (largestBet === 0n) {
                 // Special case for small blind position in PREFLOP
                 if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {

@@ -1,4 +1,4 @@
-import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
@@ -28,7 +28,7 @@ class RaiseAction extends BaseAction implements IAction {
     verify(player: Player): Range {
         // 1. Perform basic validation (player active, player's turn, etc.)
         super.verify(player);
-        
+
         // 2. Cannot raise in the ANTE round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot raise in the ante round. Small blind must post.");
@@ -40,17 +40,16 @@ class RaiseAction extends BaseAction implements IAction {
 
         // 3. For preflop, ensure blinds have been posted
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            // if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.SMALL_BLIND)) {
-            //     throw new Error("Small blind must post before raising.");
-            // }
-
-            // if (!this.game.getActionsForRound(TexasHoldemRound.ANTE).some(action => action.action === PlayerActionType.BIG_BLIND)) {
-            //     throw new Error("Big blind must post before raising.");
-            // }
-
             const playerSeat = this.game.getPlayerSeatNumber(player.address);
             const isSmallBlind = playerSeat === this.game.smallBlindPosition;
-            // const playerBet = this.getSumBets(player.address);
+
+            // Only do bets, calls or raises
+            const lastBettingActions = this.findLastBetCallOrRaise();
+
+            // Should be UTG
+            if (!lastBettingActions) {
+                return { minAmount: this.game.bigBlind, maxAmount: player.chips };
+            }
 
             if (isSmallBlind) {
                 // Can reopen the betting with a minimum of big blind
@@ -67,26 +66,26 @@ class RaiseAction extends BaseAction implements IAction {
         // Calculate minimum raise amount
         const largestBet = this.getLargestBet();
         const playerCurrentBet = this.getSumBets(player.address);
-        
+
         // Standard minimum raise is double the previous bet/raise
         // But in all cases, a player must add at least the big blind
         const doubleLastBet = largestBet * 2n;
         const lastBetPlusBigBlind = largestBet + this.game.bigBlind;
-        
+
         // Use the larger of the two options for minimum raise
         const minRaise = doubleLastBet > lastBetPlusBigBlind ? doubleLastBet : lastBetPlusBigBlind;
-        
+
         // Calculate how much more the player needs to add
         let minAmountToAdd = minRaise - playerCurrentBet;
-        
+
         // If player doesn't have enough for the minimum raise, they can go all-in
         if (player.chips < minAmountToAdd) {
             minAmountToAdd = player.chips;
         }
 
-        return { 
-            minAmount: minAmountToAdd, 
-            maxAmount: player.chips 
+        return {
+            minAmount: minAmountToAdd,
+            maxAmount: player.chips
         };
     }
 
@@ -95,6 +94,17 @@ class RaiseAction extends BaseAction implements IAction {
         const actions = this.game.getActionsForRound(this.game.currentRound);
         for (let i = actions.length - 1; i >= 0; i--) {
             if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
+                return actions[i];
+            }
+        }
+        return undefined;
+    }
+
+    // Find the last bet or raise in the current round
+    private findLastBetCallOrRaise() {
+        const actions = this.game.getActionsForRound(this.game.currentRound);
+        for (let i = actions.length - 1; i >= 0; i--) {
+            if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE || actions[i].action === PlayerActionType.CALL) {
                 return actions[i];
             }
         }
