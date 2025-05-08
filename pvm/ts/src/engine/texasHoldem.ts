@@ -555,22 +555,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // This prevents the double incrementing problem
 
         const seat = this.getPlayerSeatNumber(turn.playerId);
-        
-        // // Skip actions for players who have left the game
-        // if (seat === -1) {
-        //     console.log(`Skipping action for player ${turn.playerId} who has left the game`);
-        //     this.incrementTurnIndex(); // Still increment turn index to maintain sequence
-        //     return;
-        // }
-        
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
         // Set the action for the current round
         this.setAction(turnWithSeat, round);
-
-        // Now explicitly increment the turn index once
-        this.incrementTurnIndex();
     }
 
     addNonPlayerAction(turn: Turn): void {
@@ -591,13 +580,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const round = this._currentRound;
         // Always get the actual seat number for the player
         const seat = this.getPlayerSeatNumber(turn.playerId);
-
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
         this.setAction(turnWithSeat, this._currentRound);
-
-        // Now explicitly increment the turn index once
-        this.incrementTurnIndex();
     }
 
     private setAction(turn: TurnWithSeat, round: TexasHoldemRound): void {

@@ -38,44 +38,53 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
         
         // Post small blind
-        game.performAction(smallBlindPlayer, PlayerActionType.SMALL_BLIND, actionCounter++, ONE_TOKEN);
+        game.performAction(smallBlindPlayer, PlayerActionType.SMALL_BLIND, actionCounter, ONE_TOKEN);
         expect(game.pot).toEqual(ONE_TOKEN);
+        actionCounter += 1;
         
         // Post big blind
-        game.performAction(bigBlindPlayer, PlayerActionType.BIG_BLIND, actionCounter++, TWO_TOKENS);
+        game.performAction(bigBlindPlayer, PlayerActionType.BIG_BLIND, actionCounter, TWO_TOKENS);
         expect(game.pot).toEqual(THREE_TOKENS);
+        actionCounter += 1;
         
         // Deal cards (move from ANTE to PREFLOP)
-        game.performAction(smallBlindPlayer, NonPlayerActionType.DEAL, actionCounter++);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.DEAL, actionCounter);
         expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+        actionCounter += 1;
         
         // Call from small blind
-        game.performAction(smallBlindPlayer, PlayerActionType.CALL, actionCounter++, ONE_TOKEN);
+        game.performAction(smallBlindPlayer, PlayerActionType.CALL, actionCounter, ONE_TOKEN);
+        actionCounter += 1;
         
         // Check from big blind
-        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter++, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
+        actionCounter += 1;
         
         // Both check on flop
-        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter++, 0n);
-        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter++, 0n);
+        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
-        
+        actionCounter += 1;
+
         // Both check on turn
-        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter++, 0n);
-        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter++, 0n);
+        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
-        
+        actionCounter += 1;
+
         // Both check on river
-        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter++, 0n);
-        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter++, 0n);
+        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
-        
+        actionCounter += 1;
+
         // Both show their cards
-        game.performAction(smallBlindPlayer, PlayerActionType.SHOW, actionCounter++, 0n);
-        game.performAction(bigBlindPlayer, PlayerActionType.SHOW, actionCounter++, 0n);
+        game.performAction(smallBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.END);
-        
+        actionCounter += 1;
+
         // Verify winners exist
         const gameState = game.toJson();
         expect(gameState.winners).toBeDefined();
