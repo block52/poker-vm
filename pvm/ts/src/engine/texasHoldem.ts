@@ -432,15 +432,17 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return actions.at(-1);
     }
 
-    getPlayersLastAction(address: string): Turn | undefined {
+    getPlayersLastAction(address: string): TurnWithSeat | undefined {
         const player = this.getPlayer(address);
-        const status = this.getPlayerStatus(address);
+        // const status = this.getPlayerStatus(address);
 
-        if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
-        if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN, index: 0 }; // Todo: fix this
-        if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD, index: 0 }; // Todo: fix this
+        return this.getPlayerActions(player).at(-1);
 
-        return undefined;
+        // if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
+        // if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN, index: 0 }; // Todo: fix this
+        // if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD, index: 0 }; // Todo: fix this
+
+        // return undefined;
     }
 
     /**
@@ -1287,6 +1289,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 
                 let lastAction: ActionDTO | undefined;
                 const turn = this.getPlayersLastAction(nonNullPlayer.address);
+                
                 if (turn) {
                     lastAction = {
                         playerId: turn.playerId,
@@ -1351,10 +1354,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         const pot = this.getPot();
         const deckAsString = this._deck.toString();
-        const communityCards: string[] = [];
-        for (let i = 0; i < this._communityCards.length; i++) {
-            communityCards.push(this._communityCards[i].mnemonic);
-        }
+
+        // Do this as a map
+        const communityCards: string[] = this._communityCards.map(card => card.mnemonic);
 
         const gameOptions: GameOptionsDTO = {
             minBuyIn: this._gameOptions.minBuyIn.toString(),
