@@ -625,13 +625,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // If this is a LEAVE action, remove the player from the game
-        if (isLeaveAction && seat !== -1) {
+        if (isLeaveAction) {
             console.log(`Removing player ${turn.playerId} from seat ${seat}`);
             this._playersMap.delete(seat);
         }
 
         // Now explicitly increment the turn index once
-        this.incrementTurnIndex();
+        this.incrementTurnIndex();  // TODO: check if this is needed as we don't count joins and leave as actions howeer we do increment the turn indes for deal action  see issue 552
     }
 
     getActionDTOs(): ActionDTO[] {
