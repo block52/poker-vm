@@ -171,7 +171,7 @@ const test_json = {
 }
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
-describe("Texas Holdem - Thru - Heads Up", () => {
+describe("Texas Holdem - Turn - Heads Up", () => {
     describe("Turn tests", () => {
 
         const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
@@ -181,17 +181,6 @@ describe("Texas Holdem - Thru - Heads Up", () => {
 
         beforeEach(() => {
             game = fromTestJson(test_json);
-            // game.performAction(SEAT_1, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
-            // game.performAction(SEAT_2, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
-            // game.performAction(SEAT_1, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
-            // game.performAction(SEAT_2, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
-            // game.performAction(SEAT_1, NonPlayerActionType.DEAL, 4);
-            // expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
-            // game.performAction(SEAT_1, PlayerActionType.CHECK, 5, 0n);
-            // game.performAction(SEAT_2, PlayerActionType.CHECK, 6, 0n);
-            // expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
-            // game.performAction(SEAT_1, PlayerActionType.CHECK, 7, 0n);
-            // game.performAction(SEAT_2, PlayerActionType.CHECK, 8, 0n);
         });
 
         it("should have correct legal actions after turn", () => {
