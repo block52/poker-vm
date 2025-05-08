@@ -34,8 +34,8 @@ class LeaveAction extends BaseAction {
         });
 
         // Now remove player completely from the game
-        console.log(`Removing player ${playerAddress} from seat ${seat}`);
-        this.game.players.delete(seat);
+        // console.log(`Removing player ${playerAddress} from seat ${seat}`);
+        // Player removal now happens in addNonPlayerAction
     }
 }
 

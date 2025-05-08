@@ -549,12 +549,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         const seat = this.getPlayerSeatNumber(turn.playerId);
         
-        // Skip actions for players who have left the game
-        if (seat === -1) {
-            console.log(`Skipping action for player ${turn.playerId} who has left the game`);
-            this.incrementTurnIndex(); // Still increment turn index to maintain sequence
-            return;
-        }
+        // // Skip actions for players who have left the game
+        // if (seat === -1) {
+        //     console.log(`Skipping action for player ${turn.playerId} who has left the game`);
+        //     this.incrementTurnIndex(); // Still increment turn index to maintain sequence
+        //     return;
+        // }
         
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
@@ -577,7 +577,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     addNonPlayerAction(turn: Turn): void {
         // For LEAVE action, we still want to record it but then the player will be removed
-        // For other non-player actions, we need to check if the player exists
         const isLeaveAction = turn.action === NonPlayerActionType.LEAVE;
         
         // Only check if player exists for non-LEAVE actions
@@ -605,6 +604,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
         } else {
             // Create a new array with this turn as the first element
             this._rounds.set(round, [turnWithSeat]);
+        }
+
+        // If this is a LEAVE action, remove the player from the game
+        if (isLeaveAction && seat !== -1) {
+            console.log(`Removing player ${turn.playerId} from seat ${seat}`);
+            this._playersMap.delete(seat);
         }
 
         // Now explicitly increment the turn index once
