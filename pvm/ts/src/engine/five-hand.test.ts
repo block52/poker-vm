@@ -63,24 +63,32 @@ describe("Texas Holdem - Play 5 Hands", () => {
         
         // Both check on flop
         game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        actionCounter += 1;
+
         game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
         actionCounter += 1;
 
         // Both check on turn
         game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        actionCounter += 1;
+
         game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
         actionCounter += 1;
 
         // Both check on river
         game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        actionCounter += 1;
+
         game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
         actionCounter += 1;
 
         // Both show their cards
         game.performAction(smallBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n);
+        actionCounter += 1;
+        
         game.performAction(bigBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n);
         expect(game.currentRound).toEqual(TexasHoldemRound.END);
         actionCounter += 1;
