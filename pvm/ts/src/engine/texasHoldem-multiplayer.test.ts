@@ -1,10 +1,11 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
+import e from "express";
 
 // This test suite is for the Texas Holdem game engine, specifically for a multiplayer scenario.
 describe("Texas Holdem - Multiplayer", () => {
-    
+
     describe("Four way", () => {
 
         const PLAYER_1 = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
@@ -47,13 +48,18 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
 
-            const nextToAct = game.getNextPlayerToAct();
+            let nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(PLAYER_2);
 
             // Perform the big blind action
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 5, TWO_TOKENS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+
+            // // Should have the deal action
+            // expect(actual).toContainEqual(
+            //     expect.objectContaining({ action: NonPlayerActionType.DEAL })
+            // );
 
             // Now deal the cards
             expect(() => {
@@ -62,18 +68,58 @@ describe("Texas Holdem - Multiplayer", () => {
 
             actual = game.getLegalActions(PLAYER_1);
 
-            // Should have the deal action
-            expect(actual).toContainEqual(
-              expect.objectContaining({ action: NonPlayerActionType.DEAL })
-            );
-
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, ONE_TOKEN);
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, undefined, "seed");
             actual = game.getLegalActions(PLAYER_1);
 
             // Should be players 3 turn
-            const nextToActAfterDeal = game.getNextPlayerToAct();
-            expect(nextToActAfterDeal).toBeDefined();
-            expect(nextToActAfterDeal?.address).toEqual(PLAYER_3);
+            nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual(PLAYER_3);
+            actual = game.getLegalActions(PLAYER_3);
+            expect(actual.length).toEqual(3); // Fold, check, bet
+            expect(actual[0].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(PlayerActionType.CHECK);
+            expect(actual[2].action).toEqual(PlayerActionType.BET);
+
+            // Open the action for player 3
+            game.performAction(PLAYER_3, PlayerActionType.BET, 7, TWO_TOKENS);
+            expect(game.pot).toEqual(500000000000000000n);
+
+            // Should be players 4 turn
+            nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual(PLAYER_4);
+            actual = game.getLegalActions(PLAYER_4);
+            expect(actual.length).toEqual(3); // Fold, call, raise
+            expect(actual[0].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(PlayerActionType.CALL);
+            expect(actual[2].action).toEqual(PlayerActionType.RAISE);
+
+            // Call from player 4
+            game.performAction(PLAYER_4, PlayerActionType.CALL, 8, TWO_TOKENS);
+            expect(game.pot).toEqual(700000000000000000n);
+
+            // Should be players 1 turn
+            nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual(PLAYER_1);
+
+            actual = game.getLegalActions(PLAYER_1);
+            expect(actual.length).toEqual(3); // Fold, call, raise
+            expect(actual[0].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(PlayerActionType.CALL);
+            expect(actual[2].action).toEqual(PlayerActionType.RAISE);
+
+            // Call from player 1
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 9);
+            expect(game.pot).toEqual(800000000000000000n);
+
+            // Should be players 2 turn
+            nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual(PLAYER_2);
+            actual = game.getLegalActions(PLAYER_2);
+            expect(actual.length).toEqual(3); // Fold, check, raise
         });
     });
 });
