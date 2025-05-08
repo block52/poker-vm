@@ -104,14 +104,31 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._lastActedSeat = _lastToAct; // Need to recalculate this
 
         for (const action of previousActions) {
-            const turn: Turn = {
+            const timestamp = Date.now();
+            // Create TurnWithSeat directly, preserving the original seat number
+            const turnWithSeat: TurnWithSeat = {
                 playerId: action.playerId,
                 action: action.action,
-                amount: BigInt(action.amount),
-                index: action.index
+                amount: action.amount ? BigInt(action.amount) : undefined,
+                index: action.index,
+                seat: action.seat, // Use the stored seat value from the DTO
+                timestamp
             };
 
-            this.addAction(turn, action.round);
+            // Check if the round already exists in the map
+            if (this._rounds.has(action.round)) {
+                // Get the existing actions array
+                const actions = this._rounds.get(action.round)!;
+                // Push the new turn to it
+                actions.push(turnWithSeat);
+                this._rounds.set(action.round, actions);
+            } else {
+                // Create a new array with this turn as the first element
+                this._rounds.set(action.round, [turnWithSeat]);
+            }
+            
+            // Increment turn index
+            this._turnIndex = Math.max(this._turnIndex, action.index + 1);
         }
 
         this._update = new (class implements IUpdate {
@@ -591,7 +608,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         
         const timestamp = Date.now();
         const round = this._currentRound;
-        const seat = isLeaveAction ? this.getPlayerSeatNumber(turn.playerId) : -1;
+        // Always get the actual seat number for the player
+        const seat = this.getPlayerSeatNumber(turn.playerId);
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
         // Check if the round already exists in the map
@@ -648,7 +666,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         for (const turn of turns) {
             const action: ActionDTO = {
                 playerId: turn.playerId,
-                seat: this.getPlayerSeatNumber(turn.playerId),
+                seat: turn.seat,
                 action: turn.action,
                 amount: turn.amount ? turn.amount.toString() : "",
                 round,
