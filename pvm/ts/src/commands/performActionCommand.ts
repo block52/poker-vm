@@ -14,7 +14,15 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
 
-    constructor(private readonly from: string, private readonly to: string, private readonly index: number, private readonly amount: bigint, private readonly action: PlayerActionType | NonPlayerActionType, private readonly nonce: number, private readonly privateKey: string) {
+    constructor(
+        private readonly from: string,
+        private readonly to: string,
+        private readonly index: number,
+        private readonly amount: bigint,
+        private readonly action: PlayerActionType | NonPlayerActionType,
+        private readonly nonce: number,
+        private readonly privateKey: string
+    ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
@@ -31,10 +39,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         console.log(`Processing game transaction: data=${this.action}, to=${this.to}`);
 
-        const [json, gameOptions] = await Promise.all([
-            this.gameManagement.get(this.to),
-            this.contractSchemas.getGameOptions(this.to)
-        ]);
+        const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.to), this.contractSchemas.getGameOptions(this.to)]);
 
         const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
@@ -43,8 +48,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
         // Sort transactions by index
-        const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx))
-            .sort((a, b) => a.index - b.index);
+        const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
         orderedTransactions.forEach(tx => {
             try {
@@ -56,10 +60,43 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
+        // Perform the current action
         game.performAction(this.from, this.action, this.index, this.amount);
 
+     
         const nonce = BigInt(this.nonce);
-        const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, nonce, this.privateKey, `${this.action},${this.index}`); // Use comma to separate action and index
+
+        // Create transaction with correct direction of funds flow  
+        // TODO: work out if theis the the best way to process a leave action and also a join action. ticket 553
+        let tx: Transaction;
+        if (this.action === NonPlayerActionType.LEAVE) {
+            // For LEAVE: funds flow from game back to player
+            // Transaction.create(to, from, amount, nonce, privateKey, data)
+            // For leave action: player (from) receives funds FROM game (to)
+            const leaveTx = await Transaction.create(
+                this.from, // player address - recipient
+                this.to, // game address - sender
+                this.amount,
+                nonce,
+                this.privateKey,
+                `${this.action},${this.index}`
+            );
+
+            await this.mempool.add(leaveTx);
+            // return signResult(leaveTx, this.privateKey);   // todo on ticket 553, we need to work out how the node can sign both the leave action and the transfer under the hood.
+        }
+
+
+        // For all other actions: funds flow from player to game 
+        tx = await Transaction.create(
+            this.to, // game receives funds (to)
+            this.from, // player sends funds (from)
+            this.amount,
+            nonce,
+            this.privateKey,
+            `${this.action},${this.index}`
+        );
+
         await this.mempool.add(tx);
         return signResult(tx, this.privateKey);
     }
