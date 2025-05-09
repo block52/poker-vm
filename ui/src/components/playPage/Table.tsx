@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { playerPosition, chipPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
@@ -14,7 +14,7 @@ import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 import "./Table.css"; // Import the Table CSS file
 
@@ -76,7 +76,7 @@ const calculateZoom = () => {
     const scaleWidth = window.innerWidth / baseWidth;
     const scaleHeight = availableHeight / baseHeight;
 
-    const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7 ;
+    const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
     return Math.min(calculatedScale, 2); // Cap at 2x
 };
 
@@ -92,28 +92,28 @@ const NetworkDisplay = ({ isMainnet = false }) => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    
+
     // Remove TableContext usage
-    // const { 
-    //     showThreeCards, 
+    // const {
+    //     showThreeCards,
     //     tableData,
     // } = useTableContext();
-    
+
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
-    
+
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat, userDataBySeat, getUserBySeat } = usePlayerSeatInfo(id);
-    
+
     // Add the useNextToActInfo hook
     const { nextToActInfo } = useNextToActInfo(id);
-    
+
     // Add the useShowingCardsByAddress hook
     const { showingPlayers, isShowdown, refresh: refreshShowingCards } = useShowingCardsByAddress(id);
-    
+
     // Add the useTableLeave hook
     const { leaveTable, isLeaving } = useTableLeave(id);
-    
+
     // Log when cards are being shown
     useEffect(() => {
         if (isShowdown && showingPlayers.length > 0) {
@@ -123,49 +123,42 @@ const Table = () => {
 
     // Add the useWinnerInfo hook
     const { winnerInfo } = useWinnerInfo(id);
-    
+
     // Add the useTableState hook to get table state properties
-    const { 
-        currentRound, 
-        totalPot: tableTotalPot, 
-        formattedTotalPot,
-        tableSize, 
-        tableType, 
-        roundType 
-    } = useTableState(id, 5000);
-    
+    const { currentRound, totalPot: tableTotalPot, formattedTotalPot, tableSize, tableType, roundType } = useTableState(id, 5000);
+
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
-    
+
     // Add the useGameProgress hook
     const { isGameInProgress, activePlayers } = useGameProgress(id);
-    
+
     // Add the usePlayerDataAvailability hook
     const { isPlayerDataAvailable } = usePlayerDataAvailability(id);
-    
+
     // Add the useCardAnimations hook
     const { flipped1, flipped2, flipped3, showThreeCards } = useCardAnimations(id);
-    
+
     // Add the useMinAndMaxBuyIns hook
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
-    
+
     // Add the useGameOptions hook
     const { gameOptions } = useGameOptions(id);
-    
+
     // Format small blind and big blind values
     const smallBlindFormatted = gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10";
     const bigBlindFormatted = gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20";
-    
+
     // Add any variables we need
     const [seat, setSeat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
-    
+
     // Add the useChipPositions hook AFTER startIndex is defined
     const { chipPositionArray } = useChipPositions(id, startIndex);
-    
+
     // Add the usePlayerChipData hook
     const { getChipAmount } = usePlayerChipData(id);
-    
+
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
     debugLog("Current user address from localStorage:", currentUserAddress);
@@ -177,7 +170,7 @@ const Table = () => {
 
     // Update to use the imported hook
     const tableDataValues = useTableData(id);
-    
+
     // Replace useUserBySeat with getUserBySeat from our new hook
     // Get the user data for the current seat
     const userData = React.useMemo(() => {
@@ -188,7 +181,9 @@ const Table = () => {
     }, [currentUserSeat, getUserBySeat]);
 
     // Define activePlayers only once - rename to tableActivePlayers since we now get activePlayers from the hook
-    const tableActivePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+    const tableActivePlayers = useMemo(() => {
+        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+    }, [tableDataValues]);
 
     useEffect(() => {
         if (!DEBUG_MODE) return; // Skip logging if not in debug mode
@@ -210,11 +205,6 @@ const Table = () => {
         }
     }, [tableActivePlayers]);
 
-    // Early return if no id
-    if (!id) {
-        return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
-    }
-
     // Add dealerIndex state here at the top with other state hooks
     const [dealerIndex, setDealerIndex] = useState<number>(0);
 
@@ -235,7 +225,7 @@ const Table = () => {
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    
+
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
@@ -255,7 +245,7 @@ const Table = () => {
         };
 
         window.addEventListener("mousemove", handleMouseMove);
-        
+
         // Cleanup function to remove event listener and cancel any pending animation frames
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
@@ -341,6 +331,11 @@ const Table = () => {
         // You could add a toast notification here if you want
     };
 
+    // Early return if no id
+    if (!id) {
+        return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
+    }
+
     // NOW you can have your conditional returns
     if (tableDataValues.isLoading) {
         return <div className="h-screen flex items-center justify-center text-white">Loading table data...</div>;
@@ -400,7 +395,7 @@ const Table = () => {
                                             title="Copy full address"
                                         />
                                     </div>
-                                    
+
                                     {/* Balance */}
                                     <div className="flex items-center">
                                         <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center mr-1.5">
@@ -415,17 +410,14 @@ const Table = () => {
                             )}
                         </div>
 
-                        <div 
+                        <div
                             className="flex items-center justify-center w-8 h-8 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300"
                             onClick={() => {
                                 console.log("Navigating to deposit page with direct reload");
                                 window.location.href = "/qr-deposit";
                             }}
                         >
-                            <RiMoneyDollarCircleLine
-                                className="text-[#ffffff] hover:scale-110 transition-transform duration-200"
-                                size={20}
-                            />
+                            <RiMoneyDollarCircleLine className="text-[#ffffff] hover:scale-110 transition-transform duration-200" size={20} />
                         </div>
                     </div>
                 </div>
@@ -449,7 +441,7 @@ const Table = () => {
                     <div className="flex items-center z-10">
                         <div className="flex items-center space-x-2">
                             <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                            ${smallBlindFormatted} / ${bigBlindFormatted}
+                                ${smallBlindFormatted} / ${bigBlindFormatted}
                             </span>
                         </div>
                     </div>
@@ -463,21 +455,19 @@ const Table = () => {
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
                             onClick={() => {
                                 // Check player status
-                                if (tableDataValues.tableDataPlayers?.some((p: any) => 
-                                    p.address?.toLowerCase() === userWalletAddress && 
-                                    p.status !== "folded" && 
-                                    p.status !== "sitting-out")
+                                if (
+                                    tableDataValues.tableDataPlayers?.some(
+                                        (p: any) => p.address?.toLowerCase() === userWalletAddress && p.status !== "folded" && p.status !== "sitting-out"
+                                    )
                                 ) {
                                     alert("You must fold your hand before leaving the table.");
                                 } else {
                                     // Get player's current stack if they are seated
-                                    const playerData = tableDataValues.tableDataPlayers?.find(
-                                        (p: any) => p.address?.toLowerCase() === userWalletAddress
-                                    );
-                                    
+                                    const playerData = tableDataValues.tableDataPlayers?.find((p: any) => p.address?.toLowerCase() === userWalletAddress);
+
                                     if (leaveTable && playerData) {
                                         console.log("Leaving table via action...");
-                                        leaveTable({ 
+                                        leaveTable({
                                             amount: playerData.stack || "0",
                                             actionIndex: 0 // Adding action index of 0 as default
                                         })
@@ -512,33 +502,37 @@ const Table = () => {
                     style={{
                         transition: "margin 0.3s ease"
                     }}
-                >                        <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
-                            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                                <defs>
-                                    <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
-                                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" 
-                                              stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
-                                    </pattern>
-                                </defs>
-                                <rect width="100%" height="100%" fill="url(#hexagons)" />
-                            </svg>
-                        </div>
-                        
-                        {/* Animated background overlay */}
-                        <div
-                            className="absolute inset-0 z-0 opacity-30 shimmer-animation"
-                            style={{
-                                backgroundImage:
-                                    "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
-                                backgroundSize: "200% 100%"
-                            }}
-                        />
-
-                        {/* Animated overlay */}
-                        <div
-                            className="absolute inset-0 z-0 opacity-20"
-                            style={{
-                                backgroundImage: `
+                >
+                    {" "}
+                    <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
+                        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
+                                    <path
+                                        d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z"
+                                        stroke="rgba(59, 130, 246, 0.5)"
+                                        strokeWidth="0.6"
+                                        fill="none"
+                                    />
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#hexagons)" />
+                        </svg>
+                    </div>
+                    {/* Animated background overlay */}
+                    <div
+                        className="absolute inset-0 z-0 opacity-30 shimmer-animation"
+                        style={{
+                            backgroundImage:
+                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
+                            backgroundSize: "200% 100%"
+                        }}
+                    />
+                    {/* Animated overlay */}
+                    <div
+                        className="absolute inset-0 z-0 opacity-20"
+                        style={{
+                            backgroundImage: `
                                     repeating-linear-gradient(
                                         ${45 + mousePosition.x / 10}deg,
                                         rgba(42, 72, 143, 0.1) 0%,
@@ -548,28 +542,27 @@ const Table = () => {
                                         rgba(42, 72, 143, 0.1) 100%
                                     )
                                 `,
-                                backgroundSize: "400% 400%",
-                                animation: "gradient 15s ease infinite",
-                                transition: "background 0.5s ease"
-                            }}
-                        />
-
-                        {/* Base gradient background */}
-                        <div
-                            className="absolute inset-0 z-0"
-                            style={{
-                                backgroundImage: `
+                            backgroundSize: "400% 400%",
+                            animation: "gradient 15s ease infinite",
+                            transition: "background 0.5s ease"
+                        }}
+                    />
+                    {/* Base gradient background */}
+                    <div
+                        className="absolute inset-0 z-0"
+                        style={{
+                            backgroundImage: `
                                     radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
                                     radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%),
                                     radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
                                     radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
                                     radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%)
                                 `,
-                                backgroundColor: "#111827",
-                                filter: "blur(60px)",
-                                transition: "all 0.3s ease-out"
-                            }}
-                        />
+                            backgroundColor: "#111827",
+                            filter: "blur(60px)",
+                            transition: "all 0.3s ease-out"
+                        }}
+                    />
                     {/*//! TABLE */}
                     <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Hexagon pattern overlay */}
@@ -653,26 +646,24 @@ const Table = () => {
                                                     </span>
                                                 </div>
                                                 <div className="flex gap-2 mt-8">
-                                                    {tableDataValues.tableDataRound === "preflop"
-                                                        ? // Show face-down cards in preflop
-                                                          Array(5)
-                                                              .fill(null)
-                                                              .map((_, index) => (
-                                                                  <div
-                                                                      key={index}
-                                                                      className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
-                                                                  />
-                                                              ))
-                                                        : // Show actual cards for other rounds
-                                                          (tableDataValues.tableDataCommunityCards || []).map((card: any, index: number) => (
-                                                              <div key={index} className="card animate-fall">
-                                                                  <OppositePlayerCards
-                                                                      frontSrc={`/cards/${card}.svg`}
-                                                                      backSrc="/cards/b52CardBack.svg"
-                                                                      flipped={true}
-                                                                  />
-                                                              </div>
-                                                          ))}
+                                                    {Array.from({ length: 5 }).map((_, idx) => {
+                                                        const communityCards = tableDataValues.tableDataCommunityCards || [];
+                                                        if (idx < communityCards.length) {
+                                                            const card = communityCards[idx];
+                                                            return (
+                                                                <div key={idx} className="card animate-fall">
+                                                                    <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped />
+                                                                </div>
+                                                            );
+                                                        } else {
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
+                                                                />
+                                                            );
+                                                        }
+                                                    })}
                                                 </div>
                                             </div>
 
@@ -783,9 +774,8 @@ const Table = () => {
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
                             {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>}
-                        </div> 
+                        </div>
                     </div>
-
                     {/*//! FOOTER */}
                     <div className="w-full flex justify-center items-center h-[250px] bg-transparent z-[10]">
                         <div className="max-w-[700px] w-full flex justify-center items-center h-full">
@@ -848,14 +838,9 @@ const Table = () => {
                     <div className="text-left mb-1">
                         <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
                     </div>
-                    <img 
-                        src="/block52.png" 
-                        alt="Block52 Logo" 
-                        className="h-12 w-auto object-contain interaction-none"
-                    />
+                    <img src="/block52.png" alt="Block52 Logo" className="h-12 w-auto object-contain interaction-none" />
                 </div>
             </div>
-            
         </div>
     );
 };

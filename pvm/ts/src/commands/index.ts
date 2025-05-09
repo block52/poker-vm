@@ -15,6 +15,7 @@ import { BlockCommand, BlockCommandParams } from "./blockCommand";
 import { BurnCommand } from "./burnCommand";
 import { CreateAccountCommand } from "./createAccountCommand";
 import { CreateContractSchemaCommand } from "./contractSchema/createContractSchemaCommand";
+import { FindGameStateCommand } from "./findGameCommand";
 import { GameStateCommand } from "./gameStateCommand";
 import { GetAllContractSchemasCommand } from "./contractSchema/getAllContractSchemasCommand";
 import { GetBlocksCommand } from "./getBlocksCommand";
@@ -36,36 +37,37 @@ import { ISignedResponse } from "./interfaces";
 export {
     AccountCommand,
     BalanceCommand,
-    ChallengeCommand,
-    GetTransactionsCommand,
-    DeployContractCommand,
-    MeCommand,
-    MintCommand,
-    NewCommand,
-    RandomCommand,
-    ResponseCommand,
-    TransferCommand,
     BlockCommand,
     BurnCommand,
+    ChallengeCommand,
     CreateAccountCommand,
     CreateContractSchemaCommand,
+    DeployContractCommand,
+    FindGameStateCommand,
     GameStateCommand,
     GetAllContractSchemasCommand,
-    GetContractSchemaCommand,
     GetBlocksCommand,
+    GetContractSchemaCommand,
     GetNodesCommand,
     GetTransactionCommand,
+    GetTransactionsCommand,
+    MeCommand,
     MempoolCommand,
     MineCommand,
+    MintCommand,
+    NewCommand,
     PerformActionCommand,
     PurgeMempoolCommand,
-    ResetCommand,
+    RandomCommand,
     ReceiveMinedBlockCommand,
     ReceiveMinedBlockHashCommand,
+    ResetCommand,
+    ResponseCommand,
     SharedSecretCommand,
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
+    TransferCommand,
 };
 
 // TypeScript's isolatedModules flag requires type-only exports to use 'export type'

@@ -14,7 +14,15 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     private readonly contractSchemas: ContractSchemaManagement;
     private readonly mempool: Mempool;
 
-    constructor(private readonly from: string, private readonly to: string, private readonly index: number, private readonly amount: bigint, private readonly action: PlayerActionType | NonPlayerActionType, private readonly nonce: number, private readonly privateKey: string) {
+    constructor(
+        private readonly from: string,
+        private readonly to: string,
+        private readonly index: number,
+        private readonly amount: bigint,
+        private readonly action: PlayerActionType | NonPlayerActionType,
+        private readonly nonce: number,
+        private readonly privateKey: string
+    ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
@@ -31,10 +39,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         console.log(`Processing game transaction: data=${this.action}, to=${this.to}`);
 
-        const [json, gameOptions] = await Promise.all([
-            this.gameManagement.get(this.to),
-            this.contractSchemas.getGameOptions(this.to)
-        ]);
+        const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.to), this.contractSchemas.getGameOptions(this.to)]);
 
         const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
@@ -43,8 +48,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
         // Sort transactions by index
-        const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx))
-            .sort((a, b) => a.index - b.index);
+        const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
         orderedTransactions.forEach(tx => {
             try {
@@ -56,11 +60,50 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
+        // Perform the current action
         game.performAction(this.from, this.action, this.index, this.amount);
 
         const nonce = BigInt(this.nonce);
-        const tx: Transaction = await Transaction.create(this.to, this.from, this.amount, nonce, this.privateKey, `${this.action},${this.index}`); // Use comma to separate action and index
-        await this.mempool.add(tx);
+        
+        // Create transaction with correct direction of funds flow  
+        // TODO: work out if theis the the best way to process a leave action and also a join action. ticket 553
+        let tx: Transaction;
+        if (this.action === NonPlayerActionType.LEAVE) {
+            // For LEAVE: We need to handle both the game action and the funds transfer
+            // 1. Create a transaction for the leave action (added to mempool)
+            const actionTx = await Transaction.create(
+                this.to, // game address
+                this.from, // player address
+                0n, // No funds for the action itself
+                nonce,
+                this.privateKey,
+                `${this.action},${this.index}`
+            );
+            await this.mempool.add(actionTx);
+            
+            // 2. Create a transfer transaction to return funds from game to player
+            tx = await Transaction.create(
+                this.from, // player receives funds (to)
+                this.to, // game sends funds (from)
+                this.amount, // Return the player's remaining stack
+                nonce + 1n, // Increment nonce for second transaction
+                this.privateKey,
+                `transfer,${this.index}`
+            );
+            await this.mempool.add(tx);
+        } else {
+            // For all other actions: funds flow from player to game 
+            tx = await Transaction.create(
+                this.to, // game receives funds (to)
+                this.from, // player sends funds (from)
+                this.amount,
+                nonce,
+                this.privateKey,
+                `${this.action},${this.index}`
+            );
+            await this.mempool.add(tx);
+        }
+
         return signResult(tx, this.privateKey);
     }
 

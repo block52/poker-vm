@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
-import { PlayerActionType, LegalActionDTO, NonPlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
-import { useTableNonce, AccountData } from "../hooks/useTableNonce";
+import { useTableNonce } from "../hooks/useTableNonce";
 
 // Import our custom hooks
 import { usePlayerDTO } from "../hooks/usePlayerDTO";

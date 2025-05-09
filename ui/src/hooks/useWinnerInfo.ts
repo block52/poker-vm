@@ -1,6 +1,5 @@
-import { ethers } from "ethers";
 import { useGameState } from "./useGameState";
-import { WinnerDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { WinnerDTO } from "@bitcoinbrisbane/block52";
 import { formatWeiToDollars } from "../utils/numberUtils";
 
 /**

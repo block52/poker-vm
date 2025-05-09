@@ -15,25 +15,25 @@ const version = "0.1.0";
 
 // Define a simple route
 app.get("/", (req: Request, res: Response) => {
-  res.send(`PVM RPC Server v${version}`);
+    res.send(`PVM RPC Server v${version}`);
 });
 
 app.post("/", async (req: Request, res: Response) => {
-  const body = req.body;
+    const body = req.body;
 
-  if (!body) {
-    res.status(400).json({ error: "Invalid request" });
-  }
+    if (!body) {
+        res.status(400).json({ error: "Invalid request" });
+    }
 
-  const response = await RPC.handle(body)
-  res.json(response);
+    const response = await RPC.handle(body);
+    res.json(response);
 });
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
 
-  // Get args from command line
-  const args = process.argv.slice(2);
-  getServerInstance().bootstrap(args);
+    // Get args from command line
+    const args = process.argv.slice(2);
+    getServerInstance().bootstrap(args);
 });
