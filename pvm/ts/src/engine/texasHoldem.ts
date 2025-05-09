@@ -510,7 +510,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
-            case NonPlayerActionType.JOIN:
+            case NonPlayerActionType.JOIN: {
                 // Parse the optional seat parameter from data if available
                 let requestedSeat: number | undefined = undefined;
 
@@ -558,6 +558,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
                 // `execute` already logged the action & incremented the index
                 return; // EARLY EXIT – nothing else to do for non-player action
+            }
 
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
