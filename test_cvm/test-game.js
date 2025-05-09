@@ -241,6 +241,72 @@ async function getAccountBalance(address) {
   }
 }
 
+// Get game state using GET_GAME_STATE RPC method
+async function getGameState(contractAddress, player) {
+  info(`Getting game state for table: ${contractAddress}`);
+  
+  try {
+    // Call the GET_GAME_STATE method with the contract address and player address
+    const result = await rpcCall(RPCMethods.GET_GAME_STATE, [
+      contractAddress,  // Table address
+      player.address    // Caller address
+    ], player.privateKey);
+    
+    success(`Retrieved game state for table: ${contractAddress}`);
+    log(chalk.cyan('Game State:'));
+    console.log(JSON.stringify(result, null, 2));
+    
+    return result;
+  } catch (err) {
+    error(`Failed to get game state: ${err.message}`);
+    return null;
+  }
+}
+
+// Analyze game state to determine next player to act
+async function analyzeGameState(gameState) {
+  if (!gameState || !gameState.data) {
+    error('Invalid game state data');
+    return;
+  }
+  
+  const state = gameState.data;
+  const nextToActIndex = state.nextToAct;
+  
+  // Find the player who is next to act
+  const nextPlayer = state.players.find(p => p.seat === nextToActIndex);
+  if (!nextPlayer) {
+    log(chalk.yellow(`No player found at seat ${nextToActIndex}`));
+    return;
+  }
+  
+  // Find the player's name by address
+  const playerName = PLAYERS.find(p => p.address.toLowerCase() === nextPlayer.address.toLowerCase())?.name || 'Unknown';
+  
+  log(chalk.green(`\n=== GAME ANALYSIS ===`));
+  log(chalk.cyan(`Current game round: ${state.round}`));
+  log(chalk.cyan(`Next player to act: ${playerName} (Seat ${nextPlayer.seat}, Address: ${nextPlayer.address})`));
+  log(chalk.cyan(`Player stack: ${nextPlayer.stack}`));
+  
+  // Display legal actions
+  if (nextPlayer.legalActions && nextPlayer.legalActions.length > 0) {
+    log(chalk.cyan(`Legal actions for ${playerName}:`));
+    nextPlayer.legalActions.forEach(action => {
+      log(chalk.yellow(`- ${action.action} (min: ${action.min}, max: ${action.max})`));
+    });
+  } else {
+    log(chalk.red(`No legal actions available for ${playerName}`));
+  }
+  
+  // Show pot size if available
+  if (state.pots && state.pots.length > 0) {
+    const totalPot = state.pots.reduce((acc, pot) => acc + BigInt(pot || '0'), BigInt(0));
+    log(chalk.cyan(`Total pot: ${totalPot.toString()}`));
+  }
+  
+  log(chalk.green(`=== END ANALYSIS ===\n`));
+}
+
 // Main function
 async function runTest() {
   try {
@@ -295,6 +361,26 @@ async function runTest() {
       
       // Wait a bit between operations
       await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+    
+    // Step 7: Get the game state after all players have joined
+    log(chalk.yellow('\nGetting game state after all players have joined...'));
+
+    // Get game state from each player's perspective
+    for (const player of PLAYERS) {
+      log(chalk.yellow(`\n${player.name}'s view of the game state:`));
+      log(chalk.yellow('='.repeat(50)));
+      const gameState = await getGameState(contractAddress, player);
+      
+      // Only analyze the game state from the first player's perspective
+      if (player === PLAYERS[0]) {
+        await analyzeGameState(gameState);
+      }
+      
+      log(chalk.yellow('='.repeat(50)));
+      
+      // Wait briefly between requests
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
     // Stop here as requested
