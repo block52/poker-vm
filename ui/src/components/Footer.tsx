@@ -582,27 +582,11 @@ const PokerActionPanel: React.FC = () => {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white p-4 pb-6 flex justify-center items-center border-t-2 border-[#3a546d] relative">
+        <div className="fixed bottom-0 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
             {/* Animated light effects */}
-            <div className="absolute inset-0 z-0 overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#3b82f6] to-transparent opacity-70"></div>
-                
-                {/* Hexagon pattern overlay with reduced opacity */}
-                <div className="absolute inset-0 opacity-5 hexagon-pattern"></div>
-                
-                {/* Blue shimmer effect */}
-                <div className="absolute inset-0 opacity-20 shimmer-animation"
-                    style={{
-                        backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
-                        backgroundSize: "200% 100%"
-                    }}
-                ></div>
-                
-                <div className="absolute top-[10%] left-[1%] w-[1px] h-[80%] bg-[#3b82f6] opacity-20 animate-pulse"></div>
-                <div className="absolute top-[10%] right-[1%] w-[1px] h-[80%] bg-[#3b82f6] opacity-20 animate-pulse" style={{ animationDelay: "0.7s" }}></div>
-            </div>
+          
 
-            <div className="flex flex-col w-[600px] space-y-3 justify-center rounded-lg relative z-10">
+            <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-3">

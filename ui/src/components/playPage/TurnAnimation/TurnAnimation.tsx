@@ -72,8 +72,8 @@ const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
                 style={{
                     left: position.left,
                     top: position.top,
-                    width: "220px",
-                    height: "110px",
+                    width: "240px",
+                    height: "130px",
                     transform: "translate(-50%, calc(-50% - 20px))"
                 }}
             >
