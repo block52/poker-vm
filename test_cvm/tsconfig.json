@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"]
+    }
+  },
+  "include": [
+    "*.js",
+    "*.ts",
+    "lucas_tests_files/**/*.ts",
+    "../pvm/ts/src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+} 
