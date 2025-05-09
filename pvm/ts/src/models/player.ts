@@ -7,7 +7,7 @@ export class Player implements IJSONModel {
     chips: bigint = 0n;
     holeCards: [Card, Card] | undefined;
     lastAction: Turn | undefined;
-    lastActed?: Date = new Date();
+    lastActed?: number;
     status: PlayerStatus = PlayerStatus.ACTIVE;
 
     private _previousActions: Stack<Turn> = new Stack<Turn>();
@@ -40,12 +40,12 @@ export class Player implements IJSONModel {
         this.status = status;
     }
 
-    addAction(action: Turn): void {
+    addAction(action: Turn, timestamp: number): void {
         this._previousActions.push(action);
 
         // Could peek at the top of the stack to get the last action.
         this.lastAction = action;
-        this.lastActed = new Date();
+        this.lastActed = timestamp;
     };
 
     previousActions(): Turn[] {

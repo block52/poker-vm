@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
-import { IUpdate, Turn } from "../types";
+import { IUpdate, Turn, TurnWithSeat } from "../types";
 import {
     defaultPositions,
     FIFTY_TOKENS,
@@ -76,7 +76,8 @@ describe("Raise Action", () => {
                 action: PlayerActionType.SMALL_BLIND,
                 index: 0,
                 seat: 2,
-                round: TexasHoldemRound.PREFLOP
+                round: TexasHoldemRound.PREFLOP,
+                timestamp: Date.now()
             },
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
@@ -84,7 +85,8 @@ describe("Raise Action", () => {
                 action: PlayerActionType.BIG_BLIND,
                 index: 0,
                 seat: 3,
-                round: TexasHoldemRound.PREFLOP
+                round: TexasHoldemRound.PREFLOP,
+                timestamp: Date.now()
             },
             {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
@@ -92,7 +94,8 @@ describe("Raise Action", () => {
                 action: PlayerActionType.BET,
                 index: 0,
                 seat: 4,
-                round: TexasHoldemRound.PREFLOP
+                round: TexasHoldemRound.PREFLOP,
+                timestamp: Date.now()
             },
         ]);
 
@@ -123,14 +126,17 @@ describe("Raise Action", () => {
 
     describe("verify", () => {
         // Mock a previous bet action to raise against
-        const lastBet: Turn = {
+        const lastBet: TurnWithSeat = {
             playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
             action: PlayerActionType.BET,
             amount: FIFTY_TOKENS, // 50 tokens
-            index: 0
+            index: 0,
+            seat: 2,
+            timestamp: Date.now()
         };
 
         beforeEach(() => {
+            const now = Date.now();
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
         });
@@ -156,7 +162,8 @@ describe("Raise Action", () => {
                     action: PlayerActionType.SMALL_BLIND,
                     index: 0,
                     seat: 2,
-                    round: TexasHoldemRound.PREFLOP
+                    round: TexasHoldemRound.PREFLOP,
+                    timestamp: Date.now()
                 },
                 {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
@@ -164,7 +171,8 @@ describe("Raise Action", () => {
                     action: PlayerActionType.BIG_BLIND,
                     index: 0,
                     seat: 3,
-                    round: TexasHoldemRound.PREFLOP
+                    round: TexasHoldemRound.PREFLOP,
+                    timestamp: Date.now()
                 }
             ]);
 
@@ -207,11 +215,13 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
             // Need to mock a bet action to avoid throwing error in verify
-            const lastBet: Turn = {
+            const lastBet: TurnWithSeat = {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 action: PlayerActionType.BET,
                 amount: FIFTY_TOKENS,
-                index: 0
+                index: 0,
+                seat: 2,
+                timestamp: Date.now()
             };
 
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
@@ -239,11 +249,13 @@ describe("Raise Action", () => {
     describe("execute", () => {
         beforeEach(() => {
             // Mock a previous bet
-            const lastBet: Turn = {
+            const lastBet: TurnWithSeat = {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 action: PlayerActionType.BET,
                 amount: FIFTY_TOKENS, // 50 tokens
-                index: 0
+                index: 0,
+                seat: 2,
+                timestamp: Date.now()
             };
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
 

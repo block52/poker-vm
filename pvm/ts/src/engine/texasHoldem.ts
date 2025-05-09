@@ -71,7 +71,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         playerStates: Map<number, Player | null>,
         deck: string,
         winners: WinnerDTO[] = [],
-        private readonly caller?: string
+        private readonly caller?: string,
+        private readonly _now: number = Date.now()
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
         this._deck = new Deck(deck);
@@ -287,7 +288,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     index: this._turnIndex
                 };
 
-                player.addAction(turn);
+                player.addAction(turn, this._now);
                 player.updateStatus(PlayerStatus.ACTIVE);
             }
 
@@ -302,7 +303,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 // Add to bets to pre-flop round
                 const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind, index: this._turnIndex };
 
-                player.addAction(turn);
+                player.addAction(turn, this._now);
                 player.updateStatus(PlayerStatus.ACTIVE);
             }
         }
@@ -555,7 +556,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // Record the action in the player's history
-        player.addAction({ playerId: address, action, amount, index });
+        const timestamp = Date.now();
+        player.addAction({ playerId: address, action, amount, index }, timestamp);
 
         // Update the last player to act
         this._lastActedSeat = seat;
@@ -635,7 +637,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     action: turn.action,
                     amount: turn.amount ? turn.amount.toString() : "",
                     round,
-                    index: turn.index
+                    index: turn.index,
+                    timestamp: turn.timestamp
                 };
 
                 actions.push(action);
@@ -660,7 +663,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 action: turn.action,
                 amount: turn.amount ? turn.amount.toString() : "",
                 round,
-                index: turn.index
+                index: turn.index,
+                timestamp: turn.timestamp
             };
 
             actions.push(action);
@@ -1208,6 +1212,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = this.getNextRound();
     }
 
+    private expired(address: string): boolean {
+        const nextToAct = this.findNextPlayerToAct();
+        if (!nextToAct || nextToAct.address !== address) {
+            return false;
+        }
+
+        const lastAction = this.getPlayersLastAction(address);
+        if (!lastAction) {
+            return false;
+        }
+        const expired = this._now - lastAction.timestamp > this._now + 60 * 1000; // 60 seconds
+        return expired;
+    }
+
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
@@ -1258,7 +1276,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             json.pots,
             players,
             json.deck,
-            json.winners
+            json.winners,
+            undefined,
+            json.now ? json.now : Date.now(),
         );
     }
 
@@ -1283,7 +1303,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                         action: turn.action,
                         amount: (turn.amount ?? 0n).toString(),
                         round: this._currentRound,
-                        index: turn.index
+                        index: turn.index,
+                        timestamp: turn.timestamp
                     };
                 }
 
@@ -1306,9 +1327,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     }
                 }
 
-                // const status = nextPlayerToAct?.address === nonNullPlayer.address && player?.lastAction
-                if (nextPlayerToAct?.address === _player.address && _player.status === PlayerStatus.ACTIVE && _player.lastActed) {
-
+                // If the next player has expired, set status to SITTING_OUT and remove hole cards
+                if (_player.status === PlayerStatus.ACTIVE && this.expired(_player.address)) {
+                    _player.updateStatus(PlayerStatus.SITTING_OUT);
+                    _player.holeCards = undefined;
                 }
 
                 const dto: PlayerDTO = {
@@ -1332,7 +1354,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         
         const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
-
         const previousActions: ActionDTO[] = this.getActionDTOs();
         const winners: WinnerDTO[] = [];
 
