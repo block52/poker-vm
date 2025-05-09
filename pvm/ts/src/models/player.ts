@@ -32,7 +32,6 @@ export class Player implements IJSONModel {
         this.holeCards = undefined;
         this.lastAction = undefined;
         this.status = PlayerStatus.ACTIVE;
-        this.chips = 0n;
         this.lastActed = undefined;
     }
 
