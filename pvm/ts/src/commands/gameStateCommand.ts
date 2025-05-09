@@ -42,7 +42,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             orderedTransactions.forEach(tx => {
                 try {
                     // Handle join actions with seat numbers similarly to performActionCommand
-                    if (tx.type === 'join' && tx.seatNumber !== undefined) {
+                    if (tx.type === "join" && tx.seatNumber !== undefined) {
                         game.performAction(tx.from, tx.type, tx.index, tx.value, tx.seatNumber);
                         console.log(`Processing in gameStateCommand action ${tx.type} from ${tx.from} with value ${tx.value}, index ${tx.index}, and seat ${tx.seatNumber}`);
                     } else {
