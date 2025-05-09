@@ -14,7 +14,11 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly contractSchemaManagement: ContractSchemaManagement;
 
     // This will be shared secret later
-    constructor(readonly address: string, private readonly privateKey: string, private readonly caller?: string | undefined) {
+    constructor(
+        readonly address: string,
+        private readonly privateKey: string,
+        private readonly caller?: string | undefined
+    ) {
         this.gameManagement = new GameManagement();
         this.mempool = getMempoolInstance();
         this.contractSchemaManagement = getContractSchemaManagement();
@@ -22,10 +26,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
     public async execute(): Promise<ISignedResponse<TexasHoldemStateDTO>> {
         try {
-            const [json, gameOptions] = await Promise.all([
-                this.gameManagement.get(this.address),
-                this.contractSchemaManagement.getGameOptions(this.address)
-            ]);
+            const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.address), this.contractSchemaManagement.getGameOptions(this.address)]);
 
             if (!json) {
                 throw new Error(`Game state not found for address: ${this.address}`);
@@ -36,15 +37,16 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
-            const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx))
-                .sort((a, b) => a.index - b.index);
+            const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
             orderedTransactions.forEach(tx => {
                 try {
                     // Handle join actions with seat numbers similarly to performActionCommand
                     if (tx.type === NonPlayerActionType.JOIN && tx.seatNumber !== undefined) {
                         game.performAction(tx.from, tx.type, tx.index, tx.value, tx.seatNumber);
-                        console.log(`Processing in gameStateCommand action ${tx.type} from ${tx.from} with value ${tx.value}, index ${tx.index}, and seat ${tx.seatNumber}`);
+                        console.log(
+                            `Processing in gameStateCommand action ${tx.type} from ${tx.from} with value ${tx.value}, index ${tx.index}, and seat ${tx.seatNumber}`
+                        );
                     } else {
                         game.performAction(tx.from, tx.type, tx.index, tx.value);
                         console.log(`Processing in gameStateCommand action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
@@ -72,14 +74,23 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
         const params = tx.data.split(",");
         const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
-        const index = parseInt(params[1].trim());
+        // const index = parseInt(params[1].trim());
+        const index = Number.parseInt(params[1]?.trim() ?? "", 10);
+        if (Number.isNaN(index)) {
+            throw new Error(`Invalid action index in tx.data: "${tx.data}"`);
+        }
 
         // Handle seat number for join actions (format: "join,index,seatNumber")
         let seatNumber = undefined;
+        // if (action === NonPlayerActionType.JOIN && params.length >= 3) {
+        //     seatNumber = parseInt(params[2].trim());
         if (action === NonPlayerActionType.JOIN && params.length >= 3) {
-            seatNumber = parseInt(params[2].trim());
-            console.log(`Found join action with seat number: ${seatNumber}`);
+            seatNumber = Number.parseInt(params[2].trim(), 10);
+            if (Number.isNaN(seatNumber)) {
+                seatNumber = undefined; // fall back gracefully
+            }
         }
+        console.log(`Found join action with seat number: ${seatNumber}`);
 
         return {
             from: tx.from,
