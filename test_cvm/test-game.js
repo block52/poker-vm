@@ -70,6 +70,12 @@ function info(message) {
   console.log(chalk.blue(`ℹ️ ${message}`));
 }
 
+function debug(message) {
+  if (program.debug) {
+    log(chalk.cyan(`[DEBUG] ${message}`));
+  }
+}
+
 // Helper function for RPC calls
 async function rpcCall(method, params = [], privateKey = null) {
   try {
@@ -229,7 +235,7 @@ async function createContractSchema() {
 }
 
 // Join a player to the table via RPC
-async function joinTable(contractAddress, player, buyInAmount) {
+async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
   info(`Player ${player.name} (${player.address}) joining table ${contractAddress} with ${buyInAmount.toString()} tokens`);
   
   try {
@@ -246,8 +252,8 @@ async function joinTable(contractAddress, player, buyInAmount) {
       seatNumber = 5;
     }
     
-    // Log the seat number assignment
-    log(chalk.yellow(`Assigning ${player.name} to seat ${seatNumber}`));
+    // Log the seat number and action index assignment
+    log(chalk.yellow(`Assigning ${player.name} to seat ${seatNumber} with action index ${actionIndex}`));
     
     // Based on proxy/js/src/index.js structure:
     // [from, to, action, amount, nonce, index]
@@ -257,7 +263,7 @@ async function joinTable(contractAddress, player, buyInAmount) {
       "join",                         // action
       buyInAmount.toString(),         // amount
       timestamp.toString(),           // nonce
-      [0, seatNumber]                 // [actionIndex, seatNumber]
+      [actionIndex, seatNumber]       // [actionIndex, seatNumber] - Using the provided actionIndex instead of always 0
     ];
     
     // Log the RPC call parameters 
@@ -269,7 +275,7 @@ async function joinTable(contractAddress, player, buyInAmount) {
     // Implement the actual RPC call to join the table with the player's private key for signing
     const result = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
     
-    success(`Player ${player.name} successfully joined table ${contractAddress} at seat ${seatNumber}`);
+    success(`Player ${player.name} successfully joined table ${contractAddress} at seat ${seatNumber} with action index ${actionIndex}`);
     log(chalk.cyan("Join response:"));
     console.log(JSON.stringify(result, null, 2));
     
@@ -304,8 +310,9 @@ async function getAccountBalance(address) {
 
 // Get game state using GET_GAME_STATE RPC method
 async function getGameState(contractAddress, player) {
+  log("");
   info(`Getting game state for table: ${contractAddress}`);
-  
+
   try {
     // Call the GET_GAME_STATE method with the contract address and player address
     const result = await rpcCall(RPCMethods.GET_GAME_STATE, [
@@ -313,9 +320,25 @@ async function getGameState(contractAddress, player) {
       player.address    // Caller address
     ], player.privateKey);
     
+    if (!result) {
+      error(`Failed to get game state for table ${contractAddress}`);
+      return null;
+    }
+
     success(`Retrieved game state for table: ${contractAddress}`);
     log(chalk.cyan("Game State:"));
     console.log(JSON.stringify(result, null, 2));
+
+    // Debug seat assignments if in debug mode
+    if (program.debug) {
+      const players = result.data.players;
+      if (players && players.length > 0) {
+        debug("Seat assignments:");
+        players.forEach(player => {
+          debug(`Player ${player.address.slice(0, 8)}... is in seat ${player.seat}`);
+        });
+      }
+    }
     
     return result;
   } catch (err) {
@@ -399,6 +422,9 @@ async function runTest() {
     await new Promise(resolve => setTimeout(resolve, 5000));
     
     // Step 6: Check player balances first
+    // Track action index for sequential actions
+    let currentActionIndex = 0; // Start with action index 0
+    
     for (const player of PLAYERS) {
       log(chalk.yellow(`\nChecking balance for ${player.name} before joining...`));
       const balance = await getAccountBalance(player.address);
@@ -415,7 +441,12 @@ async function runTest() {
       // Only try to join if player has sufficient balance
       if (balanceBigInt >= buyInAmount) {
         log(chalk.green(`${player.name} has sufficient funds to join with 1 ETH!`));
-        await joinTable(contractAddress, player, buyInAmount);
+        
+        // Use sequential action indices for each player
+        await joinTable(contractAddress, player, buyInAmount, currentActionIndex);
+        
+        // Increment action index for the next player
+        currentActionIndex++;
       } else {
         log(chalk.red(`${player.name} doesn't have enough funds to join. Needs ${buyInAmount.toString()}, has ${balanceBigInt.toString()}`));
       }
