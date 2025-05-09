@@ -57,7 +57,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         orderedTransactions.forEach(tx => {
             try {
                 // Pass seat number if it exists for join actions
-                if (tx.type === 'join' && tx.seatNumber !== undefined) {
+                if (tx.type === NonPlayerActionType.JOIN && tx.seatNumber !== undefined) {
                     game.performAction(tx.from, tx.type, tx.index, tx.value, tx.seatNumber);
                     console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and seat ${tx.seatNumber}`);
                 } else {
@@ -78,7 +78,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         // TODO: Migration - This handles the new format of passing seat numbers for join actions.
         // The seat number is passed as the second element in the index array: [actionIndex, seatNumber]
         // If we need a more generic solution in the future, consider moving to a proper data structure.
-        if (this.action === 'join' && Array.isArray(this.index)) {
+        if (this.action === NonPlayerActionType.JOIN && Array.isArray(this.index)) {
             console.log(`Join action with seat specification: ${JSON.stringify(this.index)}`);
             // Extract actionIndex and seatNumber from the array
             if (this.index.length >= 2) {
@@ -175,27 +175,32 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error("Transaction data is undefined");
         }
 
-        const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
+        // Split and extract main components from transaction data
+        const [rawAction, rawIndex, rawSeat, ...extraParams] = tx.data.split(",");
         
-        // Check if index part exists and is parseable
-        if (params.length < 2 || params[1].trim() === '') {
-            console.warn(`WARNING: Transaction ${tx.hash} has invalid index format in data: "${tx.data}"`);
+        if (!rawAction || !rawIndex) {
+            throw new Error(`Transaction ${tx.hash} has invalid format: "${tx.data}"`);
         }
         
-        const index = parseInt(params[1].trim());
-        if (isNaN(index)) {
-            console.warn(`WARNING: Transaction ${tx.hash} has NaN index: "${params[1]}"`);
+        // Parse action
+        const action = rawAction.trim() as PlayerActionType | NonPlayerActionType;
+        
+        // Parse and validate index
+        const index = Number(rawIndex.trim());
+        if (Number.isNaN(index)) {
+            throw new Error(`Invalid index "${rawIndex}" in transaction ${tx.hash}`);
         }
         
-        // Handle seat number for join actions (format: "join,index,seatNumber")
-        let seatNumber = undefined;
-        if (action === 'join' && params.length >= 3) {
-            seatNumber = parseInt(params[2].trim());
-            console.log(`Found join action with seat number: ${seatNumber}`);
+        // Parse seat number only for join actions
+        let seatNumber: number | undefined = undefined;
+        if (action === NonPlayerActionType.JOIN && rawSeat) {
+            seatNumber = Number(rawSeat.trim());
+            if (Number.isNaN(seatNumber)) {
+                throw new Error(`Invalid seat number "${rawSeat}" in join transaction ${tx.hash}`);
+            }
+            console.log(`Found join action with valid seat number: ${seatNumber}`);
         }
 
-        // Return actual values without fallbacks to make issues visible
         return {
             from: tx.from,
             to: tx.to,
