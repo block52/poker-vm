@@ -80,6 +80,12 @@ async function rpcCall(method, params = [], privateKey = null) {
       params
     };
     
+    // Print out the full RPC request structure
+    log(chalk.magenta('\n📡 RPC REQUEST:'));
+    log(chalk.magenta('-'.repeat(50)));
+    log(chalk.magenta('Method: ') + chalk.white(method));
+    log(chalk.magenta('Params: ') + chalk.white(JSON.stringify(params, null, 2)));
+    
     // If private key is provided, sign the request
     if (privateKey) {
       const wallet = new Wallet(privateKey);
@@ -90,8 +96,13 @@ async function rpcCall(method, params = [], privateKey = null) {
       requestPayload.signature = signature;
       requestPayload.publicKey = wallet.address;
       
-      log(chalk.gray(`Request signed with address: ${wallet.address}`));
+      log(chalk.magenta('Signed by: ') + chalk.white(wallet.address));
     }
+    
+    // Print the complete payload
+    log(chalk.magenta('Complete payload:'));
+    log(chalk.white(JSON.stringify(requestPayload, null, 2)));
+    log(chalk.magenta('-'.repeat(50)));
     
     const response = await axios.post(RPC_URL, requestPayload);
     
@@ -99,6 +110,9 @@ async function rpcCall(method, params = [], privateKey = null) {
       error(`RPC Error: ${JSON.stringify(response.data.error)}`);
       throw new Error(response.data.error.message || JSON.stringify(response.data.error));
     }
+    
+    // Log RPC response summary (not the full response to avoid too much noise)
+    log(chalk.green('✅ RPC Response received'));
     
     return response.data.result;
   } catch (err) {
