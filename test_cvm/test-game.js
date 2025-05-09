@@ -73,6 +73,7 @@ function info(message) {
 // Helper function for RPC calls
 async function rpcCall(method, params = [], privateKey = null) {
   try {
+    // Create request payload with base properties
     const requestPayload = {
       jsonrpc: "2.0",
       id: Date.now().toString(),
@@ -92,16 +93,25 @@ async function rpcCall(method, params = [], privateKey = null) {
       const messageToSign = JSON.stringify(requestPayload);
       const signature = await wallet.signMessage(messageToSign);
       
-      // Add signature and public key to the request
+      // Add signature and publicKey to the request
       requestPayload.signature = signature;
       requestPayload.publicKey = wallet.address;
       
       log(chalk.magenta("Signed by: ") + chalk.white(wallet.address));
     }
     
-    // Print the complete payload
-    log(chalk.magenta("Complete payload:"));
-    log(chalk.white(JSON.stringify(requestPayload, null, 2)));
+    // Create and log the RPCRequest object structure as defined in rpc.d.ts
+    log(chalk.magenta("RPCRequest format according to rpc.d.ts:"));
+    const rpcRequestObject = {
+      id: requestPayload.id,
+      method: requestPayload.method,
+      params: requestPayload.params,
+      // Only include these if they exist
+      ...(requestPayload.signature && { signature: requestPayload.signature }),
+      ...(requestPayload.data && { data: requestPayload.data }),
+      ...(requestPayload.publicKey && { publicKey: requestPayload.publicKey })
+    };
+    log(chalk.white(JSON.stringify(rpcRequestObject, null, 2)));
     log(chalk.magenta("-".repeat(50)));
     
     const response = await axios.post(RPC_URL, requestPayload);
@@ -111,8 +121,33 @@ async function rpcCall(method, params = [], privateKey = null) {
       throw new Error(response.data.error.message || JSON.stringify(response.data.error));
     }
     
-    // Log RPC response summary (not the full response to avoid too much noise)
+    // Log RPC response in RPCResponse format
     log(chalk.green("✅ RPC Response received"));
+    log(chalk.magenta("RPCResponse format according to rpc.d.ts:"));
+    
+    // Format the response to match RPCResponse<T> structure
+    const rpcResponseObject = {
+      id: response.data.id,
+      result: response.data.result,  // ISignedResponse<T> with data and signature
+      ...(response.data.error && { error: response.data.error })
+    };
+    
+    log(chalk.white(JSON.stringify(rpcResponseObject, null, 2)));
+    
+    // Check if result has the expected ISignedResponse structure
+    if (response.data.result && typeof response.data.result === 'object') {
+      log(chalk.magenta("ISignedResponse<T> structure check:"));
+      const hasDataProperty = 'data' in response.data.result;
+      const hasSignatureProperty = 'signature' in response.data.result;
+      
+      if (hasDataProperty && hasSignatureProperty) {
+        log(chalk.green("✓ Response follows the ISignedResponse<T> interface with data and signature properties"));
+      } else {
+        log(chalk.yellow("⚠ Response may not follow ISignedResponse<T> interface:"));
+        log(chalk.yellow(`  - data property: ${hasDataProperty ? 'present' : 'missing'}`));
+        log(chalk.yellow(`  - signature property: ${hasSignatureProperty ? 'present' : 'missing'}`));
+      }
+    }
     
     return response.data.result;
   } catch (err) {
