@@ -10,17 +10,17 @@ const WAIT_TIME = 30 * 1000; // 30 seconds
 const PLAYERS = [
   {
     name: 'Dan',
-    privateKey: '0xd33ffa661474e5de3e4e7547dee7e683c089ff433847fe22c9af4b555b085da7',
+    privateKey: '',
     address: '0xE8DE79b707BfB7d8217cF0a494370A9cC251602C'
   },
   {
     name: 'Tracey',
-    privateKey: '0x0b3b0b79670811055a07a8376c6c776313e7239cfc44f645d08b3b83ca00a9dd',
+    privateKey: '',
     address: '0x4260E88e81E60113146092Fb9474b61C59f7552e'
   },
   {
     name: 'Hamish',
-    privateKey: '0xadea8f03e50b0d096352d294507eafe1e9d73f40de7db67837c41fd2cc71d8fa',
+    privateKey: '',
     address: '0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD'
   }
 ];
