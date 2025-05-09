@@ -4,7 +4,7 @@ import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
 import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic } from "../../../../../test_cvm/lucas_tests_files/testConstants";
+import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
