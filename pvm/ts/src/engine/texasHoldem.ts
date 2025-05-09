@@ -828,6 +828,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 continue;
             }
 
+            // Skip JOIN actions when calculating bets for the pot
+            if (action.action === NonPlayerActionType.JOIN) {
+                continue;
+            }
+
             // Get current total for this player
             const currentTotal = bets.get(action.playerId) || 0n;
 
