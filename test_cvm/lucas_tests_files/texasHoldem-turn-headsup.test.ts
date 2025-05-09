@@ -1,5 +1,5 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
-import TexasHoldemGame from "./texasHoldem";
+import TexasHoldemGame from "../../pvm/ts/src/engine/texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic, fromTestJson } from "./testConstants";
 
 const test_json = {

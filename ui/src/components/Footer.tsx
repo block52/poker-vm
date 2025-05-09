@@ -573,11 +573,10 @@ const PokerActionPanel: React.FC = () => {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0  text-white p-4 pb-6 flex justify-center items-center  relative">
-            {/* Animated light effects */}
 
+        <div className="fixed bottom-0 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
 
-            <div className="flex flex-col w-[600px] space-y-3 justify-center rounded-lg relative z-10">
+            <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-3">
