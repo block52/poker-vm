@@ -34,7 +34,6 @@ import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers } from "ethers";
 
-
 class TexasHoldemGame implements IPoker, IUpdate {
     private readonly _update: IUpdate;
 
@@ -127,14 +126,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 // Create a new array with this turn as the first element
                 this._rounds.set(action.round, [turnWithSeat]);
             }
-            
+
             // Increment turn index
             this._turnIndex = Math.max(this._turnIndex, action.index + 1);
         }
 
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) { }
-            addAction(action: Turn): void { }
+            constructor(public game: TexasHoldemGame) {}
+            addAction(action: Turn): void {}
         })(this);
 
         this._actions = [
@@ -208,18 +207,18 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (this.exists(player.address)) {
             throw new Error("Player already joined.");
         }
-        
+
         if (seat === -1) {
             throw new Error("Table full.");
         }
-        
+
         if (player.chips < this._gameOptions.minBuyIn || player.chips > this._gameOptions.maxBuyIn) {
             throw new Error("Player does not have enough or too many chips to join.");
         }
-        
+
         // Add player to the map
         this._playersMap.set(seat, player);
-        
+
         // Set as active
         player.updateStatus(PlayerStatus.ACTIVE);
     }
@@ -515,12 +514,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case NonPlayerActionType.JOIN:
                 // Parse the optional seat parameter from data if available
                 let requestedSeat: number | undefined = undefined;
-                
+
                 console.log(`[TexasHoldem DEBUG] JOIN action for player ${address} with data=${JSON.stringify(data)}, type=${typeof data}`);
-                
+
                 // Handle different formats of the data parameter
                 if (data !== undefined) {
-                    if (typeof data === 'number') {
+                    if (typeof data === "number") {
                         // Direct number format - old style
                         requestedSeat = Number(data);
                         console.log(`[TexasHoldem DEBUG] JOIN: Requested specific seat ${requestedSeat} for player ${address} (direct number format)`);
@@ -541,14 +540,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
                         }
                     }
                 }
-                
+
                 if (requestedSeat === undefined) {
                     console.log(`[TexasHoldem DEBUG] JOIN: No specific seat requested for player ${address}, will auto-assign`);
                 }
-                
+
                 // Create a temporary player object with the address
                 const tempPlayer = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-                
+
                 // Use JoinAction to handle the full joining process
                 if (requestedSeat !== undefined) {
                     console.log(`[TexasHoldem DEBUG] Executing JoinAction with specified seat ${requestedSeat} for player ${address}`);
@@ -557,10 +556,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     console.log(`[TexasHoldem DEBUG] Executing JoinAction with auto-seat assignment for player ${address}`);
                     new JoinAction(this, this._update).execute(tempPlayer, index, _amount);
                 }
-                
-                // Just increment turn index, no need to call join() anymore
-                this.incrementTurnIndex();
-                break;
+
+                // `execute` already logged the action & incremented the index
+                return; // EARLY EXIT – nothing else to do for non-player action
+
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
                 return;
@@ -577,7 +576,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // In ANTE round, only allow specific actions until minimum players joined
         if (this.currentRound === TexasHoldemRound.ANTE) {
-            if (action !== PlayerActionType.SMALL_BLIND && action !== PlayerActionType.BIG_BLIND && action !== NonPlayerActionType.JOIN) {
+            // Fix type error by checking whether action is in a set of allowed values
+            const allowedActions = [
+                PlayerActionType.SMALL_BLIND,
+                PlayerActionType.BIG_BLIND,
+                NonPlayerActionType.JOIN
+            ];
+            
+            if (!allowedActions.includes(action as any)) {
                 if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
                     throw new Error("Not enough players to start game.");
                 }
@@ -649,7 +655,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     addNonPlayerAction(turn: Turn): void {
         // For LEAVE action, we still want to record it but then the player will be removed
         const isLeaveAction = turn.action === NonPlayerActionType.LEAVE;
-        
+
         // Only check if player exists for non-LEAVE actions
         if (!isLeaveAction) {
             const playerExists = this.exists(turn.playerId);
@@ -659,7 +665,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return;
             }
         }
-        
+
         const timestamp = Date.now();
         const round = this._currentRound;
         // Always get the actual seat number for the player
@@ -689,8 +695,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // Now explicitly increment the turn index once
-        this.incrementTurnIndex();  // TODO: check if this is needed as we don't count joins and leave as actions howeer we do increment the turn indes for deal action  see issue 552
-
+        this.incrementTurnIndex(); // TODO: check if this is needed as we don't count joins and leave as actions howeer we do increment the turn indes for deal action  see issue 552
     }
 
     getActionDTOs(): ActionDTO[] {
@@ -769,7 +774,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return seat;
             }
         }
-        
+
         // For actions in history that refer to players who have left,
         // return -1 instead of throwing an error
         return -1;
@@ -868,7 +873,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     private findLivePlayers(): Player[] {
-
         const livePlayers: Player[] = [];
 
         // Iterate through all players and check their status
@@ -894,8 +898,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     getSeatedPlayers(): Player[] {
         // Return all non-null player objects from the players map
-        return Array.from(this._playersMap.values())
-            .filter((player): player is Player => player !== null);
+        return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null);
     }
 
     findNextEmptySeat(start: number = 1): number {
@@ -941,11 +944,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Moving to SHOWDOWN - calculate winner
             //this.calculateWinner();
         } else if (this._currentRound === TexasHoldemRound.SHOWDOWN) {
-
             // this.calculateWinner();
-
             // Moving to ANTE - reset the game
-
             // this.reInit(this._deck.toString());
         }
 
@@ -1157,7 +1157,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         if (round === TexasHoldemRound.SHOWDOWN) {
-
             // If everyone else has folded, the round is over and payout the winner
             const livePlayers = this.findLivePlayers();
             if (livePlayers.length === 1) {
@@ -1368,7 +1367,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             .map(([seat, player]) => {
                 // After filtering, we know player is not null
                 const nonNullPlayer = player!;
-                
+
                 let lastAction: ActionDTO | undefined;
                 const turn = this.getPlayersLastAction(nonNullPlayer.address);
                 if (turn) {
@@ -1387,9 +1386,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
                 // Ensure hole cards are properly included if they exist
                 let holeCardsDto: string[] | undefined = undefined;
-                if ((caller && nonNullPlayer.address.toLowerCase() === caller.toLowerCase()) || 
-                    caller === ethers.ZeroAddress || 
-                    nonNullPlayer.status === PlayerStatus.SHOWING) {
+                if (
+                    (caller && nonNullPlayer.address.toLowerCase() === caller.toLowerCase()) ||
+                    caller === ethers.ZeroAddress ||
+                    nonNullPlayer.status === PlayerStatus.SHOWING
+                ) {
                     if (nonNullPlayer.holeCards) {
                         holeCardsDto = nonNullPlayer.holeCards.map(card => card.mnemonic);
                     }
