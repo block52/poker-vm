@@ -22,6 +22,7 @@ import CallAction from "./actions/callAction";
 import CheckAction from "./actions/checkAction";
 import DealAction from "./actions/dealAction";
 import FoldAction from "./actions/foldAction";
+import JoinAction from "./actions/joinAction";
 import LeaveAction from "./actions/leaveAction";
 import MuckAction from "./actions/muckAction";
 import RaiseAction from "./actions/raiseAction";
@@ -146,7 +147,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new CallAction(this, this._update),
             new RaiseAction(this, this._update),
             new MuckAction(this, this._update),
-            new ShowAction(this, this._update)
+            new ShowAction(this, this._update),
+            new JoinAction(this, this._update),
+            new LeaveAction(this, this._update)
         ];
     }
 
@@ -474,7 +477,22 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN:
-                this.join(address, amount!);
+                // TODO: Here we could accept an optional seat parameter from RPC
+                // Example: RPC params: [address, gameAddress, "join", amount, nonce, seatNumber]
+                // if (data !== undefined && typeof data === 'number') {
+                //     // Join at specified seat if provided
+                //     const seat = Number(data);
+                //     const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
+                //     this.joinAtSeat(player, seat);
+                // } else {
+                //     this.join(address, _amount);
+                // }
+                // Use JoinAction instead of calling join directly
+                // Since the player doesn't exist yet, create a temporary player object
+                const tempPlayer = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
+                new JoinAction(this, this._update).execute(tempPlayer, index, _amount);
+                // We still need to handle the actual adding of the player here since JoinAction can't access private members
+                this.join(address, _amount);
                 this.incrementTurnIndex();
                 break;
             case NonPlayerActionType.LEAVE:
