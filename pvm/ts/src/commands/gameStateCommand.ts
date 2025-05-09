@@ -1,4 +1,4 @@
-import { PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemStateDTO, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { GameManagement } from "../state/gameManagement";
@@ -41,8 +41,14 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             orderedTransactions.forEach(tx => {
                 try {
-                    game.performAction(tx.from, tx.type, tx.index, tx.value);
-                    console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                    // Handle join actions with seat numbers similarly to performActionCommand
+                    if (tx.type === 'join' && tx.seatNumber !== undefined) {
+                        game.performAction(tx.from, tx.type, tx.index, tx.value, tx.seatNumber);
+                        console.log(`Processing in gameStateCommand action ${tx.type} from ${tx.from} with value ${tx.value}, index ${tx.index}, and seat ${tx.seatNumber}`);
+                    } else {
+                        game.performAction(tx.from, tx.type, tx.index, tx.value);
+                        console.log(`Processing in gameStateCommand action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                    }
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                     // Continue with other transactions, don't let this error propagate up
@@ -59,22 +65,29 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
         }
     }
 
-    // Deprecated: use toOrderedTransaction instead
     private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
         if (!tx.data) {
             throw new Error("Transaction data is undefined");
         }
 
         const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType;
+        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
         const index = parseInt(params[1].trim());
+
+        // Handle seat number for join actions (format: "join,index,seatNumber")
+        let seatNumber = undefined;
+        if (action === 'join' && params.length >= 3) {
+            seatNumber = parseInt(params[2].trim());
+            console.log(`Found join action with seat number: ${seatNumber}`);
+        }
 
         return {
             from: tx.from,
             to: tx.to,
             value: tx.value,
             type: action,
-            index: index
+            index: index,
+            seatNumber: seatNumber
         };
     }
 }

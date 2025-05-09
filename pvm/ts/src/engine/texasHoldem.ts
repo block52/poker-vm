@@ -510,11 +510,35 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case NonPlayerActionType.JOIN:
                 // Parse the optional seat parameter from data if available
                 let requestedSeat: number | undefined = undefined;
-                if (data !== undefined && typeof data === 'number') {
-                    requestedSeat = Number(data);
-                    console.log(`JOIN: Requested specific seat ${requestedSeat} for player ${address}`);
-                } else {
-                    console.log(`JOIN: No specific seat requested for player ${address}, will auto-assign`);
+                
+                console.log(`[TexasHoldem DEBUG] JOIN action for player ${address} with data=${JSON.stringify(data)}, type=${typeof data}`);
+                
+                // Handle different formats of the data parameter
+                if (data !== undefined) {
+                    if (typeof data === 'number') {
+                        // Direct number format - old style
+                        requestedSeat = Number(data);
+                        console.log(`[TexasHoldem DEBUG] JOIN: Requested specific seat ${requestedSeat} for player ${address} (direct number format)`);
+                    } else if (Array.isArray(data) && data.length >= 2) {
+                        // Array format from RPC request [actionIndex, seatNumber]
+                        requestedSeat = Number(data[1]);
+                        console.log(`[TexasHoldem DEBUG] JOIN: Requested specific seat ${requestedSeat} for player ${address} (array format)`);
+                    } else {
+                        // Try parsing as string in case it's a serialized value
+                        try {
+                            const parsedSeat = Number(data);
+                            if (!isNaN(parsedSeat)) {
+                                requestedSeat = parsedSeat;
+                                console.log(`[TexasHoldem DEBUG] JOIN: Requested specific seat ${requestedSeat} for player ${address} (parsed from string)`);
+                            }
+                        } catch (e) {
+                            console.log(`[TexasHoldem DEBUG] JOIN: Could not parse seat number from data: ${data}, will auto-assign`);
+                        }
+                    }
+                }
+                
+                if (requestedSeat === undefined) {
+                    console.log(`[TexasHoldem DEBUG] JOIN: No specific seat requested for player ${address}, will auto-assign`);
                 }
                 
                 // Create a temporary player object with the address
@@ -522,10 +546,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 
                 // Use JoinAction to handle the full joining process
                 if (requestedSeat !== undefined) {
-                    console.log(`Executing JoinAction with specified seat ${requestedSeat} for player ${address}`);
+                    console.log(`[TexasHoldem DEBUG] Executing JoinAction with specified seat ${requestedSeat} for player ${address}`);
                     new JoinAction(this, this._update).execute(tempPlayer, index, _amount, requestedSeat);
                 } else {
-                    console.log(`Executing JoinAction with auto-seat assignment for player ${address}`);
+                    console.log(`[TexasHoldem DEBUG] Executing JoinAction with auto-seat assignment for player ${address}`);
                     new JoinAction(this, this._update).execute(tempPlayer, index, _amount);
                 }
                 

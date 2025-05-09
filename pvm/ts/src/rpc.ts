@@ -338,7 +338,18 @@ export class RPC {
 
                 case RPCMethods.PERFORM_ACTION: {
                     const [from, to, action, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
-                    const index = Number(data);
+                    
+                    // Handle the case where data is an array containing [actionIndex, seatNumber] for join actions
+                    let index: number | number[] = 0;
+                    if (Array.isArray(data) && action === 'join') {
+                        // Pass the array directly to allow PerformActionCommand to extract actionIndex and seatNumber
+                        index = data;
+                        console.log(`Handling join with seat: index=${JSON.stringify(index)}`);
+                    } else {
+                        // For backward compatibility with existing code
+                        index = Number(data);
+                    }
+                    
                     const _action = action as PlayerActionType | NonPlayerActionType;
                     const command = new PerformActionCommand(from, to, index, BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey);
                     result = await command.execute();

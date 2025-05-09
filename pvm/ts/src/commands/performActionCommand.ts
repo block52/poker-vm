@@ -17,7 +17,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     constructor(
         private readonly from: string,
         private readonly to: string,
-        private readonly index: number,
+        private readonly index: number | number[], // Allow array for join actions with seat number
         private readonly amount: bigint,
         private readonly action: PlayerActionType | NonPlayerActionType,
         private readonly nonce: number,
@@ -27,6 +27,10 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
+        
+        // Debug logging to see what we're getting in the constructor
+        const indexType = Array.isArray(this.index) ? 'array' : 'number';
+        console.log(`PerformActionCommand created with action=${action}, index=${JSON.stringify(this.index)} (${indexType})`);
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -92,6 +96,11 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             actionIndex = Number(this.index);
         }
 
+        // Add warning if the actionIndex is NaN to help debugging
+        if (isNaN(actionIndex)) {
+            console.warn(`WARNING: Action index is NaN. Original value: ${JSON.stringify(this.index)}`);
+        }
+
         console.log(`Performing action ${this.action} with index ${actionIndex}${seatNumber !== undefined ? `, seat ${seatNumber}` : ''}`);
         game.performAction(this.from, this.action, actionIndex, this.amount, seatNumber);
 
@@ -123,7 +132,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 `transfer,${actionIndex}`
             );
             await this.mempool.add(tx);
-        } else if (this.action === NonPlayerActionType.JOIN && seatNumber !== undefined) {
+        } else if (this.action === 'join' && seatNumber !== undefined) {
             // For JOIN with seat number: Include the seat number in the transaction data
             tx = await Transaction.create(
                 this.to, // game receives funds (to)
@@ -168,7 +177,16 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         const params = tx.data.split(",");
         const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
+        
+        // Check if index part exists and is parseable
+        if (params.length < 2 || params[1].trim() === '') {
+            console.warn(`WARNING: Transaction ${tx.hash} has invalid index format in data: "${tx.data}"`);
+        }
+        
         const index = parseInt(params[1].trim());
+        if (isNaN(index)) {
+            console.warn(`WARNING: Transaction ${tx.hash} has NaN index: "${params[1]}"`);
+        }
         
         // Handle seat number for join actions (format: "join,index,seatNumber")
         let seatNumber = undefined;
@@ -177,13 +195,14 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             console.log(`Found join action with seat number: ${seatNumber}`);
         }
 
+        // Return actual values without fallbacks to make issues visible
         return {
             from: tx.from,
             to: tx.to,
             value: tx.value,
             type: action,
-            index: index,
-            seatNumber: seatNumber // Add seatNumber to the OrderedTransaction
+            index: index, 
+            seatNumber: seatNumber
         };
     }
 }
