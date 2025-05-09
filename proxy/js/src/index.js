@@ -6,10 +6,8 @@
 // ===================================
 // 1. Import Dependencies
 // ===================================
-const { BigUnit } = require("bigunit");
 const express = require("express");
 const cors = require("cors");
-const ethers = require("ethers");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
 const axios = require("axios");
