@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { gameOptions } from "../../../../test_cvm/lucas_tests_files/testConstants";
+import { gameOptions } from "../engine/testConstants";
 
 describe("Game Tests", () => {
     it("should get texas holdem state from JSON", async () => {
