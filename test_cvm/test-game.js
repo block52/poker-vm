@@ -1,18 +1,18 @@
 #!/usr/bin/env node
-const axios = require('axios');
-const chalk = require('chalk');
-const { program } = require('commander');
-const { Wallet } = require('ethers');
-const path = require('path');
-const dotenv = require('dotenv');
-const { RPCMethods, NonPlayerActionType } = require('@bitcoinbrisbane/block52');
+const axios = require("axios");
+const chalk = require("chalk");
+const { program } = require("commander");
+const { Wallet } = require("ethers");
+const path = require("path");
+const dotenv = require("dotenv");
+const { RPCMethods, NonPlayerActionType } = require("@bitcoinbrisbane/block52");
 
 // Load environment variables from .env file
 dotenv.config();
 
 // Import constants from testConstants.ts
 // Note: This requires ts-node to run or the constants file to be compiled to JS
-const testConstants = require('./lucas_tests_files/testConstants');
+const testConstants = require("./lucas_tests_files/testConstants");
 const { 
   ONE_TOKEN, 
   TWO_TOKENS, 
@@ -25,8 +25,8 @@ const {
 
 // Configure CLI options
 program
-  .option('-u, --url <url>', 'RPC URL', 'http://localhost:3000')
-  .option('-w, --wait <seconds>', 'Wait time for mining (seconds)', '30')
+  .option("-u, --url <url>", "RPC URL", "http://localhost:3000")
+  .option("-w, --wait <seconds>", "Wait time for mining (seconds)", "30")
   .parse(process.argv);
 
 const options = program.opts();
@@ -37,15 +37,15 @@ const WAIT_TIME = parseInt(options.wait, 10) * 1000;
 
 // Get private keys from environment variables
 const PRIVATE_KEYS = [
-  process.env.PRIVATE_KEY_DAN || process.env.PRIVATE_KEY_1 || '0xd33ffa661474e5de3e4e7547dee7e683c089ff433847fe22c9af4b555b085da7',
-  process.env.PRIVATE_KEY_TRACEY || process.env.PRIVATE_KEY_2 || '0x0b3b0b79670811055a07a8376c6c776313e7239cfc44f645d08b3b83ca00a9dd',
-  process.env.PRIVATE_KEY_HAMISH || process.env.PRIVATE_KEY_3 || '0xadea8f03e50b0d096352d294507eafe1e9d73f40de7db67837c41fd2cc71d8fa'
+  process.env.PRIVATE_KEY_DAN || process.env.PRIVATE_KEY_1 || "0xd33ffa661474e5de3e4e7547dee7e683c089ff433847fe22c9af4b555b085da7",
+  process.env.PRIVATE_KEY_TRACEY || process.env.PRIVATE_KEY_2 || "0x0b3b0b79670811055a07a8376c6c776313e7239cfc44f645d08b3b83ca00a9dd",
+  process.env.PRIVATE_KEY_HAMISH || process.env.PRIVATE_KEY_3 || "0xadea8f03e50b0d096352d294507eafe1e9d73f40de7db67837c41fd2cc71d8fa"
 ];
 
 // Derive addresses from private keys
 const PLAYERS = PRIVATE_KEYS.map((privateKey, index) => {
   const wallet = new Wallet(privateKey);
-  const name = ['Dan', 'Tracey', 'Hamish'][index];
+  const name = ["Dan", "Tracey", "Hamish"][index];
   return {
     name,
     privateKey,
@@ -74,17 +74,17 @@ function info(message) {
 async function rpcCall(method, params = [], privateKey = null) {
   try {
     const requestPayload = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: Date.now().toString(),
       method,
       params
     };
     
     // Print out the full RPC request structure
-    log(chalk.magenta('\n📡 RPC REQUEST:'));
-    log(chalk.magenta('-'.repeat(50)));
-    log(chalk.magenta('Method: ') + chalk.white(method));
-    log(chalk.magenta('Params: ') + chalk.white(JSON.stringify(params, null, 2)));
+    log(chalk.magenta("\n📡 RPC REQUEST:"));
+    log(chalk.magenta("-".repeat(50)));
+    log(chalk.magenta("Method: ") + chalk.white(method));
+    log(chalk.magenta("Params: ") + chalk.white(JSON.stringify(params, null, 2)));
     
     // If private key is provided, sign the request
     if (privateKey) {
@@ -96,13 +96,13 @@ async function rpcCall(method, params = [], privateKey = null) {
       requestPayload.signature = signature;
       requestPayload.publicKey = wallet.address;
       
-      log(chalk.magenta('Signed by: ') + chalk.white(wallet.address));
+      log(chalk.magenta("Signed by: ") + chalk.white(wallet.address));
     }
     
     // Print the complete payload
-    log(chalk.magenta('Complete payload:'));
+    log(chalk.magenta("Complete payload:"));
     log(chalk.white(JSON.stringify(requestPayload, null, 2)));
-    log(chalk.magenta('-'.repeat(50)));
+    log(chalk.magenta("-".repeat(50)));
     
     const response = await axios.post(RPC_URL, requestPayload);
     
@@ -112,7 +112,7 @@ async function rpcCall(method, params = [], privateKey = null) {
     }
     
     // Log RPC response summary (not the full response to avoid too much noise)
-    log(chalk.green('✅ RPC Response received'));
+    log(chalk.green("✅ RPC Response received"));
     
     return response.data.result;
   } catch (err) {
@@ -123,32 +123,32 @@ async function rpcCall(method, params = [], privateKey = null) {
 
 // Wait for server to be available
 async function waitForServer(maxAttempts = 30) {
-  log(chalk.yellow('Waiting for server to be available...'));
+  log(chalk.yellow("Waiting for server to be available..."));
   
   for (let i = 0; i < maxAttempts; i++) {
     try {
       await axios.get(RPC_URL);
-      success('Server is up and running!');
+      success("Server is up and running!");
       return true;
     } catch (error) {
-      process.stdout.write('.');
+      process.stdout.write(".");
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
   
-  throw new Error('Server did not become available in time');
+  throw new Error("Server did not become available in time");
 }
 
 // Wait for mining to complete
 async function waitForMining() {
   log(chalk.yellow(`Waiting for node to complete mining (${WAIT_TIME/1000}s)...`));
   await new Promise(resolve => setTimeout(resolve, WAIT_TIME));
-  success('Mining wait time completed');
+  success("Mining wait time completed");
 }
 
 // Print player details
 function printPlayerDetails() {
-  log(chalk.yellow('Player Details:'));
+  log(chalk.yellow("Player Details:"));
   
   PLAYERS.forEach(player => {
     console.log(chalk.cyan(`\nPlayer: ${player.name}`));
@@ -156,17 +156,17 @@ function printPlayerDetails() {
     console.log(`Address: ${player.address}`);
   });
   
-  success('Addresses derived from private keys successfully');
+  success("Addresses derived from private keys successfully");
 }
 
 // Create contract schema using NEW RPC method
 async function createContractSchema() {
-  info('Creating Texas Holdem contract schema...');
+  info("Creating Texas Holdem contract schema...");
   
   // Format for schema: game_type,game_variant,min_players,max_players,small_blind,big_blind,min_buyin,max_buyin,timeout
   const schemaStr = `texas,cash,${gameOptions.minPlayers},${gameOptions.maxPlayers},${gameOptions.smallBlind.toString()},${gameOptions.bigBlind.toString()},${gameOptions.minBuyIn.toString()},${gameOptions.maxBuyIn.toString()},${gameOptions.timeout}`;
   
-  log(chalk.yellow('Contract schema string: ' + schemaStr));
+  log(chalk.yellow("Contract schema string: " + schemaStr));
   
   // Use the specified table ID to create the contract schema
   const tableId = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
@@ -180,7 +180,7 @@ async function createContractSchema() {
     ]);
     
     // Fix the formatting for the contract address
-    const contractAddress = typeof result === 'object' ? 
+    const contractAddress = typeof result === "object" ? 
       (result.address || tableId) : 
       (result || tableId);
       
@@ -188,7 +188,7 @@ async function createContractSchema() {
     return contractAddress;
   } catch (err) {
     error(`Failed to create contract schema: ${err.message}`);
-    log(chalk.yellow('Using fallback table ID for further steps'));
+    log(chalk.yellow("Using fallback table ID for further steps"));
     return tableId;
   }
 }
@@ -214,7 +214,7 @@ async function joinTable(contractAddress, player, buyInAmount) {
     ];
     
     // Log the RPC call parameters 
-    log(chalk.yellow('Sending RPC call to join table:'));
+    log(chalk.yellow("Sending RPC call to join table:"));
     log(chalk.cyan(`Method: ${RPCMethods.PERFORM_ACTION}`));
     log(chalk.cyan(`Parameters: ${JSON.stringify(params, null, 2)}`));
     log(chalk.cyan(`Using private key for: ${player.name}`));
@@ -223,7 +223,7 @@ async function joinTable(contractAddress, player, buyInAmount) {
     const result = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
     
     success(`Player ${player.name} successfully joined table ${contractAddress}`);
-    log(chalk.cyan('Join response:'));
+    log(chalk.cyan("Join response:"));
     console.log(JSON.stringify(result, null, 2));
     
     return result;
@@ -242,16 +242,16 @@ async function getAccountBalance(address) {
     const result = await rpcCall(RPCMethods.GET_ACCOUNT, [address]);
     
     success(`Retrieved account info for: ${address}`);
-    log(chalk.cyan('Account details:'));
+    log(chalk.cyan("Account details:"));
     console.log(JSON.stringify(result, null, 2));
     
     // The balance is inside the "data" object
-    const balance = result?.data?.balance || '0';
+    const balance = result?.data?.balance || "0";
     log(chalk.cyan(`Extracted balance: ${balance}`));
     return balance;
   } catch (err) {
     error(`Failed to retrieve account balance: ${err.message}`);
-    return '0';
+    return "0";
   }
 }
 
@@ -267,7 +267,7 @@ async function getGameState(contractAddress, player) {
     ], player.privateKey);
     
     success(`Retrieved game state for table: ${contractAddress}`);
-    log(chalk.cyan('Game State:'));
+    log(chalk.cyan("Game State:"));
     console.log(JSON.stringify(result, null, 2));
     
     return result;
@@ -280,7 +280,7 @@ async function getGameState(contractAddress, player) {
 // Analyze game state to determine next player to act
 async function analyzeGameState(gameState) {
   if (!gameState || !gameState.data) {
-    error('Invalid game state data');
+    error("Invalid game state data");
     return;
   }
   
@@ -295,7 +295,7 @@ async function analyzeGameState(gameState) {
   }
   
   // Find the player's name by address
-  const playerName = PLAYERS.find(p => p.address.toLowerCase() === nextPlayer.address.toLowerCase())?.name || 'Unknown';
+  const playerName = PLAYERS.find(p => p.address.toLowerCase() === nextPlayer.address.toLowerCase())?.name || "Unknown";
   
   log(chalk.green(`\n=== GAME ANALYSIS ===`));
   log(chalk.cyan(`Current game round: ${state.round}`));
@@ -314,7 +314,7 @@ async function analyzeGameState(gameState) {
   
   // Show pot size if available
   if (state.pots && state.pots.length > 0) {
-    const totalPot = state.pots.reduce((acc, pot) => acc + BigInt(pot || '0'), BigInt(0));
+    const totalPot = state.pots.reduce((acc, pot) => acc + BigInt(pot || "0"), BigInt(0));
     log(chalk.cyan(`Total pot: ${totalPot.toString()}`));
   }
   
@@ -334,21 +334,21 @@ async function runTest() {
     printPlayerDetails();
     
     // Step 4: Print the constants from testConstants.ts
-    log(chalk.yellow('\nConstants from testConstants.ts:'));
+    log(chalk.yellow("\nConstants from testConstants.ts:"));
     console.log(`ONE_TOKEN: ${ONE_TOKEN.toString()}`);
     console.log(`TWO_TOKENS: ${TWO_TOKENS.toString()}`);
     console.log(`ONE_HUNDRED_TOKENS: ${ONE_HUNDRED_TOKENS.toString()}`);
     console.log(`ONE_THOUSAND_TOKENS: ${ONE_THOUSAND_TOKENS.toString()}`);
-    console.log('\nGame Options:');
+    console.log("\nGame Options:");
     console.log(JSON.stringify(gameOptions, (key, value) => 
-      typeof value === 'bigint' ? value.toString() : value, 2
+      typeof value === "bigint" ? value.toString() : value, 2
     ));
     
     // Step 5: Create contract schema with the specific table ID
     const contractAddress = await createContractSchema();
     
     // Wait a bit for the contract creation to be mined
-    log(chalk.yellow('\nWaiting for the contract creation to be mined...'));
+    log(chalk.yellow("\nWaiting for the contract creation to be mined..."));
     await new Promise(resolve => setTimeout(resolve, 5000));
     
     // Step 6: Check player balances first
@@ -358,12 +358,12 @@ async function runTest() {
       log(chalk.cyan(`${player.name}'s balance: ${balance}`));
       
       // Convert balance to BigInt for comparison
-      const balanceBigInt = BigInt(balance || '0');
+      const balanceBigInt = BigInt(balance || "0");
       
       // Set buy-in amount to 1 ETH (less than the minimum game buy-in, just for testing)
       // The min buy-in is probably 100 ETH (100000000000000000000)
       // So we'll try a much smaller amount like 1 ETH
-      const buyInAmount = BigInt('1000000000000000000'); // 1 ETH
+      const buyInAmount = BigInt("1000000000000000000"); // 1 ETH
       
       // Only try to join if player has sufficient balance
       if (balanceBigInt >= buyInAmount) {
@@ -378,12 +378,12 @@ async function runTest() {
     }
     
     // Step 7: Get the game state after all players have joined
-    log(chalk.yellow('\nGetting game state after all players have joined...'));
+    log(chalk.yellow("\nGetting game state after all players have joined..."));
 
     // Get game state from each player's perspective
     for (const player of PLAYERS) {
       log(chalk.yellow(`\n${player.name}'s view of the game state:`));
-      log(chalk.yellow('='.repeat(50)));
+      log(chalk.yellow("=".repeat(50)));
       const gameState = await getGameState(contractAddress, player);
       
       // Only analyze the game state from the first player's perspective
@@ -391,14 +391,14 @@ async function runTest() {
         await analyzeGameState(gameState);
       }
       
-      log(chalk.yellow('='.repeat(50)));
+      log(chalk.yellow("=".repeat(50)));
       
       // Wait briefly between requests
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
     // Stop here as requested
-    success('Test completed');
+    success("Test completed");
     
   } catch (err) {
     error(`Test failed: ${err.message}`);
