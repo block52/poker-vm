@@ -391,6 +391,42 @@ async function analyzeGameState(gameState) {
   log(chalk.green(`=== END ANALYSIS ===\n`));
 }
 
+// Post small blind for a player
+async function postSmallBlind(contractAddress, player, smallBlindAmount, actionIndex) {
+  info(`Player ${player.name} (${player.address}) posting small blind ${smallBlindAmount.toString()} tokens`);
+  
+  try {
+    const timestamp = Date.now();
+    
+    // Based on proxy/js/src/index.js structure:
+    // [from, to, action, amount, nonce, index]
+    const params = [
+      player.address,                 // from
+      contractAddress,                // to
+      "small-blind",                  // action
+      smallBlindAmount.toString(),    // amount
+      timestamp.toString(),           // nonce
+      actionIndex                     // index
+    ];
+    
+    log(chalk.yellow("Sending RPC call to post small blind:"));
+    log(chalk.cyan(`Method: ${RPCMethods.PERFORM_ACTION}`));
+    log(chalk.cyan(`Parameters: ${JSON.stringify(params, null, 2)}`));
+    log(chalk.cyan(`Using private key for: ${player.name}`));
+    
+    const result = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
+    
+    success(`Player ${player.name} successfully posted small blind of ${smallBlindAmount.toString()}`);
+    log(chalk.cyan("Small blind response:"));
+    console.log(JSON.stringify(result, null, 2));
+    
+    return result;
+  } catch (err) {
+    error(`Failed to post small blind: ${err.message}`);
+    return null;
+  }
+}
+
 // Main function
 async function runTest() {
   try {
@@ -459,10 +495,11 @@ async function runTest() {
     log(chalk.yellow("\nGetting game state after all players have joined..."));
 
     // Get game state from each player's perspective
+    let gameState;
     for (const player of PLAYERS) {
       log(chalk.yellow(`\n${player.name}'s view of the game state:`));
       log(chalk.yellow("=".repeat(50)));
-      const gameState = await getGameState(contractAddress, player);
+      gameState = await getGameState(contractAddress, player);
       
       // Only analyze the game state from the first player's perspective
       if (player === PLAYERS[0]) {
@@ -473,6 +510,37 @@ async function runTest() {
       
       // Wait briefly between requests
       await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    // Step 8: Post small blind for the player in the small blind position
+    if (gameState && gameState.data && gameState.data.players) {
+      // Find small blind player
+      const smallBlindPlayer = gameState.data.players.find(p => p.isSmallBlind);
+      
+      if (smallBlindPlayer) {
+        // Find the player object matching the small blind position
+        const playerForSmallBlind = PLAYERS.find(p => 
+          p.address.toLowerCase() === smallBlindPlayer.address.toLowerCase()
+        );
+        
+        if (playerForSmallBlind) {
+          log(chalk.yellow(`\nPosting small blind with ${playerForSmallBlind.name}...`));
+          
+          // Get small blind amount from game options
+          const smallBlindAmount = BigInt(gameState.data.gameOptions.smallBlind);
+          
+          // Post small blind with the next action index
+          await postSmallBlind(contractAddress, playerForSmallBlind, smallBlindAmount, currentActionIndex);
+          
+          // Increment action index
+          currentActionIndex++;
+          
+          // Get updated game state after posting small blind
+          log(chalk.yellow("\nGetting game state after posting small blind..."));
+          const updatedState = await getGameState(contractAddress, playerForSmallBlind);
+          await analyzeGameState(updatedState);
+        }
+      }
     }
     
     // Stop here as requested
