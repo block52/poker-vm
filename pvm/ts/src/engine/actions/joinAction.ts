@@ -11,37 +11,37 @@ class JoinAction extends BaseAction {
     // Override verify method for join action
     verify(_player: Player): Range {
         // For joining, we don't need to verify against an existing player
-
-        // Return min/max buy-in options - we can't access these directly yet
-        // TODO: Add getters for minBuyIn and maxBuyIn to TexasHoldemGame
+        
+        // Now we can use the actual min/max buy-in values
         return { 
-            minAmount: this.game.smallBlind * 100n, // Typical minimum buy-in is 100 big blinds 
-            maxAmount: this.game.smallBlind * 2000n // Typical maximum is 200 big blinds
+            minAmount: this.game.minBuyIn,
+            maxAmount: this.game.maxBuyIn
         };
     }
 
     // Override execute to handle player joining
-    execute(player: Player, index: number, amount: bigint): void {
-        // For reference, this is what should be done but we can't do it directly:
-        // 1. Validate the amount is between min/max buy-in
-        // 2. Check if player already exists
-        // 3. Find an available seat (or use the provided seat)
-        // 4. Add player to the game
-        // 5. Set player status to active
-        // 6. Record the join action in the action history
+    execute(player: Player, index: number, amount: bigint, seatNumber?: number): void {
+        // Validate amount against min/max buy-in
+        if (amount < this.game.minBuyIn || amount > this.game.maxBuyIn) {
+            throw new Error(`Buy-in amount must be between ${this.game.minBuyIn} and ${this.game.maxBuyIn}`);
+        }
+        
+        // Create new player with the proper chips
+        const newPlayer = new Player(player.address, undefined, amount, undefined, PlayerStatus.SITTING_OUT);
+        
+        // Find a seat or use the specified one
+        const seat = seatNumber !== undefined ? seatNumber : this.game.findNextEmptySeat();
+        
+        // Add the player at the determined seat
+        this.game.addPlayerAtSeat(newPlayer, seat);
         
         // Add join action to history
-        // Note: The actual join logic will be handled by TexasHoldemGame's join() method
         this.game.addNonPlayerAction({
             playerId: player.address, 
             action: NonPlayerActionType.JOIN, 
             index: index,
             amount: amount
         });
-        
-        // TODO: Add a comment in performAction mentioning that:
-        // The RPC could accept an optional 'seat' parameter in data to allow players to choose seats:
-        // RPC params: [address, gameAddress, "join", amount, nonce, seatNumber]
     }
 }
 

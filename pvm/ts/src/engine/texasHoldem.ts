@@ -188,6 +188,37 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._handNumber;
     }
 
+    // Add getters for buy-in limits
+    get minBuyIn() {
+        return this._gameOptions.minBuyIn;
+    }
+
+    get maxBuyIn() {
+        return this._gameOptions.maxBuyIn;
+    }
+
+    // Method to add players to seats directly
+    addPlayerAtSeat(player: Player, seat: number): void {
+        // Add validation that's currently in joinAtSeat
+        if (this.exists(player.address)) {
+            throw new Error("Player already joined.");
+        }
+        
+        if (seat === -1) {
+            throw new Error("Table full.");
+        }
+        
+        if (player.chips < this._gameOptions.minBuyIn || player.chips > this._gameOptions.maxBuyIn) {
+            throw new Error("Player does not have enough or too many chips to join.");
+        }
+        
+        // Add player to the map
+        this._playersMap.set(seat, player);
+        
+        // Set as active
+        player.updateStatus(PlayerStatus.ACTIVE);
+    }
+
     // Returns the current turn index without incrementing it
     getTurnIndex(): number {
         return this._turnIndex;
@@ -477,22 +508,19 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN:
-                // TODO: Here we could accept an optional seat parameter from RPC
-                // Example: RPC params: [address, gameAddress, "join", amount, nonce, seatNumber]
-                // if (data !== undefined && typeof data === 'number') {
-                //     // Join at specified seat if provided
-                //     const seat = Number(data);
-                //     const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-                //     this.joinAtSeat(player, seat);
-                // } else {
-                //     this.join(address, _amount);
-                // }
-                // Use JoinAction instead of calling join directly
-                // Since the player doesn't exist yet, create a temporary player object
+                // Parse the optional seat parameter from data if available
+                let requestedSeat: number | undefined = undefined;
+                if (data !== undefined && typeof data === 'number') {
+                    requestedSeat = Number(data);
+                }
+                
+                // Create a temporary player object with the address
                 const tempPlayer = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-                new JoinAction(this, this._update).execute(tempPlayer, index, _amount);
-                // We still need to handle the actual adding of the player here since JoinAction can't access private members
-                this.join(address, _amount);
+                
+                // Use JoinAction to handle the full joining process
+                new JoinAction(this, this._update).execute(tempPlayer, index, _amount, requestedSeat);
+                
+                // Just increment turn index, no need to call join() anymore
                 this.incrementTurnIndex();
                 break;
             case NonPlayerActionType.LEAVE:
