@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 import { IDB } from "./interfaces";
 
-class DatabaseConnection implements IDB {
+class MongoDatabaseConnection implements IDB {
     private static instance: DatabaseConnection;
     private isConnected: boolean = false;
 
@@ -17,7 +17,6 @@ class DatabaseConnection implements IDB {
 
     public async connect(uri: string = "mongodb://localhost:27017/pvm"): Promise<void> {
         if (this.isConnected) {
-            // console.log("Using existing database connection");
             return;
         }
 

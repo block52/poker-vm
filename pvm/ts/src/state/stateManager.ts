@@ -1,4 +1,4 @@
-import { connectDB } from "../data/dbConfig"
+import { connectDB } from "../data/mongoConnection"
 
 export abstract class StateManager {
   private readonly connectionString: string;
