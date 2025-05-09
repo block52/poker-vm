@@ -29,7 +29,7 @@ class JoinAction extends BaseAction {
         // Check if the amount is within the valid range
         const buyIn = amount || 0n;
         if (buyIn < range.minAmount || buyIn > range.maxAmount) {
-            throw new Error(`Invalid buy-in amount: ${buyIn}. Must be between ${range.minAmount} and ${range.maxAmount}.`);
+            throw new Error("Player does not have enough or too many chips to join.");
         }
         
         // Create a new player instance with proper settings
