@@ -52,8 +52,14 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         orderedTransactions.forEach(tx => {
             try {
-                game.performAction(tx.from, tx.type, tx.index, tx.value);
-                console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                // Pass seat number if it exists for join actions
+                if (tx.type === 'join' && tx.seatNumber !== undefined) {
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.seatNumber);
+                    console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and seat ${tx.seatNumber}`);
+                } else {
+                    game.performAction(tx.from, tx.type, tx.index, tx.value);
+                    console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                }
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 // Continue with other transactions, don't let this error propagate up
@@ -61,16 +67,33 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         });
 
         // Perform the current action
-        let index, seatNumber;
-        if (Array.isArray(this.action) && this.action[0] === 'join') {
-            [index, seatNumber] = this.action;
-            index = Number(index);
-            seatNumber = Number(seatNumber);
+        // Check for seat number in join actions 
+        let actionIndex = this.index;
+        let seatNumber = undefined;
+        
+        // TODO: Migration - This handles the new format of passing seat numbers for join actions.
+        // The seat number is passed as the second element in the index array: [actionIndex, seatNumber]
+        // If we need a more generic solution in the future, consider moving to a proper data structure.
+        if (this.action === 'join' && Array.isArray(this.index)) {
+            console.log(`Join action with seat specification: ${JSON.stringify(this.index)}`);
+            // Extract actionIndex and seatNumber from the array
+            if (this.index.length >= 2) {
+                [actionIndex, seatNumber] = this.index;
+                actionIndex = Number(actionIndex);
+                seatNumber = Number(seatNumber);
+                console.log(`Extracted action index: ${actionIndex}, seat number: ${seatNumber}`);
+            } else {
+                // Backward compatibility - if only one element, treat it as actionIndex
+                actionIndex = Number(this.index[0]);
+                console.log(`Join action with only action index: ${actionIndex}`);
+            }
         } else {
-            index = Number(this.action);
+            // For non-join actions or when index is not an array
+            actionIndex = Number(this.index);
         }
 
-        game.performAction(this.from, this.action, index, this.amount, seatNumber);
+        console.log(`Performing action ${this.action} with index ${actionIndex}${seatNumber !== undefined ? `, seat ${seatNumber}` : ''}`);
+        game.performAction(this.from, this.action, actionIndex, this.amount, seatNumber);
 
         const nonce = BigInt(this.nonce);
         
@@ -86,7 +109,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 0n, // No funds for the action itself
                 nonce,
                 this.privateKey,
-                `${this.action},${this.index}`
+                `${this.action},${actionIndex}`
             );
             await this.mempool.add(actionTx);
             
@@ -97,18 +120,29 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 this.amount, // Return the player's remaining stack
                 nonce + 1n, // Increment nonce for second transaction
                 this.privateKey,
-                `transfer,${this.index}`
+                `transfer,${actionIndex}`
             );
             await this.mempool.add(tx);
-        } else {
-            // For all other actions: funds flow from player to game 
+        } else if (this.action === NonPlayerActionType.JOIN && seatNumber !== undefined) {
+            // For JOIN with seat number: Include the seat number in the transaction data
             tx = await Transaction.create(
                 this.to, // game receives funds (to)
                 this.from, // player sends funds (from)
                 this.amount,
                 nonce,
                 this.privateKey,
-                `${this.action},${this.index}`
+                `${this.action},${actionIndex},${seatNumber}` // Include seat number
+            );
+            await this.mempool.add(tx);
+        } else {
+            // For all other actions: regular format
+            tx = await Transaction.create(
+                this.to, // game receives funds (to)
+                this.from, // player sends funds (from)
+                this.amount,
+                nonce,
+                this.privateKey,
+                `${this.action},${actionIndex}`
             );
             await this.mempool.add(tx);
         }
@@ -133,15 +167,23 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         }
 
         const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType;
+        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
         const index = parseInt(params[1].trim());
+        
+        // Handle seat number for join actions (format: "join,index,seatNumber")
+        let seatNumber = undefined;
+        if (action === 'join' && params.length >= 3) {
+            seatNumber = parseInt(params[2].trim());
+            console.log(`Found join action with seat number: ${seatNumber}`);
+        }
 
         return {
             from: tx.from,
             to: tx.to,
             value: tx.value,
             type: action,
-            index: index
+            index: index,
+            seatNumber: seatNumber // Add seatNumber to the OrderedTransaction
         };
     }
 }

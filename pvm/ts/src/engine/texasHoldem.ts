@@ -512,6 +512,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 let requestedSeat: number | undefined = undefined;
                 if (data !== undefined && typeof data === 'number') {
                     requestedSeat = Number(data);
+                    console.log(`JOIN: Requested specific seat ${requestedSeat} for player ${address}`);
+                } else {
+                    console.log(`JOIN: No specific seat requested for player ${address}, will auto-assign`);
                 }
                 
                 // Create a temporary player object with the address
@@ -519,8 +522,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 
                 // Use JoinAction to handle the full joining process
                 if (requestedSeat !== undefined) {
+                    console.log(`Executing JoinAction with specified seat ${requestedSeat} for player ${address}`);
                     new JoinAction(this, this._update).execute(tempPlayer, index, _amount, requestedSeat);
                 } else {
+                    console.log(`Executing JoinAction with auto-seat assignment for player ${address}`);
                     new JoinAction(this, this._update).execute(tempPlayer, index, _amount);
                 }
                 
