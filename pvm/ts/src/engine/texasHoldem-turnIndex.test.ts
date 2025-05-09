@@ -1,6 +1,6 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, mnemonic, ONE_HUNDRED_TOKENS, TEN_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, mnemonic, ONE_HUNDRED_TOKENS, TEN_TOKENS } from "../../../../test_cvm/lucas_tests_files/testConstants";
 import { Player } from "../models/player";
 
 /**

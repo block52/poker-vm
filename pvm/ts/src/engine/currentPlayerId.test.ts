@@ -1,7 +1,7 @@
 import { GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
-import { baseGameConfig, gameOptions } from "./testConstants";
+import { baseGameConfig, gameOptions } from "../../../../test_cvm/lucas_tests_files/testConstants";
 
 describe("CurrentPlayerId Tests", () => {
     let game: TexasHoldemGame;

@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic } from "../../../../../test_cvm/lucas_tests_files/testConstants";
 
 describe("FoldAction", () => {
     let game: TexasHoldemGame;

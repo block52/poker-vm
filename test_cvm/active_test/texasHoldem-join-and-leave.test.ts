@@ -1,7 +1,7 @@
 import { PlayerStatus, TexasHoldemRound, GameOptions, PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
-import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS } from "./testConstants";
-import { Player } from "../models/player";
+import TexasHoldemGame from "../../pvm/ts/src/engine/texasHoldem";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS } from "../lucas_tests_files/testConstants";
+import { Player } from "../../pvm/ts/src/models/player";
 
 describe("Texas Holdem - Join and Leave", () => {
 

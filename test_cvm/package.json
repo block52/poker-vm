@@ -1,0 +1,21 @@
+{
+    "name": "poker-vm-test",
+    "version": "1.0.0",
+    "description": "Test suite for Poker VM",
+    "main": "test-game.js",
+    "scripts": {
+        "test": "ts-node --transpile-only test-game.js",
+        "test:game": "ts-node --transpile-only test-game.js",
+        "test:rpc-join-leave": "node active_test/rpc-join-leave-test.js"
+    },
+    "dependencies": {
+        "@types/node": "^20.2.1",
+        "axios": "^1.6.2",
+        "chalk": "^4.1.2",
+        "commander": "^11.1.0",
+        "dotenv": "^16.0.3",
+        "ethers": "^6.8.1",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.0.4"
+    }
+}

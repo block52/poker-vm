@@ -5,7 +5,7 @@ import { IUpdate, Turn, TurnWithSeat } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
 // Assuming you have a constants file, otherwise define TEN_TOKENS in this file
-import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../../../../../test_cvm/lucas_tests_files/testConstants";
 
 describe("CallAction", () => {
     let action: CallAction;

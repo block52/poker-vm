@@ -15,7 +15,7 @@ import {
     TEN_TOKENS,
     TWENTY_TOKENS,
     TWO_THOUSAND_TOKENS
-} from "../testConstants";
+} from "../../../../../test_cvm/lucas_tests_files/testConstants";
 
 describe("Raise Action", () => {
     let game: TexasHoldemGame;

@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
+import { defaultPositions, gameOptions, mnemonic } from "../../../../../test_cvm/lucas_tests_files/testConstants";
 
 describe("SmallBlindAction", () => {
     let game: TexasHoldemGame;
