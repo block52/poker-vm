@@ -1,11 +1,13 @@
 #!/usr/bin/env node
+
+const { PlayerActionType, NonPlayerActionType, RPCMethods } = require("@bitcoinbrisbane/block52");
+
 const axios = require("axios");
 const chalk = require("chalk");
 const { program } = require("commander");
 const { Wallet } = require("ethers");
 const path = require("path");
 const dotenv = require("dotenv");
-const { RPCMethods, NonPlayerActionType } = require("@bitcoinbrisbane/block52");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -245,11 +247,11 @@ async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
     // Assign specific seat numbers based on player name
     let seatNumber;
     if (player.name === "Dan") {
-      seatNumber = 2;
+      seatNumber = 1;
     } else if (player.name === "Tracey") {
-      seatNumber = 3;
+      seatNumber = 2;
     } else if (player.name === "Hamish") {
-      seatNumber = 5;
+      seatNumber = 3;
     }
     
     // Log the seat number and action index assignment
@@ -260,7 +262,7 @@ async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
     const params = [
       player.address,                 // from
       contractAddress,                // to
-      "join",                         // action
+      NonPlayerActionType.JOIN,                         // action
       buyInAmount.toString(),         // amount
       timestamp.toString(),           // nonce
       [actionIndex, seatNumber]       // [actionIndex, seatNumber] - Using the provided actionIndex instead of always 0
@@ -403,7 +405,7 @@ async function postSmallBlind(contractAddress, player, smallBlindAmount, actionI
     const params = [
       player.address,                 // from
       contractAddress,                // to
-      "small-blind",                  // action
+      PlayerActionType.SMALL_BLIND,   // action - FIXED: use the correct PlayerActionType
       smallBlindAmount.toString(),    // amount
       timestamp.toString(),           // nonce
       actionIndex                     // index
@@ -414,15 +416,19 @@ async function postSmallBlind(contractAddress, player, smallBlindAmount, actionI
     log(chalk.cyan(`Parameters: ${JSON.stringify(params, null, 2)}`));
     log(chalk.cyan(`Using private key for: ${player.name}`));
     
-    const result = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
+    const response = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
     
-    success(`Player ${player.name} successfully posted small blind of ${smallBlindAmount.toString()}`);
-    log(chalk.cyan("Small blind response:"));
-    console.log(JSON.stringify(result, null, 2));
-    
-    return result;
+    if (response.result) {
+      success(`Player ${player.name} successfully posted small blind of ${smallBlindAmount}`);
+      log(chalk.green(`Small blind response:`));
+      log(response.result);
+      return response.result;
+    } else if (response.error) {
+      error(`Failed to post small blind: ${response.error.message}`);
+      return null;
+    }
   } catch (err) {
-    error(`Failed to post small blind: ${err.message}`);
+    error(`Error posting small blind: ${err.message}`);
     return null;
   }
 }
