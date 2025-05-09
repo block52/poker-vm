@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../../../../../test_cvm/lucas_tests_files/testConstants";
+import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("CheckAction", () => {

@@ -1,6 +1,6 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions } from "../../../../test_cvm/lucas_tests_files/testConstants";
+import { baseGameConfig, gameOptions } from "./testConstants";
 
 describe.skip("Texas Holdem Game", () => {
 

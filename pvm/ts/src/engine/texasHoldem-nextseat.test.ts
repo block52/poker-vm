@@ -1,6 +1,6 @@
 import { PlayerStatus, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS } from "../../../../test_cvm/lucas_tests_files/testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS } from "./testConstants";
 import { Player } from "../models/player";
 
 describe("Texas Holdem Game - Next seat", () => {

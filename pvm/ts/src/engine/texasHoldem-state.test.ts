@@ -2,7 +2,7 @@ import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";
-import { baseGameConfig, gameOptions } from "../../../../test_cvm/lucas_tests_files/testConstants";
+import { baseGameConfig, gameOptions } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - State", () => {
