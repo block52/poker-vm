@@ -5,6 +5,7 @@ const { program } = require('commander');
 const { Wallet } = require('ethers');
 const path = require('path');
 const dotenv = require('dotenv');
+const { RPCMethods, NonPlayerActionType } = require('@bitcoinbrisbane/block52');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -70,14 +71,29 @@ function info(message) {
 }
 
 // Helper function for RPC calls
-async function rpcCall(method, params = []) {
+async function rpcCall(method, params = [], privateKey = null) {
   try {
-    const response = await axios.post(RPC_URL, {
+    const requestPayload = {
       jsonrpc: '2.0',
       id: Date.now().toString(),
       method,
       params
-    });
+    };
+    
+    // If private key is provided, sign the request
+    if (privateKey) {
+      const wallet = new Wallet(privateKey);
+      const messageToSign = JSON.stringify(requestPayload);
+      const signature = await wallet.signMessage(messageToSign);
+      
+      // Add signature and public key to the request
+      requestPayload.signature = signature;
+      requestPayload.publicKey = wallet.address;
+      
+      log(chalk.gray(`Request signed with address: ${wallet.address}`));
+    }
+    
+    const response = await axios.post(RPC_URL, requestPayload);
     
     if (response.data.error) {
       error(`RPC Error: ${JSON.stringify(response.data.error)}`);
@@ -137,19 +153,92 @@ async function createContractSchema() {
   const schemaStr = `texas,cash,${gameOptions.minPlayers},${gameOptions.maxPlayers},${gameOptions.smallBlind.toString()},${gameOptions.bigBlind.toString()},${gameOptions.minBuyIn.toString()},${gameOptions.maxBuyIn.toString()},${gameOptions.timeout}`;
   
   log(chalk.yellow('Contract schema string: ' + schemaStr));
-  log(chalk.yellow('This would be used with the NEW RPC method next'));
   
-  // Placeholder for actual implementation for the contract schema creation using RPC
-  // const result = await rpcCall('new', [
-  //   "",  // Empty for auto-generated address
-  //   schemaStr
-  // ]);
-  // 
-  // const contractAddress = result.address || result;
-  // success(`Contract schema created with address: ${contractAddress}`);
-  // return contractAddress;
+  // Use the specified table ID to create the contract schema
+  const tableId = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
+  log(chalk.cyan(`Using table ID: ${tableId}`));
   
-  return "0x0000000000000000000000000000000000000000";
+  try {
+    // Using RPCMethods.NEW from the Block52 package for type safety
+    const result = await rpcCall(RPCMethods.NEW, [
+      tableId,  // Use the specified table address
+      schemaStr
+    ]);
+    
+    // Fix the formatting for the contract address
+    const contractAddress = typeof result === 'object' ? 
+      (result.address || tableId) : 
+      (result || tableId);
+      
+    success(`Contract schema created with address: ${contractAddress}`);
+    return contractAddress;
+  } catch (err) {
+    error(`Failed to create contract schema: ${err.message}`);
+    log(chalk.yellow('Using fallback table ID for further steps'));
+    return tableId;
+  }
+}
+
+// Join a player to the table via RPC
+async function joinTable(contractAddress, player, buyInAmount) {
+  info(`Player ${player.name} (${player.address}) joining table ${contractAddress} with ${buyInAmount.toString()} tokens`);
+  
+  try {
+    // Format parameters according to: [from, to, action, amount, nonce, index]
+    const timestamp = Date.now();
+    const actionIndex = 0; // Action index for join (usually 0 for the first action)
+    
+    // Based on proxy/js/src/index.js structure:
+    // [from, to, action, amount, nonce, index]
+    const params = [
+      player.address,                // from: player address
+      contractAddress,               // to: table address
+      "join",                        // action: "join" string directly (NonPlayerActionType.JOIN)
+      buyInAmount.toString(),        // amount: buy-in amount
+      timestamp.toString(),          // nonce: timestamp as string
+      actionIndex                    // index: action index
+    ];
+    
+    // Log the RPC call parameters 
+    log(chalk.yellow('Sending RPC call to join table:'));
+    log(chalk.cyan(`Method: ${RPCMethods.PERFORM_ACTION}`));
+    log(chalk.cyan(`Parameters: ${JSON.stringify(params, null, 2)}`));
+    log(chalk.cyan(`Using private key for: ${player.name}`));
+    
+    // Implement the actual RPC call to join the table with the player's private key for signing
+    const result = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
+    
+    success(`Player ${player.name} successfully joined table ${contractAddress}`);
+    log(chalk.cyan('Join response:'));
+    console.log(JSON.stringify(result, null, 2));
+    
+    return result;
+  } catch (err) {
+    error(`Failed to join table: ${err.message}`);
+    return null;
+  }
+}
+
+// Check account balance via RPC
+async function getAccountBalance(address) {
+  info(`Checking balance for account: ${address}`);
+  
+  try {
+    // Implement the actual RPC call to get account info
+    const result = await rpcCall(RPCMethods.GET_ACCOUNT, [address]);
+    
+    success(`Retrieved account info for: ${address}`);
+    log(chalk.cyan('Account details:'));
+    console.log(JSON.stringify(result, null, 2));
+    
+    // The balance is inside the "data" object
+    const balance = result?.data?.balance || '0';
+    log(chalk.cyan(`Extracted balance: ${balance}`));
+    return balance;
+  } catch (err) {
+    error(`Failed to retrieve account balance: ${err.message}`);
+    return '0';
+  }
 }
 
 // Main function
@@ -175,8 +264,38 @@ async function runTest() {
       typeof value === 'bigint' ? value.toString() : value, 2
     ));
     
-    // Step 5: Create contract schema placeholder
+    // Step 5: Create contract schema with the specific table ID
     const contractAddress = await createContractSchema();
+    
+    // Wait a bit for the contract creation to be mined
+    log(chalk.yellow('\nWaiting for the contract creation to be mined...'));
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    // Step 6: Check player balances first
+    for (const player of PLAYERS) {
+      log(chalk.yellow(`\nChecking balance for ${player.name} before joining...`));
+      const balance = await getAccountBalance(player.address);
+      log(chalk.cyan(`${player.name}'s balance: ${balance}`));
+      
+      // Convert balance to BigInt for comparison
+      const balanceBigInt = BigInt(balance || '0');
+      
+      // Set buy-in amount to 1 ETH (less than the minimum game buy-in, just for testing)
+      // The min buy-in is probably 100 ETH (100000000000000000000)
+      // So we'll try a much smaller amount like 1 ETH
+      const buyInAmount = BigInt('1000000000000000000'); // 1 ETH
+      
+      // Only try to join if player has sufficient balance
+      if (balanceBigInt >= buyInAmount) {
+        log(chalk.green(`${player.name} has sufficient funds to join with 1 ETH!`));
+        await joinTable(contractAddress, player, buyInAmount);
+      } else {
+        log(chalk.red(`${player.name} doesn't have enough funds to join. Needs ${buyInAmount.toString()}, has ${balanceBigInt.toString()}`));
+      }
+      
+      // Wait a bit between operations
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
     
     // Stop here as requested
     success('Test completed');
