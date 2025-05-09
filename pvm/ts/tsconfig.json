@@ -13,6 +13,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/**/*.ts", "../../test_cvm/lucas_tests_files/texasHoldem-turn-headsup.test.ts", "../../test_cvm/active_test/texasHoldem-join-and-leave.test.ts", "../../test_cvm/lucas_tests_files/texasHoldem-multiplayer.test.ts", "../../test_cvm/lucas_tests_files/testConstants.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "cli"]
 }
