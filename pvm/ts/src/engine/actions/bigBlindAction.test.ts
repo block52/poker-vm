@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../../../../../test_cvm/lucas_tests_files/testConstants";
+import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
 
 describe("BigBlindAction", () => {
     let game: TexasHoldemGame;
