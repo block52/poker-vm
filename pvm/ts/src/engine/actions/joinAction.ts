@@ -48,7 +48,7 @@ class JoinAction extends BaseAction {
             console.log(`[JoinAction DEBUG] Requested specific seat ${requestedSeat} is being processed for player ${player.address}`);
             
             // Validate the seat is within the allowed range (1 to maxPlayers)
-            const maxSeat = 9; // Default to 9 if we can't access maxPlayers
+            const maxSeat = this.game.maxPlayers;
             if (requestedSeat < 1 || requestedSeat > maxSeat) {
                 console.log(`[JoinAction DEBUG] Requested seat ${requestedSeat} is out of valid range (1-${maxSeat}), will auto-assign`);
                 seat = this.game.findNextEmptySeat();

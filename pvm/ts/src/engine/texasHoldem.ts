@@ -197,6 +197,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._gameOptions.maxBuyIn;
     }
 
+    // Add getter for max players
+    get maxPlayers() {
+        return this._gameOptions.maxPlayers;
+    }
+
     // Method to add players to seats directly
     addPlayerAtSeat(player: Player, seat: number): void {
         // Add validation that's currently in joinAtSeat
