@@ -235,17 +235,29 @@ async function joinTable(contractAddress, player, buyInAmount) {
   try {
     // Format parameters according to: [from, to, action, amount, nonce, index]
     const timestamp = Date.now();
-    const actionIndex = 0; // Action index for join (usually 0 for the first action)
+    
+    // Assign specific seat numbers based on player name
+    let seatNumber;
+    if (player.name === "Dan") {
+      seatNumber = 2;
+    } else if (player.name === "Tracey") {
+      seatNumber = 3;
+    } else if (player.name === "Hamish") {
+      seatNumber = 5;
+    }
+    
+    // Log the seat number assignment
+    log(chalk.yellow(`Assigning ${player.name} to seat ${seatNumber}`));
     
     // Based on proxy/js/src/index.js structure:
     // [from, to, action, amount, nonce, index]
     const params = [
-      player.address,                // from: player address
-      contractAddress,               // to: table address
-      "join",                        // action: "join" string directly (NonPlayerActionType.JOIN)
-      buyInAmount.toString(),        // amount: buy-in amount
-      timestamp.toString(),          // nonce: timestamp as string
-      actionIndex                    // index: action index
+      player.address,                 // from
+      contractAddress,                // to
+      "join",                         // action
+      buyInAmount.toString(),         // amount
+      timestamp.toString(),           // nonce
+      [0, seatNumber]                 // [actionIndex, seatNumber]
     ];
     
     // Log the RPC call parameters 
@@ -257,7 +269,7 @@ async function joinTable(contractAddress, player, buyInAmount) {
     // Implement the actual RPC call to join the table with the player's private key for signing
     const result = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
     
-    success(`Player ${player.name} successfully joined table ${contractAddress}`);
+    success(`Player ${player.name} successfully joined table ${contractAddress} at seat ${seatNumber}`);
     log(chalk.cyan("Join response:"));
     console.log(JSON.stringify(result, null, 2));
     

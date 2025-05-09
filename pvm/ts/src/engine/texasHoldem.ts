@@ -518,7 +518,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 const tempPlayer = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
                 
                 // Use JoinAction to handle the full joining process
-                new JoinAction(this, this._update).execute(tempPlayer, index, _amount, requestedSeat);
+                if (requestedSeat !== undefined) {
+                    new JoinAction(this, this._update).execute(tempPlayer, index, _amount, requestedSeat);
+                } else {
+                    new JoinAction(this, this._update).execute(tempPlayer, index, _amount);
+                }
                 
                 // Just increment turn index, no need to call join() anymore
                 this.incrementTurnIndex();

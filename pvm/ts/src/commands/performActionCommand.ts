@@ -61,7 +61,16 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         });
 
         // Perform the current action
-        game.performAction(this.from, this.action, this.index, this.amount);
+        let index, seatNumber;
+        if (Array.isArray(this.action) && this.action[0] === 'join') {
+            [index, seatNumber] = this.action;
+            index = Number(index);
+            seatNumber = Number(seatNumber);
+        } else {
+            index = Number(this.action);
+        }
+
+        game.performAction(this.from, this.action, index, this.amount, seatNumber);
 
         const nonce = BigInt(this.nonce);
         
