@@ -17,19 +17,20 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     constructor(
         private readonly from: string,
         private readonly to: string,
-        private readonly index: number | number[], // Allow array for join actions with seat number
+        private readonly index: number, // Allow array for join actions with seat number
         private readonly amount: bigint,
         private readonly action: PlayerActionType | NonPlayerActionType,
         private readonly nonce: number,
-        private readonly privateKey: string
+        private readonly privateKey: string,
+        private readonly data?: string
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
-        
+
         // Debug logging to see what we're getting in the constructor
-        const indexType = Array.isArray(this.index) ? 'array' : 'number';
+        const indexType = Array.isArray(this.index) ? "array" : "number";
         console.log(`PerformActionCommand created with action=${action}, index=${JSON.stringify(this.index)} (${indexType})`);
     }
 
@@ -56,13 +57,9 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         orderedTransactions.forEach(tx => {
             try {
-                // Pass seat number if it exists for join actions
-                if (tx.type === NonPlayerActionType.JOIN && tx.seatNumber !== undefined) {
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.seatNumber);
-                    console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and seat ${tx.seatNumber}`);
-                } else {
-                    game.performAction(tx.from, tx.type, tx.index, tx.value);
-                    console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                {
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                    console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
                 }
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
@@ -70,90 +67,38 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
-        // Perform the current action
-        // Check for seat number in join actions 
-        let actionIndex = this.index;
-        let seatNumber = undefined;
-        
-        // TODO: Migration - This handles the new format of passing seat numbers for join actions.
-        // The seat number is passed as the second element in the index array: [actionIndex, seatNumber]
-        // If we need a more generic solution in the future, consider moving to a proper data structure.
-        if (this.action === NonPlayerActionType.JOIN && Array.isArray(this.index)) {
-            console.log(`Join action with seat specification: ${JSON.stringify(this.index)}`);
-            // Extract actionIndex and seatNumber from the array
-            if (this.index.length >= 2) {
-                [actionIndex, seatNumber] = this.index;
-                actionIndex = Number(actionIndex);
-                seatNumber = Number(seatNumber);
-                console.log(`Extracted action index: ${actionIndex}, seat number: ${seatNumber}`);
-            } else {
-                // Backward compatibility - if only one element, treat it as actionIndex
-                actionIndex = Number(this.index[0]);
-                console.log(`Join action with only action index: ${actionIndex}`);
-            }
-        } else {
-            // For non-join actions or when index is not an array
-            actionIndex = Number(this.index);
-        }
-
-        // Add warning if the actionIndex is NaN to help debugging
-        if (isNaN(actionIndex)) {
-            console.warn(`WARNING: Action index is NaN. Original value: ${JSON.stringify(this.index)}`);
-        }
-
-        console.log(`Performing action ${this.action} with index ${actionIndex}${seatNumber !== undefined ? `, seat ${seatNumber}` : ''}`);
-        game.performAction(this.from, this.action, actionIndex, this.amount, seatNumber);
+        console.log(`Performing action ${this.action} with index ${this.index} data ${this.data}`);
+        game.performAction(this.from, this.action, this.index, this.amount, this.data);
 
         const nonce = BigInt(this.nonce);
-        
-        // Create transaction with correct direction of funds flow  
-        // TODO: work out if theis the the best way to process a leave action and also a join action. ticket 553
-        let tx: Transaction;
+
+        const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
+        const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
+
+        // Create transaction with correct direction of funds flow
+        // For all other actions: regular format
+        const tx: Transaction = await Transaction.create(
+            _to, // game receives funds (to)
+            _from, // player sends funds (from)
+            this.amount,
+            nonce,
+            this.privateKey,
+            `${this.action},${this.index}`
+        );
+
+        await this.mempool.add(tx);
+
         if (this.action === NonPlayerActionType.LEAVE) {
-            // For LEAVE: We need to handle both the game action and the funds transfer
-            // 1. Create a transaction for the leave action (added to mempool)
             const actionTx = await Transaction.create(
-                this.to, // game address
-                this.from, // player address
-                0n, // No funds for the action itself
-                nonce,
+                _to, // game address
+                _from, // player address
+                this.amount,
+                nonce + 1n, // Increment nonce for action transaction
                 this.privateKey,
-                `${this.action},${actionIndex}`
+                `${this.action},${this.index}` // Action data
             );
+
             await this.mempool.add(actionTx);
-            
-            // 2. Create a transfer transaction to return funds from game to player
-            tx = await Transaction.create(
-                this.from, // player receives funds (to)
-                this.to, // game sends funds (from)
-                this.amount, // Return the player's remaining stack
-                nonce + 1n, // Increment nonce for second transaction
-                this.privateKey,
-                `transfer,${actionIndex}`
-            );
-            await this.mempool.add(tx);
-        } else if (this.action === 'join' && seatNumber !== undefined) {
-            // For JOIN with seat number: Include the seat number in the transaction data
-            tx = await Transaction.create(
-                this.to, // game receives funds (to)
-                this.from, // player sends funds (from)
-                this.amount,
-                nonce,
-                this.privateKey,
-                `${this.action},${actionIndex},${seatNumber}` // Include seat number
-            );
-            await this.mempool.add(tx);
-        } else {
-            // For all other actions: regular format
-            tx = await Transaction.create(
-                this.to, // game receives funds (to)
-                this.from, // player sends funds (from)
-                this.amount,
-                nonce,
-                this.privateKey,
-                `${this.action},${actionIndex}`
-            );
-            await this.mempool.add(tx);
         }
 
         return signResult(tx, this.privateKey);
@@ -170,44 +115,63 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         return found;
     }
 
+    // private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
+    //     if (!tx.data) {
+    //         throw new Error("Transaction data is undefined");
+    //     }
+
+    //     // Split and extract main components from transaction data
+    //     const [rawAction, rawIndex, rawSeat, ...extraParams] = tx.data.split(",");
+
+    //     if (!rawAction || !rawIndex) {
+    //         throw new Error(`Transaction ${tx.hash} has invalid format: "${tx.data}"`);
+    //     }
+
+    //     // Parse action
+    //     const action = rawAction.trim() as PlayerActionType | NonPlayerActionType;
+
+    //     // Parse and validate index
+    //     const index = Number(rawIndex.trim());
+    //     if (Number.isNaN(index)) {
+    //         throw new Error(`Invalid index "${rawIndex}" in transaction ${tx.hash}`);
+    //     }
+
+    //     // Parse seat number only for join actions
+    //     let seatNumber: number | undefined = undefined;
+    //     if (action === NonPlayerActionType.JOIN && rawSeat) {
+    //         seatNumber = Number(rawSeat.trim());
+    //         if (Number.isNaN(seatNumber)) {
+    //             throw new Error(`Invalid seat number "${rawSeat}" in join transaction ${tx.hash}`);
+    //         }
+    //         console.log(`Found join action with valid seat number: ${seatNumber}`);
+    //     }
+
+    //     return {
+    //         from: tx.from,
+    //         to: tx.to,
+    //         value: tx.value,
+    //         type: action,
+    //         index: index,
+    //         data: seatNumber
+    //     };
+    // }
+
     private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
         if (!tx.data) {
             throw new Error("Transaction data is undefined");
         }
 
-        // Split and extract main components from transaction data
-        const [rawAction, rawIndex, rawSeat, ...extraParams] = tx.data.split(",");
-        
-        if (!rawAction || !rawIndex) {
-            throw new Error(`Transaction ${tx.hash} has invalid format: "${tx.data}"`);
-        }
-        
-        // Parse action
-        const action = rawAction.trim() as PlayerActionType | NonPlayerActionType;
-        
-        // Parse and validate index
-        const index = Number(rawIndex.trim());
-        if (Number.isNaN(index)) {
-            throw new Error(`Invalid index "${rawIndex}" in transaction ${tx.hash}`);
-        }
-        
-        // Parse seat number only for join actions
-        let seatNumber: number | undefined = undefined;
-        if (action === NonPlayerActionType.JOIN && rawSeat) {
-            seatNumber = Number(rawSeat.trim());
-            if (Number.isNaN(seatNumber)) {
-                throw new Error(`Invalid seat number "${rawSeat}" in join transaction ${tx.hash}`);
-            }
-            console.log(`Found join action with valid seat number: ${seatNumber}`);
-        }
+        const params = tx.data.split(",");
+        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
+        const index = parseInt(params[1].trim());
 
         return {
             from: tx.from,
             to: tx.to,
             value: tx.value,
             type: action,
-            index: index, 
-            seatNumber: seatNumber
+            index: index,
+            data: tx.data
         };
     }
 }

@@ -23,7 +23,6 @@ class JoinAction extends BaseAction {
     execute(player: Player, index: number, amount?: bigint, requestedSeat?: number): void {
         // First verify the action
         const range = this.verify(player);
-        
         console.log(`[JoinAction DEBUG] execute called with player=${player.address}, index=${index}, amount=${amount}, requestedSeat=${requestedSeat}`);
         
         // Check if the amount is within the valid range
@@ -32,49 +31,11 @@ class JoinAction extends BaseAction {
             throw new Error("Player does not have enough or too many chips to join.");
         }
         
-        // Create a new player instance with proper settings
-        const newPlayer = new Player(
-            player.address,
-            undefined, // lastAction
-            buyIn,
-            undefined, // holeCards
-            PlayerStatus.SITTING_OUT
-        );
-        
         // Find an available seat or use the requested one
-        let seat: number;
-        if (requestedSeat !== undefined) {
-            // Check if requested seat is available
-            console.log(`[JoinAction DEBUG] Requested specific seat ${requestedSeat} is being processed for player ${player.address}`);
-            
-            // Validate the seat is within the allowed range (1 to maxPlayers)
-            const maxSeat = this.game.maxPlayers;
-            if (requestedSeat < 1 || requestedSeat > maxSeat) {
-                console.log(`[JoinAction DEBUG] Requested seat ${requestedSeat} is out of valid range (1-${maxSeat}), will auto-assign`);
-                seat = this.game.findNextEmptySeat();
-            } else {
-                // Check if seat is already taken
-                const existingPlayer = this.game.getPlayerAtSeat(requestedSeat);
-                if (existingPlayer) {
-                    console.log(`[JoinAction DEBUG] Requested seat ${requestedSeat} is already taken, will auto-assign`);
-                    seat = this.game.findNextEmptySeat();
-                } else {
-                    console.log(`[JoinAction DEBUG] Using requested seat ${requestedSeat} for player ${player.address}`);
-                    seat = requestedSeat;
-                }
-            }
-        } else {
-            // Auto-assign a seat only when no specific seat is requested
-            seat = this.game.findNextEmptySeat();
-            console.log(`[JoinAction DEBUG] Auto-assigned seat ${seat} for player ${player.address}`);
-        }
-        
-        if (seat === -1) {
-            throw new Error("Table is full, no available seats.");
-        }
-        
+        const seat = requestedSeat === undefined ? this.game.findNextEmptySeat() : requestedSeat;
+
         console.log(`[JoinAction DEBUG] FINAL - Adding player ${player.address} to seat ${seat} with ${buyIn} chips`);
-        this.game.addPlayerAtSeat(newPlayer, seat);
+        this.game.joinAtSeat(player, seat);
         
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction({

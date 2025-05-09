@@ -200,28 +200,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._gameOptions.maxPlayers;
     }
 
-    // Method to add players to seats directly
-    addPlayerAtSeat(player: Player, seat: number): void {
-        // Add validation that's currently in joinAtSeat
-        if (this.exists(player.address)) {
-            throw new Error("Player already joined.");
-        }
-
-        if (seat === -1) {
-            throw new Error("Table full.");
-        }
-
-        if (player.chips < this._gameOptions.minBuyIn || player.chips > this._gameOptions.maxBuyIn) {
-            throw new Error("Player does not have enough or too many chips to join.");
-        }
-
-        // Add player to the map
-        this._playersMap.set(seat, player);
-
-        // Set as active
-        player.updateStatus(PlayerStatus.ACTIVE);
-    }
-
     // Returns the current turn index without incrementing it
     getTurnIndex(): number {
         return this._turnIndex;
@@ -285,7 +263,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this.joinAtSeat(player, seat);
     }
 
-    private joinAtSeat(player: Player, seat: number) {
+    joinAtSeat(player: Player, seat: number) {
         // Check if the player is already in the game
         if (this.exists(player.address)) {
             throw new Error("Player already joined.");
@@ -511,51 +489,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN: {
-                // Parse the optional seat parameter from data if available
-                let requestedSeat: number | undefined = undefined;
+                const seat = data ? Number(data) : undefined;
+                const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
 
-                console.log(`[TexasHoldem DEBUG] JOIN action for player ${address} with data=${JSON.stringify(data)}, type=${typeof data}`);
-
-                // Handle different formats of the data parameter
-                if (data !== undefined) {
-                    if (typeof data === "number") {
-                        // Direct number format - old style
-                        requestedSeat = Number(data);
-                        console.log(`[TexasHoldem DEBUG] JOIN: Requested specific seat ${requestedSeat} for player ${address} (direct number format)`);
-                    } else if (Array.isArray(data) && data.length >= 2) {
-                        // Array format from RPC request [actionIndex, seatNumber]
-                        requestedSeat = Number(data[1]);
-                        console.log(`[TexasHoldem DEBUG] JOIN: Requested specific seat ${requestedSeat} for player ${address} (array format)`);
-                    } else {
-                        // Try parsing as string in case it's a serialized value
-                        try {
-                            const parsedSeat = Number(data);
-                            if (!isNaN(parsedSeat)) {
-                                requestedSeat = parsedSeat;
-                                console.log(`[TexasHoldem DEBUG] JOIN: Requested specific seat ${requestedSeat} for player ${address} (parsed from string)`);
-                            }
-                        } catch (e) {
-                            console.log(`[TexasHoldem DEBUG] JOIN: Could not parse seat number from data: ${data}, will auto-assign`);
-                        }
-                    }
-                }
-
-                if (requestedSeat === undefined) {
-                    console.log(`[TexasHoldem DEBUG] JOIN: No specific seat requested for player ${address}, will auto-assign`);
-                }
-
-                // Create a temporary player object with the address
-                const tempPlayer = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-
-                // Use JoinAction to handle the full joining process
-                if (requestedSeat !== undefined) {
-                    console.log(`[TexasHoldem DEBUG] Executing JoinAction with specified seat ${requestedSeat} for player ${address}`);
-                    new JoinAction(this, this._update).execute(tempPlayer, index, _amount, requestedSeat);
-                } else {
-                    console.log(`[TexasHoldem DEBUG] Executing JoinAction with auto-seat assignment for player ${address}`);
-                    new JoinAction(this, this._update).execute(tempPlayer, index, _amount);
-                }
-
+                new JoinAction(this, this._update).execute(player, index, _amount, seat);
+                
                 // `execute` already logged the action & incremented the index
                 return; // EARLY EXIT – nothing else to do for non-player action
             }
@@ -667,7 +605,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         const timestamp = Date.now();
-        const round = this._currentRound;
         // Always get the actual seat number for the player
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };

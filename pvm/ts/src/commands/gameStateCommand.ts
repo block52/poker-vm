@@ -14,11 +14,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly contractSchemaManagement: ContractSchemaManagement;
 
     // This will be shared secret later
-    constructor(
-        readonly address: string,
-        private readonly privateKey: string,
-        private readonly caller?: string | undefined
-    ) {
+    constructor(readonly address: string, private readonly privateKey: string, private readonly caller?: string | undefined) {
         this.gameManagement = new GameManagement();
         this.mempool = getMempoolInstance();
         this.contractSchemaManagement = getContractSchemaManagement();
@@ -41,19 +37,9 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             orderedTransactions.forEach(tx => {
                 try {
-                    // Handle join actions with seat numbers similarly to performActionCommand
-                    if (tx.type === NonPlayerActionType.JOIN && tx.seatNumber !== undefined) {
-                        game.performAction(tx.from, tx.type, tx.index, tx.value, tx.seatNumber);
-                        console.log(
-                            `Processing in gameStateCommand action ${tx.type} from ${tx.from} with value ${tx.value}, index ${tx.index}, and seat ${tx.seatNumber}`
-                        );
-                    } else {
-                        game.performAction(tx.from, tx.type, tx.index, tx.value);
-                        console.log(`Processing in gameStateCommand action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
-                    }
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
-                    // Continue with other transactions, don't let this error propagate up
                 }
             });
 
@@ -74,23 +60,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
         const params = tx.data.split(",");
         const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
-        // const index = parseInt(params[1].trim());
-        const index = Number.parseInt(params[1]?.trim() ?? "", 10);
-        if (Number.isNaN(index)) {
-            throw new Error(`Invalid action index in tx.data: "${tx.data}"`);
-        }
-
-        // Handle seat number for join actions (format: "join,index,seatNumber")
-        let seatNumber = undefined;
-        // if (action === NonPlayerActionType.JOIN && params.length >= 3) {
-        //     seatNumber = parseInt(params[2].trim());
-        if (action === NonPlayerActionType.JOIN && params.length >= 3) {
-            seatNumber = Number.parseInt(params[2].trim(), 10);
-            if (Number.isNaN(seatNumber)) {
-                seatNumber = undefined; // fall back gracefully
-            }
-        }
-        console.log(`Found join action with seat number: ${seatNumber}`);
+        const index = parseInt(params[1].trim());
 
         return {
             from: tx.from,
@@ -98,7 +68,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             value: tx.value,
             type: action,
             index: index,
-            seatNumber: seatNumber
+            data: tx.data
         };
     }
 }

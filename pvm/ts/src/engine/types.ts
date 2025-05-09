@@ -56,5 +56,5 @@ export type OrderedTransaction = {
     value: bigint;
     type: PlayerActionType | NonPlayerActionType;
     index: number;
-    seatNumber?: number; // Optional seat number for join actions
+    data?: any;
 };
