@@ -106,10 +106,10 @@ async function rpcCall(method, params = [], privateKey = null) {
       id: requestPayload.id,
       method: requestPayload.method,
       params: requestPayload.params,
-      // Only include these if they exist
-      ...(requestPayload.signature && { signature: requestPayload.signature }),
-      ...(requestPayload.data && { data: requestPayload.data }),
-      ...(requestPayload.publicKey && { publicKey: requestPayload.publicKey })
+      // Always include these fields for consistent shape, even if they're empty
+      data: requestPayload.data || null,
+      signature: requestPayload.signature || null,
+      publicKey: requestPayload.publicKey || null
     };
     log(chalk.white(JSON.stringify(rpcRequestObject, null, 2)));
     log(chalk.magenta("-".repeat(50)));
@@ -129,7 +129,7 @@ async function rpcCall(method, params = [], privateKey = null) {
     const rpcResponseObject = {
       id: response.data.id,
       result: response.data.result,  // ISignedResponse<T> with data and signature
-      ...(response.data.error && { error: response.data.error })
+      error: response.data.error || null  // Always include error field for consistent shape
     };
     
     log(chalk.white(JSON.stringify(rpcResponseObject, null, 2)));
