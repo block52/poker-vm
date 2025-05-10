@@ -16,6 +16,7 @@ import { LuPanelLeftClose } from "react-icons/lu";
 import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
 import { useNavigate, useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
+import { motion } from "framer-motion";
 import "./Table.css"; // Import the Table CSS file
 
 import { ethers } from "ethers";
@@ -686,16 +687,20 @@ const Table = () => {
                                             })}
                                             {/*//! Dealer */}
                                             {isDealerButtonVisible && (
-                                                <div
+                                                <motion.div
                                                     className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                                    style={{
+                                                    animate={{
                                                         left: `calc(${dealerButtonPosition.left} + 200px)`,
-                                                        top: dealerButtonPosition.top,
-                                                        transform: "none"
+                                                        top: dealerButtonPosition.top
+                                                    }}
+                                                    initial={false}
+                                                    transition={{
+                                                        duration: 0.6,
+                                                        ease: "easeInOut"
                                                     }}
                                                 >
                                                     D
-                                                </div>
+                                                </motion.div>
                                             )}
                                         </div>
                                     </div>
