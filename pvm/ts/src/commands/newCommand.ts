@@ -88,7 +88,8 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                     signature: ethers.ZeroHash
                 };
 
-                await this.gameManagement.saveFromJSON(JSON.stringify(newGameJson));
+                // await this.gameManagement.saveFromJSON(JSON.stringify(newGameJson));
+                await this.gameManagement.saveFromJSON(newGameJson);
 
                 // Create a transaction record for this action
                 const newGameTx: Transaction = await Transaction.create(

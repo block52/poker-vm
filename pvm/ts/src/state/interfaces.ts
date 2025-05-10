@@ -34,7 +34,7 @@ export interface IGameManagement {
     get(address: string): Promise<any | null>;
     create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string>;
     save(sate: IJSONModel): Promise<void>;
-    saveFromJSON(json: string): Promise<void>;
+    saveFromJSON(json: any): Promise<void>;
 }
 
 export interface ITransactionManagement {
