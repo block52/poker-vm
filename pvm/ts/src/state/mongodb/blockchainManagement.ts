@@ -1,13 +1,13 @@
-import { Block } from "../models/index";
-import Blocks from "../schema/blocks";
-import { StateManager } from "./stateManager";
-import GenesisBlock from "../data/genesisblock.json";
-import { IBlockDocument } from "../models/interfaces";
-import { AccountManagement } from "./accountManagement";
-import { TransactionManagement } from "./transactionManagement";
-import { IBlockchainManagement } from "./interfaces";
+import { Block } from "../../models/index";
+import Blocks from "../../schema/blocks";
+import { StateManager } from "../stateManager";
+import GenesisBlock from "../../data/genesisblock.json";
+import { IBlockDocument } from "../../models/interfaces";
+import { AccountManagement } from "../accountManagement";
+import { TransactionManagement } from "../transactionManagement";
+import { IBlockchainManagement } from "../interfaces";
 
-export class BlockchainManagement extends StateManager implements IBlockchainManagement {
+export class MongoDBBlockchainManagement extends StateManager implements IBlockchainManagement {
     constructor(private readonly connString: string) {
         super(connString);
     }

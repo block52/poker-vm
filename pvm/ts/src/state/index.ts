@@ -5,7 +5,7 @@ import { getContractSchemaManagement } from "./contractSchemaManagement";
 import { getGameManagementInstance } from "./gameManagement";
 import { IBlockchainManagement } from "./interfaces";
 import { getTransactionInstance } from "./transactionManagement";
-import { BlockchainManagement } from "./blockchainManagement";
+import { MongoDBBlockchainManagement } from "./mongodb/blockchainManagement";
 
 export { getAccountManagementInstance, getContractSchemaManagement, getGameManagementInstance, getTransactionInstance };
 
@@ -21,7 +21,7 @@ export const getBlockchainInstance = (): IBlockchainManagement => {
     }
 
     if (dbType === "mongodb") {
-        return new BlockchainManagement(connString);
+        return new MongoDBBlockchainManagement(connString);
     }
 
     if (dbType === "rocksdb") {
