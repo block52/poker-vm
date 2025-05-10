@@ -1,6 +1,7 @@
 import { Redis } from "ioredis";
-import { Block } from "./types";
+import { Block } from "../models/block";
 import { IBlockchainManagement } from "../state/interfaces";
+import { ethers } from "ethers";
 
 export class RedisBlockchainManagement implements IBlockchainManagement {
     private readonly redisClient: Redis;
@@ -49,15 +50,16 @@ export class RedisBlockchainManagement implements IBlockchainManagement {
      */
     public getGenesisBlock(): Block {
         // Define genesis block structure
-        const genesisBlock: Block = {
-            index: 0,
-            previousHash: "0",
-            timestamp: new Date("2023-01-01T00:00:00Z").getTime(),
-            data: "Genesis Block",
-            hash: "0000000000000000000000000000000000000000000000000000000000000000",
-            nonce: 0,
-            difficulty: 1
-        };
+        const genesisBlock: Block = new Block(
+            0,
+            ethers.ZeroHash,
+            new Date("2023-01-01T00:00:00Z").getTime(),
+            ethers.ZeroAddress,
+            ethers.ZeroHash,
+            ethers.ZeroHash,
+            ethers.ZeroHash,
+            [] // No transactions in the genesis block
+        );
 
         return genesisBlock;
     }
