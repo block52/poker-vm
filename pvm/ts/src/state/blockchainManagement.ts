@@ -80,7 +80,7 @@ export class BlockchainManagement extends StateManager implements IBlockchainMan
     }
 
     public getBlockByIndex(index: number): Promise<Block | null> {
-        throw new Error("Method not implemented.");
+        return this.getBlock(index).catch(() => null);
     }
 
     public async getBlock(index: number): Promise<Block> {
