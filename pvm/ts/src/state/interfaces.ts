@@ -22,6 +22,7 @@ export interface IBlockchainManagement {
     getBlockByIndex(index: number): Promise<Block | null>;
     getBlock(index: number): Promise<Block>;
     getBlocks(count?: number): Promise<Block[]>;
+    reset(): Promise<void>;
 }
 
 export interface IContractSchemaManagement {
@@ -37,6 +38,7 @@ export interface IGameManagement {
 }
 
 export interface ITransactionManagement {
+    exists(txid: string): Promise<Boolean>;
     getTransactions(blockHash: string, count?: number): Promise<Transaction[]>;
     getTransaction(txid: string): Promise<Transaction | null>;
     getTransactionByIndex(index: string): Promise<Transaction | null>;

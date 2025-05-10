@@ -6,7 +6,8 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { NativeToken } from "../models/nativeToken";
 import { createProvider } from "../core/provider";
 import { CONTRACT_ADDRESSES } from "../core/constants";
-import { TransactionManagement, getTransactionInstance } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/transactionManagement";
+import { ITransactionManagement } from "../state/interfaces";
 
 export class MintCommand implements ISignedCommand<Transaction> {
     private readonly publicKey: string;
@@ -14,7 +15,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
     private readonly index: bigint;
-    private readonly transactionManagement: TransactionManagement;
+    private readonly transactionManagement: ITransactionManagement;
     private readonly mempool: Mempool;
 
     constructor(readonly depositIndex: string, readonly hash: string, private readonly privateKey: string) {
@@ -38,7 +39,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         // this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
         //     staticNetwork: true
         // });
-        
+
         this.mempool = getMempoolInstance();
         this.transactionManagement = getTransactionInstance();
 
@@ -63,7 +64,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         const data = `MINT_${this.depositIndex}`;
         console.log("📝 Checking for existing transaction with data:", data);
         const exists = await this.transactionManagement.getTransactionByData(data);
-        
+
         if (exists) {
             console.log("ℹ️ Transaction already exists in blockchain, returning existing transaction");
             // Return the existing transaction instead of throwing an error
@@ -103,22 +104,12 @@ export class MintCommand implements ISignedCommand<Transaction> {
             asTokens: Number(value) / 1e18
         });
 
-  
-      
-
         console.log("📝 Creating transaction...");
-        const mintTx: Transaction = await Transaction.create(
-            account, 
-            CONTRACT_ADDRESSES.bridgeAddress, 
-            value, 
-            this.index, 
-            this.privateKey, 
-            data
-        );
+        const mintTx: Transaction = await Transaction.create(account, CONTRACT_ADDRESSES.bridgeAddress, value, this.index, this.privateKey, data);
 
         console.log("📨 Sending to mempool...");
         await this.mempool.add(mintTx);
-        
+
         console.log("✅ MintCommand execution complete");
         return signResult(mintTx, this.privateKey);
     }

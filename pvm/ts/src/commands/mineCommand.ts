@@ -1,30 +1,28 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block, Transaction } from "../models";
-import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
+import { getBlockchainInstance } from "../state/blockchainManagement";
 import { GameManagement } from "../state/gameManagement";
-import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/transactionManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import contractSchemas from "../schema/contractSchemas";
 import { GameStateCommand } from "./gameStateCommand";
-import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
+import { getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { IGameStateDocument } from "../models/interfaces";
 import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
+import { IBlockchainManagement, IContractSchemaManagement, IGameManagement, ITransactionManagement } from "../state/interfaces";
 
 export class MineCommand implements ISignedCommand<Block | null> {
     private readonly mempool: Mempool;
-    private readonly accountManagement: AccountManagement;
-    private readonly blockchainManagement: BlockchainManagement;
-    private readonly transactionManagement: TransactionManagement;
-    private readonly gameStateManagement: GameManagement;
-    private readonly contractSchemaManagement: ContractSchemaManagement;
+    private readonly blockchainManagement: IBlockchainManagement;
+    private readonly transactionManagement: ITransactionManagement;
+    private readonly gameStateManagement: IGameManagement;
+    private readonly contractSchemaManagement: IContractSchemaManagement;
 
     constructor(private readonly privateKey: string) {
         this.mempool = getMempoolInstance();
-        this.accountManagement = getAccountManagementInstance();
         this.blockchainManagement = getBlockchainInstance();
         this.transactionManagement = getTransactionInstance();
         this.gameStateManagement = new GameManagement();
@@ -95,14 +93,14 @@ export class MineCommand implements ISignedCommand<Block | null> {
             try {
                 const result = await commands[i].execute();
                 // Save the game state to the database
-                await this.gameStateManagement.saveFromJSON(result.data);
+                await this.gameStateManagement.saveFromJSON(JSON.stringify(result.data));
             } catch (error) {
                 console.warn(`Error processing game transactions for address ${commands[i].address}: ${(error as Error).message}`);
             }
         }
     }
 
-    async expireActions(): Promise<void> {
+    private async expireActions(): Promise<void> {
         // Look for expired actions
         const gameStates = await this.gameStateManagement.getAll();
         const gameStateAddresses = gameStates.map((gameState: IGameStateDocument) => gameState.address);

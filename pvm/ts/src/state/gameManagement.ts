@@ -4,14 +4,14 @@ import { ethers } from "ethers";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { IGameStateDocument, IJSONModel } from "../models/interfaces";
 import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { ContractSchemaManagement, getContractSchemaManagement } from "./contractSchemaManagement";
+import { getContractSchemaManagement } from "./contractSchemaManagement";
 import { Deck } from "../models";
 import { TexasHoldemGameState } from "../types";
-import { IGameManagement } from "./interfaces";
+import { IContractSchemaManagement, IGameManagement } from "./interfaces";
 
 export class GameManagement extends StateManager implements IGameManagement {
     private readonly mempool: Mempool;
-    private readonly contractSchemas: ContractSchemaManagement;
+    private readonly contractSchemas: IContractSchemaManagement;
 
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");

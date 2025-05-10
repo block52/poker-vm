@@ -1,11 +1,12 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
-import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
+import { ITransactionManagement } from "../state/interfaces";
+import { getTransactionInstance } from "../state/transactionManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class GetTransactionCommand implements ISignedCommand<Transaction> {
-    private readonly transactionManagement: TransactionManagement;
+    private readonly transactionManagement: ITransactionManagement;
     private readonly mempool: Mempool;
     private readonly hash: string;
 

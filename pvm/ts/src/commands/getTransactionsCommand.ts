@@ -1,11 +1,11 @@
 import { Transaction } from "../models";
-// import { TransactionList } from "../models/transactionList";
-import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
+import { ITransactionManagement } from "../state/interfaces";
+import { getTransactionInstance } from "../state/transactionManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class GetTransactionsCommand implements ISignedCommand<Transaction[]> {
-    private readonly transactionManagement: TransactionManagement;
+    private readonly transactionManagement: ITransactionManagement;
     private readonly count: number;
     private readonly blockHash: string;
 

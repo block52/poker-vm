@@ -2,7 +2,7 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Deck, Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/gameManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
 import { getContractSchemaManagement } from "../state/contractSchemaManagement";
@@ -88,7 +88,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                     signature: ethers.ZeroHash
                 };
 
-                await this.gameManagement.saveFromJSON(newGameJson);
+                await this.gameManagement.saveFromJSON(JSON.stringify(newGameJson));
 
                 // Create a transaction record for this action
                 const newGameTx: Transaction = await Transaction.create(
@@ -120,7 +120,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
 
             // Save the updated game state
             const updatedJson = game.toJson();
-            await this.gameManagement.saveFromJSON(updatedJson);
+            await this.gameManagement.saveFromJSON(JSON.stringify(updatedJson));
 
             // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern
             // of getting the next nonce from the account and validating it.
