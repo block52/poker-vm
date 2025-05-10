@@ -1,9 +1,9 @@
 import { StateManager } from "./stateManager";
 import ContractSchemas from "../schema/contractSchemas";
 import { GameOptions } from "@bitcoinbrisbane/block52";
+import { IContractSchemaManagement } from "./interfaces";
 
-export class ContractSchemaManagement extends StateManager {
-
+export class ContractSchemaManagement extends StateManager implements IContractSchemaManagement {
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
@@ -29,7 +29,7 @@ export class ContractSchemaManagement extends StateManager {
             maxPlayers: parseInt(args[3]),
             smallBlind: BigInt(args[4]),
             bigBlind: BigInt(args[5]),
-            timeout: parseInt(args[8]),
+            timeout: parseInt(args[8])
         };
 
         return options;
@@ -42,4 +42,4 @@ export const getContractSchemaManagement = (): ContractSchemaManagement => {
         instance = new ContractSchemaManagement();
     }
     return instance;
-}
+};

@@ -1,5 +1,7 @@
 import { Transaction } from "../models/transaction";
 import { Account } from "../models/account";
+import { Block } from "../models";
+import { GameOptions } from "@bitcoinbrisbane/block52";
 
 export interface IAccountManagement {
     createAccount(privateKey: string): Promise<Account>;
@@ -8,4 +10,35 @@ export interface IAccountManagement {
     decrementBalance(address: string, amount: bigint): Promise<void>;
     applyTransaction(tx: Transaction): Promise<void>;
     applyTransactions(txs: Transaction[]): Promise<void>;
+}
+
+export interface IBlockchainManagement {
+    addBlock(block: Block): Promise<void>;
+    getGenesisBlock(): Block;
+    getBlockHeight(): Promise<number>;
+    getLastBlock(): Promise<Block>;
+    getBlockByHash(hash: string): Promise<Block | null>;
+    getBlockByIndex(index: number): Promise<Block | null>;
+    getBlock(index: number): Promise<Block>;
+    getBlocks(count?: number): Promise<Block[]>;
+}
+
+export interface IContractSchemaManagement {
+    getGameOptions(address: string): Promise<GameOptions>;
+}
+
+export interface IGameManagement {
+    getAll(): Promise<any[]>;
+    get(address: string): Promise<any | null>;
+    create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string>;
+    update(address: string, state: any): Promise<void>;
+    delete(address: string): Promise<void>;
+}
+
+export interface ITransactionManagement {
+    getTransactions(blockHash: string, count?: number): Promise<Transaction[]>;
+    getTransaction(txid: string): Promise<Transaction | null>;
+    getTransactionByIndex(index: string): Promise<Transaction | null>;
+    getTransactionByData(data: string): Promise<Transaction | null>;
+    getTransactionsByAddress(address: string, count?: number): Promise<Transaction[]>;
 }

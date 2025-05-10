@@ -11,7 +11,7 @@ export class AccountManagement extends StateManager implements IAccountManagemen
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
 
-    async createAccount(privateKey: string): Promise<Account> {
+    public async createAccount(privateKey: string): Promise<Account> {
         const account = Account.create(privateKey);
 
         // If this account already exists, just return the existing account
@@ -23,7 +23,7 @@ export class AccountManagement extends StateManager implements IAccountManagemen
         return account;
     }
 
-    async getAccount(address: string): Promise<Account> {
+    public async getAccount(address: string): Promise<Account> {
         const account = await this._getAccount(address);
 
         if (!account) {
@@ -39,13 +39,13 @@ export class AccountManagement extends StateManager implements IAccountManagemen
     }
 
     // Helper functions
-    async getBalance(address: string): Promise<bigint> {
+    public async getBalance(address: string): Promise<bigint> {
         const account = await this.getAccount(address);
 
         return account.balance;
     }
 
-    async incrementBalance(address: string, amount: bigint): Promise<void> {
+    public async incrementBalance(address: string, amount: bigint): Promise<void> {
         if (amount < 0n) {
             // throw new Error("Balance must be positive");
             console.log("Balance must be positive");
@@ -100,7 +100,7 @@ export class AccountManagement extends StateManager implements IAccountManagemen
         }
     }
 
-    async applyTransaction(tx: Transaction): Promise<void> {
+    public async applyTransaction(tx: Transaction): Promise<void> {
         // Deduct from sender
         if (tx.from) {
             await this.decrementBalance(tx.from, tx.value);
@@ -112,7 +112,7 @@ export class AccountManagement extends StateManager implements IAccountManagemen
         }
     }
 
-    async applyTransactions(txs: Transaction[]): Promise<void> {
+    public async applyTransactions(txs: Transaction[]): Promise<void> {
         for (const tx of txs) {
             await this.applyTransaction(tx);
         }

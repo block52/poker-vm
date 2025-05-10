@@ -1,12 +1,13 @@
-import { Block, Transaction } from "../models/index";
+import { Block } from "../models/index";
 import Blocks from "../schema/blocks";
 import { StateManager } from "./stateManager";
 import GenesisBlock from "../data/genesisblock.json";
 import { IBlockDocument } from "../models/interfaces";
 import { AccountManagement } from "./accountManagement";
 import { TransactionManagement } from "./transactionManagement";
+import { IBlockchainManagement } from "./interfaces";
 
-export class BlockchainManagement extends StateManager {
+export class BlockchainManagement extends StateManager implements IBlockchainManagement {
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
@@ -35,8 +36,6 @@ export class BlockchainManagement extends StateManager {
         const blockDoc = block.toDocument();
         const newBlock = new Blocks(blockDoc);
         await newBlock.save();
-
-        // console.log(`Block saved with ${block.transactions.length} transactions`);
     }
 
     public getGenesisBlock(): Block {
@@ -78,6 +77,10 @@ export class BlockchainManagement extends StateManager {
             throw new Error("Block not found");
         }
         return Block.fromDocument(block);
+    }
+
+    public getBlockByIndex(index: number): Promise<Block | null> {
+        throw new Error("Method not implemented.");
     }
 
     public async getBlock(index: number): Promise<Block> {
