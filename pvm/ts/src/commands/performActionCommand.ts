@@ -79,14 +79,14 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         // Create a formatted transaction data string
         let txData: string;
 
-        // For JOIN actions, include seat number in the transaction data if available
+        // For JOIN actions, include only the seat number in the transaction data if available
         if (this.action === NonPlayerActionType.JOIN && this.data) {
-            // Format: "join,actionIndex,seatNumber"
-            txData = `${this.action},${this.index},${this.data}`;
-            console.log(`Creating JOIN transaction with data: ${txData}`);
+            // Just pass the seat number as data - no need to include action index
+            txData = this.data;
+            console.log(`Creating JOIN transaction with data (seat number): ${txData}`);
         } else {
-            // For all other actions, use standard format
-            txData = `${this.action},${this.index}`;
+            // For all other actions, no data is needed since index is already a separate parameter
+            txData = `${this.action}`;
         }
 
         // Create transaction with correct direction of funds flow
