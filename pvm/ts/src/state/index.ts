@@ -6,11 +6,14 @@ import { getGameManagementInstance } from "./gameManagement";
 import { IBlockchainManagement } from "./interfaces";
 import { getTransactionInstance } from "./transactionManagement";
 import { MongoDBBlockchainManagement } from "./mongodb/blockchainManagement";
+import { LevelDBBlockchainManagement } from "./leveldb/blockchainManagment";
 
 export { getAccountManagementInstance, getContractSchemaManagement, getGameManagementInstance, getTransactionInstance };
 
 export const getBlockchainInstance = (): IBlockchainManagement => {
-    const connString = process.env.DB_URL || "redis://localhost:6379";
+    let connString = process.env.DB_URL || "redis://localhost:6379";
+
+    connString = "leveldb://leveldb"; // For testing purposes, use LevelDB
 
     const dbType = connString.split(":")[0];
 
@@ -24,8 +27,9 @@ export const getBlockchainInstance = (): IBlockchainManagement => {
         return new MongoDBBlockchainManagement(connString);
     }
 
-    if (dbType === "rocksdb") {
-        throw new Error("RocksDB is not supported yet");
+    if (dbType === "leveldb") {
+        const instance = new LevelDBBlockchainManagement("./leveldb");
+        return instance;
     }
 
     throw new Error("Unsupported database type");

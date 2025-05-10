@@ -3,12 +3,12 @@ import Blocks from "../../schema/blocks";
 import { StateManager } from "../stateManager";
 import GenesisBlock from "../../data/genesisblock.json";
 import { IBlockDocument } from "../../models/interfaces";
-import { AccountManagement } from "../accountManagement";
+import { getAccountManagementInstance } from "../accountManagement";
 import { TransactionManagement } from "../transactionManagement";
 import { IBlockchainManagement } from "../interfaces";
 
 export class MongoDBBlockchainManagement extends StateManager implements IBlockchainManagement {
-    constructor(private readonly connString: string) {
+    constructor(readonly connString: string) {
         super(connString);
     }
 
@@ -24,7 +24,7 @@ export class MongoDBBlockchainManagement extends StateManager implements IBlockc
 
         // First update account balances if there are transactions
         if (block.transactions && block.transactions.length > 0) {
-            const accountManagement = new AccountManagement();
+            const accountManagement = getAccountManagementInstance();
             await accountManagement.applyTransactions(block.transactions);
 
             // Add transactions to transaction management
