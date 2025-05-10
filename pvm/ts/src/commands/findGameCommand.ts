@@ -2,9 +2,10 @@ import { GameManagement } from "../state/gameManagement";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { GameOptionsResponse } from "@bitcoinbrisbane/block52";
+import { IGameManagement } from "../state/interfaces";
 
 export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[]> {
-    private readonly gameManagement: GameManagement;
+    private readonly gameManagement: IGameManagement;
     private readonly sb?: bigint;
     private readonly bb?: bigint;
 

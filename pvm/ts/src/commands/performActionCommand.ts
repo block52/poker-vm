@@ -2,16 +2,17 @@ import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52"
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/gameManagement";
 import contractSchemas from "../schema/contractSchemas";
-import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
+import { getContractSchemaManagement } from "../state/contractSchemaManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { OrderedTransaction } from "../engine/types";
+import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<Transaction>> {
-    private readonly gameManagement: GameManagement;
-    private readonly contractSchemas: ContractSchemaManagement;
+    private readonly gameManagement: IGameManagement;
+    private readonly contractSchemas: IContractSchemaManagement;
     private readonly mempool: Mempool;
 
     constructor(
