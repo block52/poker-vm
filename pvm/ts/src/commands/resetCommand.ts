@@ -4,7 +4,7 @@ import Blocks from "../schema/blocks";
 import Transactions from "../schema/transactions";
 import GameState from "../schema/gameState";
 import { ICommand } from "./interfaces";
-import { getBlockchainInstance } from "../state/blockchainManagement";
+import { getBlockchainInstance } from "../state/index";
 import { getMempoolInstance } from "../core/mempool";
 import { getServerInstance } from "../core/server";
 import { Bridge } from "../core/bridge";

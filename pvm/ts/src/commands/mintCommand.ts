@@ -6,7 +6,7 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { NativeToken } from "../models/nativeToken";
 import { createProvider } from "../core/provider";
 import { CONTRACT_ADDRESSES } from "../core/constants";
-import { getTransactionInstance } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/index";
 import { ITransactionManagement } from "../state/interfaces";
 
 export class MintCommand implements ISignedCommand<Transaction> {

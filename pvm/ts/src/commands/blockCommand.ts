@@ -1,5 +1,5 @@
 import { Block, Transaction } from "../models";
-import { getBlockchainInstance } from "../state/blockchainManagement";
+import { getBlockchainInstance } from "../state/index";
 import { IBlockchainManagement, ITransactionManagement } from "../state/interfaces";
 import { getTransactionInstance } from "../state/transactionManagement";
 import { signResult } from "./abstractSignedCommand";

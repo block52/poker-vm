@@ -1,4 +1,4 @@
-import { getAccountManagementInstance } from "../state/accountManagement";
+import { getAccountManagementInstance } from "../state/index";
 import { IAccountManagement } from "../state/interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";

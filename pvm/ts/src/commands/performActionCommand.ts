@@ -2,9 +2,9 @@ import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52"
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/index";
 import contractSchemas from "../schema/contractSchemas";
-import { getContractSchemaManagement } from "../state/contractSchemaManagement";
+import { getContractSchemaManagement } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { OrderedTransaction } from "../engine/types";

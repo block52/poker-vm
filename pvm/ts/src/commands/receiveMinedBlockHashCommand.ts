@@ -1,7 +1,7 @@
 import { BlockDTO, NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { getBlockchainInstance } from "../state/blockchainManagement";
+import { getBlockchainInstance } from "../state/index";
 import { Block } from "../models";
 import { IBlockchainManagement } from "../state/interfaces";
 
