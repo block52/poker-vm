@@ -1,7 +1,7 @@
 import { PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { GameManagement } from "../state/gameManagement";
+import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { getContractSchemaManagement } from "../state/index";
@@ -16,7 +16,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
     // This will be shared secret later
     constructor(readonly address: string, private readonly privateKey: string, private readonly caller?: string | undefined) {
-        this.gameManagement = new GameManagement();
+        this.gameManagement = getGameManagementInstance();
         this.mempool = getMempoolInstance();
         this.contractSchemaManagement = getContractSchemaManagement();
     }

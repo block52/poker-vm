@@ -1,11 +1,11 @@
 import Redis from "ioredis";
-import { RedisBlockchainManagement } from "../data/redis";
+import { RedisBlockchainManagement } from "./redis/redisBlockchainManagement";
 import { getAccountManagementInstance } from "./accountManagement";
 import { getContractSchemaManagement } from "./contractSchemaManagement";
 import { getGameManagementInstance } from "./gameManagement";
 import { IBlockchainManagement } from "./interfaces";
 import { getTransactionInstance } from "./transactionManagement";
-import { BlockchainManagement } from "./blockchainManagement";
+import { mongoBlockchainInstance } from "./blockchainManagement";
 
 export { getAccountManagementInstance, getContractSchemaManagement, getGameManagementInstance, getTransactionInstance };
 
@@ -21,7 +21,7 @@ export const getBlockchainInstance = (): IBlockchainManagement => {
     }
 
     if (dbType === "mongodb") {
-        return new BlockchainManagement();
+        return mongoBlockchainInstance()
     }
 
     if (dbType === "rocksdb") {

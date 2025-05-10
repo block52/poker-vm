@@ -1,7 +1,7 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block, Transaction } from "../models";
 import { getBlockchainInstance } from "../state/index";
-import { GameManagement } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/gameManagement";
 import { getTransactionInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
@@ -25,7 +25,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
         this.mempool = getMempoolInstance();
         this.blockchainManagement = getBlockchainInstance();
         this.transactionManagement = getTransactionInstance();
-        this.gameStateManagement = new GameManagement();
+        this.gameStateManagement = getGameManagementInstance();
         this.contractSchemaManagement = getContractSchemaManagement();
     }
 

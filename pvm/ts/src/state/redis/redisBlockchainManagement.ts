@@ -1,6 +1,6 @@
 import { Redis } from "ioredis";
-import { Block } from "../models/block";
-import { IBlockchainManagement } from "../state/interfaces";
+import { Block } from "../../models/block";
+import { IBlockchainManagement } from "../interfaces";
 import { ethers } from "ethers";
 
 export class RedisBlockchainManagement implements IBlockchainManagement {

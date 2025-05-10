@@ -108,7 +108,7 @@ export class BlockchainManagement extends StateManager implements IBlockchainMan
 }
 
 let instance: BlockchainManagement;
-export const getBlockchainInstance = (): IBlockchainManagement => {
+export const mongoBlockchainInstance = (): IBlockchainManagement => {
     if (!instance) {
         instance = new BlockchainManagement();
     }
