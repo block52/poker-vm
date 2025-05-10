@@ -20,7 +20,7 @@ export interface IClient {
     getTransactions(): Promise<TransactionDTO[]>;
     mint(address: string, amount: string, transactionId: string): Promise<void>;
     newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
-    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any>;
+    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<any>;
     playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
     playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
     sendBlock(blockHash: string, block: string): Promise<void>;
@@ -310,18 +310,21 @@ export class NodeRpcClient implements IClient {
     }
 
     /**
-     * Create a new account on the remote node
+     * Join a Texas Holdem game
      * @param gameAddress The address of the game
-     * @returns A Promise that resolves to the address of the new account
+     * @param amount The amount to join with
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
      */
-    public async playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
+    public async playerJoin(gameAddress: string, amount: bigint, nonce?: number, data?: any): Promise<any> {
         const address = this.getAddress();
         const signature = await this.getSignature(nonce);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, signature]
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, data],
+            signature: signature
         });
 
         return body.result.data;
