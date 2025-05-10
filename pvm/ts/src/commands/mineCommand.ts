@@ -1,8 +1,7 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block, Transaction } from "../models";
-import { getBlockchainInstance } from "../state/index";
 import { getGameManagementInstance } from "../state/gameManagement";
-import { getTransactionInstance } from "../state/index";
+import { getBlockchainInstance, getTransactionInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import contractSchemas from "../schema/contractSchemas";

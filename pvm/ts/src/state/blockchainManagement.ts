@@ -8,8 +8,8 @@ import { TransactionManagement } from "./transactionManagement";
 import { IBlockchainManagement } from "./interfaces";
 
 export class BlockchainManagement extends StateManager implements IBlockchainManagement {
-    constructor() {
-        super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
+    constructor(private readonly connString: string) {
+        super(connString);
     }
 
     public async addBlock(block: Block): Promise<void> {
@@ -107,10 +107,10 @@ export class BlockchainManagement extends StateManager implements IBlockchainMan
     }
 }
 
-let instance: BlockchainManagement;
-export const mongoBlockchainInstance = (): IBlockchainManagement => {
-    if (!instance) {
-        instance = new BlockchainManagement();
-    }
-    return instance;
-};
+// let instance: BlockchainManagement;
+// export const mongoBlockchainInstance = (): IBlockchainManagement => {
+//     if (!instance) {
+//         instance = new BlockchainManagement();
+//     }
+//     return instance;
+// };

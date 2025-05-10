@@ -12,7 +12,7 @@ describe.skip("BlockCommand", () => {
     let mockBlockchainManagement: jest.Mocked<BlockchainManagement>;
 
     beforeEach(() => {
-        mockBlockchainManagement = new BlockchainManagement() as jest.Mocked<BlockchainManagement>;
+        mockBlockchainManagement = new BlockchainManagement("") as jest.Mocked<BlockchainManagement>;
         (BlockchainManagement as jest.Mock).mockImplementation(() => mockBlockchainManagement);
     });
 
