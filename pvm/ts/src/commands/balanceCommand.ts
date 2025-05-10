@@ -3,7 +3,7 @@ import { IAccountManagement } from "../state/interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class BalanceCommand implements ISignedCommand<BigInt> {
+export class BalanceCommand implements ISignedCommand<bigint> {
     private readonly accountManagement: IAccountManagement;
     private readonly address: string;
 
@@ -13,7 +13,7 @@ export class BalanceCommand implements ISignedCommand<BigInt> {
         this.privateKey = privateKey;
     }
 
-    public async execute(): Promise<ISignedResponse<BigInt>> {
+    public async execute(): Promise<ISignedResponse<bigint>> {
         const account = await this.accountManagement.getAccount(this.address);
         return signResult(account.balance, this.privateKey);
     }
