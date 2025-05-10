@@ -401,15 +401,16 @@ async function postSmallBlind(contractAddress, player, smallBlindAmount, actionI
   try {
     const timestamp = Date.now();
     
-    // Based on proxy/js/src/index.js structure:
-    // [from, to, action, amount, nonce, index]
+    // Based on the correct format: [from, to, action, amount, nonce, index, data]
+    // index should be just the action index (number) and data is an optional 7th parameter
     const params = [
       player.address,                 // from
       contractAddress,                // to
-      PlayerActionType.SMALL_BLIND,   // action - FIXED: use the correct PlayerActionType
+      PlayerActionType.SMALL_BLIND,   // action
       smallBlindAmount.toString(),    // amount
       timestamp.toString(),           // nonce
-      [actionIndex, player.seat]      // index - FIXED: use array format with [actionIndex, seat]
+      actionIndex,                    // index - FIXED: just use the action index number
+      ""                              // data - optional parameter, empty for small blind
     ];
     
     log(chalk.yellow("Sending RPC call to post small blind:"));

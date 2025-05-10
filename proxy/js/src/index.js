@@ -230,17 +230,18 @@ app.post("/table/:tableId/post_small_blind", async (req, res) => {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
 
-        // Format the RPC call to match the PERFORM_ACTION structure
+        // Format the RPC call to match the PERFORM_ACTION structure with 7 parameters
         const rpcCall = {
             id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.body.userAddress, // from
-                req.params.tableId, // to (using the tableId from URL params)
-                PlayerActionType.SMALL_BLIND, // action
-                req.body.amount || req.body.smallBlindAmount || "0", // amount (use amount or smallBlindAmount)
-                timestampNonce, // nonce - using timestamp for uniqueness
-                req.body.index // data/index - use the provided index
+                req.body.userAddress,                               // from (1)
+                req.params.tableId,                                 // to (2)
+                PlayerActionType.SMALL_BLIND,                       // action (3)
+                req.body.amount || req.body.smallBlindAmount || "0", // amount (4)
+                timestampNonce,                                      // nonce (5)
+                req.body.index,                                      // index (6)
+                ""                                                   // data (7) - empty for small blind
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
@@ -282,17 +283,18 @@ app.post("/table/:tableId/post_big_blind", async (req, res) => {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
 
-        // Format the RPC call to match the PERFORM_ACTION structure
+        // Format the RPC call to match the PERFORM_ACTION structure with 7 parameters
         const rpcCall = {
             id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.body.userAddress, // from
-                req.params.tableId, // to (using the tableId from URL params)
-                PlayerActionType.BIG_BLIND, // action
-                req.body.amount || req.body.bigBlindAmount || "0", // amount (use amount or bigBlindAmount)
-                timestampNonce, // nonce - using timestamp for uniqueness
-                req.body.index // data/index - use the provided index
+                req.body.userAddress,                             // from (1)
+                req.params.tableId,                               // to (2)
+                PlayerActionType.BIG_BLIND,                       // action (3)
+                req.body.amount || req.body.bigBlindAmount || "0", // amount (4)
+                timestampNonce,                                    // nonce (5)
+                req.body.index,                                    // index (6)
+                ""                                                 // data (7) - empty for big blind
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
