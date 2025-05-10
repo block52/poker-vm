@@ -7,8 +7,8 @@ import { StateManager } from "./stateManager";
 import { IAccountManagement } from "./interfaces";
 
 export class AccountManagement extends StateManager implements IAccountManagement {
-    constructor() {
-        super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
+    constructor(private readonly connString: string) {
+        super(connString);
     }
 
     public async createAccount(privateKey: string): Promise<Account> {
@@ -121,8 +121,9 @@ export class AccountManagement extends StateManager implements IAccountManagemen
 
 let instance: AccountManagement;
 export const getAccountManagementInstance = (): IAccountManagement => {
+    const connString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
     if (!instance) {
-        instance = new AccountManagement();
+        instance = new AccountManagement(connString);
     }
     return instance;
 };
