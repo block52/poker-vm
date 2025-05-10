@@ -172,9 +172,9 @@ app.post("/table/:tableId/join", async (req, res) => {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
         
-        // Create the combined array of [actionIndex, seatNumber] just like in test-game.js
+        // Create the combined string format of "actionIndex,seatNumber" just like in test-game.js
         const indexData = req.body.seatNumber !== undefined ? 
-            [req.body.actionIndex || 0, req.body.seatNumber] : 
+            `${req.body.actionIndex || 0},${req.body.seatNumber}` : 
             req.body.actionIndex || 0;
             
         console.log("Using index data format:", indexData);
@@ -189,7 +189,7 @@ app.post("/table/:tableId/join", async (req, res) => {
                 NonPlayerActionType.JOIN, // action - using the imported constant
                 req.body.buyInAmount, // amount
                 timestampNonce, // nonce - using timestamp for uniqueness
-                indexData // Combined [actionIndex, seatNumber] OR just actionIndex if no seat
+                indexData // "actionIndex,seatNumber" as string OR just actionIndex if no seat
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
