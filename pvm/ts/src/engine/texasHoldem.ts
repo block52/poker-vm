@@ -916,9 +916,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const activePlayers = this.findActivePlayers();
         const activePlayerCount = activePlayers.length;
 
-        if (activePlayerCount < this._gameOptions.minPlayers) {
-            throw new Error("Not enough active players to reinitialize the game.");
-        }
+        // if (activePlayerCount < this._gameOptions.minPlayers) {
+        //     throw new Error("Not enough active players to reinitialize the game.");
+        // }
 
         // Heads up
         if (activePlayerCount === 2) {
