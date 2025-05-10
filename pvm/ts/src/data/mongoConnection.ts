@@ -2,22 +2,21 @@ import mongoose from "mongoose";
 
 import { IDB } from "./interfaces";
 
-class DatabaseConnection implements IDB {
-    private static instance: DatabaseConnection;
+class MongoDatabaseConnection implements IDB {
+    private static instance: MongoDatabaseConnection;
     private isConnected: boolean = false;
 
     private constructor() {}
 
-    public static getInstance(): DatabaseConnection {
-        if (!DatabaseConnection.instance) {
-            DatabaseConnection.instance = new DatabaseConnection();
+    public static getInstance(): MongoDatabaseConnection {
+        if (!MongoDatabaseConnection.instance) {
+            MongoDatabaseConnection.instance = new MongoDatabaseConnection();
         }
-        return DatabaseConnection.instance;
+        return MongoDatabaseConnection.instance;
     }
 
     public async connect(uri: string = "mongodb://localhost:27017/pvm"): Promise<void> {
         if (this.isConnected) {
-            // console.log("Using existing database connection");
             return;
         }
 
@@ -62,4 +61,4 @@ class DatabaseConnection implements IDB {
     }
 }
 
-export const connectDB = DatabaseConnection.getInstance();
+export const connectDB = MongoDatabaseConnection.getInstance();

@@ -2,17 +2,18 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Deck, Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { GameManagement, getGameManagementInstance } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/gameManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
-import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
-import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { getContractSchemaManagement } from "../state/index";
+import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { TexasHoldemGameState } from "../types";
 import { ethers } from "ethers";
+import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
 export class NewCommand implements ICommand<ISignedResponse<any>> {
-    private readonly gameManagement: GameManagement;
-    private readonly contractSchemas: ContractSchemaManagement;
+    private readonly gameManagement: IGameManagement;
+    private readonly contractSchemas: IContractSchemaManagement;
     private readonly mempool: Mempool;
     private readonly seed: number[];
 
@@ -43,10 +44,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                 throw new Error(`Address ${this.address} is not a valid game contract`);
             }
 
-            const [json, gameOptions] = await Promise.all([
-                this.gameManagement.get(this.address),
-                this.contractSchemas.getGameOptions(this.address)
-            ]);
+            const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.address), this.contractSchemas.getGameOptions(this.address)]);
 
             if (!gameOptions) {
                 throw new Error(`Game options not found for address ${this.address}`);
@@ -55,11 +53,11 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
             // Create new game if it doesn't exist
             if (!json) {
                 console.log(`Creating new game for address: ${this.address}`);
-                
-                // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern 
+
+                // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern
                 // of getting the next nonce from the account and validating it.
                 const timestampNonce = BigInt(Date.now());
-                
+
                 const address = await this.gameManagement.create(
                     timestampNonce, // Using timestamp as nonce instead of 0n
                     this.address,
@@ -90,8 +88,8 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                     signature: ethers.ZeroHash
                 };
 
-                await this.gameManagement.saveFromJSON(newGameJson);
-                
+                await this.gameManagement.saveFromJSON(JSON.stringify(newGameJson));
+
                 // Create a transaction record for this action
                 const newGameTx: Transaction = await Transaction.create(
                     this.address,
@@ -122,7 +120,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
 
             // Save the updated game state
             const updatedJson = game.toJson();
-            await this.gameManagement.saveFromJSON(updatedJson);
+            await this.gameManagement.saveFromJSON(JSON.stringify(updatedJson));
 
             // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern
             // of getting the next nonce from the account and validating it.
@@ -133,9 +131,9 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                 this.address,
                 "",
                 0n, // No value transfer
-                timestampNonce, 
+                timestampNonce,
                 this.privateKey,
-                `next,${deck.toString()}` // 
+                `next,${deck.toString()}` //
             );
 
             // Add the transaction to the mempool
@@ -143,7 +141,6 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
 
             // Return the signed transaction like in TransferCommand
             return signResult(dealTx, this.privateKey);
-
         } catch (e) {
             console.error(`Error in deal command:`, e);
             throw new Error("Error dealing cards");

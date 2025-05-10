@@ -4,13 +4,14 @@ import { IAccountDocument } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
 import { CONTRACT_ADDRESSES } from "../core/constants";
 import { StateManager } from "./stateManager";
+import { IAccountManagement } from "./interfaces";
 
-export class AccountManagement extends StateManager {
+export class AccountManagement extends StateManager implements IAccountManagement {
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
 
-    async createAccount(privateKey: string): Promise<Account> {
+    public async createAccount(privateKey: string): Promise<Account> {
         const account = Account.create(privateKey);
 
         // If this account already exists, just return the existing account
@@ -22,7 +23,7 @@ export class AccountManagement extends StateManager {
         return account;
     }
 
-    async getAccount(address: string): Promise<Account> {
+    public async getAccount(address: string): Promise<Account> {
         const account = await this._getAccount(address);
 
         if (!account) {
@@ -32,19 +33,19 @@ export class AccountManagement extends StateManager {
         return Account.fromDocument(account);
     }
 
-    async _getAccount(address: string): Promise<IAccountDocument | null> {
+    private async _getAccount(address: string): Promise<IAccountDocument | null> {
         await this.connect();
         return await Accounts.findOne({ address });
     }
 
     // Helper functions
-    async getBalance(address: string): Promise<bigint> {
+    public async getBalance(address: string): Promise<bigint> {
         const account = await this.getAccount(address);
 
         return account.balance;
     }
 
-    async incrementBalance(address: string, amount: bigint): Promise<void> {
+    public async incrementBalance(address: string, amount: bigint): Promise<void> {
         if (amount < 0n) {
             // throw new Error("Balance must be positive");
             console.log("Balance must be positive");
@@ -67,10 +68,7 @@ export class AccountManagement extends StateManager {
                 }
 
                 balance += amount;
-                await Accounts.updateOne(
-                    { address }, 
-                    { $set: { balance: balance.toString() } }
-                );
+                await Accounts.updateOne({ address }, { $set: { balance: balance.toString() } });
             }
         }
     }
@@ -102,7 +100,7 @@ export class AccountManagement extends StateManager {
         }
     }
 
-    async applyTransaction(tx: Transaction) {
+    public async applyTransaction(tx: Transaction): Promise<void> {
         // Deduct from sender
         if (tx.from) {
             await this.decrementBalance(tx.from, tx.value);
@@ -114,7 +112,7 @@ export class AccountManagement extends StateManager {
         }
     }
 
-    async applyTransactions(txs: Transaction[]): Promise<void> {
+    public async applyTransactions(txs: Transaction[]): Promise<void> {
         for (const tx of txs) {
             await this.applyTransaction(tx);
         }
@@ -122,9 +120,9 @@ export class AccountManagement extends StateManager {
 }
 
 let instance: AccountManagement;
-export const getAccountManagementInstance = (): AccountManagement => {
-  if (!instance) {
-    instance = new AccountManagement();
-  }
-  return instance;
-}
+export const getAccountManagementInstance = (): IAccountManagement => {
+    if (!instance) {
+        instance = new AccountManagement();
+    }
+    return instance;
+};

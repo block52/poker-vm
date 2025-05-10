@@ -1,13 +1,14 @@
 
 import { Block } from "../models/block";
-import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
+import { getBlockchainInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/index";
+import { IBlockchainManagement, ITransactionManagement } from "../state/interfaces";
 
 export class GetBlocksCommand implements ISignedCommand<Block[]> {
-    private readonly blockchainManagement: BlockchainManagement;
-    private readonly transactionManagement: TransactionManagement;
+    private readonly blockchainManagement: IBlockchainManagement;
+    private readonly transactionManagement: ITransactionManagement;
 
     constructor(
         private readonly count: number = 100,

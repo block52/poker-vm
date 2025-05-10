@@ -1,10 +1,11 @@
 import { Account } from "../models/account";
-import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
+import { getAccountManagementInstance } from "../state/index";
+import { IAccountManagement } from "../state/interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class CreateAccountCommand implements ISignedCommand<Account> {
-    private readonly accountManagement: AccountManagement;
+    private readonly accountManagement: IAccountManagement;
 
     constructor(private readonly privateKey: string) {
         this.accountManagement = getAccountManagementInstance();

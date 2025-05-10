@@ -1,4 +1,4 @@
-import { ethers, JsonRpcProvider, Contract, InterfaceAbi, ZeroAddress } from "ethers";
+import { ethers, JsonRpcProvider, Contract, InterfaceAbi } from "ethers";
 import { getMempoolInstance } from "../core/mempool";
 import { Transaction, BurnResponse, NativeToken } from "../models";
 import accounts from "../schema/accounts";

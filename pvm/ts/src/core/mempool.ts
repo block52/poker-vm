@@ -1,10 +1,11 @@
 import { Transaction } from "../models/transaction";
 import Blocks from "../schema/blocks";
-import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
+import { ITransactionManagement } from "../state/interfaces";
+import { getTransactionInstance } from "../state/transactionManagement";
 
 export class Mempool {
     private readonly txMap = new Map<string, Transaction>();
-    private readonly transactionManagement: TransactionManagement;
+    private readonly transactionManagement: ITransactionManagement;
 
     constructor(readonly maxSize: number = 100) {
         this.transactionManagement = getTransactionInstance();

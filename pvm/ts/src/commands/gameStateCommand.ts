@@ -4,14 +4,15 @@ import TexasHoldemGame from "../engine/texasHoldem";
 import { GameManagement } from "../state/gameManagement";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
+import { getContractSchemaManagement } from "../state/index";
 import { Transaction } from "../models";
 import { OrderedTransaction } from "../engine/types";
+import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
-    private readonly gameManagement: GameManagement;
+    private readonly gameManagement: IGameManagement;
     private readonly mempool: Mempool;
-    private readonly contractSchemaManagement: ContractSchemaManagement;
+    private readonly contractSchemaManagement: IContractSchemaManagement;
 
     // This will be shared secret later
     constructor(readonly address: string, private readonly privateKey: string, private readonly caller?: string | undefined) {
