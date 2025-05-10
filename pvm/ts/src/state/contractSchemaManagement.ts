@@ -37,7 +37,7 @@ export class ContractSchemaManagement extends StateManager implements IContractS
 }
 
 let instance: ContractSchemaManagement;
-export const getContractSchemaManagement = (): ContractSchemaManagement => {
+export const getContractSchemaManagement = (): IContractSchemaManagement => {
     if (!instance) {
         instance = new ContractSchemaManagement();
     }

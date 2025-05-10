@@ -120,7 +120,7 @@ export class AccountManagement extends StateManager implements IAccountManagemen
 }
 
 let instance: AccountManagement;
-export const getAccountManagementInstance = (): AccountManagement => {
+export const getAccountManagementInstance = (): IAccountManagement => {
     if (!instance) {
         instance = new AccountManagement();
     }
