@@ -22,13 +22,16 @@ const {
   ONE_THOUSAND_TOKENS,
   gameOptions,
   defaultPositions,
-  baseGameConfig
+  baseGameConfig,
+  TEN_TOKENS
 } = testConstants;
 
 // Configure CLI options
 program
   .option("-u, --url <url>", "RPC URL", "http://localhost:3000")
   .option("-w, --wait <seconds>", "Wait time for mining (seconds)", "30")
+  .option("-p, --players <number>", "Number of players to join (2 or 3)", "2") // Default to 2 players
+  .option("-s, --seats <seats>", "Comma-separated seat numbers for each player (e.g. '1,3,5')")
   .parse(process.argv);
 
 const options = program.opts();
@@ -36,6 +39,23 @@ const options = program.opts();
 // Configuration
 const RPC_URL = options.url;
 const WAIT_TIME = parseInt(options.wait, 10) * 1000;
+const NUM_PLAYERS = parseInt(options.players, 10);
+
+// Validate number of players
+if (NUM_PLAYERS < 2 || NUM_PLAYERS > 3) {
+  console.error(chalk.red("Error: Number of players must be 2 or 3"));
+  process.exit(1);
+}
+
+// Parse seat assignments if provided
+let SEAT_ASSIGNMENTS = [];
+if (options.seats) {
+  SEAT_ASSIGNMENTS = options.seats.split(",").map(seat => parseInt(seat.trim(), 10));
+  if (SEAT_ASSIGNMENTS.length < NUM_PLAYERS) {
+    console.error(chalk.red(`Error: Not enough seat numbers provided. Expected ${NUM_PLAYERS}, got ${SEAT_ASSIGNMENTS.length}`));
+    process.exit(1);
+  }
+}
 
 // Get private keys from environment variables
 const PRIVATE_KEYS = [
@@ -44,14 +64,16 @@ const PRIVATE_KEYS = [
   process.env.PRIVATE_KEY_HAMISH || process.env.PRIVATE_KEY_3 || "0xadea8f03e50b0d096352d294507eafe1e9d73f40de7db67837c41fd2cc71d8fa"
 ];
 
-// Derive addresses from private keys
-const PLAYERS = PRIVATE_KEYS.map((privateKey, index) => {
+// Derive addresses from private keys - only use the number of players specified
+const PLAYER_NAMES = ["Dan", "Tracey", "Hamish"];
+const PLAYERS = PRIVATE_KEYS.slice(0, NUM_PLAYERS).map((privateKey, index) => {
   const wallet = new Wallet(privateKey);
-  const name = ["Dan", "Tracey", "Hamish"][index];
+  const name = PLAYER_NAMES[index];
   return {
     name,
     privateKey,
-    address: wallet.address
+    address: wallet.address,
+    wallet
   };
 });
 
@@ -244,14 +266,21 @@ async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
     // Format parameters according to: [from, to, action, amount, nonce, index, data]
     const timestamp = Date.now();
     
-    // Assign specific seat numbers based on player name
+    // Assign specific seat numbers based on player name or index
     let seatNumber;
-    if (player.name === "Dan") {
-      seatNumber = 1;
-    } else if (player.name === "Tracey") {
-      seatNumber = 2;
-    } else if (player.name === "Hamish") {
-      seatNumber = 3;
+    if (SEAT_ASSIGNMENTS.length > 0) {
+      // Use provided seat assignments
+      const playerIndex = PLAYERS.findIndex(p => p.name === player.name);
+      seatNumber = SEAT_ASSIGNMENTS[playerIndex];
+    } else {
+      // Default seat numbers
+      if (player.name === "Dan") {
+        seatNumber = 1;
+      } else if (player.name === "Tracey") {
+        seatNumber = 2;
+      } else if (player.name === "Hamish") {
+        seatNumber = 3;
+      }
     }
     
     // Log the seat number and action index assignment
@@ -275,17 +304,14 @@ async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
     log(chalk.cyan(`Parameters: ${JSON.stringify(params, null, 2)}`));
     log(chalk.cyan(`Using private key for: ${player.name}`));
     
-    // Implement the actual RPC call to join the table with the player's private key for signing
+    // Send the RPC call
     const result = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
-    
-    success(`Player ${player.name} successfully joined table ${contractAddress} at seat ${seatNumber} with action index ${actionIndex}`);
-    log(chalk.cyan("Join response:"));
-    console.log(JSON.stringify(result, null, 2));
-    
+    success(`Player ${player.name} joined successfully at seat ${seatNumber}`);
     return result;
   } catch (err) {
     error(`Failed to join table: ${err.message}`);
-    return null;
+    console.error(err);
+    process.exit(1);
   }
 }
 
@@ -394,7 +420,7 @@ async function analyzeGameState(gameState) {
   log(chalk.green(`=== END ANALYSIS ===\n`));
 }
 
-// Post small blind for a player
+// Post small blind
 async function postSmallBlind(contractAddress, player, smallBlindAmount, actionIndex) {
   info(`Player ${player.name} (${player.address}) posting small blind ${smallBlindAmount.toString()} tokens`);
   
@@ -409,29 +435,23 @@ async function postSmallBlind(contractAddress, player, smallBlindAmount, actionI
       PlayerActionType.SMALL_BLIND,   // action
       smallBlindAmount.toString(),    // amount
       timestamp.toString(),           // nonce
-      actionIndex,                    // index - FIXED: just use the action index number
-      ""                              // data - optional parameter, empty for small blind
+      actionIndex,                    // index - IMPORTANT: Must match the expected action index (1 for small blind)
+      ""                              // data - empty string as no additional data is needed
     ];
     
+    // Log the RPC call parameters 
     log(chalk.yellow("Sending RPC call to post small blind:"));
     log(chalk.cyan(`Method: ${RPCMethods.PERFORM_ACTION}`));
     log(chalk.cyan(`Parameters: ${JSON.stringify(params, null, 2)}`));
-    log(chalk.cyan(`Using private key for: ${player.name}`));
     
-    const response = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
-    
-    if (response.result) {
-      success(`Player ${player.name} successfully posted small blind of ${smallBlindAmount}`);
-      log(chalk.green(`Small blind response:`));
-      log(response.result);
-      return response.result;
-    } else if (response.error) {
-      error(`Failed to post small blind: ${response.error.message}`);
-      return null;
-    }
+    // Send the RPC call
+    const result = await rpcCall(RPCMethods.PERFORM_ACTION, params, player.privateKey);
+    success(`Player ${player.name} posted small blind successfully`);
+    return result;
   } catch (err) {
-    error(`Error posting small blind: ${err.message}`);
-    return null;
+    error(`Failed to post small blind: ${err.message}`);
+    console.error(err);
+    process.exit(1);
   }
 }
 
@@ -447,115 +467,67 @@ async function runTest() {
     // Step 3: Print player details
     printPlayerDetails();
     
-    // Step 4: Print the constants from testConstants.ts
-    log(chalk.yellow("\nConstants from testConstants.ts:"));
-    console.log(`ONE_TOKEN: ${ONE_TOKEN.toString()}`);
-    console.log(`TWO_TOKENS: ${TWO_TOKENS.toString()}`);
-    console.log(`ONE_HUNDRED_TOKENS: ${ONE_HUNDRED_TOKENS.toString()}`);
-    console.log(`ONE_THOUSAND_TOKENS: ${ONE_THOUSAND_TOKENS.toString()}`);
-    console.log("\nGame Options:");
-    console.log(JSON.stringify(gameOptions, (key, value) => 
-      typeof value === "bigint" ? value.toString() : value, 2
-    ));
+    // Print test configuration
+    log(chalk.yellow("\nTest Configuration:"));
+    log(chalk.cyan(`Number of players: ${NUM_PLAYERS}`));
+    if (SEAT_ASSIGNMENTS.length > 0) {
+      log(chalk.cyan(`Seat assignments: ${SEAT_ASSIGNMENTS.join(', ')}`));
+    } else {
+      log(chalk.cyan("Seat assignments: Default (1, 2, 3)"));
+    }
+    log(chalk.cyan(`RPC URL: ${RPC_URL}`));
+    log(chalk.cyan(`Wait time: ${WAIT_TIME/1000} seconds`));
     
-    // Step 5: Create contract schema with the specific table ID
+    // Step 4: Create a new contract
+    log(chalk.yellow("\nCreating new game contract..."));
     const contractAddress = await createContractSchema();
+    log(chalk.green(`Contract created at address: ${contractAddress}`));
     
-    // Wait a bit for the contract creation to be mined
-    log(chalk.yellow("\nWaiting for the contract creation to be mined..."));
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Step 5: Players join the table
+    log(chalk.yellow("\nPlayers joining the table..."));
     
-    // Step 6: Check player balances first
-    // Track action index for sequential actions
-    let currentActionIndex = 0; // Start with action index 0
+    // Only use the first NUM_PLAYERS players
+    const activePlayers = PLAYERS.slice(0, NUM_PLAYERS);
     
-    for (const player of PLAYERS) {
-      log(chalk.yellow(`\nChecking balance for ${player.name} before joining...`));
-      const balance = await getAccountBalance(player.address);
-      log(chalk.cyan(`${player.name}'s balance: ${balance}`));
+    // Join players to the table
+    const buyInAmount = BigInt(TEN_TOKENS);
+    for (let i = 0; i < activePlayers.length; i++) {
+      await joinTable(contractAddress, activePlayers[i], buyInAmount, i);
       
-      // Convert balance to BigInt for comparison
-      const balanceBigInt = BigInt(balance || "0");
+      // Wait for mining to complete after each join
+      await waitForMining();
       
-      // Set buy-in amount to 1 ETH (less than the minimum game buy-in, just for testing)
-      // The min buy-in is probably 100 ETH (100000000000000000000)
-      // So we'll try a much smaller amount like 1 ETH
-      const buyInAmount = BigInt("1000000000000000000"); // 1 ETH
-      
-      // Only try to join if player has sufficient balance
-      if (balanceBigInt >= buyInAmount) {
-        log(chalk.green(`${player.name} has sufficient funds to join with 1 ETH!`));
-        
-        // Use sequential action indices for each player
-        await joinTable(contractAddress, player, buyInAmount, currentActionIndex);
-        
-        // Increment action index for the next player
-        currentActionIndex++;
-      } else {
-        log(chalk.red(`${player.name} doesn't have enough funds to join. Needs ${buyInAmount.toString()}, has ${balanceBigInt.toString()}`));
-      }
-      
-      // Wait a bit between operations
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Get current game state after each player joins
+      const gameState = await getGameState(contractAddress, activePlayers[0]);
+      log(chalk.cyan("\nCurrent game state after player joined:"));
+      analyzeGameState(gameState);
     }
     
-    // Step 7: Get the game state after all players have joined
-    log(chalk.yellow("\nGetting game state after all players have joined..."));
-
-    // Get game state from each player's perspective
-    let gameState;
-    for (const player of PLAYERS) {
-      log(chalk.yellow(`\n${player.name}'s view of the game state:`));
-      log(chalk.yellow("=".repeat(50)));
-      gameState = await getGameState(contractAddress, player);
-      
-      // Only analyze the game state from the first player's perspective
-      if (player === PLAYERS[0]) {
-        await analyzeGameState(gameState);
-      }
-      
-      log(chalk.yellow("=".repeat(50)));
-      
-      // Wait briefly between requests
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+    // Step 6: Check the game state after all players have joined
+    log(chalk.yellow("\nChecking game state after all players joined..."));
+    const gameStateAfterJoin = await getGameState(contractAddress, activePlayers[0]);
+    analyzeGameState(gameStateAfterJoin);
     
-    // Step 8: Post small blind for the player in the small blind position
-    if (gameState && gameState.data && gameState.data.players) {
-      // Find small blind player
-      const smallBlindPlayer = gameState.data.players.find(p => p.isSmallBlind);
-      
-      if (smallBlindPlayer) {
-        // Find the player object matching the small blind position
-        const playerForSmallBlind = PLAYERS.find(p => 
-          p.address.toLowerCase() === smallBlindPlayer.address.toLowerCase()
-        );
-        
-        if (playerForSmallBlind) {
-          log(chalk.yellow(`\nPosting small blind with ${playerForSmallBlind.name}...`));
-          
-          // Get small blind amount from game options
-          const smallBlindAmount = BigInt(gameState.data.gameOptions.smallBlind);
-          
-          // Post small blind with the next action index
-          await postSmallBlind(contractAddress, playerForSmallBlind, smallBlindAmount, currentActionIndex);
-          
-          // Increment action index
-          currentActionIndex++;
-          
-          // Get updated game state after posting small blind
-          log(chalk.yellow("\nGetting game state after posting small blind..."));
-          const updatedState = await getGameState(contractAddress, playerForSmallBlind);
-          await analyzeGameState(updatedState);
-        }
-      }
-    }
+    // Step 7: First player posts small blind
+    log(chalk.yellow("\nFirst player posting small blind..."));
+    const smallBlindAmount = BigInt(ONE_TOKEN);
+    await postSmallBlind(contractAddress, activePlayers[0], smallBlindAmount, 1);
     
-    // Stop here as requested
-    success("Test completed");
+    // Wait for mining to complete
+    await waitForMining();
+    
+    // Step 8: Check game state after small blind
+    log(chalk.yellow("\nChecking game state after small blind..."));
+    const gameStateAfterSmallBlind = await getGameState(contractAddress, activePlayers[0]);
+    analyzeGameState(gameStateAfterSmallBlind);
+    
+    // Continue with the rest of the game...
+    
+    log(chalk.green("\nTest completed successfully!"));
     
   } catch (err) {
     error(`Test failed: ${err.message}`);
+    console.error(err);
     process.exit(1);
   }
 }
