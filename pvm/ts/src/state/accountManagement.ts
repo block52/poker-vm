@@ -4,8 +4,9 @@ import { IAccountDocument } from "../models/interfaces";
 import { Transaction } from "../models/transaction";
 import { CONTRACT_ADDRESSES } from "../core/constants";
 import { StateManager } from "./stateManager";
+import { IAccountManagement } from "./interfaces";
 
-export class AccountManagement extends StateManager {
+export class AccountManagement extends StateManager implements IAccountManagement {
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
@@ -32,7 +33,7 @@ export class AccountManagement extends StateManager {
         return Account.fromDocument(account);
     }
 
-    async _getAccount(address: string): Promise<IAccountDocument | null> {
+    private async _getAccount(address: string): Promise<IAccountDocument | null> {
         await this.connect();
         return await Accounts.findOne({ address });
     }
@@ -67,10 +68,7 @@ export class AccountManagement extends StateManager {
                 }
 
                 balance += amount;
-                await Accounts.updateOne(
-                    { address }, 
-                    { $set: { balance: balance.toString() } }
-                );
+                await Accounts.updateOne({ address }, { $set: { balance: balance.toString() } });
             }
         }
     }
@@ -102,7 +100,7 @@ export class AccountManagement extends StateManager {
         }
     }
 
-    async applyTransaction(tx: Transaction) {
+    async applyTransaction(tx: Transaction): Promise<void> {
         // Deduct from sender
         if (tx.from) {
             await this.decrementBalance(tx.from, tx.value);
@@ -123,8 +121,8 @@ export class AccountManagement extends StateManager {
 
 let instance: AccountManagement;
 export const getAccountManagementInstance = (): AccountManagement => {
-  if (!instance) {
-    instance = new AccountManagement();
-  }
-  return instance;
-}
+    if (!instance) {
+        instance = new AccountManagement();
+    }
+    return instance;
+};
