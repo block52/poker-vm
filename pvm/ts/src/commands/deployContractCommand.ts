@@ -2,9 +2,10 @@ import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { GameOptions } from "@bitcoinbrisbane/block52";
 import { GameManagement } from "../state/gameManagement";
+import { IGameManagement } from "../state/interfaces";
 
 export class DeployContractCommand implements ISignedCommand<string> {
-    private readonly gameManagement: GameManagement;
+    private readonly gameManagement: IGameManagement;
     private readonly gameOptions: GameOptions;
     
     constructor(private readonly nonce: bigint, private readonly owner: string, private readonly data: string, private readonly privateKey: string) {

@@ -1,0 +1,45 @@
+import { Transaction } from "../models/transaction";
+import { Account } from "../models/account";
+import { Block } from "../models";
+import { GameOptions, TexasHoldemGameState } from "@bitcoinbrisbane/block52";
+import { IGameStateDocument, IJSONModel } from "../models/interfaces";
+
+export interface IAccountManagement {
+    createAccount(privateKey: string): Promise<Account>;
+    getAccount(address: string): Promise<Account>;
+    incrementBalance(address: string, amount: bigint): Promise<void>;
+    decrementBalance(address: string, amount: bigint): Promise<void>;
+    applyTransaction(tx: Transaction): Promise<void>;
+    applyTransactions(txs: Transaction[]): Promise<void>;
+}
+
+export interface IBlockchainManagement {
+    addBlock(block: Block): Promise<void>;
+    getGenesisBlock(): Block;
+    getBlockHeight(): Promise<number>;
+    getLastBlock(): Promise<Block>;
+    getBlockByHash(hash: string): Promise<Block | null>;
+    getBlockByIndex(index: number): Promise<Block | null>;
+    getBlock(index: number): Promise<Block>;
+    getBlocks(count?: number): Promise<Block[]>;
+}
+
+export interface IContractSchemaManagement {
+    getGameOptions(address: string): Promise<GameOptions>;
+}
+
+export interface IGameManagement {
+    getAll(): Promise<IGameStateDocument[]>;
+    get(address: string): Promise<any | null>;
+    create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string>;
+    save(sate: IJSONModel): Promise<void>;
+    saveFromJSON(json: string): Promise<void>;
+}
+
+export interface ITransactionManagement {
+    getTransactions(blockHash: string, count?: number): Promise<Transaction[]>;
+    getTransaction(txid: string): Promise<Transaction | null>;
+    getTransactionByIndex(index: string): Promise<Transaction | null>;
+    getTransactionByData(data: string): Promise<Transaction | null>;
+    getTransactionsByAddress(address: string, count?: number): Promise<Transaction[]>;
+}

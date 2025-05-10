@@ -1,9 +1,9 @@
 import Transactions from "../schema/transactions";
 import { Transaction } from "../models/transaction";
 import { StateManager } from "./stateManager";
-import { TransactionList } from "../models/transactionList";
+import { ITransactionManagement } from "./interfaces";
 
-export class TransactionManagement extends StateManager {
+export class TransactionManagement extends StateManager implements ITransactionManagement {
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
@@ -27,22 +27,11 @@ export class TransactionManagement extends StateManager {
         }
     }
 
-    async exists(txid: string): Promise<Boolean> {
+    public async exists(txid: string): Promise<Boolean> {
         await this.connect();
         const tx = await Transactions.findOne({ hash: txid });
         return tx !== null;
     }
-
-    // public async getTransactions(blockHash: string, count?: number): Promise<TransactionList> {
-    //     await this.connect();
-
-    //     const transactions = await Transactions.find({ blockHash })
-    //         .sort({ timestamp: -1 })
-    //         .limit(count ?? 100);
-
-    //     const txs = transactions.map(tx => Transaction.fromDocument(tx));
-    //     return new TransactionList(txs);
-    // }
 
     public async getTransactions(blockHash: string, count?: number): Promise<Transaction[]> {
         await this.connect();
@@ -60,7 +49,7 @@ export class TransactionManagement extends StateManager {
         const transactions = await Transactions.find({ to: address })
             .sort({ timestamp: -1 })
             .limit(count ?? 100);
-        
+
         return transactions.map(tx => Transaction.fromDocument(tx));
     }
 
@@ -94,7 +83,7 @@ export class TransactionManagement extends StateManager {
 
 // export default TransactionManagement;
 let instance: TransactionManagement;
-export const getTransactionInstance = (): TransactionManagement => {
+export const getTransactionInstance = (): ITransactionManagement => {
     if (!instance) {
         instance = new TransactionManagement();
     }

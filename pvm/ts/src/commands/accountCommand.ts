@@ -1,11 +1,12 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Account } from "../models";
-import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
+import { getAccountManagementInstance } from "../state/accountManagement";
+import { IAccountManagement } from "../state/interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class AccountCommand implements ISignedCommand<Account> {
-    private readonly accountManagement: AccountManagement;
+    private readonly accountManagement: IAccountManagement;
     private readonly mempool: Mempool;
     private readonly address: string;
 

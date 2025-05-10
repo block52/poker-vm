@@ -1,9 +1,10 @@
-import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
+import { getAccountManagementInstance } from "../state/accountManagement";
+import { IAccountManagement } from "../state/interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class BalanceCommand implements ISignedCommand<BigInt> {
-    private readonly accountManagement: AccountManagement;
+    private readonly accountManagement: IAccountManagement;
     private readonly address: string;
 
     constructor(address: string, private readonly privateKey: string) {
