@@ -80,6 +80,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
             uniqueAddresses.add(tx.to);
         }
 
+        console.log(`Found ${uniqueAddresses.size} unique game addresses to update`);
         const commands: GameStateCommand[] = [];
 
         // iterate over the unique addresses
@@ -89,15 +90,37 @@ export class MineCommand implements ISignedCommand<Block | null> {
             commands.push(command);
         }
 
+        // Process all game state commands and save results
+        const results = [];
         for (let i = 0; i < commands.length; i++) {
             try {
+                console.log(`Updating game state for address ${commands[i].address}`);
                 const result = await commands[i].execute();
+                
+                // Log some information about the result
+                console.log(`Game state update result for ${commands[i].address}:
+                - Players: ${result.data.players.length}
+                - Round: ${result.data.round}
+                - Actions: ${result.data.previousActions.length}`);
+                
                 // Save the game state to the database
                 await this.gameStateManagement.saveFromJSON(JSON.stringify(result.data));
+                console.log(`Saved updated game state for ${commands[i].address}`);
+                
+                results.push(result);
             } catch (error) {
                 console.warn(`Error processing game transactions for address ${commands[i].address}: ${(error as Error).message}`);
             }
         }
+
+        // Print summary of game state updates
+        if (results.length > 0) {
+            console.log(`Successfully updated ${results.length} game states`);
+        } else if (commands.length > 0) {
+            console.warn(`Failed to update any game states out of ${commands.length} attempted`);
+        }
+
+        return results;
     }
 
     private async expireActions(): Promise<void> {

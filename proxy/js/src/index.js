@@ -184,12 +184,13 @@ app.post("/table/:tableId/join", async (req, res) => {
             id: getNextRpcId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [
-                req.body.userAddress, // from
-                req.params.tableId, // to (using the tableId from URL params)
-                NonPlayerActionType.JOIN, // action - using the imported constant
-                req.body.buyInAmount, // amount
-                timestampNonce, // nonce - using timestamp for uniqueness
-                indexData // "actionIndex,seatNumber" as string OR just actionIndex if no seat
+                req.body.userAddress,              // from (1)
+                req.params.tableId,                // to (2)
+                NonPlayerActionType.JOIN,          // action (3)
+                req.body.buyInAmount,              // amount (4)
+                timestampNonce,                    // nonce (5)
+                req.body.actionIndex || 0,         // index (6) - just the action index number
+                req.body.seatNumber ? `${req.body.seatNumber}` : "" // data (7) - seat number as string if available
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey

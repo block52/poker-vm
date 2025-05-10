@@ -510,7 +510,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 const seat = data ? Number(data) : undefined;
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
 
-                new JoinAction(this, this._update).execute(player, index, _amount, seat);
+                // Log this for debugging 
+                console.log(`[performAction] Processing JOIN action for ${address} with seat=${seat} and data=${data}`);
+                
+                // Execute the join action
+                new JoinAction(this, this._update).execute(player, index, _amount, seat, data?.toString());
                 
                 // `execute` already logged the action & incremented the index
                 return; // EARLY EXIT – nothing else to do for non-player action
@@ -1271,26 +1275,44 @@ class TexasHoldemGame implements IPoker, IUpdate {
             gameOptions.bigBlind = BigInt(json.gameOptions?.bigBlind);
         }
 
-        json?.players.map((p: any) => {
-            const stack: bigint = BigInt(p.stack);
+        // First ensure we have valid player data
+        if (json?.players && Array.isArray(json.players)) {
+            // Process each player in the json data
+            json.players.forEach((p: any) => {
+                const stack: bigint = BigInt(p.stack);
 
-            // Create hole cards if they exist in the JSON
-            let holeCards: [Card, Card] | undefined = undefined;
+                // Create hole cards if they exist in the JSON
+                let holeCards: [Card, Card] | undefined = undefined;
 
-            if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
-                try {
-                    // Use Deck.fromString to create Card objects
-                    const card1 = Deck.fromString(p.holeCards[0]);
-                    const card2 = Deck.fromString(p.holeCards[1]);
-                    holeCards = [card1, card2] as [Card, Card];
-                } catch (e) {
-                    console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
+                    try {
+                        // Use Deck.fromString to create Card objects
+                        const card1 = Deck.fromString(p.holeCards[0]);
+                        const card2 = Deck.fromString(p.holeCards[1]);
+                        holeCards = [card1, card2] as [Card, Card];
+                    } catch (e) {
+                        console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                    }
                 }
-            }
 
-            const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
-            players.set(p.seat, player);
-        });
+                // Create the player object with all available data
+                const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
+                
+                // Get the seat number from the player data
+                // This is critically important! We need to use the seat number to place the player correctly
+                let seatNumber = p.seat !== null && p.seat !== undefined ? Number(p.seat) : -1;
+                
+                // Log the player and seat number for debugging
+                console.log(`[fromJson] Creating player ${p.address} at seat ${seatNumber}`);
+                
+                // Only add players with valid seat numbers
+                if (seatNumber >= 0) {
+                    players.set(seatNumber, player);
+                } else {
+                    console.warn(`[fromJson] Player ${p.address} has invalid seat number: ${seatNumber}`);
+                }
+            });
+        }
 
         const positions: Positions = {
             dealer: json.dealer,
@@ -1324,11 +1346,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
             .filter(([_, player]) => player !== null) // Filter out null players (removed/empty seats)
             .map(([seat, player]) => {
                 // After filtering, we know player is not null
-
-
-
                 const _player: Player = player!;
 
+                // Log this for debugging
+                console.log(`[toJson] Creating PlayerDTO for ${_player.address} at seat ${seat}`);
 
                 let lastAction: ActionDTO | undefined;
                 const turn = this.getPlayersLastAction(_player.address);
@@ -1336,7 +1357,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 if (turn) {
                     lastAction = {
                         playerId: turn.playerId,
-                        seat: seat,
+                        seat: turn.seat, // Use the seat from the turn data if available
                         action: turn.action,
                         amount: (turn.amount ?? 0n).toString(),
                         round: this._currentRound,
@@ -1371,7 +1392,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
                 const dto: PlayerDTO = {
                     address: _player.address,
-                    seat: seat,
+                    seat: seat, // This is the critical field - we're using the actual seat number from the map key
                     stack: _player.chips.toString(),
                     isSmallBlind: seat === this._smallBlindPosition,
                     isBigBlind: seat === this._bigBlindPosition,

@@ -3,49 +3,87 @@ import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { Range } from "../types";
 
+/**
+ * JoinAction handles a player joining a table with a specific buy-in amount and seat number.
+ * The seat number can be provided in two ways:
+ * 1. As a separate requestedSeat parameter (legacy method)
+ * 2. As a string in the data parameter (new method, from blockchain transactions)
+ */
 class JoinAction extends BaseAction {
     get type(): NonPlayerActionType {
         return NonPlayerActionType.JOIN;
     }
 
-    // Override verify method for join action
     verify(_player: Player): Range {
-        // For joining, we don't need to verify against an existing player
-        
-        // Now we can use the actual min/max buy-in values
-        return { 
+        // Any player can join
+        return {
             minAmount: this.game.minBuyIn,
             maxAmount: this.game.maxBuyIn
         };
     }
 
-    // Override execute to handle player joining
-    execute(player: Player, index: number, amount?: bigint, requestedSeat?: number): void {
-        // First verify the action
-        const range = this.verify(player);
-        console.log(`[JoinAction DEBUG] execute called with player=${player.address}, index=${index}, amount=${amount}, requestedSeat=${requestedSeat}`);
+    /**
+     * Execute the join action - add player to the game at a specific seat
+     * @param player - Player object joining the game
+     * @param index - Action index
+     * @param amount - Buy-in amount
+     * @param requestedSeat - Optional explicit seat number (legacy method)
+     * @param data - Optional data string containing seat number (new blockchain transaction method)
+     */
+    execute(player: Player, index: number, amount?: bigint, requestedSeat?: number, data?: string): void {
+        console.log(`[JoinAction] execute called with player=${player.address}, index=${index}, amount=${amount}, requestedSeat=${requestedSeat}, data=${data}`);
         
-        // Check if the amount is within the valid range
-        const buyIn = amount || 0n;
-        if (buyIn < range.minAmount || buyIn > range.maxAmount) {
-            throw new Error("Player does not have enough or too many chips to join.");
+        // Determine the seat number to use
+        let seatNumber: number | undefined = requestedSeat;
+        
+        // If no explicit seat requested, try to parse seat from data string
+        if (seatNumber === undefined && data !== undefined && data !== "") {
+            try {
+                // Try to parse data as seat number
+                seatNumber = parseInt(data, 10);
+                console.log(`[JoinAction] Parsed seat number ${seatNumber} from data: "${data}"`);
+            } catch (error) {
+                console.error(`[JoinAction] Failed to parse seat number from data: "${data}"`, error);
+            }
         }
         
-        // Find an available seat or use the requested one
-        const seat = requestedSeat === undefined ? this.game.findNextEmptySeat() : requestedSeat;
-
-        console.log(`[JoinAction DEBUG] FINAL - Adding player ${player.address} to seat ${seat} with ${buyIn} chips`);
-        this.game.joinAtSeat(player, seat);
+        // Handle the case where no seat is specified
+        if (seatNumber === undefined) {
+            // Find next available seat
+            seatNumber = this.game.findNextEmptySeat();
+            console.log(`[JoinAction] No seat specified, assigned seat ${seatNumber}`);
+        }
         
-        // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
+        // Ensure we have a valid seat number
+        if (seatNumber === undefined || isNaN(seatNumber)) {
+            console.error(`[JoinAction] Failed to assign a valid seat number for player ${player.address}`);
+            return;
+        }
+
+        // Set player's chips based on amount provided or default min buy-in
+        const chips = amount !== undefined ? amount : this.game.minBuyIn;
+        
+        // Create a new player with the correct PlayerStatus
+        const newPlayer = new Player(
+            player.address,
+            undefined, // holeCards - none yet
+            chips,
+            undefined, // hand - none yet
+            PlayerStatus.ACTIVE
+        );
+        
+        // Add player to the game at the specified seat
+        this.game.joinAtSeat(newPlayer, seatNumber);
+        
+        // Add the join action to the game history
         this.game.addNonPlayerAction({
-            playerId: player.address, 
-            action: NonPlayerActionType.JOIN, 
+            playerId: player.address,
+            action: NonPlayerActionType.JOIN,
             index: index,
-            amount: buyIn
+            amount: chips
         });
         
-        console.log(`[JoinAction DEBUG] Join action completed for player ${player.address} at seat ${seat}`);
+        console.log(`[JoinAction] Player ${player.address} joined at seat ${seatNumber} with ${chips} chips`);
     }
 }
 

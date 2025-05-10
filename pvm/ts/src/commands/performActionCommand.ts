@@ -76,17 +76,30 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
         const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
 
+        // Create a formatted transaction data string
+        let txData: string;
+
+        // For JOIN actions, include seat number in the transaction data if available
+        if (this.action === NonPlayerActionType.JOIN && this.data) {
+            // Format: "join,actionIndex,seatNumber"
+            txData = `${this.action},${this.index},${this.data}`;
+            console.log(`Creating JOIN transaction with data: ${txData}`);
+        } else {
+            // For all other actions, use standard format
+            txData = `${this.action},${this.index}`;
+        }
+
         // Create transaction with correct direction of funds flow
-        // For all other actions: regular format
         const tx: Transaction = await Transaction.create(
             _to, // game receives funds (to)
             _from, // player sends funds (from)
             this.amount,
             nonce,
             this.privateKey,
-            `${this.action},${this.index}`
+            txData // Use the formatted data string
         );
 
+        console.log(`Created transaction with data: ${tx.data}`);
         await this.mempool.add(tx);
 
         if (this.action === NonPlayerActionType.LEAVE) {
@@ -96,7 +109,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 this.amount,
                 nonce + 1n, // Increment nonce for action transaction
                 this.privateKey,
-                `${this.action},${this.index}` // Action data
+                txData // Use the same formatted data string
             );
 
             await this.mempool.add(actionTx);

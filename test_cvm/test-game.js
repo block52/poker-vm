@@ -241,7 +241,7 @@ async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
   info(`Player ${player.name} (${player.address}) joining table ${contractAddress} with ${buyInAmount.toString()} tokens`);
   
   try {
-    // Format parameters according to: [from, to, action, amount, nonce, index]
+    // Format parameters according to: [from, to, action, amount, nonce, index, data]
     const timestamp = Date.now();
     
     // Assign specific seat numbers based on player name
@@ -257,15 +257,19 @@ async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
     // Log the seat number and action index assignment
     log(chalk.yellow(`Assigning ${player.name} to seat ${seatNumber} with action index ${actionIndex}`));
     
-    // Based on proxy/js/src/index.js structure:
-    // [from, to, action, amount, nonce, index]
+    // The JoinAction.execute expects (player, index, amount, requestedSeat)
+    // So we need to adapt our RPC parameters to match this expectation
+    
+    // The actionIndex needs to be sent as the index parameter, 
+    // and seatNumber should be passed as an extra parameter that will map to requestedSeat
     const params = [
       player.address,                 // from
       contractAddress,                // to
-      NonPlayerActionType.JOIN,                         // action
+      NonPlayerActionType.JOIN,       // action
       buyInAmount.toString(),         // amount
       timestamp.toString(),           // nonce
-      `${actionIndex},${seatNumber}`  // "actionIndex,seatNumber" - Using the provided actionIndex instead of always 0
+      actionIndex,                    // index - action index number
+      seatNumber                      // data - seat number as number (not string)
     ];
     
     // Log the RPC call parameters 

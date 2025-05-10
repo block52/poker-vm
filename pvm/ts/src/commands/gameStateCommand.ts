@@ -23,7 +23,11 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
     public async execute(): Promise<ISignedResponse<TexasHoldemStateDTO>> {
         try {
-            const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.address), this.contractSchemaManagement.getGameOptions(this.address)]);
+            // Retrieve current game state and options
+            const [json, gameOptions] = await Promise.all([
+                this.gameManagement.get(this.address), 
+                this.contractSchemaManagement.getGameOptions(this.address)
+            ]);
 
             if (!json) {
                 throw new Error(`Game state not found for address: ${this.address}`);
@@ -31,22 +35,69 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             // Get the games view with respect to the caller (shared secret)
             const game = TexasHoldemGame.fromJson(json, gameOptions);
-            const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
-            console.log(`Found ${mempoolTransactions.length} mempool transactions`);
+            
+            // Find relevant transactions in the mempool for this game
+            const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => 
+                tx.to === this.address && tx.data !== undefined
+            );
+            console.log(`Found ${mempoolTransactions.length} mempool transactions for game ${this.address}`);
 
-            const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
+            // Convert and order transactions
+            const orderedTransactions = mempoolTransactions
+                .map(tx => this.castToOrderedTransaction(tx))
+                .sort((a, b) => a.index - b.index);
 
-            orderedTransactions.forEach(tx => {
+            // Log to help with debugging
+            if (orderedTransactions.length > 0) {
+                console.log(`Processing ${orderedTransactions.length} ordered transactions:`);
+                orderedTransactions.forEach(tx => {
+                    console.log(`- From: ${tx.from}, Action: ${tx.type}, Index: ${tx.index}, Data: ${tx.data}, Value: ${tx.value?.toString()}`);
+                });
+            }
+
+            // Apply all pending transactions to the game state
+            let appliedCount = 0;
+            for (const tx of orderedTransactions) {
                 try {
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                    // For join actions, extract seat number from the data if possible
+                    let dataValue = tx.data;
+                    if (tx.type === NonPlayerActionType.JOIN) {
+                        // Extract seat number if available
+                        const txParams = tx.data?.toString().split(',');
+                        if (txParams?.length >= 2) {
+                            // Action type and action index already extracted
+                            // Any third parameter would be seat number
+                            const seatParam = txParams[2];
+                            if (seatParam && !isNaN(Number(seatParam))) {
+                                dataValue = seatParam; // Use seat number as data
+                                console.log(`Extracted seat number ${dataValue} from JOIN transaction data`);
+                            }
+                        }
+                    }
+                    
+                    // Perform the action on the game state
+                    console.log(`Applying transaction ${tx.type} from ${tx.from} with index ${tx.index}, data: ${dataValue}`);
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, dataValue);
+                    appliedCount++;
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 }
-            });
+            }
 
-            // update game state
+            if (appliedCount > 0) {
+                console.log(`Successfully applied ${appliedCount} transactions to game state`);
+                // Save the updated game state back to the database
+                try {
+                    const updatedState = game.toJson(this.caller);
+                    await this.gameManagement.saveFromJSON(updatedState);
+                    console.log(`Updated game state saved to database after applying ${appliedCount} transactions`);
+                } catch (saveError) {
+                    console.error(`Failed to save updated game state: ${(saveError as Error).message}`);
+                }
+            }
+
+            // Get the final state to return
             const state = game.toJson(this.caller);
-
             return await signResult(state, this.privateKey);
         } catch (error) {
             console.error(`Error executing GameStateCommand: ${(error as Error).message}`);
@@ -61,7 +112,15 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
         const params = tx.data.split(",");
         const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
-        const index = parseInt(params[1].trim());
+        
+        // Parse the second parameter as the action index
+        let index = 0;
+        if (params.length > 1 && !isNaN(parseInt(params[1].trim()))) {
+            index = parseInt(params[1].trim());
+        }
+
+        // For debugging
+        console.log(`Parsed transaction data: action=${action}, index=${index}, full data=${tx.data}`);
 
         return {
             from: tx.from,
@@ -69,7 +128,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             value: tx.value,
             type: action,
             index: index,
-            data: tx.data
+            data: tx.data // Keep the full data string for further processing
         };
     }
 }

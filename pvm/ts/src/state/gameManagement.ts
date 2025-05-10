@@ -107,20 +107,53 @@ export class GameManagement extends StateManager implements IGameManagement {
     }
 
     public async saveFromJSON(json: any): Promise<void> {
+        // Parse JSON string if needed
+        let jsonObj;
+        if (typeof json === 'string') {
+            try {
+                jsonObj = JSON.parse(json);
+            } catch (err) {
+                console.error('Failed to parse JSON string:', err);
+                throw new Error('Invalid JSON string provided to saveFromJSON');
+            }
+        } else {
+            jsonObj = json;
+        }
+
+        // Ensure we have an address
+        if (!jsonObj.address) {
+            console.error('No address found in JSON data');
+            throw new Error('Missing address in game state data');
+        }
+
+        console.log(`Saving game state for address: ${jsonObj.address}, players: ${jsonObj.players?.length || 0}`);
+        
+        // Print information about any players for debugging
+        if (jsonObj.players && Array.isArray(jsonObj.players) && jsonObj.players.length > 0) {
+            jsonObj.players.forEach((player: any, index: number) => {
+                console.log(`  Player ${index} at seat ${player.seat}: ${player.address} (${player.status})`);
+            });
+        }
+
         const game = new GameState({
-            address: json.address,
-            state: json
+            address: jsonObj.address,
+            state: jsonObj
         });
 
+        // Check if game state already exists
         const existingGameState = await GameState.findOne({
             address: game.address
         });
 
         if (existingGameState) {
+            console.log(`Updating existing game state for ${game.address}`);
             existingGameState.state = game.state;
             await existingGameState.save();
+            console.log(`Game state updated successfully for ${game.address}`);
         } else {
+            console.log(`Creating new game state for ${game.address}`);
             await game.save();
+            console.log(`New game state created successfully for ${game.address}`);
         }
     }
 }
