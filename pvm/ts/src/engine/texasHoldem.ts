@@ -666,6 +666,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     amount: turn.amount ? turn.amount.toString() : "",
                     round,
                     index: turn.index,
+                    timestamp: turn.timestamp
                 };
 
                 actions.push(action);
@@ -691,6 +692,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 amount: turn.amount ? turn.amount.toString() : "",
                 round,
                 index: turn.index,
+                timestamp: turn.timestamp
             };
 
             actions.push(action);
@@ -1339,6 +1341,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                         amount: (turn.amount ?? 0n).toString(),
                         round: this._currentRound,
                         index: turn.index,
+                        timestamp: turn.timestamp
                     };
                 }
 
@@ -1347,7 +1350,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
                 // Ensure hole cards are properly included if they exist
                 let holeCardsDto: string[] | undefined = undefined;
-                if ((caller && _player.address.toLowerCase() === caller.toLowerCase()) ||
+                if (caller && _player.address.toLowerCase() === caller.toLowerCase()) ||
                     caller === ethers.ZeroAddress ||
                     _player.status === PlayerStatus.SHOWING
                 ) {
