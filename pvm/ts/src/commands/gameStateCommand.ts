@@ -59,20 +59,12 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             let appliedCount = 0;
             for (const tx of orderedTransactions) {
                 try {
-                    // For join actions, extract seat number from the data if possible
+                    // Initialize dataValue with transaction data
                     let dataValue = tx.data;
+                    
+                    // For join actions, the data is already just the seat number
                     if (tx.type === NonPlayerActionType.JOIN) {
-                        // Extract seat number if available
-                        const txParams = tx.data?.toString().split(',');
-                        if (txParams?.length >= 2) {
-                            // Action type and action index already extracted
-                            // Any third parameter would be seat number
-                            const seatParam = txParams[2];
-                            if (seatParam && !isNaN(Number(seatParam))) {
-                                dataValue = seatParam; // Use seat number as data
-                                console.log(`Extracted seat number ${dataValue} from JOIN transaction data`);
-                            }
-                        }
+                        console.log(`Using seat number ${dataValue} from JOIN transaction data`);
                     }
                     
                     // Perform the action on the game state
@@ -110,17 +102,39 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             throw new Error("Transaction data is undefined");
         }
 
-        const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
-        
-        // Parse the second parameter as the action index
+        // Check if data contains the action type (might be just a seat number for JOIN)
+        let action: PlayerActionType | NonPlayerActionType;
         let index = 0;
-        if (params.length > 1 && !isNaN(parseInt(params[1].trim()))) {
-            index = parseInt(params[1].trim());
+        let data = tx.data;
+
+        // If the data contains valid action text (BET, CALL, JOIN, etc)
+        if (Object.values(PlayerActionType).includes(tx.data as PlayerActionType) || 
+            Object.values(NonPlayerActionType).includes(tx.data as NonPlayerActionType)) {
+            // The entire data string is the action type
+            action = tx.data as PlayerActionType | NonPlayerActionType;
+        } else {
+            // For backward compatibility - check if it's a comma-separated format
+            const params = tx.data.split(",");
+            if (params.length > 0 && (
+                Object.values(PlayerActionType).includes(params[0].trim() as PlayerActionType) || 
+                Object.values(NonPlayerActionType).includes(params[0].trim() as NonPlayerActionType)
+            )) {
+                action = params[0].trim() as PlayerActionType | NonPlayerActionType;
+                
+                // If there's a second parameter, it might be the index
+                if (params.length > 1 && !isNaN(parseInt(params[1].trim()))) {
+                    index = parseInt(params[1].trim());
+                }
+            } else {
+                // If data doesn't match any action type and isn't in old format,
+                // assume it's a JOIN with just the seat number
+                action = NonPlayerActionType.JOIN;
+                data = tx.data; // Keep the original data (seat number)
+            }
         }
 
         // For debugging
-        console.log(`Parsed transaction data: action=${action}, index=${index}, full data=${tx.data}`);
+        console.log(`Parsed transaction data: action=${action}, index=${index}, data=${data}`);
 
         return {
             from: tx.from,
@@ -128,7 +142,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             value: tx.value,
             type: action,
             index: index,
-            data: tx.data // Keep the full data string for further processing
+            data: data
         };
     }
 }
