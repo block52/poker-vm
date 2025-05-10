@@ -6,10 +6,8 @@
 // ===================================
 // 1. Import Dependencies
 // ===================================
-const { BigUnit } = require("bigunit");
 const express = require("express");
 const cors = require("cors");
-const ethers = require("ethers");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
 const axios = require("axios");
@@ -166,11 +164,20 @@ app.post("/table/:tableId/join", async (req, res) => {
     console.log("Request body:", req.body);
     console.log("   signature:", req.body.signature);
     console.log("   publicKey:", req.body.publicKey);
+    console.log("   seatNumber:", req.body.seatNumber);
+    console.log("   actionIndex:", req.body.actionIndex);
     console.log("Buy in amount on join:", req.body.buyInAmount);
 
     try {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
+        
+        // Create the combined array of [actionIndex, seatNumber] just like in test-game.js
+        const indexData = req.body.seatNumber !== undefined ? 
+            [req.body.actionIndex || 0, req.body.seatNumber] : 
+            req.body.actionIndex || 0;
+            
+        console.log("Using index data format:", indexData);
 
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
@@ -179,10 +186,10 @@ app.post("/table/:tableId/join", async (req, res) => {
             params: [
                 req.body.userAddress, // from
                 req.params.tableId, // to (using the tableId from URL params)
-                NonPlayerActionType.JOIN, // action
+                NonPlayerActionType.JOIN, // action - using the imported constant
                 req.body.buyInAmount, // amount
                 timestampNonce, // nonce - using timestamp for uniqueness
-                req.body.index
+                indexData // Combined [actionIndex, seatNumber] OR just actionIndex if no seat
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey

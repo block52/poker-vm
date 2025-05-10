@@ -17,16 +17,21 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     constructor(
         private readonly from: string,
         private readonly to: string,
-        private readonly index: number,
+        private readonly index: number, // Allow array for join actions with seat number
         private readonly amount: bigint,
         private readonly action: PlayerActionType | NonPlayerActionType,
         private readonly nonce: number,
-        private readonly privateKey: string
+        private readonly privateKey: string,
+        private readonly data?: string
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
+
+        // Debug logging to see what we're getting in the constructor
+        const indexType = Array.isArray(this.index) ? "array" : "number";
+        console.log(`PerformActionCommand created with action=${action}, index=${JSON.stringify(this.index)} (${indexType})`);
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -52,56 +57,48 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         orderedTransactions.forEach(tx => {
             try {
-                game.performAction(tx.from, tx.type, tx.index, tx.value);
-                console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                {
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                    console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
+                }
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 // Continue with other transactions, don't let this error propagate up
             }
         });
 
-        // Perform the current action
-        game.performAction(this.from, this.action, this.index, this.amount);
+        console.log(`Performing action ${this.action} with index ${this.index} data ${this.data}`);
+        game.performAction(this.from, this.action, this.index, this.amount, this.data);
 
         const nonce = BigInt(this.nonce);
-        
-        // Create transaction with correct direction of funds flow  
-        // TODO: work out if theis the the best way to process a leave action and also a join action. ticket 553
-        let tx: Transaction;
+
+        const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
+        const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
+
+        // Create transaction with correct direction of funds flow
+        // For all other actions: regular format
+        const tx: Transaction = await Transaction.create(
+            _to, // game receives funds (to)
+            _from, // player sends funds (from)
+            this.amount,
+            nonce,
+            this.privateKey,
+            `${this.action},${this.index}`
+        );
+
+        await this.mempool.add(tx);
+
         if (this.action === NonPlayerActionType.LEAVE) {
-            // For LEAVE: We need to handle both the game action and the funds transfer
-            // 1. Create a transaction for the leave action (added to mempool)
             const actionTx = await Transaction.create(
-                this.to, // game address
-                this.from, // player address
-                0n, // No funds for the action itself
-                nonce,
-                this.privateKey,
-                `${this.action},${this.index}`
-            );
-            await this.mempool.add(actionTx);
-            
-            // 2. Create a transfer transaction to return funds from game to player
-            tx = await Transaction.create(
-                this.from, // player receives funds (to)
-                this.to, // game sends funds (from)
-                this.amount, // Return the player's remaining stack
-                nonce + 1n, // Increment nonce for second transaction
-                this.privateKey,
-                `transfer,${this.index}`
-            );
-            await this.mempool.add(tx);
-        } else {
-            // For all other actions: funds flow from player to game 
-            tx = await Transaction.create(
-                this.to, // game receives funds (to)
-                this.from, // player sends funds (from)
+                _to, // game address
+                _from, // player address
                 this.amount,
-                nonce,
+                nonce + 1n, // Increment nonce for action transaction
                 this.privateKey,
-                `${this.action},${this.index}`
+                `${this.action},${this.index}` // Action data
             );
-            await this.mempool.add(tx);
+
+            await this.mempool.add(actionTx);
         }
 
         return signResult(tx, this.privateKey);
@@ -118,13 +115,54 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         return found;
     }
 
+    // private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
+    //     if (!tx.data) {
+    //         throw new Error("Transaction data is undefined");
+    //     }
+
+    //     // Split and extract main components from transaction data
+    //     const [rawAction, rawIndex, rawSeat, ...extraParams] = tx.data.split(",");
+
+    //     if (!rawAction || !rawIndex) {
+    //         throw new Error(`Transaction ${tx.hash} has invalid format: "${tx.data}"`);
+    //     }
+
+    //     // Parse action
+    //     const action = rawAction.trim() as PlayerActionType | NonPlayerActionType;
+
+    //     // Parse and validate index
+    //     const index = Number(rawIndex.trim());
+    //     if (Number.isNaN(index)) {
+    //         throw new Error(`Invalid index "${rawIndex}" in transaction ${tx.hash}`);
+    //     }
+
+    //     // Parse seat number only for join actions
+    //     let seatNumber: number | undefined = undefined;
+    //     if (action === NonPlayerActionType.JOIN && rawSeat) {
+    //         seatNumber = Number(rawSeat.trim());
+    //         if (Number.isNaN(seatNumber)) {
+    //             throw new Error(`Invalid seat number "${rawSeat}" in join transaction ${tx.hash}`);
+    //         }
+    //         console.log(`Found join action with valid seat number: ${seatNumber}`);
+    //     }
+
+    //     return {
+    //         from: tx.from,
+    //         to: tx.to,
+    //         value: tx.value,
+    //         type: action,
+    //         index: index,
+    //         data: seatNumber
+    //     };
+    // }
+
     private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
         if (!tx.data) {
             throw new Error("Transaction data is undefined");
         }
 
         const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType;
+        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
         const index = parseInt(params[1].trim());
 
         return {
@@ -132,7 +170,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             to: tx.to,
             value: tx.value,
             type: action,
-            index: index
+            index: index,
+            data: tx.data
         };
     }
 }

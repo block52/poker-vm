@@ -9,7 +9,7 @@ class LeaveAction extends BaseAction {
     }
 
     // Override verify method to allow leaving anytime
-    verify(player: Player): Range | undefined {
+    verify(player: Player): Range {
         return { minAmount: player.chips, maxAmount: player.chips };
     }
 

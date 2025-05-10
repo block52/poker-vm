@@ -52,12 +52,15 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             try {
                 const buyInWei = ethers.parseUnits(storedAmount, 18).toString();
+                console.log(`Joining table at seat ${index} with amount ${buyInWei} and action index ${actionIndex}`);
+                
                 await joinTable({
                     buyInAmount: buyInWei,
                     userAddress,
                     privateKey,
                     publicKey: userAddress,
-                    index: actionIndex
+                    actionIndex,
+                    seatNumber: index
                 });
                 window.location.reload();
             } catch (err) {

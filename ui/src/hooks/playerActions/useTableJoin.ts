@@ -10,20 +10,32 @@ interface JoinTableOptions {
   privateKey: string | null;
   publicKey: string | null;
   nonce?: string | number;
-  index?: number;
+  actionIndex?: number;
+  seatNumber?: number;
 }
 
 async function joinTableFetcher(
   url: string,
   { arg }: { arg: JoinTableOptions }
 ) {
-  const { buyInAmount, userAddress, privateKey, publicKey, nonce = Date.now().toString(), index = 0 } = arg;
+  const { 
+    buyInAmount, 
+    userAddress, 
+    privateKey, 
+    publicKey, 
+    nonce = Date.now().toString(), 
+    actionIndex = 0,
+    seatNumber 
+  } = arg;
   
   if (!userAddress || !privateKey) {
     throw new Error("Missing user address or private key");
   }
 
-  console.log("Joining table with index:", index);
+  console.log("Joining table with parameters:", {
+    actionIndex,
+    seatNumber: seatNumber !== undefined ? seatNumber : "auto-assign"
+  });
 
   // Create a wallet to sign the message
   const wallet = new ethers.Wallet(privateKey);
@@ -44,7 +56,8 @@ async function joinTableFetcher(
     publicKey: publicKey || userAddress,
     nonce: nonce,
     timestamp,
-    index
+    actionIndex, // Use actionIndex instead of index
+    seatNumber   // Add seatNumber for specific seat selection
   };
 
   console.log("Join table request:", requestData);

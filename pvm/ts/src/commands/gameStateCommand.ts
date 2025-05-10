@@ -1,4 +1,4 @@
-import { PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemStateDTO, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { GameManagement } from "../state/gameManagement";
@@ -22,10 +22,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
     public async execute(): Promise<ISignedResponse<TexasHoldemStateDTO>> {
         try {
-            const [json, gameOptions] = await Promise.all([
-                this.gameManagement.get(this.address),
-                this.contractSchemaManagement.getGameOptions(this.address)
-            ]);
+            const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.address), this.contractSchemaManagement.getGameOptions(this.address)]);
 
             if (!json) {
                 throw new Error(`Game state not found for address: ${this.address}`);
@@ -36,16 +33,13 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
-            const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx))
-                .sort((a, b) => a.index - b.index);
+            const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
             orderedTransactions.forEach(tx => {
                 try {
-                    game.performAction(tx.from, tx.type, tx.index, tx.value);
-                    console.log(`Processing action ${tx.type} from ${tx.from} with value ${tx.value} and index ${tx.index}`);
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
-                    // Continue with other transactions, don't let this error propagate up
                 }
             });
 
@@ -59,14 +53,13 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
         }
     }
 
-    // Deprecated: use toOrderedTransaction instead
     private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
         if (!tx.data) {
             throw new Error("Transaction data is undefined");
         }
 
         const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType;
+        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
         const index = parseInt(params[1].trim());
 
         return {
@@ -74,7 +67,8 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             to: tx.to,
             value: tx.value,
             type: action,
-            index: index
+            index: index,
+            data: tx.data
         };
     }
 }
