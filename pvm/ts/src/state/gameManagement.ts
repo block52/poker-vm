@@ -133,7 +133,7 @@ export class GameManagement extends StateManager implements IGameManagement {
 }
 
 let instance: GameManagement;
-export const getGameManagementInstance = (): GameManagement => {
+export const getGameManagementInstance = (): IGameManagement => {
     if (!instance) {
         instance = new GameManagement();
     }

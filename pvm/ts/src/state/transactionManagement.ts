@@ -83,7 +83,7 @@ export class TransactionManagement extends StateManager implements ITransactionM
 
 // export default TransactionManagement;
 let instance: TransactionManagement;
-export const getTransactionInstance = (): TransactionManagement => {
+export const getTransactionInstance = (): ITransactionManagement => {
     if (!instance) {
         instance = new TransactionManagement();
     }
