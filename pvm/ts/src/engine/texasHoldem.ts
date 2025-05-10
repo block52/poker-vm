@@ -1350,7 +1350,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
                 // Ensure hole cards are properly included if they exist
                 let holeCardsDto: string[] | undefined = undefined;
-                if (caller && _player.address.toLowerCase() === caller.toLowerCase()) ||
+                if (caller && _player.address.toLowerCase() === caller.toLowerCase() ||
                     caller === ethers.ZeroAddress ||
                     _player.status === PlayerStatus.SHOWING
                 ) {
