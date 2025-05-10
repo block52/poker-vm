@@ -265,7 +265,7 @@ async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
       NonPlayerActionType.JOIN,                         // action
       buyInAmount.toString(),         // amount
       timestamp.toString(),           // nonce
-      [actionIndex, seatNumber]       // [actionIndex, seatNumber] - Using the provided actionIndex instead of always 0
+      `${actionIndex},${seatNumber}`  // "actionIndex,seatNumber" - Using the provided actionIndex instead of always 0
     ];
     
     // Log the RPC call parameters 
@@ -408,7 +408,7 @@ async function postSmallBlind(contractAddress, player, smallBlindAmount, actionI
       PlayerActionType.SMALL_BLIND,   // action - FIXED: use the correct PlayerActionType
       smallBlindAmount.toString(),    // amount
       timestamp.toString(),           // nonce
-      actionIndex                     // index
+      [actionIndex, player.seat]      // index - FIXED: use array format with [actionIndex, seat]
     ];
     
     log(chalk.yellow("Sending RPC call to post small blind:"));

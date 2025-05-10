@@ -9,7 +9,7 @@
         "test:rpc-join-leave": "node active_test/rpc-join-leave-test.js"
     },
     "dependencies": {
-        "@bitcoinbrisbane/block52": "1.0.87",
+        "@bitcoinbrisbane/block52": "1.0.99",
         "@types/node": "^20.2.1",
         "axios": "^1.6.2",
         "chalk": "^4.1.2",
