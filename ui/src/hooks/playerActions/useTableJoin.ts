@@ -57,7 +57,7 @@ async function joinTableFetcher(
     nonce: nonce,
     timestamp,
     actionIndex, // Use actionIndex instead of index
-    seatNumber   // Add seatNumber for specific seat selection
+    seatNumber: seatNumber !== undefined ? seatNumber.toString() : undefined   // Ensure seatNumber is a string if provided
   };
 
   console.log("Join table request:", requestData);

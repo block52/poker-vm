@@ -257,19 +257,16 @@ async function joinTable(contractAddress, player, buyInAmount, actionIndex) {
     // Log the seat number and action index assignment
     log(chalk.yellow(`Assigning ${player.name} to seat ${seatNumber} with action index ${actionIndex}`));
     
-    // The JoinAction.execute expects (player, index, amount, requestedSeat)
-    // So we need to adapt our RPC parameters to match this expectation
-    
-    // The actionIndex needs to be sent as the index parameter, 
-    // and seatNumber should be passed as an extra parameter that will map to requestedSeat
+    // The action index is the 6th parameter, and the seat number is the 7th parameter (data)
+    // Format matches [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string]
     const params = [
-      player.address,                 // from
-      contractAddress,                // to
-      NonPlayerActionType.JOIN,       // action
-      buyInAmount.toString(),         // amount
-      timestamp.toString(),           // nonce
-      actionIndex,                    // index - action index number
-      seatNumber                      // data - seat number as number (not string)
+      player.address,                 // from (1)
+      contractAddress,                // to (2)
+      NonPlayerActionType.JOIN,       // action (3)
+      buyInAmount.toString(),         // amount (4)
+      timestamp.toString(),           // nonce (5)
+      actionIndex,                    // index (6) - action index number
+      seatNumber.toString()           // data (7) - seat number as string (not number)
     ];
     
     // Log the RPC call parameters 

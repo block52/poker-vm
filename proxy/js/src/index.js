@@ -172,12 +172,10 @@ app.post("/table/:tableId/join", async (req, res) => {
         // TODO: HACK - Using timestamp as nonce. Should properly get and validate nonces from account in the future
         const timestampNonce = Date.now().toString();
         
-        // Create the combined string format of "actionIndex,seatNumber" just like in test-game.js
-        const indexData = req.body.seatNumber !== undefined ? 
-            `${req.body.actionIndex || 0},${req.body.seatNumber}` : 
-            req.body.actionIndex || 0;
-            
-        console.log("Using index data format:", indexData);
+        // Ensure the seatNumber is passed as a string in the data parameter position
+        // This aligns with our RPC interface definition: [from, to, action, amount, nonce, index, data]
+        const seatNumber = req.body.seatNumber !== undefined ? req.body.seatNumber.toString() : "";
+        console.log(`Using seat number: ${seatNumber || "(none provided)"}`);
 
         // Format the RPC call to match the PERFORM_ACTION structure
         const rpcCall = {
@@ -190,7 +188,7 @@ app.post("/table/:tableId/join", async (req, res) => {
                 req.body.buyInAmount,              // amount (4)
                 timestampNonce,                    // nonce (5)
                 req.body.actionIndex || 0,         // index (6) - just the action index number
-                req.body.seatNumber ? `${req.body.seatNumber}` : "" // data (7) - seat number as string if available
+                seatNumber                         // data (7) - seat number as string if available
             ],
             signature: req.body.signature,
             publicKey: req.body.publicKey
