@@ -81,6 +81,7 @@ export type ActionDTO = {
     amount: string;
     round: TexasHoldemRound;
     index: number;
+    timestamp: number;
 };
 
 export type LegalActionDTO = {

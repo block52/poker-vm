@@ -72,7 +72,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         playerStates: Map<number, Player | null>,
         deck: string,
         winners: WinnerDTO[] = [],
-        private readonly caller?: string
+        private readonly caller?: string,
+        private readonly _now: number = Date.now()
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
         this._deck = new Deck(deck);
@@ -303,7 +304,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     index: this._turnIndex
                 };
 
-                player.addAction(turn);
+                player.addAction(turn, this._now);
                 player.updateStatus(PlayerStatus.ACTIVE);
             }
 
@@ -318,7 +319,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 // Add to bets to pre-flop round
                 const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind, index: this._turnIndex };
 
-                player.addAction(turn);
+                player.addAction(turn, this._now);
                 player.updateStatus(PlayerStatus.ACTIVE);
             }
         }
@@ -436,6 +437,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return actions;
     }
 
+    /*
+     * Gets the last action taken in the current round
+     * @returns The last action taken in the current round, or undefined if no actions exist
+     */
     getLastRoundAction(): TurnWithSeat | undefined {
         const round = this._currentRound;
         const actions = this._rounds.get(round);
@@ -447,15 +452,28 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return actions.at(-1);
     }
 
-    getPlayersLastAction(address: string): Turn | undefined {
+    getPlayersLastAction(address: string): TurnWithSeat | undefined {
         const player = this.getPlayer(address);
-        const status = this.getPlayerStatus(address);
+        return this.getPlayerActions(player).at(-1);
 
-        if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
-        if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN, index: 0 }; // Todo: fix this
-        if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD, index: 0 }; // Todo: fix this
+        // if (status === PlayerStatus.ACTIVE) return this.getPlayerActions(player).at(-1);
+        // if (status === PlayerStatus.ALL_IN) return { playerId: address, action: PlayerActionType.ALL_IN, index: 0 }; // Todo: fix this
+        // if (status === PlayerStatus.FOLDED) return { playerId: address, action: PlayerActionType.FOLD, index: 0 }; // Todo: fix this
 
-        return undefined;
+        // return undefined;
+    }
+
+    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): TurnWithSeat[] {
+        // Get the actions for the specified round
+        const actions = this._rounds.get(round);
+
+        // If no actions exist for this round, return empty array
+        if (!actions) {
+            return [];
+        }
+
+        // Filter the actions to only include those made by the specified player
+        return actions.filter(action => action.playerId === player.address);
     }
 
     /**
@@ -567,7 +585,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // Record the action in the player's history
-        player.addAction({ playerId: address, action, amount, index });
+        const timestamp = Date.now();
+        player.addAction({ playerId: address, action, amount, index }, timestamp);
 
         // Update the last player to act
         this._lastActedSeat = seat;
@@ -646,7 +665,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     action: turn.action,
                     amount: turn.amount ? turn.amount.toString() : "",
                     round,
-                    index: turn.index
+                    index: turn.index,
+                    timestamp: turn.timestamp
                 };
 
                 actions.push(action);
@@ -671,7 +691,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 action: turn.action,
                 amount: turn.amount ? turn.amount.toString() : "",
                 round,
-                index: turn.index
+                index: turn.index,
+                timestamp: turn.timestamp
             };
 
             actions.push(action);
@@ -797,19 +818,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return pot;
     }
 
-    private getPlayerActions(player: Player, round: TexasHoldemRound = this._currentRound): TurnWithSeat[] {
-        // Get the actions for the specified round
-        const actions = this._rounds.get(round);
-
-        // If no actions exist for this round, return empty array
-        if (!actions) {
-            return [];
-        }
-
-        // Filter the actions to only include those made by the specified player
-        return actions.filter(action => action.playerId === player.address);
-    }
-
     private findActivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.status === PlayerStatus.ACTIVE);
     }
@@ -826,14 +834,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 }
             }
         }
-
-        // const livePlayers = Array.from(this._playersMap.values()).filter(p => {
-        //     if (p) {
-        //         const status = this.getPlayerStatus(p.address);
-        //         return status !== PlayerStatus.FOLDED && status !== PlayerStatus.SITTING_OUT;
-        //     }
-        //     return false;
-        // });
 
         return livePlayers;
     }
@@ -1245,6 +1245,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = this.getNextRound();
     }
 
+    private expired(address: string): boolean {
+        const nextToAct = this.findNextPlayerToAct();
+        if (!nextToAct || nextToAct.address !== address) {
+            return false;
+        }
+
+        const lastAction = this.getPlayersLastAction(address);
+        if (!lastAction) {
+            return false;
+        }
+        const expired = this._now - lastAction.timestamp > this._now + 60 * 1000; // 60 seconds
+        return expired;
+    }
+
     public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
@@ -1263,8 +1277,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Create hole cards if they exist in the JSON
             let holeCards: [Card, Card] | undefined = undefined;
 
-            // Only show the callers world view of their hole.  Use zero address for God mode.
-            // if ((caller && p.address.toLowerCase() === caller.toLowerCase()) || caller === ethers.ZeroAddress || p.status === PlayerStatus.SHOWING) {
             if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
                 try {
                     // Use Deck.fromString to create Card objects
@@ -1275,7 +1287,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
                 }
             }
-            // }
 
             const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
             players.set(p.seat, player);
@@ -1298,20 +1309,30 @@ class TexasHoldemGame implements IPoker, IUpdate {
             json.pots,
             players,
             json.deck,
-            json.winners
+            json.winners,
+            undefined,
+            json.now ? json.now : Date.now(),
         );
     }
 
     public toJson(caller?: string): TexasHoldemStateDTO {
+
+        const nextPlayerToAct = this.findNextPlayerToAct();
+
         // Create an array of player DTOs, filtering out any empty seats or removed players
         const players: PlayerDTO[] = Array.from(this._playersMap.entries())
             .filter(([_, player]) => player !== null) // Filter out null players (removed/empty seats)
             .map(([seat, player]) => {
                 // After filtering, we know player is not null
-                const nonNullPlayer = player!;
+
+
+
+                const _player: Player = player!;
+
 
                 let lastAction: ActionDTO | undefined;
-                const turn = this.getPlayersLastAction(nonNullPlayer.address);
+                const turn = this.getPlayersLastAction(_player.address);
+
                 if (turn) {
                     lastAction = {
                         playerId: turn.playerId,
@@ -1319,50 +1340,56 @@ class TexasHoldemGame implements IPoker, IUpdate {
                         action: turn.action,
                         amount: (turn.amount ?? 0n).toString(),
                         round: this._currentRound,
-                        index: turn.index
+                        index: turn.index,
+                        timestamp: turn.timestamp
                     };
                 }
 
-                const legalActions: LegalActionDTO[] = this.getLegalActions(nonNullPlayer.address);
+                const legalActions: LegalActionDTO[] = this.getLegalActions(_player.address);
                 console.log("Legal actions:", legalActions);
 
                 // Ensure hole cards are properly included if they exist
                 let holeCardsDto: string[] | undefined = undefined;
-                if (
-                    (caller && nonNullPlayer.address.toLowerCase() === caller.toLowerCase()) ||
+                if (caller && _player.address.toLowerCase() === caller.toLowerCase()) ||
                     caller === ethers.ZeroAddress ||
-                    nonNullPlayer.status === PlayerStatus.SHOWING
+                    _player.status === PlayerStatus.SHOWING
                 ) {
-                    if (nonNullPlayer.holeCards) {
-                        holeCardsDto = nonNullPlayer.holeCards.map(card => card.mnemonic);
+                    if (_player.holeCards) {
+                        holeCardsDto = _player.holeCards.map(card => card.mnemonic);
                     }
                 } else {
-                    if (nonNullPlayer.holeCards) {
-                        holeCardsDto = nonNullPlayer.holeCards.map(() => "??");
+                    if (_player.holeCards) {
+                        holeCardsDto = _player.holeCards.map(() => "??");
                     }
                 }
 
-                return {
-                    address: nonNullPlayer.address,
+                // If the next player has expired, set status to SITTING_OUT and remove hole cards
+                if (_player.status === PlayerStatus.ACTIVE && this.expired(_player.address)) {
+                    _player.updateStatus(PlayerStatus.SITTING_OUT);
+                    _player.holeCards = undefined;
+                }
+
+                const dto: PlayerDTO = {
+                    address: _player.address,
                     seat: seat,
-                    stack: nonNullPlayer.chips.toString(),
+                    stack: _player.chips.toString(),
                     isSmallBlind: seat === this._smallBlindPosition,
                     isBigBlind: seat === this._bigBlindPosition,
                     isDealer: seat === this._dealer,
-                    deck: this._deck.toString(),
                     holeCards: holeCardsDto,
-                    status: nonNullPlayer.status,
+                    status: _player.status,
                     lastAction: lastAction,
                     legalActions: legalActions,
-                    sumOfBets: this.getPlayerTotalBets(nonNullPlayer.address).toString(),
+                    sumOfBets: this.getPlayerTotalBets(_player.address).toString(),
                     timeout: 0,
                     signature: ethers.ZeroHash
                 };
+
+                return dto;
             });
 
-        const nextPlayerToAct = this.findNextPlayerToAct();
+        
         const nextToAct = nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1;
-
         const previousActions: ActionDTO[] = this.getActionDTOs();
         const winners: WinnerDTO[] = [];
 
@@ -1378,10 +1405,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         const pot = this.getPot();
         const deckAsString = this._deck.toString();
-        const communityCards: string[] = [];
-        for (let i = 0; i < this._communityCards.length; i++) {
-            communityCards.push(this._communityCards[i].mnemonic);
-        }
+
+        // Do this as a map
+        const communityCards: string[] = this._communityCards.map(card => card.mnemonic);
 
         const gameOptions: GameOptionsDTO = {
             minBuyIn: this._gameOptions.minBuyIn.toString(),

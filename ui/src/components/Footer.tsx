@@ -26,13 +26,12 @@ import axios from "axios";
 
 import { ethers } from "ethers";
 
-
 const PokerActionPanel: React.FC = () => {
     const { id: tableId } = useParams<{ id: string }>();
-    
+
     // Add the useStartNewHand hook
     const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
-    
+
     // Get data from our custom hooks
     const { nonce, accountData, refreshNonce } = useTableNonce();
     const { players } = usePlayerDTO(tableId);
@@ -47,24 +46,18 @@ const PokerActionPanel: React.FC = () => {
     const { betHand } = useTableBet(tableId);
     const { muckCards, isMucking } = useTableMuck(tableId);
     const { showCards, isShowing } = useTableShow(tableId);
-    
+
     // Use the useNextToActInfo hook
     const { nextToActInfo, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
-    
+
     // Add the useTableState hook to get table state properties
-    const { 
-        currentRound, 
-        totalPot: tableTotalPot, 
-        formattedTotalPot,
-        tableType, 
-        roundType,
-    } = useTableState(tableId);
+    const { currentRound, totalPot: tableTotalPot, formattedTotalPot, tableType, roundType } = useTableState(tableId);
 
     // Log info from our hooks for debugging
     useEffect(() => {
         console.log("🎮 NextToActInfo:", nextToActInfo);
     }, [nextToActInfo]);
-    
+
     const [publicKey, setPublicKey] = useState<string>();
     const [isCallAction, setIsCallAction] = useState(false);
     const [isCheckAction, setIsCheckAction] = useState(false);
@@ -72,16 +65,16 @@ const PokerActionPanel: React.FC = () => {
 
     // Get user's address directly from localStorage
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-    
+
     // Determine if user is in the table using our hooks instead of accountUtils
     const isUserInTable = !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
-    
+
     // Use nextToActInfo to determine if it's the user's turn
     const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
-    
+
     // Replace userPlayer with direct checks from our hook data
     const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
-    
+
     // Check if fold action exists in legal actions
     const hasFoldAction = legalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
 
@@ -93,7 +86,6 @@ const PokerActionPanel: React.FC = () => {
 
     // New flag to determine whether to hide other action buttons when deal is available
     const hideOtherButtons = shouldShowDealButton;
-
 
     // Check if each action is available based on legalActions
     const canFold = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD);
@@ -252,7 +244,7 @@ const PokerActionPanel: React.FC = () => {
             // Reset UI states after action
             setIsCallAction(false);
             setIsCheckAction(false);
-            
+
             // Refresh the next-to-act info to reflect the new state
             refreshNextToActInfo?.();
         } catch (error: any) {
@@ -289,18 +281,18 @@ const PokerActionPanel: React.FC = () => {
         console.log("Posting small blind");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !postSmallBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to post small blind
         postSmallBlind({
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.[0]?.index || 0,
+            actionIndex: legalActions?.[0]?.index || 0
         });
     };
 
@@ -308,18 +300,18 @@ const PokerActionPanel: React.FC = () => {
         console.log("Posting big blind");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !postBigBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to post big blind
         postBigBlind({
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.[0]?.index || 0,
+            actionIndex: legalActions?.[0]?.index || 0
         });
     };
 
@@ -327,18 +319,18 @@ const PokerActionPanel: React.FC = () => {
         console.log("Checking");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !checkHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to check
         checkHand({
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === PlayerActionType.CHECK)?.index || 0,
+            actionIndex: legalActions?.find(a => a.action === PlayerActionType.CHECK)?.index || 0
         });
     };
 
@@ -346,18 +338,18 @@ const PokerActionPanel: React.FC = () => {
         console.log("Folding");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !foldHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to fold
         foldHand({
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === PlayerActionType.FOLD)?.index || 0,
+            actionIndex: legalActions?.find(a => a.action === PlayerActionType.FOLD)?.index || 0
         });
     };
 
@@ -365,12 +357,12 @@ const PokerActionPanel: React.FC = () => {
         console.log("Calling");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !callHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         if (callAction) {
             // Use our hook to call with the correct amount
             callHand({
@@ -378,7 +370,7 @@ const PokerActionPanel: React.FC = () => {
                 privateKey,
                 publicKey,
                 actionIndex: callAction.index || 0,
-                amount: callAction.min.toString(),
+                amount: callAction.min.toString()
             });
         } else {
             console.error("Call action not available");
@@ -389,21 +381,21 @@ const PokerActionPanel: React.FC = () => {
         console.log("Betting");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !betHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to bet with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
-        
+
         betHand({
             userAddress: publicKey,
             privateKey,
             publicKey,
             actionIndex: betAction?.index || 0,
-            amount: amountWei,
+            amount: amountWei
         });
     };
 
@@ -411,34 +403,33 @@ const PokerActionPanel: React.FC = () => {
         console.log("Raising");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !raiseHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to raise with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
-        
+
         raiseHand({
             userAddress: publicKey,
             privateKey,
             publicKey,
             actionIndex: raiseAction?.index || 0,
-            amount: amountWei,
+            amount: amountWei
         });
     };
-
 
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = legalActions?.some(action => action.action === "post-small-blind") && isUsersTurn;
     const shouldShowBigBlindButton = legalActions?.some(action => action.action === "post-big-blind") && isUsersTurn;
-    
+
     // Find the specific actions we need
     const smallBlindAction = legalActions?.find(action => action.action === "post-small-blind");
     const bigBlindAction = legalActions?.find(action => action.action === "post-big-blind");
     const foldAction = legalActions?.find(action => action.action === "fold");
-    
+
     // Debug log to understand action button visibility
     console.log("Action Button Debug:", {
         isUserInTable,
@@ -451,12 +442,13 @@ const PokerActionPanel: React.FC = () => {
         hasFoldAction: !!foldAction,
         playerStatus
     });
-    
+
     // Only show action buttons if user is in the table
     const showButtons = isUserInTable;
-    
+
     // Only show fold button if the player has the fold action and is in the table
-    const canFoldAnytime = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold") && playerStatus !== "folded" && showButtons;
+    const canFoldAnytime =
+        legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold") && playerStatus !== "folded" && showButtons;
 
     // Only show other action buttons if it's the player's turn, they have legal actions,
     // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
@@ -470,26 +462,25 @@ const PokerActionPanel: React.FC = () => {
     const activePlayerCount = activePlayers?.length || 0;
     const gameInProgress = activePlayerCount > 1;
 
-   
     // Add a handler for the deal button
     const handleDeal = () => {
         console.log("Deal button clicked");
-        
+
         // Get public and private keys
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !dealCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use the new hook to deal cards
         dealCards({
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === "deal")?.index || 0,
+            actionIndex: legalActions?.find(a => a.action === "deal")?.index || 0
         });
     };
 
@@ -501,7 +492,7 @@ const PokerActionPanel: React.FC = () => {
 
     // Check if muck action exists in legal actions
     const hasMuckAction = legalActions?.some((a: any) => a.action === "muck" || a.action === PlayerActionType.MUCK);
-    
+
     // Check if show action exists in legal actions
     const hasShowAction = legalActions?.some((a: any) => a.action === "show" || a.action === PlayerActionType.SHOW);
 
@@ -510,38 +501,38 @@ const PokerActionPanel: React.FC = () => {
         console.log("Mucking cards");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !muckCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to muck cards
         muckCards({
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === PlayerActionType.MUCK || a.action === "muck")?.index || 0,
+            actionIndex: legalActions?.find(a => a.action === PlayerActionType.MUCK || a.action === "muck")?.index || 0
         });
     };
-    
+
     // Handler for show action
     const handleShow = () => {
         console.log("Showing cards");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !showCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to show cards
         showCards({
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === PlayerActionType.SHOW || a.action === "show")?.index || 0,
+            actionIndex: legalActions?.find(a => a.action === PlayerActionType.SHOW || a.action === "show")?.index || 0
         });
     };
 
@@ -550,17 +541,17 @@ const PokerActionPanel: React.FC = () => {
         console.log("Starting new hand");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        
+
         if (!publicKey || !privateKey || !startNewHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-        
+
         console.log(`Table ID for new hand: ${tableId}`);
-        
+
         // Get current nonce from the hook
         console.log("Using nonce:", nonce);
-        
+
         // Use our hook to start a new hand
         startNewHand({
             userAddress: publicKey,
@@ -569,22 +560,21 @@ const PokerActionPanel: React.FC = () => {
             nonce: nonce || Date.now().toString(), // Use nonce from useTableNonce if available
             seed: Math.random().toString(36).substring(2, 15) // Generate a random seed
         })
-        .then((result) => {
-            console.log("New hand started successfully:", result);
-            // Force refresh all game state
-            refreshNonce?.();
-            refreshNextToActInfo?.();
-        })
-        .catch(error => {
-            console.error("Failed to start new hand:", error);
-            alert("Failed to start new hand. Please try again.");
-        });
+            .then(result => {
+                console.log("New hand started successfully:", result);
+                // Force refresh all game state
+                refreshNonce?.();
+                refreshNextToActInfo?.();
+            })
+            .catch(error => {
+                console.error("Failed to start new hand:", error);
+                alert("Failed to start new hand. Please try again.");
+            });
     };
 
     return (
+
         <div className="fixed bottom-0 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
-            {/* Animated light effects */}
-          
 
             <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
@@ -659,7 +649,7 @@ const PokerActionPanel: React.FC = () => {
                         </button>
                     </div>
                 )}
-                
+
                 {/* Show Button - Show when action is available */}
                 {hasShowAction && (
                     <div className="flex justify-center mb-3">
@@ -672,12 +662,7 @@ const PokerActionPanel: React.FC = () => {
                             disabled={isShowing}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -695,7 +680,7 @@ const PokerActionPanel: React.FC = () => {
                     <>
                         {/* Player Action Buttons Container */}
                         <div className="flex justify-center items-center gap-2">
-                            {showSmallBlindButton && (playerStatus !== "folded") && (
+                            {showSmallBlindButton && playerStatus !== "folded" && (
                                 <button
                                     onClick={handlePostSmallBlind}
                                     className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
@@ -709,7 +694,7 @@ const PokerActionPanel: React.FC = () => {
                                 </button>
                             )}
 
-                            {showBigBlindButton && (playerStatus !== "folded") && (
+                            {showBigBlindButton && playerStatus !== "folded" && (
                                 <button
                                     onClick={handlePostBigBlind}
                                     className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
@@ -722,20 +707,23 @@ const PokerActionPanel: React.FC = () => {
                                     </span>
                                 </button>
                             )}
-                            {canFoldAnytime && (!showActionButtons || (showSmallBlindButton || showBigBlindButton)) && (
-                                        <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
-                    px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
-                    transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
-                                            onClick={handleFold}
-                                        >
-                                            FOLD
-                                        </button>
-                                    )}
-                                    {/* Show a message if the player has folded */}
-                                    {userPlayer?.status === "folded" && (
-                                        <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
-                                    )}
+                            {canFoldAnytime && (!showActionButtons || showSmallBlindButton || showBigBlindButton) && (
+                                <button
+                                    className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155]
+hover:from-[#991b1b] hover:to-[#b91c1c]
+active:bg-white/10 active:scale-105
+px-6 py-2 rounded-lg border border-[#3a546d]
+hover:border-[#ef4444] hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]
+transition-all duration-200 font-medium min-w-[100px]"
+                                    onClick={handleFold}
+                                >
+                                    FOLD
+                                </button>
+                            )}
+                            {/* Show a message if the player has folded */}
+                            {userPlayer?.status === "folded" && (
+                                <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
+                            )}
                         </div>
 
                         {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
@@ -744,9 +732,12 @@ const PokerActionPanel: React.FC = () => {
                                 <div className="flex justify-between gap-2">
                                     {canFoldAnytime && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#7f1d1d] to-[#991b1b] hover:from-[#991b1b] hover:to-[#b91c1c]
-                    px-6 py-2 rounded-lg border border-[#7f1d1d] hover:border-[#ef4444] shadow-md
-                    transition-all duration-200 font-medium transform hover:scale-105 min-w-[100px]"
+                                            className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155]
+hover:from-[#991b1b] hover:to-[#b91c1c]
+active:bg-white/10 active:scale-105
+px-6 py-2 rounded-lg border border-[#3a546d]
+hover:border-[#ef4444] hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]
+transition-all duration-200 font-medium min-w-[100px]"
                                             onClick={handleFold}
                                         >
                                             FOLD
@@ -759,9 +750,9 @@ const PokerActionPanel: React.FC = () => {
 
                                     {canCheck && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#1e3a8a]/90 to-[#1e40af]/90 hover:from-[#1e40af] hover:to-[#2563eb]
-                                            px-4 py-2 rounded-lg w-full border border-[#1e3a8a]/50 hover:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
-                                            transition-all duration-200 font-medium transform hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                                            className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
+                                            px-4 py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
+                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCheck}
                                         >
                                             CHECK
@@ -769,12 +760,12 @@ const PokerActionPanel: React.FC = () => {
                                     )}
                                     {canCall && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#1e40af]/90 to-[#3b82f6]/90 hover:from-[#3b82f6] hover:to-[#60a5fa]
-                                            px-4 py-2 rounded-lg w-full border border-[#1e40af]/50 hover:border-[#60a5fa]/70 shadow-md backdrop-blur-sm
-                                            transition-all duration-200 font-medium transform hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                                            className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e40af]/90 hover:to-[#3b82f6]/90 active:from-[#3b82f6] active:to-[#60a5fa]
+                                            px-4 py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e40af]/50 active:border-[#60a5fa]/70 shadow-md backdrop-blur-sm
+                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCall}
                                         >
-                                            CALL <span className="text-[#93c5fd]">${callAmount.toFixed(2)}</span>
+                                            CALL <span className="text-[#ffffff]">${callAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                     {(canRaise || canBet) && (
@@ -783,11 +774,11 @@ const PokerActionPanel: React.FC = () => {
                                             disabled={isRaiseAmountInvalid || !isPlayerTurn}
                                             className={`${
                                                 isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
-                                            } bg-gradient-to-r from-[#7e22ce]/90 to-[#9333ea]/90 hover:from-[#9333ea] hover:to-[#a855f7]
-    px-4 py-2 rounded-lg w-full border border-[#7e22ce]/50 hover:border-[#c084fc]/70 shadow-md backdrop-blur-sm
-    transition-all duration-200 font-medium hover:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
+                                            } bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce]/90 hover:to-[#9333ea]/90 active:from-[#9333ea] active:to-[#a855f7]
+    px-4 py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm
+    transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
                                         >
-                                            {canRaise ? "RAISE" : "BET"} <span className="text-[#93c5fd]">${raiseAmount.toFixed(2)}</span>
+                                            {canRaise ? "RAISE" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
@@ -941,9 +932,9 @@ const PokerActionPanel: React.FC = () => {
                                                 Pot
                                             </button>
                                             <button
-                                                className="bg-gradient-to-r from-[#7e22ce] to-[#9333ea] hover:from-[#9333ea] hover:to-[#a855f7]
-                                                px-2 py-1.5 rounded-lg w-full border border-[#7e22ce] hover:border-[#c084fc] shadow-md
-                                                transition-all duration-200 text-xs font-medium transform hover:scale-105"
+                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce] hover:to-[#9333ea] active:from-[#9333ea] active:to-[#a855f7]
+                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#7e22ce] active:border-[#c084fc] shadow-md
+                                                transition-all duration-200 text-xs font-medium transform active:scale-105"
                                                 onClick={() => {
                                                     const newAmt = canBet ? maxBet : maxRaise;
                                                     handleRaiseChange(newAmt);
@@ -970,14 +961,14 @@ export default PokerActionPanel;
 /*
  * ======================== MIGRATION SUMMARY ========================
  * We've successfully migrated these features from TableContext to custom hooks:
- * 
+ *
  * 1. playerLegalActions -> usePlayerLegalActions().legalActions
  * 2. isPlayerTurn -> usePlayerLegalActions().isPlayerTurn
  * 3. canDeal -> Now uses currentUserCanDeal (from legalActions)
  * 4. dealCards -> useTableDeal().dealCards (replaced dealTable)
  * 5. nonce -> useTableNonce().nonce
  * 6. refreshNonce -> useTableNonce().refreshNonce
- * 
+ *
  * All user actions now use their respective hooks:
  * - Check: useTableCheck().checkHand
  * - Fold: useTableFold().foldHand
@@ -987,7 +978,7 @@ export default PokerActionPanel;
  * - Bet: useTableBet().betHand
  * - Raise: useTableRaise().raiseHand
  * - Deal: useTableDeal().dealCards
- * 
+ *
  * TO DO:
  * - Remove the TableContext dependency completely
  * - Potentially consolidate these hooks into a more organized structure

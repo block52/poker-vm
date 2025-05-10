@@ -137,7 +137,8 @@ describe("BigBlindAction", () => {
                     action: PlayerActionType.SMALL_BLIND,
                     index: 0,
                     seat: 2,
-                    round: TexasHoldemRound.ANTE
+                    round: TexasHoldemRound.ANTE,
+                    timestamp: Date.now()
                 }
             ]);
 
