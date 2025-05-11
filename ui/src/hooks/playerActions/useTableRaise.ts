@@ -2,19 +2,11 @@ import { useCallback, useState } from "react";
 import axios from "axios";
 import { PROXY_URL } from "../../config/constants";
 import { ethers } from "ethers";
-
-// Types for the raise parameters
-interface RaiseHandArgs {
-    userAddress?: string | null;
-    privateKey?: string | null;
-    publicKey?: string | null;
-    actionIndex: number;
-    amount: string; // Amount to raise in wei
-}
+import { HandParams } from "./types";
 
 // Interface for the hook return type
 interface UseTableRaiseReturn {
-    raiseHand: (args: RaiseHandArgs) => Promise<any>;
+    raiseHand: (args: HandParams) => Promise<any>;
     isRaising: boolean;
     error: Error | null;
 }
@@ -30,7 +22,7 @@ export function useTableRaise(tableId?: string): UseTableRaiseReturn {
 
     // Function to raise on hand
     const raiseHand = useCallback(
-        async ({ userAddress, privateKey, publicKey, actionIndex, amount }: RaiseHandArgs): Promise<any> => {
+        async ({ userAddress, privateKey, publicKey, actionIndex, amount }: HandParams): Promise<any> => {
             if (!tableId) {
                 const noTableError = new Error("No table ID provided");
                 setError(noTableError);
@@ -100,13 +92,5 @@ export function useTableRaise(tableId?: string): UseTableRaiseReturn {
     );
 
     const result = { raiseHand, isRaising, error };
-
-    console.log("[useTableRaise] Returns:", {
-        hasRaiseFunction: !!result.raiseHand,
-        isRaising: result.isRaising,
-        hasError: !!result.error,
-        tableId
-    });
-
     return result;
 }
