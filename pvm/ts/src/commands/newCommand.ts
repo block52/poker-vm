@@ -77,6 +77,11 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
                     smallBlind: gameOptions.smallBlind.toString(),
                     bigBlind: gameOptions.bigBlind.toString(),
                     dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
+                    positions: {
+                        dealer: gameOptions.maxPlayers,
+                        smallBlind: 1,
+                        bigBlind: 2
+                    },
                     players: [],
                     deck: deck.toString(),
                     communityCards: [],

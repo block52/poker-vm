@@ -72,6 +72,11 @@ export class GameManagement extends StateManager implements IGameManagement {
             dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
             players: [],
             deck: deck.toString(),
+            positions: {
+                dealer: gameOptions.maxPlayers,
+                smallBlind: 1,
+                bigBlind: 2
+            },
             communityCards: [],
             pots: ["0"],
             nextToAct: -1,
