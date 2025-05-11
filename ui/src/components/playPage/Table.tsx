@@ -13,10 +13,12 @@ import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
-import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
 import { useNavigate, useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 import "./Table.css"; // Import the Table CSS file
+
+
+//// TODO REPLACE THE BELOW HOOKS WITH THE SDK HOOK
 
 import { ethers } from "ethers";
 import { useTableState } from "../../hooks/useTableState";
@@ -39,6 +41,7 @@ import { useTableData } from "../../hooks/useTableData";
 import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
+import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -92,12 +95,14 @@ const NetworkDisplay = ({ isMainnet = false }) => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-
-    // Remove TableContext usage
-    // const {
-    //     showThreeCards,
-    //     tableData,
-    // } = useTableContext();
+    
+    // Add NodeRpcContext for balance
+    const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
+    const [accountBalance, setAccountBalance] = useState<string>("0");
+    const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
+    const [balanceError, setBalanceError] = useState<Error | null>(null);
+    const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
+    const [accountNonce, setAccountNonce] = useState<number>(0); // Add nonce state
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
@@ -153,11 +158,26 @@ const Table = () => {
     const [seat, setSeat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
 
+    // Restore missing state variables
+    const [dealerIndex, setDealerIndex] = useState<number>(0);
+    const [currentIndex, setCurrentIndex] = useState<number>(1);
+    const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
+    const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
+    const [zoom, setZoom] = useState(calculateZoom());
+    const [openSidebar, setOpenSidebar] = useState(false);
+    const [isCardVisible, setCardVisible] = useState(-1);
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
     // Add the useChipPositions hook AFTER startIndex is defined
     const { chipPositionArray } = useChipPositions(id, startIndex);
 
     // Add the usePlayerChipData hook
     const { getChipAmount } = usePlayerChipData(id);
+
+    const navigate = useNavigate();
+
+    // Add a ref for the animation frame ID
+    const animationFrameRef = useRef<number | undefined>(undefined);
 
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
@@ -185,49 +205,24 @@ const Table = () => {
         return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
     }, [tableDataValues]);
 
+    // Added direct game state fetching using the NodeRpc client
     useEffect(() => {
-        if (!DEBUG_MODE) return; // Skip logging if not in debug mode
+        if (!client || !id) return;
 
-        debugLog("Active Players:", tableActivePlayers);
-        // If there are active players, set their positions
-        if (tableActivePlayers.length > 0) {
-            // Player in seat 1
-            if (tableActivePlayers.find((p: any) => p.seat === 1)) {
-                const player1 = tableActivePlayers.find((p: any) => p.seat === 1);
-                debugLog("Player 1:", player1);
+        const fetchTableDataDirectly = async () => {
+            try {
+                // Call the SDK function to get game state directly
+                const gameState = await client.getGameState(id);
+                console.log("Direct game state from SDK:", gameState);
+                // You could update some local state with this data if needed
+            } catch (err) {
+                console.error("Error fetching game state directly:", err);
+                // We don't return early or stop rendering due to errors
             }
+        };
 
-            // Player in seat 2
-            if (tableActivePlayers.find((p: any) => p.seat === 2)) {
-                const player2 = tableActivePlayers.find((p: any) => p.seat === 2);
-                debugLog("Player 2:", player2);
-            }
-        }
-    }, [tableActivePlayers]);
-
-    // Add dealerIndex state here at the top with other state hooks
-    const [dealerIndex, setDealerIndex] = useState<number>(0);
-
-    // Handle loading state
-    const [currentIndex, setCurrentIndex] = useState<number>(1);
-    // const [type, setType] = useState<string | null>(null);
-
-    const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
-    const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
-    const [zoom, setZoom] = useState(calculateZoom());
-    const [openSidebar, setOpenSidebar] = useState(false);
-
-    const [isCardVisible, setCardVisible] = useState(-1);
-
-    const navigate = useNavigate();
-
-    const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
-
-    // Add state for mouse position
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-    // Add a ref for the animation frame ID
-    const animationFrameRef = useRef<number | undefined>(undefined);
+        fetchTableDataDirectly();
+    }, [client, id]);
 
     // Add effect to track mouse movement
     useEffect(() => {
@@ -275,7 +270,7 @@ const Table = () => {
     // Restore the useEffect for the timer
     useEffect(() => {
         const timer = setTimeout(() => {
-            setCurrentIndex(prevIndex => {
+            setCurrentIndex((prevIndex: number) => {
                 if (prevIndex === 2) {
                     // Handle case where prevIndex is 2 (e.g., no change or custom logic)
                     return prevIndex + 2; // For example, keep it the same
@@ -331,22 +326,65 @@ const Table = () => {
         // You could add a toast notification here if you want
     };
 
-    // Early return if no id
+    // Function to fetch account balance directly using NodeRpcClient
+    const fetchAccountBalance = async () => {
+        if (!client) {
+            setBalanceError(new Error("RPC client not initialized"));
+            setIsBalanceLoading(false);
+            return;
+        }
+
+        try {
+            setIsBalanceLoading(true);
+            
+            // Use the stored public key
+            if (!publicKey) {
+                setBalanceError(new Error("No address available"));
+                setIsBalanceLoading(false);
+                return;
+            }
+
+            const account = await client.getAccount(publicKey);
+            setAccountBalance(account.balance);
+            setAccountNonce(account.nonce); // Save the nonce
+            setBalanceError(null);
+        } catch (err) {
+            console.error("Error fetching account balance:", err);
+            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
+        } finally {
+            setIsBalanceLoading(false);
+        }
+    };
+
+    // Update to fetch balance when publicKey or client changes
+    useEffect(() => {
+        if (publicKey && client && !clientLoading) {
+            fetchAccountBalance();
+        }
+    }, [publicKey, client, clientLoading]);
+
+    // Format the balance
+    const balanceFormatted = accountBalance ? formatWeiToUSD(accountBalance) : "0.00";
+
+    // Remove early returns for errors, continue rendering even if there's an error
     if (!id) {
-        return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
+        console.error("No table ID provided");
+        // Continue rendering instead of returning early
     }
 
-    // NOW you can have your conditional returns
     if (tableDataValues.isLoading) {
-        return <div className="h-screen flex items-center justify-center text-white">Loading table data...</div>;
+        console.log("Table data is loading...");
+        // Continue rendering instead of returning early
     }
 
     if (tableDataValues.error) {
-        return <div className="h-screen flex items-center justify-center text-white">Error: {tableDataValues.error.message}</div>;
+        console.error("Error loading table data:", tableDataValues.error);
+        // Continue rendering instead of returning early
     }
 
     if (!tableDataValues.tableDataPlayers || !tableDataValues.tableDataCommunityCards) {
-        return <div className="h-screen flex items-center justify-center text-white">Waiting for table data...</div>;
+        console.log("Table data not fully loaded yet");
+        // Continue rendering instead of returning early
     }
 
     return (
@@ -374,10 +412,10 @@ const Table = () => {
                         <NetworkDisplay isMainnet={false} />
                     </div>
 
-                    {/* Right Section - Wallet info */}
+                    {/* Right Section - Wallet info - UPDATED to use NodeRpc balance */}
                     <div className="flex items-center z-10">
                         <div className="flex items-center bg-gray-800/60 rounded-lg border border-blue-500/10 py-1 px-2 mr-3">
-                            {walletLoading ? (
+                            {isBalanceLoading ? (
                                 <span>Loading...</span>
                             ) : (
                                 <>
@@ -396,15 +434,18 @@ const Table = () => {
                                         />
                                     </div>
 
-                                    {/* Balance */}
+                                    {/* Balance - UPDATED to use NodeRpc balance */}
                                     <div className="flex items-center">
                                         <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center mr-1.5">
                                             <span className="text-blue-400 font-bold text-[10px]">$</span>
                                         </div>
-                                        <p className="text-white font-medium text-xs">
-                                            ${balance ? formatWeiToUSD(balance) : "0.00"}
-                                            <span className="text-[10px] ml-1 text-gray-400">USDC</span>
-                                        </p>
+                                        <div>
+                                            <p className="text-white font-medium text-xs">
+                                                ${balanceFormatted}
+                                                <span className="text-[10px] ml-1 text-gray-400">USDC</span>
+                                            </p>
+                                            <p className="text-[8px] text-gray-400 -mt-1">nonce: {accountNonce}</p>
+                                        </div>
                                     </div>
                                 </>
                             )}
@@ -831,6 +872,11 @@ const Table = () => {
                     <span>Hand complete - waiting for next hand</span>
                 </div>
             )}
+
+            {/* Add table ID display */}
+            <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
+                Table ID: {id ? id.slice(0, 8) + "..." + id.slice(-6) : "Unknown"}
+            </div>
 
             {/* Powered by Block52 */}
             <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
