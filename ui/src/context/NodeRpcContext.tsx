@@ -26,7 +26,7 @@ interface NodeRpcProviderProps {
 // Provider component
 export const NodeRpcProvider: React.FC<NodeRpcProviderProps> = ({ 
   children, 
-  nodeUrl = "http://localhost:3000" 
+  nodeUrl = process.env.NODE_RPC_URL || "https://node1.block52.xyz/" 
 }) => {
   const [client, setClient] = useState<IClient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
