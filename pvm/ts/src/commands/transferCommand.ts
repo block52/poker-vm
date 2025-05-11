@@ -1,4 +1,4 @@
-import { GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
@@ -10,7 +10,7 @@ import contractSchemas from "../schema/contractSchemas";
 import { getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
-export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
+export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly gameManagement: IGameManagement;
     private readonly contractSchemas: IContractSchemaManagement;
     private readonly mempool: Mempool;
@@ -22,7 +22,7 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
         this.mempool = getMempoolInstance();
     }
 
-    public async execute(): Promise<ISignedResponse<Transaction>> {
+    public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         console.log(`Executing transfer command...`);
 
         const accountCommand = new AccountCommand(this.from, this.privateKey);
@@ -56,12 +56,22 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 game.performAction(this.from, NonPlayerActionType.JOIN, game.getTurnIndex(), this.amount);
                 console.log(`Join successful`);
 
-                // const _json = game.toJson();
-                // await this.gameManagement.saveFromJSON(_json);
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, "JOIN");
                 await this.mempool.add(gameTx);
-                return signResult(gameTx, this.privateKey);
+
+                const txResponse: TransactionResponse = {
+                    nonce: this.nonce.toString(),
+                    from: this.from,
+                    to: this.to,
+                    value: this.amount.toString(),
+                    hash: gameTx.hash,
+                    signature: gameTx.signature,
+                    timestamp: gameTx.timestamp.toString(),
+                    data: gameTx.data ?? "",
+                };
+
+                return signResult(txResponse, this.privateKey);
             }
 
             if (await this.isGameTransaction(this.from)) {
@@ -80,9 +90,20 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
                 // const _json = game.toJson();
                 // await this.gameManagement.saveFromJSON(_json);
 
-                const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "LEAVE");
+                const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "leave");
                 await this.mempool.add(gameTx);
-                return signResult(gameTx, this.privateKey);
+                
+                const txResponse: TransactionResponse = {
+                    nonce: this.nonce.toString(),
+                    from: this.from,
+                    to: this.to,
+                    value: stack.toString(),
+                    hash: gameTx.hash,
+                    signature: gameTx.signature,
+                    timestamp: gameTx.timestamp.toString(),
+                    data: gameTx.data ?? "",
+                };
+                return signResult(txResponse, this.privateKey);
             }
 
             console.log(`Processing EUA transaction...`);
@@ -91,7 +112,18 @@ export class TransferCommand implements ICommand<ISignedResponse<Transaction>> {
             const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
             await this.mempool.add(transaction);
 
-            return signResult(transaction, this.privateKey);
+            const txResponse: TransactionResponse = {
+                nonce: this.nonce.toString(),
+                from: this.from,
+                to: this.to,
+                value: this.amount.toString(),
+                hash: transaction.hash,
+                signature: transaction.signature,
+                timestamp: transaction.timestamp.toString(),
+                data: transaction.data ?? "",
+            };
+
+            return signResult(txResponse, this.privateKey);
 
         } catch (e) {
             console.error(`Error in transfer command:`, e);

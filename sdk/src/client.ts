@@ -1,12 +1,12 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { GameOptionsDTO, NonPlayerActionType, PerformActionResponse, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
+import { GameOptionsDTO, NonPlayerActionType, PerformActionResponse, PlayerActionType, TexasHoldemStateDTO, TransactionResponse } from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
 import { Wallet } from "ethers";
 
 export interface IClient {
-    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
+    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<PerformActionResponse>;
     findGames(min?: bigint, max?: bigint): Promise<GameOptionsDTO[]>;
     getAccount(address: string): Promise<AccountDTO>;
     getBlock(index: number): Promise<BlockDTO>;
@@ -19,13 +19,13 @@ export interface IClient {
     getNodes(): Promise<string[]>;
     getTransactions(): Promise<TransactionDTO[]>;
     mint(address: string, amount: string, transactionId: string): Promise<void>;
-    newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
+    newHand(gameAddress: string, seed: string, nonce?: number): Promise<TransactionResponse>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
-    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
-    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
+    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
+    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
-    transfer(to: string, amount: string, nonce?: number, data?: string): Promise<any>;
+    transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
 }
 
 /**
@@ -245,7 +245,7 @@ export class NodeRpcClient implements IClient {
      * @param amount The amount to transfer
      * @returns A Promise that resolves when the request is complete
      */
-    public async transfer(to: string, amount: string, nonce?: number, data?: string): Promise<any> {
+    public async transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse> {
         const from = this.getAddress();
         const signature = await this.getSignature(nonce);
 
@@ -296,7 +296,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async newHand(gameAddress: string, seed: string, nonce?: number): Promise<any> {
+    public async newHand(gameAddress: string, seed: string, nonce?: number): Promise<TransactionResponse> {
         const signature = await this.getSignature(nonce);
 
         const { data: body } = await axios.post(this.url, {
@@ -313,12 +313,16 @@ export class NodeRpcClient implements IClient {
      * Join a Texas Holdem game
      * @param gameAddress The address of the game
      * @param amount The amount to join with
+     * @param seat The seat number to join
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoin(gameAddress: string, amount: bigint, nonce?: number, data?: any): Promise<any> {
+    public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
         const signature = await this.getSignature(nonce);
+
+        // Pack the seat into the data field
+        const data = seat.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -353,7 +357,14 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
-    public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
+    /**
+     * Leave a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param amount The amount to leave with
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
@@ -374,7 +385,7 @@ export class NodeRpcClient implements IClient {
      * @param seed Optional seed for shuffling
      * @returns A Promise that resolves to the transaction
      */
-    public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<any> {
+    public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
 
