@@ -332,6 +332,7 @@ export class NodeRpcClient implements IClient {
         }
 
         const signature = await this.getSignature(nonce);
+        const index = await this.getNextTurnIndex(gameAddress, address);
 
         // Pack the seat into the data field
         const data = seat.toString();
@@ -339,7 +340,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, data],
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data],  // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -442,14 +443,16 @@ export class NodeRpcClient implements IClient {
 
     private async getNextTurnIndex(gameAddress: string, playerId: string): Promise<number> {
         const gameState = await this.getGameState(gameAddress);
-        const players = gameState.players;
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
 
-        if (!players) {
+        if (!gameState.previousActions) {
             return 0;
         }
 
-        // return players.findIndex((player) => player.id === playerId);
-        return 0;
+        const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
+        return lastAction.index + 1;
     }
 
     private async getNonce(address: string): Promise<number> {
