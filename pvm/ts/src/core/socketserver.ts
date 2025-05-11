@@ -2,8 +2,6 @@
 import { Server as SocketServer, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
-import GameState from "../schema/gameState";
-import { getGameManagementInstance } from "../state/gameManagement";
 
 // Map of table addresses to array of socket IDs
 const tableSubscriptions: Map<string, string[]> = new Map();
@@ -20,7 +18,7 @@ export class SocketService {
         });
 
         this.setupSocketEvents();
-        this.setupGameStateChangeListener();
+        console.log("Socket.IO server initialized");
     }
 
     private setupSocketEvents() {
@@ -32,14 +30,17 @@ export class SocketService {
                 this.subscribeToTable(tableAddress, socket.id);
                 console.log(`Socket ${socket.id} subscribed to table ${tableAddress}`);
 
-                // Send current game state to the client immediately upon subscription
-                this.sendCurrentGameState(tableAddress, socket.id);
+                // Join a room named after the table address for easier broadcasting
+                socket.join(tableAddress);
             });
 
             // Handle unsubscription from a table
             socket.on("unsubscribe", (tableAddress: string) => {
                 this.unsubscribeFromTable(tableAddress, socket.id);
                 console.log(`Socket ${socket.id} unsubscribed from table ${tableAddress}`);
+
+                // Leave the room
+                socket.leave(tableAddress);
             });
 
             // Handle disconnection
@@ -48,22 +49,6 @@ export class SocketService {
                 console.log(`Socket disconnected: ${socket.id}`);
             });
         });
-    }
-
-    private async sendCurrentGameState(tableAddress: string, socketId: string) {
-        try {
-            const gameManagement = getGameManagementInstance();
-            const gameState = await gameManagement.get(tableAddress);
-
-            if (gameState) {
-                this.io.to(socketId).emit("gameStateUpdate", {
-                    tableAddress,
-                    gameState
-                });
-            }
-        } catch (error) {
-            console.error(`Error fetching game state for table ${tableAddress}:`, error);
-        }
     }
 
     private subscribeToTable(tableAddress: string, socketId: string) {
@@ -99,56 +84,28 @@ export class SocketService {
         }
     }
 
-    private setupGameStateChangeListener() {
-        // This is where we'd set up a watcher for game state changes
-        // For MongoDB, we can use change streams to watch for updates
-        this.setupMongooseChangeStream();
-    }
-
-    private setupMongooseChangeStream() {
-        // Set up a change stream on the GameState collection
-        const changeStream = GameState.watch();
-
-        changeStream.on("change", async change => {
-            try {
-                if (change.operationType === "update" || change.operationType === "replace") {
-                    // Get table address from the change document
-                    const tableAddress = change.documentKey._id;
-
-                    // Get updated game state
-                    const gameStateDoc = await GameState.findById(tableAddress);
-
-                    if (gameStateDoc) {
-                        // Broadcast update to all subscribers of this table
-                        this.broadcastGameStateUpdate(tableAddress, gameStateDoc.state);
-                    }
-                }
-            } catch (error) {
-                console.error("Error processing game state change:", error);
-            }
-        });
-
-        changeStream.on("error", error => {
-            console.error("Error in GameState change stream:", error);
-            // Attempt to restart the change stream after a delay
-            setTimeout(() => this.setupMongooseChangeStream(), 5000);
-        });
-    }
-
-    // Method to manually broadcast game state updates (can be called from other parts of the app)
+    // Method to broadcast game state updates (can be called from anywhere in the application)
     public broadcastGameStateUpdate(tableAddress: string, gameState: TexasHoldemStateDTO) {
         const subscribers = tableSubscriptions.get(tableAddress);
 
         if (subscribers && subscribers.length > 0) {
             console.log(`Broadcasting game state update for table ${tableAddress} to ${subscribers.length} subscribers`);
 
-            // Emit to all subscribed clients
-            subscribers.forEach(socketId => {
-                this.io.to(socketId).emit("gameStateUpdate", {
-                    tableAddress,
-                    gameState
-                });
+            // Option 1: Emit to all subscribed clients individually
+            // subscribers.forEach(socketId => {
+            //   this.io.to(socketId).emit('gameStateUpdate', {
+            //     tableAddress,
+            //     gameState
+            //   });
+            // });
+
+            // Option 2: More efficient - emit to the room (all sockets in the room receive the message)
+            this.io.to(tableAddress).emit("gameStateUpdate", {
+                tableAddress,
+                gameState
             });
+        } else {
+            console.log(`No subscribers for table ${tableAddress}, skipping broadcast`);
         }
     }
 }

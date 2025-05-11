@@ -3,6 +3,7 @@ import { ICommand, ISignedResponse } from "./interfaces";
 import { PerformActionCommand } from "./performActionCommand";
 import { GameStateCommand } from "./gameStateCommand";
 import { signResult } from "./abstractSignedCommand";
+import { getSocketService } from "../core/socketserver";
 
 export class PerformActionCommandWithResult extends PerformActionCommand implements ICommand<ISignedResponse<PerformActionResponse>> {
     constructor(
@@ -37,6 +38,13 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
             timestamp: response.data.timestamp,
             data: this.action
         };
+
+        // Broadcast the game state update to all subscribed clients
+        const socketService = getSocketService();
+        if (socketService) {
+            console.log(`Broadcasting game state update for table ${this.to} after action ${this.action}`);
+            socketService.broadcastGameStateUpdate(this.to, gameStateResponse.data);
+        }
 
         return signResult(result, this.privateKey);
     }
