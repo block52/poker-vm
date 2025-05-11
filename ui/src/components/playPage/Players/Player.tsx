@@ -1,20 +1,12 @@
 import * as React from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
-import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
-
-// Helper function that only logs when DEBUG_MODE is true
-const debugLog = (...args: any[]) => {
-    if (DEBUG_MODE) {
-        console.log(...args);
-    }
-};
 
 type PlayerProps = {
     left?: string; // Front side image source
