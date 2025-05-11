@@ -17,7 +17,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 import "./Table.css"; // Import the Table CSS file
 
-
 //// TODO REPLACE THE BELOW HOOKS WITH THE SDK HOOK
 
 import { ethers } from "ethers";
@@ -95,7 +94,7 @@ const NetworkDisplay = ({ isMainnet = false }) => {
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    
+
     // Add NodeRpcContext for balance
     const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
@@ -108,7 +107,7 @@ const Table = () => {
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
 
     // Add the usePlayerSeatInfo hook
-    const { currentUserSeat, userDataBySeat, getUserBySeat } = usePlayerSeatInfo(id);
+    const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
 
     // Add the useNextToActInfo hook
     const { nextToActInfo } = useNextToActInfo(id);
@@ -126,26 +125,17 @@ const Table = () => {
         }
     }, [isShowdown, showingPlayers]);
 
-    // Add the useWinnerInfo hook
-    const { winnerInfo } = useWinnerInfo(id);
-
     // Add the useTableState hook to get table state properties
-    const { currentRound, totalPot: tableTotalPot, formattedTotalPot, tableSize, tableType, roundType } = useTableState(id, 5000);
+    const { currentRound, formattedTotalPot, tableSize } = useTableState(id, 5000);
 
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
 
     // Add the useGameProgress hook
-    const { isGameInProgress, activePlayers } = useGameProgress(id);
+    const { isGameInProgress } = useGameProgress(id);
 
     // Add the usePlayerDataAvailability hook
     const { isPlayerDataAvailable } = usePlayerDataAvailability(id);
-
-    // Add the useCardAnimations hook
-    const { flipped1, flipped2, flipped3, showThreeCards } = useCardAnimations(id);
-
-    // Add the useMinAndMaxBuyIns hook
-    const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
 
     // Add the useGameOptions hook
     const { gameOptions } = useGameOptions(id);
@@ -159,7 +149,6 @@ const Table = () => {
     const [startIndex, setStartIndex] = useState<number>(0);
 
     // Restore missing state variables
-    const [dealerIndex, setDealerIndex] = useState<number>(0);
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
@@ -173,8 +162,6 @@ const Table = () => {
 
     // Add the usePlayerChipData hook
     const { getChipAmount } = usePlayerChipData(id);
-
-    const navigate = useNavigate();
 
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
@@ -202,7 +189,7 @@ const Table = () => {
 
     // Define activePlayers only once - rename to tableActivePlayers since we now get activePlayers from the hook
     const tableActivePlayers = useMemo(() => {
-        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
     }, [tableDataValues]);
 
     // Added direct game state fetching using the NodeRpc client
@@ -336,7 +323,7 @@ const Table = () => {
 
         try {
             setIsBalanceLoading(true);
-            
+
             // Use the stored public key
             if (!publicKey) {
                 setBalanceError(new Error("No address available"));
