@@ -8,7 +8,7 @@ import { TransactionManagement } from "../transactionManagement";
 import { IBlockchainManagement } from "../interfaces";
 
 export class MongoDBBlockchainManagement extends StateManager implements IBlockchainManagement {
-    constructor(private readonly connString: string) {
+    constructor(protected readonly connString: string) {
         super(connString);
     }
 
@@ -24,7 +24,7 @@ export class MongoDBBlockchainManagement extends StateManager implements IBlockc
 
         // First update account balances if there are transactions
         if (block.transactions && block.transactions.length > 0) {
-            const accountManagement = new AccountManagement();
+            const accountManagement = new AccountManagement(this.connString);
             await accountManagement.applyTransactions(block.transactions);
 
             // Add transactions to transaction management

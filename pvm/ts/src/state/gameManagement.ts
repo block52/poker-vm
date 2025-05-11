@@ -8,7 +8,7 @@ import { TexasHoldemGameState } from "../types";
 import { IGameManagement } from "./interfaces";
 
 export class GameManagement extends StateManager implements IGameManagement {
-    constructor(private readonly connString: string) {
+    constructor(protected readonly connString: string) {
         super(connString);
     }
 
