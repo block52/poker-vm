@@ -2,7 +2,7 @@ type BadgeProps = {
     count: number; // The number displayed in the badge
     value: number; // The larger number displayed next to the badge
     color?: string;
-}
+};
 
 const Badge: React.FC<BadgeProps> = ({ count, value, color }) => {
     // Format the value to always show 2 decimal places
