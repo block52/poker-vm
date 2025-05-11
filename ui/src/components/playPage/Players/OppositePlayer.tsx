@@ -7,16 +7,6 @@ import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
 import { useShowingCardsByAddress } from "../../../hooks/useShowingCardsByAddress";
 
-// Enable this to see verbose logging
-const DEBUG_MODE = false;
-
-// Helper function that only logs when DEBUG_MODE is true
-const debugLog = (...args: any[]) => {
-    if (DEBUG_MODE) {
-        // console.log(...args);
-    }
-};
-
 type OppositePlayerProps = {
     left?: string;
     top?: string;
@@ -33,12 +23,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
     const { winnerInfo } = useWinnerInfo(id);
-    const { showingPlayers, isShowdown } = useShowingCardsByAddress(id);
-
-    // Add more detailed debugging
-    React.useEffect(() => {
-        debugLog("OppositePlayer component rendering for seat:", index);
-    }, [index]);
+    const { showingPlayers } = useShowingCardsByAddress(id);
 
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
@@ -67,11 +52,8 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
     }, [isShowingCards, showingPlayers, index]);
 
     if (!playerData) {
-        debugLog("OppositePlayer component has no player data for seat", index);
         return <></>;
     }
-
-    debugLog("Rendering OppositePlayer UI for seat", index, "with stack", playerData.stack, "showing cards:", showingCards);
 
     return (
         <>
@@ -108,7 +90,9 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                 <div className="relative flex flex-col justify-end mt-[-6px] mx-1">
                     <div
                         style={{ backgroundColor: isWinner ? "#2c8a3c" : color }}
-                        className={`b-[0%] mt-[auto] w-full h-[55px] shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${isWinner ? "animate-pulse" : ""}`}
+                        className={`b-[0%] mt-[auto] w-full h-[55px] shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${
+                            isWinner ? "animate-pulse" : ""
+                        }`}
                     >
                         {/* Progress bar is not shown in showdown */}
                         {!isWinner && round !== "showdown" && <ProgressBar index={index} />}
