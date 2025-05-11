@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { RPC } from "./rpc";
 import { getServerInstance } from "./core/server";
 import cors from "cors";
-import http from "http";
 import { initSocketServer } from "./core/socketserver";
 
 dotenv.config();
@@ -15,15 +14,20 @@ const PORT = process.env.PORT || 3000;
 
 const version = "0.1.1";
 
-// Create HTTP server
-const server = http.createServer(app);
-
 // Initialize Socket.IO server
-const socketService = initSocketServer(server);
+const socketService = initSocketServer();
 
 // Define a simple route
 app.get("/", (req: Request, res: Response) => {
     res.send(`PVM RPC Server v${version}`);
+});
+
+// WebSocket status endpoint
+app.get("/socket-status", (req: Request, res: Response) => {
+    res.json({
+        websocket_server: "active",
+        subscriptions: socketService.getSubscriptionInfo()
+    });
 });
 
 app.post("/", async (req: Request, res: Response) => {
@@ -40,6 +44,7 @@ app.post("/", async (req: Request, res: Response) => {
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`WebSocket server is running on ws://localhost:${PORT}`);
 
     // Get args from command line
     const args = process.argv.slice(2);

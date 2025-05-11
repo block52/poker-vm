@@ -1,86 +1,152 @@
 // src/socket/socket-server.ts
-import { Server as SocketServer, Socket } from "socket.io";
-import { Server as HttpServer } from "http";
+import WebSocket, { WebSocketServer } from "ws";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import url from "url";
 
-// Map of table addresses to array of socket IDs
-const tableSubscriptions: Map<string, string[]> = new Map();
+// Map of table addresses to set of WebSocket connections
+const tableSubscriptions: Map<string, Set<WebSocket>> = new Map();
+
+// Type definitions for message formats
+type SubscribeMessage = {
+    action: "subscribe";
+    tableAddress: string;
+};
+
+type UnsubscribeMessage = {
+    action: "unsubscribe";
+    tableAddress: string;
+};
+
+type ClientMessage = SubscribeMessage | UnsubscribeMessage;
+
+type GameStateUpdateMessage = {
+    type: "gameStateUpdate";
+    tableAddress: string;
+    gameState: TexasHoldemStateDTO;
+};
 
 export class SocketService {
-    private io: SocketServer;
+    private wss: WebSocketServer;
 
-    constructor(server: HttpServer) {
-        this.io = new SocketServer(server, {
-            cors: {
-                origin: "*", // In production, restrict this to trusted domains
-                methods: ["GET", "POST"]
-            }
-        });
-
+    constructor() {
+        this.wss = new WebSocketServer({ noServer: true });
         this.setupSocketEvents();
-        console.log("Socket.IO server initialized");
+        console.log("WebSocket server initialized");
     }
 
     private setupSocketEvents() {
-        this.io.on("connection", (socket: Socket) => {
-            console.log(`Socket connected: ${socket.id}`);
 
-            // Handle subscription to a table
-            socket.on("subscribe", (tableAddress: string) => {
-                this.subscribeToTable(tableAddress, socket.id);
-                console.log(`Socket ${socket.id} subscribed to table ${tableAddress}`);
+        console.log("Setting up WebSocket events");
 
-                // Join a room named after the table address for easier broadcasting
-                socket.join(tableAddress);
-            });
+        this.wss.on("connection", (ws: WebSocket, req: any) => {
+            console.log(`WebSocket connected from ${req.socket.remoteAddress}`);
 
-            // Handle unsubscription from a table
-            socket.on("unsubscribe", (tableAddress: string) => {
-                this.unsubscribeFromTable(tableAddress, socket.id);
-                console.log(`Socket ${socket.id} unsubscribed from table ${tableAddress}`);
+            // Try to get tableAddress from URL query parameters
+            const parsedUrl = url.parse(req.url || "", true);
+            const tableAddress = parsedUrl.query.tableAddress as string;
 
-                // Leave the room
-                socket.leave(tableAddress);
+            // If tableAddress is provided in URL, auto-subscribe
+            if (tableAddress) {
+                this.subscribeToTable(tableAddress, ws);
+                console.log(`Auto-subscribed to table ${tableAddress}`);
+
+                // Send confirmation message
+                this.sendMessage(ws, {
+                    type: "subscribed",
+                    tableAddress
+                });
+            }
+
+            // Handle messages from client
+            ws.on("message", (message: string) => {
+                try {
+                    const data = JSON.parse(message) as ClientMessage;
+
+                    if (data.action === "subscribe" && data.tableAddress) {
+                        this.subscribeToTable(data.tableAddress, ws);
+                        console.log(`Subscribed to table ${data.tableAddress}`);
+
+                        // Send confirmation
+                        this.sendMessage(ws, {
+                            type: "subscribed",
+                            tableAddress: data.tableAddress
+                        });
+                    } else if (data.action === "unsubscribe" && data.tableAddress) {
+                        this.unsubscribeFromTable(data.tableAddress, ws);
+                        console.log(`Unsubscribed from table ${data.tableAddress}`);
+
+                        // Send confirmation
+                        this.sendMessage(ws, {
+                            type: "unsubscribed",
+                            tableAddress: data.tableAddress
+                        });
+                    } else {
+                        console.log(`Received unknown message: ${message}`);
+                    }
+                } catch (error) {
+                    console.error("Error handling message:", error);
+                    this.sendMessage(ws, {
+                        type: "error",
+                        message: "Invalid message format"
+                    });
+                }
             });
 
             // Handle disconnection
-            socket.on("disconnect", () => {
-                this.handleDisconnect(socket.id);
-                console.log(`Socket disconnected: ${socket.id}`);
+            ws.on("close", () => {
+                console.log("WebSocket disconnected");
+                this.handleDisconnect(ws);
+            });
+
+            // Send welcome message
+            this.sendMessage(ws, {
+                type: "connected",
+                message: "Connected to PVM WebSocket Server"
             });
         });
     }
 
-    private subscribeToTable(tableAddress: string, socketId: string) {
-        // Get existing subscriptions or create new array
-        const subscriptions = tableSubscriptions.get(tableAddress) || [];
-
-        // Add socket ID if not already subscribed
-        if (!subscriptions.includes(socketId)) {
-            subscriptions.push(socketId);
-            tableSubscriptions.set(tableAddress, subscriptions);
+    private sendMessage(ws: WebSocket, data: any) {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(data));
         }
     }
 
-    private unsubscribeFromTable(tableAddress: string, socketId: string) {
-        const subscriptions = tableSubscriptions.get(tableAddress);
+    private subscribeToTable(tableAddress: string, ws: WebSocket) {
+        // Get existing subscriptions or create new set
+        if (!tableSubscriptions.has(tableAddress)) {
+            tableSubscriptions.set(tableAddress, new Set());
+        }
 
-        if (subscriptions) {
-            const updatedSubscriptions = subscriptions.filter(id => id !== socketId);
+        // Add websocket to subscribers
+        const subscribers = tableSubscriptions.get(tableAddress)!;
+        subscribers.add(ws);
+    }
 
-            if (updatedSubscriptions.length > 0) {
-                tableSubscriptions.set(tableAddress, updatedSubscriptions);
-            } else {
+    private unsubscribeFromTable(tableAddress: string, ws: WebSocket) {
+        const subscribers = tableSubscriptions.get(tableAddress);
+
+        if (subscribers) {
+            subscribers.delete(ws);
+
+            if (subscribers.size === 0) {
                 // If no more subscribers, remove the table entry
                 tableSubscriptions.delete(tableAddress);
             }
         }
     }
 
-    private handleDisconnect(socketId: string) {
-        // Remove this socket from all table subscriptions
+    private handleDisconnect(ws: WebSocket) {
+        // Remove this websocket from all table subscriptions
         for (const [tableAddress, subscribers] of tableSubscriptions.entries()) {
-            this.unsubscribeFromTable(tableAddress, socketId);
+            if (subscribers.has(ws)) {
+                subscribers.delete(ws);
+
+                if (subscribers.size === 0) {
+                    // If no more subscribers, remove the table entry
+                    tableSubscriptions.delete(tableAddress);
+                }
+            }
         }
     }
 
@@ -88,33 +154,48 @@ export class SocketService {
     public broadcastGameStateUpdate(tableAddress: string, gameState: TexasHoldemStateDTO) {
         const subscribers = tableSubscriptions.get(tableAddress);
 
-        if (subscribers && subscribers.length > 0) {
-            console.log(`Broadcasting game state update for table ${tableAddress} to ${subscribers.length} subscribers`);
+        if (subscribers && subscribers.size > 0) {
+            console.log(`Broadcasting game state update for table ${tableAddress} to ${subscribers.size} subscribers`);
 
-            // Option 1: Emit to all subscribed clients individually
-            // subscribers.forEach(socketId => {
-            //   this.io.to(socketId).emit('gameStateUpdate', {
-            //     tableAddress,
-            //     gameState
-            //   });
-            // });
-
-            // Option 2: More efficient - emit to the room (all sockets in the room receive the message)
-            this.io.to(tableAddress).emit("gameStateUpdate", {
+            const updateMessage: GameStateUpdateMessage = {
+                type: "gameStateUpdate",
                 tableAddress,
                 gameState
+            };
+
+            const messageStr = JSON.stringify(updateMessage);
+
+            // Send to all subscribed clients
+            subscribers.forEach(ws => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(messageStr);
+                }
             });
         } else {
             console.log(`No subscribers for table ${tableAddress}, skipping broadcast`);
         }
     }
+
+    // Get subscription information (for status endpoints)
+    public getSubscriptionInfo() {
+        const info: Record<string, number> = {};
+
+        for (const [tableAddress, subscribers] of tableSubscriptions.entries()) {
+            info[tableAddress] = subscribers.size;
+        }
+
+        return {
+            tables: Object.keys(info).length,
+            subscribers: info
+        };
+    }
 }
 
 let socketServiceInstance: SocketService | null = null;
 
-export function initSocketServer(server: HttpServer): SocketService {
+export function initSocketServer(): SocketService {
     if (!socketServiceInstance) {
-        socketServiceInstance = new SocketService(server);
+        socketServiceInstance = new SocketService();
     }
     return socketServiceInstance;
 }
