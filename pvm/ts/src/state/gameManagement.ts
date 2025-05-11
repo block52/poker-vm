@@ -2,9 +2,8 @@ import { StateManager } from "./stateManager";
 import GameState from "../schema/gameState";
 import { ethers } from "ethers";
 import { IGameStateDocument, IJSONModel } from "../models/interfaces";
-import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../models";
-import { TexasHoldemGameState } from "../types";
 import { IGameManagement } from "./interfaces";
 
 export class GameManagement extends StateManager implements IGameManagement {
@@ -73,6 +72,11 @@ export class GameManagement extends StateManager implements IGameManagement {
             dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
             players: [],
             deck: deck.toString(),
+            positions: {
+                dealer: gameOptions.maxPlayers,
+                smallBlind: 1,
+                bigBlind: 2
+            },
             communityCards: [],
             pots: ["0"],
             nextToAct: -1,

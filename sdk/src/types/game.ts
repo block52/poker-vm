@@ -121,6 +121,7 @@ export type TexasHoldemGameState = {
     maxPlayers: number;
     smallBlind: string;
     bigBlind: string;
+    dealer: number;
     positions: Positions;
     players: string[];
     deck: string;

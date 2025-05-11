@@ -6,8 +6,7 @@ import { getGameManagementInstance } from "../state/gameManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
 import { getContractSchemaManagement } from "../state/index";
-import { TexasHoldemRound, TransactionResponse } from "@bitcoinbrisbane/block52";
-import { TexasHoldemGameState } from "../types";
+import { TexasHoldemGameState, TexasHoldemRound, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
@@ -78,6 +77,11 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
                     smallBlind: gameOptions.smallBlind.toString(),
                     bigBlind: gameOptions.bigBlind.toString(),
                     dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
+                    positions: {
+                        dealer: gameOptions.maxPlayers,
+                        smallBlind: 1,
+                        bigBlind: 2
+                    },
                     players: [],
                     deck: deck.toString(),
                     communityCards: [],
