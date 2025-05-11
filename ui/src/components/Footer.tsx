@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import * as React from "react";
-import { PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
-import { PROXY_URL } from "../config/constants";
+import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 import { useTableNonce } from "../hooks/useTableNonce";
@@ -351,7 +350,7 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === "deal")?.index || 0
+            actionIndex: legalActions?.find(a => a.action === NonPlayerActionType.DEAL)?.index || 0
         });
     };
 
