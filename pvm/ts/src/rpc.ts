@@ -22,8 +22,8 @@ import {
     MineCommand,
     MintCommand,
     NewCommand,
-    PerformActionCommand,
     PurgeMempoolCommand,
+    PerformActionCommandWithResult,
     ReceiveMinedBlockHashCommand,
     ResetCommand,
     SharedSecretCommand,
@@ -339,7 +339,7 @@ export class RPC {
                 case RPCMethods.PERFORM_ACTION: {
                     const [from, to, action, amount, nonce, index, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
                     const _action = action as PlayerActionType | NonPlayerActionType;
-                    const command = new PerformActionCommand(from, to, Number(index), BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey, data);
+                    const command = new PerformActionCommandWithResult(from, to, Number(index), BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey, data);
                     result = await command.execute();
                     break;
                 }

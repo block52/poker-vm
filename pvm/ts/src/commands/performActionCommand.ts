@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
@@ -10,20 +10,20 @@ import { signResult } from "./abstractSignedCommand";
 import { OrderedTransaction } from "../engine/types";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
-export class PerformActionCommand implements ICommand<ISignedResponse<Transaction>> {
-    private readonly gameManagement: IGameManagement;
-    private readonly contractSchemas: IContractSchemaManagement;
-    private readonly mempool: Mempool;
+export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
+    protected readonly gameManagement: IGameManagement;
+    protected readonly contractSchemas: IContractSchemaManagement;
+    protected readonly mempool: Mempool;
 
     constructor(
-        private readonly from: string,
-        private readonly to: string,
-        private readonly index: number, // Allow array for join actions with seat number
-        private readonly amount: bigint,
-        private readonly action: PlayerActionType | NonPlayerActionType,
-        private readonly nonce: number,
-        private readonly privateKey: string,
-        private readonly data?: string
+        protected readonly from: string,
+        protected readonly to: string,
+        protected readonly index: number, // Allow array for join actions with seat number
+        protected readonly amount: bigint,
+        protected readonly action: PlayerActionType | NonPlayerActionType,
+        protected readonly nonce: number,
+        protected readonly privateKey: string,
+        protected readonly data?: string
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
         this.gameManagement = getGameManagementInstance();
@@ -35,7 +35,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         console.log(`PerformActionCommand created with action=${action}, index=${JSON.stringify(this.index)} (${indexType})`);
     }
 
-    public async execute(): Promise<ISignedResponse<Transaction>> {
+    public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         console.log("Executing transfer command...");
 
         if (await !this.isGameTransaction(this.to)) {
@@ -102,7 +102,18 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             await this.mempool.add(actionTx);
         }
 
-        return signResult(tx, this.privateKey);
+        const txResponse: TransactionResponse = {
+            nonce: tx.nonce.toString(),
+            to: tx.to,
+            from: tx.from,
+            value: tx.value.toString(),
+            hash: tx.hash,
+            signature: tx.signature,
+            timestamp: tx.timestamp.toString(),
+            data: tx.data
+        };
+
+        return signResult(txResponse, this.privateKey);
     }
 
     private async isGameTransaction(address: string): Promise<Boolean> {

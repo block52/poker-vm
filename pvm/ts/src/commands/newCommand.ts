@@ -110,18 +110,13 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
 
             // For existing games, handle reinitialization
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
-
-            // if (game.currentRound !== TexasHoldemRound.END) {
-            //     throw new Error("Game has not finished yet");
-            // }
-
             const deck = new Deck();
             deck.shuffle(this.seed);
             game.reInit(deck.toString());
 
             // Save the updated game state
             const updatedJson = game.toJson();
-            await this.gameManagement.saveFromJSON(JSON.stringify(updatedJson));
+            await this.gameManagement.saveFromJSON(updatedJson);
 
             // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern
             // of getting the next nonce from the account and validating it.

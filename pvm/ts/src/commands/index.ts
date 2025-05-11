@@ -25,6 +25,7 @@ import { GetTransactionCommand } from "./getTransactionCommand";
 import { MempoolCommand } from "./mempoolCommand";
 import { MineCommand } from "./mineCommand";
 import { PerformActionCommand } from "./performActionCommand";
+import { PerformActionCommandWithResult } from "./performActionCommandWithResult";
 import { PurgeMempoolCommand } from "./purgeMempoolCommand";
 import { ReceiveMinedBlockCommand } from "./receiveMinedBlockCommand";
 import { ReceiveMinedBlockHashCommand } from "./receiveMinedBlockHashCommand";
@@ -57,6 +58,7 @@ export {
     MintCommand,
     NewCommand,
     PerformActionCommand,
+    PerformActionCommandWithResult,
     PurgeMempoolCommand,
     RandomCommand,
     ReceiveMinedBlockCommand,
