@@ -21,7 +21,7 @@ export interface IClient {
     mint(address: string, amount: string, transactionId: string): Promise<void>;
     newHand(gameAddress: string, seed: string, nonce?: number): Promise<TransactionResponse>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
-    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
+    playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
     playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
