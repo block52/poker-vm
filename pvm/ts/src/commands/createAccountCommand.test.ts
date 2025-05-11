@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { CreateAccountCommand } from "./createAccountCommand";
-import { getAccountManagementInstance } from "../state/mongodb/accountManagement";
+import { getAccountManagementInstance } from "../state/index";
 import { Account } from "../models";
 
 // Mock the account management module

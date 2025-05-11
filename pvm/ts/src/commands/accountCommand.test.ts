@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { AccountCommand } from "./accountCommand";
 import { getMempoolInstance } from "../core/mempool";
-import { getAccountManagementInstance } from "../state/mongodb/accountManagement";
+import { getAccountManagementInstance } from "../state/index";
 import { Account, Transaction } from "../models";
 
 // Mock both mempool and account management

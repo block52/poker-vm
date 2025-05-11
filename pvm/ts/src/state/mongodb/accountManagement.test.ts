@@ -1,4 +1,4 @@
-import { AccountManagement, getAccountManagementInstance } from "./accountManagement";
+import { AccountManagement, getMongoAccountManagementInstance } from "./accountManagement";
 import { Account } from "../../models/account";
 import Accounts from "../../schema/accounts";
 import { Transaction } from "../../models/transaction";
@@ -316,8 +316,8 @@ describe.skip("AccountManagement", () => {
     describe("getAccountManagementInstance", () => {
         it("should return singleton instance", () => {
             // Arrange & Act
-            const instance1 = getAccountManagementInstance();
-            const instance2 = getAccountManagementInstance();
+            const instance1 = getMongoAccountManagementInstance();
+            const instance2 = getMongoAccountManagementInstance();
 
             // Assert
             expect(instance1).toBe(instance2);
