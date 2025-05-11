@@ -247,6 +247,9 @@ export class NodeRpcClient implements IClient {
      */
     public async transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse> {
         const from = this.getAddress();
+        if (!nonce) {
+            nonce = await this.getNonce(from);
+        }
         const signature = await this.getSignature(nonce);
 
         const { data: body } = await axios.post(this.url, {
@@ -297,6 +300,10 @@ export class NodeRpcClient implements IClient {
      * @returns A Promise that resolves to the transaction
      */
     public async newHand(gameAddress: string, seed: string, nonce?: number): Promise<TransactionResponse> {
+        if (!nonce) {
+            nonce = await this.getNonce(this.getAddress());
+        }
+
         const signature = await this.getSignature(nonce);
 
         const { data: body } = await axios.post(this.url, {
@@ -319,6 +326,11 @@ export class NodeRpcClient implements IClient {
      */
     public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
+
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
+
         const signature = await this.getSignature(nonce);
 
         // Pack the seat into the data field
@@ -343,8 +355,13 @@ export class NodeRpcClient implements IClient {
      * @returns
      */
     public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<PerformActionResponse> {
-        const signature = await this.getSignature(nonce);
         const address = this.getAddress();
+
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
+
+        const signature = await this.getSignature(nonce);
         const index = await this.getNextTurnIndex(gameAddress, address);
 
         const { data: body } = await axios.post(this.url, {
@@ -366,6 +383,10 @@ export class NodeRpcClient implements IClient {
      */
     public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
+
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
 
@@ -389,6 +410,10 @@ export class NodeRpcClient implements IClient {
         const address = this.getAddress();
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
 
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
@@ -408,8 +433,7 @@ export class NodeRpcClient implements IClient {
         const address = this.wallet.address;
 
         if (!nonce) {
-            const account = await this.getAccount(address);
-            nonce = account.nonce;
+            nonce = await this.getNonce(address);
         }
 
         const signature = await this.wallet.signMessage(nonce.toString());
@@ -425,6 +449,16 @@ export class NodeRpcClient implements IClient {
         }
 
         // return players.findIndex((player) => player.id === playerId);
+        return 0;
+    }
+
+    private async getNonce(address: string): Promise<number> {
+        const response = await this.getAccount(address);
+
+        if (response) {
+            return response.nonce;
+        }
+
         return 0;
     }
 }
