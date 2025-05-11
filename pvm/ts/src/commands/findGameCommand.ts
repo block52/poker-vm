@@ -66,7 +66,7 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
             // Return the filtered results
             return await signResult(results, this.privateKey);
         } catch (error) {
-            console.error(`Error executing GameStateCommand: ${(error as Error).message}`);
+            console.error(`Error executing findGameCommand: ${(error as Error).message}`);
             throw error; // Rethrow the error to be handled by the caller
         }
     }

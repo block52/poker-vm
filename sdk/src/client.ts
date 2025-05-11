@@ -13,6 +13,7 @@ export interface IClient {
     getBlockByHash(hash: string): Promise<BlockDTO>;
     getBlockHeight(): Promise<number>;
     getBlocks(count?: number): Promise<BlockDTO[]>;
+    getGameOptions(gameAddress: string): Promise<GameOptionsDTO>;
     getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
     getLastBlock(): Promise<BlockDTO>;
     getMempool(): Promise<TransactionDTO[]>;
@@ -292,6 +293,10 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
+    public async getGameOptions(gameAddress: string): Promise<GameOptionsDTO> {
+        throw new Error("Method not implemented.");
+    }
+
     /**
      * Create a new game on the remote node
      * @param gameAddress The address of the game
@@ -340,7 +345,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data],  // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
