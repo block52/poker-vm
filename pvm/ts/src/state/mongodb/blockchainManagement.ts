@@ -1,15 +1,15 @@
-import { Block } from "../models/index";
-import Blocks from "../schema/blocks";
-import { StateManager } from "./stateManager";
-import GenesisBlock from "../data/genesisblock.json";
-import { IBlockDocument } from "../models/interfaces";
-import { AccountManagement } from "./accountManagement";
-import { TransactionManagement } from "./transactionManagement";
-import { IBlockchainManagement } from "./interfaces";
+import { Block } from "../../models/index";
+import Blocks from "../../schema/blocks";
+import { StateManager } from "../stateManager";
+import GenesisBlock from "../../data/genesisblock.json";
+import { IBlockDocument } from "../../models/interfaces";
+import { AccountManagement } from "../accountManagement";
+import { TransactionManagement } from "../transactionManagement";
+import { IBlockchainManagement } from "../interfaces";
 
-export class BlockchainManagement extends StateManager implements IBlockchainManagement {
-    constructor() {
-        super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
+export class MongoDBBlockchainManagement extends StateManager implements IBlockchainManagement {
+    constructor(private readonly connString: string) {
+        super(connString);
     }
 
     public async addBlock(block: Block): Promise<void> {
@@ -107,10 +107,10 @@ export class BlockchainManagement extends StateManager implements IBlockchainMan
     }
 }
 
-let instance: BlockchainManagement;
-export const getBlockchainInstance = (): IBlockchainManagement => {
-    if (!instance) {
-        instance = new BlockchainManagement();
-    }
-    return instance;
-};
+// let instance: BlockchainManagement;
+// export const mongoBlockchainInstance = (): IBlockchainManagement => {
+//     if (!instance) {
+//         instance = new BlockchainManagement();
+//     }
+//     return instance;
+// };

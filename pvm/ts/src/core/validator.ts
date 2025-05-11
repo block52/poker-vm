@@ -1,10 +1,10 @@
 import { ethers, ZeroAddress } from "ethers";
-import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
 import { getBootNodes } from "../state/nodeManagement";
 import { Node } from "../core/types";
 import { createProvider } from "./provider";
 import { CONTRACT_ADDRESSES } from "./constants";
 import { IBlockchainManagement } from "../state/interfaces";
+import { getBlockchainInstance } from "../state";
 
 export class Validator {
     private readonly stakingContract: ethers.Contract;
