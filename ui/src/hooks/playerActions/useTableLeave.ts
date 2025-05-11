@@ -2,15 +2,7 @@ import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../../config/constants";
-
-interface LeaveTableOptions {
-    amount?: string;
-    userAddress?: string | null;
-    privateKey?: string | null;
-    publicKey?: string | null;
-    nonce?: string | number;
-    actionIndex?: number | null;
-}
+import { LeaveTableOptions } from "./types";
 
 async function leaveTableFetcher(url: string, { arg }: { arg: LeaveTableOptions }) {
     // Get credentials from localStorage if not provided
@@ -65,14 +57,6 @@ export function useTableLeave(tableId: string | undefined) {
         error,
         data
     };
-
-    console.log("[useTableLeave] Returns:", {
-        hasLeaveFunction: !!result.leaveTable,
-        isLeaving: result.isLeaving,
-        hasError: !!result.error,
-        hasData: !!result.data,
-        tableId
-    });
 
     return result;
 }
