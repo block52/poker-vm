@@ -1,18 +1,11 @@
 import { useCallback, useState } from "react";
 import axios from "axios";
 import { PROXY_URL } from "../../config/constants";
-
-// Types for the check parameters
-interface CheckHandArgs {
-    userAddress?: string | null;
-    privateKey?: string | null;
-    publicKey?: string | null;
-    actionIndex: number;
-}
+import { HandParams } from "./types";
 
 // Interface for the hook return type
 interface UseTableCheckReturn {
-    checkHand: (args: CheckHandArgs) => Promise<any>;
+    checkHand: (args: HandParams) => Promise<any>;
     isChecking: boolean;
     error: Error | null;
 }
@@ -28,7 +21,7 @@ export function useTableCheck(tableId?: string): UseTableCheckReturn {
 
     // Function to check on hand
     const checkHand = useCallback(
-        async ({ userAddress, privateKey, publicKey, actionIndex }: CheckHandArgs): Promise<any> => {
+        async ({ userAddress, privateKey, publicKey, actionIndex }: HandParams): Promise<any> => {
             if (!tableId) {
                 const noTableError = new Error("No table ID provided");
                 setError(noTableError);
@@ -46,7 +39,7 @@ export function useTableCheck(tableId?: string): UseTableCheckReturn {
 
             try {
                 console.log(`Checking on table ${tableId} with action index ${actionIndex}`);
-                
+
                 // Make API call to check
                 const response = await axios.post(`${PROXY_URL}/table/${tableId}/check`, {
                     tableId,
@@ -57,7 +50,7 @@ export function useTableCheck(tableId?: string): UseTableCheckReturn {
                 });
 
                 console.log("Check response:", response.data);
-                
+
                 setIsChecking(false);
                 return response.data;
             } catch (err: any) {
