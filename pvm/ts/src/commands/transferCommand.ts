@@ -86,10 +86,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                 const stack = player?.chips ?? 0n;
                 game.performAction(this.to, NonPlayerActionType.LEAVE, game.getTurnIndex(), stack);
                 console.log(`Leave successful, returning ${stack} chips`);
-
-                // const _json = game.toJson();
-                // await this.gameManagement.saveFromJSON(_json);
-
+                
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "leave");
                 await this.mempool.add(gameTx);
                 
@@ -97,7 +94,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     nonce: this.nonce.toString(),
                     from: this.from,
                     to: this.to,
-                    value: this.amount.toString(),
+                    value: stack.toString(),
                     hash: gameTx.hash,
                     signature: gameTx.signature,
                     timestamp: gameTx.timestamp.toString(),
