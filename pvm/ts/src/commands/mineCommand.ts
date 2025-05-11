@@ -146,7 +146,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
                         Date.now(),
                         0n,
                         undefined,
-                        `${PlayerActionType.FOLD}-${turnIndex}`);
+                        `${PlayerActionType.FOLD},${turnIndex}`);
 
                     this.mempool.add(transaction);
                     console.log(`Expired action for game ${gameState.address} and player ${turn.playerId}`);
