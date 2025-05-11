@@ -31,7 +31,7 @@ describe.skip("AccountManagement", () => {
         jest.clearAllMocks();
 
         // Create a new instance for each test
-        accountManagement = new AccountManagement();
+        accountManagement = new AccountManagement("");
     });
 
     describe("createAccount", () => {

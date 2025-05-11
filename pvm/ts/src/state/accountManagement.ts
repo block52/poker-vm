@@ -7,7 +7,7 @@ import { StateManager } from "./stateManager";
 import { IAccountManagement } from "./interfaces";
 
 export class AccountManagement extends StateManager implements IAccountManagement {
-    constructor(private readonly connString: string) {
+    constructor(protected readonly connString: string) {
         super(connString);
     }
 

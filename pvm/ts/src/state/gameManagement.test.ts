@@ -23,7 +23,7 @@ describe.skip("GameManagement", () => {
             ...process,
             env: { ...process.env, DB_URL: "mongodb://testdb:27017/test" }
         }));
-        gameManagement = new GameManagement();
+        gameManagement = new GameManagement("mock");
     });
 
     describe("get", () => {
