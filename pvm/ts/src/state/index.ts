@@ -20,7 +20,7 @@ export const getBlockchainInstance = (): IBlockchainManagement => {
         return instance;
     }
 
-    if (dbType === "mongodb") {
+    if (dbType === "mongodb" || dbType === "mongodb+srv") {
         return new MongoDBBlockchainManagement(connString);
     }
 

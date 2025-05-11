@@ -180,16 +180,6 @@ app.post("/", async (req: Request, res: Response) => {
     res.json(response);
 });
 
-// // Start the server
-// app.listen(PORT, () => {
-//     console.log(`Server is running on http://localhost:${PORT}`);
-//     console.log(`WebSocket server is running on ws://localhost:${PORT}`);
-
-//     // Get args from command line
-//     const args = process.argv.slice(2);
-//     getServerInstance().bootstrap(args);
-// });
-
 // Start the HTTP server (instead of app.listen)
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
