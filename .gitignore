@@ -439,6 +439,7 @@ ui/build
 # misc
 ui/.DS_Store
 ui/.env.local
+ui/.env
 ui/.env.development.local
 ui/.env.test.local
 ui/.env.production.local
