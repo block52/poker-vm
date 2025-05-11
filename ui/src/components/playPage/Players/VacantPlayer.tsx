@@ -4,9 +4,9 @@ import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import PokerProfile from "../../../assets/PokerProfile.svg";
 import { toDisplaySeat } from "../../../utils/tableUtils";
-import { useTableJoin } from "../../../hooks/playerActions/useTableJoin";
 import { useTableTurnIndex } from "../../../hooks/useTableTurnIndex";
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
+import { useNodeRpc } from "../../../context/NodeRpcContext";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -28,43 +28,58 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const privateKey = localStorage.getItem("user_eth_private_key");
         const actionIndex = useTableTurnIndex(tableId);
 
+        const { client, isLoading: clientLoading } = useNodeRpc();
+
         const [showConfirmModal, setShowConfirmModal] = useState(false);
+        const [isJoining, setIsJoining] = useState(false);
+        const [joinError, setJoinError] = useState<string | null>(null);
+        
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
-
-        const { joinTable } = useTableJoin(tableId);
 
         const handleJoinClick = useCallback(() => {
             debugLog("Join click:", { index, tableId });
             if (!canJoinThisSeat) return;
             setShowConfirmModal(true);
+            setJoinError(null);
         }, [canJoinThisSeat, index, tableId]);
 
         const handleConfirmSeat = async () => {
-            setShowConfirmModal(false);
-
-            const storedAmount = localStorage.getItem("buy_in_amount");
-
-            if (!storedAmount || !joinTable || !userAddress || !privateKey) {
-                console.error("Missing join parameters");
+            if (!client || !userAddress || !privateKey || !tableId) {
+                setJoinError("Missing required information to join table");
                 return;
             }
 
+            const storedAmount = localStorage.getItem("buy_in_amount");
+            if (!storedAmount) {
+                setJoinError("Missing buy-in amount");
+                return;
+            }
+
+            setIsJoining(true);
+            setJoinError(null);
+
             try {
-                const buyInWei = ethers.parseUnits(storedAmount, 18).toString();
-                console.log(`Joining table at seat ${index} with amount ${buyInWei} and action index ${actionIndex}`);
+                const buyInWei = ethers.parseUnits(storedAmount, 18);
                 
-                await joinTable({
-                    buyInAmount: buyInWei,
-                    userAddress,
-                    privateKey,
-                    publicKey: userAddress,
-                    actionIndex,
-                    seatNumber: index
-                });
+                const account = await client.getAccount(userAddress);
+                
+                console.log(`Joining table at seat ${index} with amount ${buyInWei} and nonce ${account.nonce}`);
+                
+                const response = await client.playerJoin(
+                    tableId,
+                    BigInt(buyInWei.toString()),
+                    index,
+                    account.nonce
+                );
+                
+                console.log("Join table response:", response);
+                
                 window.location.reload();
             } catch (err) {
-                console.error("Failed to join:", err);
+                console.error("Failed to join table:", err);
+                setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
+                setIsJoining(false);
             }
         };
 
@@ -98,18 +113,37 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                 Sit Here?
                                 <span className="text-red-400 ml-2">♦</span>
                             </h2>
+                            
+                            {joinError && (
+                                <div className="mb-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm">
+                                    Error: {joinError}
+                                </div>
+                            )}
+                            
                             <div className="flex justify-between space-x-4 mt-6">
                                 <button
                                     onClick={() => setShowConfirmModal(false)}
                                     className="px-5 py-3 bg-gray-600 text-white rounded-lg flex-1 hover:bg-gray-500 transition"
+                                    disabled={isJoining}
                                 >
                                     No
                                 </button>
                                 <button
                                     onClick={handleConfirmSeat}
-                                    className="px-5 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg flex-1 shadow-lg hover:from-green-500 hover:to-green-400 transform hover:scale-105 transition"
+                                    disabled={isJoining || clientLoading}
+                                    className="px-5 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg flex-1 shadow-lg hover:from-green-500 hover:to-green-400 transform hover:scale-105 transition flex items-center justify-center"
                                 >
-                                    Yes
+                                    {isJoining ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Joining...
+                                        </>
+                                    ) : (
+                                        "Yes"
+                                    )}
                                 </button>
                             </div>
                         </div>
