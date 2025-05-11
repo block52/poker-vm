@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import { RPC } from "./rpc";
 import { getServerInstance } from "./core/server";
 import cors from "cors";
+import http from "http";
+import { initSocketServer } from "./core/socketserver";
 
 dotenv.config();
 
@@ -11,7 +13,13 @@ app.use(express.json());
 app.use(cors()); // Add this line to enable CORS for all routes
 const PORT = process.env.PORT || 3000;
 
-const version = "0.1.0";
+const version = "0.1.1";
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO server
+const socketService = initSocketServer(server);
 
 // Define a simple route
 app.get("/", (req: Request, res: Response) => {
