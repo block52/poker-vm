@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import useUserWallet from "../../hooks/useUserWallet";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
+import { useNodeRpc } from "../../context/NodeRpcContext";
+
 
 interface BuyInModalProps {
     tableId: string;
@@ -12,6 +14,12 @@ interface BuyInModalProps {
 
 const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => {
     const { balance } = useUserWallet();
+    const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
+    const [accountBalance, setAccountBalance] = useState<string>("0");
+    const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
+    const [balanceError, setBalanceError] = useState<Error | null>(null);
+    const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
+    
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(tableId);
 
       // ──────────── derive big/small blind ────────────
@@ -25,7 +33,40 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
     const [waitForBigBlind, setWaitForBigBlind] = useState(true);
 
     const navigate = useNavigate();
-    const balanceFormatted = balance ? parseFloat(ethers.formatUnits(balance, 18)) : 0;
+    const balanceFormatted = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
+
+    const fetchAccountBalance = async () => {
+        if (!client) {
+            setBalanceError(new Error("RPC client not initialized"));
+            setIsBalanceLoading(false);
+            return;
+        }
+
+        try {
+            setIsBalanceLoading(true);
+            
+            if (!publicKey) {
+                setBalanceError(new Error("No address available"));
+                setIsBalanceLoading(false);
+                return;
+            }
+
+            const account = await client.getAccount(publicKey);
+            setAccountBalance(account.balance);
+            setBalanceError(null);
+        } catch (err) {
+            console.error("Error fetching account balance:", err);
+            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
+        } finally {
+            setIsBalanceLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (publicKey && client && !clientLoading) {
+            fetchAccountBalance();
+        }
+    }, [publicKey, client, clientLoading]);
 
     const handleBuyInChange = (amount: string) => {
         setBuyInAmount(amount);
