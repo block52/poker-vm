@@ -92,7 +92,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
             try {
                 const result = await commands[i].execute();
                 // Save the game state to the database
-                await this.gameStateManagement.saveFromJSON(JSON.stringify(result.data));
+                await this.gameStateManagement.saveFromJSON(result.data);
             } catch (error) {
                 console.warn(`Error processing game transactions for address ${commands[i].address}: ${(error as Error).message}`);
             }
