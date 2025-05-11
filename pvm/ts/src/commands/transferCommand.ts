@@ -97,13 +97,12 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     nonce: this.nonce.toString(),
                     from: this.from,
                     to: this.to,
-                    value: this.amount.toString(),
+                    value: stack.toString(),
                     hash: gameTx.hash,
                     signature: gameTx.signature,
                     timestamp: gameTx.timestamp.toString(),
                     data: gameTx.data ?? "",
                 };
-
                 return signResult(txResponse, this.privateKey);
             }
 
