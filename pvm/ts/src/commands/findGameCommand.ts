@@ -1,4 +1,4 @@
-import { GameManagement } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/gameManagement";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { GameOptionsResponse } from "@bitcoinbrisbane/block52";
@@ -11,7 +11,7 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
 
     // TODO: Create more specific types for min and max
     constructor(private readonly privateKey: string, query: string) {
-        this.gameManagement = new GameManagement();
+        this.gameManagement = getGameManagementInstance();
 
         const params = query.split(",");
 

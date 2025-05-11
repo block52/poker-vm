@@ -1,7 +1,7 @@
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { GameOptions } from "@bitcoinbrisbane/block52";
-import { GameManagement } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/gameManagement";
 import { IGameManagement } from "../state/interfaces";
 
 export class DeployContractCommand implements ISignedCommand<string> {
@@ -22,7 +22,7 @@ export class DeployContractCommand implements ISignedCommand<string> {
         };
 
         this.gameOptions = gameOptions;
-        this.gameManagement = new GameManagement();
+        this.gameManagement = getGameManagementInstance();
     }
 
     public async execute(): Promise<ISignedResponse<string>> {

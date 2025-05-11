@@ -7,8 +7,8 @@ import { Deck } from "../models";
 import { IGameManagement } from "./interfaces";
 
 export class GameManagement extends StateManager implements IGameManagement {
-    constructor() {
-        super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
+    constructor(protected readonly connString: string) {
+        super(connString);
     }
 
     public async getAll(): Promise<IGameStateDocument[]> {
@@ -132,7 +132,8 @@ export class GameManagement extends StateManager implements IGameManagement {
 let instance: GameManagement;
 export const getGameManagementInstance = (): IGameManagement => {
     if (!instance) {
-        instance = new GameManagement();
+        const connString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
+        instance = new GameManagement(connString);
     }
     return instance;
 };

@@ -1,5 +1,5 @@
 import { BlockCommand } from "./blockCommand";
-import { BlockchainManagement } from "../state/blockchainManagement";
+import { MongoDBBlockchainManagement } from "../state/mongodb/blockchainManagement";
 import { Block } from "../models";
 
 const privateKey = "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -9,11 +9,11 @@ const privateKey = "0x0000000000000000000000000000000000000000000000000000000000
 jest.mock("../state/blockchainManagement");
 
 describe.skip("BlockCommand", () => {
-    let mockBlockchainManagement: jest.Mocked<BlockchainManagement>;
+    let mockBlockchainManagement: jest.Mocked<MongoDBBlockchainManagement>;
 
     beforeEach(() => {
-        mockBlockchainManagement = new BlockchainManagement() as jest.Mocked<BlockchainManagement>;
-        (BlockchainManagement as jest.Mock).mockImplementation(() => mockBlockchainManagement);
+        mockBlockchainManagement = new MongoDBBlockchainManagement("") as jest.Mocked<MongoDBBlockchainManagement>;
+        (MongoDBBlockchainManagement as jest.Mock).mockImplementation(() => mockBlockchainManagement);
     });
 
     it("should get specific block when index is provided", async () => {

@@ -1,14 +1,22 @@
 import React, { useEffect, useState, useRef } from "react"; // Import React, useEffect, and useRef
 import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
-import { STORAGE_PUBLIC_KEY, STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
+
 import "./Dashboard.css"; // Import the CSS file with animations
-import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; // Add this import
-import useUserWallet from "../hooks/useUserWallet"; // Add this import
-import useNewCommand from "../hooks/DashboardPage/useNewCommand"; // Import the new hook
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+
+// Web3 Wallet Imports
+import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; //  Keep for Web3 wallet
+import useUserWallet from "../hooks/useUserWallet"; // Keep for Web3 wallet
 import { Wallet } from "ethers";
+
+
+
 import BuyInModal from "./playPage/BuyInModal";
+
+
+// game wallet and SDK imports
+import { useNodeRpc } from "../context/NodeRpcContext"; // Use NodeRpcContext
+import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
+
 // Create an enum of game types
 enum GameType {
     CASH = "cash",
@@ -47,23 +55,32 @@ const HexagonPattern = () => {
 };
 
 const Dashboard: React.FC = () => {
-    const seats = [2, 6, 8];
+
 
     const navigate = useNavigate();
-    const [publicKey, setPublicKey] = useState<string>();
     const [typeSelected, setTypeSelected] = useState<string>("cash");
     const [variantSelected, setVariantSelected] = useState<string>("texas-holdem");
     const [seatSelected, setSeatSelected] = useState<number>(2);
     const [limitTypeSelected, setLimitTypeSelected] = useState("no-limit");
+    const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
-    const { balance: b52Balance } = useUserWallet();
+    const { balance: walletBalance } = useUserWallet(); // Keep for Web3 wallet
+    
+    // Replace useAccountBalance with direct NodeRpcClient interaction
+    const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
+    const [accountBalance, setAccountBalance] = useState<string>("0");
+    const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
+    const [balanceError, setBalanceError] = useState<Error | null>(null);
+    const [accountNonce, setAccountNonce] = useState<number>(0); // Track nonce for transactions
+
+
     const [games, setGames] = useState([]);
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
     const [importError, setImportError] = useState("");
     const [showPrivateKey, setShowPrivateKey] = useState(false);
-    const [isResetting, setIsResetting] = useState(false);
+
 
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
@@ -109,151 +126,92 @@ const Dashboard: React.FC = () => {
     }, []);
 
     // Game contract addresses - in a real app, these would come from the API
-    const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd343"; // Example address
+    const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd34326"; // Example address
 
-    // Initialize the useNewCommand hook with the selected contract address
-    const { createNewGame, isCreating } = useNewCommand({
-        gameContractAddress: selectedContractAddress || DEFAULT_GAME_CONTRACT
-    });
-
-    // Function to handle creating a new game
+    // Function to handle creating a new game using NodeRpcClient directly
     const handleCreateNewGame = async () => {
+        if (!client) {
+            setCreateGameError("Client not initialized");
+            return;
+        }
+
         setIsCreatingGame(true);
         setCreateGameError("");
 
         try {
-            // Generate a random seed for the game (optional)
+            // Generate a random seed for the game
             const randomSeed = Math.random().toString(36).substring(2, 15);
-
-            const result = await createNewGame(randomSeed);
-
-            if (result.success && result.gameAddress) {
-                setNewGameAddress(result.gameAddress);
+            const gameAddress = selectedContractAddress || DEFAULT_GAME_CONTRACT;
+            
+            // Create the new game using the client's newHand method
+            // The account's nonce is managed automatically by the NodeRpcClient
+            const result = await client.newHand(gameAddress, randomSeed);
+            
+            if (result && result.hash) {
+                setNewGameAddress(gameAddress);
                 setShowCreateGameModal(false);
 
                 // Show success message
-                alert(`Game created successfully! Game address: ${result.gameAddress}`);
-
-                // You could automatically navigate to the game or update the UI
-                // navigate(`/table/${result.gameAddress}`);
+                alert(`Game created successfully! Game address: ${gameAddress}`);
+                
+                // Refresh account data to get updated nonce
+                fetchAccountBalance();
             } else {
-                setCreateGameError(result.error || "Failed to create game");
+                setCreateGameError("Failed to create game - no transaction hash returned");
             }
         } catch (error: any) {
+            console.error("Error creating game:", error);
             setCreateGameError(error.message || "An unexpected error occurred");
         } finally {
             setIsCreatingGame(false);
         }
     };
 
-    // Add function to reset blockchain
-    const resetBlockchain = async () => {
-        if (!confirm("Are you sure you want to reset the blockchain? This will clear all data.")) {
+
+    // Function to fetch account balance directly using NodeRpcClient
+    const fetchAccountBalance = async () => {
+        if (!client) {
+            setBalanceError(new Error("RPC client not initialized"));
+            setIsBalanceLoading(false);
             return;
         }
 
-        setIsResetting(true);
         try {
-            // Determine API endpoint based on current URL
-            const apiUrl =
-                window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://localhost:3000" : "https://node1.block52.xyz";
-
-            // According to the SDK, RESET_BLOCKCHAIN expects [username, password] params
-            // but our implementation doesn't currently require them
-            const response = await axios.post(
-                apiUrl,
-                {
-                    id: 1,
-                    method: "reset_blockchain",
-                    params: ["admin", "admin"] // Using placeholder values since our implementation ignores them
-                },
-                {
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-
-            console.log("Reset response:", response.data);
-
-            // Check if the response indicates success - could be in various formats
-            // Look for error first, then check if data is true, or if there's a result object at all
-            if (response.data.error) {
-                alert(`Blockchain reset failed: ${response.data.error}`);
-            } else if (response.data.result === true) {
-                // Direct boolean result - the new format
-                alert("Blockchain reset successful! All data has been cleared and accounts recreated.");
-            } else if (response.data.result && response.data.result.data) {
-                // Old format with nested data property
-                if (response.data.result.data === true || response.data.result.data === "true") {
-                    alert("Blockchain reset successful! All data has been cleared and account on layer 2 have been resynced with layer 1.");
-                } else {
-                    alert("Blockchain reset completed but with an unexpected response. Check console for details.");
-                }
-            } else {
-                alert("Blockchain reset response format unexpected. Check console for details.");
+            setIsBalanceLoading(true);
+            
+            // Use the stored public key
+            if (!publicKey) {
+                setBalanceError(new Error("No address available"));
+                setIsBalanceLoading(false);
+                return;
             }
 
-            // Refresh the page to update any UI components
-            window.location.reload();
-        } catch (error: any) {
-            console.error("Error resetting blockchain:", error);
-            alert(`Error resetting blockchain: ${error.message || "Unknown error"}`);
+            const account = await client.getAccount(publicKey);
+            setAccountBalance(account.balance);
+            setAccountNonce(account.nonce); // Save the nonce for transactions
+            setBalanceError(null);
+        } catch (err) {
+            console.error("Error fetching account balance:", err);
+            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
         } finally {
-            setIsResetting(false);
+            setIsBalanceLoading(false);
         }
     };
-
-    // Add logging to fetch games
-    const fetchGames = async () => {
-        // console.log("\n=== Fetching Games from Proxy ===");
-        try {
-            const response = await axios.get(`${PROXY_URL}/games`);
-            // console.log("Games Response:", response.data);
-
-            // Map the response to our game types
-            const games = response.data.map((game: any) => ({
-                id: game.id,
-                variant: game.variant,
-                type: game.type,
-                limit: game.limit,
-                maxPlayers: game.max_players,
-                minBuy: game.min,
-                maxBuy: game.max
-            }));
-
-            // console.log("Processed Games:", games);
-            setGames(games);
-        } catch (error) {
-            console.error("Error fetching games:", error);
-        }
-    };
+ 
 
     useEffect(() => {
-        //  console.log("Dashboard mounted, fetching games...");
-        fetchGames();
-    }, []);
-
-    useEffect(() => {
-        // console.log("\n=== Dashboard Mounted ===");
-        // console.log("Connected Wallet:", address);
-        // console.log("Balance:", b52Balance);
-        // console.log("======================\n");
-
-        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
-        // console.log("Local Storage Key:", localKey);
+        const localKey = localStorage.getItem("user_eth_public_key");
         if (!localKey) return setPublicKey(undefined);
 
         setPublicKey(localKey);
     }, []);
 
+    // Update to fetch balance when publicKey or client changes
     useEffect(() => {
-        // console.log('\n=== Dashboard Balance Check ===');
-        // console.log('Connected Address:', address);
-        // console.log('Raw B52 Balance:', b52Balance);
-        // console.log('Formatted Balance:', b52Balance ? formatBalance(b52Balance) : '0');
-        // console.log('============================\n');
-    }, [address, b52Balance]);
+        if (publicKey && client && !clientLoading) {
+            fetchAccountBalance();
+        }
+    }, [publicKey, client, clientLoading]);
 
     const handleGameType = (type: GameType) => {
         console.log("\n=== Game Type Selected ===");
@@ -335,7 +293,7 @@ const Dashboard: React.FC = () => {
 
             // Save to localStorage
             localStorage.setItem(STORAGE_PRIVATE_KEY, importKey);
-            localStorage.setItem(STORAGE_PUBLIC_KEY, wallet.address);
+            localStorage.setItem("user_eth_public_key", wallet.address);
 
             // Reset form and close modal
             setImportKey("");
@@ -569,22 +527,25 @@ const Dashboard: React.FC = () => {
                                 </div>
                                 <div className="flex items-center justify-between p-2 bg-gray-800/60 rounded-lg border border-blue-500/10">
                                     <p className="font-mono text-blue-400 text-sm tracking-wider">{formatAddress(publicKey)}</p>
-                                    <button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(publicKey || "");
-                                        }}
-                                        className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-                                        title="Copy address"
-                                    >
-                                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                            />
-                                        </svg>
-                                    </button>
+                                    <div className="flex items-center">
+                                        <span className="text-xs text-gray-400 mr-2">Nonce: {accountNonce}</span>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(publicKey || "");
+                                            }}
+                                            className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                            title="Copy address"
+                                        >
+                                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -599,7 +560,15 @@ const Dashboard: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-white font-bold">${formatBalance(b52Balance || "0")}</p>
+                                    <p className="text-white font-bold">
+                                        {isBalanceLoading ? (
+                                            <span className="text-gray-400">Loading...</span>
+                                        ) : balanceError ? (
+                                            <span className="text-red-400">Error</span>
+                                        ) : (
+                                            `$${formatBalance(accountBalance || "0")}`
+                                        )}
+                                    </p>
                                     <button
                                         onClick={() => setShowPrivateKey(!showPrivateKey)}
                                         className="text-xs text-blue-400 hover:text-blue-300 transition duration-300"
