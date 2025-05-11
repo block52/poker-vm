@@ -1,4 +1,4 @@
-// src/socket/socket-server.ts
+import { Server as HttpServer } from "http";
 import WebSocket, { WebSocketServer } from "ws";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import url from "url";
@@ -26,19 +26,30 @@ type GameStateUpdateMessage = {
 };
 
 export class SocketService {
-    private wss: WebSocketServer;
+    private readonly wss: WebSocket.Server;
+    private readonly maxConnections: number;
+    private activeConnections: number = 0;
 
-    constructor() {
-        this.wss = new WebSocketServer({ noServer: true });
+    constructor(server: HttpServer, maxConnections: number = 100) {
+        // this.wss = new WebSocketServer({ noServer: true });
+        this.wss = new WebSocket.Server({ server });
+        this.maxConnections = maxConnections;
         this.setupSocketEvents();
         console.log("WebSocket server initialized");
     }
 
     private setupSocketEvents() {
-
         console.log("Setting up WebSocket events");
 
         this.wss.on("connection", (ws: WebSocket, req: any) => {
+            // Check if we've reached the connection limit
+            if (this.activeConnections >= this.maxConnections) {
+                console.log(`Connection limit reached (${this.maxConnections}). Rejecting new connection.`);
+                ws.close(1013, "Maximum number of connections reached"); // 1013 = "Try again later"
+                return;
+            }
+
+            this.activeConnections++;
             console.log(`WebSocket connected from ${req.socket.remoteAddress}`);
 
             // Try to get tableAddress from URL query parameters
@@ -94,6 +105,7 @@ export class SocketService {
 
             // Handle disconnection
             ws.on("close", () => {
+                this.activeConnections--;
                 console.log("WebSocket disconnected");
                 this.handleDisconnect(ws);
             });
@@ -193,9 +205,20 @@ export class SocketService {
 
 let socketServiceInstance: SocketService | null = null;
 
-export function initSocketServer(): SocketService {
+// export function initSocketServer(): SocketService {
+//     if (!socketServiceInstance) {
+//         socketServiceInstance = new SocketService();
+//     }
+//     return socketServiceInstance;
+// }
+
+// export function getSocketService(): SocketService | null {
+//     return socketServiceInstance;
+// }
+
+export function initSocketServer(server: HttpServer): SocketService {
     if (!socketServiceInstance) {
-        socketServiceInstance = new SocketService();
+        socketServiceInstance = new SocketService(server);
     }
     return socketServiceInstance;
 }
