@@ -103,7 +103,6 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     timestamp: gameTx.timestamp.toString(),
                     data: gameTx.data ?? ""
                 };
-
                 return signResult(txResponse, this.privateKey);
             }
 
