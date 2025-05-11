@@ -1,8 +1,8 @@
 import { AccountManagement, getAccountManagementInstance } from "./accountManagement";
-import { Account } from "../models/account";
-import Accounts from "../schema/accounts";
-import { Transaction } from "../models/transaction";
-import { CONTRACT_ADDRESSES } from "../core/constants";
+import { Account } from "../../models/account";
+import Accounts from "../../schema/accounts";
+import { Transaction } from "../../models/transaction";
+import { CONTRACT_ADDRESSES } from "../../core/constants";
 
 // Mock the MongoDB models
 jest.mock("../schema/accounts", () => ({

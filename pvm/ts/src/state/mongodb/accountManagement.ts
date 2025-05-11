@@ -1,10 +1,10 @@
-import { Account } from "../models/account";
-import Accounts from "../schema/accounts";
-import { IAccountDocument } from "../models/interfaces";
-import { Transaction } from "../models/transaction";
-import { CONTRACT_ADDRESSES } from "../core/constants";
-import { StateManager } from "./stateManager";
-import { IAccountManagement } from "./interfaces";
+import { Account } from "../../models/account";
+import Accounts from "../../schema/accounts";
+import { IAccountDocument } from "../../models/interfaces";
+import { Transaction } from "../../models/transaction";
+import { CONTRACT_ADDRESSES } from "../../core/constants";
+import { StateManager } from "../stateManager";
+import { IAccountManagement } from "../interfaces";
 
 export class AccountManagement extends StateManager implements IAccountManagement {
     constructor(protected readonly connString: string) {

@@ -3,7 +3,7 @@ import Blocks from "../../schema/blocks";
 import { StateManager } from "../stateManager";
 import GenesisBlock from "../../data/genesisblock.json";
 import { IBlockDocument } from "../../models/interfaces";
-import { AccountManagement } from "../accountManagement";
+import { AccountManagement } from "./accountManagement";
 import { TransactionManagement } from "../transactionManagement";
 import { IBlockchainManagement } from "../interfaces";
 

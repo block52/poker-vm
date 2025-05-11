@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { CreateAccountCommand } from "./createAccountCommand";
-import { getAccountManagementInstance } from "../state/accountManagement";
+import { getAccountManagementInstance } from "../state/mongodb/accountManagement";
 import { Account } from "../models";
 
 // Mock the account management module
@@ -24,7 +24,7 @@ describe.skip("CreateAccountCommand Tests", () => {
                 )
             )
         };
-        
+
         // Log the mock structure
         console.log("Mock Account Management Structure:", {
             type: "Mock Object",
@@ -34,7 +34,7 @@ describe.skip("CreateAccountCommand Tests", () => {
         });
 
         (getAccountManagementInstance as jest.Mock).mockReturnValue(mockAccountManagement);
-        
+
         // Log what getAccountManagementInstance returns
         console.log("Mocked getInstance returns:", getAccountManagementInstance());
     });
@@ -46,7 +46,7 @@ describe.skip("CreateAccountCommand Tests", () => {
 
         // Create the command
         const command = new CreateAccountCommand(privateKey);
-        
+
         // Execute the command
         const response = await command.execute();
 
@@ -56,7 +56,7 @@ describe.skip("CreateAccountCommand Tests", () => {
 
         // Verify the account management was called
         expect(mockAccountManagement.createAccount).toHaveBeenCalledWith(privateKey);
-        
+
         // Verify the response structure
         expect(response).toHaveProperty('data');
         expect(response).toHaveProperty('signature');
