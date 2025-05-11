@@ -84,7 +84,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             this.amount,
             nonce,
             this.privateKey,
-            `${this.action},${this.index}`
+            `${this.action},${this.index},${this.data}`
         );
 
         await this.mempool.add(tx);

@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.10.1.tgz#63430d04bd8c5e74f8d7d049338f1cd9d4f02069"
   integrity sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==
 
-"@bitcoinbrisbane/block52@1.0.105":
-  version "1.0.105"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.105.tgz#5651c7bb580a3a04ccd542a843203b7b7af3482e"
-  integrity sha512-CeAIb2mLa7l7co5TygDnA6EGYtMuxmfD3ODXjv0HRc3cxva3vSLeVrtP6rLGB8j6AAHEfe6S/Zz24/BesUelcg==
+"@bitcoinbrisbane/block52@1.0.109":
+  version "1.0.109"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.109.tgz#b798c58b6789ad088a37c146f3753081db94ad0c"
+  integrity sha512-eXh5IC8GG/KgEvC12Yy+d42GRMS2FLjPqxIkhfwmvSnCm90egsklyHxCb5DbsKuJyx8lO6LCufVADqgrBuSd0Q==
   dependencies:
     axios "^1.8.1"
     bigunit "^1.2.5"

@@ -447,7 +447,7 @@ export class NodeRpcClient implements IClient {
             throw new Error("Game state not found");
         }
 
-        if (!gameState.previousActions) {
+        if (!gameState.previousActions || gameState.previousActions.length === 0) {
             return 0;
         }
 
