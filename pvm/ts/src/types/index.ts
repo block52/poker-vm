@@ -1,4 +1,4 @@
-import { GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 export type TexasHoldemGameState = {
     type: string;
@@ -19,3 +19,31 @@ export type TexasHoldemGameState = {
     winners: unknown[];
     signature: string;
 };
+
+export type TransactionResponse = {
+    nonce: string;
+    to: string;
+    from: string;
+    value: string;
+    hash: string;
+    signature: string;
+    timestamp: string;
+    data?: string;
+}
+
+export type GameStateResponse = {
+    state: TexasHoldemStateDTO;
+}
+
+// export type PerformActionResponse = GameStateResponse & TransactionResponse;
+export type PerformActionResponse= {
+    state: TexasHoldemStateDTO;
+    nonce: string;
+    to: string;
+    from: string;
+    value: string;
+    hash: string;
+    signature: string;
+    timestamp: string;
+    data?: string;
+}

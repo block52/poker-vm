@@ -86,7 +86,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
             json.signature,
             Number(json.timestamp),
             json.nonce ? BigInt(json.nonce) : 0n,
-            json.index ? Number(json.index) : undefined
+            json.index ? Number(json.index) : undefined,
+            json.data
         );
     }
 
