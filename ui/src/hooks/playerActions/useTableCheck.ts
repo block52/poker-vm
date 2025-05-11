@@ -38,8 +38,6 @@ export function useTableCheck(tableId?: string): UseTableCheckReturn {
             setError(null);
 
             try {
-                console.log(`Checking on table ${tableId} with action index ${actionIndex}`);
-
                 // Make API call to check
                 const response = await axios.post(`${PROXY_URL}/table/${tableId}/check`, {
                     tableId,
@@ -48,8 +46,6 @@ export function useTableCheck(tableId?: string): UseTableCheckReturn {
                     publicKey,
                     actionIndex
                 });
-
-                console.log("Check response:", response.data);
 
                 setIsChecking(false);
                 return response.data;
@@ -64,13 +60,5 @@ export function useTableCheck(tableId?: string): UseTableCheckReturn {
     );
 
     const result = { checkHand, isChecking, error };
-
-    console.log("[useTableCheck] Returns:", {
-        hasCheckFunction: !!result.checkHand,
-        isChecking: result.isChecking,
-        hasError: !!result.error,
-        tableId
-    });
-
     return result;
 }

@@ -146,6 +146,7 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
         }
 
         // Extract and return all the relevant information
+        // TODO: MAKE A STRONG TYPE
         const result = {
             legalActions: Array.isArray(currentPlayer.legalActions) ? currentPlayer.legalActions : [],
             isSmallBlindPosition: currentPlayer.isSmallBlind || gameState.smallBlindPosition === currentPlayer.seat,
