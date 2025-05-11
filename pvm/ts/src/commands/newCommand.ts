@@ -6,12 +6,12 @@ import { getGameManagementInstance } from "../state/gameManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
 import { getContractSchemaManagement } from "../state/index";
-import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { TexasHoldemRound, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { TexasHoldemGameState } from "../types";
 import { ethers } from "ethers";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
-export class NewCommand implements ICommand<ISignedResponse<any>> {
+export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly gameManagement: IGameManagement;
     private readonly contractSchemas: IContractSchemaManagement;
     private readonly mempool: Mempool;
@@ -37,7 +37,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
         }
     }
 
-    public async execute(): Promise<ISignedResponse<Transaction>> {
+    public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         try {
             const isGameContract = await this.isGameContract(this.address);
             if (!isGameContract) {
@@ -94,7 +94,7 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                 // Create a transaction record for this action
                 const newGameTx: Transaction = await Transaction.create(
                     this.address,
-                    "",
+                    ethers.ZeroAddress,
                     0n, // No value transfer
                     timestampNonce,
                     this.privateKey,
@@ -104,8 +104,19 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
                 // Add the transaction to the mempool
                 await this.mempool.add(newGameTx);
 
+                const txResponse: TransactionResponse = {
+                    nonce: "0",
+                    from: this.address,
+                    to: ethers.ZeroAddress,
+                    value: "0",
+                    hash: newGameTx.hash,
+                    signature: newGameTx.signature,
+                    timestamp: newGameTx.timestamp.toString(),
+                    data: `create,${deck.toString()}`
+                };
+
                 // Return the signed transaction
-                return signResult(newGameTx, this.privateKey);
+                return signResult(txResponse, this.privateKey);
             }
 
             // For existing games, handle reinitialization
@@ -125,18 +136,29 @@ export class NewCommand implements ICommand<ISignedResponse<any>> {
             // Create a transaction record for this action
             const dealTx: Transaction = await Transaction.create(
                 this.address,
-                "",
+                ethers.ZeroAddress,
                 0n, // No value transfer
                 timestampNonce,
                 this.privateKey,
-                `next,${deck.toString()}` //
+                `next,${deck.toString()}`
             );
 
             // Add the transaction to the mempool
             await this.mempool.add(dealTx);
 
+            const txResponse: TransactionResponse = {
+                nonce: "0",
+                from: this.address,
+                to: ethers.ZeroAddress,
+                value: "0",
+                hash: dealTx.hash,
+                signature: dealTx.signature,
+                timestamp: timestampNonce.toString(),
+                data: `next,${deck.toString()}`
+            };
+
             // Return the signed transaction like in TransferCommand
-            return signResult(dealTx, this.privateKey);
+            return signResult(txResponse, this.privateKey);
         } catch (e) {
             console.error(`Error in deal command:`, e);
             throw new Error("Error dealing cards");
