@@ -15,7 +15,14 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
     private readonly contractSchemas: IContractSchemaManagement;
     private readonly mempool: Mempool;
 
-    constructor(private from: string, private to: string, private amount: bigint, private readonly nonce: number | 0, private data: string | null, private readonly privateKey: string) {
+    constructor(
+        private from: string,
+        private to: string,
+        private amount: bigint,
+        private readonly nonce: number | 0,
+        private data: string | null,
+        private readonly privateKey: string
+    ) {
         console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagement();
@@ -45,17 +52,13 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
             if (await this.isGameTransaction(this.to)) {
                 console.log(`Processing game transaction: data=${this.data}, to=${this.to}`);
 
-                const [json, gameOptions] = await Promise.all([
-                    this.gameManagement.get(this.to),
-                    this.contractSchemas.getGameOptions(this.to)
-                ]);
+                const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.to), this.contractSchemas.getGameOptions(this.to)]);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
                 console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
                 game.performAction(this.from, NonPlayerActionType.JOIN, game.getTurnIndex(), this.amount);
                 console.log(`Join successful`);
-
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, "JOIN");
                 await this.mempool.add(gameTx);
@@ -68,7 +71,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     hash: gameTx.hash,
                     signature: gameTx.signature,
                     timestamp: gameTx.timestamp.toString(),
-                    data: gameTx.data ?? "",
+                    data: gameTx.data ?? ""
                 };
 
                 return signResult(txResponse, this.privateKey);
@@ -87,12 +90,9 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                 game.performAction(this.to, NonPlayerActionType.LEAVE, game.getTurnIndex(), stack);
                 console.log(`Leave successful, returning ${stack} chips`);
 
-                // const _json = game.toJson();
-                // await this.gameManagement.saveFromJSON(_json);
-
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "leave");
                 await this.mempool.add(gameTx);
-                
+
                 const txResponse: TransactionResponse = {
                     nonce: this.nonce.toString(),
                     from: this.from,
@@ -101,7 +101,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     hash: gameTx.hash,
                     signature: gameTx.signature,
                     timestamp: gameTx.timestamp.toString(),
-                    data: gameTx.data ?? "",
+                    data: gameTx.data ?? ""
                 };
                 return signResult(txResponse, this.privateKey);
             }
@@ -120,11 +120,10 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                 hash: transaction.hash,
                 signature: transaction.signature,
                 timestamp: transaction.timestamp.toString(),
-                data: transaction.data ?? "",
+                data: transaction.data ?? ""
             };
 
             return signResult(txResponse, this.privateKey);
-
         } catch (e) {
             console.error(`Error in transfer command:`, e);
             throw new Error("Error transferring funds");
