@@ -23,6 +23,7 @@ import {
     MintCommand,
     NewCommand,
     PurgeMempoolCommand,
+    PerformActionCommandWithResult,
     ReceiveMinedBlockHashCommand,
     ResetCommand,
     SharedSecretCommand,

@@ -1,7 +1,5 @@
-import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
-
+import { NonPlayerActionType, PerformActionResponse, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { PerformActionResponse, PerformActionResponseWithSignature, TransactionResponse } from "../types";
 import { PerformActionCommand } from "./performActionCommand";
 import { GameStateCommand } from "./gameStateCommand";
 import { signResult } from "./abstractSignedCommand";

@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
@@ -9,7 +9,6 @@ import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { OrderedTransaction } from "../engine/types";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
-import { TransactionResponse } from "../types";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     protected readonly gameManagement: IGameManagement;
