@@ -6,8 +6,7 @@ import { getGameManagementInstance } from "../state/gameManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
 import { getContractSchemaManagement } from "../state/index";
-import { TexasHoldemRound, TransactionResponse } from "@bitcoinbrisbane/block52";
-import { TexasHoldemGameState } from "../types";
+import { TexasHoldemGameState, TexasHoldemRound, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
