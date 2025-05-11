@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import PokerProfile from "../../../assets/PokerProfile.svg";
 import { toDisplaySeat } from "../../../utils/tableUtils";
-import { useTableTurnIndex } from "../../../hooks/useTableTurnIndex";
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
 import { useNodeRpc } from "../../../context/NodeRpcContext";
 
@@ -26,17 +25,15 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const { id: tableId } = useParams<{ id: string }>();
         const userAddress = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        const actionIndex = useTableTurnIndex(tableId);
 
         // Get NodeRpcClient
         const { client, isLoading: clientLoading } = useNodeRpc();
-
         const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
         const [joinSuccess, setJoinSuccess] = useState(false);
         const [joinResponse, setJoinResponse] = useState<any>(null);
-        
+
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
 
@@ -68,26 +65,21 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             try {
                 // Convert the buy-in amount to bigint
                 const buyInWei = ethers.parseUnits(storedAmount, 18);
-                
+
                 // Get the latest account info to get the current nonce
                 const account = await client.getAccount(userAddress);
-                
+
                 // Log the join attempt
                 console.log(`Joining table at seat ${index} with amount ${buyInWei} and nonce ${account.nonce}`);
-                
+
                 // Call the playerJoin method directly from the SDK
-                const response = await client.playerJoin(
-                    tableId,
-                    BigInt(buyInWei.toString()),
-                    index,
-                    account.nonce
-                );
-                
+                const response = await client.playerJoin(tableId, BigInt(buyInWei.toString()), index, account.nonce);
+
                 console.log("Join table response:", response);
                 setJoinResponse(response);
                 setJoinSuccess(true);
                 setIsJoining(false);
-                
+
                 // Don't reload the page automatically so network requests can be inspected
                 // window.location.reload();
             } catch (err) {
@@ -100,10 +92,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const handleManualReload = () => {
             window.location.reload();
         };
-
-        useEffect(() => {
-            debugLog("VacantPlayer mounted:", { left, top, index });
-        }, [left, top, index]);
 
         return (
             <div className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`} style={{ left, top }} onClick={canJoinThisSeat ? handleJoinClick : undefined}>
@@ -126,7 +114,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                         >
                             <div className="absolute -right-8 -top-8 text-6xl opacity-10 rotate-12">♠</div>
                             <div className="absolute -left-8 -bottom-8 text-6xl opacity-10 -rotate-12">♥</div>
-                            
+
                             {joinSuccess ? (
                                 <>
                                     <h2 className="text-2xl font-bold mb-4 text-white text-center flex items-center justify-center">
@@ -134,19 +122,22 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                         Join Request Sent!
                                         <span className="text-red-400 ml-2">♦</span>
                                     </h2>
-                                    
+
                                     <div className="mb-4 p-3 bg-green-900/50 text-green-200 rounded-lg">
                                         <p className="mb-2">Join request for seat {index} has been sent to the network.</p>
-                                        <p className="mb-2 text-yellow-300 text-sm">Note: Join not confirmed by mining yet and state not persisted. Check network status.</p>
-                                        <p className="text-xs text-gray-300">Transaction Hash: {joinResponse?.hash ? `${joinResponse.hash.slice(0, 10)}...${joinResponse.hash.slice(-8)}` : "N/A"}</p>
+                                        <p className="mb-2 text-yellow-300 text-sm">
+                                            Note: Join not confirmed by mining yet and state not persisted. Check network status.
+                                        </p>
+                                        <p className="text-xs text-gray-300">
+                                            Transaction Hash:{" "}
+                                            {joinResponse?.hash ? `${joinResponse.hash.slice(0, 10)}...${joinResponse.hash.slice(-8)}` : "N/A"}
+                                        </p>
                                     </div>
-                                    
+
                                     <div className="mb-4 overflow-hidden bg-gray-900 rounded-lg p-2">
-                                        <pre className="text-xs text-gray-300 overflow-auto max-h-40">
-                                            {JSON.stringify(joinResponse, null, 2)}
-                                        </pre>
+                                        <pre className="text-xs text-gray-300 overflow-auto max-h-40">{JSON.stringify(joinResponse, null, 2)}</pre>
                                     </div>
-                                    
+
                                     <button
                                         onClick={handleManualReload}
                                         className="w-full px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-400 transition"
@@ -161,13 +152,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                         Sit Here?
                                         <span className="text-red-400 ml-2">♦</span>
                                     </h2>
-                                    
-                                    {joinError && (
-                                        <div className="mb-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm">
-                                            Error: {joinError}
-                                        </div>
-                                    )}
-                                    
+
+                                    {joinError && <div className="mb-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm">Error: {joinError}</div>}
+
                                     <div className="flex justify-between space-x-4 mt-6">
                                         <button
                                             onClick={() => setShowConfirmModal(false)}
@@ -183,9 +170,18 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                         >
                                             {isJoining ? (
                                                 <>
-                                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <svg
+                                                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                    >
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        <path
+                                                            className="opacity-75"
+                                                            fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                        ></path>
                                                     </svg>
                                                     Joining...
                                                 </>

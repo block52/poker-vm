@@ -11,11 +11,11 @@ interface BuyInModalProps {
 }
 
 const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => {
-    const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
+    const { client, isLoading: clientLoading } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
-    const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
-    const [balanceError, setBalanceError] = useState<Error | null>(null);
-    const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
+    const [, setIsBalanceLoading] = useState<boolean>(true);
+    const [, setBalanceError] = useState<Error | null>(null);
+    const [publicKey, ] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
     const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(tableId);
 

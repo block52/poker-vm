@@ -5,9 +5,6 @@ import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
 
-// Enable this to see verbose logging
-const DEBUG_MODE = false;
-
 type PlayerProps = {
     left?: string; // Front side image source
     top?: string; // Back side image source
@@ -17,16 +14,10 @@ type PlayerProps = {
     status?: string;
 };
 
-const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
+const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
     const { winnerInfo } = useWinnerInfo(id);
-
-    // // Add debugging
-    // React.useEffect(() => {
-    //     console.log("Player component rendering for seat:", index);
-    //     console.log("Player component tableData:", tableData);
-    // }, [index, tableData]);
 
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
@@ -60,8 +51,8 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
             <div className="flex justify-center gap-1">
                 {holeCards && holeCards.length === 2 ? (
                     <>
-                        <img src={`/cards/${holeCards[0]}.svg`} width={60} height={80} className="mb-[11px]"/>
-                        <img src={`/cards/${holeCards[1]}.svg`} width={60} height={80} className="mb-[11px]"/>
+                        <img src={`/cards/${holeCards[0]}.svg`} width={60} height={80} className="mb-[11px]" />
+                        <img src={`/cards/${holeCards[1]}.svg`} width={60} height={80} className="mb-[11px]" />
                     </>
                 ) : (
                     // Render nothing when no cards have been dealt yet
@@ -71,7 +62,9 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color, status }) => {
             <div className="relative flex flex-col justify-end mt-[-6px] mx-1s">
                 <div
                     style={{ backgroundColor: isWinner ? "#2c8a3c" : "green" }}
-                    className={`b-[0%] mt-[auto] w-full h-[55px]  shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${isWinner ? "animate-pulse" : ""}`}
+                    className={`b-[0%] mt-[auto] w-full h-[55px]  shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${
+                        isWinner ? "animate-pulse" : ""
+                    }`}
                 >
                     {/* Progress bar is not shown in showdown */}
                     {!isWinner && round !== "showdown" && <ProgressBar index={index} />}
