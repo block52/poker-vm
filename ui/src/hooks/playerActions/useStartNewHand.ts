@@ -2,14 +2,8 @@ import { ethers } from "ethers";
 import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../../config/constants";
+import { StartNewHandOptions } from "./types";
 
-interface StartNewHandOptions {
-    userAddress: string | null;
-    privateKey: string | null;
-    publicKey: string | null;
-    nonce?: string | number;
-    seed?: string;
-}
 
 async function startNewHandFetcher(url: string, { arg }: { arg: StartNewHandOptions }) {
     const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), seed = Math.random().toString(36).substring(2, 15) } = arg;

@@ -1,15 +1,7 @@
-import { PlayerStatus } from "@bitcoinbrisbane/block52";
-
-// Type definitions for better type safety
-export interface LegalAction {
-    action: string; // "fold", "check", "bet", etc.
-    min: string; // Min amount as string (in wei)
-    max: string; // Max amount as string (in wei)
-    index: number; // Action index
-}
+import { LegalActionDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 
 export interface PlayerLegalActionsResult {
-    legalActions: LegalAction[];
+    legalActions: LegalActionDTO[];
     isSmallBlindPosition: boolean;
     isBigBlindPosition: boolean;
     isDealerPosition: boolean;
@@ -47,4 +39,47 @@ export interface HandParams {
     publicKey: string;
     actionIndex: number;
     amount: string;
+}
+
+export interface StartNewHandOptions {
+    userAddress: string | null;
+    privateKey: string | null;
+    publicKey: string | null;
+    nonce?: string | number;
+    seed?: string;
+}
+
+export interface DealOptions {
+    userAddress: string | null;
+    privateKey: string | null;
+    publicKey: string | null;
+    nonce?: string | number;
+    actionIndex?: number | null;
+}
+
+export interface FoldOptions {
+    userAddress: string | null;
+    privateKey: string | null;
+    publicKey: string | null;
+    nonce?: string | number;
+    actionIndex?: number | null;
+}
+
+export interface JoinTableOptions {
+    buyInAmount: string;
+    userAddress: string | null;
+    privateKey: string | null;
+    publicKey: string | null;
+    nonce?: string | number;
+    actionIndex?: number;
+    seatNumber?: number;
+}
+
+export interface LeaveTableOptions {
+    amount?: string;
+    userAddress?: string | null;
+    privateKey?: string | null;
+    publicKey?: string | null;
+    nonce?: string | number;
+    actionIndex?: number | null;
 }

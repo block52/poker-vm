@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 
 // types.ts
 export interface LastActionType {
@@ -40,12 +40,8 @@ export interface PlayerContextType {
 export type Player = {
     address: string;
     seat: number;
-    legalActions: LegalAction[];
+    legalActions: LegalActionDTO[];
     timeout: number;
-}
-
-export type LegalAction = {
-    action: string;
 }
 
 export type TableData = {
@@ -69,7 +65,7 @@ export type TableStatus = {
     seat: number;
     stack: string;
     status: string;
-    availableActions: LegalAction[];
+    availableActions: LegalActionDTO[];
     canPostSmallBlind: boolean;
     canPostBigBlind: boolean;
     canCheck: boolean;

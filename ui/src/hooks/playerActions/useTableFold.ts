@@ -3,20 +3,10 @@ import axios from "axios";
 import useSWRMutation from "swr/mutation";
 import { PROXY_URL } from "../../config/constants";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-
-interface FoldOptions {
-    userAddress: string | null;
-    privateKey: string | null;
-    publicKey: string | null;
-    nonce?: string | number;
-    actionIndex?: number | null;
-}
+import { FoldOptions } from "./types";
 
 async function foldFetcher(url: string, { arg }: { arg: FoldOptions }) {
     const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), actionIndex } = arg;
-
-    console.log("🔴 Fold attempt for:", url);
-    console.log("🔴 Using action index:", actionIndex);
 
     if (!userAddress || !privateKey) {
         console.error("🔴 Missing address or private key");
@@ -92,14 +82,6 @@ export function useTableFold(tableId: string | undefined) {
         error,
         data
     };
-
-    console.log("[useTableFold] Returns:", {
-        hasFoldFunction: !!result.foldHand,
-        isFolding: result.isFolding,
-        hasError: !!result.error,
-        hasData: !!result.data,
-        tableId
-    });
 
     return result;
 }

@@ -1,9 +1,7 @@
 import { useState } from "react";
-import axios from "axios";
-import { PROXY_URL } from "../../config/constants";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { ethers } from "ethers";
 import { HandParams } from "./types";
+import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to handle calling in a poker game
@@ -30,37 +28,12 @@ export const useTableCall = (tableId?: string) => {
         setError(null);
 
         try {
-            console.log("Calling with amount:", params.amount);
-
-            // Create wallet instance to sign the message
-            const wallet = new ethers.Wallet(params.privateKey);
-
-            // Create message to sign
-            const timestamp = Math.floor(Date.now() / 1000).toString();
-            const message = `call:${params.amount}:${tableId}:${timestamp}`;
-
-            // Sign the message
-            const signature = await wallet.signMessage(message);
-
-            // Prepare the request payload
-            const payload = {
-                userAddress: params.userAddress,
-                action: PlayerActionType.CALL,
-                amount: params.amount,
-                signature,
-                publicKey: params.publicKey,
-                timestamp,
-                index: params.actionIndex
-            };
-
-            console.log("Call payload:", payload);
+            // Create a new client instance using the official NodeRpcClient
+            const nodeUrl = process.env.NODE_RPC_URL || "https://node1.block52.xyz/";
+            const client = new NodeRpcClient(nodeUrl, params.privateKey);
 
             // Make the API call
-            const response = await axios.post(`${PROXY_URL}/table/${tableId}/call`, payload);
-
-            console.log("Call response:", response.data);
-
-            // Return the response data
+            const response = await client.playerAction(tableId, PlayerActionType.CALL, params.amount);
             return response.data;
         } catch (err: any) {
             console.error("Error calling:", err);
