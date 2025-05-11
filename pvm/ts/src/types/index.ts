@@ -20,30 +20,3 @@ export type TexasHoldemGameState = {
     signature: string;
 };
 
-export type TransactionResponse = {
-    nonce: string;
-    to: string;
-    from: string;
-    value: string;
-    hash: string;
-    signature: string;
-    timestamp: string;
-    data?: string;
-}
-
-export type GameStateResponse = {
-    state: TexasHoldemStateDTO;
-}
-
-// export type PerformActionResponse = GameStateResponse & TransactionResponse;
-export type PerformActionResponse= {
-    state: TexasHoldemStateDTO;
-    nonce: string;
-    to: string;
-    from: string;
-    value: string;
-    hash: string;
-    signature: string;
-    timestamp: string;
-    data?: string;
-}

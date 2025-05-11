@@ -22,7 +22,6 @@ import {
     MineCommand,
     MintCommand,
     NewCommand,
-    PerformActionCommand,
     PurgeMempoolCommand,
     ReceiveMinedBlockHashCommand,
     ResetCommand,

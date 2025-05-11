@@ -1,5 +1,5 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { GameOptionsDTO, NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
+import { GameOptionsDTO, NonPlayerActionType, PerformActionResponse, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
@@ -20,7 +20,7 @@ export interface IClient {
     getTransactions(): Promise<TransactionDTO[]>;
     mint(address: string, amount: string, transactionId: string): Promise<void>;
     newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
-    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<any>;
+    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
     playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
     sendBlock(blockHash: string, block: string): Promise<void>;
@@ -338,7 +338,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce
      * @returns
      */
-    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any> {
+    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<PerformActionResponse> {
         const signature = await this.getSignature(nonce);
         const address = this.getAddress();
         const index = await this.getNextTurnIndex(gameAddress, address);
