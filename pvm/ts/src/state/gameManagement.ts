@@ -13,6 +13,25 @@ export class GameManagement extends StateManager implements IGameManagement {
         super(connString);
     }
 
+    public async getByAddress(address: string): Promise<IGameStateDocument | null> {
+        const gameState = await GameState.findOne({
+            address
+        });
+
+        if (gameState) {
+            // this is stored in MongoDB as an object / document
+            const state: IGameStateDocument = {
+                address: gameState.address,
+                schemaAddress: gameState.schemaAddress,
+                state: gameState.state
+            };
+            return state;
+        }
+
+        // Return null instead of throwing an error
+        return null;
+    }
+
     public async getAll(): Promise<IGameStateDocument[]> {
         const gameStates = await GameState.find({});
         const states = gameStates.map(gameState => {
@@ -27,8 +46,22 @@ export class GameManagement extends StateManager implements IGameManagement {
         return states;
     }
 
+    public async getAllBySchemaAddress(schemaAddress: string): Promise<IGameStateDocument[]> {
+        const gameStates = await GameState.find({ schemaAddress });
+        const states = gameStates.map(gameState => {
+            // this is stored in MongoDB as an object / document
+            const state: IGameStateDocument = {
+                address: gameState.address,
+                schemaAddress: gameState.schemaAddress,
+                state: gameState.state
+            };
+            return state;
+        });
+        return states;
+    }
+
     // This needs to be looser in the future as "any", use a generic type
-    public async get(address: string): Promise<TexasHoldemGameState | null> {
+    public async getState(address: string): Promise<TexasHoldemGameState | null> {
         const gameState = await GameState.findOne({
             address
         });
@@ -80,6 +113,7 @@ export class GameManagement extends StateManager implements IGameManagement {
 
         const game = new GameState({
             address: address,
+            schemaAddress: contractSchemaAddress,
             state
         });
 

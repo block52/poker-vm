@@ -12,13 +12,13 @@ import { IContractSchemaManagement, IGameManagement } from "../state/interfaces"
 
 export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly gameManagement: IGameManagement;
-    private readonly contractSchemas: IContractSchemaManagement;
+    private readonly contractSchemaManagement: IContractSchemaManagement;
     private readonly mempool: Mempool;
     private readonly seed: number[];
 
     constructor(private readonly address: string, private readonly privateKey: string, _seed: string | undefined = undefined) {
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemas = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
 
         // Convert the seed string to a number array for shuffling
@@ -43,15 +43,13 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
                 throw new Error(`Address ${this.address} is not a valid game contract`);
             }
 
-            const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.address), this.contractSchemas.getGameOptions(this.address)]);
-
-            if (!gameOptions) {
-                throw new Error(`Game options not found for address ${this.address}`);
-            }
+            const json = await this.gameManagement.getState(this.address);
 
             if (!json) {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
+
+            const gameOptions = await this.contractSchemaManagement.getGameOptions(this.address);
 
             // For existing games, handle reinitialization
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);

@@ -12,7 +12,7 @@ import { IContractSchemaManagement, IGameManagement } from "../state/interfaces"
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     protected readonly gameManagement: IGameManagement;
-    protected readonly contractSchemas: IContractSchemaManagement;
+    private readonly contractSchemaManagement: IContractSchemaManagement;
     protected readonly mempool: Mempool;
 
     constructor(
@@ -27,7 +27,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemas = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
 
         // Debug logging to see what we're getting in the constructor
@@ -44,9 +44,14 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         }
 
         console.log(`Processing game transaction: data=${this.action}, to=${this.to}`);
+        const gameState = await this.gameManagement.getByAddress(this.to);
 
-        const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.to), this.contractSchemas.getGameOptions(this.to)]);
-        const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
+        if (!gameState) {
+            throw new Error(`Game state not found for address: ${this.to}`);
+        }
+
+        const gameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
+        const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
 
         // Get mempool transactions for the game
         const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.to && tx.data !== undefined);
@@ -125,47 +130,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         console.log(`Is game transaction: ${found}`);
         return found;
     }
-
-    // private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
-    //     if (!tx.data) {
-    //         throw new Error("Transaction data is undefined");
-    //     }
-
-    //     // Split and extract main components from transaction data
-    //     const [rawAction, rawIndex, rawSeat, ...extraParams] = tx.data.split(",");
-
-    //     if (!rawAction || !rawIndex) {
-    //         throw new Error(`Transaction ${tx.hash} has invalid format: "${tx.data}"`);
-    //     }
-
-    //     // Parse action
-    //     const action = rawAction.trim() as PlayerActionType | NonPlayerActionType;
-
-    //     // Parse and validate index
-    //     const index = Number(rawIndex.trim());
-    //     if (Number.isNaN(index)) {
-    //         throw new Error(`Invalid index "${rawIndex}" in transaction ${tx.hash}`);
-    //     }
-
-    //     // Parse seat number only for join actions
-    //     let seatNumber: number | undefined = undefined;
-    //     if (action === NonPlayerActionType.JOIN && rawSeat) {
-    //         seatNumber = Number(rawSeat.trim());
-    //         if (Number.isNaN(seatNumber)) {
-    //             throw new Error(`Invalid seat number "${rawSeat}" in join transaction ${tx.hash}`);
-    //         }
-    //         console.log(`Found join action with valid seat number: ${seatNumber}`);
-    //     }
-
-    //     return {
-    //         from: tx.from,
-    //         to: tx.to,
-    //         value: tx.value,
-    //         type: action,
-    //         index: index,
-    //         data: seatNumber
-    //     };
-    // }
 
     private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
         if (!tx.data) {
