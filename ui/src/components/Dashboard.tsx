@@ -1,32 +1,19 @@
-import React, { useEffect, useState, useRef } from "react"; // Import React, useEffect, and useRef
+import React, { useEffect, useState, useRef, useCallback } from "react"; // Import React, useEffect, and useRef
 import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
 
 import "./Dashboard.css"; // Import the CSS file with animations
 
 // Web3 Wallet Imports
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; //  Keep for Web3 wallet
-import useUserWallet from "../hooks/useUserWallet"; // Keep for Web3 wallet
 import { Wallet } from "ethers";
 
-
-
 import BuyInModal from "./playPage/BuyInModal";
-
 
 // game wallet and SDK imports
 import { useNodeRpc } from "../context/NodeRpcContext"; // Use NodeRpcContext
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
-
-// Create an enum of game types
-enum GameType {
-    CASH = "cash",
-    TOURNAMENT = "tournament"
-}
-
-enum Variant {
-    TEXAS_HOLDEM = "texas-holdem",
-    OMAHA = "omaha"
-}
+import { GameType, Variant } from "./types";
+import { formatAddress, formatBalance } from "./common/utils";
 
 // Add network display component
 const NetworkDisplay = ({ isMainnet = false }) => {
@@ -55,8 +42,6 @@ const HexagonPattern = () => {
 };
 
 const Dashboard: React.FC = () => {
-
-
     const navigate = useNavigate();
     const [typeSelected, setTypeSelected] = useState<string>("cash");
     const [variantSelected, setVariantSelected] = useState<string>("texas-holdem");
@@ -65,8 +50,7 @@ const Dashboard: React.FC = () => {
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
-    const { balance: walletBalance } = useUserWallet(); // Keep for Web3 wallet
-    
+
     // Replace useAccountBalance with direct NodeRpcClient interaction
     const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
@@ -74,13 +58,10 @@ const Dashboard: React.FC = () => {
     const [balanceError, setBalanceError] = useState<Error | null>(null);
     const [accountNonce, setAccountNonce] = useState<number>(0); // Track nonce for transactions
 
-
-    const [games, setGames] = useState([]);
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
     const [importError, setImportError] = useState("");
     const [showPrivateKey, setShowPrivateKey] = useState(false);
-
 
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
@@ -99,31 +80,31 @@ const Dashboard: React.FC = () => {
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
+    // Add this ref at the top of your component
+    const initialLoadComplete = useRef(false);
+    const lastFetchedPublicKey = useRef<string | undefined>(undefined);
+
     // Add effect to track mouse movement
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!animationFrameRef.current) {
+            animationFrameRef.current = requestAnimationFrame(() => {
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                setMousePosition({ x, y });
+                animationFrameRef.current = undefined;
+            });
+        }
+    }, []);
+
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            // Only update if no animation frame is pending
-            if (!animationFrameRef.current) {
-                animationFrameRef.current = requestAnimationFrame(() => {
-                    // Calculate mouse position as percentage of window
-                    const x = (e.clientX / window.innerWidth) * 100;
-                    const y = (e.clientY / window.innerHeight) * 100;
-                    setMousePosition({ x, y });
-                    animationFrameRef.current = undefined;
-                });
-            }
-        };
-
         window.addEventListener("mousemove", handleMouseMove);
-
-        // Cleanup function to remove event listener and cancel any pending animation frames
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
             if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
             }
         };
-    }, []);
+    }, [handleMouseMove]);
 
     // Game contract addresses - in a real app, these would come from the API
     const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd34326"; // Example address
@@ -142,18 +123,18 @@ const Dashboard: React.FC = () => {
             // Generate a random seed for the game
             const randomSeed = Math.random().toString(36).substring(2, 15);
             const gameAddress = selectedContractAddress || DEFAULT_GAME_CONTRACT;
-            
+
             // Create the new game using the client's newHand method
             // The account's nonce is managed automatically by the NodeRpcClient
             const result = await client.newHand(gameAddress, randomSeed);
-            
+
             if (result && result.hash) {
                 setNewGameAddress(gameAddress);
                 setShowCreateGameModal(false);
 
                 // Show success message
                 alert(`Game created successfully! Game address: ${gameAddress}`);
-                
+
                 // Refresh account data to get updated nonce
                 fetchAccountBalance();
             } else {
@@ -167,37 +148,38 @@ const Dashboard: React.FC = () => {
         }
     };
 
-
     // Function to fetch account balance directly using NodeRpcClient
-    const fetchAccountBalance = async () => {
-        if (!client) {
-            setBalanceError(new Error("RPC client not initialized"));
+    const fetchAccountBalance = useCallback(async (force = false) => {
+        // Skip if no client or no public key
+        if (!client || !publicKey) {
+            !publicKey && setBalanceError(new Error("No address available"));
             setIsBalanceLoading(false);
             return;
         }
-
+        
+        // Skip if we've already loaded for this key and it's not forced
+        if (!force && initialLoadComplete.current && lastFetchedPublicKey.current === publicKey) {
+            return;
+        }
+        
         try {
             setIsBalanceLoading(true);
             
-            // Use the stored public key
-            if (!publicKey) {
-                setBalanceError(new Error("No address available"));
-                setIsBalanceLoading(false);
-                return;
-            }
-
             const account = await client.getAccount(publicKey);
             setAccountBalance(account.balance);
-            setAccountNonce(account.nonce); // Save the nonce for transactions
+            setAccountNonce(account.nonce);
             setBalanceError(null);
+            
+            // Mark that we've completed a load for this key
+            initialLoadComplete.current = true;
+            lastFetchedPublicKey.current = publicKey;
         } catch (err) {
             console.error("Error fetching account balance:", err);
             setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
         } finally {
             setIsBalanceLoading(false);
         }
-    };
- 
+    }, [client, publicKey]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -209,9 +191,17 @@ const Dashboard: React.FC = () => {
     // Update to fetch balance when publicKey or client changes
     useEffect(() => {
         if (publicKey && client && !clientLoading) {
-            fetchAccountBalance();
+            // Only fetch if public key changed or it's the initial load
+            if (publicKey !== lastFetchedPublicKey.current || !initialLoadComplete.current) {
+                fetchAccountBalance();
+            }
         }
-    }, [publicKey, client, clientLoading]);
+    }, [publicKey, clientLoading, fetchAccountBalance]);
+
+    // Add a specific function to force refresh when needed
+    const refreshBalance = useCallback(() => {
+        fetchAccountBalance(true);
+    }, [fetchAccountBalance]);
 
     const handleGameType = (type: GameType) => {
         console.log("\n=== Game Type Selected ===");
@@ -245,35 +235,6 @@ const Dashboard: React.FC = () => {
 
     const handleSeat = (seat: number) => {
         setSeatSelected(seat);
-    };
-
-    const buildUrl = () => {
-        if (newGameAddress) {
-            return `/table/${newGameAddress}`;
-        }
-        // return `/table/${typeSelected}?variant=${variantSelected}&seats=${seatSelected}`;
-        return "/table/0x22dfa2150160484310c5163f280f49e23b8fd34326";
-    };
-
-    // const [loading, setLoading] = useState(true);
-    // const [gameType, setGameType] = useState<string | null>(null);
-
-    // Add function to format address
-    const formatAddress = (address: string | undefined) => {
-        if (!address) return "";
-        return `${address.slice(0, 6)}...${address.slice(-4)}`;
-    };
-
-    // Modify formatBalance to add logging
-    const formatBalance = (rawBalance: string | number) => {
-        console.log("\n=== Format Balance Called ===");
-        console.log("Input Balance:", rawBalance);
-        const value = Number(rawBalance) / 1e18;
-        console.log("Converted Value:", value);
-        const formatted = value.toFixed(2);
-        console.log("Formatted Result:", formatted);
-        console.log("==========================\n");
-        return formatted;
     };
 
     const handleImportPrivateKey = () => {
@@ -321,10 +282,6 @@ const Dashboard: React.FC = () => {
 
     // CSS for disabled buttons
     const disabledButtonClass = "text-gray-300 bg-gradient-to-br from-gray-600 to-gray-700 cursor-not-allowed shadow-inner border border-gray-600/30";
-
-    function handleCashLimitType(arg0: number): void {
-        throw new Error("Function not implemented.");
-    }
 
     useEffect(() => {
         setLimitTypeSelected("no-limit"); // Default when changing variant
@@ -833,15 +790,15 @@ const Dashboard: React.FC = () => {
                         </button>
                     </div>
                     <div className="flex justify-between gap-6">
-                    <button
-                        onClick={() => {
-                            setShowBuyInModal(true);
-                            setBuyInTableId("0x22dfa2150160484310c5163f280f49e23b8fd34326"); //Change to selected Contract for dynamic
-                        }}
-                        className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
-                    >
-                        Choose Table
-                    </button>
+                        <button
+                            onClick={() => {
+                                setShowBuyInModal(true);
+                                setBuyInTableId("0x22dfa2150160484310c5163f280f49e23b8fd34326"); //Change to selected Contract for dynamic
+                            }}
+                            className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
+                        >
+                            Choose Table
+                        </button>
                     </div>
                 </div>
             </div>
