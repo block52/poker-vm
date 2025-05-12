@@ -1,62 +1,78 @@
-import { ethers } from "ethers";
-import axios from "axios";
 import useSWRMutation from "swr/mutation";
-import { PROXY_URL } from "../../config/constants";
+import { useNodeRpc } from "../../context/NodeRpcContext";
+import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { LeaveTableOptions } from "./types";
 
-async function leaveTableFetcher(url: string, { arg }: { arg: LeaveTableOptions }) {
-    // Get credentials from localStorage if not provided
-    const userAddress = arg.userAddress || localStorage.getItem("user_eth_public_key");
-    const privateKey = arg.privateKey || localStorage.getItem("user_eth_private_key");
-    const publicKey = arg.publicKey || localStorage.getItem("user_eth_public_key");
-    const { amount = "0", nonce = Date.now().toString(), actionIndex } = arg;
+export function useTableLeave(tableId: string | undefined) {
+    // Get the Node RPC client
+    const { client } = useNodeRpc();
 
-    if (!userAddress || !privateKey) {
-        throw new Error("Missing user address or private key");
-    }
+    // Create a fetcher that has access to the client
+    const leaveFetcher = async (_url: string, { arg }: { arg: LeaveTableOptions }) => {
+        const { privateKey, amount = "0", nonce = Date.now().toString(), actionIndex } = arg;
 
-    // Create a wallet to sign the message
-    const wallet = new ethers.Wallet(privateKey);
+        console.log("👋 Leave table attempt");
+        console.log("👋 Using amount:", amount);
+        console.log("👋 Using nonce:", nonce);
 
-    // Create message to sign in format that matches the action pattern
-    // Format: "leave" + amount + tableId + timestamp
-    const timestamp = Math.floor(Date.now() / 1000);
-    const messageToSign = `leave${amount}${url.split("/").pop()}${timestamp}`;
+        if (!privateKey) {
+            console.error("👋 Missing private key");
+            throw new Error("Missing private key");
+        }
+        
+        try {
+            // Check if the client is available
+            if (!client) {
+                throw new Error("Node RPC client not available");
+            }
 
-    // Sign the message
-    const signature = await wallet.signMessage(messageToSign);
+            if (!tableId) {
+                throw new Error("Table ID is required");
+            }
 
-    // Prepare request data that matches the proxy's expected format for PERFORM_ACTION
-    const requestData = {
-        userAddress,
-        amount,
-        signature,
-        publicKey: publicKey || userAddress,
-        nonce: nonce || timestamp,
-        timestamp,
-        index: actionIndex !== undefined && actionIndex !== null ? actionIndex : undefined
+            // Convert the amount from string to bigint
+            const amountBigInt = BigInt(amount);
+            
+            console.log("👋 Calling playerLeave with params:", {
+                tableId,
+                amount: amountBigInt.toString(),
+                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString())
+            });
+
+            // Call playerLeave method on the client
+            const response = await client.playerLeave(
+                tableId,
+                amountBigInt,
+                typeof nonce === "number" ? nonce : parseInt(nonce.toString())
+            );
+
+            console.log("👋 Leave table response:", response);
+            return response;
+        } catch (error) {
+            console.error("👋 Leave table error:", error);
+            throw error;
+        }
     };
 
-    // Send the request to the proxy server
-    const response = await axios.post(url, requestData);
-    return response.data;
-}
+    const { trigger, isMutating, error, data } = useSWRMutation(
+        tableId ? `leave_${tableId}` : null, 
+        leaveFetcher
+    );
 
-export function useTableLeave(tableId: string | undefined) {
-    const { trigger, isMutating, error, data } = useSWRMutation(tableId ? `${PROXY_URL}/table/${tableId}/leave` : null, leaveTableFetcher);
+    // Add better error handling
+    if (error) {
+        console.error("Leave table hook error:", error instanceof Error ? error.message : String(error));
+    }
 
     // Get player's stack from the table data if needed
     const leaveTableWithStack = async (options: LeaveTableOptions = {}) => {
-        // If no amount was provided, we could fetch the stack here if needed
         return trigger(options);
     };
 
-    const result = {
+    return {
         leaveTable: tableId ? leaveTableWithStack : null,
         isLeaving: isMutating,
         error,
         data
     };
-
-    return result;
 }

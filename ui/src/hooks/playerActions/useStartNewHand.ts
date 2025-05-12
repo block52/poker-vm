@@ -1,75 +1,61 @@
-import { ethers } from "ethers";
-import axios from "axios";
 import useSWRMutation from "swr/mutation";
-import { PROXY_URL } from "../../config/constants";
+import { useNodeRpc } from "../../context/NodeRpcContext";
 import { StartNewHandOptions } from "./types";
 
+export function useStartNewHand(tableId: string | undefined) {
+    // Get the Node RPC client
+    const { client } = useNodeRpc();
 
-async function startNewHandFetcher(url: string, { arg }: { arg: StartNewHandOptions }) {
-    const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), seed = Math.random().toString(36).substring(2, 15) } = arg;
+    // Create a fetcher that has access to the client
+    const startNewHandFetcher = async (_url: string, { arg }: { arg: StartNewHandOptions }) => {
+        const { privateKey, nonce = Date.now().toString(), seed = Math.random().toString(36).substring(2, 15) } = arg;
 
-    console.log("🔄 Start new hand attempt for:", url);
-    console.log("🔄 Using nonce:", nonce);
+        console.log("🔄 Start new hand attempt");
+        console.log("🔄 Using nonce:", nonce);
+        console.log("🔄 Using seed:", seed);
 
-    if (!userAddress || !privateKey) {
-        console.error("🔄 Missing address or private key");
-        throw new Error("Missing user address or private key");
-    }
+        if (!privateKey) {
+            console.error("🔄 Missing private key");
+            throw new Error("Missing private key");
+        }
+        
+        try {
+            // Check if the client is available
+            if (!client) {
+                throw new Error("Node RPC client not available");
+            }
 
-    // Ensure address is lowercase to avoid case-sensitivity issues
-    const normalizedAddress = userAddress.toLowerCase();
-    console.log("🔄 Using normalized address:", normalizedAddress);
+            if (!tableId) {
+                throw new Error("Table ID is required");
+            }
 
-    // Create a wallet to sign the message
-    const wallet = new ethers.Wallet(privateKey);
+            console.log("🔄 Table ID for new hand:", tableId);
+            
+            console.log("🔄 Calling newHand with params:", {
+                tableId,
+                seed,
+                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString())
+            });
 
-    // Extract tableId correctly - grab the last segment of the URL
-    const urlParts = url.split("/");
-    const tableId = urlParts[urlParts.length - 1]; // Get the table ID from the URL
-    console.log("🔄 Table ID for new hand:", tableId);
+            // Call newHand method on the client
+            const response = await client.newHand(
+                tableId,
+                seed,
+                typeof nonce === "number" ? nonce : parseInt(nonce.toString())
+            );
 
-    // Create message to sign in format: new_hand + tableId + timestamp + nonce
-    const timestamp = Math.floor(Date.now() / 1000);
-    const messageToSign = `new_hand${tableId}${timestamp}${nonce}`;
-    console.log("🔄 Message to sign:", messageToSign);
-
-    // Sign the message
-    const signature = await wallet.signMessage(messageToSign);
-    console.log("🔄 Signature created");
-
-    // Prepare request data for the new hand endpoint
-    const requestData = {
-        userAddress: normalizedAddress,
-        signature,
-        publicKey: (publicKey || userAddress).toLowerCase(),
-        tableId: tableId,
-        nonce,
-        timestamp,
-        seed: seed
+            console.log("🔄 New hand response:", response);
+            return response;
+        } catch (error) {
+            console.error("🔄 New hand error:", error);
+            throw error;
+        }
     };
 
-    console.log("🔄 Sending new hand request:", requestData);
-
-    try {
-        // Send the request to the proxy server
-        const response = await axios.post(url, requestData, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-        console.log("🔄 New hand response:", response.data);
-        return response.data;
-    } catch (error) {
-        console.error("🔄 New hand error:", error);
-        if (axios.isAxiosError(error) && error.response) {
-            console.error("🔄 Response data:", error.response.data);
-        }
-        throw error;
-    }
-}
-
-export function useStartNewHand(tableId: string | undefined) {
-    const { trigger, isMutating, error, data } = useSWRMutation(tableId ? `${PROXY_URL}/create_new_hand/${tableId}` : null, startNewHandFetcher);
+    const { trigger, isMutating, error, data } = useSWRMutation(
+        tableId ? `new_hand_${tableId}` : null, 
+        startNewHandFetcher
+    );
 
     // Add better error handling
     if (error) {
@@ -94,7 +80,8 @@ export function useStartNewHand(tableId: string | undefined) {
         isStartingNewHand: result.isStartingNewHand,
         hasError: !!result.error,
         hasData: !!result.data,
-        tableId
+        tableId,
+        hasClient: !!client
     });
 
     return result;
