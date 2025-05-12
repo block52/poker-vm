@@ -1,5 +1,5 @@
 import React from "react";
-import { useGameState } from "./useGameState";
+import { useGameState } from "./useGameState"
 import { ethers } from "ethers";
 
 /**
@@ -39,8 +39,8 @@ export const useVacantSeatData = (tableId?: string) => {
       players: []
     };
     
-    const smallBlindWei = gameState.smallBlind || "0";
-    const bigBlindWei = gameState.bigBlind || "0";
+    const smallBlindWei = gameState.gameOptions?.smallBlind || "0";
+    const bigBlindWei = gameState.gameOptions?.bigBlind || "0";
     
     return {
       smallBlindWei,
@@ -48,8 +48,8 @@ export const useVacantSeatData = (tableId?: string) => {
       smallBlindDisplay: ethers.formatUnits(smallBlindWei, 18),
       bigBlindDisplay: ethers.formatUnits(bigBlindWei, 18),
       dealerPosition: gameState.dealer || 0,
-      smallBlindPosition: gameState.smallBlindPosition || 0,
-      bigBlindPosition: gameState.bigBlindPosition || 0,
+      smallBlindPosition: gameState.gameOptions?.smallBlind || 0,
+      bigBlindPosition: gameState.gameOptions?.bigBlind || 0,
       players: gameState.players || []
     };
   }, [gameState]);
