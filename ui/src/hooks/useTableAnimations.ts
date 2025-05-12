@@ -1,4 +1,4 @@
-import { useGameState } from "./useGameState";
+import { useGameState } from "./useGameState"
 
 /**
  * Custom hook to provide table animation-related information
@@ -23,10 +23,8 @@ export const useTableAnimations = (tableId?: string) => {
 
   try {
     // Extract table size (maximum players) from game options
-    const tableSize = gameState.gameOptions?.maxPlayers || 
-                      gameState.maxPlayers || 
-                      defaultTableSize;
-
+    const tableSize = gameState.gameOptions?.maxPlayers || gameState.gameOptions?.minPlayers || defaultTableSize;
+    
     const result = {
       tableSize,
       isLoading: false,

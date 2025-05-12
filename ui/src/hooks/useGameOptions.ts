@@ -1,4 +1,4 @@
-import { useGameState } from "./useGameState";
+import { useGameState } from "./useGameState"
 import { GameOptions } from "@bitcoinbrisbane/block52";
 import { useEffect, useState } from "react";
 
@@ -17,6 +17,14 @@ const defaultOptions: GameOptions = {
     smallBlind: BigInt(DEFAULT_SMALL_BLIND),
     bigBlind: BigInt(DEFAULT_BIG_BLIND),
     timeout: 300
+};
+
+// Helper to safely convert values to bigint
+const toBigInt = (value: any): bigint => {
+    if (typeof value === "string") return BigInt(value);
+    if (typeof value === "bigint") return value;
+    if (typeof value === "number") return BigInt(value);
+    return BigInt(0);
 };
 
 /**
@@ -47,12 +55,12 @@ export const useGameOptions = (tableId?: string) => {
 
                 // Use the game options from the API with fallbacks to defaults
                 const newOptions: GameOptions = {
-                    minBuyIn: gameOptions.minBuyIn || defaultOptions.minBuyIn,
-                    maxBuyIn: gameOptions.maxBuyIn || defaultOptions.maxBuyIn,
+                    minBuyIn: toBigInt(gameOptions.minBuyIn || defaultOptions.minBuyIn),
+                    maxBuyIn: toBigInt(gameOptions.maxBuyIn || defaultOptions.maxBuyIn),
                     maxPlayers: gameOptions.maxPlayers || defaultOptions.maxPlayers,
                     minPlayers: gameOptions.minPlayers || defaultOptions.minPlayers,
-                    smallBlind: gameOptions.smallBlind || defaultOptions.smallBlind,
-                    bigBlind: gameOptions.bigBlind || defaultOptions.bigBlind,
+                    smallBlind: toBigInt(gameOptions.smallBlind || defaultOptions.smallBlind),
+                    bigBlind: toBigInt(gameOptions.bigBlind || defaultOptions.bigBlind),
                     timeout: gameOptions.timeout || defaultOptions.timeout
                 };
 
