@@ -6,6 +6,7 @@ import { GameOptions, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbri
 import { Deck } from "../models";
 import { IGameManagement } from "./interfaces";
 import { createHash } from "crypto";
+import { createAddress } from "../utils/crypto";
 
 export class GameManagement extends StateManager implements IGameManagement {
     constructor(protected readonly connString: string) {
@@ -43,10 +44,7 @@ export class GameManagement extends StateManager implements IGameManagement {
 
     public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
         const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
-        let address = createHash("SHA256").update(digest).digest("hex");
-
-        // Get last 40 characters of the hash
-        address = "0x" + address.substring(address.length - 40);
+        const address = createAddress(digest);
 
         // Creating a log to confirm what's happening
         console.log(`Creating game with address: ${address} (using contract schema address directly)`);
