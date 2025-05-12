@@ -1,5 +1,5 @@
 import { Server as HttpServer } from "http";
-import WebSocket, { WebSocketServer } from "ws";
+import WebSocket from "ws";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import url from "url";
 
