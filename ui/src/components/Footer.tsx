@@ -62,7 +62,10 @@ const PokerActionPanel: React.FC = () => {
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
 
     // Determine if user is in the table using our hooks instead of accountUtils
-    const isUserInTable = !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
+    const isUserInTable = useMemo(() => 
+        !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress),
+        [players, userAddress]
+    );
 
     // Use nextToActInfo to determine if it's the user's turn
     const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
@@ -319,8 +322,12 @@ const PokerActionPanel: React.FC = () => {
     const showButtons = isUserInTable;
 
     // Only show fold button if the player has the fold action and is in the table
-    const canFoldAnytime =
-        legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === PlayerActionType.FOLD) && playerStatus !== PlayerStatus.FOLDED && showButtons;
+    const canFoldAnytime = useMemo(() =>
+        legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === PlayerActionType.FOLD) && 
+        playerStatus !== PlayerStatus.FOLDED && 
+        showButtons,
+        [legalActions, playerStatus, showButtons]
+    );
 
     // Only show other action buttons if it's the player's turn, they have legal actions,
     // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
