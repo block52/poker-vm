@@ -1,6 +1,27 @@
 import { useGameState } from "./useGameState";
 import { formatWeiToSimpleDollars } from "../utils/numberUtils";
 
+// Interface to represent the structure we expect
+interface GameStateFields {
+  type?: string;
+  address?: string;
+  smallBlind?: string;
+  bigBlind?: string;
+  blinds?: { small?: string; big?: string };
+  smallBlindPosition?: number;
+  bigBlindPosition?: number;
+  positions?: { smallBlind?: number; bigBlind?: number };
+  dealer?: number;
+  players?: any[];
+  communityCards?: string[];
+  deck?: string;
+  pots?: string[];
+  nextToAct?: number;
+  round?: string;
+  winners?: string[];
+  signature?: string;
+}
+
 /**
  * Custom hook to provide formatted table data
  * @param tableId The ID of the table to fetch data for
@@ -42,28 +63,37 @@ export const useTableData = (tableId?: string) => {
   }
 
   try {
-    if (!gameState || gameState.type !== "cash") {
+    if (!gameState) {
       return emptyState;
     }
+
+    // Cast to our interface to work with properties safely
+    const state = gameState as unknown as GameStateFields;
+    
+    // Map SDK DTO to our expected structure
+    const smallBlind = state.smallBlind || state.blinds?.small || "0";
+    const bigBlind = state.bigBlind || state.blinds?.big || "0";
+    const smallBlindPosition = state.smallBlindPosition || state.positions?.smallBlind || 0;
+    const bigBlindPosition = state.bigBlindPosition || state.positions?.bigBlind || 0;
 
     return {
       isLoading: false,
       error: null,
-      tableDataType: gameState.type,
-      tableDataAddress: gameState.address,
-      tableDataSmallBlind: formatWeiToSimpleDollars(gameState.smallBlind),
-      tableDataBigBlind: formatWeiToSimpleDollars(gameState.bigBlind),
-      tableDataSmallBlindPosition: gameState.smallBlindPosition,
-      tableDataBigBlindPosition: gameState.bigBlindPosition,
-      tableDataDealer: gameState.dealer,
-      tableDataPlayers: gameState.players || [],
-      tableDataCommunityCards: gameState.communityCards || [],
-      tableDataDeck: gameState.deck || "",
-      tableDataPots: gameState.pots || ["0"],
-      tableDataNextToAct: gameState.nextToAct ?? -1,
-      tableDataRound: gameState.round || "preflop",
-      tableDataWinners: gameState.winners || [],
-      tableDataSignature: gameState.signature || ""
+      tableDataType: state.type || "cash",
+      tableDataAddress: state.address || "",
+      tableDataSmallBlind: formatWeiToSimpleDollars(smallBlind),
+      tableDataBigBlind: formatWeiToSimpleDollars(bigBlind),
+      tableDataSmallBlindPosition: smallBlindPosition,
+      tableDataBigBlindPosition: bigBlindPosition,
+      tableDataDealer: state.dealer || 0,
+      tableDataPlayers: state.players || [],
+      tableDataCommunityCards: state.communityCards || [],
+      tableDataDeck: state.deck || "",
+      tableDataPots: state.pots || ["0"],
+      tableDataNextToAct: state.nextToAct ?? -1,
+      tableDataRound: state.round || "preflop",
+      tableDataWinners: state.winners || [],
+      tableDataSignature: state.signature || ""
     };
   } catch (err) {
     console.error("Error parsing table data:", err);

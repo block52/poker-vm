@@ -49,7 +49,7 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number) 
 
     // Extract table size (maximum players)
     const tableSize = gameState.gameOptions?.maxPlayers || 
-                      gameState.maxPlayers || 
+                      gameState.gameOptions?.minPlayers || 
                       9;
 
     // Extract table type

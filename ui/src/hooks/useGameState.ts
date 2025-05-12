@@ -1,13 +1,7 @@
 import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { useNodeRpc } from "../context/NodeRpcContext";
 import { useEffect } from "react";
-
-// Define the fetcher function that includes the user address as a query parameter
-const fetcher = (url: string) => {
-  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-  return axios.get(`${url}?userAddress=${userAddress}`).then(res => res.data);
-};
+import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * Central hook for fetching game state data
@@ -17,11 +11,18 @@ const fetcher = (url: string) => {
  * @returns Object containing game state data and SWR utilities
  */
 export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 10000) => {
-  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+  const { client, isLoading: clientLoading } = useNodeRpc();
+  const userAddress = localStorage.getItem("user_eth_public_key");
   
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
+  // Define the fetcher function using the SDK client
+  const fetcher = async (gameAddress: string) => {
+    if (!client) throw new Error("RPC client not initialized");
+    return client.getGameState(gameAddress, userAddress?.toLowerCase() ?? "");
+  };
+
+  // Skip the request if no tableId is provided or client isn't ready
+  const { data: gameState, error, isLoading: dataLoading, mutate } = useSWR(
+    tableId && client ? tableId : null,
     fetcher,
     {
       refreshInterval: autoRefreshIntervalMs,
@@ -30,9 +31,6 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
     }
   );
 
-  // Handle different response structures
-  const gameState = data?.data || data;
-  
   // Set up an effect to refresh more frequently when the game is in the "end" state
   useEffect(() => {
     if (gameState?.round === "end") {
@@ -46,6 +44,8 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
     }
   }, [gameState?.round, mutate]);
   
+  const isLoading = clientLoading || dataLoading;
+  
   return { 
     gameState, 
     error, 
@@ -55,9 +55,9 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
     getNestedValue: (path: string) => {
       if (!gameState) return undefined;
       
-      return path.split(".").reduce((obj, key) => 
+      return path.split(".").reduce((obj: any, key: string) => 
         (obj && obj[key] !== undefined) ? obj[key] : undefined, 
-        gameState
+        gameState as any
       );
     }
   };
