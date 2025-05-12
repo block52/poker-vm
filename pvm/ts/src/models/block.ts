@@ -87,8 +87,8 @@ export class Block implements IJSONModel {
             const newLevel: string[] = [];
             for (let i = 0; i < transactionHashes.length; i += 2) {
                 const hashPair = transactionHashes[i] + transactionHashes[i + 1];
-                const newHash = createHash("SHA256").update(hashPair).digest("hex");
-                newLevel.push(newHash);
+                const hash = createHash("SHA256").update(hashPair).digest("hex");
+                newLevel.push(hash);
             }
 
             // Move up to the next level of the tree

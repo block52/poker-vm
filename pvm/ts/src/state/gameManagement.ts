@@ -5,6 +5,7 @@ import { IGameStateDocument, IJSONModel } from "../models/interfaces";
 import { GameOptions, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../models";
 import { IGameManagement } from "./interfaces";
+import { createHash } from "crypto";
 
 export class GameManagement extends StateManager implements IGameManagement {
     constructor(protected readonly connString: string) {
@@ -46,12 +47,11 @@ export class GameManagement extends StateManager implements IGameManagement {
         // to work correctly. We're keeping the original hash generation code commented out
         // until we can properly separate game instances from contract schemas.
 
-        // const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
-        // const hash = crypto.createHash("sha256").update(digest).digest("hex");
+        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
+        let address = createHash("SHA256").update(digest).digest("hex");
 
-        // Instead of creating a new hash, using the contractSchema address
-        // This ensures the game address matches the contract address
-        const address = contractSchemaAddress;
+        // Get last 40 characters of the hash
+        address = "0x" + address.substring(address.length - 40);
 
         // Creating a log to confirm what's happening
         console.log(`Creating game with address: ${address} (using contract schema address directly)`);
