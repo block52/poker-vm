@@ -211,7 +211,7 @@ const Table = () => {
         const fetchTableDataDirectly = async () => {
             try {
                 // Call the SDK function to get game state directly
-                const gameState = await client.getGameState(id);
+                const gameState = await client.getGameState(id, userWalletAddress?.toLowerCase() ?? "");
                 console.log("Direct game state from SDK:", gameState);
                 // You could update some local state with this data if needed
             } catch (err) {
