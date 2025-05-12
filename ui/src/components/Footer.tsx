@@ -188,99 +188,89 @@ const PokerActionPanel: React.FC = () => {
     const handlePostSmallBlind = useCallback(() => {
         console.log("Posting small blind");
         
-        if (!publicKey || !privateKey || !postSmallBlind) {
+        if (!privateKey || !postSmallBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
 
         // Use our hook to post small blind
         postSmallBlind({
-            userAddress: publicKey,
             privateKey,
-            publicKey,
             actionIndex: smallBlindAction?.index || 0
         });
-    }, [publicKey, privateKey, postSmallBlind, smallBlindAction]);
+    }, [privateKey, postSmallBlind, smallBlindAction]);
 
     const handlePostBigBlind = useCallback(() => {
         console.log("Posting big blind");
         
-        if (!publicKey || !privateKey || !postBigBlind) {
+        if (!privateKey || !postBigBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
 
         // Use our hook to post big blind
         postBigBlind({
-            userAddress: publicKey,
             privateKey,
-            publicKey,
             actionIndex: bigBlindAction?.index || 0
         });
-    }, [publicKey, privateKey, postBigBlind, bigBlindAction]);
+    }, [privateKey, postBigBlind, bigBlindAction]);
 
     const handleCheck = useCallback(() => {
         console.log("Checking");
         
-        if (!publicKey || !privateKey || !checkHand) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!privateKey || !checkHand) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
         // Use our hook to check
         checkHand({
-            userAddress: publicKey,
             privateKey,
-            publicKey,
             actionIndex: checkAction?.index || 0,
             amount: "0" // Check doesn't require an amount
         });
-    }, [publicKey, privateKey, checkHand, checkAction]);
+    }, [privateKey, checkHand, checkAction]);
 
     const handleFold = useCallback(() => {
         console.log("Folding");
         
-        if (!publicKey || !privateKey || !foldHand) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!privateKey || !foldHand) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
         // Use our hook to fold
         foldHand({
-            userAddress: publicKey,
             privateKey,
-            publicKey,
             actionIndex: foldAction?.index || 0
         });
-    }, [foldHand, foldAction, publicKey, privateKey]);
+    }, [foldHand, foldAction, privateKey]);
 
     const handleCall = useCallback(() => {
         console.log("Calling");
         
-        if (!publicKey || !privateKey || !callHand) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!privateKey || !callHand) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
         if (callAction) {
             // Use our hook to call with the correct amount
             callHand({
-                userAddress: publicKey,
                 privateKey,
-                publicKey,
                 actionIndex: callAction.index || 0,
                 amount: "0", // callAction.min.toString() // Call doesn't require an amount, the PVM should handle it
             });
         } else {
             console.error("Call action not available");
         }
-    }, [publicKey, privateKey, callHand, callAction]);
+    }, [privateKey, callHand, callAction]);
 
     const handleBet = useCallback(() => {
         console.log("Betting");
         
-        if (!publicKey || !privateKey || !betHand) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!privateKey || !betHand) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
@@ -288,19 +278,17 @@ const PokerActionPanel: React.FC = () => {
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         betHand({
-            userAddress: publicKey,
             privateKey,
-            publicKey,
             actionIndex: betAction?.index || 0,
             amount: amountWei
         });
-    }, [publicKey, privateKey, betHand, raiseAmount, betAction]);
+    }, [privateKey, betHand, raiseAmount, betAction]);
 
     const handleRaise = useCallback(() => {
         console.log("Raising");
         
-        if (!publicKey || !privateKey || !raiseHand) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!privateKey || !raiseHand) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
@@ -308,13 +296,11 @@ const PokerActionPanel: React.FC = () => {
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         raiseHand({
-            userAddress: publicKey,
             privateKey,
-            publicKey,
             actionIndex: raiseAction?.index || 0,
             amount: amountWei
         });
-    }, [publicKey, privateKey, raiseHand, raiseAmount, raiseAction]);
+    }, [privateKey, raiseHand, raiseAmount, raiseAction]);
 
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = hasSmallBlindAction && isUsersTurn;
@@ -356,18 +342,15 @@ const PokerActionPanel: React.FC = () => {
     const handleDeal = () => {
         console.log("Deal button clicked");
 
-        // Get public and private keys
-        
-        if (!publicKey || !privateKey || !dealCards) {
-            console.error("Wallet keys not available or hook not ready");
+        // Get private key
+        if (!privateKey || !dealCards) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
-        // Use the new hook to deal cards
+        // Use the hook to deal cards
         dealCards({
-            userAddress: publicKey,
             privateKey,
-            publicKey,
             actionIndex: getActionByType(NonPlayerActionType.DEAL)?.index || getActionByType("deal")?.index || 0
         });
     };
@@ -382,44 +365,40 @@ const PokerActionPanel: React.FC = () => {
     const handleMuck = () => {
         console.log("Mucking cards");
         
-        if (!publicKey || !privateKey || !muckCards) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!privateKey || !muckCards) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
         // Use our hook to muck cards
-        muckCards({
-            userAddress: publicKey,
-            privateKey,
-            publicKey,
-            actionIndex: getActionByType(PlayerActionType.MUCK)?.index || getActionByType("muck")?.index || 0
-        });
+        // muckCards({
+        //     privateKey,
+        //     actionIndex: getActionByType(PlayerActionType.MUCK)?.index || getActionByType("muck")?.index || 0
+        // });
     };
 
     // Handler for show action
     const handleShow = () => {
         console.log("Showing cards");
         
-        if (!publicKey || !privateKey || !showCards) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!privateKey || !showCards) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
         // Use our hook to show cards
-        showCards({
-            userAddress: publicKey,
-            privateKey,
-            publicKey,
-            actionIndex: getActionByType(PlayerActionType.SHOW)?.index || getActionByType("show")?.index || 0
-        });
+        // showCards({
+        //     privateKey,
+        //     actionIndex: getActionByType(PlayerActionType.SHOW)?.index || getActionByType("show")?.index || 0
+        // });
     };
 
     // Add the handleStartNewHand function after the other handler functions
     const handleStartNewHand = () => {
         console.log("Starting new hand");
         
-        if (!publicKey || !privateKey || !startNewHand) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!privateKey || !startNewHand) {
+            console.error("Private key not available or hook not ready");
             return;
         }
 
@@ -430,9 +409,7 @@ const PokerActionPanel: React.FC = () => {
 
         // Use our hook to start a new hand
         startNewHand({
-            userAddress: publicKey,
             privateKey,
-            publicKey,
             nonce: nonce || Date.now().toString(), // Use nonce from useTableNonce if available
             seed: Math.random().toString(36).substring(2, 15) // Generate a random seed
         })

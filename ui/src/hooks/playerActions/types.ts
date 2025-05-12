@@ -34,42 +34,32 @@ export interface AccountApiResponse {
 
 // Define the parameter type for callHand function
 export interface HandParams {
-    userAddress: string;
     privateKey: string;
-    publicKey: string;
     actionIndex: number;
     amount: string;
 }
 
 export interface StartNewHandOptions {
-    userAddress: string | null;
     privateKey: string | null;
-    publicKey: string | null;
     nonce?: string | number;
     seed?: string;
 }
 
 export interface DealOptions {
-    userAddress: string | null;
     privateKey: string | null;
-    publicKey: string | null;
     nonce?: string | number;
     actionIndex?: number | null;
 }
 
 export interface FoldOptions {
-    userAddress: string | null;
     privateKey: string | null;
-    publicKey: string | null;
     nonce?: string | number;
     actionIndex?: number | null;
 }
 
 export interface JoinTableOptions {
     buyInAmount: string;
-    userAddress: string | null;
     privateKey: string | null;
-    publicKey: string | null;
     nonce?: string | number;
     actionIndex?: number;
     seatNumber?: number;
@@ -77,9 +67,21 @@ export interface JoinTableOptions {
 
 export interface LeaveTableOptions {
     amount?: string;
-    userAddress?: string | null;
     privateKey?: string | null;
-    publicKey?: string | null;
+    nonce?: string | number;
+    actionIndex?: number | null;
+}
+
+// Define MuckOptions interface
+export interface MuckOptions {
+    privateKey: string | null;
+    nonce?: string | number;
+    actionIndex?: number | null;
+}
+
+// Define ShowCardsParams interface
+export interface ShowCardsParams {
+    privateKey: string | null;
     nonce?: string | number;
     actionIndex?: number | null;
 }
