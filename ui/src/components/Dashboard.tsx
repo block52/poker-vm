@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
     };
 
     // Function to fetch account balance directly using NodeRpcClient
-    const fetchAccountBalance = async () => {
+    const fetchAccountBalance = useCallback(async () => {
         if (!client) {
             setBalanceError(new Error("RPC client not initialized"));
             setIsBalanceLoading(false);
@@ -172,7 +172,7 @@ const Dashboard: React.FC = () => {
         } finally {
             setIsBalanceLoading(false);
         }
-    };
+    }, [client, publicKey]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -186,7 +186,7 @@ const Dashboard: React.FC = () => {
         if (publicKey && client && !clientLoading) {
             fetchAccountBalance();
         }
-    }, [publicKey, client, clientLoading]);
+    }, [publicKey, client, clientLoading, fetchAccountBalance]);
 
     const handleGameType = (type: GameType) => {
         console.log("\n=== Game Type Selected ===");
