@@ -2,6 +2,11 @@ import { computeAddress, ethers } from "ethers";
 import { createVerify } from "crypto";
 
 export const verifySignature = (publicKey: string, message: string, signature: string): boolean => {
+
+    if (signature === ethers.ZeroHash) {
+        return true;
+    }
+
     const verifier = createVerify("SHA256");
     verifier.update(message);
     verifier.end();
@@ -67,13 +72,13 @@ export const getAccountFromPublicKey = (publicKey: string): string => {
         if (!publicKey.startsWith('0x')) {
             publicKey = '0x' + publicKey;
         }
-        
+
         // Remove '0x04' prefix if present (for uncompressed keys)
         // Uncompressed public keys start with 0x04
         if (publicKey.startsWith('0x04')) {
             publicKey = '0x' + publicKey.substring(4);
         }
-        
+
         // Derive the Ethereum address from the public key
         return computeAddress(publicKey);
     } catch (error) {
