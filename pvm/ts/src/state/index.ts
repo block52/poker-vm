@@ -1,9 +1,9 @@
 import Redis from "ioredis";
 import { RedisBlockchainManagement } from "./redis/redisBlockchainManagement";
-import { getContractSchemaManagement } from "./contractSchemaManagement";
-import { getGameManagementInstance } from "./gameManagement";
+import { getContractSchemaManagement } from "./mongodb/contractSchemaManagement";
+import { getGameManagementInstance } from "./mongodb/gameManagement";
 import { IAccountManagement, IBlockchainManagement } from "./interfaces";
-import { getTransactionInstance } from "./transactionManagement";
+import { getTransactionInstance } from "./mongodb/transactionManagement";
 import { MongoDBBlockchainManagement } from "./mongodb/blockchainManagement";
 import { getRedisAccountManagementInstance } from "./redis/redisAccountManagement";
 import { getMongoAccountManagementInstance } from "./mongodb/accountManagement";

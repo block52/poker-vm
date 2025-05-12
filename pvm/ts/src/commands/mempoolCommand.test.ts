@@ -26,7 +26,7 @@ describe("MempoolCommand", () => {
                 hash: "tx1",
                 signature: ethers.ZeroHash,
                 timestamp: 1000,
-                data: "mock-data-1"
+                data: "mock,1"
             })
         }
     ];

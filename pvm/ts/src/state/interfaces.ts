@@ -38,6 +38,8 @@ export interface IGameManagement {
 }
 
 export interface ITransactionManagement {
+    addTransaction(tx: Transaction): Promise<void>;
+    addTransactions(txs: Transaction[], blockHash: string): Promise<void>;
     exists(txid: string): Promise<Boolean>;
     getTransactions(blockHash: string, count?: number): Promise<Transaction[]>;
     getTransaction(txid: string): Promise<Transaction | null>;

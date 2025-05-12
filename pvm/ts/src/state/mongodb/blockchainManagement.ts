@@ -4,12 +4,16 @@ import { StateManager } from "../stateManager";
 import GenesisBlock from "../../data/genesisblock.json";
 import { IBlockDocument } from "../../models/interfaces";
 import { AccountManagement } from "./accountManagement";
-import { TransactionManagement } from "../transactionManagement";
-import { IBlockchainManagement } from "../interfaces";
+import { getTransactionInstance } from "../../state/index";
+import { IBlockchainManagement, ITransactionManagement } from "../interfaces";
 
 export class MongoDBBlockchainManagement extends StateManager implements IBlockchainManagement {
+
+    private readonly transactionManagement: ITransactionManagement;
+
     constructor(protected readonly connString: string) {
         super(connString);
+        this.transactionManagement = getTransactionInstance();
     }
 
     public async addBlock(block: Block): Promise<void> {
@@ -28,8 +32,7 @@ export class MongoDBBlockchainManagement extends StateManager implements IBlockc
             await accountManagement.applyTransactions(block.transactions);
 
             // Add transactions to transaction management
-            const transactionManagement = new TransactionManagement();
-            await transactionManagement.addTransactions(block.transactions, block.hash);
+            await this.transactionManagement.addTransactions(block.transactions, block.hash);
         }
 
         // Save the block with transaction hashes

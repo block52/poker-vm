@@ -1,6 +1,6 @@
 import { GameManagement, getGameManagementInstance } from "./gameManagement";
-import GameState from "../schema/gameState";
-import contractSchemas from "../schema/contractSchemas";
+import GameState from "../../schema/gameState";
+import contractSchemas from "../../schema/contractSchemas";
 import { ethers } from "ethers";
 
 // Mock dependencies

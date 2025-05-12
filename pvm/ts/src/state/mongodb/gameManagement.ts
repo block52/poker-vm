@@ -1,10 +1,10 @@
-import { StateManager } from "./stateManager";
-import GameState from "../schema/gameState";
+import { StateManager } from "../stateManager";
+import GameState from "../../schema/gameState";
 import { ethers } from "ethers";
-import { IGameStateDocument, IJSONModel } from "../models/interfaces";
+import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
 import { GameOptions, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { Deck } from "../models";
-import { IGameManagement } from "./interfaces";
+import { Deck } from "../../models";
+import { IGameManagement } from "../interfaces";
 
 export class GameManagement extends StateManager implements IGameManagement {
     constructor(protected readonly connString: string) {

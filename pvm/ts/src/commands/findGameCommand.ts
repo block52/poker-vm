@@ -1,4 +1,4 @@
-import { getGameManagementInstance } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/index";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { GameOptionsResponse } from "@bitcoinbrisbane/block52";

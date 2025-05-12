@@ -1,7 +1,7 @@
 import { MineCommand } from "./mineCommand";
 import { getMempoolInstance } from "../core/mempool";
 import { MongoDBBlockchainManagement } from "../state/mongodb/blockchainManagement";
-import { getTransactionInstance } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/index";
 import { Block, Transaction } from "../models";
 import { ethers } from "ethers";
 

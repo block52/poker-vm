@@ -1,7 +1,7 @@
-import { StateManager } from "./stateManager";
-import ContractSchemas from "../schema/contractSchemas";
+import { StateManager } from "../stateManager";
+import ContractSchemas from "../../schema/contractSchemas";
 import { GameOptions } from "@bitcoinbrisbane/block52";
-import { IContractSchemaManagement } from "./interfaces";
+import { IContractSchemaManagement } from "../interfaces";
 
 export class ContractSchemaManagement extends StateManager implements IContractSchemaManagement {
     constructor() {
