@@ -403,35 +403,32 @@ const Table = () => {
 
     /**
      * Memoized player component renderer - critical for table rendering performance
-     * This function determines which type of component to render at each position and
-     * prevents unnecessary re-renders when other parts of the state change.
-     * 
-     * @param position - Position data containing left/top/color styling
-     * @param positionIndex - The index in the reordered array (not the actual seat number)
-     * @returns The appropriate React component for this position
      */
     const getComponentToRender = useCallback((position: PositionArray, positionIndex: number) => {
-        // Find if a player is seated at this position
-        const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === positionIndex + 1);
+        // Calculate the actual seat number accounting for rotation
+        const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
+        
+        // Find if a player is seated at this position (using correct seat number)
+        const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
         
         // Check if this seat belongs to the current user
         const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
         
         // Build common props shared by all player components
         const playerProps = {
-            index: positionIndex + 1,
+            index: seatNumber, // Use the correct seat number
             currentIndex, 
             left: position.left,
             top: position.top,
             color: position.color,
-            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === positionIndex + 1)?.status
+            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status
         };
         
         // CASE 1: No player at this seat - render vacant position
         if (!playerAtThisSeat) {
             return (
                 <VacantPlayer
-                    index={positionIndex + 1}
+                    index={seatNumber} // Use the correct seat number
                     left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
                     top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
                 />
@@ -443,7 +440,7 @@ const Table = () => {
         return isCurrentUser ? 
             <Player {...playerProps} /> : 
             <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
-    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible]);
+    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex]);
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
