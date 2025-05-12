@@ -1,6 +1,8 @@
 import { ethers } from "ethers";
-import { LegalAction, Player, TableData, TableStatus } from "../types/index";
+import { Player, TableData, TableStatus } from "../types/index";
+import { LegalActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 
+// TODO: Seems to be the same action type?
 export const getSignature = async (
     privateKey: string,
     nonce: number | string,
@@ -86,13 +88,13 @@ export const getUserTableStatus = (tableData: any): TableStatus | undefined => {
     const availableActions = player.legalActions || [];
 
     // Check for specific actions
-    const canPostSmallBlind = availableActions.some((a: LegalAction) => a.action === "post small blind");
-    const canPostBigBlind = availableActions.some((a: LegalAction) => a.action === "post big blind");
-    const canCheck = availableActions.some((a: LegalAction) => a.action === "check");
-    const canCall = availableActions.some((a: LegalAction) => a.action === "call");
-    const canBet = availableActions.some((a: LegalAction) => a.action === "bet");
-    const canRaise = availableActions.some((a: LegalAction) => a.action === "raise");
-    const canFold = availableActions.some((a: LegalAction) => a.action === "fold");
+    const canPostSmallBlind = availableActions.some((a: LegalActionDTO) => a.action === PlayerActionType.SMALL_BLIND);
+    const canPostBigBlind = availableActions.some((a: LegalActionDTO) => a.action === PlayerActionType.BIG_BLIND);
+    const canCheck = availableActions.some((a: LegalActionDTO) => a.action === PlayerActionType.CHECK);
+    const canCall = availableActions.some((a: LegalActionDTO) => a.action === PlayerActionType.CALL);
+    const canBet = availableActions.some((a: LegalActionDTO) => a.action === PlayerActionType.BET);
+    const canRaise = availableActions.some((a: LegalActionDTO) => a.action === PlayerActionType.RAISE);
+    const canFold = availableActions.some((a: LegalActionDTO) => a.action === PlayerActionType.FOLD);
 
     // Check if player is in small blind position
     const isSmallBlindPosition = actualTableData.smallBlindPosition === player.seat;
@@ -100,12 +102,12 @@ export const getUserTableStatus = (tableData: any): TableStatus | undefined => {
 
     // Get action limits if available
     const getActionLimits = (actionType: string) => {
-        const action = availableActions.find((a: LegalAction) => a.action === actionType);
+        const action = availableActions.find((a: LegalActionDTO) => a.action === actionType);
         return action
             ? {
-                  min: action.min,
-                  max: action.max
-              }
+                min: action.min,
+                max: action.max
+            }
             : null;
     };
 

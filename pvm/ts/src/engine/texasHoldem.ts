@@ -609,7 +609,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this.setAction(turnWithSeat, round);
     }
 
-    addNonPlayerAction(turn: Turn): void {
+    addNonPlayerAction(turn: Turn, data?: string): void {
         // For LEAVE action, we still want to record it but then the player will be removed
         const isLeaveAction = turn.action === NonPlayerActionType.LEAVE;
 
@@ -625,7 +625,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         const timestamp = Date.now();
         // Always get the actual seat number for the player
-        const seat = this.getPlayerSeatNumber(turn.playerId);
+        const seat = data ? Number(data) : this.getPlayerSeatNumber(turn.playerId);
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
 
         this.setAction(turnWithSeat, this._currentRound);

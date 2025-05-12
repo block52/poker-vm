@@ -11,8 +11,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Default contract address on L2
-let defaultTableAddress = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
-let node = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
+let defaultTableAddress = "0xa78eba9eda216154d263679e1cc615c7271679efa3";
+let node = "https://node1.block52.xyz"; // process.env.NODE_URL || "http://localhost:3000"; // "
 let nonce: number = 0;
 
 let _node: NodeRpcClient;
@@ -34,6 +34,11 @@ if (args.length > 0) {
         console.log(chalk.cyan(`Address: ${wallet.address}`));
     } catch (error) {
         console.log(chalk.red("Invalid private key provided as argument. Will try environment variable."));
+    }
+
+    if (args[0].startsWith("http")) {
+        node = args[0];
+        console.log(chalk.green("Node URL set from command line arguments"));
     }
 }
 
@@ -68,15 +73,6 @@ const getAddress = () => {
     }
 
     throw new Error("No valid private key found");
-};
-
-const getNonce = async (address: string): Promise<number> => {
-    const rpcClient = getClient();
-    const response = await rpcClient.getAccount(address);
-    if (response) {
-        nonce = response?.nonce || 0;
-    }
-    return nonce;
 };
 
 const getPublicKeyDetails = (privateKey: string): string => {
@@ -153,11 +149,9 @@ const syncNonce = async (address: string) => {
     }
 };
 
-const join = async (tableAddress: string, amount: bigint): Promise<string> => {
+const join = async (tableAddress: string, amount: bigint, seat: number): Promise<string> => {
     const rpcClient = getClient();
-    const response = await rpcClient.playerJoin(tableAddress, amount, nonce);
-
-    // console.log(chalk.green("Join response:"), response.hash);
+    const response = await rpcClient.playerJoin(tableAddress, amount, seat, nonce);
     return response.hash;
 };
 
@@ -271,7 +265,9 @@ const renderGameState = (state: TexasHoldemStateDTO, publicKey: string): void =>
     console.log(chalk.cyan("=".repeat(60)));
 
     // Game info
-    console.log(chalk.yellow(`Game Type: ${state.type} | Round: ${state.round} | Blinds: ${formatChips(state.gameOptions.smallBlind)}/${formatChips(state.gameOptions.bigBlind)}`));
+    const sb = state.gameOptions.smallBlind || "0";
+    const bb = state.gameOptions.bigBlind || "0";
+    console.log(chalk.yellow(`Game Type: ${state.type} | Round: ${state.round} | Blinds: ${formatChips(sb)}/${formatChips(bb)}`));
 
     // Community cards
     let communityCardsStr = "Board: ";
@@ -534,7 +530,7 @@ const interactiveAction = async () => {
                     const buyInWei = ethers.parseEther(buyInAmount);
                     console.log(chalk.yellow(`Attempting to join game with ${buyInAmount} USDC...`));
 
-                    const result = await join(defaultTableAddress, buyInWei);
+                    const result = await join(defaultTableAddress, buyInWei, 2);
 
                     if (result) {
                         console.log(chalk.cyan("Response:"), result);

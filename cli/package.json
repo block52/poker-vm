@@ -19,7 +19,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.78",
+    "@bitcoinbrisbane/block52": "1.0.109",
     "axios": "^1.8.4",
     "chalk": "^4.1.2",
     "commander": "^9.4.1",

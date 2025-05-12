@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import * as React from "react";
-import { PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
-import { PROXY_URL } from "../config/constants";
+import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 import { useTableNonce } from "../hooks/useTableNonce";
@@ -22,7 +21,6 @@ import { useTableMuck } from "../hooks/playerActions/useTableMuck";
 import { useTableShow } from "../hooks/playerActions/useTableShow";
 import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 
-import axios from "axios";
 
 import { ethers } from "ethers";
 
@@ -51,23 +49,28 @@ const PokerActionPanel: React.FC = () => {
     const { nextToActInfo, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
-    const { currentRound, totalPot: tableTotalPot, formattedTotalPot, tableType, roundType } = useTableState(tableId);
+    const { currentRound, formattedTotalPot } = useTableState(tableId);
 
     // Log info from our hooks for debugging
     useEffect(() => {
         console.log("🎮 NextToActInfo:", nextToActInfo);
-    }, [nextToActInfo]);
+        console.log("🎮 Legal Actions:", legalActions);
+    }, [nextToActInfo, legalActions]);
 
     const [publicKey, setPublicKey] = useState<string>();
-    const [isCallAction, setIsCallAction] = useState(false);
-    const [isCheckAction, setIsCheckAction] = useState(false);
-    const [balance, setBalance] = useState(0);
+    const [privateKey, setPrivateKey] = useState<string>();
 
-    // Get user's address directly from localStorage
-    const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+    // Use useMemo for localStorage access
+    const userAddress = useMemo(() => 
+        localStorage.getItem("user_eth_public_key")?.toLowerCase(),
+        []
+    );
 
     // Determine if user is in the table using our hooks instead of accountUtils
-    const isUserInTable = !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
+    const isUserInTable = useMemo(() => 
+        !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress),
+        [players, userAddress]
+    );
 
     // Use nextToActInfo to determine if it's the user's turn
     const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
@@ -75,43 +78,61 @@ const PokerActionPanel: React.FC = () => {
     // Replace userPlayer with direct checks from our hook data
     const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
 
-    // Check if fold action exists in legal actions
-    const hasFoldAction = legalActions?.some((a: any) => a.action === "fold" || a.action === PlayerActionType.FOLD);
+    // Helper function to check if an action exists in legal actions (handles both string and enum types)
+    const hasAction = (actionType: string | PlayerActionType | NonPlayerActionType) => {
+        return legalActions?.some(action => 
+            action.action === actionType || 
+            action.action?.toString() === actionType?.toString()
+        );
+    };
 
-    // Check if current user has the deal action
-    const currentUserCanDeal = userPlayer?.legalActions?.some((action: any) => action.action === "deal") || false;
+    // Check if actions are available using the helper function
+    const hasDealAction = hasAction(NonPlayerActionType.DEAL) || hasAction(NonPlayerActionType.DEAL);
+    const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND) || hasAction(PlayerActionType.SMALL_BLIND);
+    const hasBigBlindAction = hasAction(PlayerActionType.BIG_BLIND) || hasAction(PlayerActionType.BIG_BLIND);
+    const hasFoldAction = hasAction(PlayerActionType.FOLD) || hasAction(PlayerActionType.FOLD);
+    const hasCheckAction = hasAction(PlayerActionType.CHECK) || hasAction(PlayerActionType.CHECK);
+    const hasCallAction = hasAction(PlayerActionType.CALL) || hasAction(PlayerActionType.CALL);
+    const hasBetAction = hasAction(PlayerActionType.BET) || hasAction(PlayerActionType.BET);
+    const hasRaiseAction = hasAction(PlayerActionType.RAISE) || hasAction(PlayerActionType.RAISE);
+    const hasMuckAction = hasAction(PlayerActionType.MUCK) || hasAction(PlayerActionType.MUCK);
+    const hasShowAction = hasAction(PlayerActionType.SHOW) || hasAction(PlayerActionType.SHOW);
 
-    // Only show deal button if current user has the deal action
-    const shouldShowDealButton = currentUserCanDeal;
+    // Only show deal button if player has the deal action
+    const shouldShowDealButton = hasDealAction;
 
     // New flag to determine whether to hide other action buttons when deal is available
     const hideOtherButtons = shouldShowDealButton;
 
-    // Check if each action is available based on legalActions
-    const canFold = legalActions?.some((a: any) => a.action === PlayerActionType.FOLD);
-    const canCall = legalActions?.some((a: any) => a.action === PlayerActionType.CALL);
-    const canRaise = legalActions?.some((a: any) => a.action === PlayerActionType.RAISE);
-    const canCheck = legalActions?.some((a: any) => a.action === PlayerActionType.CHECK);
-    const canBet = legalActions?.some((a: any) => a.action === PlayerActionType.BET);
+    // Find the specific actions
+    const getActionByType = (actionType: string | PlayerActionType | NonPlayerActionType) => {
+        return legalActions?.find(action => 
+            action.action === actionType || 
+            action.action?.toString() === actionType?.toString()
+        );
+    };
 
-    // Get min/max values for bet and raise
-    const betAction = legalActions?.find((a: any) => a.action === PlayerActionType.BET);
-    const raiseAction = legalActions?.find((a: any) => a.action === PlayerActionType.RAISE);
-    const callAction = legalActions?.find((a: any) => a.action === PlayerActionType.CALL);
+    const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND) || getActionByType("small-blind");
+    const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND) || getActionByType("big-blind");
+    const foldAction = getActionByType(PlayerActionType.FOLD) || getActionByType("fold");
+    const checkAction = getActionByType(PlayerActionType.CHECK) || getActionByType("check");
+    const callAction = getActionByType(PlayerActionType.CALL) || getActionByType("call");
+    const betAction = getActionByType(PlayerActionType.BET) || getActionByType("bet");
+    const raiseAction = getActionByType(PlayerActionType.RAISE) || getActionByType("raise");
 
-    // Convert values to ETH for display
-    const minBet = betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0;
-    const maxBet = betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0;
-    const minRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0;
-    const maxRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0;
-    const callAmount = callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0;
+    // Convert values to USDC for faster display
+    const minBet = useMemo(() =>  betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0, [betAction]);
+    const maxBet = useMemo(() =>  betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0, [betAction]);
+    const minRaise = useMemo(() => raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0, [raiseAction]);
+    const maxRaise = useMemo(() => raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0, [raiseAction]);
+    const callAmount = useMemo(() => callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0, [callAction]);
 
     //
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
     const [raiseInputRaw, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
     const [lastAmountSource, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
-    const isRaiseAmountInvalid = canRaise ? raiseAmount < minRaise || raiseAmount > maxRaise : canBet ? raiseAmount < minBet || raiseAmount > maxBet : false;
+    const isRaiseAmountInvalid = hasRaiseAction ? raiseAmount < minRaise || raiseAmount > maxRaise : hasBetAction ? raiseAmount < minBet || raiseAmount > maxBet : false;
 
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
@@ -130,14 +151,21 @@ const PokerActionPanel: React.FC = () => {
         setPublicKey(localKey);
     }, [publicKey]);
 
+    useEffect(() => {
+        const localKey = localStorage.getItem("user_eth_private_key");
+        if (!localKey) return setPrivateKey(undefined);
+
+        setPrivateKey(localKey);
+    }, [privateKey]);
+
     // Log the player's legal actions
     useEffect(() => {
-        // console.log("Footer - Player's legal actions:", {
-        //     actions: playerLegalActions,
-        //     isPlayerTurn,
-        //     nextToAct: nextToActInfo?.seat,
-        //     userSeat: playerSeat
-        // });
+        console.log("Footer - Player's legal actions:", {
+            actions: legalActions,
+            isPlayerTurn,
+            nextToAct: nextToActInfo?.seat,
+            userSeat: playerSeat
+        });
     }, [legalActions, isPlayerTurn, nextToActInfo, playerSeat]);
 
     const handleRaiseChange = (newAmount: number) => {
@@ -145,143 +173,21 @@ const PokerActionPanel: React.FC = () => {
         setRaiseInputRaw(newAmount.toFixed(2));
     };
 
-    // Player action function to handle all game actions
-    const handleSetPlayerAction = async (action: PlayerActionType, amount: string) => {
-        console.log("Setting player action:", action, amount);
-        if (!userAddress || !tableId) {
-            console.error("Missing user address or table ID", { userAddress, tableId });
-            return;
-        }
-
-        try {
-            console.log(`Executing player action: ${action} with amount: ${amount}`);
-
-            // Get the private key from localStorage
-            const privateKey = localStorage.getItem("user_eth_private_key");
-            if (!privateKey) {
-                console.error("Private key not found");
-                return;
-            }
-
-            // Create a wallet instance to sign the message
-            const wallet = new ethers.Wallet(privateKey);
-
-            // Create the message to sign - Add delimiters for clarity and reliability
-            const timestamp = Math.floor(Date.now() / 1000).toString();
-
-            // Ensure action is properly formatted and consistent with API expectations
-            // Convert action to lowercase string as expected by the API
-            let formattedAction = "";
-
-            // Handle the action format based on the type
-            if (typeof action === "string") {
-                formattedAction = action.toLowerCase();
-            } else if (typeof action === "number") {
-                // If it's a numeric enum, map it to the expected string
-                switch (action) {
-                    case PlayerActionType.FOLD:
-                        formattedAction = "fold";
-                        break;
-                    case PlayerActionType.CHECK:
-                        formattedAction = "check";
-                        break;
-                    case PlayerActionType.CALL:
-                        formattedAction = "call";
-                        break;
-                    case PlayerActionType.BET:
-                        formattedAction = "bet";
-                        break;
-                    case PlayerActionType.RAISE:
-                        formattedAction = "raise";
-                        break;
-                    case PlayerActionType.SMALL_BLIND:
-                        formattedAction = "post small blind";
-                        break;
-                    case PlayerActionType.BIG_BLIND:
-                        formattedAction = "post big blind";
-                        break;
-                    default:
-                        formattedAction = (action as any).toString().toLowerCase();
-                }
-            } else {
-                formattedAction = (action as any).toString().toLowerCase();
-            }
-
-            console.log(`Formatted action: ${formattedAction}`);
-
-            const message = `${formattedAction}:${amount}:${tableId}:${timestamp}`;
-
-            // Sign the message
-            const signature = await wallet.signMessage(message);
-
-            console.log("Message signed:", message);
-            console.log("Signature:", signature);
-
-            // Debug log for the entire payload we're about to send
-            const payload = {
-                userAddress,
-                action: formattedAction,
-                amount,
-                signature,
-                publicKey: userAddress, // Add publicKey which is needed by the API
-                timestamp
-            };
-
-            console.log("Full API payload:", JSON.stringify(payload, null, 2));
-
-            // Send the action to the backend
-            const response = await axios.post(`${PROXY_URL}/table/${tableId}/playeraction`, payload);
-
-            console.log("Player action response:", response.data);
-
-            // Check if there is an error in the response
-            if (response.data.error) {
-                console.error(`Action error: ${response.data.error}`);
-                // You could also display this error to the user via a toast notification
-                alert(`Action failed: ${response.data.error}`);
-            }
-
-            // Reset UI states after action
-            setIsCallAction(false);
-            setIsCheckAction(false);
-
-            // Refresh the next-to-act info to reflect the new state
-            refreshNextToActInfo?.();
-        } catch (error: any) {
-            console.error("Error executing player action:", error);
-            // Log the error stack trace for debugging
-            console.error("Error stack:", error.stack);
-
-            // Show the detailed error
-            if (error.response) {
-                console.error("Error response data:", error.response.data);
-                console.error("Error response status:", error.response.status);
-                // Display a more detailed error message to the user
-                alert(`Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
-            } else {
-                // Generic error message
-                alert(`Error executing action: ${error.message}`);
-            }
-        }
-    };
-
     //Min Raise Text Prefill
     useEffect(() => {
-        if (canRaise && minRaise > 0) {
+        if (hasRaiseAction && minRaise > 0) {
             setRaiseAmount(minRaise);
             setRaiseInputRaw(minRaise.toFixed(2));
-        } else if (canBet && minBet > 0) {
+        } else if (hasBetAction && minBet > 0) {
             setRaiseAmount(minBet);
             setRaiseInputRaw(minBet.toFixed(2));
         }
-    }, [canRaise, canBet, minRaise, minBet]);
+    }, [hasRaiseAction, hasBetAction, minRaise, minBet]);
 
     // Handler functions for different actions - Now use our custom hooks
-    const handlePostSmallBlind = () => {
+    const handlePostSmallBlind = useCallback(() => {
         console.log("Posting small blind");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !postSmallBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -292,15 +198,13 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.[0]?.index || 0
+            actionIndex: smallBlindAction?.index || 0
         });
-    };
+    }, [publicKey, privateKey, postSmallBlind, smallBlindAction]);
 
-    const handlePostBigBlind = () => {
+    const handlePostBigBlind = useCallback(() => {
         console.log("Posting big blind");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !postBigBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -311,15 +215,13 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.[0]?.index || 0
+            actionIndex: bigBlindAction?.index || 0
         });
-    };
+    }, [publicKey, privateKey, postBigBlind, bigBlindAction]);
 
-    const handleCheck = () => {
+    const handleCheck = useCallback(() => {
         console.log("Checking");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !checkHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -330,15 +232,14 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === PlayerActionType.CHECK)?.index || 0
+            actionIndex: checkAction?.index || 0,
+            amount: "0" // Check doesn't require an amount
         });
-    };
+    }, [publicKey, privateKey, checkHand, checkAction]);
 
-    const handleFold = () => {
+    const handleFold = useCallback(() => {
         console.log("Folding");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !foldHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -349,15 +250,13 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === PlayerActionType.FOLD)?.index || 0
+            actionIndex: foldAction?.index || 0
         });
-    };
+    }, [foldHand, foldAction, publicKey, privateKey]);
 
-    const handleCall = () => {
+    const handleCall = useCallback(() => {
         console.log("Calling");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !callHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -370,18 +269,16 @@ const PokerActionPanel: React.FC = () => {
                 privateKey,
                 publicKey,
                 actionIndex: callAction.index || 0,
-                amount: callAction.min.toString()
+                amount: "0", // callAction.min.toString() // Call doesn't require an amount, the PVM should handle it
             });
         } else {
             console.error("Call action not available");
         }
-    };
+    }, [publicKey, privateKey, callHand, callAction]);
 
-    const handleBet = () => {
+    const handleBet = useCallback(() => {
         console.log("Betting");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !betHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -397,13 +294,11 @@ const PokerActionPanel: React.FC = () => {
             actionIndex: betAction?.index || 0,
             amount: amountWei
         });
-    };
+    }, [publicKey, privateKey, betHand, raiseAmount, betAction]);
 
-    const handleRaise = () => {
+    const handleRaise = useCallback(() => {
         console.log("Raising");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !raiseHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -419,16 +314,11 @@ const PokerActionPanel: React.FC = () => {
             actionIndex: raiseAction?.index || 0,
             amount: amountWei
         });
-    };
+    }, [publicKey, privateKey, raiseHand, raiseAmount, raiseAction]);
 
     // Update to use our hook data for button visibility
-    const shouldShowSmallBlindButton = legalActions?.some(action => action.action === "post-small-blind") && isUsersTurn;
-    const shouldShowBigBlindButton = legalActions?.some(action => action.action === "post-big-blind") && isUsersTurn;
-
-    // Find the specific actions we need
-    const smallBlindAction = legalActions?.find(action => action.action === "post-small-blind");
-    const bigBlindAction = legalActions?.find(action => action.action === "post-big-blind");
-    const foldAction = legalActions?.find(action => action.action === "fold");
+    const shouldShowSmallBlindButton = hasSmallBlindAction && isUsersTurn;
+    const shouldShowBigBlindButton = hasBigBlindAction && isUsersTurn;
 
     // Debug log to understand action button visibility
     console.log("Action Button Debug:", {
@@ -437,9 +327,9 @@ const PokerActionPanel: React.FC = () => {
         userPlayerSeat: playerSeat,
         isUsersTurn,
         legalActions,
-        hasPostSmallBlindAction: !!smallBlindAction,
-        hasPostBigBlindAction: !!bigBlindAction,
-        hasFoldAction: !!foldAction,
+        hasSmallBlindAction,
+        hasBigBlindAction,
+        hasFoldAction,
         playerStatus
     });
 
@@ -447,8 +337,12 @@ const PokerActionPanel: React.FC = () => {
     const showButtons = isUserInTable;
 
     // Only show fold button if the player has the fold action and is in the table
-    const canFoldAnytime =
-        legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === "fold") && playerStatus !== "folded" && showButtons;
+    const canFoldAnytime = useMemo(() =>
+        hasFoldAction && 
+        playerStatus !== PlayerStatus.FOLDED && 
+        showButtons,
+        [hasFoldAction, playerStatus, showButtons]
+    );
 
     // Only show other action buttons if it's the player's turn, they have legal actions,
     // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
@@ -458,18 +352,12 @@ const PokerActionPanel: React.FC = () => {
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
 
-    const activePlayers = players?.filter((p: any) => p.status !== "folded" && p.status !== "sitting-out");
-    const activePlayerCount = activePlayers?.length || 0;
-    const gameInProgress = activePlayerCount > 1;
-
     // Add a handler for the deal button
     const handleDeal = () => {
         console.log("Deal button clicked");
 
         // Get public and private keys
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !dealCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -480,7 +368,7 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === "deal")?.index || 0
+            actionIndex: getActionByType(NonPlayerActionType.DEAL)?.index || getActionByType("deal")?.index || 0
         });
     };
 
@@ -490,18 +378,10 @@ const PokerActionPanel: React.FC = () => {
         console.log("💰 Account data from hook:", accountData);
     }, [nonce, accountData]);
 
-    // Check if muck action exists in legal actions
-    const hasMuckAction = legalActions?.some((a: any) => a.action === "muck" || a.action === PlayerActionType.MUCK);
-
-    // Check if show action exists in legal actions
-    const hasShowAction = legalActions?.some((a: any) => a.action === "show" || a.action === PlayerActionType.SHOW);
-
     // Handler for muck action
     const handleMuck = () => {
         console.log("Mucking cards");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !muckCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -512,16 +392,14 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === PlayerActionType.MUCK || a.action === "muck")?.index || 0
+            actionIndex: getActionByType(PlayerActionType.MUCK)?.index || getActionByType("muck")?.index || 0
         });
     };
 
     // Handler for show action
     const handleShow = () => {
         console.log("Showing cards");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !showCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -532,16 +410,14 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === PlayerActionType.SHOW || a.action === "show")?.index || 0
+            actionIndex: getActionByType(PlayerActionType.SHOW)?.index || getActionByType("show")?.index || 0
         });
     };
 
     // Add the handleStartNewHand function after the other handler functions
     const handleStartNewHand = () => {
         console.log("Starting new hand");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !startNewHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -573,9 +449,7 @@ const PokerActionPanel: React.FC = () => {
     };
 
     return (
-
         <div className="fixed bottom-0 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
-
             <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
@@ -748,7 +622,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                         <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
                                     )}
 
-                                    {canCheck && (
+                                    {hasCheckAction && (
                                         <button
                                             className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
                                             px-4 py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
@@ -758,7 +632,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             CHECK
                                         </button>
                                     )}
-                                    {canCall && (
+                                    {hasCallAction && (
                                         <button
                                             className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e40af]/90 hover:to-[#3b82f6]/90 active:from-[#3b82f6] active:to-[#60a5fa]
                                             px-4 py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e40af]/50 active:border-[#60a5fa]/70 shadow-md backdrop-blur-sm
@@ -768,9 +642,9 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             CALL <span className="text-[#ffffff]">${callAmount.toFixed(2)}</span>
                                         </button>
                                     )}
-                                    {(canRaise || canBet) && (
+                                    {(hasRaiseAction || hasBetAction) && (
                                         <button
-                                            onClick={canRaise ? handleRaise : handleBet}
+                                            onClick={hasRaiseAction ? handleRaise : handleBet}
                                             disabled={isRaiseAmountInvalid || !isPlayerTurn}
                                             className={`${
                                                 isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
@@ -778,13 +652,13 @@ transition-all duration-200 font-medium min-w-[100px]"
     px-4 py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm
     transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
                                         >
-                                            {canRaise ? "RAISE" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
+                                            {hasRaiseAction ? "RAISE" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
 
                                 {/* Only show slider and betting options if player can bet or raise */}
-                                {(canBet || canRaise) && (
+                                {(hasBetAction || hasRaiseAction) && (
                                     <>
                                         {/* Slider and Controls */}
                                         <div className="flex items-center space-x-4 bg-[#0f172a40] backdrop-blur-sm p-3 rounded-lg border border-[#3a546d]/50 shadow-inner">
@@ -792,7 +666,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
     transition-all duration-200"
-                                                onClick={() => handleRaiseChange(Math.max(raiseAmount - 0.1, canBet ? minBet : minRaise))}
+                                                onClick={() => handleRaiseChange(Math.max(raiseAmount - 0.1, hasBetAction ? minBet : minRaise))}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 -
@@ -801,8 +675,8 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
-                                                min={canBet ? minBet : minRaise}
-                                                max={canBet ? maxBet : maxRaise}
+                                                min={hasBetAction ? minBet : minRaise}
+                                                max={hasBetAction ? maxBet : maxRaise}
                                                 step={0.01}
                                                 value={raiseAmount}
                                                 onChange={e => {
@@ -812,12 +686,12 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 className="flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
-                                                        ((raiseAmount - (canBet ? minBet : minRaise)) /
-                                                            ((canBet ? maxBet : maxRaise) - (canBet ? minBet : minRaise))) *
+                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
+                                                            ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b ${
-                                                        ((raiseAmount - (canBet ? minBet : minRaise)) /
-                                                            ((canBet ? maxBet : maxRaise) - (canBet ? minBet : minRaise))) *
+                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
+                                                            ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b 100%)`
                                                 }}
@@ -827,7 +701,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
     transition-all duration-200"
-                                                onClick={() => handleRaiseChange(Math.min(raiseAmount + 0.1, canBet ? maxBet : maxRaise))}
+                                                onClick={() => handleRaiseChange(Math.min(raiseAmount + 0.1, hasBetAction ? maxBet : maxRaise))}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 +
@@ -871,8 +745,8 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                         isRaiseAmountInvalid ? "text-red-400" : "text-gray-400"
                                                     }`}
                                                 >
-                                                    <div>Min: ${canBet ? minBet.toFixed(2) : minRaise.toFixed(2)}</div>
-                                                    <div>Max: ${canBet ? maxBet.toFixed(2) : maxRaise.toFixed(2)}</div>
+                                                    <div>Min: ${hasBetAction ? minBet.toFixed(2) : minRaise.toFixed(2)}</div>
+                                                    <div>Max: ${hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -884,7 +758,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
                                                 transition-all duration-200 text-xs transform hover:scale-105"
                                                 onClick={() => {
-                                                    const newAmt = Math.max(totalPot / 4, canBet ? minBet : minRaise);
+                                                    const newAmt = Math.max(totalPot / 4, hasBetAction ? minBet : minRaise);
                                                     handleRaiseChange(newAmt);
                                                     setLastAmountSource("button");
                                                 }}
@@ -897,7 +771,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
                                                 transition-all duration-200 text-xs transform hover:scale-105"
                                                 onClick={() => {
-                                                    const newAmt = Math.max(totalPot / 2, canBet ? minBet : minRaise);
+                                                    const newAmt = Math.max(totalPot / 2, hasBetAction ? minBet : minRaise);
                                                     handleRaiseChange(newAmt);
                                                     setLastAmountSource("button");
                                                 }}
@@ -910,7 +784,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
                                                 transition-all duration-200 text-xs transform hover:scale-105"
                                                 onClick={() => {
-                                                    const newAmt = Math.max((totalPot * 3) / 4, canBet ? minBet : minRaise);
+                                                    const newAmt = Math.max((totalPot * 3) / 4, hasBetAction ? minBet : minRaise);
                                                     handleRaiseChange(newAmt);
                                                     setLastAmountSource("button");
                                                 }}
@@ -923,7 +797,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
                                                 transition-all duration-200 text-xs transform hover:scale-105"
                                                 onClick={() => {
-                                                    const newAmt = Math.max(totalPot, canBet ? minBet : minRaise);
+                                                    const newAmt = Math.max(totalPot, hasBetAction ? minBet : minRaise);
                                                     handleRaiseChange(newAmt);
                                                     setLastAmountSource("button");
                                                 }}
@@ -936,7 +810,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#7e22ce] active:border-[#c084fc] shadow-md
                                                 transition-all duration-200 text-xs font-medium transform active:scale-105"
                                                 onClick={() => {
-                                                    const newAmt = canBet ? maxBet : maxRaise;
+                                                    const newAmt = hasBetAction ? maxBet : maxRaise;
                                                     handleRaiseChange(newAmt);
                                                     setLastAmountSource("button");
                                                 }}

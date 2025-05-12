@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
@@ -13,32 +13,51 @@ import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
-import useUserWallet from "../../hooks/useUserWallet"; // this is the browser wallet
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
-import "./Table.css"; // Import the Table CSS file
-
-import { ethers } from "ethers";
-import { useTableState } from "../../hooks/useTableState";
-import { useWinnerInfo } from "../../hooks/useWinnerInfo";
-import { useNextToActInfo } from "../../hooks/useNextToActInfo";
-import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";
-import { useDealerPosition } from "../../hooks/useDealerPosition";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
-import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
-import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
-import { useGameProgress } from "../../hooks/useGameProgress";
+import { ethers } from "ethers";
+
+
+import "./Table.css"; // Import the Table CSS file
+
+//// TODO get these hooks to subscribe to the wss connection
+
+// 1. Core Data Providers
+import { useTableData } from "../../hooks/useTableData";  // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
+import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";  // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
+import { useNextToActInfo } from "../../hooks/useNextToActInfo";
+
+//2. Visual Position/State Providers
+import { useDealerPosition } from "../../hooks/useDealerPosition";
 import { useChipPositions } from "../../hooks/useChipPositions";
 import { usePlayerChipData } from "../../hooks/usePlayerChipData";
-import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
-import { useCardAnimations } from "../../hooks/useCardAnimations";
-import { useTableData } from "../../hooks/useTableData";
+
+//3. Game State Providers
+import { useTableState } from "../../hooks/useTableState"; //Provides currentRound, formattedTotalPot, tableSize, tableSize determines player layout (6 vs 9 players)
+import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGameInProgress - whether a hand is active
+
+
+
+//todo wire up to use the sdk instead of the proxy
+// 4. Player Actions
+import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
+
+
+// other
+import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
-import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
+import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
+
+
+
+import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
+
+import { PositionArray } from "../../types/index";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -59,13 +78,7 @@ const debugLog = (...args: any[]) => {
 //* SHOWDOWN - Players show their cards to determine winner
 
 //* Define the interface for the position object
-interface PositionArray {
-    left?: string;
-    top?: string;
-    bottom?: string;
-    right?: string;
-    color?: string;
-}
+
 
 const calculateZoom = () => {
     const baseWidth = 2000;
@@ -93,17 +106,19 @@ const NetworkDisplay = ({ isMainnet = false }) => {
 const Table = () => {
     const { id } = useParams<{ id: string }>();
 
-    // Remove TableContext usage
-    // const {
-    //     showThreeCards,
-    //     tableData,
-    // } = useTableContext();
+    // Add NodeRpcContext for balance
+    const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
+    const [accountBalance, setAccountBalance] = useState<string>("0");
+    const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
+    const [balanceError, setBalanceError] = useState<Error | null>(null);
+    const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
+    const [accountNonce, setAccountNonce] = useState<number>(0); // Add nonce state
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
 
     // Add the usePlayerSeatInfo hook
-    const { currentUserSeat, userDataBySeat, getUserBySeat } = usePlayerSeatInfo(id);
+    const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
 
     // Add the useNextToActInfo hook
     const { nextToActInfo } = useNextToActInfo(id);
@@ -121,37 +136,39 @@ const Table = () => {
         }
     }, [isShowdown, showingPlayers]);
 
-    // Add the useWinnerInfo hook
-    const { winnerInfo } = useWinnerInfo(id);
-
     // Add the useTableState hook to get table state properties
-    const { currentRound, totalPot: tableTotalPot, formattedTotalPot, tableSize, tableType, roundType } = useTableState(id, 5000);
+    const { currentRound, formattedTotalPot, tableSize } = useTableState(id, 5000);
 
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
 
     // Add the useGameProgress hook
-    const { isGameInProgress, activePlayers } = useGameProgress(id);
+    const { isGameInProgress } = useGameProgress(id);
 
     // Add the usePlayerDataAvailability hook
     const { isPlayerDataAvailable } = usePlayerDataAvailability(id);
-
-    // Add the useCardAnimations hook
-    const { flipped1, flipped2, flipped3, showThreeCards } = useCardAnimations(id);
-
-    // Add the useMinAndMaxBuyIns hook
-    const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(id);
 
     // Add the useGameOptions hook
     const { gameOptions } = useGameOptions(id);
 
     // Format small blind and big blind values
-    const smallBlindFormatted = gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10";
-    const bigBlindFormatted = gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20";
+    const formattedValues = useMemo(() => ({
+        smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
+        bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20",
+    }), [gameOptions]);
 
     // Add any variables we need
     const [seat, setSeat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
+
+    
+    const [currentIndex, setCurrentIndex] = useState<number>(1);
+    const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
+    const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
+    const [zoom, setZoom] = useState(calculateZoom());
+    const [openSidebar, setOpenSidebar] = useState(false);
+    const [isCardVisible, setCardVisible] = useState(-1);
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
     // Add the useChipPositions hook AFTER startIndex is defined
     const { chipPositionArray } = useChipPositions(id, startIndex);
@@ -159,9 +176,11 @@ const Table = () => {
     // Add the usePlayerChipData hook
     const { getChipAmount } = usePlayerChipData(id);
 
+    // Add a ref for the animation frame ID
+    const animationFrameRef = useRef<number | undefined>(undefined);
+
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
-    debugLog("Current user address from localStorage:", currentUserAddress);
 
     // Create a different variable for comparison purposes
     const userWalletAddress = React.useMemo(() => {
@@ -173,7 +192,7 @@ const Table = () => {
 
     // Replace useUserBySeat with getUserBySeat from our new hook
     // Get the user data for the current seat
-    const userData = React.useMemo(() => {
+    const userData = useMemo(() => {
         if (currentUserSeat >= 0) {
             return getUserBySeat(currentUserSeat);
         }
@@ -182,52 +201,27 @@ const Table = () => {
 
     // Define activePlayers only once - rename to tableActivePlayers since we now get activePlayers from the hook
     const tableActivePlayers = useMemo(() => {
-        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== "0x0000000000000000000000000000000000000000") ?? [];
+        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
     }, [tableDataValues]);
 
+    // Added direct game state fetching using the NodeRpc client
     useEffect(() => {
-        if (!DEBUG_MODE) return; // Skip logging if not in debug mode
+        if (!client || !id) return;
 
-        debugLog("Active Players:", tableActivePlayers);
-        // If there are active players, set their positions
-        if (tableActivePlayers.length > 0) {
-            // Player in seat 1
-            if (tableActivePlayers.find((p: any) => p.seat === 1)) {
-                const player1 = tableActivePlayers.find((p: any) => p.seat === 1);
-                debugLog("Player 1:", player1);
+        const fetchTableDataDirectly = async () => {
+            try {
+                // Call the SDK function to get game state directly
+                const gameState = await client.getGameState(id, userWalletAddress?.toLowerCase() ?? "");
+                console.log("Direct game state from SDK:", gameState);
+                // You could update some local state with this data if needed
+            } catch (err) {
+                console.error("Error fetching game state directly:", err);
+                // We don't return early or stop rendering due to errors
             }
+        };
 
-            // Player in seat 2
-            if (tableActivePlayers.find((p: any) => p.seat === 2)) {
-                const player2 = tableActivePlayers.find((p: any) => p.seat === 2);
-                debugLog("Player 2:", player2);
-            }
-        }
-    }, [tableActivePlayers]);
-
-    // Add dealerIndex state here at the top with other state hooks
-    const [dealerIndex, setDealerIndex] = useState<number>(0);
-
-    // Handle loading state
-    const [currentIndex, setCurrentIndex] = useState<number>(1);
-    // const [type, setType] = useState<string | null>(null);
-
-    const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
-    const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
-    const [zoom, setZoom] = useState(calculateZoom());
-    const [openSidebar, setOpenSidebar] = useState(false);
-
-    const [isCardVisible, setCardVisible] = useState(-1);
-
-    const navigate = useNavigate();
-
-    const { account, balance, isLoading: walletLoading } = useUserWallet(); // this is the wallet in the browser.
-
-    // Add state for mouse position
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-    // Add a ref for the animation frame ID
-    const animationFrameRef = useRef<number | undefined>(undefined);
+        fetchTableDataDirectly();
+    }, [client, id]);
 
     // Add effect to track mouse movement
     useEffect(() => {
@@ -257,12 +251,15 @@ const Table = () => {
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
-    useEffect(() => {
-        const reorderedPlayerArray = [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)];
-        const reorderedDealerArray = [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)];
-        setPlayerPositionArray(reorderedPlayerArray);
-        setDealerPositionArray(reorderedDealerArray);
-    }, [startIndex, playerPositionArray, dealerPositionArray]);
+    const reorderedPlayerArray = useMemo(() => 
+        [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
+        [playerPositionArray, startIndex]
+    );
+
+    const reorderedDealerArray = useMemo(() => 
+        [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
+        [dealerPositionArray, startIndex]
+    );
 
     // Add useEffect to refresh showing cards when the round is showdown or end
     useEffect(() => {
@@ -275,7 +272,7 @@ const Table = () => {
     // Restore the useEffect for the timer
     useEffect(() => {
         const timer = setTimeout(() => {
-            setCurrentIndex(prevIndex => {
+            setCurrentIndex((prevIndex: number) => {
                 if (prevIndex === 2) {
                     // Handle case where prevIndex is 2 (e.g., no change or custom logic)
                     return prevIndex + 2; // For example, keep it the same
@@ -298,11 +295,14 @@ const Table = () => {
         return () => clearTimeout(timer);
     }, [currentIndex]);
 
+    const handleResize = useCallback(() => 
+        setZoom(calculateZoom()),
+    []);
+
     useEffect(() => {
-        const handleResize = () => setZoom(calculateZoom());
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, []);
+    }, [handleResize]);
 
     useEffect(() => {
         //* set the number of players
@@ -319,35 +319,128 @@ const Table = () => {
                 setPlayerPositionArray([]);
                 setDealerPositionArray([]);
         }
-    }, [tableSize]);
+    }, [tableSize, id]);
 
-    const onCloseSideBar = () => {
+    const onCloseSideBar = useCallback(() => {
         setOpenSidebar(!openSidebar);
-    };
+    }, [openSidebar]);
 
     // Add this helper function for copying to clipboard
-    const copyToClipboard = (text: string) => {
+    const copyToClipboard = useCallback((text: string) => {
         navigator.clipboard.writeText(text);
         // You could add a toast notification here if you want
-    };
+    }, []);
 
-    // Early return if no id
+    // Function to fetch account balance directly using NodeRpcClient
+    const fetchAccountBalance = useCallback(async () => {
+        if (!client) {
+            setBalanceError(new Error("RPC client not initialized"));
+            setIsBalanceLoading(false);
+            return;
+        }
+
+        try {
+            setIsBalanceLoading(true);
+
+            // Use the stored public key
+            if (!publicKey) {
+                setBalanceError(new Error("No address available"));
+                setIsBalanceLoading(false);
+                return;
+            }
+
+            const account = await client.getAccount(publicKey);
+            setAccountBalance(account.balance);
+            setAccountNonce(account.nonce); // Save the nonce
+            setBalanceError(null);
+        } catch (err) {
+            console.error("Error fetching account balance:", err);
+            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
+        } finally {
+            setIsBalanceLoading(false);
+        }
+    }, [client, publicKey, setAccountBalance, setAccountNonce, setBalanceError, setIsBalanceLoading]);
+
+    // Update to fetch balance when publicKey or client changes
+    useEffect(() => {
+        if (publicKey && client && !clientLoading) {
+            fetchAccountBalance();
+        }
+    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+
+    // Format the balance
+    const balanceFormatted = useMemo(() => 
+        accountBalance ? formatWeiToUSD(accountBalance) : "0.00",
+        [accountBalance]
+    );
+
+    // Remove early returns for errors, continue rendering even if there's an error
     if (!id) {
-        return <div className="h-screen flex items-center justify-center text-white">Invalid table ID</div>;
+        console.error("No table ID provided");
+        // Continue rendering instead of returning early
     }
 
-    // NOW you can have your conditional returns
     if (tableDataValues.isLoading) {
-        return <div className="h-screen flex items-center justify-center text-white">Loading table data...</div>;
+        console.log("Table data is loading...");
+        // Continue rendering instead of returning early
     }
 
     if (tableDataValues.error) {
-        return <div className="h-screen flex items-center justify-center text-white">Error: {tableDataValues.error.message}</div>;
+        console.error("Error loading table data:", tableDataValues.error);
+        // Continue rendering instead of returning early
     }
 
     if (!tableDataValues.tableDataPlayers || !tableDataValues.tableDataCommunityCards) {
-        return <div className="h-screen flex items-center justify-center text-white">Waiting for table data...</div>;
+        console.log("Table data not fully loaded yet");
+        // Continue rendering instead of returning early
     }
+
+    const dealerButtonStyle = useMemo(() => ({
+        left: `calc(${dealerButtonPosition.left} + 200px)`,
+        top: dealerButtonPosition.top,
+        transform: "none"
+    }), [dealerButtonPosition]);
+
+    /**
+     * Memoized player component renderer - critical for table rendering performance
+     */
+    const getComponentToRender = useCallback((position: PositionArray, positionIndex: number) => {
+        // Calculate the actual seat number accounting for rotation
+        const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
+        
+        // Find if a player is seated at this position (using correct seat number)
+        const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
+        
+        // Check if this seat belongs to the current user
+        const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
+        
+        // Build common props shared by all player components
+        const playerProps = {
+            index: seatNumber, // Use the correct seat number
+            currentIndex, 
+            left: position.left,
+            top: position.top,
+            color: position.color,
+            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status
+        };
+        
+        // CASE 1: No player at this seat - render vacant position
+        if (!playerAtThisSeat) {
+            return (
+                <VacantPlayer
+                    index={seatNumber} // Use the correct seat number
+                    left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
+                    top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
+                />
+            );
+        } 
+        
+        // CASE 2: The current user's seat - render with own controls
+        // CASE 3: Another player's seat - render opponent view
+        return isCurrentUser ? 
+            <Player {...playerProps} /> : 
+            <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
+    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex]);
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
@@ -374,10 +467,10 @@ const Table = () => {
                         <NetworkDisplay isMainnet={false} />
                     </div>
 
-                    {/* Right Section - Wallet info */}
+                    {/* Right Section - Wallet info - UPDATED to use NodeRpc balance */}
                     <div className="flex items-center z-10">
                         <div className="flex items-center bg-gray-800/60 rounded-lg border border-blue-500/10 py-1 px-2 mr-3">
-                            {walletLoading ? (
+                            {isBalanceLoading ? (
                                 <span>Loading...</span>
                             ) : (
                                 <>
@@ -396,15 +489,18 @@ const Table = () => {
                                         />
                                     </div>
 
-                                    {/* Balance */}
+                                    {/* Balance - UPDATED to use NodeRpc balance */}
                                     <div className="flex items-center">
                                         <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center mr-1.5">
                                             <span className="text-blue-400 font-bold text-[10px]">$</span>
                                         </div>
-                                        <p className="text-white font-medium text-xs">
-                                            ${balance ? formatWeiToUSD(balance) : "0.00"}
-                                            <span className="text-[10px] ml-1 text-gray-400">USDC</span>
-                                        </p>
+                                        <div>
+                                            <p className="text-white font-medium text-xs">
+                                                ${balanceFormatted}
+                                                <span className="text-[10px] ml-1 text-gray-400">USDC</span>
+                                            </p>
+                                            <p className="text-[8px] text-gray-400 -mt-1">nonce: {accountNonce}</p>
+                                        </div>
                                     </div>
                                 </>
                             )}
@@ -441,7 +537,7 @@ const Table = () => {
                     <div className="flex items-center z-10">
                         <div className="flex items-center space-x-2">
                             <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                ${smallBlindFormatted} / ${bigBlindFormatted}
+                                ${formattedValues.smallBlindFormatted} / ${formattedValues.bigBlindFormatted}
                             </span>
                         </div>
                     </div>
@@ -688,11 +784,7 @@ const Table = () => {
                                             {isDealerButtonVisible && (
                                                 <div
                                                     className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                                    style={{
-                                                        left: `calc(${dealerButtonPosition.left} + 200px)`,
-                                                        top: dealerButtonPosition.top,
-                                                        transform: "none"
-                                                    }}
+                                                    style={dealerButtonStyle}
                                                 >
                                                     D
                                                 </div>
@@ -700,61 +792,14 @@ const Table = () => {
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
-                                        {playerPositionArray.map((position, positionIndex) => {
-                                            const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === positionIndex + 1);
-                                            const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
-
-                                            if (DEBUG_MODE && playerAtThisSeat) {
-                                                debugLog(`Seat ${positionIndex + 1} detailed comparison:`, {
-                                                    playerAddress: playerAtThisSeat.address,
-                                                    playerAddressLower: playerAtThisSeat.address?.toLowerCase(),
-                                                    currentUserAddress: userWalletAddress,
-                                                    currentUserAddressLower: userWalletAddress?.toLowerCase(),
-                                                    isMatch: isCurrentUser,
-                                                    exactCompare: playerAtThisSeat.address === userWalletAddress,
-                                                    lowerCompare: playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase()
-                                                });
-                                            }
-
-                                            const componentProps = {
-                                                index: positionIndex + 1,
-                                                currentIndex: currentIndex,
-                                                left: position.left,
-                                                top: position.top,
-                                                color: position.color,
-                                                status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === positionIndex + 1)?.status
-                                            };
-
-                                            const componentToRender = !playerAtThisSeat ? (
-                                                <VacantPlayer
-                                                    index={positionIndex + 1}
-                                                    left={
-                                                        tableSize === 6
-                                                            ? vacantPlayerPosition.six[positionIndex].left
-                                                            : vacantPlayerPosition.nine[positionIndex].left
-                                                    }
-                                                    top={
-                                                        tableSize === 6
-                                                            ? vacantPlayerPosition.six[positionIndex].top
-                                                            : vacantPlayerPosition.nine[positionIndex].top
-                                                    }
-                                                />
-                                            ) : isCurrentUser ? (
-                                                <Player {...componentProps} />
-                                            ) : (
-                                                <OppositePlayer
-                                                    {...componentProps}
-                                                    setStartIndex={(index: number) => setStartIndex(index)}
-                                                    isCardVisible={isCardVisible}
-                                                    setCardVisible={setCardVisible}
-                                                />
-                                            );
+                                        {reorderedPlayerArray.map((position, positionIndex) => {
+                                            const componentToRender = getComponentToRender(position, positionIndex);
 
                                             if (DEBUG_MODE) {
                                                 debugLog(`Rendering component for seat ${positionIndex + 1}:`, {
-                                                    isVacant: !playerAtThisSeat,
-                                                    isCurrentUser,
-                                                    componentType: !playerAtThisSeat ? "VacantPlayer" : isCurrentUser ? "Player" : "OppositePlayer",
+                                                    isVacant: !componentToRender,
+                                                    isCurrentUser: componentToRender,
+                                                    componentType: !componentToRender ? "VacantPlayer" : "OppositePlayer",
                                                     currentUserAddress: userWalletAddress
                                                 });
                                             }
@@ -831,6 +876,11 @@ const Table = () => {
                     <span>Hand complete - waiting for next hand</span>
                 </div>
             )}
+
+            {/* Add table ID display */}
+            <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
+                Table ID: {id ? id.slice(0, 8) + "..." + id.slice(-6) : "Unknown"}
+            </div>
 
             {/* Powered by Block52 */}
             <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">

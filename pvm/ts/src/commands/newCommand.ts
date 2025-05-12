@@ -102,7 +102,7 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
                     0n, // No value transfer
                     timestampNonce,
                     this.privateKey,
-                    `create,${deck.toString()}`
+                    `create,0,${deck.toString()}`
                 );
 
                 // Add the transaction to the mempool
@@ -116,7 +116,7 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
                     hash: newGameTx.hash,
                     signature: newGameTx.signature,
                     timestamp: newGameTx.timestamp.toString(),
-                    data: `create,${deck.toString()}`
+                    data: `create,0,${deck.toString()}`
                 };
 
                 // Return the signed transaction

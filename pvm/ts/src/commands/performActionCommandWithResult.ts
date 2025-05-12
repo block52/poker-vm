@@ -24,7 +24,7 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
         const response = await super.execute();
         console.log("Perform action command with result executed successfully");
 
-        const gameStateCommand = new GameStateCommand(this.to, this.privateKey);
+        const gameStateCommand = new GameStateCommand(this.to, this.privateKey, this.from);
         const gameStateResponse = await gameStateCommand.execute();
 
         const result: PerformActionResponse = {
@@ -43,7 +43,16 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
         const socketService = getSocketService();
         if (socketService) {
             console.log(`Broadcasting game state update for table ${this.to} after action ${this.action}`);
-            socketService.broadcastGameStateUpdate(this.to, gameStateResponse.data);
+
+            // Get all players in the game
+            const players = gameStateResponse.data.players.map(player => player.address);
+            await Promise.all(
+                players.map(async player => {
+                    const cmd = new GameStateCommand(this.to, this.privateKey, player);
+                    const resp = await cmd.execute();
+                    socketService.broadcastGameStateUpdate(this.to, player, resp.data);
+                })
+            );
         }
 
         return signResult(result, this.privateKey);

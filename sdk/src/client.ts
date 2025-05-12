@@ -13,7 +13,7 @@ export interface IClient {
     getBlockByHash(hash: string): Promise<BlockDTO>;
     getBlockHeight(): Promise<number>;
     getBlocks(count?: number): Promise<BlockDTO[]>;
-    getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
+    getGameState(gameAddress: string, caller: string): Promise<TexasHoldemStateDTO>;
     getLastBlock(): Promise<BlockDTO>;
     getMempool(): Promise<TransactionDTO[]>;
     getNodes(): Promise<string[]>;
@@ -280,13 +280,14 @@ export class NodeRpcClient implements IClient {
     /**
      * Get the state of a Texas Holdem game
      * @param gameAddress The address of the game
+     * @param caller The address of the caller
      * @returns A Promise that resolves to a TexasHoldemState object
      */
-    public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
+    public async getGameState(gameAddress: string, caller: string): Promise<TexasHoldemStateDTO> {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_GAME_STATE,
-            params: [gameAddress]
+            params: [gameAddress, caller]
         });
 
         return body.result.data;
@@ -332,6 +333,7 @@ export class NodeRpcClient implements IClient {
         }
 
         const signature = await this.getSignature(nonce);
+        const index = await this.getNextTurnIndex(gameAddress, address);
 
         // Pack the seat into the data field
         const data = seat.toString();
@@ -339,7 +341,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, data],
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data],  // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -441,15 +443,17 @@ export class NodeRpcClient implements IClient {
     }
 
     private async getNextTurnIndex(gameAddress: string, playerId: string): Promise<number> {
-        const gameState = await this.getGameState(gameAddress);
-        const players = gameState.players;
+        const gameState = await this.getGameState(gameAddress, playerId);
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
 
-        if (!players) {
+        if (!gameState.previousActions || gameState.previousActions.length === 0) {
             return 0;
         }
 
-        // return players.findIndex((player) => player.id === playerId);
-        return 0;
+        const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
+        return lastAction.index + 1;
     }
 
     private async getNonce(address: string): Promise<number> {

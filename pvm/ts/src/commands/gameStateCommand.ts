@@ -69,7 +69,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             value: tx.value,
             type: action,
             index: index,
-            data: tx.data
+            data: params[2] ? params[2].trim() : undefined
         };
     }
 }
