@@ -10,11 +10,13 @@ const tableSubscriptions: Map<string, Set<WebSocket>> = new Map();
 type SubscribeMessage = {
     action: "subscribe";
     tableAddress: string;
+    playerId: string;
 };
 
 type UnsubscribeMessage = {
     action: "unsubscribe";
     tableAddress: string;
+    playerId: string;
 };
 
 type ClientMessage = SubscribeMessage | UnsubscribeMessage;
@@ -31,7 +33,6 @@ export class SocketService {
     private activeConnections: number = 0;
 
     constructor(server: HttpServer, maxConnections: number = 100) {
-        // this.wss = new WebSocketServer({ noServer: true });
         this.wss = new WebSocket.Server({ server });
         this.maxConnections = maxConnections;
         this.setupSocketEvents();
@@ -55,16 +56,18 @@ export class SocketService {
             // Try to get tableAddress from URL query parameters
             const parsedUrl = url.parse(req.url || "", true);
             const tableAddress = parsedUrl.query.tableAddress as string;
+            const playerId = parsedUrl.query.playerId as string;
 
             // If tableAddress is provided in URL, auto-subscribe
             if (tableAddress) {
-                this.subscribeToTable(tableAddress, ws);
+                this.subscribeToTable(tableAddress, playerId, ws);
                 console.log(`Auto-subscribed to table ${tableAddress}`);
 
                 // Send confirmation message
                 this.sendMessage(ws, {
                     type: "subscribed",
-                    tableAddress
+                    tableAddress,
+                    playerId
                 });
             }
 
@@ -73,8 +76,8 @@ export class SocketService {
                 try {
                     const data = JSON.parse(message) as ClientMessage;
 
-                    if (data.action === "subscribe" && data.tableAddress) {
-                        this.subscribeToTable(data.tableAddress, ws);
+                    if (data.action === "subscribe" && data.tableAddress && data.playerId) {
+                        this.subscribeToTable(data.tableAddress, data.playerId, ws);
                         console.log(`Subscribed to table ${data.tableAddress}`);
 
                         // Send confirmation
@@ -89,7 +92,8 @@ export class SocketService {
                         // Send confirmation
                         this.sendMessage(ws, {
                             type: "unsubscribed",
-                            tableAddress: data.tableAddress
+                            tableAddress: data.tableAddress,
+                            playerId: data.playerId
                         });
                     } else {
                         console.log(`Received unknown message: ${message}`);
@@ -124,7 +128,7 @@ export class SocketService {
         }
     }
 
-    private subscribeToTable(tableAddress: string, ws: WebSocket) {
+    private subscribeToTable(tableAddress: string, playerId: string, ws: WebSocket) {
         // Get existing subscriptions or create new set
         if (!tableSubscriptions.has(tableAddress)) {
             tableSubscriptions.set(tableAddress, new Set());
@@ -204,18 +208,6 @@ export class SocketService {
 }
 
 let socketServiceInstance: SocketService | null = null;
-
-// export function initSocketServer(): SocketService {
-//     if (!socketServiceInstance) {
-//         socketServiceInstance = new SocketService();
-//     }
-//     return socketServiceInstance;
-// }
-
-// export function getSocketService(): SocketService | null {
-//     return socketServiceInstance;
-// }
-
 export function initSocketServer(server: HttpServer): SocketService {
     if (!socketServiceInstance) {
         socketServiceInstance = new SocketService(server);
