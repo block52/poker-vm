@@ -6,6 +6,10 @@ const gameStateSchema = new Schema<IGameStateDocument>({
         type: String,
         required: true
     },
+    schemaAddress: {
+        type: String,
+        required: true
+    },
     state: {
         type: Object,
         required: true

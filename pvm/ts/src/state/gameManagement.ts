@@ -18,6 +18,7 @@ export class GameManagement extends StateManager implements IGameManagement {
             // this is stored in MongoDB as an object / document
             const state: IGameStateDocument = {
                 address: gameState.address,
+                schemaAddress: gameState.schemaAddress,
                 state: gameState.state
             };
             return state;
@@ -33,8 +34,7 @@ export class GameManagement extends StateManager implements IGameManagement {
 
         if (gameState) {
             // this is stored in MongoDB as an object / document
-            const state = gameState.state;
-            return state;
+            return gameState.state;
         }
 
         // Return null instead of throwing an error
@@ -42,11 +42,6 @@ export class GameManagement extends StateManager implements IGameManagement {
     }
 
     public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
-        // TODO: Eventually we should generate a unique table address here, but for now
-        // the game address needs to be the same as the contractSchema address for the system
-        // to work correctly. We're keeping the original hash generation code commented out
-        // until we can properly separate game instances from contract schemas.
-
         const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
         let address = createHash("SHA256").update(digest).digest("hex");
 
