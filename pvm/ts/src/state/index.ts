@@ -1,5 +1,4 @@
-import Redis from "ioredis";
-import { RedisBlockchainManagement } from "./redis/redisBlockchainManagement";
+import { getRedisBlockchainManagementInstance, RedisBlockchainManagement } from "./redis/redisBlockchainManagement";
 import { getContractSchemaManagement } from "./mongodb/contractSchemaManagement";
 import { getGameManagementInstance } from "./mongodb/gameManagement";
 import { IAccountManagement, IBlockchainManagement } from "./interfaces";
@@ -11,13 +10,11 @@ import { getMongoAccountManagementInstance } from "./mongodb/accountManagement";
 export { getContractSchemaManagement, getGameManagementInstance, getTransactionInstance };
 
 export const getBlockchainInstance = (): IBlockchainManagement => {
-    const connString = process.env.DB_URL || "redis://localhost:6379";
+    const connString = "redis://localhost:6379";
     const dbType = connString.split(":")[0];
 
     if (dbType === "redis") {
-        const redisClient = new Redis(process.env.DB_URL || "redis://localhost:6379");
-        const instance = new RedisBlockchainManagement(redisClient);
-        return instance;
+        return getRedisBlockchainManagementInstance(connString);
     }
 
     if (dbType === "mongodb" || dbType === "mongodb+srv") {
@@ -32,11 +29,11 @@ export const getBlockchainInstance = (): IBlockchainManagement => {
 }
 
 export const getAccountManagementInstance = (): IAccountManagement => {
-    const connString = process.env.DB_URL || "redis://localhost:6379";
+    const connString = "redis://localhost:6379";
     const dbType = connString.split(":")[0];
 
     if (dbType === "redis") {
-        return getRedisAccountManagementInstance();
+        return getRedisAccountManagementInstance(connString);
     }
 
     if (dbType === "mongodb" || dbType === "mongodb+srv") {

@@ -15,8 +15,8 @@ export class RedisBlockchainManagement implements IBlockchainManagement {
      * @param redisClient Redis client instance
      * @param namespace Optional namespace for Redis keys (useful for multiple blockchains)
      */
-    constructor(redisClient: Redis, namespace: string = "blockchain") {
-        this.redisClient = redisClient;
+    constructor(redisUrl: string, namespace: string = "pvm") {
+        this.redisClient = new Redis(redisUrl);
         this.blockchainKey = `${namespace}:blocks`;
         this.blockIndexKey = `${namespace}:block:index`;
         this.blockHashKey = `${namespace}:block:hash`;
@@ -165,3 +165,11 @@ export class RedisBlockchainManagement implements IBlockchainManagement {
         }
     }
 }
+
+let instance: RedisBlockchainManagement;
+export const getRedisBlockchainManagementInstance = (connString: string): IBlockchainManagement => {
+    if (!instance) {
+        instance = new RedisBlockchainManagement(connString);
+    }
+    return instance;
+};

@@ -323,10 +323,9 @@ export class RedisAccountManagement implements IAccountManagement {
 // Singleton instance
 let instance: RedisAccountManagement;
 
-export const getRedisAccountManagementInstance = (): IAccountManagement => {
-    const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+export const getRedisAccountManagementInstance = (connString: string): IAccountManagement => {
     if (!instance) {
-        instance = new RedisAccountManagement(redisUrl);
+        instance = new RedisAccountManagement(connString);
     }
     return instance;
 };
