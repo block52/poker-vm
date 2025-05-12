@@ -12,7 +12,6 @@ export { getContractSchemaManagement, getGameManagementInstance, getTransactionI
 
 export const getBlockchainInstance = (): IBlockchainManagement => {
     const connString = process.env.DB_URL || "redis://localhost:6379";
-
     const dbType = connString.split(":")[0];
 
     if (dbType === "redis") {
@@ -34,7 +33,6 @@ export const getBlockchainInstance = (): IBlockchainManagement => {
 
 export const getAccountManagementInstance = (): IAccountManagement => {
     const connString = process.env.DB_URL || "redis://localhost:6379";
-
     const dbType = connString.split(":")[0];
 
     if (dbType === "redis") {
