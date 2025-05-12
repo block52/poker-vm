@@ -3,8 +3,16 @@ import WebSocket from "ws";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import url from "url";
 
+// type PlayerSocket = {
+//     playerId: string;
+//     ws: WebSocket;
+// }
+
 // Map of table addresses to set of WebSocket connections
-const tableSubscriptions: Map<string, Set<WebSocket>> = new Map();
+// const tableSubscriptions: Map<string, Set<WebSocket>> = new Map();
+
+// Map of table addresses to map of player IDs to WebSocket connections
+const tableSubscriptions: Map<string, Map<string, WebSocket>> = new Map();
 
 // Type definitions for message formats
 type SubscribeMessage = {
@@ -37,6 +45,12 @@ export class SocketService {
         this.maxConnections = maxConnections;
         this.setupSocketEvents();
         console.log("WebSocket server initialized");
+    }
+
+    public getSubscribers(tableAddress: string): string[] {
+        // Need to get the players from the table address
+        const players: string[] = [];
+        return players;
     }
 
     private setupSocketEvents() {
@@ -131,12 +145,16 @@ export class SocketService {
     private subscribeToTable(tableAddress: string, playerId: string, ws: WebSocket) {
         // Get existing subscriptions or create new set
         if (!tableSubscriptions.has(tableAddress)) {
-            tableSubscriptions.set(tableAddress, new Set());
+            const subscriber = new Map<string, WebSocket>();
+            subscriber.set(playerId, ws);
+            tableSubscriptions.set(tableAddress, subscriber);
         }
 
         // Add websocket to subscribers
         const subscribers = tableSubscriptions.get(tableAddress)!;
-        subscribers.add(ws);
+        // const subscriber = new Map<string, WebSocket>();
+        subscribers.add(playerId, ws);
+        // subscribers.set(tableAddress, subscriber);
     }
 
     private unsubscribeFromTable(tableAddress: string, ws: WebSocket) {
@@ -167,7 +185,7 @@ export class SocketService {
     }
 
     // Method to broadcast game state updates (can be called from anywhere in the application)
-    public broadcastGameStateUpdate(tableAddress: string, gameState: TexasHoldemStateDTO) {
+    public broadcastGameStateUpdate(tableAddress: string, playerId: string, gameState: TexasHoldemStateDTO) {
         const subscribers = tableSubscriptions.get(tableAddress);
 
         if (subscribers && subscribers.size > 0) {
