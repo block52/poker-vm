@@ -1,13 +1,13 @@
 import { ethers, JsonRpcProvider, Contract } from "ethers";
 import { TransferCommand } from "./transferCommand";
 import { getMempoolInstance } from "../core/mempool";
-import { getTransactionInstance } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/index";
 import { Transaction } from "../models/transaction";
 
 // Mock external dependencies
 jest.mock("ethers");
 jest.mock("../core/mempool");
-jest.mock("../state/transactionManagement");
+jest.mock("../state/index");
 jest.mock("../models/transaction");
 jest.mock("../core/provider");
 
