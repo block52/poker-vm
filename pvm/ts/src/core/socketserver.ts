@@ -2,6 +2,8 @@ import { Server as HttpServer } from "http";
 import WebSocket from "ws";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import url from "url";
+import { verify } from "crypto";
+import { verifySignature } from "../utils/crypto";
 
 // Map of table addresses to map of player IDs to WebSocket connections
 const tableSubscriptions: Map<string, Map<string, WebSocket>> = new Map();
@@ -11,12 +13,14 @@ type SubscribeMessage = {
     action: "subscribe";
     tableAddress: string;
     playerId: string;
+    signature?: string; // Optional signature field
 };
 
 type UnsubscribeMessage = {
     action: "unsubscribe";
     tableAddress: string;
     playerId: string;
+    signature?: string; // Optional signature field
 };
 
 type ClientMessage = SubscribeMessage | UnsubscribeMessage;
@@ -93,6 +97,11 @@ export class SocketService implements SocketServiceInterface {
                     const data = JSON.parse(messageStr) as ClientMessage;
 
                     if (data.action === "subscribe" && data.tableAddress && data.playerId) {
+                        if (verifySignature(data.playerId, data.signature || "", data.tableAddress)) {
+                            console.log(`Signature verified for player ${data.playerId} on table ${data.tableAddress}`);
+                            return;
+                        }
+
                         this.subscribeToTable(data.tableAddress, data.playerId, ws);
                         console.log(`Subscribed player ${data.playerId} to table ${data.tableAddress}`);
 
@@ -102,8 +111,8 @@ export class SocketService implements SocketServiceInterface {
                             tableAddress: data.tableAddress,
                             playerId: data.playerId
                         });
-                    } 
-                    
+                    }
+
                     if (data.action === "unsubscribe" && data.tableAddress && data.playerId) {
                         this.unsubscribeFromTable(data.tableAddress, data.playerId);
                         console.log(`Unsubscribed player ${data.playerId} from table ${data.tableAddress}`);
