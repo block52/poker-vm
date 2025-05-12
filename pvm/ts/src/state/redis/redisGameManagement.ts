@@ -174,7 +174,7 @@ export class RedisGameManagement implements IGameManagement {
         }
 
         // Update the state
-        currentState.state = state.toJSON();
+        currentState.state = state.toJson();
         currentState.updatedAt = new Date();
 
         // Save back to Redis
