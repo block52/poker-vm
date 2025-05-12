@@ -163,14 +163,14 @@ export class RedisGameManagement implements IGameManagement {
      * Save game state
      * @param state Game state model
      */
-    public async save(state: IJSONModel, address?: string): Promise<void> {
+    public async save(state: IJSONModel, address: string): Promise<void> {
         await this.connect();
 
         // Get the game by its address
         const currentState = await this.get(address);
 
         if (!currentState) {
-            throw new Error(`Game with address ${state.address} not found`);
+            throw new Error(`Game with address ${address} not found`);
         }
 
         // Update the state

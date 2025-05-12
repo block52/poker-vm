@@ -33,7 +33,7 @@ export interface IGameManagement {
     getAll(): Promise<IGameStateDocument[]>;
     get(address: string): Promise<any | null>;
     create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string>;
-    save(sate: IJSONModel): Promise<void>;
+    save(state: IJSONModel): Promise<void>;
     saveFromJSON(json: any): Promise<void>;
 }
 
