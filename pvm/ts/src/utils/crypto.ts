@@ -3,7 +3,8 @@ import { createVerify } from "crypto";
 
 export const verifySignature = (publicKey: string, message: string, signature: string): boolean => {
 
-    if (signature === ethers.ZeroHash) {
+    // ethers.ZeroHash not working
+    if (signature === "0x0000000000000000000000000000000000000000000000000000000000000000") {
         return true;
     }
 
