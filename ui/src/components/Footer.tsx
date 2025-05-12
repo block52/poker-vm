@@ -162,7 +162,7 @@ const PokerActionPanel: React.FC = () => {
     }, [canRaise, canBet, minRaise, minBet]);
 
     // Handler functions for different actions - Now use our custom hooks
-    const handlePostSmallBlind = () => {
+    const handlePostSmallBlind = useCallback(() => {
         console.log("Posting small blind");
         
         if (!publicKey || !privateKey || !postSmallBlind) {
@@ -177,9 +177,9 @@ const PokerActionPanel: React.FC = () => {
             publicKey,
             actionIndex: legalActions?.[0]?.index || 0
         });
-    };
+    }, [publicKey, privateKey, postSmallBlind, legalActions]);
 
-    const handlePostBigBlind = () => {
+    const handlePostBigBlind = useCallback(() => {
         console.log("Posting big blind");
         
         if (!publicKey || !privateKey || !postBigBlind) {
@@ -194,9 +194,9 @@ const PokerActionPanel: React.FC = () => {
             publicKey,
             actionIndex: legalActions?.[0]?.index || 0
         });
-    };
+    }, [publicKey, privateKey, postBigBlind, legalActions]);
 
-    const handleCheck = () => {
+    const handleCheck = useCallback(() => {
         console.log("Checking");
         
         if (!publicKey || !privateKey || !checkHand) {
@@ -212,7 +212,7 @@ const PokerActionPanel: React.FC = () => {
             actionIndex: legalActions?.find(a => a.action === PlayerActionType.CHECK)?.index || 0,
             amount: "0" // Check doesn't require an amount
         });
-    };
+    }, [publicKey, privateKey, checkHand, legalActions]);
 
     const handleFold = useCallback(() => {
         console.log("Folding");
@@ -231,7 +231,7 @@ const PokerActionPanel: React.FC = () => {
         });
     }, [foldHand, legalActions, publicKey, privateKey]);
 
-    const handleCall = () => {
+    const handleCall = useCallback(() => {
         console.log("Calling");
         
         if (!publicKey || !privateKey || !callHand) {
@@ -251,9 +251,9 @@ const PokerActionPanel: React.FC = () => {
         } else {
             console.error("Call action not available");
         }
-    };
+    }, [publicKey, privateKey, callHand, callAction]);
 
-    const handleBet = () => {
+    const handleBet = useCallback(() => {
         console.log("Betting");
         
         if (!publicKey || !privateKey || !betHand) {
@@ -271,9 +271,9 @@ const PokerActionPanel: React.FC = () => {
             actionIndex: betAction?.index || 0,
             amount: amountWei
         });
-    };
+    }, [publicKey, privateKey, betHand, raiseAmount, betAction]);
 
-    const handleRaise = () => {
+    const handleRaise = useCallback(() => {
         console.log("Raising");
         
         if (!publicKey || !privateKey || !raiseHand) {
@@ -291,7 +291,7 @@ const PokerActionPanel: React.FC = () => {
             actionIndex: raiseAction?.index || 0,
             amount: amountWei
         });
-    };
+    }, [publicKey, privateKey, raiseHand, raiseAmount, raiseAction]);
 
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = legalActions?.some(action => action.action === "post-small-blind") && isUsersTurn;
