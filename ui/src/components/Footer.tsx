@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import * as React from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
@@ -90,12 +90,12 @@ const PokerActionPanel: React.FC = () => {
     const raiseAction = legalActions?.find((a: any) => a.action === PlayerActionType.RAISE);
     const callAction = legalActions?.find((a: any) => a.action === PlayerActionType.CALL);
 
-    // Convert values to ETH for display
-    const minBet = betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0;
-    const maxBet = betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0;
-    const minRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0;
-    const maxRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0;
-    const callAmount = callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0;
+    // Convert values to USDC for faster display
+    const minBet = useMemo(() =>  betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0, [betAction]);
+    const maxBet = useMemo(() =>  betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0, [betAction]);
+    const minRaise = useMemo(() => raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0, [raiseAction]);
+    const maxRaise = useMemo(() => raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0, [raiseAction]);
+    const callAmount = useMemo(() => callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0, [callAction]);
 
     //
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
@@ -206,7 +206,7 @@ const PokerActionPanel: React.FC = () => {
         });
     };
 
-    const handleFold = () => {
+    const handleFold = useCallback(() => {
         console.log("Folding");
         const publicKey = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
@@ -223,7 +223,7 @@ const PokerActionPanel: React.FC = () => {
             publicKey,
             actionIndex: legalActions?.find(a => a.action === PlayerActionType.FOLD)?.index || 0
         });
-    };
+    }, [foldHand, legalActions, publicKey]);
 
     const handleCall = () => {
         console.log("Calling");
