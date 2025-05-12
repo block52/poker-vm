@@ -4,9 +4,7 @@ import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
 
 interface PostSmallBlindOptions {
-    userAddress: string | null;
     privateKey: string | null;
-    publicKey: string | null;
     nonce?: string | number;
     actionIndex?: number | null;
     smallBlindAmount?: string; // Optional amount override
@@ -20,19 +18,28 @@ export function useTablePostSmallBlind(tableId: string | undefined) {
 
     // Create a fetcher that has access to the client
     const postSmallBlindFetcher = async (_url: string, { arg }: { arg: PostSmallBlindOptions }) => {
-        const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), actionIndex, smallBlindAmount } = arg;
+        const { privateKey, nonce = Date.now().toString(), actionIndex, smallBlindAmount } = arg;
 
         console.log("🔵 Post small blind attempt");
         console.log("🔵 Using action index:", actionIndex, typeof actionIndex);
 
-        if (!userAddress || !privateKey) {
-            console.error("🔵 Missing address or private key");
-            throw new Error("Missing user address or private key");
+        if (!privateKey) {
+            console.error("🔵 Missing private key");
+            throw new Error("Missing private key");
+        }
+
+        // ONLY use the address from browser storage - use public key as the storage key
+        const storedAddress = localStorage.getItem("user_eth_public_key");
+        
+        // If we don't have a stored address, fail immediately
+        if (!storedAddress) {
+            console.error("🔵 No user public key found in browser storage");
+            throw new Error("No user public key available in browser storage for small blind action");
         }
 
         // Ensure address is lowercase to avoid case-sensitivity issues
-        const normalizedAddress = userAddress.toLowerCase();
-        console.log("🔵 Using normalized address:", normalizedAddress);
+        const normalizedAddress = storedAddress.toLowerCase();
+        console.log("🔵 Using ONLY browser-stored public key:", normalizedAddress);
 
         // Format: "post-small-blind" + amount + tableId + timestamp
         const timestamp = Math.floor(Date.now() / 1000);
@@ -47,6 +54,17 @@ export function useTablePostSmallBlind(tableId: string | undefined) {
             if (!tableId) {
                 throw new Error("Table ID is required");
             }
+
+            console.log("🔵 Calling playerAction with params:", {
+                tableId,
+                action: PlayerActionType.SMALL_BLIND,
+                amount,
+                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
+                data: {
+                    index: actionIndex !== undefined && actionIndex !== null ? actionIndex : 0,
+                    timestamp,
+                }
+            });
 
             // Call playerAction method on the client
             const response = await client.playerAction(
@@ -100,7 +118,8 @@ export function useTablePostSmallBlind(tableId: string | undefined) {
         hasData: !!result.data,
         smallBlindAmount: gameOptions.smallBlind.toString(),
         tableId,
-        hasClient: !!client
+        hasClient: !!client,
+        addressFromStorage: localStorage.getItem("user_eth_public_key")
     });
 
     return result;
