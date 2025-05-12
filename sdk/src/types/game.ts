@@ -47,10 +47,31 @@ export enum TexasHoldemRound {
     END = "end"
 }
 
+export enum SUIT {
+    CLUBS = 1,
+    DIAMONDS = 2,
+    HEARTS = 3,
+    SPADES = 4
+}
+
+export type Card = {
+    suit: SUIT;
+    rank: number;
+    value: number;
+    mnemonic: string;
+};
+
 export type Positions = {
     dealer?: number;
     smallBlind?: number;
     bigBlind?: number;
+};
+
+export type Fee = {
+    address: string;
+    max: bigint;
+    fixed: bigint;
+    percentage: number;
 }
 
 export type GameOptions = {
@@ -75,8 +96,8 @@ export type GameOptionsDTO = {
 
 // This is the type of the last action of a player
 export type ActionDTO = {
-    playerId: string,
-    seat: number,
+    playerId: string;
+    seat: number;
     action: PlayerActionType | NonPlayerActionType;
     amount: string;
     round: TexasHoldemRound;
@@ -100,9 +121,9 @@ export type PlayerDTO = {
     address: string;
     seat: number; // change to position
     stack: string; // BigNumber
-    isSmallBlind: boolean,
-    isBigBlind: boolean,
-    isDealer: boolean,
+    isSmallBlind: boolean;
+    isBigBlind: boolean;
+    isDealer: boolean;
     holeCards: string[] | undefined;
     status: PlayerStatus;
     lastAction: ActionDTO | undefined;
@@ -152,25 +173,10 @@ export type TexasHoldemStateDTO = {
     signature: string;
 };
 
-export enum SUIT {
-    CLUBS = 1,
-    DIAMONDS = 2,
-    HEARTS = 3,
-    SPADES = 4
-}
-
-export type Card = {
-    suit: SUIT;
-    rank: number;
-    value: number;
-    mnemonic: string;
-};
-
 export type GameOptionsResponse = {
     address: string;
     gameOptions: GameOptionsDTO;
 };
-
 
 export type TransactionResponse = {
     nonce: string;
@@ -181,14 +187,13 @@ export type TransactionResponse = {
     signature: string;
     timestamp: string;
     data?: string;
-}
+};
 
 export type GameStateResponse = {
     state: TexasHoldemStateDTO;
-}
+};
 
-// export type PerformActionResponse = GameStateResponse & TransactionResponse;
-export type PerformActionResponse= {
+export type PerformActionResponse = {
     state: TexasHoldemStateDTO;
     nonce: string;
     to: string;
@@ -198,4 +203,4 @@ export type PerformActionResponse= {
     signature: string;
     timestamp: string;
     data?: string;
-}
+};
