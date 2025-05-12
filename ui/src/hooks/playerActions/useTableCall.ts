@@ -21,7 +21,6 @@ export const useTableCall = (tableId?: string) => {
      */
     const callHand = async (params: HandParams) => {
         if (!tableId) {
-            console.error("Table ID is required to call");
             setError("Table ID is required");
             return;
         }
@@ -30,10 +29,6 @@ export const useTableCall = (tableId?: string) => {
         setError(null);
 
         try {
-            // Create a new client instance using the official NodeRpcClient
-            // const nodeUrl = process.env.NODE_RPC_URL || "https://node1.block52.xyz/";
-            // const client = new NodeRpcClient(nodeUrl, params.privateKey);
-
             // Make the API call
             if (!client) {
                 setError("Client is not initialized");
@@ -43,7 +38,6 @@ export const useTableCall = (tableId?: string) => {
             const response = await client.playerAction(tableId, PlayerActionType.CALL, params.amount);
             return response.data;
         } catch (err: any) {
-            console.error("Error calling:", err);
             setError(err.message || "Failed to call");
             throw err;
         } finally {
