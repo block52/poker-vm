@@ -41,6 +41,8 @@ import { useGameOptions } from "../../hooks/useGameOptions";
 import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 
+import { PositionArray } from "../../types/index";
+
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
 
@@ -60,13 +62,7 @@ const debugLog = (...args: any[]) => {
 //* SHOWDOWN - Players show their cards to determine winner
 
 //* Define the interface for the position object
-interface PositionArray {
-    left?: string;
-    top?: string;
-    bottom?: string;
-    right?: string;
-    color?: string;
-}
+
 
 const calculateZoom = () => {
     const baseWidth = 2000;
@@ -149,7 +145,7 @@ const Table = () => {
     const [seat, setSeat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
 
-    // Restore missing state variables
+    
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
@@ -407,7 +403,7 @@ const Table = () => {
         const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
         
         // Build common props shared by all player components
-        const componentProps = {
+        const playerProps = {
             index: positionIndex + 1,
             currentIndex, 
             left: position.left,
@@ -430,8 +426,8 @@ const Table = () => {
         // CASE 2: The current user's seat - render with own controls
         // CASE 3: Another player's seat - render opponent view
         return isCurrentUser ? 
-            <Player {...componentProps} /> : 
-            <OppositePlayer {...componentProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
+            <Player {...playerProps} /> : 
+            <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
     }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible]);
 
     return (
