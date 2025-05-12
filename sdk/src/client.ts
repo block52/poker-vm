@@ -318,6 +318,13 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
+    /**
+     * Create a new game table on the remote node
+     * @param schemaAddress The address of the schema to use for the table
+     * @param owner The address of the table owner
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the table address
+     */
     public async newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string> {
         if (!nonce) {
             nonce = await this.getNonce(this.getAddress());
