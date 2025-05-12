@@ -390,6 +390,50 @@ const Table = () => {
         transform: "none"
     }), [dealerButtonPosition]);
 
+    /**
+     * Memoized player component renderer - critical for table rendering performance
+     * This function determines which type of component to render at each position and
+     * prevents unnecessary re-renders when other parts of the state change.
+     * 
+     * @param position - Position data containing left/top/color styling
+     * @param positionIndex - The index in the reordered array (not the actual seat number)
+     * @returns The appropriate React component for this position
+     */
+    const getComponentToRender = useCallback((position: PositionArray, positionIndex: number) => {
+        // Find if a player is seated at this position
+        const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === positionIndex + 1);
+        
+        // Check if this seat belongs to the current user
+        const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
+        
+        // Build common props shared by all player components
+        const componentProps = {
+            index: positionIndex + 1,
+            currentIndex, 
+            left: position.left,
+            top: position.top,
+            color: position.color,
+            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === positionIndex + 1)?.status
+        };
+        
+        // CASE 1: No player at this seat - render vacant position
+        if (!playerAtThisSeat) {
+            return (
+                <VacantPlayer
+                    index={positionIndex + 1}
+                    left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
+                    top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
+                />
+            );
+        } 
+        
+        // CASE 2: The current user's seat - render with own controls
+        // CASE 3: Another player's seat - render opponent view
+        return isCurrentUser ? 
+            <Player {...componentProps} /> : 
+            <OppositePlayer {...componentProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
+    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible]);
+
     return (
         <div className="relative h-screen w-full overflow-hidden">
             {/*//! HEADER - CASINO STYLE */}
@@ -741,60 +785,13 @@ const Table = () => {
                                     </div>
                                     <div className="absolute inset-0 z-30">
                                         {reorderedPlayerArray.map((position, positionIndex) => {
-                                            const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === positionIndex + 1);
-                                            const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
-
-                                            if (DEBUG_MODE && playerAtThisSeat) {
-                                                debugLog(`Seat ${positionIndex + 1} detailed comparison:`, {
-                                                    playerAddress: playerAtThisSeat.address,
-                                                    playerAddressLower: playerAtThisSeat.address?.toLowerCase(),
-                                                    currentUserAddress: userWalletAddress,
-                                                    currentUserAddressLower: userWalletAddress?.toLowerCase(),
-                                                    isMatch: isCurrentUser,
-                                                    exactCompare: playerAtThisSeat.address === userWalletAddress,
-                                                    lowerCompare: playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase()
-                                                });
-                                            }
-
-                                            const componentProps = {
-                                                index: positionIndex + 1,
-                                                currentIndex: currentIndex,
-                                                left: position.left,
-                                                top: position.top,
-                                                color: position.color,
-                                                status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === positionIndex + 1)?.status
-                                            };
-
-                                            const componentToRender = !playerAtThisSeat ? (
-                                                <VacantPlayer
-                                                    index={positionIndex + 1}
-                                                    left={
-                                                        tableSize === 6
-                                                            ? vacantPlayerPosition.six[positionIndex].left
-                                                            : vacantPlayerPosition.nine[positionIndex].left
-                                                    }
-                                                    top={
-                                                        tableSize === 6
-                                                            ? vacantPlayerPosition.six[positionIndex].top
-                                                            : vacantPlayerPosition.nine[positionIndex].top
-                                                    }
-                                                />
-                                            ) : isCurrentUser ? (
-                                                <Player {...componentProps} />
-                                            ) : (
-                                                <OppositePlayer
-                                                    {...componentProps}
-                                                    setStartIndex={(index: number) => setStartIndex(index)}
-                                                    isCardVisible={isCardVisible}
-                                                    setCardVisible={setCardVisible}
-                                                />
-                                            );
+                                            const componentToRender = getComponentToRender(position, positionIndex);
 
                                             if (DEBUG_MODE) {
                                                 debugLog(`Rendering component for seat ${positionIndex + 1}:`, {
-                                                    isVacant: !playerAtThisSeat,
-                                                    isCurrentUser,
-                                                    componentType: !playerAtThisSeat ? "VacantPlayer" : isCurrentUser ? "Player" : "OppositePlayer",
+                                                    isVacant: !componentToRender,
+                                                    isCurrentUser: componentToRender,
+                                                    componentType: !componentToRender ? "VacantPlayer" : "OppositePlayer",
                                                     currentUserAddress: userWalletAddress
                                                 });
                                             }
