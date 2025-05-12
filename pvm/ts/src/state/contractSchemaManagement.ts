@@ -18,9 +18,11 @@ export class ContractSchemaManagement extends StateManager implements IContractS
         }
 
         const args = contract.schema.split(",");
-        if (args.length !== 9) {
+        if (args.length < 8) {
             throw new Error("Invalid schema");
         }
+
+        const timeout = args[8] ? parseInt(args[8]) : 30000; // Default timeout of 30 seconds
 
         const options: GameOptions = {
             minBuyIn: BigInt(args[6]),
@@ -29,7 +31,7 @@ export class ContractSchemaManagement extends StateManager implements IContractS
             maxPlayers: parseInt(args[3]),
             smallBlind: BigInt(args[4]),
             bigBlind: BigInt(args[5]),
-            timeout: parseInt(args[8])
+            timeout: timeout
         };
 
         return options;

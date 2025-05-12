@@ -32,6 +32,7 @@ export interface IBlockDocument {
 
 export interface IGameStateDocument {
     address: string;
+    schemaAddress: string;
     state: any;
 }
 

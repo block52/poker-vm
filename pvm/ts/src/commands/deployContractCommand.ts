@@ -11,6 +11,10 @@ export class DeployContractCommand implements ISignedCommand<string> {
     constructor(private readonly nonce: bigint, private readonly owner: string, private readonly data: string, private readonly privateKey: string) {
         const params = data.split(",");
 
+        if (params.length !== 7) {
+            throw new Error("Invalid number of parameters. Expected 7 parameters.");
+        }
+
         const gameOptions: GameOptions = {
             minBuyIn: BigInt(params[0]),
             maxBuyIn: BigInt(params[1]),
