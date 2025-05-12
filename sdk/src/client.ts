@@ -13,7 +13,7 @@ export interface IClient {
     getBlockByHash(hash: string): Promise<BlockDTO>;
     getBlockHeight(): Promise<number>;
     getBlocks(count?: number): Promise<BlockDTO[]>;
-    getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
+    getGameState(gameAddress: string, caller: string): Promise<TexasHoldemStateDTO>;
     getLastBlock(): Promise<BlockDTO>;
     getMempool(): Promise<TransactionDTO[]>;
     getNodes(): Promise<string[]>;
@@ -280,13 +280,14 @@ export class NodeRpcClient implements IClient {
     /**
      * Get the state of a Texas Holdem game
      * @param gameAddress The address of the game
+     * @param caller The address of the caller
      * @returns A Promise that resolves to a TexasHoldemState object
      */
-    public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
+    public async getGameState(gameAddress: string, caller: string): Promise<TexasHoldemStateDTO> {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_GAME_STATE,
-            params: [gameAddress]
+            params: [gameAddress, caller]
         });
 
         return body.result.data;
@@ -442,7 +443,7 @@ export class NodeRpcClient implements IClient {
     }
 
     private async getNextTurnIndex(gameAddress: string, playerId: string): Promise<number> {
-        const gameState = await this.getGameState(gameAddress);
+        const gameState = await this.getGameState(gameAddress, playerId);
         if (!gameState) {
             throw new Error("Game state not found");
         }
