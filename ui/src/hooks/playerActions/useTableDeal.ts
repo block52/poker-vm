@@ -9,19 +9,15 @@ export function useTableDeal(tableId: string | undefined) {
 
     // Create a fetcher that has access to the client
     const dealFetcher = async (_url: string, { arg }: { arg: DealOptions }) => {
-        const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), actionIndex } = arg;
+        const { privateKey, nonce = Date.now().toString(), actionIndex } = arg;
 
         console.log("🃏 Deal cards attempt");
         console.log("🃏 Using action index:", actionIndex, typeof actionIndex);
 
-        if (!userAddress || !privateKey) {
-            console.error("🃏 Missing address or private key");
-            throw new Error("Missing user address or private key");
+        if (!privateKey) {
+            console.error("🃏 Missing private key");
+            throw new Error("Missing private key");
         }
-
-        // Ensure address is lowercase to avoid case-sensitivity issues
-        const normalizedAddress = userAddress.toLowerCase();
-        console.log("🃏 Using normalized address:", normalizedAddress);
 
         // Create a seed from timestamp for randomness
         const timestamp = Math.floor(Date.now() / 1000);
@@ -37,11 +33,18 @@ export function useTableDeal(tableId: string | undefined) {
                 throw new Error("Table ID is required");
             }
 
-            // Use the client's deal method
+            console.log("🃏 Calling deal with params:", {
+                tableId,
+                seed,
+                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString())
+            });
+
+            // Use the client's deal method - it doesn't need the publicKey parameter
+            // since the NodeRpcClient already knows the address
             const response = await client.deal(
                 tableId,
                 seed,
-                (publicKey || userAddress).toLowerCase(),
+                "", // The publicKey is not actually used in the interface
                 typeof nonce === "number" ? nonce : parseInt(nonce.toString())
             );
 

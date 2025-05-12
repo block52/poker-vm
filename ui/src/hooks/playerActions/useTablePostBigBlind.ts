@@ -28,19 +28,6 @@ export function useTablePostBigBlind(tableId: string | undefined) {
             throw new Error("Missing private key");
         }
 
-        // ONLY use the address from browser storage - use public key as the storage key
-        const storedAddress = localStorage.getItem("user_eth_public_key");
-        
-        // If we don't have a stored address, fail immediately
-        if (!storedAddress) {
-            console.error("🔵 No user public key found in browser storage");
-            throw new Error("No user public key available in browser storage for big blind action");
-        }
-
-        // Ensure address is lowercase to avoid case-sensitivity issues
-        const normalizedAddress = storedAddress.toLowerCase();
-        console.log("🔵 Using ONLY browser-stored public key:", normalizedAddress);
-
         // Format: "post-big-blind" + amount + tableId + timestamp
         const timestamp = Math.floor(Date.now() / 1000);
         const amount = bigBlindAmount || DEFAULT_BIG_BLIND; // Use the default from useGameOptions
@@ -118,8 +105,7 @@ export function useTablePostBigBlind(tableId: string | undefined) {
         hasData: !!result.data,
         bigBlindAmount: gameOptions.bigBlind.toString(),
         tableId,
-        hasClient: !!client,
-        addressFromStorage: localStorage.getItem("user_eth_public_key")
+        hasClient: !!client
     });
 
     return result;
