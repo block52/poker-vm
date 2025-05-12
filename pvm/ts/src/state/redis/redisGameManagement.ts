@@ -84,10 +84,10 @@ export class RedisGameManagement implements IGameManagement {
             if (result && Object.keys(result).length > 0) {
                 // Parse JSON fields from Redis strings
                 try {
-                    const gameState = this.parseGameState(result);
-                    games.push(gameState);
+                    // const gameState = this.parseGameState(result);
+                    // games.push(gameState);
                 } catch (error) {
-                    console.error(`Error parsing game state: ${error.message}`);
+                    console.error(`Error parsing game state: ${error}`);
                 }
             }
         }
@@ -163,11 +163,11 @@ export class RedisGameManagement implements IGameManagement {
      * Save game state
      * @param state Game state model
      */
-    public async save(state: IJSONModel): Promise<void> {
+    public async save(state: IJSONModel, address?: string): Promise<void> {
         await this.connect();
 
         // Get the game by its address
-        const currentState = await this.get(state.address);
+        const currentState = await this.get(address);
 
         if (!currentState) {
             throw new Error(`Game with address ${state.address} not found`);
