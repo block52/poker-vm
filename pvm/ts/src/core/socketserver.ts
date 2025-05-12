@@ -97,7 +97,7 @@ export class SocketService implements SocketServiceInterface {
                     const data = JSON.parse(messageStr) as ClientMessage;
 
                     if (data.action === "subscribe" && data.tableAddress && data.playerId) {
-                        if (verifySignature(data.playerId, data.signature || "", data.tableAddress)) {
+                        if (!verifySignature(data.playerId, data.signature || "", data.tableAddress)) {
                             console.log(`Signature verified for player ${data.playerId} on table ${data.tableAddress}`);
                             return;
                         }

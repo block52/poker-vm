@@ -46,12 +46,13 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
 
             // Get all players in the game
             const players = gameStateResponse.data.players.map(player => player.address);
-            for (const player of players) {
-                // Broadcast the game state update to each player with their address and view
-                const gameStateCommand = new GameStateCommand(this.to, this.privateKey, player);
-                const gameStateResponse = await gameStateCommand.execute();
-                socketService.broadcastGameStateUpdate(this.to, player, gameStateResponse.data);
-            }
+            await Promise.all(
+                players.map(async player => {
+                    const cmd = new GameStateCommand(this.to, this.privateKey, player);
+                    const resp = await cmd.execute();
+                    socketService.broadcastGameStateUpdate(this.to, player, resp.data);
+                })
+            );
         }
 
         return signResult(result, this.privateKey);
