@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { HandParams } from "./types";
-import { NodeRpcClient } from "@bitcoinbrisbane/block52";
+// import { NodeRpcClient } from "@bitcoinbrisbane/block52";
+import { useNodeRpc } from "../../context/NodeRpcContext";
 
 /**
  * Custom hook to handle calling in a poker game
@@ -11,6 +12,7 @@ import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 export const useTableCall = (tableId?: string) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { client } = useNodeRpc();
 
     /**
      * Executes a call action on the specified table
@@ -29,10 +31,15 @@ export const useTableCall = (tableId?: string) => {
 
         try {
             // Create a new client instance using the official NodeRpcClient
-            const nodeUrl = process.env.NODE_RPC_URL || "https://node1.block52.xyz/";
-            const client = new NodeRpcClient(nodeUrl, params.privateKey);
+            // const nodeUrl = process.env.NODE_RPC_URL || "https://node1.block52.xyz/";
+            // const client = new NodeRpcClient(nodeUrl, params.privateKey);
 
             // Make the API call
+            if (!client) {
+                setError("Client is not initialized");
+                return;
+            }
+
             const response = await client.playerAction(tableId, PlayerActionType.CALL, params.amount);
             return response.data;
         } catch (err: any) {
