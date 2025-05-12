@@ -80,3 +80,12 @@ export type TableStatus = {
     bigBlindAmount: string;
     isSmallBlindPosition: boolean;
 }
+
+
+export interface PositionArray {
+    left?: string;
+    top?: string;
+    bottom?: string;
+    right?: string;
+    color?: string;
+}
