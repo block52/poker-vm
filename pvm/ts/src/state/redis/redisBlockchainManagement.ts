@@ -31,16 +31,16 @@ export class RedisBlockchainManagement implements IBlockchainManagement {
         const multi = this.redisClient.multi();
 
         // Store block by index
-        multi.hset(this.blockIndexKey, block.index.toString(), JSON.stringify(block));
+        multi.hset(this.blockIndexKey, block.index.toString(), JSON.stringify(block.toJson()));
 
         // Store block by hash
-        multi.hset(this.blockHashKey, block.hash, JSON.stringify(block));
+        multi.hset(this.blockHashKey, block.hash, JSON.stringify(block.toJson()));
 
         // Update the last block
-        multi.set(this.lastBlockKey, JSON.stringify(block));
+        multi.set(this.lastBlockKey, JSON.stringify(block.toJson()));
 
         // Add to the blockchain list
-        multi.rpush(this.blockchainKey, JSON.stringify(block));
+        multi.rpush(this.blockchainKey, JSON.stringify(block.toJson()));
 
         await multi.exec();
     }
