@@ -80,6 +80,10 @@ const Dashboard: React.FC = () => {
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
+    // Add this ref at the top of your component
+    const initialLoadComplete = useRef(false);
+    const lastFetchedPublicKey = useRef<string | undefined>(undefined);
+
     // Add effect to track mouse movement
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!animationFrameRef.current) {
@@ -145,27 +149,30 @@ const Dashboard: React.FC = () => {
     };
 
     // Function to fetch account balance directly using NodeRpcClient
-    const fetchAccountBalance = useCallback(async () => {
-        if (!client) {
-            setBalanceError(new Error("RPC client not initialized"));
+    const fetchAccountBalance = useCallback(async (force = false) => {
+        // Skip if no client or no public key
+        if (!client || !publicKey) {
+            !publicKey && setBalanceError(new Error("No address available"));
             setIsBalanceLoading(false);
             return;
         }
-
+        
+        // Skip if we've already loaded for this key and it's not forced
+        if (!force && initialLoadComplete.current && lastFetchedPublicKey.current === publicKey) {
+            return;
+        }
+        
         try {
             setIsBalanceLoading(true);
-
-            // Use the stored public key
-            if (!publicKey) {
-                setBalanceError(new Error("No address available"));
-                setIsBalanceLoading(false);
-                return;
-            }
-
+            
             const account = await client.getAccount(publicKey);
             setAccountBalance(account.balance);
-            setAccountNonce(account.nonce); // Save the nonce for transactions
+            setAccountNonce(account.nonce);
             setBalanceError(null);
+            
+            // Mark that we've completed a load for this key
+            initialLoadComplete.current = true;
+            lastFetchedPublicKey.current = publicKey;
         } catch (err) {
             console.error("Error fetching account balance:", err);
             setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
@@ -184,9 +191,17 @@ const Dashboard: React.FC = () => {
     // Update to fetch balance when publicKey or client changes
     useEffect(() => {
         if (publicKey && client && !clientLoading) {
-            fetchAccountBalance();
+            // Only fetch if public key changed or it's the initial load
+            if (publicKey !== lastFetchedPublicKey.current || !initialLoadComplete.current) {
+                fetchAccountBalance();
+            }
         }
-    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+    }, [publicKey, clientLoading, fetchAccountBalance]);
+
+    // Add a specific function to force refresh when needed
+    const refreshBalance = useCallback(() => {
+        fetchAccountBalance(true);
+    }, [fetchAccountBalance]);
 
     const handleGameType = (type: GameType) => {
         console.log("\n=== Game Type Selected ===");
