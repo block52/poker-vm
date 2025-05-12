@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import * as React from "react";
-import { PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
-import { PROXY_URL } from "../config/constants";
+import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 import { useTableNonce } from "../hooks/useTableNonce";
@@ -22,7 +21,6 @@ import { useTableMuck } from "../hooks/playerActions/useTableMuck";
 import { useTableShow } from "../hooks/playerActions/useTableShow";
 import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 
-import axios from "axios";
 
 import { ethers } from "ethers";
 
@@ -59,12 +57,19 @@ const PokerActionPanel: React.FC = () => {
     }, [nextToActInfo]);
 
     const [publicKey, setPublicKey] = useState<string>();
+    const [privateKey, setPrivateKey] = useState<string>();
 
-    // Get user's address directly from localStorage
-    const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+    // Use useMemo for localStorage access
+    const userAddress = useMemo(() => 
+        localStorage.getItem("user_eth_public_key")?.toLowerCase(),
+        []
+    );
 
     // Determine if user is in the table using our hooks instead of accountUtils
-    const isUserInTable = !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
+    const isUserInTable = useMemo(() => 
+        !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress),
+        [players, userAddress]
+    );
 
     // Use nextToActInfo to determine if it's the user's turn
     const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
@@ -92,12 +97,12 @@ const PokerActionPanel: React.FC = () => {
     const raiseAction = legalActions?.find((a: any) => a.action === PlayerActionType.RAISE);
     const callAction = legalActions?.find((a: any) => a.action === PlayerActionType.CALL);
 
-    // Convert values to ETH for display
-    const minBet = betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0;
-    const maxBet = betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0;
-    const minRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0;
-    const maxRaise = raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0;
-    const callAmount = callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0;
+    // Convert values to USDC for faster display
+    const minBet = useMemo(() =>  betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0, [betAction]);
+    const maxBet = useMemo(() =>  betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0, [betAction]);
+    const minRaise = useMemo(() => raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0, [raiseAction]);
+    const maxRaise = useMemo(() => raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0, [raiseAction]);
+    const callAmount = useMemo(() => callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0, [callAction]);
 
     //
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
@@ -122,6 +127,13 @@ const PokerActionPanel: React.FC = () => {
 
         setPublicKey(localKey);
     }, [publicKey]);
+
+    useEffect(() => {
+        const localKey = localStorage.getItem("user_eth_private_key");
+        if (!localKey) return setPrivateKey(undefined);
+
+        setPrivateKey(localKey);
+    }, [privateKey]);
 
     // // Log the player's legal actions
     // useEffect(() => {
@@ -150,11 +162,9 @@ const PokerActionPanel: React.FC = () => {
     }, [canRaise, canBet, minRaise, minBet]);
 
     // Handler functions for different actions - Now use our custom hooks
-    const handlePostSmallBlind = () => {
+    const handlePostSmallBlind = useCallback(() => {
         console.log("Posting small blind");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !postSmallBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -167,13 +177,11 @@ const PokerActionPanel: React.FC = () => {
             publicKey,
             actionIndex: legalActions?.[0]?.index || 0
         });
-    };
+    }, [publicKey, privateKey, postSmallBlind, legalActions]);
 
-    const handlePostBigBlind = () => {
+    const handlePostBigBlind = useCallback(() => {
         console.log("Posting big blind");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !postBigBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -186,13 +194,11 @@ const PokerActionPanel: React.FC = () => {
             publicKey,
             actionIndex: legalActions?.[0]?.index || 0
         });
-    };
+    }, [publicKey, privateKey, postBigBlind, legalActions]);
 
-    const handleCheck = () => {
+    const handleCheck = useCallback(() => {
         console.log("Checking");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !checkHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -206,13 +212,11 @@ const PokerActionPanel: React.FC = () => {
             actionIndex: legalActions?.find(a => a.action === PlayerActionType.CHECK)?.index || 0,
             amount: "0" // Check doesn't require an amount
         });
-    };
+    }, [publicKey, privateKey, checkHand, legalActions]);
 
-    const handleFold = () => {
+    const handleFold = useCallback(() => {
         console.log("Folding");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !foldHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -225,13 +229,11 @@ const PokerActionPanel: React.FC = () => {
             publicKey,
             actionIndex: legalActions?.find(a => a.action === PlayerActionType.FOLD)?.index || 0
         });
-    };
+    }, [foldHand, legalActions, publicKey, privateKey]);
 
-    const handleCall = () => {
+    const handleCall = useCallback(() => {
         console.log("Calling");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !callHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -249,13 +251,11 @@ const PokerActionPanel: React.FC = () => {
         } else {
             console.error("Call action not available");
         }
-    };
+    }, [publicKey, privateKey, callHand, callAction]);
 
-    const handleBet = () => {
+    const handleBet = useCallback(() => {
         console.log("Betting");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !betHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -271,13 +271,11 @@ const PokerActionPanel: React.FC = () => {
             actionIndex: betAction?.index || 0,
             amount: amountWei
         });
-    };
+    }, [publicKey, privateKey, betHand, raiseAmount, betAction]);
 
-    const handleRaise = () => {
+    const handleRaise = useCallback(() => {
         console.log("Raising");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !raiseHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -293,7 +291,7 @@ const PokerActionPanel: React.FC = () => {
             actionIndex: raiseAction?.index || 0,
             amount: amountWei
         });
-    };
+    }, [publicKey, privateKey, raiseHand, raiseAmount, raiseAction]);
 
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = legalActions?.some(action => action.action === "post-small-blind") && isUsersTurn;
@@ -321,8 +319,12 @@ const PokerActionPanel: React.FC = () => {
     const showButtons = isUserInTable;
 
     // Only show fold button if the player has the fold action and is in the table
-    const canFoldAnytime =
-        legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === PlayerActionType.FOLD) && playerStatus !== PlayerStatus.FOLDED && showButtons;
+    const canFoldAnytime = useMemo(() =>
+        legalActions?.some((a: any) => a.action === PlayerActionType.FOLD || a.action === PlayerActionType.FOLD) && 
+        playerStatus !== PlayerStatus.FOLDED && 
+        showButtons,
+        [legalActions, playerStatus, showButtons]
+    );
 
     // Only show other action buttons if it's the player's turn, they have legal actions,
     // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
@@ -338,9 +340,7 @@ const PokerActionPanel: React.FC = () => {
         console.log("Deal button clicked");
 
         // Get public and private keys
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !dealCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -351,7 +351,7 @@ const PokerActionPanel: React.FC = () => {
             userAddress: publicKey,
             privateKey,
             publicKey,
-            actionIndex: legalActions?.find(a => a.action === "deal")?.index || 0
+            actionIndex: legalActions?.find(a => a.action === NonPlayerActionType.DEAL)?.index || 0
         });
     };
 
@@ -370,9 +370,7 @@ const PokerActionPanel: React.FC = () => {
     // Handler for muck action
     const handleMuck = () => {
         console.log("Mucking cards");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !muckCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -390,9 +388,7 @@ const PokerActionPanel: React.FC = () => {
     // Handler for show action
     const handleShow = () => {
         console.log("Showing cards");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !showCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -410,9 +406,7 @@ const PokerActionPanel: React.FC = () => {
     // Add the handleStartNewHand function after the other handler functions
     const handleStartNewHand = () => {
         console.log("Starting new hand");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !startNewHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
