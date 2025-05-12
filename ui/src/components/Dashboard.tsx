@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react"; // Import React, useEffect, and useRef
+import React, { useEffect, useState, useRef, useCallback } from "react"; // Import React, useEffect, and useRef
 import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
 
 import "./Dashboard.css"; // Import the CSS file with animations
@@ -81,30 +81,26 @@ const Dashboard: React.FC = () => {
     const animationFrameRef = useRef<number | undefined>(undefined);
 
     // Add effect to track mouse movement
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!animationFrameRef.current) {
+            animationFrameRef.current = requestAnimationFrame(() => {
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                setMousePosition({ x, y });
+                animationFrameRef.current = undefined;
+            });
+        }
+    }, []);
+
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            // Only update if no animation frame is pending
-            if (!animationFrameRef.current) {
-                animationFrameRef.current = requestAnimationFrame(() => {
-                    // Calculate mouse position as percentage of window
-                    const x = (e.clientX / window.innerWidth) * 100;
-                    const y = (e.clientY / window.innerHeight) * 100;
-                    setMousePosition({ x, y });
-                    animationFrameRef.current = undefined;
-                });
-            }
-        };
-
         window.addEventListener("mousemove", handleMouseMove);
-
-        // Cleanup function to remove event listener and cancel any pending animation frames
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
             if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
             }
         };
-    }, []);
+    }, [handleMouseMove]);
 
     // Game contract addresses - in a real app, these would come from the API
     const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd34326"; // Example address
