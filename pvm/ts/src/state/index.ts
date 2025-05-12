@@ -10,7 +10,7 @@ import { getMongoAccountManagementInstance } from "./mongodb/accountManagement";
 export { getContractSchemaManagement, getGameManagementInstance, getTransactionInstance };
 
 export const getBlockchainInstance = (): IBlockchainManagement => {
-    const connString = "redis://localhost:6379";
+    const connString = process.env.DB_URL || "redis://localhost:6379";
     const dbType = connString.split(":")[0];
 
     if (dbType === "redis") {
@@ -29,7 +29,7 @@ export const getBlockchainInstance = (): IBlockchainManagement => {
 }
 
 export const getAccountManagementInstance = (): IAccountManagement => {
-    const connString = "redis://localhost:6379";
+    const connString = process.env.DB_URL || "redis://localhost:6379";
     const dbType = connString.split(":")[0];
 
     if (dbType === "redis") {
