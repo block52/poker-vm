@@ -46,7 +46,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         console.log(`Processing game transaction: data=${this.action}, to=${this.to}`);
 
         const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.to), this.contractSchemas.getGameOptions(this.to)]);
-
         const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
         // Get mempool transactions for the game
