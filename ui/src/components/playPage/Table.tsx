@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
@@ -13,7 +13,7 @@ import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 import "./Table.css"; // Import the Table CSS file
 
@@ -21,7 +21,6 @@ import "./Table.css"; // Import the Table CSS file
 
 import { ethers } from "ethers";
 import { useTableState } from "../../hooks/useTableState";
-import { useWinnerInfo } from "../../hooks/useWinnerInfo";
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";
 import { useDealerPosition } from "../../hooks/useDealerPosition";
@@ -29,13 +28,13 @@ import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
-import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
+
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameProgress } from "../../hooks/useGameProgress";
 import { useChipPositions } from "../../hooks/useChipPositions";
 import { usePlayerChipData } from "../../hooks/usePlayerChipData";
 import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
-import { useCardAnimations } from "../../hooks/useCardAnimations";
+
 import { useTableData } from "../../hooks/useTableData";
 import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
@@ -141,8 +140,10 @@ const Table = () => {
     const { gameOptions } = useGameOptions(id);
 
     // Format small blind and big blind values
-    const smallBlindFormatted = gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10";
-    const bigBlindFormatted = gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20";
+    const formattedValues = useMemo(() => ({
+        smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
+        bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20",
+    }), [gameOptions]);
 
     // Add any variables we need
     const [seat, setSeat] = useState<number>(0);
@@ -180,7 +181,7 @@ const Table = () => {
 
     // Replace useUserBySeat with getUserBySeat from our new hook
     // Get the user data for the current seat
-    const userData = React.useMemo(() => {
+    const userData = useMemo(() => {
         if (currentUserSeat >= 0) {
             return getUserBySeat(currentUserSeat);
         }
@@ -239,12 +240,15 @@ const Table = () => {
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
-    useEffect(() => {
-        const reorderedPlayerArray = [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)];
-        const reorderedDealerArray = [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)];
-        setPlayerPositionArray(reorderedPlayerArray);
-        setDealerPositionArray(reorderedDealerArray);
-    }, [startIndex, playerPositionArray, dealerPositionArray]);
+    const reorderedPlayerArray = useMemo(() => 
+        [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
+        [playerPositionArray, startIndex]
+    );
+
+    const reorderedDealerArray = useMemo(() => 
+        [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
+        [dealerPositionArray, startIndex]
+    );
 
     // Add useEffect to refresh showing cards when the round is showdown or end
     useEffect(() => {
@@ -280,11 +284,14 @@ const Table = () => {
         return () => clearTimeout(timer);
     }, [currentIndex]);
 
+    const handleResize = useCallback(() => 
+        setZoom(calculateZoom()),
+    []);
+
     useEffect(() => {
-        const handleResize = () => setZoom(calculateZoom());
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, []);
+    }, [handleResize]);
 
     useEffect(() => {
         //* set the number of players
@@ -301,20 +308,20 @@ const Table = () => {
                 setPlayerPositionArray([]);
                 setDealerPositionArray([]);
         }
-    }, [tableSize]);
+    }, [tableSize, id]);
 
-    const onCloseSideBar = () => {
+    const onCloseSideBar = useCallback(() => {
         setOpenSidebar(!openSidebar);
-    };
+    }, [openSidebar]);
 
     // Add this helper function for copying to clipboard
-    const copyToClipboard = (text: string) => {
+    const copyToClipboard = useCallback((text: string) => {
         navigator.clipboard.writeText(text);
         // You could add a toast notification here if you want
-    };
+    }, []);
 
     // Function to fetch account balance directly using NodeRpcClient
-    const fetchAccountBalance = async () => {
+    const fetchAccountBalance = useCallback(async () => {
         if (!client) {
             setBalanceError(new Error("RPC client not initialized"));
             setIsBalanceLoading(false);
@@ -341,17 +348,20 @@ const Table = () => {
         } finally {
             setIsBalanceLoading(false);
         }
-    };
+    }, [client, publicKey, setAccountBalance, setAccountNonce, setBalanceError, setIsBalanceLoading]);
 
     // Update to fetch balance when publicKey or client changes
     useEffect(() => {
         if (publicKey && client && !clientLoading) {
             fetchAccountBalance();
         }
-    }, [publicKey, client, clientLoading]);
+    }, [publicKey, client, clientLoading, fetchAccountBalance]);
 
     // Format the balance
-    const balanceFormatted = accountBalance ? formatWeiToUSD(accountBalance) : "0.00";
+    const balanceFormatted = useMemo(() => 
+        accountBalance ? formatWeiToUSD(accountBalance) : "0.00",
+        [accountBalance]
+    );
 
     // Remove early returns for errors, continue rendering even if there's an error
     if (!id) {
@@ -373,6 +383,12 @@ const Table = () => {
         console.log("Table data not fully loaded yet");
         // Continue rendering instead of returning early
     }
+
+    const dealerButtonStyle = useMemo(() => ({
+        left: `calc(${dealerButtonPosition.left} + 200px)`,
+        top: dealerButtonPosition.top,
+        transform: "none"
+    }), [dealerButtonPosition]);
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
@@ -469,7 +485,7 @@ const Table = () => {
                     <div className="flex items-center z-10">
                         <div className="flex items-center space-x-2">
                             <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                ${smallBlindFormatted} / ${bigBlindFormatted}
+                                ${formattedValues.smallBlindFormatted} / ${formattedValues.bigBlindFormatted}
                             </span>
                         </div>
                     </div>
@@ -716,11 +732,7 @@ const Table = () => {
                                             {isDealerButtonVisible && (
                                                 <div
                                                     className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                                    style={{
-                                                        left: `calc(${dealerButtonPosition.left} + 200px)`,
-                                                        top: dealerButtonPosition.top,
-                                                        transform: "none"
-                                                    }}
+                                                    style={dealerButtonStyle}
                                                 >
                                                     D
                                                 </div>
@@ -728,7 +740,7 @@ const Table = () => {
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
-                                        {playerPositionArray.map((position, positionIndex) => {
+                                        {reorderedPlayerArray.map((position, positionIndex) => {
                                             const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === positionIndex + 1);
                                             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
 
