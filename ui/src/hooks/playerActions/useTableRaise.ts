@@ -1,96 +1,92 @@
-import { useCallback, useState } from "react";
-import axios from "axios";
-import { PROXY_URL } from "../../config/constants";
-import { ethers } from "ethers";
+import useSWRMutation from "swr/mutation";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { useNodeRpc } from "../../context/NodeRpcContext";
 import { HandParams } from "./types";
-
-// Interface for the hook return type
-interface UseTableRaiseReturn {
-    raiseHand: (args: HandParams) => Promise<any>;
-    isRaising: boolean;
-    error: Error | null;
-}
 
 /**
  * Hook to handle the raise action on a poker table
  * @param tableId The ID of the table
  * @returns Object with raiseHand function and loading state
  */
-export function useTableRaise(tableId?: string): UseTableRaiseReturn {
-    const [isRaising, setIsRaising] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
+export function useTableRaise(tableId?: string) {
+    // Get the Node RPC client
+    const { client } = useNodeRpc();
 
-    // Function to raise on hand
-    const raiseHand = useCallback(
-        async ({ userAddress, privateKey, publicKey, actionIndex, amount }: HandParams): Promise<any> => {
+    // Create a fetcher that has access to the client
+    const raiseFetcher = async (_url: string, { arg }: { arg: HandParams }) => {
+        const { privateKey, actionIndex, amount, nonce = Date.now().toString() } = arg;
+
+        console.log("💰 Raise attempt");
+        console.log("💰 Using action index:", actionIndex);
+        console.log("💰 Raising amount:", amount);
+        console.log("💰 Using nonce:", nonce);
+
+        if (!privateKey) {
+            console.error("💰 Missing private key");
+            throw new Error("Missing private key");
+        }
+
+        if (!amount) {
+            console.error("💰 Missing amount");
+            throw new Error("Raise amount is required");
+        }
+
+        // Format: "raise" + amount + tableId + timestamp
+        const timestamp = Math.floor(Date.now() / 1000);
+        
+        try {
+            // Check if the client is available
+            if (!client) {
+                throw new Error("Node RPC client not available");
+            }
+
             if (!tableId) {
-                const noTableError = new Error("No table ID provided");
-                setError(noTableError);
-                return Promise.reject(noTableError);
+                throw new Error("Table ID is required");
             }
 
-            if (!privateKey) {
-                const noPrivateKeyError = new Error("Private key is required");
-                setError(noPrivateKeyError);
-                return Promise.reject(noPrivateKeyError);
-            }
-
-            if (!amount) {
-                const noAmountError = new Error("Raise amount is required");
-                setError(noAmountError);
-                return Promise.reject(noAmountError);
-            }
-
-            if (!userAddress) {
-                const noAddressError = new Error("User address is required");
-                setError(noAddressError);
-                return Promise.reject(noAddressError);
-            }
-
-            setIsRaising(true);
-            setError(null);
-
-            try {
-                console.log(`Raising on table ${tableId} with action index ${actionIndex} and amount ${amount}`);
-                
-                // Create a wallet instance to sign the message
-                const wallet = new ethers.Wallet(privateKey);
-                
-                // Create the message to sign - Add delimiters for clarity and reliability
-                const timestamp = Math.floor(Date.now() / 1000).toString();
-                const nonce = Date.now().toString(); // Use timestamp as nonce
-                const message = `raise:${amount}:${tableId}:${timestamp}`;
-                
-                // Sign the message
-                const signature = await wallet.signMessage(message);
-                
-                // Make API call to raise 
-                const response = await axios.post(`${PROXY_URL}/table/${tableId}/raise`, {
-                    tableId,
-                    privateKey,
-                    actionIndex,
-                    amount,
-                    userAddress,
-                    publicKey,
-                    signature,
+            console.log("💰 Calling playerAction with params:", {
+                tableId,
+                action: PlayerActionType.RAISE,
+                amount,
+                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
+                data: {
+                    index: actionIndex,
                     timestamp,
-                    nonce
-                });
+                }
+            });
 
-                console.log("Raise response:", response.data);
-                
-                setIsRaising(false);
-                return response.data;
-            } catch (err: any) {
-                console.error("Error raising:", err);
-                setError(err);
-                setIsRaising(false);
-                throw err;
-            }
-        },
-        [tableId]
+            // Call playerAction method on the client
+            const response = await client.playerAction(
+                tableId,
+                PlayerActionType.RAISE,
+                amount,
+                typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
+                JSON.stringify({index: actionIndex})
+            );
+
+            console.log("💰 Raise response:", response);
+            return response;
+        } catch (error) {
+            console.error("💰 Raise error:", error);
+            throw error;
+        }
+    };
+
+    const { trigger, isMutating, error, data } = useSWRMutation(
+        tableId ? `raise_${tableId}` : null, 
+        raiseFetcher
     );
 
-    const result = { raiseHand, isRaising, error };
-    return result;
+    // Add better error handling
+    if (error) {
+        console.error("Raise hook error:", error instanceof Error ? error.message : String(error));
+    }
+
+    return {
+        raiseHand: tableId 
+            ? (params: HandParams) => trigger(params)
+            : null,
+        isRaising: isMutating,
+        error
+    };
 }

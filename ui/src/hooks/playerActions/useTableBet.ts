@@ -1,78 +1,90 @@
-import { useState } from "react";
-import axios from "axios";
-import { PROXY_URL } from "../../config/constants";
+import useSWRMutation from "swr/mutation";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { ethers } from "ethers";
+import { useNodeRpc } from "../../context/NodeRpcContext";
 import { HandParams } from "./types";
+
 /**
  * Custom hook to handle betting in a poker game
  * @param tableId The ID of the table where the action will be performed
  * @returns Object containing functions for performing bet action
  */
 export const useTableBet = (tableId?: string) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    // Get the Node RPC client
+    const { client } = useNodeRpc();
 
-    /**
-     * Executes a bet action on the specified table
-     * @param params Parameters needed for the bet action
-     * @returns Promise resolving to the result of the bet action
-     */
-    const betHand = async (params: HandParams) => {
-        if (!tableId) {
-            console.error("Table ID is required to bet");
-            setError("Table ID is required");
-            return;
+    // Create a fetcher that has access to the client
+    const betFetcher = async (_url: string, { arg }: { arg: HandParams }) => {
+        const { privateKey, actionIndex, amount, nonce = Date.now().toString() } = arg;
+
+        console.log("🎲 Bet attempt");
+        console.log("🎲 Using action index:", actionIndex);
+        console.log("🎲 Betting amount:", amount);
+        console.log("🎲 Using nonce:", nonce);
+
+        if (!privateKey) {
+            console.error("🎲 Missing private key");
+            throw new Error("Missing private key");
         }
 
-        setIsLoading(true);
-        setError(null);
-
+        // Format: "bet" + amount + tableId + timestamp
+        const timestamp = Math.floor(Date.now() / 1000);
+        
         try {
-            console.log("Betting with amount:", params.amount);
+            // Check if the client is available
+            if (!client) {
+                throw new Error("Node RPC client not available");
+            }
 
-            // Create wallet instance to sign the message
-            const wallet = new ethers.Wallet(params.privateKey);
+            if (!tableId) {
+                throw new Error("Table ID is required");
+            }
 
-            // Create message to sign
-            const timestamp = Math.floor(Date.now() / 1000).toString();
-            const message = `bet:${params.amount}:${tableId}:${timestamp}`;
-
-            // Sign the message
-            const signature = await wallet.signMessage(message);
-
-            // Prepare the request payload
-            const payload = {
-                userAddress: params.userAddress,
+            console.log("🎲 Calling playerAction with params:", {
+                tableId,
                 action: PlayerActionType.BET,
-                amount: params.amount,
-                signature,
-                publicKey: params.publicKey,
-                timestamp,
-                index: params.actionIndex
-            };
+                amount,
+                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
+                data: {
+                    index: actionIndex,
+                    timestamp,
+                }
+            });
 
-            console.log("Bet payload:", payload);
+            // Call playerAction method on the client
+            const response = await client.playerAction(
+                tableId,
+                PlayerActionType.BET,
+                amount,
+                typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
+                JSON.stringify({
+                    index: actionIndex,
+                    timestamp
+                })
+            );
 
-            // Make the API call
-            const response = await axios.post(`${PROXY_URL}/table/${tableId}/bet`, payload);
-
-            console.log("Bet response:", response.data);
-
-            // Return the response data
-            return response.data;
-        } catch (err: any) {
-            console.error("Error betting:", err);
-            setError(err.message || "Failed to bet");
-            throw err;
-        } finally {
-            setIsLoading(false);
+            console.log("🎲 Bet response:", response);
+            return response;
+        } catch (error) {
+            console.error("🎲 Bet error:", error);
+            throw error;
         }
     };
 
+    const { trigger, isMutating, error, data } = useSWRMutation(
+        tableId ? `bet_${tableId}` : null, 
+        betFetcher
+    );
+
+    // Add better error handling
+    if (error) {
+        console.error("Bet hook error:", error instanceof Error ? error.message : String(error));
+    }
+
     return {
-        betHand,
-        isLoading,
+        betHand: tableId 
+            ? (params: HandParams) => trigger(params)
+            : null,
+        isLoading: isMutating,
         error
     };
 };
