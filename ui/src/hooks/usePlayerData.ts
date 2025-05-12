@@ -1,15 +1,7 @@
 import React from "react";
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
 import { ethers } from "ethers";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
-
-// Define the fetcher function that includes the user address as a query parameter
-const fetcher = (url: string) => {
-  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-  return axios.get(`${url}?userAddress=${userAddress}`).then(res => res.data);
-};
+import { useGameState } from "./useGameState";
 
 /**
  * Custom hook to fetch player data for a specific seat
@@ -18,29 +10,39 @@ const fetcher = (url: string) => {
  * @returns Object with player data and utility functions
  */
 export const usePlayerData = (tableId?: string, seatIndex?: number) => {
-  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+  // Use useGameState hook instead of making our own API call
+  const { gameState, error, isLoading, refresh } = useGameState(tableId);
   
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+  // Log for debugging
+  React.useEffect(() => {
+    console.log(`usePlayerData for seat ${seatIndex} (raw seat number):`, {
+      hasGameState: !!gameState,
+      playerCount: gameState?.players?.length || 0,
+      seats: gameState?.players?.map(p => p.seat) || []
+    });
+  }, [gameState, seatIndex]);
   
   // Get player data from the table state
   const playerData = React.useMemo(() => {
-    if (!data || !seatIndex) return null;
+    if (!gameState || !seatIndex) {
+      console.log(`No player data - gameState exists: ${!!gameState}, seatIndex: ${seatIndex}`);
+      return null;
+    }
     
-    // Extract table data from the response (handling different API response structures)
-    const tableData = data.data || data;
+    if (!gameState.players) {
+      console.log("Game state has no players array");
+      return null;
+    }
     
-    if (!tableData?.players) return null;
+    const player = gameState.players.find((p) => p.seat === seatIndex);
     
-    return tableData.players.find((p: any) => p.seat === seatIndex);
-  }, [data, seatIndex]);
+    console.log(`Looking for player at seat ${seatIndex}:`, {
+      found: !!player,
+      availableSeats: gameState.players.map(p => p.seat).join(", ")
+    });
+    
+    return player || null;
+  }, [gameState, seatIndex]);
   
   // Format stack value with ethers.js (more accurate for large numbers)
   const stackValue = React.useMemo(() => {
@@ -62,10 +64,8 @@ export const usePlayerData = (tableId?: string, seatIndex?: number) => {
   }, [playerData]);
   
   const round = React.useMemo(() => {
-    if (!data) return null;
-    const tableData = data.data || data;
-    return tableData?.round;
-  }, [data]);
+    return gameState?.round || null;
+  }, [gameState]);
   
   return {
     playerData,
@@ -75,6 +75,7 @@ export const usePlayerData = (tableId?: string, seatIndex?: number) => {
     holeCards,
     round,
     isLoading,
-    error
+    error,
+    refresh
   };
 }; 
