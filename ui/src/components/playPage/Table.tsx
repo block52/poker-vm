@@ -15,30 +15,46 @@ import placeholderLogo from "../../assets/YOUR_CLUB.png";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
-import "./Table.css"; // Import the Table CSS file
-
-//// TODO REPLACE THE BELOW HOOKS WITH THE SDK HOOK
-
-import { ethers } from "ethers";
-import { useTableState } from "../../hooks/useTableState";
-import { useNextToActInfo } from "../../hooks/useNextToActInfo";
-import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";
-import { useDealerPosition } from "../../hooks/useDealerPosition";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { toDisplaySeat } from "../../utils/tableUtils";
+import { ethers } from "ethers";
 
-import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
-import { useGameProgress } from "../../hooks/useGameProgress";
+
+import "./Table.css"; // Import the Table CSS file
+
+//// TODO get these hooks to subscribe to the wss connection
+
+// 1. Core Data Providers
+import { useTableData } from "../../hooks/useTableData";  // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
+import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";  // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
+import { useNextToActInfo } from "../../hooks/useNextToActInfo";
+
+//2. Visual Position/State Providers
+import { useDealerPosition } from "../../hooks/useDealerPosition";
 import { useChipPositions } from "../../hooks/useChipPositions";
 import { usePlayerChipData } from "../../hooks/usePlayerChipData";
-import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
 
-import { useTableData } from "../../hooks/useTableData";
+//3. Game State Providers
+import { useTableState } from "../../hooks/useTableState"; //Provides currentRound, formattedTotalPot, tableSize, tableSize determines player layout (6 vs 9 players)
+import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGameInProgress - whether a hand is active
+
+
+
+//todo wire up to use the sdk instead of the proxy
+// 4. Player Actions
+import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
+
+
+// other
+import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
-import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
+import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
+
+
+
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 
 import { PositionArray } from "../../types/index";
@@ -165,7 +181,6 @@ const Table = () => {
 
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
-    debugLog("Current user address from localStorage:", currentUserAddress);
 
     // Create a different variable for comparison purposes
     const userWalletAddress = React.useMemo(() => {
