@@ -57,9 +57,13 @@ const PokerActionPanel: React.FC = () => {
     }, [nextToActInfo]);
 
     const [publicKey, setPublicKey] = useState<string>();
+    const [privateKey, setPrivateKey] = useState<string>();
 
-    // Get user's address directly from localStorage
-    const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+    // Use useMemo for localStorage access
+    const userAddress = useMemo(() => 
+        localStorage.getItem("user_eth_public_key")?.toLowerCase(),
+        []
+    );
 
     // Determine if user is in the table using our hooks instead of accountUtils
     const isUserInTable = useMemo(() => 
@@ -124,6 +128,13 @@ const PokerActionPanel: React.FC = () => {
         setPublicKey(localKey);
     }, [publicKey]);
 
+    useEffect(() => {
+        const localKey = localStorage.getItem("user_eth_private_key");
+        if (!localKey) return setPrivateKey(undefined);
+
+        setPrivateKey(localKey);
+    }, [privateKey]);
+
     // // Log the player's legal actions
     // useEffect(() => {
     //     // console.log("Footer - Player's legal actions:", {
@@ -153,9 +164,7 @@ const PokerActionPanel: React.FC = () => {
     // Handler functions for different actions - Now use our custom hooks
     const handlePostSmallBlind = () => {
         console.log("Posting small blind");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !postSmallBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -172,9 +181,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handlePostBigBlind = () => {
         console.log("Posting big blind");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !postBigBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -191,9 +198,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleCheck = () => {
         console.log("Checking");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !checkHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -211,9 +216,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleFold = useCallback(() => {
         console.log("Folding");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !foldHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -230,9 +233,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleCall = () => {
         console.log("Calling");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !callHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -254,9 +255,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleBet = () => {
         console.log("Betting");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !betHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -276,9 +275,7 @@ const PokerActionPanel: React.FC = () => {
 
     const handleRaise = () => {
         console.log("Raising");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !raiseHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -343,9 +340,7 @@ const PokerActionPanel: React.FC = () => {
         console.log("Deal button clicked");
 
         // Get public and private keys
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !dealCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -375,9 +370,7 @@ const PokerActionPanel: React.FC = () => {
     // Handler for muck action
     const handleMuck = () => {
         console.log("Mucking cards");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !muckCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -395,9 +388,7 @@ const PokerActionPanel: React.FC = () => {
     // Handler for show action
     const handleShow = () => {
         console.log("Showing cards");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !showCards) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -415,9 +406,7 @@ const PokerActionPanel: React.FC = () => {
     // Add the handleStartNewHand function after the other handler functions
     const handleStartNewHand = () => {
         console.log("Starting new hand");
-        const publicKey = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
-
+        
         if (!publicKey || !privateKey || !startNewHand) {
             console.error("Wallet keys not available or hook not ready");
             return;
