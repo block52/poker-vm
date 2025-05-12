@@ -32,11 +32,12 @@ export interface AccountApiResponse {
     };
 }
 
-// Define the parameter type for callHand function
+// 
 export interface HandParams {
     privateKey: string;
     actionIndex: number;
     amount: string;
+    nonce?: string | number;
 }
 
 export interface StartNewHandOptions {

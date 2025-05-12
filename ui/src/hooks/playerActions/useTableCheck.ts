@@ -1,64 +1,82 @@
-import { useCallback, useState } from "react";
-import axios from "axios";
-import { PROXY_URL } from "../../config/constants";
+import useSWRMutation from "swr/mutation";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { useNodeRpc } from "../../context/NodeRpcContext";
 import { HandParams } from "./types";
-
-// Interface for the hook return type
-interface UseTableCheckReturn {
-    checkHand: (args: HandParams) => Promise<any>;
-    isChecking: boolean;
-    error: Error | null;
-}
 
 /**
  * Hook to handle the check action on a poker table
  * @param tableId The ID of the table
  * @returns Object with checkHand function and loading state
  */
-export function useTableCheck(tableId?: string): UseTableCheckReturn {
-    const [isChecking, setIsChecking] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
+export function useTableCheck(tableId?: string) {
+    // Get the Node RPC client
+    const { client } = useNodeRpc();
 
-    // Function to check on hand
-    const checkHand = useCallback(
-        async ({ userAddress, privateKey, publicKey, actionIndex }: HandParams): Promise<any> => {
+    // Create a fetcher that has access to the client
+    const checkFetcher = async (_url: string, { arg }: { arg: HandParams }) => {
+        const { privateKey, actionIndex, amount, nonce = Date.now().toString() } = arg;
+
+        console.log("✅ Check attempt");
+        console.log("✅ Using action index:", actionIndex);
+        console.log("✅ Using nonce:", nonce);
+
+        if (!privateKey) {
+            console.error("✅ Missing private key");
+            throw new Error("Missing private key");
+        }
+        
+        try {
+            // Check if the client is available
+            if (!client) {
+                throw new Error("Node RPC client not available");
+            }
+
             if (!tableId) {
-                const noTableError = new Error("No table ID provided");
-                setError(noTableError);
-                return Promise.reject(noTableError);
+                throw new Error("Table ID is required");
             }
 
-            if (!privateKey) {
-                const noPrivateKeyError = new Error("Private key is required");
-                setError(noPrivateKeyError);
-                return Promise.reject(noPrivateKeyError);
-            }
+            console.log("✅ Calling playerAction with params:", {
+                tableId,
+                action: PlayerActionType.CHECK,
+                amount: amount || "0", // Check doesn't require an amount, but API expects it
+                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
+                data: {
+                    index: actionIndex
+                }
+            });
 
-            setIsChecking(true);
-            setError(null);
+            // Call playerAction method on the client
+            const response = await client.playerAction(
+                tableId,
+                PlayerActionType.CHECK,
+                amount || "0", // Check doesn't require an amount, but API expects it
+                typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
+                JSON.stringify({index: actionIndex})
+            );
 
-            try {
-                // Make API call to check
-                const response = await axios.post(`${PROXY_URL}/table/${tableId}/check`, {
-                    tableId,
-                    privateKey,
-                    userAddress,
-                    publicKey,
-                    actionIndex
-                });
+            console.log("✅ Check response:", response);
+            return response;
+        } catch (error) {
+            console.error("✅ Check error:", error);
+            throw error;
+        }
+    };
 
-                setIsChecking(false);
-                return response.data;
-            } catch (err: any) {
-                console.error("Error checking:", err);
-                setError(err);
-                setIsChecking(false);
-                throw err;
-            }
-        },
-        [tableId]
+    const { trigger, isMutating, error, data } = useSWRMutation(
+        tableId ? `check_${tableId}` : null, 
+        checkFetcher
     );
 
-    const result = { checkHand, isChecking, error };
-    return result;
+    // Add better error handling
+    if (error) {
+        console.error("Check hook error:", error instanceof Error ? error.message : String(error));
+    }
+
+    return {
+        checkHand: tableId 
+            ? (params: HandParams) => trigger(params)
+            : null,
+        isChecking: isMutating,
+        error
+    };
 }
