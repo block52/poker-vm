@@ -229,7 +229,7 @@ const PokerActionPanel: React.FC = () => {
             publicKey,
             actionIndex: legalActions?.find(a => a.action === PlayerActionType.FOLD)?.index || 0
         });
-    }, [foldHand, legalActions, publicKey]);
+    }, [foldHand, legalActions, publicKey, privateKey]);
 
     const handleCall = () => {
         console.log("Calling");
