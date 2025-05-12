@@ -22,6 +22,7 @@ import {
     MineCommand,
     MintCommand,
     NewCommand,
+    NewTableCommand,
     PurgeMempoolCommand,
     PerformActionCommandWithResult,
     ReceiveMinedBlockHashCommand,
@@ -347,6 +348,13 @@ export class RPC {
                 case RPCMethods.NEW: {
                     const [to, data] = request.params as RPCRequestParams[RPCMethods.NEW];
                     const command = new NewCommand(to, validatorPrivateKey, data);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.NEW_TABLE: {
+                    const [to, owner] = request.params as RPCRequestParams[RPCMethods.NEW_TABLE];
+                    const command = new NewTableCommand(to, owner, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
