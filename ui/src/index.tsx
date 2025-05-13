@@ -9,10 +9,12 @@ if (!projectId) {
     throw new Error("Project ID is not defined in .env file");
 }
 
+const url = process.env.NODE_URL;
+
 const root = createRoot(document.getElementById("app") as HTMLElement);
 root.render(
     <React.StrictMode>
-        <NodeRpcProvider nodeUrl="http://localhost:3000">
+        <NodeRpcProvider nodeUrl={url}>
             <App />
         </NodeRpcProvider>
     </React.StrictMode>
