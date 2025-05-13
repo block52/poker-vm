@@ -58,14 +58,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private seed: number[] = [];
     private readonly _communityCards: Card[] = [];
     private _handNumber: number = 0;
-    // private _turnIndex: number = 0;
 
     constructor(
         private readonly _address: string,
         private gameOptions: GameOptions,
         private positions: Positions,
         private _lastToAct: number,
-        private previousActions: ActionDTO[] = [],
+        previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private communityCards: string[],
         private pots: bigint[] = [0n],
@@ -203,8 +202,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     // Returns the current turn index without incrementing it
     getTurnIndex(): number {
-        // return this._turnIndex;
-        return this.previousActions.length;
+        return this.getPreviousActions().length;
     }
 
     exists(playerId: string): boolean {
@@ -257,12 +255,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 player.holeCards[1] = secondCard; // Replace second card
             }
         }
-    }
-
-    private join(address: string, chips: bigint) {
-        const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
-        const seat = this.findNextEmptySeat();
-        this.joinAtSeat(player, seat);
     }
 
     joinAtSeat(player: Player, seat: number) {
@@ -334,7 +326,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     private incrementTurnIndex(): void {
-        // this._turnIndex++;
+        // do nothing
     }
 
     getNextPlayerToAct(): Player | undefined {
@@ -658,37 +650,46 @@ class TexasHoldemGame implements IPoker, IUpdate {
             this._playersMap.delete(turn.seat);
         }
 
-        this.previousActions.push({
-            playerId: turn.playerId,
-            action: turn.action,
-            amount: turn.amount ? turn.amount.toString() : "",
-            round,
-            index: turn.index,
-            seat: turn.seat,
-            timestamp: turn.timestamp
-        });
-
         // Now explicitly increment the turn index once
-        this.incrementTurnIndex(); // TODO: check if this is needed as we don't count joins and leave as actions howeer we do increment the turn indes for deal action  see issue 552
+        this.incrementTurnIndex(); // TODO: check if this is needed as we don't count joins and leave as actions however we do increment the turn indexs for deal action  see issue 552
     }
 
-    getActionDTOs(): ActionDTO[] {
-        const actions: ActionDTO[] = [];
+    private getPreviousActions(): TurnWithSeat[] {
+        const actions: TurnWithSeat[] = [];
 
         for (const [round, turns] of this._rounds) {
             for (const turn of turns) {
-                const action: ActionDTO = {
+                const action: TurnWithSeat = {
                     playerId: turn.playerId,
                     seat: turn.seat,
                     action: turn.action,
-                    amount: turn.amount ? turn.amount.toString() : "",
-                    round,
+                    amount: turn.amount ? BigInt(turn.amount) : undefined,
                     index: turn.index,
                     timestamp: turn.timestamp
                 };
 
                 actions.push(action);
             }
+        }
+
+        return actions;
+    }   
+
+    getActionDTOs(): ActionDTO[] {
+        const actions: ActionDTO[] = [];
+        const previousActions = this.getPreviousActions();
+
+        for (const turn of previousActions) {
+            const action: ActionDTO = {
+                playerId: turn.playerId,
+                seat: turn.seat,
+                action: turn.action,
+                amount: turn.amount ? turn.amount.toString() : "", // Cast to string for over the wire
+                round: this._currentRound,
+                index: turn.index,
+                timestamp: turn.timestamp
+            };
+            actions.push(action);
         }
 
         return actions;
@@ -963,8 +964,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 }
             }
         }
-
-        this.previousActions.length = 0;
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
