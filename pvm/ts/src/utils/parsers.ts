@@ -1,12 +1,12 @@
 import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { OrderedTransaction } from "../engine/types";
-import { Transaction } from "../models";
+import { ITransaction } from "../models/interfaces";
 
 export const toGameOptions = (data: string): GameOptions => {
     throw new Error("Not implemented");
 }
 
-export const toOrderedTransaction = (tx: Transaction): OrderedTransaction => {
+export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
     if (!tx.data) {
         throw new Error("Transaction data is undefined");
     }
@@ -20,6 +20,7 @@ export const toOrderedTransaction = (tx: Transaction): OrderedTransaction => {
         to: tx.to,
         value: tx.value,
         type: action,
-        index: index
+        index: index,
+        data: params[2] ? params[2].trim() : undefined
     };
 }

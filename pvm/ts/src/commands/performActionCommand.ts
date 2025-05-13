@@ -9,6 +9,7 @@ import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { OrderedTransaction } from "../engine/types";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
+import { toOrderedTransaction } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     protected readonly gameManagement: IGameManagement;
@@ -58,7 +59,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
         // Sort transactions by index
-        const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
+        const orderedTransactions = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
         orderedTransactions.forEach(tx => {
             try {
@@ -129,24 +130,5 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         console.log(`Is game transaction: ${found}`);
         return found;
-    }
-
-    private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
-        if (!tx.data) {
-            throw new Error("Transaction data is undefined");
-        }
-
-        const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
-        const index = parseInt(params[1].trim());
-
-        return {
-            from: tx.from,
-            to: tx.to,
-            value: tx.value,
-            type: action,
-            index: index,
-            data: tx.data
-        };
     }
 }
