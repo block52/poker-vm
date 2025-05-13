@@ -3,7 +3,6 @@ import { ZeroHash } from "ethers";
 import { RPC } from "./rpc"; // Update with your actual path
 import { RPCMethods, RPCRequest, PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { PerformActionCommandWithResult } from "./commands/performActionCommandWithResult";
-// import { IGameStateDocument } from "./models/interfaces";
 
 // Define types for our mocks to avoid "type is never" errors
 interface IGameManagement {
@@ -11,37 +10,23 @@ interface IGameManagement {
     performAction: jest.Mock;
 }
 
-// const mockGameState: IGameStateDocument = {
-//     address: "0x123456789",
-//     schemaAddress: "0x987654321",
-//     state: "any"
-// };
-
 // Create typed mock instances
 const gameManagementMock: IGameManagement = {
     getGameState: jest.fn().mockImplementation(async () => ({})),
     performAction: jest.fn().mockImplementation(async () => ({ success: true }))
 };
 
-// // Create mock instances for dependencies
-// const mockGameManagement = {
-//     getGameState: jest.fn().mockResolvedValue()
-//     // Add other methods as needed
-// };
+// Mock the getGameManagementInstance function using a factory function
+const mockGameState = jest.fn().mockImplementation(async () => ({}));
+const mockPerformAction = jest.fn().mockImplementation(async () => ({ success: true }));
 
-// const mockContractSchemaManagement = {
-//     getContractSchema: jest.fn().mockResolvedValue({})
-//     // Add other methods as needed
-// };
-
-// Mock dependencies
-jest.mock("../src/state/index", () => ({
-    getGameManagementInstance: jest.fn().mockReturnValue(gameManagementMock)
+jest.mock("./state/index", () => ({
+    getGameManagementInstance: () => ({
+        getGameState: mockGameState,
+        performAction: mockPerformAction
+    })
 }));
 
-// jest.mock("../src/core/contract", () => ({
-//     getContractSchemaManagement: jest.fn().mockReturnValue(mockContractSchemaManagement)
-// }));
 
 jest.mock("../src/types/response", () => {
     return {
@@ -64,8 +49,8 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         process.env.VALIDATOR_KEY = ZeroHash;
 
         // Spy on console.error
-        jest.spyOn(console, "error").mockImplementation(() => {});
-        jest.spyOn(console, "log").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
+        jest.spyOn(console, "log").mockImplementation(() => { });
     });
 
     afterEach(() => {
