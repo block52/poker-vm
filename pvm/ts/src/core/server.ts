@@ -95,11 +95,9 @@ export class Server {
 
         await this.syncDeposits();
 
-        // console.log("Polling...");
         const intervalId = setInterval(async () => {
             if (!this._started) {
                 clearInterval(intervalId);
-                // console.log("Polling stopped");
                 return;
             }
 
@@ -144,10 +142,7 @@ export class Server {
 
             // Broadcast the block hash to the network
             const me = await this.me();
-            const nodes = await getBootNodes(
-                me.url, 
-                process.env.DEV_MODE === "true"
-            );
+            const nodes = await getBootNodes(me.url, process.env.DEV_MODE === "true");
 
             for (const node of nodes) {
                 // console.log(`Broadcasting block hash to ${node.url}`);
@@ -170,10 +165,7 @@ export class Server {
         let count = 0;
         if (this._nodes.size === 0) {
             const me: Node = await this.me();
-            const nodes = await getBootNodes(
-                me.url, 
-                process.env.DEV_MODE === "true"
-            );
+            const nodes = await getBootNodes(me.url, process.env.DEV_MODE === "true");
 
             for (const node of nodes) {
                 this._nodes.set(node.url, node);
@@ -186,14 +178,14 @@ export class Server {
     private async syncMempool() {
         // console.log("Syncing mempool...");
         const mempool = getMempoolInstance();
-    
+
         for (const [url, node] of this._nodes) {
             try {
                 const client = new NodeRpcClient(
-                    url, 
+                    url,
                     this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
                 );
-                
+
                 const otherMempool: TransactionDTO[] = await client.getMempool();
                 // Add to own mempool
                 await Promise.all(
@@ -201,7 +193,6 @@ export class Server {
                         await mempool.add(Transaction.fromJson(transaction));
                     })
                 );
-    
             } catch (error) {
                 console.error("Error connecting to node:", error);
                 console.warn(`Missing node ${url}`);
@@ -251,11 +242,11 @@ export class Server {
 
     private async syncDeposits() {
         // if (!this.isValidator) {
-            console.log("Not a validator, skipping deposit sync");
+        // console.log("Not a validator, skipping deposit sync");
         //     return;
         // }
 
-        // console.log("Syncing deposits...");
+        console.log("Syncing deposits...");
 
         // Check if the last deposit sync was more than 1 hour ago
         const now = new Date();
@@ -266,20 +257,25 @@ export class Server {
             return;
         }
 
-        if (this.isValidator) {
-            const bridge = new Bridge(process.env.RPC_URL || "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
-    
-              // First sync historical deposits
-              await bridge.resync();
-            
-              // Then start listening for new deposits
-              await bridge.listenToBridge();
-            this._lastDepositSync = new Date();
+        const rpcUrl = process.env.RPC_URL;
+        if (!rpcUrl) {
+            console.error("RPC_URL not set");
+            return;
         }
+
+        //if (this.isValidator) {
+            const bridge = new Bridge(rpcUrl);
+
+            // First sync historical deposits
+            await bridge.resync();
+
+            // Then start listening for new deposits
+            await bridge.listenToBridge();
+            this._lastDepositSync = new Date();
+        //}
     }
 
     private async resyncBlockchain() {
-        // console.log("Resyncing blockchain...");
         const blockchain = getBlockchainInstance();
         await blockchain.reset();
         await this.syncBlockchain();
@@ -289,7 +285,6 @@ export class Server {
         this._syncing = true;
 
         if (this._nodes.size === 0) {
-            // console.log("No nodes to sync with");
             this._syncing = false;
             this._synced = true;
             return;
@@ -311,10 +306,10 @@ export class Server {
         for (const [url, node] of this._nodes) {
             try {
                 const client = new NodeRpcClient(
-                    url, 
+                    url,
                     this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
                 );
-                
+
                 console.log("Trying to connect to node:", node.url);
                 const block = await client.getLastBlock();
                 console.info(`Received block ${block.index} ${block.hash} from ${node.url}`);
@@ -327,7 +322,6 @@ export class Server {
 
                 // Update the node height
                 nodeHeights.set(node.url, block.index);
-
             } catch (error) {
                 console.error("Error connecting to node:", error);
                 console.warn(`Missing node ${url}`);
@@ -348,7 +342,7 @@ export class Server {
             const blockDTO: BlockDTO = await client.getBlock(i);
 
             console.log(`Syncing block ${blockDTO.index} ${blockDTO.hash} from ${highestNode.url}`);
-            
+
             if (blockDTO) {
                 const block = Block.fromJson(blockDTO);
 
@@ -372,7 +366,7 @@ export class Server {
         for (const [url, node] of this._nodes) {
             try {
                 const client = new NodeRpcClient(
-                    url, 
+                    url,
                     this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
                 );
                 const block = await client.getLastBlock();
