@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import { PROXY_URL } from "../../../config/constants";
-import { AccountApiResponse, AccountData } from "../types";
+import { useNodeRpc } from "../../../context/NodeRpcContext";
+import { AccountData } from "../types";
 
 // Key for storing last API call time in localStorage
 const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
@@ -16,6 +15,7 @@ export function useTableNonce() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
     const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
+    const { client } = useNodeRpc();
 
     // Get user address from localStorage
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
@@ -27,6 +27,12 @@ export function useTableNonce() {
         async (address: string): Promise<number | null> => {
             if (!address) {
                 setError(new Error("No user address available"));
+                setIsLoading(false);
+                return null;
+            }
+
+            if (!client) {
+                setError(new Error("SDK client not initialized"));
                 setIsLoading(false);
                 return null;
             }
@@ -50,15 +56,22 @@ export function useTableNonce() {
                 // Update shared last API call time
                 localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
 
-                const response = await axios.get<AccountApiResponse>(`${PROXY_URL}/get_account/${address}`);
+                // Use the SDK's getAccount method
+                const data = await client.getAccount(address);
 
-                if (response.data?.result?.data) {
-                    const { data } = response.data.result;
-                    setAccountData(data);
-                    setNonce(data.nonce);
+                if (data) {
+                    // Convert the response to match our expected AccountData format
+                    const accountData: AccountData = {
+                        address: address,
+                        balance: data.balance || "0",
+                        nonce: data.nonce || 0
+                    };
+                    
+                    setAccountData(accountData);
+                    setNonce(accountData.nonce);
                     setLastRefreshTime(Date.now());
                     setIsLoading(false);
-                    return data.nonce;
+                    return accountData.nonce;
                 } else {
                     throw new Error("Invalid response format");
                 }
@@ -70,7 +83,7 @@ export function useTableNonce() {
                 return null;
             }
         },
-        [nonce]
+        [nonce, client]
     );
 
     /**
@@ -93,22 +106,22 @@ export function useTableNonce() {
 
     // Initial fetch on mount
     useEffect(() => {
-        if (userAddress) {
+        if (userAddress && client) {
             fetchNonce(userAddress);
         }
-    }, [userAddress, fetchNonce]);
+    }, [userAddress, fetchNonce, client]);
 
     // Automatically refresh nonce every 15 seconds
     useEffect(() => {
         const interval = setInterval(() => {
-            if (userAddress) {
+            if (userAddress && client) {
                 console.log("🔄 Scheduled nonce refresh");
                 fetchNonce(userAddress);
             }
         }, 15000);
 
         return () => clearInterval(interval);
-    }, [userAddress, fetchNonce]);
+    }, [userAddress, fetchNonce, client]);
 
     const result = {
         nonce,

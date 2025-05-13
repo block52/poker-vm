@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { Wallet } from "ethers";
-import axios from "axios";
 import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { PROXY_URL } from "../config/constants";
 
@@ -30,7 +29,7 @@ const useUserWallet = (): UserWalletResult => {
     const [refreshCounter, setRefreshCounter] = useState(0);
 
     const fetchBalance = useCallback(async () => {
-        if (!account) return;
+        if (!account || !client) return;
 
         // Rate limiting: Only allow API calls once every 10 seconds across all hooks
         const now = Date.now();
@@ -51,20 +50,13 @@ const useUserWallet = (): UserWalletResult => {
         localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
 
         try {
-            const url = PROXY_URL;
-
+            // Use the SDK's getAccount method
+            const accountData = await client.getAccount(account);
             
-            const response = await axios.get(`${url}/get_account/${account}`);
-
-            if (response.status !== 200) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            if (response.data?.result?.data?.balance) {
-                const newBalance = response.data.result.data.balance;
-                setBalance(newBalance);
+            if (accountData?.balance) {
+                setBalance(accountData.balance);
             } else {
-                console.error("Balance not found in response:", response.data);
+                console.error("Balance not found in account data:", accountData);
                 setBalance("0");
             }
         } catch (err) {
@@ -74,7 +66,7 @@ const useUserWallet = (): UserWalletResult => {
         } finally {
             setIsLoading(false);
         }
-    }, [account, balance]);
+    }, [account, balance, client]);
 
     // Manual refresh function
     const refreshBalance = useCallback(async () => {

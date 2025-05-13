@@ -306,30 +306,30 @@ const PokerActionPanel: React.FC = () => {
 
     // Handler for muck action
     const handleMuck = () => {
-        if (!privateKey || !muckCards) {
-            console.error("Private key not available or hook not ready");
+        if (!muckCards || !privateKey) {
+            console.error("Hook not ready or private key not available");
             return;
         }
 
         // Use our hook to muck cards
-        // muckCards({
-        //     privateKey,
-        //     actionIndex: getActionByType(PlayerActionType.MUCK)?.index || getActionByType("muck")?.index || 0
-        // });
+        muckCards({
+            privateKey,
+            actionIndex: getActionByType(PlayerActionType.MUCK)?.index || getActionByType("muck")?.index || 0
+        });
     };
 
     // Handler for show action
     const handleShow = () => {
-        if (!privateKey || !showCards) {
-            console.error("Private key not available or hook not ready");
+        if (!showCards || !privateKey) {
+            console.error("Hook not ready or private key not available");
             return;
         }
 
         // Use our hook to show cards
-        // showCards({
-        //     privateKey,
-        //     actionIndex: getActionByType(PlayerActionType.SHOW)?.index || getActionByType("show")?.index || 0
-        // });
+        showCards({
+            privateKey,
+            actionIndex: getActionByType(PlayerActionType.SHOW)?.index || getActionByType("show")?.index || 0
+        });
     };
 
     // Add the handleStartNewHand function after the other handler functions

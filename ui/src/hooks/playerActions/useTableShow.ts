@@ -1,17 +1,15 @@
 import { useState } from "react";
-import { ethers } from "ethers";
-import axios from "axios";
-import { PROXY_URL } from "../../config/constants";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { useNodeRpc } from "../../context/NodeRpcContext";
 
 interface ShowCardsParams {
-    userAddress: string;
     privateKey: string;
-    publicKey: string;
     actionIndex: number;
 }
 
 export function useTableShow(tableId?: string) {
     const [isShowing, setIsShowing] = useState(false);
+    const { client } = useNodeRpc();
 
     const showCards = async (params: ShowCardsParams) => {
         if (!tableId) {
@@ -19,30 +17,24 @@ export function useTableShow(tableId?: string) {
             return;
         }
 
+        if (!client) {
+            console.error("RPC client not initialized");
+            return;
+        }
+
         setIsShowing(true);
 
         try {
-            // Create a wallet instance to sign the message
-            const wallet = new ethers.Wallet(params.privateKey);
+            // Use the SDK's playerAction method directly
+            const response = await client.playerAction(
+                tableId,
+                PlayerActionType.SHOW,
+                "0", // No amount needed for showing
+                undefined, // Let the client handle the nonce
+                params.actionIndex.toString() // Pass the action index as data
+            );
 
-            // Create the message to sign
-            const timestamp = Math.floor(Date.now() / 1000).toString();
-            const message = `show:0:${tableId}:${timestamp}`;
-
-            // Sign the message
-            const signature = await wallet.signMessage(message);
-
-            // Send the request to the proxy
-            const response = await axios.post(`${PROXY_URL}/table/${tableId}/show`, {
-                userAddress: params.userAddress,
-                publicKey: params.publicKey,
-                signature,
-                index: params.actionIndex,
-                timestamp
-            });
-
-            // If successful, you might want to trigger a refresh of game state
-            return response.data;
+            return response;
         } catch (error) {
             console.error("Error showing cards:", error);
             throw error;
