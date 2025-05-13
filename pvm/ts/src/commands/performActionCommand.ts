@@ -7,7 +7,6 @@ import contractSchemas from "../schema/contractSchemas";
 import { getContractSchemaManagement } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
-import { OrderedTransaction } from "../engine/types";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 
@@ -61,28 +60,17 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         // Sort transactions by index
         const orderedTransactions = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
-        // orderedTransactions.forEach(tx => {
-        //     try {
-        //         {
-        //             console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-        //             game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
-        //         }
-        //     } catch (error) {
-        //         console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
-        //         // Continue with other transactions, don't let this error propagate up
-        //     }
-        // });
-
-        for (let i = 0; i < orderedTransactions.length; i++) {
-            const tx = orderedTransactions[i];
+        orderedTransactions.forEach(tx => {
             try {
-                console.log(`Processing action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                {
+                    console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                }
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 // Continue with other transactions, don't let this error propagate up
             }
-        }
+        });
 
         console.log(`Performing action ${this.action} with index ${this.index} data ${this.data}`);
         game.performAction(this.from, this.action, this.index, this.amount, this.data);
