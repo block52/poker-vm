@@ -41,13 +41,5 @@ export function usePlayerDTO(tableId?: string) {
     refresh
   };
 
-  console.log("[usePlayerDTO] Returns:", {
-    hasPlayers: !!players,
-    numPlayers: players?.length || 0,
-    playerSeats: players?.map((p: PlayerDTO) => p.seat) || [],
-    isLoading,
-    hasError: !!error
-  });
-
   return result;
 } 

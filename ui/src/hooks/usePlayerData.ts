@@ -13,15 +13,6 @@ export const usePlayerData = (tableId?: string, seatIndex?: number) => {
   // Use useGameState hook instead of making our own API call
   const { gameState, error, isLoading, refresh } = useGameState(tableId);
   
-  // Log for debugging
-  React.useEffect(() => {
-    console.log(`usePlayerData for seat ${seatIndex} (raw seat number):`, {
-      hasGameState: !!gameState,
-      playerCount: gameState?.players?.length || 0,
-      seats: gameState?.players?.map(p => p.seat) || []
-    });
-  }, [gameState, seatIndex]);
-  
   // Get player data from the table state
   const playerData = React.useMemo(() => {
     if (!gameState || !seatIndex) {
@@ -36,10 +27,6 @@ export const usePlayerData = (tableId?: string, seatIndex?: number) => {
     
     const player = gameState.players.find((p) => p.seat === seatIndex);
     
-    console.log(`Looking for player at seat ${seatIndex}:`, {
-      found: !!player,
-      availableSeats: gameState.players.map(p => p.seat).join(", ")
-    });
     
     return player || null;
   }, [gameState, seatIndex]);
