@@ -5,7 +5,7 @@ import { Transaction } from "../../models/transaction";
 import { CONTRACT_ADDRESSES } from "../../core/constants";
 
 // Mock the MongoDB models
-jest.mock("../schema/accounts", () => ({
+jest.mock("../../schema/accounts", () => ({
     create: jest.fn(),
     findOne: jest.fn(),
     updateOne: jest.fn()

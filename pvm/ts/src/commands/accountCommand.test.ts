@@ -6,7 +6,7 @@ import { Account, Transaction } from "../models";
 
 // Mock both mempool and account management
 jest.mock("../core/mempool");
-jest.mock("../state/accountManagement");
+jest.mock("../state/index");
 
 describe("AccountCommand Tests", () => {
     const testAddress = ethers.Wallet.createRandom().address;

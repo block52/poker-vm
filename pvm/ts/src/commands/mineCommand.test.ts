@@ -14,7 +14,7 @@ jest.mock("../core/mempool", () => ({
 //     getBlockchainInstance: jest.fn()
 // }));
 
-jest.mock("../state/transactionManagement", () => ({
+jest.mock("../state/index", () => ({
     getTransactionInstance: jest.fn()
 }));
 

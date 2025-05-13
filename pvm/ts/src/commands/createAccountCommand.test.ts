@@ -4,7 +4,7 @@ import { getAccountManagementInstance } from "../state/index";
 import { Account } from "../models";
 
 // Mock the account management module
-jest.mock("../state/accountManagement");
+jest.mock("../state/index");
 
 describe.skip("CreateAccountCommand Tests", () => {
     // Mock instances
