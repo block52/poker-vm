@@ -642,7 +642,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
-    private getPreviousActions(): TurnWithSeat[] {
+    getPreviousActions(): TurnWithSeat[] {
         const actions: TurnWithSeat[] = [];
 
         for (const [round, turns] of this._rounds) {
@@ -665,47 +665,28 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     getActionDTOs(): ActionDTO[] {
         const actions: ActionDTO[] = [];
-        const previousActions = this.getPreviousActions();
 
-        for (const turn of previousActions) {
-            const action: ActionDTO = {
-                playerId: turn.playerId,
-                seat: turn.seat,
-                action: turn.action,
-                amount: turn.amount ? turn.amount.toString() : "", // Cast to string for over the wire
-                round: this._currentRound,
-                index: turn.index,
-                timestamp: turn.timestamp
-            };
-            actions.push(action);
+        for (const [round, turns] of this._rounds) {
+            for (const turn of turns) {
+                const action: ActionDTO = {
+                    playerId: turn.playerId,
+                    seat: turn.seat,
+                    action: turn.action,
+                    amount: turn.amount ? turn.amount.toString() : "", // Cast to string for over the wire
+                    round: round,
+                    index: turn.index,
+                    timestamp: turn.timestamp
+                };
+                actions.push(action);
+            }
         }
 
         return actions;
     }
 
-    getActionsForRound(round: TexasHoldemRound): ActionDTO[] {
-        const actions: ActionDTO[] = [];
+    getActionsForRound(round: TexasHoldemRound): TurnWithSeat[] {
         const turns = this._rounds.get(round);
-
-        if (!turns) {
-            return actions;
-        }
-
-        for (const turn of turns) {
-            const action: ActionDTO = {
-                playerId: turn.playerId,
-                seat: turn.seat,
-                action: turn.action,
-                amount: turn.amount ? turn.amount.toString() : "",
-                round,
-                index: turn.index,
-                timestamp: turn.timestamp
-            };
-
-            actions.push(action);
-        }
-
-        return actions;
+        return turns ? turns : [];
     }
 
     getPlayer(address: string): Player {
