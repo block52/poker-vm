@@ -12,7 +12,7 @@ jest.mock("../../schema/accounts", () => ({
 }));
 
 // Mock the StateManager
-jest.mock("./stateManager", () => ({
+jest.mock("../stateManager", () => ({
     StateManager: jest.fn().mockImplementation(() => ({
         connect: jest.fn().mockResolvedValue(true)
     }))
