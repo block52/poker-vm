@@ -1,7 +1,7 @@
 import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
-import { Range } from "../types";
+import { Range, TurnWithSeat } from "../types";
 
 class JoinAction extends BaseAction {
     get type(): NonPlayerActionType {

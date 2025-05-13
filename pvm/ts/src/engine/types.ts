@@ -26,7 +26,7 @@ export type PlayerState = {
 export type Range = {
     minAmount: bigint;
     maxAmount: bigint;
-}
+};
 
 export type Turn = {
     playerId: string;
@@ -36,7 +36,7 @@ export type Turn = {
 };
 
 // Timestamp in milliseconds is required for auto folding etc
-export type TurnWithSeat = Turn & { seat: number, timestamp: number };
+export type TurnWithSeat = Turn & { seat: number; timestamp: number };
 
 export type LegalAction = ActionDTO;
 

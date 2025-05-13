@@ -1,10 +1,10 @@
 import { TransactionDTO } from "@bitcoinbrisbane/block52";
 import { createHash } from "crypto";
 import { signData } from "../utils/crypto";
-import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
+import { ICryptoModel, IJSONModel, ITransaction, ITransactionDocument } from "./interfaces";
 import { ZeroHash } from "ethers";
 
-export class Transaction implements ICryptoModel, IJSONModel {
+export class Transaction implements ITransaction, ICryptoModel, IJSONModel {
     private _blockHash: string | undefined;
 
     constructor(
