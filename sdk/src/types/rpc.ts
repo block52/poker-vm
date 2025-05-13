@@ -44,13 +44,14 @@ export enum RPCMethods {
     MINED_BLOCK_HASH = "mined_block_hash",
     MINT = "mint",
     NEW = "new",
+    NEW_TABLE = "new_table",
     PERFORM_ACTION = "perform_action",
     PURGE = "purge",
     RESET_BLOCKCHAIN = "reset_blockchain",
     SHUTDOWN = "shutdown",
     START = "start",
     STOP = "stop",
-    TRANSFER = "transfer",
+    TRANSFER = "transfer"
 }
 
 export type RPCRequestParams = {
@@ -78,7 +79,8 @@ export type RPCRequestParams = {
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
     [RPCMethods.MINT]: [string]; // [depositIndex]
-    [RPCMethods.NEW]: [string, string]; // [to, data]
+    [RPCMethods.NEW]: [string, string]; // [to, data] where data is the seed
+    [RPCMethods.NEW_TABLE]: [string, string]; // [from (creator), to (schema)]
     [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string]; // [from, to, action, amount, nonce, index, data]
     [RPCMethods.PURGE]: [string, string]; // [username, password]
     [RPCMethods.RESET_BLOCKCHAIN]: [string, string]; // [username, password]

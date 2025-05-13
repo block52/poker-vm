@@ -1,5 +1,5 @@
 import { computeAddress, ethers } from "ethers";
-import { createVerify } from "crypto";
+import { createHash, createVerify } from "crypto";
 
 export const verifySignature = (publicKey: string, message: string, signature: string): boolean => {
 
@@ -88,6 +88,13 @@ export const getAccountFromPublicKey = (publicKey: string): string => {
     }
 }
 
+export const createAddress = (digest: string): string => {
+    // Create a hash of the digest
+    const hash = createHash("SHA256").update(digest).digest("hex");
+
+    // Get the last 40 characters of the hash
+    return "0x" + hash.substring(hash.length - 40);
+}
 
 export default {
     recoverPublicKey,

@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { verifySignature, signData, recoverPublicKey, castPemToHex, hexToPem } from "./crypto";
+import { verifySignature, signData, recoverPublicKey, castPemToHex, hexToPem, createAddress } from "./crypto";
 
 // Mock crypto modules
 jest.mock("crypto", () => {
@@ -32,6 +32,16 @@ jest.mock("ethers", () => {
 });
 
 describe("Crypto Utils", () => {
+
+    describe("createAddress", () => {
+        it("should create a hash from the input string", () => {
+            const input = "testInput";
+            const expectedHash = "0x3085620284f0960a276bbc3f0bd416449df14dbe";
+            const address = createAddress(input);
+            expect(address).toBe(expectedHash);
+        });
+    });
+
     describe("verifySignature", () => {
         it("should call crypto.createVerify with correct params", () => {
             const crypto = require("crypto");

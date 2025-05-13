@@ -5,6 +5,7 @@ import { GetTransactionsCommand } from "./getTransactionsCommand";
 import { MeCommand } from "./meCommand";
 import { MintCommand } from "./mintCommand";
 import { NewCommand } from "./newCommand";
+import { NewTableCommand } from "./newTableCommand";
 import { RandomCommand } from "./randomCommand";
 import { ResponseCommand } from "./responseCommand";
 import { TransferCommand } from "./transferCommand";
@@ -57,6 +58,7 @@ export {
     MineCommand,
     MintCommand,
     NewCommand,
+    NewTableCommand,
     PerformActionCommand,
     PerformActionCommandWithResult,
     PurgeMempoolCommand,
@@ -69,13 +71,10 @@ export {
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
-    TransferCommand,
+    TransferCommand
 };
 
 // TypeScript's isolatedModules flag requires type-only exports to use 'export type'
 // This separates types (which are erased at compile time) from values (which are preserved)
 // Classes and values like AccountCommand go in the normal export, while interfaces and type aliases go here
-export type {
-    BlockCommandParams,
-    ISignedResponse
-};
+export type { BlockCommandParams, ISignedResponse };
