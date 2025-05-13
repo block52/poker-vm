@@ -3,7 +3,7 @@ import { ZeroHash } from "ethers";
 import { RPC } from "./rpc"; // Update with your actual path
 import { RPCMethods, RPCRequest, PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { PerformActionCommandWithResult } from "./commands/performActionCommandWithResult";
-import { IGameStateDocument } from "./models/interfaces";
+// import { IGameStateDocument } from "./models/interfaces";
 
 // Define types for our mocks to avoid "type is never" errors
 interface IGameManagement {
@@ -11,11 +11,11 @@ interface IGameManagement {
     performAction: jest.Mock;
 }
 
-const mockGameState: IGameStateDocument = {
-    address: "0x123456789",
-    schemaAddress: "0x987654321",
-    state: "any"
-};
+// const mockGameState: IGameStateDocument = {
+//     address: "0x123456789",
+//     schemaAddress: "0x987654321",
+//     state: "any"
+// };
 
 // Create typed mock instances
 const gameManagementMock: IGameManagement = {
