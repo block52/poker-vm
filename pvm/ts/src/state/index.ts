@@ -1,4 +1,4 @@
-import { getRedisBlockchainManagementInstance, RedisBlockchainManagement } from "./redis/redisBlockchainManagement";
+import { getRedisBlockchainManagementInstance } from "./redis/redisBlockchainManagement";
 import { getContractSchemaManagement } from "./mongodb/contractSchemaManagement";
 import { getGameManagementInstance } from "./mongodb/gameManagement";
 import { IAccountManagement, IBlockchainManagement } from "./interfaces";
