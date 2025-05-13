@@ -10,10 +10,6 @@ export function useStartNewHand(tableId: string | undefined) {
     const startNewHandFetcher = async (_url: string, { arg }: { arg: StartNewHandOptions }) => {
         const { privateKey, nonce = Date.now().toString(), seed = Math.random().toString(36).substring(2, 15) } = arg;
 
-        console.log("🔄 Start new hand attempt");
-        console.log("🔄 Using nonce:", nonce);
-        console.log("🔄 Using seed:", seed);
-
         if (!privateKey) {
             console.error("🔄 Missing private key");
             throw new Error("Missing private key");
@@ -28,23 +24,12 @@ export function useStartNewHand(tableId: string | undefined) {
             if (!tableId) {
                 throw new Error("Table ID is required");
             }
-
-            console.log("🔄 Table ID for new hand:", tableId);
-            
-            console.log("🔄 Calling newHand with params:", {
-                tableId,
-                seed,
-                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString())
-            });
-
             // Call newHand method on the client
             const response = await client.newHand(
                 tableId,
                 seed,
                 typeof nonce === "number" ? nonce : parseInt(nonce.toString())
             );
-
-            console.log("🔄 New hand response:", response);
             return response;
         } catch (error) {
             console.error("🔄 New hand error:", error);

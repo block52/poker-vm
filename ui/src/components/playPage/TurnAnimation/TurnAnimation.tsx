@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useTableAnimations } from "../../../hooks/useTableAnimations";
 import { useNextToActInfo } from "../../../hooks/useNextToActInfo";
 import { useParams } from "react-router-dom";
@@ -8,92 +8,61 @@ interface TurnAnimationProps {
     index: number;
 }
 
-const TurnAnimation: React.FC<TurnAnimationProps> = ({ index }) => {
+// Add React.memo to prevent re-renders when props don't change
+const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
     const { id } = useParams<{ id: string }>();
     const { tableSize } = useTableAnimations(id);
     const { nextToActInfo } = useNextToActInfo(id);
     const [isCurrentPlayersTurn, setIsCurrentPlayersTurn] = useState(false);
-    const [position, setPosition] = useState<any>(null);
-
-    useEffect(() => {
-        if (nextToActInfo?.seat === index + 1) {
-            setIsCurrentPlayersTurn(true);
-        } else {
-            setIsCurrentPlayersTurn(false);
-        }
-    }, [nextToActInfo, index]);
-
-    useEffect(() => {
+    
+    // Check for reduced motion preference - only calculate once
+    const prefersReducedMotion = useMemo(() => 
+        window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false, 
+    []);
+    
+    // Memoize the position calculation
+    const position = useMemo(() => {
         if (tableSize === 9) {
-            setPosition(turnAnimationPosition.nine[index]);
+            return turnAnimationPosition.nine[index];
         } else {
-            setPosition(turnAnimationPosition.six[index]);
+            return turnAnimationPosition.six[index];
         }
     }, [tableSize, index]);
 
+    // Check if it's the current player's turn
+    useEffect(() => {
+        const isTurn = nextToActInfo?.seat === index + 1;
+        if (isCurrentPlayersTurn !== isTurn) {
+            setIsCurrentPlayersTurn(isTurn);
+        }
+    }, [nextToActInfo?.seat, index, isCurrentPlayersTurn]);
+
+    // Don't render anything if it's not this player's turn or position isn't available
     if (!isCurrentPlayersTurn || !position) {
         return null;
     }
 
-    // Determine pulse speed
-    const baseRingStyle = {
-        width: "220px",
-        height: "110px",
-        borderRadius: "9999px",
-        position: "absolute" as const,
-        left: "0",
-        top: "0",
-        transform: "translate(-50%, -50%)",
-        backgroundColor: "rgba(100, 255, 218, 0.1)",
-        border: "2px solid rgba(100, 255, 218, 0.3)",
-        animation: "ripple 2.4s linear infinite"
-    };
-
     return (
-        <>
-            <style>{`
-                @keyframes ripple {
-                    0% {
-                        transform: scale(0.6);
-                        opacity: 0.4;
-                    }
-                    80% {
-                        transform: scale(1.1);
-                        opacity: 0.05;
-                    }
-                    100% {
-                        transform: scale(1.1);
-                        opacity: 0;
-                    }
-                }
-            `}</style>
-            <div
-                className="absolute z-[0] pointer-events-none"
-                style={{
-                    left: position.left,
-                    top: position.top,
-                    width: "240px",
-                    height: "130px",
-                    transform: "translate(-50%, calc(-50% - 20px))"
-                }}
-            >
-                {[0, 1, 2, 3].map(i => (
-                    <div
-                        key={i}
-                        style={{
-                            position: "absolute",
-                            width: "100%",
-                            height: "100%",
-                            backgroundColor: "rgba(255, 255, 255, 0.6)",
-                            borderRadius: "9999px",
-                            animation: "ripple 2000ms linear infinite",
-                            animationDelay: `${-i * 455}ms`
-                        }}
-                    />
-                ))}
-            </div>
-        </>
+        <div 
+            className="turn-animation-container"
+            style={{
+                left: position.left,
+                top: position.top,
+            }}
+        >
+            {prefersReducedMotion ? (
+                // Simplified static version for reduced motion preference
+                <div className="turn-animation-static" />
+            ) : (
+                // Single animated element instead of multiple
+                <div className="turn-animation-pulse" />
+            )}
+        </div>
     );
-};
+});
+
+// Add display name for debugging
+TurnAnimation.displayName = "TurnAnimation";
 
 export default TurnAnimation;
+

@@ -13,7 +13,7 @@ import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
 const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
-console.log("PROXY_URL:", PROXY_URL); // Debug log
+
 const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 
@@ -144,10 +144,8 @@ const QRDeposit: React.FC = () => {
 
     // Update displayBalance when b52Balance changes
     useEffect(() => {
-        console.log("🔷 QRDeposit: b52Balance changed:", b52Balance);
         if (b52Balance) {
             setDisplayBalance(b52Balance.toString());
-            console.log("🔷 QRDeposit: Updated displayBalance to:", b52Balance.toString());
         }
     }, [b52Balance]);
 
@@ -156,7 +154,6 @@ const QRDeposit: React.FC = () => {
         // Set up a timer to refresh balance every 5 seconds
         const balanceRefreshInterval = setInterval(() => {
             // Use the refreshBalance function from the hook
-            console.log("🔷 QRDeposit: Refreshing balance via interval...");
             refreshBalance();
         }, 5000);
 
@@ -170,13 +167,10 @@ const QRDeposit: React.FC = () => {
             return;
         }
 
-        console.log("Starting countdown timer from:", timeLeft); // Debug log
 
         const timer = setInterval(() => {
             setTimeLeft(prevTime => {
                 const newTime = prevTime - 1;
-                console.log("Time remaining:", newTime); // Debug log
-
                 if (newTime <= 0) {
                     // Session expired
                     setShowQR(false);
@@ -189,7 +183,6 @@ const QRDeposit: React.FC = () => {
 
         // Cleanup timer on unmount or when conditions change
         return () => {
-            console.log("Clearing timer"); // Debug log
             clearInterval(timer);
         };
     }, [showQR, currentSession, timeLeft]);
@@ -206,7 +199,6 @@ const QRDeposit: React.FC = () => {
         const storedKey = localStorage.getItem("user_eth_public_key");
         if (storedKey) {
             setLoggedInAccount(storedKey);
-            console.log("Loaded logged in account:", storedKey);
         }
     }, []);
 
@@ -232,8 +224,6 @@ const QRDeposit: React.FC = () => {
     }, [fetchWeb3Balance, web3Address]);
 
     const handleGenerateQR = async () => {
-        console.log("Generate QR button clicked");
-
         if (!loggedInAccount) {
             setError("Please connect your wallet first");
             return;
@@ -244,10 +234,7 @@ const QRDeposit: React.FC = () => {
                 userAddress: loggedInAccount,
                 depositAddress: DEPOSIT_ADDRESS
             };
-            console.log("Creating new deposit session:", payload);
-
             const response = await axios.post(`${PROXY_URL}/deposit-sessions`, payload);
-            console.log("Session created:", response.data);
 
             setCurrentSession(response.data);
             setSessionId(response.data._id);

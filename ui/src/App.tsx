@@ -11,10 +11,7 @@ import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 
 import QRDeposit from "./components/QRDeposit";
-import { PROXY_URL } from "./config/constants";
-// TODO: Remove TableProvider once all hooks are fully implemented and tested
 
-console.log("PROXY_URL in App:", PROXY_URL); // Debug log
 
 const queryClient = new QueryClient();
 
@@ -34,22 +31,12 @@ createAppKit({
     allWallets: "SHOW"
 });
 
-// Route change monitoring component
-function RouteChangeMonitor() {
-    const location = useLocation();
-    
-    useEffect(() => {
-        console.log("Route changed to:", location.pathname);
-    }, [location]);
-    
-    return null;
-}
 
 // Main App content to be wrapped with providers
 function AppContent() {
     return (
         <div className="bg-[#2c3245] min-h-screen">
-            <RouteChangeMonitor />
+          
             <Routes>
                 <Route path="/table/:id" element={<Table />} />
                 <Route path="/deposit" element={<Deposit />} />

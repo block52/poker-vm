@@ -41,7 +41,6 @@ const useUserWallet = (): UserWalletResult => {
 
         // If it's been less than 10 seconds since the last call and we have balance data, use cached data
         if (timeSinceLastCall < minInterval && balance !== null) {
-            console.log(`[useUserWallet] Rate limiting: Using cached balance data (${Math.floor(timeSinceLastCall/1000)}s since last call)`);
             return;
         }
 
@@ -50,15 +49,12 @@ const useUserWallet = (): UserWalletResult => {
         
         // Update shared last API call time
         localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
-        console.log(`[useUserWallet] Making API call to /get_account/ (${Math.floor(timeSinceLastCall/1000)}s since last call)`);
-        console.log("⚡ useUserWallet: Fetching balance for account", account);
 
         try {
             const url = PROXY_URL;
-            console.log("⚡ useUserWallet: API URL", url);
+
             
             const response = await axios.get(`${url}/get_account/${account}`);
-            console.log("⚡ useUserWallet: Balance response", response.data);
 
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -66,7 +62,6 @@ const useUserWallet = (): UserWalletResult => {
 
             if (response.data?.result?.data?.balance) {
                 const newBalance = response.data.result.data.balance;
-                console.log("⚡ useUserWallet: New balance", newBalance, "Old balance", balance);
                 setBalance(newBalance);
             } else {
                 console.error("Balance not found in response:", response.data);
@@ -83,12 +78,10 @@ const useUserWallet = (): UserWalletResult => {
 
     // Manual refresh function
     const refreshBalance = useCallback(async () => {
-        console.log("⚡ useUserWallet: Manual refresh requested");
         setRefreshCounter(prev => prev + 1);
     }, []);
 
     useEffect(() => {
-        console.log("⚡ useUserWallet: Refresh counter changed", refreshCounter);
         fetchBalance();
     }, [fetchBalance, refreshCounter]);
 
@@ -145,15 +138,6 @@ const useUserWallet = (): UserWalletResult => {
         b52: client,
         refreshBalance
     };
-
-    console.log("[useUserWallet] Returns:", {
-        hasAccount: !!result.account,
-        balance: result.balance,
-        hasPrivateKey: !!result.privateKey,
-        hasClient: !!result.b52,
-        isLoading: result.isLoading,
-        hasError: !!result.error
-    });
 
     return result;
 };

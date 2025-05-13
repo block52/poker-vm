@@ -51,12 +51,6 @@ const PokerActionPanel: React.FC = () => {
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState(tableId);
 
-    // Log info from our hooks for debugging
-    useEffect(() => {
-        console.log("🎮 NextToActInfo:", nextToActInfo);
-        console.log("🎮 Legal Actions:", legalActions);
-    }, [nextToActInfo, legalActions]);
-
     const [publicKey, setPublicKey] = useState<string>();
     const [privateKey, setPrivateKey] = useState<string>();
 
@@ -137,12 +131,6 @@ const PokerActionPanel: React.FC = () => {
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
 
-    // Log if it's user's turn based on nextToActInfo
-    useEffect(() => {
-        if (nextToActInfo?.isCurrentUserTurn) {
-            console.log("It's your turn to act based on nextToActInfo!");
-        }
-    }, [nextToActInfo]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -158,15 +146,6 @@ const PokerActionPanel: React.FC = () => {
         setPrivateKey(localKey);
     }, [privateKey]);
 
-    // Log the player's legal actions
-    useEffect(() => {
-        console.log("Footer - Player's legal actions:", {
-            actions: legalActions,
-            isPlayerTurn,
-            nextToAct: nextToActInfo?.seat,
-            userSeat: playerSeat
-        });
-    }, [legalActions, isPlayerTurn, nextToActInfo, playerSeat]);
 
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
@@ -186,13 +165,10 @@ const PokerActionPanel: React.FC = () => {
 
     // Handler functions for different actions - Now use our custom hooks
     const handlePostSmallBlind = useCallback(() => {
-        console.log("Posting small blind");
-        
         if (!privateKey || !postSmallBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
         }
-
         // Use our hook to post small blind
         postSmallBlind({
             privateKey,
@@ -201,8 +177,6 @@ const PokerActionPanel: React.FC = () => {
     }, [privateKey, postSmallBlind, smallBlindAction]);
 
     const handlePostBigBlind = useCallback(() => {
-        console.log("Posting big blind");
-        
         if (!privateKey || !postBigBlind) {
             console.error("Wallet keys not available or hook not ready");
             return;
@@ -216,8 +190,6 @@ const PokerActionPanel: React.FC = () => {
     }, [privateKey, postBigBlind, bigBlindAction]);
 
     const handleCheck = useCallback(() => {
-        console.log("Checking");
-        
         if (!privateKey || !checkHand) {
             console.error("Private key not available or hook not ready");
             return;
@@ -232,8 +204,6 @@ const PokerActionPanel: React.FC = () => {
     }, [privateKey, checkHand, checkAction]);
 
     const handleFold = useCallback(() => {
-        console.log("Folding");
-        
         if (!privateKey || !foldHand) {
             console.error("Private key not available or hook not ready");
             return;
@@ -247,8 +217,6 @@ const PokerActionPanel: React.FC = () => {
     }, [foldHand, foldAction, privateKey]);
 
     const handleCall = useCallback(() => {
-        console.log("Calling");
-        
         if (!privateKey || !callHand) {
             console.error("Private key not available or hook not ready");
             return;
@@ -267,8 +235,6 @@ const PokerActionPanel: React.FC = () => {
     }, [privateKey, callHand, callAction]);
 
     const handleBet = useCallback(() => {
-        console.log("Betting");
-        
         if (!privateKey || !betHand) {
             console.error("Private key not available or hook not ready");
             return;
@@ -285,8 +251,6 @@ const PokerActionPanel: React.FC = () => {
     }, [privateKey, betHand, raiseAmount, betAction]);
 
     const handleRaise = useCallback(() => {
-        console.log("Raising");
-        
         if (!privateKey || !raiseHand) {
             console.error("Private key not available or hook not ready");
             return;
@@ -305,19 +269,6 @@ const PokerActionPanel: React.FC = () => {
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = hasSmallBlindAction && isUsersTurn;
     const shouldShowBigBlindButton = hasBigBlindAction && isUsersTurn;
-
-    // Debug log to understand action button visibility
-    console.log("Action Button Debug:", {
-        isUserInTable,
-        nextToActSeat: nextToActInfo?.seat,
-        userPlayerSeat: playerSeat,
-        isUsersTurn,
-        legalActions,
-        hasSmallBlindAction,
-        hasBigBlindAction,
-        hasFoldAction,
-        playerStatus
-    });
 
     // Only show action buttons if user is in the table
     const showButtons = isUserInTable;
@@ -340,8 +291,6 @@ const PokerActionPanel: React.FC = () => {
 
     // Add a handler for the deal button
     const handleDeal = () => {
-        console.log("Deal button clicked");
-
         // Get private key
         if (!privateKey || !dealCards) {
             console.error("Private key not available or hook not ready");
@@ -355,16 +304,8 @@ const PokerActionPanel: React.FC = () => {
         });
     };
 
-    // Add useEffect to log the nonce information from our new hook
-    useEffect(() => {
-        console.log("🔢 Current nonce from hook:", nonce);
-        console.log("💰 Account data from hook:", accountData);
-    }, [nonce, accountData]);
-
     // Handler for muck action
     const handleMuck = () => {
-        console.log("Mucking cards");
-        
         if (!privateKey || !muckCards) {
             console.error("Private key not available or hook not ready");
             return;
@@ -379,8 +320,6 @@ const PokerActionPanel: React.FC = () => {
 
     // Handler for show action
     const handleShow = () => {
-        console.log("Showing cards");
-        
         if (!privateKey || !showCards) {
             console.error("Private key not available or hook not ready");
             return;
@@ -395,18 +334,11 @@ const PokerActionPanel: React.FC = () => {
 
     // Add the handleStartNewHand function after the other handler functions
     const handleStartNewHand = () => {
-        console.log("Starting new hand");
-        
         if (!privateKey || !startNewHand) {
             console.error("Private key not available or hook not ready");
             return;
         }
-
-        console.log(`Table ID for new hand: ${tableId}`);
-
-        // Get current nonce from the hook
-        console.log("Using nonce:", nonce);
-
+        
         // Use our hook to start a new hand
         startNewHand({
             privateKey,

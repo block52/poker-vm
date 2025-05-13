@@ -25,7 +25,6 @@ export function useTableTurnIndex(tableId?: string): number {
     const previousActions = gameState.previousActions || [];
     
     if (previousActions.length === 0) {
-      console.log("No previous actions found, returning index 0");
       return 0; // If no previous actions, start with index 0
     }
     
@@ -38,9 +37,6 @@ export function useTableTurnIndex(tableId?: string): number {
     
     // The next index is the latest index + 1
     const nextIndex = latestAction.index + 1;
-    console.log(`Latest action index: ${latestAction.index}, next index: ${nextIndex}`);
-    
-    console.log("[useTableTurnIndex] Returns:", nextIndex);
     
     return nextIndex;
   } catch (err) {

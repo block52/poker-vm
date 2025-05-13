@@ -32,9 +32,7 @@ const Deposit: React.FC = () => {
     const { balance } = useWalletBalance();
     const { balance: b52Balance } = useUserWallet();
 
-    // console.log("allowance: ", allowance);
-    // console.log("balance: ", balance);
-
+ 
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -108,12 +106,11 @@ const Deposit: React.FC = () => {
     const handleDeposit = async () => {
         if (allowed) {
             try {
-                console.log("Initiating deposit...");
+               
                 if (publicKey) {
-                    console.log("isPending:  ", isDepositPending);
+                  
                     await deposit(BigUnit.from(+amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
                     setTmpDepositAmount(BigUnit.from(+amount, decimals).toBigInt()); // Fixed incorrect function call
-                    console.log("Deposit successful");
                 }
             } catch (err) {
                 console.error("Deposit failed:", err);

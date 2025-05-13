@@ -206,16 +206,10 @@ const Dashboard: React.FC = () => {
 
 
     const handleGameVariant = (variant: Variant) => {
-        console.log("\n=== Game Variant Selected ===");
-        console.log("Variant:", variant);
-
         if (variant === Variant.TEXAS_HOLDEM) {
-            console.log("Setting variant to TEXAS HOLDEM");
             setVariantSelected("texas-holdem");
         }
-
         if (variant === Variant.OMAHA) {
-            console.log("Setting variant to OMAHA");
             setVariantSelected("omaha");
         }
     };
@@ -771,8 +765,6 @@ const Dashboard: React.FC = () => {
                             <button
                                 key={limit}
                                 onClick={() => {
-                                    console.log("=== Limit Type Selected ===");
-                                    console.log("Limit:", limit);
                                     setLimitTypeSelected(limit);
                                     // TODO: Wire limitTypeSelected into game creation logic
                                 }}
