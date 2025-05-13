@@ -351,17 +351,18 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(smallBlindPlayer?.chips).toEqual(100200000000000000000n);
             expect(bigBlindPlayer?.chips).toEqual(99800000000000000000n);
 
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 15, ONE_TOKEN);
+            // Reset hand index
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 0, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(ONE_TOKEN);
             expect(game.getNextPlayerToAct()?.address).toEqual(SMALL_BLIND_PLAYER);
 
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 16, TWO_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 1, TWO_TOKENS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(THREE_TOKENS);
 
             // Add a DEAL action to advance from ANTE to PREFLOP
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.DEAL, 17);
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.DEAL, 2);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
         });
     });

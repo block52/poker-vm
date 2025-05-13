@@ -70,16 +70,6 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number) 
       refresh
     };
 
-    console.log("[useTableState] Returns:", {
-      currentRound,
-      formattedTotalPot,
-      tableSize,
-      tableType,
-      roundType,
-      isLoading: false,
-      hasError: false
-    });
-
     return result;
   } catch (err) {
     console.error("Error parsing table state:", err);

@@ -103,27 +103,48 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
 
     return (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-            <div className="bg-gradient-to-b from-gray-800 to-gray-900 p-8 rounded-xl shadow-2xl w-96 border border-gray-700 overflow-hidden relative">
+            <div className="bg-gray-800/90 backdrop-blur-md p-8 rounded-xl shadow-2xl w-96 border border-blue-400/20 overflow-hidden relative">
+                {/* Hexagon pattern background */}
+                <div className="absolute inset-0 opacity-5 overflow-hidden pointer-events-none">
+                    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
+                                <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#hexagons)" />
+                    </svg>
+                </div>
+                
                 <div className="absolute -right-8 -top-8 text-6xl opacity-10 rotate-12">♠</div>
                 <div className="absolute -left-8 -bottom-8 text-6xl opacity-10 -rotate-12">♥</div>
 
                 <h2 className="text-2xl font-bold mb-4 text-white flex items-center">
-                    <span className="text-green-400 mr-2">♣</span>
+                    <span className="text-blue-400 mr-2">♣</span>
                     Buy In
                     <span className="text-red-400 ml-2">♦</span>
                 </h2>
-                <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent mb-4 opacity-50"></div>
+                <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent mb-4 opacity-50"></div>
 
                 {/* Playable Balance */}
-                <div className="mb-4 text-center">
-                    <p className="text-gray-300 text-sm">Playable Balance:</p>
-                    <p className="text-orange-400 text-xl font-bold">{balanceFormatted.toFixed(2)}</p>
+                <div className="mb-5 p-3 bg-gray-800/60 rounded-lg border border-blue-500/10">
+                    <p className="text-gray-400 text-sm mb-1">Playable Balance:</p>
+                    <div className="flex items-center">
+                        <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center mr-2">
+                            <span className="text-blue-400 font-bold text-xs">$</span>
+                        </div>
+                        <p className="text-white text-xl font-bold">{balanceFormatted.toFixed(2)}</p>
+                    </div>
                 </div>
 
                 {/* Stake Dropdown (now dynamic) */}
                 <div className="mb-6">
                     <label className="block text-gray-300 mb-1 font-medium text-sm">Select Stake</label>
-                    <select disabled value={stakeLabel} className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 text-sm">
+                    <select 
+                        disabled 
+                        value={stakeLabel} 
+                        className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-sm"
+                    >
                         <option>{stakeLabel}</option>
                     </select>
                 </div>
@@ -132,12 +153,18 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                 <div className="mb-6">
                     <label className="block text-gray-300 mb-2 font-medium text-sm">Select Buy-In Amount</label>
                     <div className="flex justify-between gap-2 mb-2">
-                        <button onClick={() => handleBuyInChange(maxBuyInFormatted)} className="flex-1 py-2 text-sm text-white bg-gray-700 rounded">
+                        <button 
+                            onClick={() => handleBuyInChange(maxBuyInFormatted)} 
+                            className="flex-1 py-2 text-sm text-white bg-gray-700 hover:bg-gray-600 rounded border border-blue-500/10 transition duration-200"
+                        >
                             MAX
                             <br />
                             {maxBuyInFormatted}
                         </button>
-                        <button onClick={() => handleBuyInChange(minBuyInFormatted)} className="flex-1 py-2 text-sm text-white bg-gray-700 rounded">
+                        <button 
+                            onClick={() => handleBuyInChange(minBuyInFormatted)} 
+                            className="flex-1 py-2 text-sm text-white bg-gray-700 hover:bg-gray-600 rounded border border-blue-500/10 transition duration-200"
+                        >
                             MIN
                             <br />
                             {minBuyInFormatted}
@@ -148,7 +175,7 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                                 type="number"
                                 value={buyInAmount}
                                 onChange={e => handleBuyInChange(e.target.value)}
-                                className="w-full p-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm text-center focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-400"
+                                className="w-full p-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                                 placeholder="0.00"
                             />
                         </div>
@@ -158,13 +185,21 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
 
                 {/* Wait for Big Blind */}
                 <div className="flex items-center mb-6">
-                    <input type="checkbox" className="mr-2" onChange={() => setWaitForBigBlind(!waitForBigBlind)} />
+                    <input 
+                        type="checkbox" 
+                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-offset-gray-800 mr-2"
+                        checked={waitForBigBlind}
+                        onChange={() => setWaitForBigBlind(!waitForBigBlind)} 
+                    />
                     <label className="text-gray-300 text-sm">Wait for Big Blind</label>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex justify-between space-x-4 mb-4">
-                    <button onClick={onClose} className="px-5 py-3 rounded-lg bg-gray-600 text-white font-medium flex-1">
+                    <button 
+                        onClick={onClose} 
+                        className="px-5 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-medium flex-1 transition-all duration-200"
+                    >
                         Cancel
                     </button>
                     <button
@@ -173,7 +208,7 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                         className={`px-5 py-3 rounded-lg font-medium flex-1 ${
                             isDisabled
                                 ? "bg-gray-500 cursor-not-allowed text-white"
-                                : "bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg hover:from-green-500 hover:to-green-400 transform hover:scale-105"
+                                : "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-md hover:scale-[1.02] transition-all duration-200"
                         }`}
                     >
                         Take My Seat
@@ -183,7 +218,7 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                 {isDisabled && (
                     <div className="text-red-400 text-sm mb-4">
                         Your available balance does not reach the minimum buy-in amount for this game. Please{" "}
-                        <span className="underline cursor-pointer text-white" onClick={() => navigate("/qr-deposit")}>
+                        <span className="underline cursor-pointer text-blue-400 hover:text-blue-300" onClick={() => navigate("/qr-deposit")}>
                             deposit
                         </span>{" "}
                         to continue.

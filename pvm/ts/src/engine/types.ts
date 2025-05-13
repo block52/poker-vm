@@ -8,9 +8,6 @@ export interface IAction {
 }
 
 export interface IPoker {
-    // deal(): void;
-    // joinAtSeat(player: Player, seat: number): void;
-    // leave(address: string): void;
     getLastRoundAction(): Turn | undefined;
     performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;
@@ -26,7 +23,7 @@ export type PlayerState = {
 export type Range = {
     minAmount: bigint;
     maxAmount: bigint;
-}
+};
 
 export type Turn = {
     playerId: string;
@@ -36,7 +33,7 @@ export type Turn = {
 };
 
 // Timestamp in milliseconds is required for auto folding etc
-export type TurnWithSeat = Turn & { seat: number, timestamp: number };
+export type TurnWithSeat = Turn & { seat: number; timestamp: number };
 
 export type LegalAction = ActionDTO;
 

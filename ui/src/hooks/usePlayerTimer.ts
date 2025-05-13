@@ -93,16 +93,5 @@ export const usePlayerTimer = (tableId?: string, playerIndex?: number) => {
     error
   };
 
-  console.log("[usePlayerTimer] Returns:", {
-    playerIndex,
-    playerStatus: result.playerStatus,
-    timeoutValue: result.timeoutValue,
-    progress: result.progress,
-    timeRemaining: result.timeRemaining,
-    isActive: result.isActive,
-    isLoading: result.isLoading,
-    hasError: !!result.error
-  });
-
   return result;
 }; 

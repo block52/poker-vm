@@ -72,29 +72,26 @@ describe("Raise Action", () => {
         jest.spyOn(game, "getActionsForRound").mockReturnValue([
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: "50000000000000000000",
+                amount: 50000000000000000000n,
                 action: PlayerActionType.SMALL_BLIND,
                 index: 0,
                 seat: 2,
-                round: TexasHoldemRound.PREFLOP,
                 timestamp: Date.now()
             },
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: "100000000000000000000",
+                amount: 10000000000000000000n,
                 action: PlayerActionType.BIG_BLIND,
                 index: 0,
                 seat: 3,
-                round: TexasHoldemRound.PREFLOP,
                 timestamp: Date.now()
             },
             {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                amount: "50000000000000000000",
+                amount: 50000000000000000000n,
                 action: PlayerActionType.BET,
                 index: 0,
                 seat: 4,
-                round: TexasHoldemRound.PREFLOP,
                 timestamp: Date.now()
             },
         ]);
@@ -158,20 +155,18 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getActionsForRound").mockReturnValue([
                 {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                    amount: "50000000000000000000",
+                    amount: 50000000000000000000n,
                     action: PlayerActionType.SMALL_BLIND,
                     index: 0,
                     seat: 2,
-                    round: TexasHoldemRound.PREFLOP,
                     timestamp: Date.now()
                 },
                 {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                    amount: "100000000000000000000",
+                    amount: 100000000000000000000n,
                     action: PlayerActionType.BIG_BLIND,
                     index: 0,
                     seat: 3,
-                    round: TexasHoldemRound.PREFLOP,
                     timestamp: Date.now()
                 }
             ]);
@@ -287,7 +282,7 @@ describe("Raise Action", () => {
         // The following tests are commented out because:
         // 1. The actual validation logic is already properly tested in the verify() tests above
         // 2. In the real flow, verify() would be called before execute() to validate raise amounts
-        
+
         /* 
         it("should not throw error if amount is less than minimum allowed", () => {
             const tooSmallAmount = 1n;

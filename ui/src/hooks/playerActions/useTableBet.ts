@@ -16,10 +16,6 @@ export const useTableBet = (tableId?: string) => {
     const betFetcher = async (_url: string, { arg }: { arg: HandParams }) => {
         const { privateKey, actionIndex, amount, nonce = Date.now().toString() } = arg;
 
-        console.log("🎲 Bet attempt");
-        console.log("🎲 Using action index:", actionIndex);
-        console.log("🎲 Betting amount:", amount);
-        console.log("🎲 Using nonce:", nonce);
 
         if (!privateKey) {
             console.error("🎲 Missing private key");
@@ -39,16 +35,6 @@ export const useTableBet = (tableId?: string) => {
                 throw new Error("Table ID is required");
             }
 
-            console.log("🎲 Calling playerAction with params:", {
-                tableId,
-                action: PlayerActionType.BET,
-                amount,
-                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
-                data: {
-                    index: actionIndex,
-                    timestamp,
-                }
-            });
 
             // Call playerAction method on the client
             const response = await client.playerAction(

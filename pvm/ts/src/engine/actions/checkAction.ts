@@ -46,7 +46,7 @@ class CheckAction extends BaseAction implements IAction {
             }
 
             // Only do bets, calls or raises
-            const lastBettingActions = lastActions.filter((action: ActionDTO) => {
+            const lastBettingActions = lastActions.filter((action: Turn) => {
                 return action.action === PlayerActionType.BET || action.action === PlayerActionType.CALL || action.action === PlayerActionType.RAISE;
             });
 

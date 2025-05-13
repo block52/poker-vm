@@ -36,7 +36,6 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
     if (gameState?.round === "end") {
       // Set a short timeout to do an extra refresh after the game ends
       const timeoutId = setTimeout(() => {
-        console.log("Game in 'end' state - doing an extra refresh");
         mutate();
       }, 3000);
       

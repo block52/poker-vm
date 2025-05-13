@@ -114,14 +114,6 @@ export const useWinnerInfo = (tableId?: string) => {
       refresh
     };
 
-    console.log("[useWinnerInfo] Returns:", {
-      hasWinners: !!winners && winners.length > 0,
-      numWinners: winners?.length || 0,
-      winnerSeats: winners?.map((w: {seat: number}) => w.seat) || [],
-      isLoading: false,
-      hasError: false
-    });
-
     return result;
   } catch (err) {
     console.error("Error parsing winner information:", err);

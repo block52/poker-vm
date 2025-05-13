@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.110",
+    "@bitcoinbrisbane/block52": "1.0.111",
     "@reown/appkit": "1.6.7",
     "@reown/appkit-adapter-ethers": "1.6.7",
     "@reown/appkit-adapter-wagmi": "1.6.7",
@@ -18,6 +18,7 @@
     "ethers": "^6.13.5",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
+    "react-devtools": "^6.1.2",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
     "react-router-dom": "^7.0.2",

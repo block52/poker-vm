@@ -7,11 +7,6 @@ import { toDisplaySeat } from "../../../utils/tableUtils";
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
 import { useNodeRpc } from "../../../context/NodeRpcContext";
 
-// Enable this to see verbose logging
-const DEBUG_MODE = false;
-const debugLog = (...args: any[]) => {
-    if (DEBUG_MODE) console.log(...args);
-};
 
 type VacantPlayerProps = {
     left?: string;
@@ -38,7 +33,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
 
         const handleJoinClick = useCallback(() => {
-            debugLog("Join click:", { index, tableId });
             if (!canJoinThisSeat) return;
             setShowConfirmModal(true);
             setJoinError(null);
@@ -69,13 +63,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 // Get the latest account info to get the current nonce
                 const account = await client.getAccount(userAddress);
 
-                // Log the join attempt
-                console.log(`Joining table at seat ${index} with amount ${buyInWei} and nonce ${account.nonce}`);
-
                 // Call the playerJoin method directly from the SDK
                 const response = await client.playerJoin(tableId, BigInt(buyInWei.toString()), index, account.nonce);
 
-                console.log("Join table response:", response);
                 setJoinResponse(response);
                 setJoinSuccess(true);
                 setIsJoining(false);

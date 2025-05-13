@@ -32,19 +32,7 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, currentIndex, color, 
         return winner ? winner.formattedAmount : null;
     }, [isWinner, winnerInfo, index]);
 
-    // For debugging - log key information to help troubleshoot
-    React.useEffect(() => {
-        console.log(`Player component rendering for seat ${index}:`, {
-            hasPlayerData: !!playerData,
-            stackValue,
-            holeCards,
-            isCurrentUser: true, // This is the current user's view
-            isFolded,
-            isAllIn,
-            isWinner,
-            round
-        });
-    }, [playerData, index, stackValue, holeCards, isFolded, isAllIn, isWinner, round]);
+
 
     if (!playerData) {
         console.log(`No player data found for player at seat ${index}`);

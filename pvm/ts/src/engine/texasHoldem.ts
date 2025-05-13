@@ -58,14 +58,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private seed: number[] = [];
     private readonly _communityCards: Card[] = [];
     private _handNumber: number = 0;
-    private _turnIndex: number = 0;
 
     constructor(
         private readonly _address: string,
         private gameOptions: GameOptions,
         private positions: Positions,
         private _lastToAct: number,
-        private previousActions: ActionDTO[] = [],
+        previousActions: ActionDTO[] = [],
         private _currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         private communityCards: string[],
         private pots: bigint[] = [0n],
@@ -129,7 +128,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             }
 
             // Increment turn index
-            this._turnIndex = Math.max(this._turnIndex, action.index + 1);
+            // this._turnIndex = Math.max(this._turnIndex, action.index + 1);
         }
 
         this._update = new (class implements IUpdate {
@@ -203,7 +202,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     // Returns the current turn index without incrementing it
     getTurnIndex(): number {
-        return this._turnIndex;
+        return this.getPreviousActions().length;
     }
 
     exists(playerId: string): boolean {
@@ -258,12 +257,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
-    private join(address: string, chips: bigint) {
-        const player = new Player(address, undefined, chips, undefined, PlayerStatus.SITTING_OUT);
-        const seat = this.findNextEmptySeat();
-        this.joinAtSeat(player, seat);
-    }
-
     joinAtSeat(player: Player, seat: number) {
         // Check if the player is already in the game
         if (this.exists(player.address)) {
@@ -301,7 +294,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     playerId: player.address,
                     action: PlayerActionType.SMALL_BLIND,
                     amount: this._gameOptions.smallBlind,
-                    index: this._turnIndex
+                    index: this.getTurnIndex()
                 };
 
                 player.addAction(turn, this._now);
@@ -317,7 +310,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this._lastActedSeat = seat;
 
                 // Add to bets to pre-flop round
-                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind, index: this._turnIndex };
+                const turn: Turn = { playerId: player.address, action: PlayerActionType.BIG_BLIND, amount: this._gameOptions.bigBlind, index: this.getTurnIndex() };
 
                 player.addAction(turn, this._now);
                 player.updateStatus(PlayerStatus.ACTIVE);
@@ -330,10 +323,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this.deal();
             }
         }
-    }
-
-    private incrementTurnIndex(): void {
-        this._turnIndex++;
     }
 
     getNextPlayerToAct(): Player | undefined {
@@ -496,7 +485,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check if the provided index matches the current turn index (without incrementing)
-        if (index !== this.getTurnIndex() && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE) {
+        const _turnIndex = this.getTurnIndex();
+        if (index !== _turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE) {
             // hack, to roll back
             throw new Error("Invalid action index.");
         }
@@ -507,12 +497,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN: {
-                const seat = data ? Number(data) : undefined;
+                // Get seat number from data using a Regex
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-
-                new JoinAction(this, this._update).execute(player, index, _amount, seat);
+                const turn = new JoinAction(this, this._update).execute(player, index, _amount, data);
                 
                 // `execute` already logged the action & incremented the index
+
+                // this.addNonPlayerAction(turn, data);
+
                 return; // EARLY EXIT – nothing else to do for non-player action
             }
 
@@ -618,7 +610,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             const playerExists = this.exists(turn.playerId);
             if (!playerExists) {
                 console.log(`Skipping non-player action for player ${turn.playerId} who has left the game`);
-                this.incrementTurnIndex(); // Still increment turn index to maintain sequence
                 return;
             }
         }
@@ -649,10 +640,28 @@ class TexasHoldemGame implements IPoker, IUpdate {
             console.log(`Removing player ${turn.playerId} from seat ${turn.seat}`);
             this._playersMap.delete(turn.seat);
         }
-
-        // Now explicitly increment the turn index once
-        this.incrementTurnIndex(); // TODO: check if this is needed as we don't count joins and leave as actions howeer we do increment the turn indes for deal action  see issue 552
     }
+
+    getPreviousActions(): TurnWithSeat[] {
+        const actions: TurnWithSeat[] = [];
+
+        for (const [round, turns] of this._rounds) {
+            for (const turn of turns) {
+                const action: TurnWithSeat = {
+                    playerId: turn.playerId,
+                    seat: turn.seat,
+                    action: turn.action,
+                    amount: turn.amount ? BigInt(turn.amount) : undefined,
+                    index: turn.index,
+                    timestamp: turn.timestamp
+                };
+
+                actions.push(action);
+            }
+        }
+
+        return actions;
+    }   
 
     getActionDTOs(): ActionDTO[] {
         const actions: ActionDTO[] = [];
@@ -663,12 +672,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     playerId: turn.playerId,
                     seat: turn.seat,
                     action: turn.action,
-                    amount: turn.amount ? turn.amount.toString() : "",
-                    round,
+                    amount: turn.amount ? turn.amount.toString() : "", // Cast to string for over the wire
+                    round: round,
                     index: turn.index,
                     timestamp: turn.timestamp
                 };
-
                 actions.push(action);
             }
         }
@@ -676,29 +684,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return actions;
     }
 
-    getActionsForRound(round: TexasHoldemRound): ActionDTO[] {
-        const actions: ActionDTO[] = [];
+    getActionsForRound(round: TexasHoldemRound): TurnWithSeat[] {
         const turns = this._rounds.get(round);
-
-        if (!turns) {
-            return actions;
-        }
-
-        for (const turn of turns) {
-            const action: ActionDTO = {
-                playerId: turn.playerId,
-                seat: turn.seat,
-                action: turn.action,
-                amount: turn.amount ? turn.amount.toString() : "",
-                round,
-                index: turn.index,
-                timestamp: turn.timestamp
-            };
-
-            actions.push(action);
-        }
-
-        return actions;
+        return turns ? turns : [];
     }
 
     getPlayer(address: string): Player {
@@ -945,8 +933,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 }
             }
         }
-
-        this.previousActions.length = 0;
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);

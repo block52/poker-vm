@@ -8,6 +8,7 @@ import { getContractSchemaManagement } from "../state/index";
 import { Transaction } from "../models";
 import { OrderedTransaction } from "../engine/types";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
+import { toOrderedTransaction } from "../utils/parsers";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: IGameManagement;
@@ -34,7 +35,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
-            const orderedTransactions = mempoolTransactions.map(tx => this.castToOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
+            const orderedTransactions = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
             orderedTransactions.forEach(tx => {
                 try {
@@ -52,24 +53,5 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             console.error(`Error executing GameStateCommand: ${(error as Error).message}`);
             throw error; // Rethrow the error to be handled by the caller
         }
-    }
-
-    private castToOrderedTransaction(tx: Transaction): OrderedTransaction {
-        if (!tx.data) {
-            throw new Error("Transaction data is undefined");
-        }
-
-        const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType | NonPlayerActionType;
-        const index = parseInt(params[1].trim());
-
-        return {
-            from: tx.from,
-            to: tx.to,
-            value: tx.value,
-            type: action,
-            index: index,
-            data: params[2] ? params[2].trim() : undefined
-        };
     }
 }

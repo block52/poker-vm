@@ -133,11 +133,10 @@ describe("BigBlindAction", () => {
             jest.spyOn(game, "getActionsForRound").mockReturnValue([
                 {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                    amount: "50000000000000000000",
+                    amount: 50000000000000000000n,
                     action: PlayerActionType.SMALL_BLIND,
                     index: 0,
                     seat: 2,
-                    round: TexasHoldemRound.ANTE,
                     timestamp: Date.now()
                 }
             ]);

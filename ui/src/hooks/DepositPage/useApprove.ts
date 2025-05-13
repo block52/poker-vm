@@ -23,7 +23,6 @@ const useApprove = () => {
             return;
         }
 
-        console.log("Approve transaction starting...");
 
         try {
             const tx = await writeContract({
