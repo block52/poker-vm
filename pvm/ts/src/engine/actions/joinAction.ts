@@ -1,7 +1,7 @@
 import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
-import { Range } from "../types";
+import { Range, TurnWithSeat } from "../types";
 
 class JoinAction extends BaseAction {
     get type(): NonPlayerActionType {
@@ -20,7 +20,7 @@ class JoinAction extends BaseAction {
     }
 
     // Override execute to handle player joining
-    execute(player: Player, index: number, amount?: bigint, requestedSeat?: string): void {
+    execute(player: Player, index: number, amount?: bigint, requestedSeat?: string): TurnWithSeat {
         // First verify the action
         const range = this.verify(player);
 
@@ -47,16 +47,27 @@ class JoinAction extends BaseAction {
 
         this.game.joinAtSeat(player, seat);
 
-        // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
-        this.game.addNonPlayerAction(
-            {
-                playerId: player.address,
-                action: NonPlayerActionType.JOIN,
-                index: index,
-                amount: buyIn
-            },
-            seat.toString()
-        );
+        // // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
+        // this.game.addNonPlayerAction(
+        //     {
+        //         playerId: player.address,
+        //         action: NonPlayerActionType.JOIN,
+        //         index: index,
+        //         amount: buyIn
+        //     },
+        //     seat.toString()
+        // );
+
+        const turn: TurnWithSeat = {
+            playerId: player.address,
+            action: NonPlayerActionType.JOIN,
+            amount: buyIn,
+            index: index,
+            seat: seat,
+            timestamp: Date.now()
+        };
+
+        return turn;
     }
 }
 
