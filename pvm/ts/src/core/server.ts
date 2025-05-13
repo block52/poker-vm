@@ -263,7 +263,7 @@ export class Server {
             return;
         }
 
-        //if (this.isValidator) {
+        if (this.isValidator) {
             const bridge = new Bridge(rpcUrl);
 
             // First sync historical deposits
@@ -272,7 +272,7 @@ export class Server {
             // Then start listening for new deposits
             await bridge.listenToBridge();
             this._lastDepositSync = new Date();
-        //}
+        }
     }
 
     private async resyncBlockchain() {
