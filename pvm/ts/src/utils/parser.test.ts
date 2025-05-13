@@ -37,5 +37,22 @@ describe("Parser", () => {
             expect(actual.type).toBe(NonPlayerActionType.JOIN);
             expect(actual.data).toBeNull();
         });
+
+        it("should remove 'undefined", () => {
+            const tx = {
+                from: "0x1234",
+                to: "0x5678",
+                value: 1000n,
+                data: "join,0,undefined"
+            };
+
+            const actual = toOrderedTransaction(tx);
+            expect(actual.index).toBe(0);
+            expect(actual.from).toBe("0x1234");
+            expect(actual.to).toBe("0x5678");
+            expect(actual.value).toBe(1000n);
+            expect(actual.type).toBe(NonPlayerActionType.JOIN);
+            expect(actual.data).toBeNull();
+        });
     });
 });

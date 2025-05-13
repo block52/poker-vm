@@ -4,7 +4,7 @@ import { ITransaction } from "../models/interfaces";
 
 export const toGameOptions = (data: string): GameOptions => {
     throw new Error("Not implemented");
-}
+};
 
 export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
     if (!tx.data) {
@@ -21,6 +21,19 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
     const params = tx.data.split(",");
     const action = params[0].trim() as PlayerActionType;
     const index = parseInt(params[1].trim());
+
+    if (params.length < 2) {
+        {
+            return {
+                from: tx.from,
+                to: tx.to,
+                value: tx.value,
+                type: action,
+                index: index
+            };
+        }
+    }
+
     // const action = match[1].trim() as PlayerActionType;
 
     // // Get index from the regex match
@@ -29,13 +42,18 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
     //     throw new Error(`Invalid index in transaction data: ${match[2]}`);
     // }
 
+    let data = params[2] ? params[2].trim() : null;
+    if (data == "undefined") {
+        data = null;
+    }
+
     return {
         from: tx.from,
         to: tx.to,
         value: tx.value,
         type: action,
         index: index,
-        data: params[2] ? params[2].trim() : null
-       // data: match[3] ? match[3].trim() : null
+        data
+        // data: match[3] ? match[3].trim() : null
     };
-}
+};
