@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest, afterEach } from "@jest/globals";
-import { ZeroHash } from "ethers";
+import { ethers, ZeroHash } from "ethers";
 import { RPC } from "./rpc"; // Update with your actual path
 import { RPCMethods, RPCRequest, PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { PerformActionCommandWithResult } from "./commands/performActionCommandWithResult";
@@ -20,13 +20,23 @@ const gameManagementMock: IGameManagement = {
 const mockGameState = jest.fn().mockImplementation(async () => ({}));
 const mockPerformAction = jest.fn().mockImplementation(async () => ({ success: true }));
 
+const PLAYER = "0x1234567890123456789012345678901234567890";
+
+const mockSchema = jest.fn().mockImplementation(async () => ({
+    address: "0xa78eba9eda216154d263679e1cc615c7271679efa3",
+    category: "cash",
+    name: "mock",
+    schema: "",
+    hash: ethers.ZeroHash
+}));
+
 jest.mock("./state/index", () => ({
     getGameManagementInstance: () => ({
         getGameState: mockGameState,
-        performAction: mockPerformAction
+        performAction: mockPerformAction,
+        getByAddress: mockSchema
     })
 }));
-
 
 jest.mock("../src/types/response", () => {
     return {
@@ -49,8 +59,8 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         process.env.VALIDATOR_KEY = ZeroHash;
 
         // Spy on console.error
-        jest.spyOn(console, "error").mockImplementation(() => { });
-        jest.spyOn(console, "log").mockImplementation(() => { });
+        jest.spyOn(console, "error").mockImplementation(() => {});
+        jest.spyOn(console, "log").mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -63,7 +73,7 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         const request: RPCRequest = {
             id: "1",
             method: RPCMethods.PERFORM_ACTION,
-            params: ["fromAddress", "toAddress", NonPlayerActionType.JOIN, "100", "0", 1, ""] //  // [from, to, action, amount, nonce, index, data]
+            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, "100", "0", 1, ""] //  // [from, to, action, amount, nonce, index, data]
         };
 
         // Act
@@ -71,8 +81,8 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
 
         // Assert
         expect(PerformActionCommandWithResult).toHaveBeenCalledWith(
-            "fromAddress",
-            "toAddress",
+            PLAYER,
+            "0xa78eba9eda216154d263679e1cc615c7271679efa3",
             0,
             BigInt(100),
             NonPlayerActionType.JOIN,

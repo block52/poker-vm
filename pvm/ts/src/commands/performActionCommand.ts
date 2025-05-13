@@ -3,7 +3,6 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { getGameManagementInstance } from "../state/index";
-import contractSchemas from "../schema/contractSchemas";
 import { getContractSchemaManagement } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
@@ -122,7 +121,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
     private async isGameTransaction(address: string): Promise<Boolean> {
         console.log(`Checking if ${address} is a game transaction...`);
-        const existingContractSchema = await contractSchemas.findOne({ address: address });
+        const existingContractSchema = await this.contractSchemaManagement.getByAddress(address);
 
         console.log(`Contract schema found:`, existingContractSchema);
         const found: Boolean = existingContractSchema !== null;
