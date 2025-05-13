@@ -325,10 +325,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
     }
 
-    private incrementTurnIndex(): void {
-        // do nothing
-    }
-
     getNextPlayerToAct(): Player | undefined {
         const player = this.findNextPlayerToAct();
         return player;
@@ -614,13 +610,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             const playerExists = this.exists(turn.playerId);
             if (!playerExists) {
                 console.log(`Skipping non-player action for player ${turn.playerId} who has left the game`);
-                this.incrementTurnIndex(); // Still increment turn index to maintain sequence
                 return;
             }
-        }
-
-        if (turn.action === NonPlayerActionType.JOIN) {
-            this.incrementTurnIndex(); // Increment turn index for JOIN action
         }
 
         const timestamp = Date.now();
@@ -649,9 +640,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             console.log(`Removing player ${turn.playerId} from seat ${turn.seat}`);
             this._playersMap.delete(turn.seat);
         }
-
-        // Now explicitly increment the turn index once
-        this.incrementTurnIndex(); // TODO: check if this is needed as we don't count joins and leave as actions however we do increment the turn indexs for deal action  see issue 552
     }
 
     private getPreviousActions(): TurnWithSeat[] {
