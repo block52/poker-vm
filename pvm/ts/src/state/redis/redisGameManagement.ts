@@ -150,7 +150,12 @@ export class RedisGameManagement implements IGameManagement, IDB {
         // Prepare game state document
         const gameState: IGameStateDocument = {
             address: gameAddress,
-            state: {}
+            schemaAddress: contractSchemaAddress,
+            state: {
+                nonce: nonce.toString(),
+                options: gameOptions,
+                createdAt: new Date().toISOString()
+            }
         };
 
         // Save to Redis
@@ -177,21 +182,26 @@ export class RedisGameManagement implements IGameManagement, IDB {
      */
     public async save(state: IJSONModel, address: string): Promise<void> {
         await this.connect();
-
+        
         // Get the game by its address
         const currentState = await this.get(address);
-
+        
         if (!currentState) {
             throw new Error(`Game with address ${address} not found`);
         }
-
+        
         // Update the state
         currentState.state = state.toJson();
-        currentState.updatedAt = new Date();
-
+        
+        // Get the game ID from the address index
+        const gameId = await this.redisClient.hget(this.gameAddressIndex, address);
+        if (!gameId) {
+            throw new Error(`Game ID not found for address ${address}`);
+        }
+        
         // Save back to Redis
         const gameData = this.serializeGameState(currentState);
-        await this.redisClient.hmset(`${this.gamesKey}:${currentState._id}`, gameData);
+        await this.redisClient.hmset(`${this.gamesKey}:${gameId}`, gameData);
     }
 
     /**
@@ -200,25 +210,30 @@ export class RedisGameManagement implements IGameManagement, IDB {
      */
     public async saveFromJSON(json: any): Promise<void> {
         await this.connect();
-
+        
         if (!json.address) {
-            throw new Error("Game address is required");
+            throw new Error('Game address is required');
         }
-
+        
         // Get the game by its address
         const currentState = await this.get(json.address);
-
+        
         if (!currentState) {
             throw new Error(`Game with address ${json.address} not found`);
         }
-
+        
         // Update the state with JSON data
         currentState.state = json;
-        currentState.updatedAt = new Date();
-
+        
+        // Get the game ID from the address index
+        const gameId = await this.redisClient.hget(this.gameAddressIndex, json.address);
+        if (!gameId) {
+            throw new Error(`Game ID not found for address ${json.address}`);
+        }
+        
         // Save back to Redis
         const gameData = this.serializeGameState(currentState);
-        await this.redisClient.hmset(`${this.gamesKey}:${currentState._id}`, gameData);
+        await this.redisClient.hmset(`${this.gamesKey}:${gameId}`, gameData);
     }
 
     // Helper methods
@@ -246,7 +261,8 @@ export class RedisGameManagement implements IGameManagement, IDB {
     private parseGameState(data: Record<string, string>): IGameStateDocument {
         return {
             address: data.address,
-            state: JSON.parse(data.state || "{}")
+            schemaAddress: data.schemaAddress,
+            state: JSON.parse(data.state || '{}')
         };
     }
 
@@ -256,6 +272,7 @@ export class RedisGameManagement implements IGameManagement, IDB {
     private serializeGameState(gameState: IGameStateDocument): Record<string, string> {
         return {
             address: gameState.address,
+            schemaAddress: gameState.schemaAddress,
             state: JSON.stringify(gameState.state || {})
         };
     }
@@ -265,28 +282,28 @@ export class RedisGameManagement implements IGameManagement, IDB {
      */
     public async reset(): Promise<void> {
         await this.connect();
-
+        
         // Get all game IDs
         const gameIds = await this.redisClient.smembers(this.gamesKey);
-
+        
         if (gameIds.length === 0) {
             return;
         }
-
+        
         // Delete all game data
         const multi = this.redisClient.multi();
-
+        
         // Remove from games set
         multi.del(this.gamesKey);
-
+        
         // Delete address index
         multi.del(this.gameAddressIndex);
-
+        
         // Delete each game's data
         for (const gameId of gameIds) {
             multi.del(`${this.gamesKey}:${gameId}`);
         }
-
+        
         await multi.exec();
     }
 }

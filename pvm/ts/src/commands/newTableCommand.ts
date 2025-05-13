@@ -1,8 +1,7 @@
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/gameManagement";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
-import { getContractSchemaManagement } from "../state";
+import { getContractSchemaManagement, getGameManagementInstance } from "../state";
 
 export class NewTableCommand implements ISignedCommand<string> {
     private readonly gameManagement: IGameManagement;
