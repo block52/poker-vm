@@ -515,7 +515,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 
                 // `execute` already logged the action & incremented the index
 
-                this.addNonPlayerAction(turn, data);
+                // this.addNonPlayerAction(turn, data);
 
                 return; // EARLY EXIT – nothing else to do for non-player action
             }
@@ -657,6 +657,16 @@ class TexasHoldemGame implements IPoker, IUpdate {
             console.log(`Removing player ${turn.playerId} from seat ${turn.seat}`);
             this._playersMap.delete(turn.seat);
         }
+
+        this.previousActions.push({
+            playerId: turn.playerId,
+            action: turn.action,
+            amount: turn.amount ? turn.amount.toString() : "",
+            round,
+            index: turn.index,
+            seat: turn.seat,
+            timestamp: turn.timestamp
+        });
 
         // Now explicitly increment the turn index once
         this.incrementTurnIndex(); // TODO: check if this is needed as we don't count joins and leave as actions howeer we do increment the turn indes for deal action  see issue 552

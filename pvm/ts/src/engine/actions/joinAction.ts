@@ -20,7 +20,7 @@ class JoinAction extends BaseAction {
     }
 
     // Override execute to handle player joining
-    execute(player: Player, index: number, amount?: bigint, requestedSeat?: string): TurnWithSeat {
+    execute(player: Player, index: number, amount?: bigint, requestedSeat?: string): void {
         // First verify the action
         const range = this.verify(player);
 
@@ -47,27 +47,16 @@ class JoinAction extends BaseAction {
 
         this.game.joinAtSeat(player, seat);
 
-        // // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
-        // this.game.addNonPlayerAction(
-        //     {
-        //         playerId: player.address,
-        //         action: NonPlayerActionType.JOIN,
-        //         index: index,
-        //         amount: buyIn
-        //     },
-        //     seat.toString()
-        // );
-
-        const turn: TurnWithSeat = {
-            playerId: player.address,
-            action: NonPlayerActionType.JOIN,
-            amount: buyIn,
-            index: index,
-            seat: seat,
-            timestamp: Date.now()
-        };
-
-        return turn;
+        // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
+        this.game.addNonPlayerAction(
+            {
+                playerId: player.address,
+                action: NonPlayerActionType.JOIN,
+                index: index,
+                amount: buyIn
+            },
+            seat.toString()
+        );
     }
 }
 
