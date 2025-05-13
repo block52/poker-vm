@@ -1,7 +1,7 @@
-import Transactions from "../schema/transactions";
-import { Transaction } from "../models/transaction";
-import { StateManager } from "./stateManager";
-import { ITransactionManagement } from "./interfaces";
+import Transactions from "../../schema/transactions";
+import { Transaction } from "../../models/transaction";
+import { StateManager } from "../stateManager";
+import { ITransactionManagement } from "../interfaces";
 
 export class TransactionManagement extends StateManager implements ITransactionManagement {
     constructor() {

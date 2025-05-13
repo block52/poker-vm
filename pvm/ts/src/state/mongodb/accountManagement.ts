@@ -1,10 +1,10 @@
-import { Account } from "../models/account";
-import Accounts from "../schema/accounts";
-import { IAccountDocument } from "../models/interfaces";
-import { Transaction } from "../models/transaction";
-import { CONTRACT_ADDRESSES } from "../core/constants";
-import { StateManager } from "./stateManager";
-import { IAccountManagement } from "./interfaces";
+import { Account } from "../../models/account";
+import Accounts from "../../schema/accounts";
+import { IAccountDocument } from "../../models/interfaces";
+import { Transaction } from "../../models/transaction";
+import { CONTRACT_ADDRESSES } from "../../core/constants";
+import { StateManager } from "../stateManager";
+import { IAccountManagement } from "../interfaces";
 
 export class AccountManagement extends StateManager implements IAccountManagement {
     constructor(protected readonly connString: string) {
@@ -120,7 +120,7 @@ export class AccountManagement extends StateManager implements IAccountManagemen
 }
 
 let instance: AccountManagement;
-export const getAccountManagementInstance = (): IAccountManagement => {
+export const getMongoAccountManagementInstance = (): IAccountManagement => {
     const connString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
     if (!instance) {
         instance = new AccountManagement(connString);

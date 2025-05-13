@@ -1,4 +1,4 @@
-import { ethers, JsonRpcProvider, Contract, InterfaceAbi, ZeroAddress } from "ethers";
+import { ethers, JsonRpcProvider, Contract, InterfaceAbi } from "ethers";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models/transaction";
 import { signResult } from "./abstractSignedCommand";

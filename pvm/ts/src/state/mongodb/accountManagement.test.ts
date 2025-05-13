@@ -1,18 +1,18 @@
-import { AccountManagement, getAccountManagementInstance } from "./accountManagement";
-import { Account } from "../models/account";
-import Accounts from "../schema/accounts";
-import { Transaction } from "../models/transaction";
-import { CONTRACT_ADDRESSES } from "../core/constants";
+import { AccountManagement, getMongoAccountManagementInstance } from "./accountManagement";
+import { Account } from "../../models/account";
+import Accounts from "../../schema/accounts";
+import { Transaction } from "../../models/transaction";
+import { CONTRACT_ADDRESSES } from "../../core/constants";
 
 // Mock the MongoDB models
-jest.mock("../schema/accounts", () => ({
+jest.mock("../../schema/accounts", () => ({
     create: jest.fn(),
     findOne: jest.fn(),
     updateOne: jest.fn()
 }));
 
 // Mock the StateManager
-jest.mock("./stateManager", () => ({
+jest.mock("../stateManager", () => ({
     StateManager: jest.fn().mockImplementation(() => ({
         connect: jest.fn().mockResolvedValue(true)
     }))
@@ -316,8 +316,8 @@ describe.skip("AccountManagement", () => {
     describe("getAccountManagementInstance", () => {
         it("should return singleton instance", () => {
             // Arrange & Act
-            const instance1 = getAccountManagementInstance();
-            const instance2 = getAccountManagementInstance();
+            const instance1 = getMongoAccountManagementInstance();
+            const instance2 = getMongoAccountManagementInstance();
 
             // Assert
             expect(instance1).toBe(instance2);

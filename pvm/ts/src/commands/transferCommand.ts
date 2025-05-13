@@ -1,4 +1,4 @@
-import { GameOptions, NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
@@ -7,7 +7,7 @@ import { getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
 import contractSchemas from "../schema/contractSchemas";
-import { getContractSchemaManagement } from "../state/contractSchemaManagement";
+import { getContractSchemaManagement } from "../state/index";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {

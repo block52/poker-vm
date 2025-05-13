@@ -1,8 +1,8 @@
 import { Transaction } from "../models/transaction";
 import { Account } from "../models/account";
 import { Block } from "../models";
-import { GameOptions, TexasHoldemGameState } from "@bitcoinbrisbane/block52";
-import { IGameStateDocument, IJSONModel } from "../models/interfaces";
+import { GameOptions } from "@bitcoinbrisbane/block52";
+import { IGameStateDocument } from "../models/interfaces";
 
 export interface IAccountManagement {
     createAccount(privateKey: string): Promise<Account>;
@@ -35,11 +35,12 @@ export interface IGameManagement {
     getByAddress(address: string): Promise<IGameStateDocument | null>;
     getState(address: string): Promise<any | null>;
     create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string>;
-    save(sate: IJSONModel): Promise<void>;
     saveFromJSON(json: any): Promise<void>;
 }
 
 export interface ITransactionManagement {
+    addTransaction(tx: Transaction): Promise<void>;
+    addTransactions(txs: Transaction[], blockHash: string): Promise<void>;
     exists(txid: string): Promise<Boolean>;
     getTransactions(blockHash: string, count?: number): Promise<Transaction[]>;
     getTransaction(txid: string): Promise<Transaction | null>;

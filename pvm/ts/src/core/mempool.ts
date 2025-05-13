@@ -1,7 +1,7 @@
 import { Transaction } from "../models/transaction";
 import Blocks from "../schema/blocks";
 import { ITransactionManagement } from "../state/interfaces";
-import { getTransactionInstance } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/index";
 
 export class Mempool {
     private readonly txMap = new Map<string, Transaction>();

@@ -1,12 +1,12 @@
 import { ethers } from "ethers";
 import { AccountCommand } from "./accountCommand";
 import { getMempoolInstance } from "../core/mempool";
-import { getAccountManagementInstance } from "../state/accountManagement";
+import { getAccountManagementInstance } from "../state/index";
 import { Account, Transaction } from "../models";
 
 // Mock both mempool and account management
 jest.mock("../core/mempool");
-jest.mock("../state/accountManagement");
+jest.mock("../state/index");
 
 describe("AccountCommand Tests", () => {
     const testAddress = ethers.Wallet.createRandom().address;

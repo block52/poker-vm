@@ -1,7 +1,7 @@
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { GameOptions } from "@bitcoinbrisbane/block52";
-import { getGameManagementInstance } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/index";
 import { IGameManagement } from "../state/interfaces";
 
 export class DeployContractCommand implements ISignedCommand<string> {

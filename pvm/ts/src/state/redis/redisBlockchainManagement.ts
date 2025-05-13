@@ -15,8 +15,8 @@ export class RedisBlockchainManagement implements IBlockchainManagement {
      * @param redisClient Redis client instance
      * @param namespace Optional namespace for Redis keys (useful for multiple blockchains)
      */
-    constructor(redisClient: Redis, namespace: string = "blockchain") {
-        this.redisClient = redisClient;
+    constructor(redisUrl: string, namespace: string = "pvm") {
+        this.redisClient = new Redis(redisUrl);
         this.blockchainKey = `${namespace}:blocks`;
         this.blockIndexKey = `${namespace}:block:index`;
         this.blockHashKey = `${namespace}:block:hash`;
@@ -31,16 +31,16 @@ export class RedisBlockchainManagement implements IBlockchainManagement {
         const multi = this.redisClient.multi();
 
         // Store block by index
-        multi.hset(this.blockIndexKey, block.index.toString(), JSON.stringify(block));
+        multi.hset(this.blockIndexKey, block.index.toString(), JSON.stringify(block.toJson()));
 
         // Store block by hash
-        multi.hset(this.blockHashKey, block.hash, JSON.stringify(block));
+        multi.hset(this.blockHashKey, block.hash, JSON.stringify(block.toJson()));
 
         // Update the last block
-        multi.set(this.lastBlockKey, JSON.stringify(block));
+        multi.set(this.lastBlockKey, JSON.stringify(block.toJson()));
 
         // Add to the blockchain list
-        multi.rpush(this.blockchainKey, JSON.stringify(block));
+        multi.rpush(this.blockchainKey, JSON.stringify(block.toJson()));
 
         await multi.exec();
     }
@@ -165,3 +165,11 @@ export class RedisBlockchainManagement implements IBlockchainManagement {
         }
     }
 }
+
+let instance: RedisBlockchainManagement;
+export const getRedisBlockchainManagementInstance = (connString: string): IBlockchainManagement => {
+    if (!instance) {
+        instance = new RedisBlockchainManagement(connString);
+    }
+    return instance;
+};

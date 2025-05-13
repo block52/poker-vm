@@ -1,7 +1,7 @@
 import { MineCommand } from "./mineCommand";
 import { getMempoolInstance } from "../core/mempool";
 import { MongoDBBlockchainManagement } from "../state/mongodb/blockchainManagement";
-import { getTransactionInstance } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/index";
 import { Block, Transaction } from "../models";
 import { ethers } from "ethers";
 
@@ -14,7 +14,7 @@ jest.mock("../core/mempool", () => ({
 //     getBlockchainInstance: jest.fn()
 // }));
 
-jest.mock("../state/transactionManagement", () => ({
+jest.mock("../state/index", () => ({
     getTransactionInstance: jest.fn()
 }));
 
