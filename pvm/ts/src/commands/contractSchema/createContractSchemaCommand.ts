@@ -11,7 +11,7 @@ export class CreateContractSchemaCommand implements ISignedCommand<string> {
         const existingContractSchema = await contractSchemas.findOne({ hash: contractSchema.hash });
 
         if (existingContractSchema) {
-            return signResult(existingContractSchema.hash, this.privateKey);
+            return signResult(existingContractSchema.address, this.privateKey);
         }
 
         await contractSchemas.create(contractSchema.toDocument());
