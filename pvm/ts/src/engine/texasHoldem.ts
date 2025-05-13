@@ -507,7 +507,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
             case NonPlayerActionType.JOIN: {
-                const seat = data ? Number(data) : undefined;
+                // Get seat number from data using a Regex
+                const seatRegex = /^\d+$/;
+                const seatMatch = data.toString().match(seatRegex);
+                const seat = seatMatch ? parseInt(seatMatch[0]) : undefined; // Join will find the next empty seat
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
 
                 new JoinAction(this, this._update).execute(player, index, _amount, seat);
