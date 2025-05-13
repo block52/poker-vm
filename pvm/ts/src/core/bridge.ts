@@ -6,14 +6,18 @@ import { ethers, EventLog } from "ethers";
 import { MintCommand } from "../commands/mintCommand";
 import { createProvider } from "./provider";
 import { CONTRACT_ADDRESSES } from "./constants";
+import { createHash } from "crypto";
 
 const abi = ["event Transfer(address indexed from, address indexed to, uint256 value)"];
-const bridge_abi = ["event Deposited(address indexed account, uint256 amount, uint256 index)"];
+const bridge_abi = [
+    "event Deposited(address indexed account, uint256 amount, uint256 index)",
+    "function deposits(uint256) view returns (address, uint256)",
+    "function depositIndex() view returns (uint256)"
+];
 
 export class Bridge {
-    private bridgeContract: ethers.Contract;
+    private readonly bridgeContract: ethers.Contract;
     private readonly provider: ethers.JsonRpcProvider;
-    private decimals: string = "6";
 
     constructor(private readonly nodeUrl: string) {
         this.provider = createProvider(this.nodeUrl);
@@ -22,18 +26,18 @@ export class Bridge {
 
     public async listenToBridge(): Promise<void> {
         const filter = this.bridgeContract.filters.Deposited();
-        
+
         this.bridgeContract.on(filter, async (log: any) => {
             try {
                 console.log("\n🔍 Raw Log:", log);
-                
+
                 // The args are already decoded by ethers
                 const [account, amount, index] = log.args;
                 const txHash = log.log.transactionHash;
-                
+
                 // Subtract 1 from index to match contract's 0-based indexing
                 const adjustedIndex = index - 1n;
-                
+
                 console.log("\n🎯 Processing Live Deposit Event:", {
                     account,
                     amount: amount.toString(),
@@ -47,7 +51,7 @@ export class Bridge {
                 console.error("❌ Failed to process live deposit:", error);
             }
         });
-        
+
         console.log("🎧 Listening for Deposited events...");
     }
 
@@ -107,9 +111,77 @@ export class Bridge {
         }
     }
 
-    public async resync(): Promise<void> {
+    public async resync(batchSize: bigint = 10n): Promise<void> {
         console.log("\n🔄 Bridge: Starting resync...");
-        
+
+        try {
+            const count: bigint = await this.bridgeContract.depositIndex();
+
+            if (count === 0n) {
+                console.log("🚫 Bridge: No deposits found, skipping resync.");
+                return;
+            }
+
+            // Then process each event with more logging
+            let successCount = 0;
+            let skippedCount = 0;
+            let errorCount = 0;
+
+            // Do in parallel in batches of 10 (default)
+            const batches = Math.ceil(Number(count) / Number(batchSize));
+            console.log(`📊 Bridge: Found ${batches} batches of deposits to process`);
+
+            for (let batch = 0n; batch < batches; batch++) {
+                const start = batch * batchSize;
+                const end = Math.min(Number(start) + Number(batchSize), Number(count));
+                console.log(`\n🔄 Bridge: Processing batch ${batch + 1n} of ${batches}`);
+
+                const promises = [];
+                for (let i = start; i < end; i++) {
+                    promises.push(this.bridgeContract.deposits(i));
+                }
+
+                const results = await Promise.all(promises);
+
+                for (let i = 0; i < results.length; i++) {
+                    const [account, amount] = results[i];
+                    console.log(`\n🔍 Bridge: Found deposit at index ${start + BigInt(i)}:`);
+
+                    try {
+                        const tx = createHash("sha256")
+                            .update(`${start + BigInt(i)}-${account}-${amount}`)
+                            .digest("hex");
+                        await this.onDeposit(account, amount, start + BigInt(i), tx);
+                        console.log(`✅ Successfully processed deposit at index ${start + BigInt(i)}`);
+                        successCount++;
+                    } catch (error) {
+                        if ((error as Error).message === "Transaction already in blockchain") {
+                            console.log(`⏭️ Skipping already processed deposit at index ${start + BigInt(i)}`);
+                            skippedCount++;
+                        } else {
+                            console.log(`❌ Failed to process deposit: ${start + BigInt(i)}`);
+                            errorCount++;
+                        }
+                    }
+                }
+            }
+
+            console.log("\n🏁 Bridge: Resync complete", {
+                total: count,
+                success: successCount,
+                skipped: skippedCount,
+                errors: errorCount
+            });
+        } catch (error) {
+            console.error("\n💥 Bridge: Resync failed with error:", error);
+            // Don't throw the error further - let the service continue running
+        }
+    }
+
+    // Deprecated function
+    public async resyncByEvents(): Promise<void> {
+        console.log("\n🔄 Bridge: Starting resync...");
+
         try {
             const events = await this.bridgeContract.queryFilter("Deposited", 0, "latest");
             console.log(`📊 Bridge: Found ${events.length} deposit events to process`);
@@ -143,7 +215,7 @@ export class Bridge {
             let successCount = 0;
             let skippedCount = 0;
             let errorCount = 0;
-            
+
             for (const event of events) {
                 const depositEvent = event as EventLog;
                 if (depositEvent.args) {
@@ -169,12 +241,7 @@ export class Bridge {
                         });
 
                         const index: bigint = depositEvent.args.index - 1n;
-                        await this.onDeposit(
-                            depositEvent.args.account, 
-                            depositEvent.args.amount, 
-                            index, 
-                            depositEvent.transactionHash
-                        );
+                        await this.onDeposit(depositEvent.args.account, depositEvent.args.amount, index, depositEvent.transactionHash);
                         console.log(`✅ Successfully processed deposit at index ${index}`);
                         successCount++;
                     } catch (error) {
@@ -193,7 +260,7 @@ export class Bridge {
                     }
                 }
             }
-            
+
             console.log("\n🏁 Bridge: Resync complete", {
                 total: events.length,
                 success: successCount,
