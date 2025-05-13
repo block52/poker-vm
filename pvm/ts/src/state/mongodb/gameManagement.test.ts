@@ -28,7 +28,7 @@ describe.skip("GameManagement", () => {
 
     describe("get", () => {
         it("should return default state for zero address", async () => {
-            const result = await gameManagement.get(ethers.ZeroAddress);
+            const result = await gameManagement.getState(ethers.ZeroAddress);
 
             expect(result).toEqual({
                 type: "cash",
@@ -58,7 +58,7 @@ describe.skip("GameManagement", () => {
 
             (GameState.findOne as jest.Mock).mockResolvedValue(mockState);
 
-            const result = await gameManagement.get("0x1234567890123456789012345678901234567890");
+            const result = await gameManagement.getState("0x1234567890123456789012345678901234567890");
 
             expect(result).toEqual(mockState.state);
             expect(GameState.findOne).toHaveBeenCalledWith({ address: "0x1234567890123456789012345678901234567890" });
@@ -73,7 +73,7 @@ describe.skip("GameManagement", () => {
             (GameState.findOne as jest.Mock).mockResolvedValue(null);
             (contractSchemas.findOne as jest.Mock).mockResolvedValue(mockSchema);
 
-            const result = await gameManagement.get("0x456");
+            const result = await gameManagement.getState("0x1234567890123456789012345678901234567890");
 
             expect(result).toEqual({
                 type: "cash",
@@ -99,7 +99,7 @@ describe.skip("GameManagement", () => {
             (GameState.findOne as jest.Mock).mockResolvedValue(null);
             (contractSchemas.findOne as jest.Mock).mockResolvedValue(null);
 
-            await expect(gameManagement.get("0x789")).rejects.toThrow("Game not found");
+            await expect(gameManagement.getState(ethers.ZeroAddress)).rejects.toThrow("Game not found");
         });
     });
 

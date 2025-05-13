@@ -6,19 +6,19 @@ import { getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
 import { getContractSchemaManagement } from "../state/index";
-import { TexasHoldemGameState, TexasHoldemRound, TransactionResponse } from "@bitcoinbrisbane/block52";
+import { TransactionResponse } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
 export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly gameManagement: IGameManagement;
-    private readonly contractSchemas: IContractSchemaManagement;
+    private readonly contractSchemaManagement: IContractSchemaManagement;
     private readonly mempool: Mempool;
     private readonly seed: number[];
 
     constructor(private readonly address: string, private readonly privateKey: string, _seed: string | undefined = undefined) {
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemas = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
 
         // Convert the seed string to a number array for shuffling
@@ -43,85 +43,13 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
                 throw new Error(`Address ${this.address} is not a valid game contract`);
             }
 
-            const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.address), this.contractSchemas.getGameOptions(this.address)]);
+            const json = await this.gameManagement.getState(this.address);
 
-            if (!gameOptions) {
-                throw new Error(`Game options not found for address ${this.address}`);
-            }
-
-            // Create new game if it doesn't exist
             if (!json) {
-                console.log(`Creating new game for address: ${this.address}`);
-
-                // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern
-                // of getting the next nonce from the account and validating it.
-                const timestampNonce = BigInt(Date.now());
-
-                const address = await this.gameManagement.create(
-                    timestampNonce, // Using timestamp as nonce instead of 0n
-                    this.address,
-                    gameOptions
-                );
-
-                // Create a deck for the new game
-                const deck = new Deck();
-                deck.shuffle(this.seed);
-
-                const newGameJson: TexasHoldemGameState = {
-                    type: "cash",
-                    address: address,
-                    minBuyIn: gameOptions.minBuyIn.toString(),
-                    maxBuyIn: gameOptions.maxBuyIn.toString(),
-                    minPlayers: gameOptions.minPlayers,
-                    maxPlayers: gameOptions.maxPlayers,
-                    smallBlind: gameOptions.smallBlind.toString(),
-                    bigBlind: gameOptions.bigBlind.toString(),
-                    dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
-                    positions: {
-                        dealer: gameOptions.maxPlayers,
-                        smallBlind: 1,
-                        bigBlind: 2
-                    },
-                    players: [],
-                    deck: deck.toString(),
-                    communityCards: [],
-                    pots: ["0"],
-                    nextToAct: -1,
-                    round: TexasHoldemRound.ANTE,
-                    winners: [],
-                    signature: ethers.ZeroHash
-                };
-
-                // await this.gameManagement.saveFromJSON(JSON.stringify(newGameJson));
-                await this.gameManagement.saveFromJSON(newGameJson);
-
-                // Create a transaction record for this action
-                const newGameTx: Transaction = await Transaction.create(
-                    this.address,
-                    ethers.ZeroAddress,
-                    0n, // No value transfer
-                    timestampNonce,
-                    this.privateKey,
-                    `create,0,${deck.toString()}`
-                );
-
-                // Add the transaction to the mempool
-                await this.mempool.add(newGameTx);
-
-                const txResponse: TransactionResponse = {
-                    nonce: "0",
-                    from: this.address,
-                    to: ethers.ZeroAddress,
-                    value: "0",
-                    hash: newGameTx.hash,
-                    signature: newGameTx.signature,
-                    timestamp: newGameTx.timestamp.toString(),
-                    data: `create,0,${deck.toString()}`
-                };
-
-                // Return the signed transaction
-                return signResult(txResponse, this.privateKey);
+                throw new Error(`Game state not found for address: ${this.address}`);
             }
+
+            const gameOptions = await this.contractSchemaManagement.getGameOptions(this.address);
 
             // For existing games, handle reinitialization
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);

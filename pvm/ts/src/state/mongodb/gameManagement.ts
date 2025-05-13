@@ -5,10 +5,30 @@ import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
 import { GameOptions, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../../models";
 import { IGameManagement } from "../interfaces";
+import { createAddress } from "../utils/crypto";
 
 export class GameManagement extends StateManager implements IGameManagement {
     constructor(protected readonly connString: string) {
         super(connString);
+    }
+
+    public async getByAddress(address: string): Promise<IGameStateDocument | null> {
+        const gameState = await GameState.findOne({
+            address
+        });
+
+        if (gameState) {
+            // this is stored in MongoDB as an object / document
+            const state: IGameStateDocument = {
+                address: gameState.address,
+                schemaAddress: gameState.schemaAddress,
+                state: gameState.state
+            };
+            return state;
+        }
+
+        // Return null instead of throwing an error
+        return null;
     }
 
     public async getAll(): Promise<IGameStateDocument[]> {
@@ -17,6 +37,21 @@ export class GameManagement extends StateManager implements IGameManagement {
             // this is stored in MongoDB as an object / document
             const state: IGameStateDocument = {
                 address: gameState.address,
+                schemaAddress: gameState.schemaAddress,
+                state: gameState.state
+            };
+            return state;
+        });
+        return states;
+    }
+
+    public async getAllBySchemaAddress(schemaAddress: string): Promise<IGameStateDocument[]> {
+        const gameStates = await GameState.find({ schemaAddress });
+        const states = gameStates.map(gameState => {
+            // this is stored in MongoDB as an object / document
+            const state: IGameStateDocument = {
+                address: gameState.address,
+                schemaAddress: gameState.schemaAddress,
                 state: gameState.state
             };
             return state;
@@ -25,15 +60,14 @@ export class GameManagement extends StateManager implements IGameManagement {
     }
 
     // This needs to be looser in the future as "any", use a generic type
-    public async get(address: string): Promise<TexasHoldemGameState | null> {
+    public async getState(address: string): Promise<TexasHoldemGameState | null> {
         const gameState = await GameState.findOne({
             address
         });
 
         if (gameState) {
             // this is stored in MongoDB as an object / document
-            const state = gameState.state;
-            return state;
+            return gameState.state;
         }
 
         // Return null instead of throwing an error
@@ -41,17 +75,8 @@ export class GameManagement extends StateManager implements IGameManagement {
     }
 
     public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
-        // TODO: Eventually we should generate a unique table address here, but for now
-        // the game address needs to be the same as the contractSchema address for the system
-        // to work correctly. We're keeping the original hash generation code commented out
-        // until we can properly separate game instances from contract schemas.
-
-        // const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
-        // const hash = crypto.createHash("sha256").update(digest).digest("hex");
-
-        // Instead of creating a new hash, using the contractSchema address
-        // This ensures the game address matches the contract address
-        const address = contractSchemaAddress;
+        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
+        const address = createAddress(digest);
 
         // Creating a log to confirm what's happening
         console.log(`Creating game with address: ${address} (using contract schema address directly)`);
@@ -87,6 +112,7 @@ export class GameManagement extends StateManager implements IGameManagement {
 
         const game = new GameState({
             address: address,
+            schemaAddress: contractSchemaAddress,
             state
         });
 

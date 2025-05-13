@@ -6,15 +6,15 @@ import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
 
 type PlayerProps = {
-    left?: string; // Front side image source
-    top?: string; // Back side image source
+    left?: string; // Position left value
+    top?: string; // Position top value
     index: number;
     currentIndex: number;
     color?: string;
     status?: string;
 };
 
-const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
+const Player: React.FC<PlayerProps> = ({ left, top, index, currentIndex, color, status }) => {
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
     const { winnerInfo } = useWinnerInfo(id);
@@ -32,7 +32,22 @@ const Player: React.FC<PlayerProps> = ({ left, top, index, color }) => {
         return winner ? winner.formattedAmount : null;
     }, [isWinner, winnerInfo, index]);
 
+    // For debugging - log key information to help troubleshoot
+    React.useEffect(() => {
+        console.log(`Player component rendering for seat ${index}:`, {
+            hasPlayerData: !!playerData,
+            stackValue,
+            holeCards,
+            isCurrentUser: true, // This is the current user's view
+            isFolded,
+            isAllIn,
+            isWinner,
+            round
+        });
+    }, [playerData, index, stackValue, holeCards, isFolded, isAllIn, isWinner, round]);
+
     if (!playerData) {
+        console.log(`No player data found for player at seat ${index}`);
         return <></>;
     }
 

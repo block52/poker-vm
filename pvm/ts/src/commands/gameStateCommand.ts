@@ -23,14 +23,14 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
     public async execute(): Promise<ISignedResponse<TexasHoldemStateDTO>> {
         try {
-            const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.address), this.contractSchemaManagement.getGameOptions(this.address)]);
+            const gameState = await this.gameManagement.getByAddress(this.address);
 
-            if (!json) {
+            if (!gameState) {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
 
-            // Get the games view with respect to the caller (shared secret)
-            const game = TexasHoldemGame.fromJson(json, gameOptions);
+            const gameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
+            const game = TexasHoldemGame.fromJson(gameState.state, gameOptions);
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 

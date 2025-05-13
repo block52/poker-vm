@@ -184,7 +184,9 @@ const Table = () => {
 
     // Create a different variable for comparison purposes
     const userWalletAddress = React.useMemo(() => {
-        return currentUserAddress ? currentUserAddress.toLowerCase() : null;
+        const storedAddress = localStorage.getItem("user_eth_public_key");
+        console.log("User wallet address from localStorage:", storedAddress);
+        return storedAddress ? storedAddress.toLowerCase() : null;
     }, [currentUserAddress]);
 
     // Update to use the imported hook
@@ -412,7 +414,18 @@ const Table = () => {
         const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
         
         // Check if this seat belongs to the current user
-        const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress;
+        const isCurrentUser = playerAtThisSeat && 
+            playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
+        
+        // Add debugging to see why Player component might not be showing
+        if (playerAtThisSeat) {
+            console.log(`Found player at seat ${seatNumber}:`, {
+                playerAddress: playerAtThisSeat.address?.toLowerCase(),
+                userWalletAddress: userWalletAddress?.toLowerCase(),
+                isMatch: playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase(),
+                isCurrentUser
+            });
+        }
         
         // Build common props shared by all player components
         const playerProps = {

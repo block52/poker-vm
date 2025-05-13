@@ -20,6 +20,7 @@ export interface IClient {
     getTransactions(): Promise<TransactionDTO[]>;
     mint(address: string, amount: string, transactionId: string): Promise<void>;
     newHand(gameAddress: string, seed: string, nonce?: number): Promise<TransactionResponse>;
+    newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
     playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
@@ -311,6 +312,30 @@ export class NodeRpcClient implements IClient {
             id: this.getRequestId(),
             method: RPCMethods.NEW,
             params: [gameAddress, seed, nonce], // [to, data, nonce]
+            signature: signature
+        });
+
+        return body.result.data;
+    }
+
+    /**
+     * Create a new game table on the remote node
+     * @param schemaAddress The address of the schema to use for the table
+     * @param owner The address of the table owner
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the table address
+     */
+    public async newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string> {
+        if (!nonce) {
+            nonce = await this.getNonce(this.getAddress());
+        }
+
+        const signature = await this.getSignature(nonce);
+
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.NEW_TABLE,
+            params: [schemaAddress, owner, nonce], // [to, from, nonce]
             signature: signature
         });
 

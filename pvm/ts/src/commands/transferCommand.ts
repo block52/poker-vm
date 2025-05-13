@@ -12,7 +12,7 @@ import { IContractSchemaManagement, IGameManagement } from "../state/interfaces"
 
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly gameManagement: IGameManagement;
-    private readonly contractSchemas: IContractSchemaManagement;
+    private readonly contractSchemaManagement: IContractSchemaManagement;
     private readonly mempool: Mempool;
 
     constructor(
@@ -25,7 +25,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
     ) {
         console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemas = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagement();
         this.mempool = getMempoolInstance();
     }
 
@@ -52,9 +52,14 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
             if (await this.isGameTransaction(this.to)) {
                 console.log(`Processing game transaction: data=${this.data}, to=${this.to}`);
 
-                const [json, gameOptions] = await Promise.all([this.gameManagement.get(this.to), this.contractSchemas.getGameOptions(this.to)]);
+                const gameState = await this.gameManagement.getByAddress(this.to);
 
-                const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
+                if (!gameState) {
+                    throw new Error(`Game state not found for address: ${this.to}`);
+                }
+
+                const gameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
+                const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
 
                 console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
                 game.performAction(this.from, NonPlayerActionType.JOIN, game.getTurnIndex(), this.amount);
@@ -78,8 +83,8 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
             }
 
             if (await this.isGameTransaction(this.from)) {
-                const json = await this.gameManagement.get(this.from);
-                const gameOptions = await this.contractSchemas.getGameOptions(this.from);
+                const json = await this.gameManagement.getState(this.from);
+                const gameOptions = await this.contractSchemaManagement.getGameOptions(this.from);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
