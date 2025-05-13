@@ -5,7 +5,7 @@ import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
 import { GameOptions, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../../models";
 import { IGameManagement } from "../interfaces";
-import { createAddress } from "../utils/crypto";
+import { createAddress } from "../../utils/crypto";
 
 export class GameManagement extends StateManager implements IGameManagement {
     constructor(protected readonly connString: string) {

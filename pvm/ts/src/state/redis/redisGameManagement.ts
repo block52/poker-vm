@@ -1,11 +1,11 @@
 import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
-import { GameOptions, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions } from "@bitcoinbrisbane/block52";
 import { IGameManagement } from "../interfaces";
-
 import { Redis } from "ioredis";
 import * as crypto from "crypto";
+import { IDB } from "../../data/interfaces";
 
-export class RedisGameManagement implements IGameManagement {
+export class RedisGameManagement implements IGameManagement, IDB {
     private readonly redisClient: Redis;
     private readonly gamesKey: string;
     private readonly gameAddressIndex: string;
@@ -45,6 +45,18 @@ export class RedisGameManagement implements IGameManagement {
             await this.redisClient.quit();
             this.isConnected = false;
         }
+    }
+
+    public getAllBySchemaAddress(schemaAddress: string): Promise<IGameStateDocument[]> {
+        throw new Error("Method not implemented.");
+    }
+
+    public getByAddress(address: string): Promise<IGameStateDocument | null> {
+        throw new Error("Method not implemented.");
+    }
+
+    public getState(address: string): Promise<any | null> {
+        throw new Error("Method not implemented.");
     }
 
     /**
@@ -138,7 +150,7 @@ export class RedisGameManagement implements IGameManagement {
         // Prepare game state document
         const gameState: IGameStateDocument = {
             address: gameAddress,
-            state: {},
+            state: {}
         };
 
         // Save to Redis
