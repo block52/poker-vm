@@ -35,7 +35,7 @@ describe("Parser", () => {
             expect(actual.to).toBe("0x5678");
             expect(actual.value).toBe(1000n);
             expect(actual.type).toBe(NonPlayerActionType.JOIN);
-            expect(actual.data).toBeUndefined();
+            expect(actual.data).toBeNull();
         });
     });
 });

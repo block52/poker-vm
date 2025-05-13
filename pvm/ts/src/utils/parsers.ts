@@ -11,23 +11,23 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         throw new Error("Transaction data is undefined");
     }
 
-    // Get the parts out of data using a REGEX
-    const regex = /(\w+),(\d+),?(\w+)?/;
-    const match = tx.data.match(regex);
-    if (!match) {
-        throw new Error(`Invalid transaction data format: ${tx.data}`);
-    }
+    // // Get the parts out of data using a REGEX
+    // const regex = /(\w+),(\d+),?(\w+)?/;
+    // const match = tx.data.match(regex);
+    // if (!match) {
+    //     throw new Error(`Invalid transaction data format: ${tx.data}`);
+    // }
 
-    // const params = tx.data.split(",");
-    // const action = params[0].trim() as PlayerActionType;
-    // const index = parseInt(params[1].trim());
-    const action = match[1].trim() as PlayerActionType;
+    const params = tx.data.split(",");
+    const action = params[0].trim() as PlayerActionType;
+    const index = parseInt(params[1].trim());
+    // const action = match[1].trim() as PlayerActionType;
 
-    // Get index from the regex match
-    const index = parseInt(match[2].trim());
-    if (isNaN(index)) {
-        throw new Error(`Invalid index in transaction data: ${match[2]}`);
-    }
+    // // Get index from the regex match
+    // const index = parseInt(match[2].trim());
+    // if (isNaN(index)) {
+    //     throw new Error(`Invalid index in transaction data: ${match[2]}`);
+    // }
 
     return {
         from: tx.from,
@@ -35,7 +35,7 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         value: tx.value,
         type: action,
         index: index,
-        // data: params[2] ? params[2].trim() : undefined
-        data: match[3] ? match[3].trim() : undefined
+        data: params[2] ? params[2].trim() : null
+       // data: match[3] ? match[3].trim() : null
     };
 }
