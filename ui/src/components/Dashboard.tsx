@@ -122,13 +122,19 @@ const Dashboard: React.FC = () => {
         try {
             const gameContractAddress = selectedContractAddress || DEFAULT_GAME_CONTRACT;
             
+            if (!publicKey) {
+                setCreateGameError("No wallet address available. Please create or import a wallet first.");
+                setIsCreatingGame(false);
+                return;
+            }
+            
             // Show creating message with selected game type
             const gameTypeName = "Texas Hold'em"; // Could be dynamic based on selection
 
             // Create the new table using the client's newTable method
             // We use the current user's public key as the "from" parameter
             // The "to" parameter is the game contract schema address
-            const result = await client.newTable(publicKey || "", gameContractAddress);
+            const result = await client.newTable(publicKey, gameContractAddress);
             
             if (result) {
                 // The result is the table ID (contract address)
@@ -198,25 +204,6 @@ const Dashboard: React.FC = () => {
         }
     }, [publicKey, clientLoading, fetchAccountBalance]);
 
-    // Add a specific function to force refresh when needed
-    const refreshBalance = useCallback(() => {
-        fetchAccountBalance(true);
-    }, [fetchAccountBalance]);
-
-    const handleGameType = (type: GameType) => {
-        console.log("\n=== Game Type Selected ===");
-        console.log("Type:", type);
-
-        if (type === GameType.CASH) {
-            console.log("Setting type to CASH");
-            setTypeSelected("cash");
-        }
-
-        if (type === GameType.TOURNAMENT) {
-            console.log("Setting type to TOURNAMENT");
-            setTypeSelected("tournament");
-        }
-    };
 
     const handleGameVariant = (variant: Variant) => {
         console.log("\n=== Game Variant Selected ===");
@@ -286,6 +273,14 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         setLimitTypeSelected("no-limit"); // Default when changing variant
     }, [variantSelected]);
+
+    const handleGameType = (type: GameType) => {
+        if (type === GameType.CASH) {
+            setTypeSelected("cash");
+        } else if (type === GameType.TOURNAMENT) {
+            setTypeSelected("tournament");
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
