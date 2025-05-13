@@ -166,26 +166,6 @@ export class Bridge {
                 }
             }
 
-            // for (let i = 0n; i < count; i++) {
-            //     const [account, amount] = await this.bridgeContract.deposits(i);
-            //     console.log(`\n🔍 Bridge: Found deposit at index ${i}:`);
-
-            //     try {
-            //         const tx = createHash("sha256").update(`${i}-${account}-${amount}`).digest("hex");
-            //         await this.onDeposit(account, amount, i, tx);
-            //         console.log(`✅ Successfully processed deposit at index ${i}`);
-            //         successCount++;
-            //     } catch (error) {
-            //         if ((error as Error).message === "Transaction already in blockchain") {
-            //             console.log(`⏭️ Skipping already processed deposit at index ${i}`);
-            //             skippedCount++;
-            //         } else {
-            //             console.log(`❌ Failed to process deposit: ${i}`);
-            //             errorCount++;
-            //         }
-            //     }
-            // }
-
             console.log("\n🏁 Bridge: Resync complete", {
                 total: count,
                 success: successCount,
