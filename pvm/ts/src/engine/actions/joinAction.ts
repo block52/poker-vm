@@ -20,7 +20,7 @@ class JoinAction extends BaseAction {
     }
 
     // Override execute to handle player joining
-    execute(player: Player, index: number, amount?: bigint, requestedSeat?: number): void {
+    execute(player: Player, index: number, amount?: bigint, requestedSeat?: string): void {
         // First verify the action
         const range = this.verify(player);
 
@@ -31,7 +31,20 @@ class JoinAction extends BaseAction {
         }
 
         // Find an available seat or use the requested one
-        const seat = requestedSeat === undefined ? this.game.findNextEmptySeat() : requestedSeat;
+        let seat: number;
+        if (requestedSeat === undefined) {
+            // Find the next empty seat
+            seat = this.game.findNextEmptySeat();
+        } else {
+            // Validate the requested seat
+            const seatRegex = /^\d+$/;
+            const seatMatch = requestedSeat.toString().match(seatRegex);
+            if (!seatMatch) {
+                throw new Error("Invalid seat number.");
+            }
+            seat = parseInt(seatMatch[0]);
+        }
+
         this.game.joinAtSeat(player, seat);
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
