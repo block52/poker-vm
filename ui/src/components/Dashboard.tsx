@@ -120,28 +120,34 @@ const Dashboard: React.FC = () => {
         setCreateGameError("");
 
         try {
-            // Generate a random seed for the game
-            const randomSeed = Math.random().toString(36).substring(2, 15);
-            const gameAddress = selectedContractAddress || DEFAULT_GAME_CONTRACT;
+            const gameContractAddress = selectedContractAddress || DEFAULT_GAME_CONTRACT;
+            
+            if (!publicKey) {
+                setCreateGameError("No wallet address available. Please create or import a wallet first.");
+                setIsCreatingGame(false);
+                return;
+            }
+            
+            // Show creating message with selected game type
+            const gameTypeName = "Texas Hold'em"; // Could be dynamic based on selection
 
-            // Create the new game using the client's newHand method
-            // The account's nonce is managed automatically by the NodeRpcClient
-            const result = await client.newHand(gameAddress, randomSeed);
-
-            if (result && result.hash) {
-                setNewGameAddress(gameAddress);
+            // Create the new table using the client's newTable method
+            // We use the current user's public key as the "from" parameter
+            // The "to" parameter is the game contract schema address
+            const result = await client.newTable(publicKey, gameContractAddress);
+            
+            if (result) {
+                // The result is the table ID (contract address)
+                setNewGameAddress(result);
                 setShowCreateGameModal(false);
-
-                // Show success message
-                alert(`Game created successfully! Game address: ${gameAddress}`);
 
                 // Refresh account data to get updated nonce
                 fetchAccountBalance();
             } else {
-                setCreateGameError("Failed to create game - no transaction hash returned");
+                setCreateGameError("Failed to create table - no table ID returned");
             }
         } catch (error: any) {
-            console.error("Error creating game:", error);
+            console.error("Error creating table:", error);
             setCreateGameError(error.message || "An unexpected error occurred");
         } finally {
             setIsCreatingGame(false);
@@ -198,25 +204,6 @@ const Dashboard: React.FC = () => {
         }
     }, [publicKey, clientLoading, fetchAccountBalance]);
 
-    // Add a specific function to force refresh when needed
-    const refreshBalance = useCallback(() => {
-        fetchAccountBalance(true);
-    }, [fetchAccountBalance]);
-
-    const handleGameType = (type: GameType) => {
-        console.log("\n=== Game Type Selected ===");
-        console.log("Type:", type);
-
-        if (type === GameType.CASH) {
-            console.log("Setting type to CASH");
-            setTypeSelected("cash");
-        }
-
-        if (type === GameType.TOURNAMENT) {
-            console.log("Setting type to TOURNAMENT");
-            setTypeSelected("tournament");
-        }
-    };
 
     const handleGameVariant = (variant: Variant) => {
         console.log("\n=== Game Variant Selected ===");
@@ -286,6 +273,14 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         setLimitTypeSelected("no-limit"); // Default when changing variant
     }, [variantSelected]);
+
+    const handleGameType = (type: GameType) => {
+        if (type === GameType.CASH) {
+            setTypeSelected("cash");
+        } else if (type === GameType.TOURNAMENT) {
+            setTypeSelected("tournament");
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
@@ -384,14 +379,16 @@ const Dashboard: React.FC = () => {
                         <h3 className="text-xl font-bold text-white mb-4">Create New Game</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-white text-sm mb-1">Game Contract</label>
+                                <label className="block text-white text-sm mb-1">Card Game Contract</label>
                                 <select
                                     value={selectedContractAddress}
                                     onChange={e => setSelectedContractAddress(e.target.value)}
                                     className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                 >
-                                    <option value={DEFAULT_GAME_CONTRACT}>Default Texas Hold'em</option>
-                                    {/* Additional contracts could be added here */}
+                                    <option value={DEFAULT_GAME_CONTRACT}>Texas Hold'em</option>
+                                    <option value="" disabled>Omaha (Coming Soon)</option>
+                                    <option value="" disabled>Seven Card Stud (Coming Soon)</option>
+                                    <option value="" disabled>Blackjack (Coming Soon)</option>
                                 </select>
                             </div>
 
@@ -429,7 +426,7 @@ const Dashboard: React.FC = () => {
                                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                                 ></path>
                                             </svg>
-                                            Creating...
+                                            Creating Table...
                                         </>
                                     ) : (
                                         "Create Game"
@@ -679,7 +676,7 @@ const Dashboard: React.FC = () => {
                 {/* Display new game address if available */}
                 {newGameAddress && (
                     <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
-                        <h3 className="text-lg font-bold text-white mb-2">New Game Created!</h3>
+                        <h3 className="text-lg font-bold text-white mb-2">New Table Created!</h3>
                         <div className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center animate-pulse">
@@ -693,7 +690,7 @@ const Dashboard: React.FC = () => {
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-gray-300 text-xs">Contract</p>
+                                    <p className="text-gray-300 text-xs">Table ID</p>
                                     <p className="font-mono text-blue-400 text-sm">{formatAddress(newGameAddress)}</p>
                                 </div>
                             </div>
@@ -701,7 +698,7 @@ const Dashboard: React.FC = () => {
                                 <button
                                     onClick={() => navigator.clipboard.writeText(newGameAddress)}
                                     className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
-                                    title="Copy address"
+                                    title="Copy table ID"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
@@ -712,16 +709,30 @@ const Dashboard: React.FC = () => {
                                         />
                                     </svg>
                                 </button>
-                                <Link
-                                    to={`/table/${newGameAddress}`}
+                                <button
+                                    onClick={() => {
+                                        setShowBuyInModal(true);
+                                        setBuyInTableId(newGameAddress);
+                                    }}
                                     className="p-2 text-green-400 hover:text-green-300 transition-colors ml-2"
-                                    title="Go to game"
+                                    title="Join table"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                     </svg>
-                                </Link>
+                                </button>
                             </div>
+                        </div>
+                        <div className="mt-2 flex justify-center">
+                            <button
+                                onClick={() => {
+                                    setShowBuyInModal(true);
+                                    setBuyInTableId(newGameAddress);
+                                }}
+                                className="text-sm text-blue-400 hover:text-blue-300"
+                            >
+                                Buy in to join this table
+                            </button>
                         </div>
                     </div>
                 )}
