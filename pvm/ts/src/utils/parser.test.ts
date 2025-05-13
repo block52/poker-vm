@@ -5,12 +5,11 @@ import { toOrderedTransaction } from "./parsers";
 describe("Parser", () => {
     describe("toOrderedTransaction", () => {
         it("should create ordered transaction", () => {
-            const tx: ITransaction = {
+            const tx = {
                 from: "0x1234",
                 to: "0x5678",
                 value: 1000n,
-                type: NonPlayerActionType.JOIN,
-                data: "0,1"
+                data: "join,0,1"
             };
 
             const actual = toOrderedTransaction(tx);

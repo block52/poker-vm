@@ -42,7 +42,6 @@ export interface ITransaction {
     to: string;
     from: string;
     value: bigint;
-    type: PlayerActionType | NonPlayerActionType;;
     data?: string;
 }
 
