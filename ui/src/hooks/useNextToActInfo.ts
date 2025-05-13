@@ -1,5 +1,5 @@
 import { useGameState } from "./useGameState";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import useSWR from "swr";
 
@@ -17,7 +17,7 @@ export interface NextToActInfo {
  * @param gameData Current game state data
  * @returns Object containing information about who is next to act
  */
-export function whoIsNextToAct(gameData: any): NextToActInfo | null {
+export const whoIsNextToAct = (gameData: any): NextToActInfo | null => {
   if (!gameData || !gameData.players) return null;
 
   const nextToActSeat = gameData.nextToAct;
@@ -44,7 +44,7 @@ export function whoIsNextToAct(gameData: any): NextToActInfo | null {
     availableActions,
     timeRemaining
   };
-}
+};
 
 /**
  * Custom hook to fetch and provide information about who is next to act
@@ -52,66 +52,72 @@ export function whoIsNextToAct(gameData: any): NextToActInfo | null {
  * @returns Object containing next-to-act information
  */
 export const useNextToActInfo = (tableId?: string) => {
-  const [nextToActInfo, setNextToActInfo] = useState<NextToActInfo | null>(null);
-  const [lastRefresh, setLastRefresh] = useState(0);
+  // Memoize the lastRefresh reference to avoid unnecessary rerenders
+  const lastRefreshRef = useCallback(() => {
+    let lastTime = 0;
+    return {
+      get: () => lastTime,
+      set: (time: number) => { lastTime = time; }
+    };
+  }, [])();
 
   // Get game state from centralized hook
   const { gameState, isLoading, error, refresh } = useGameState(tableId);
-
-  // Custom more frequent refresh for this critical hook
-  useSWR(
-    tableId ? `next-to-act-${tableId}` : null,
-    async () => {
-      const now = Date.now();
-      // Refresh if more than 3 seconds have elapsed
-      if (now - lastRefresh >= 3000) {
-        await refresh();
-        setLastRefresh(now);
+  
+  // Memoize the nextToActInfo calculation to avoid recomputing on every render
+  const nextToActInfo = useMemo(() => {
+    if (!gameState || isLoading || error) return null;
+    
+    try {
+      // Special case: if dealer position is 9, treat it as 0 for UI purposes
+      const gameStateCopy = { ...gameState };
+      if (gameStateCopy.dealer === 9) {
+        gameStateCopy.dealer = 0;
       }
+      
+      // Use the utility function to determine who is next to act
+      return whoIsNextToAct(gameStateCopy);
+    } catch (err) {
+      console.error("Error parsing next-to-act info:", err);
       return null;
-    },
-    { refreshInterval: 3000, revalidateOnFocus: true }
-  );
-
-  // Process the data whenever it changes
-  useEffect(() => {
-    if (!isLoading && !error && gameState) {
-      try {
-        // Special case: if dealer position is 9, treat it as 0 for UI purposes
-        if (gameState.dealer === 9) {
-          gameState.dealer = 0;
-        }
-
-        // Use the utility function to determine who is next to act
-        const nextToActData = whoIsNextToAct(gameState);
-        setNextToActInfo(nextToActData);
-      } catch (err) {
-        console.error("Error parsing next-to-act info:", err);
-      }
     }
   }, [gameState, isLoading, error]);
 
-  // Manual refresh function
+  // Memoize the fetcher function to avoid recreation on every render
+  const fetcher = useCallback(async () => {
+    const now = Date.now();
+    // Refresh if more than 3 seconds have elapsed
+    if (now - lastRefreshRef.get() >= 3000) {
+      await refresh();
+      lastRefreshRef.set(now);
+    }
+    return null;
+  }, [refresh, lastRefreshRef]);
+
+  // Custom more frequent refresh using SWR
+  useSWR(
+    tableId ? `next-to-act-${tableId}` : null,
+    fetcher,
+    { 
+      refreshInterval: 3000, 
+      revalidateOnFocus: true,
+      // Reduce unnecessary revalidations
+      dedupingInterval: 1000,
+      // Prevent additional renders from focus events when tab switching
+      focusThrottleInterval: 5000
+    }
+  );
+
+  // Memoize the manual refresh function to maintain reference equality
   const manualRefresh = useCallback(() => {
     return refresh();
   }, [refresh]);
 
-  const result = {
+  // Memoize the result object to prevent unnecessary re-renders in consuming components
+  return useMemo(() => ({
     nextToActInfo,
     isLoading,
     error,
     refresh: manualRefresh
-  };
-
-  console.log("[useNextToActInfo] Returns:", {
-    nextToActSeat: nextToActInfo?.seat,
-    playerAddress: nextToActInfo?.player?.address,
-    isCurrentUserTurn: nextToActInfo?.isCurrentUserTurn,
-    numAvailableActions: nextToActInfo?.availableActions?.length,
-    timeRemaining: nextToActInfo?.timeRemaining,
-    isLoading,
-    hasError: !!error
-  });
-
-  return result;
+  }), [nextToActInfo, isLoading, error, manualRefresh]);
 }; 

@@ -62,12 +62,6 @@ import { PositionArray } from "../../types/index";
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
 
-// Helper function that only logs when DEBUG_MODE is true
-const debugLog = (...args: any[]) => {
-    if (DEBUG_MODE) {
-        console.log(...args);
-    }
-};
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -103,6 +97,9 @@ const NetworkDisplay = ({ isMainnet = false }) => {
     );
 };
 
+// Replace this comparison function
+const MemoizedTurnAnimation = React.memo(TurnAnimation);
+
 const Table = () => {
     const { id } = useParams<{ id: string }>();
 
@@ -128,13 +125,6 @@ const Table = () => {
 
     // Add the useTableLeave hook
     const { leaveTable, isLeaving } = useTableLeave(id);
-
-    // Log when cards are being shown
-    useEffect(() => {
-        if (isShowdown && showingPlayers.length > 0) {
-            console.log("Showdown detected! Players showing cards:", showingPlayers);
-        }
-    }, [isShowdown, showingPlayers]);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot, tableSize } = useTableState(id, 5000);
@@ -185,7 +175,6 @@ const Table = () => {
     // Create a different variable for comparison purposes
     const userWalletAddress = React.useMemo(() => {
         const storedAddress = localStorage.getItem("user_eth_public_key");
-        console.log("User wallet address from localStorage:", storedAddress);
         return storedAddress ? storedAddress.toLowerCase() : null;
     }, [currentUserAddress]);
 
@@ -214,7 +203,6 @@ const Table = () => {
             try {
                 // Call the SDK function to get game state directly
                 const gameState = await client.getGameState(id, userWalletAddress?.toLowerCase() ?? "");
-                console.log("Direct game state from SDK:", gameState);
                 // You could update some local state with this data if needed
             } catch (err) {
                 console.error("Error fetching game state directly:", err);
@@ -266,7 +254,6 @@ const Table = () => {
     // Add useEffect to refresh showing cards when the round is showdown or end
     useEffect(() => {
         if (currentRound === "showdown" || currentRound === "end") {
-            console.log("Round changed to", currentRound, "- refreshing showing cards");
             refreshShowingCards();
         }
     }, [currentRound, refreshShowingCards]);
@@ -376,26 +363,14 @@ const Table = () => {
         [accountBalance]
     );
 
-    // Remove early returns for errors, continue rendering even if there's an error
-    if (!id) {
-        console.error("No table ID provided");
-        // Continue rendering instead of returning early
-    }
-
-    if (tableDataValues.isLoading) {
-        console.log("Table data is loading...");
-        // Continue rendering instead of returning early
-    }
+ 
 
     if (tableDataValues.error) {
         console.error("Error loading table data:", tableDataValues.error);
         // Continue rendering instead of returning early
     }
 
-    if (!tableDataValues.tableDataPlayers || !tableDataValues.tableDataCommunityCards) {
-        console.log("Table data not fully loaded yet");
-        // Continue rendering instead of returning early
-    }
+
 
     const dealerButtonStyle = useMemo(() => ({
         left: `calc(${dealerButtonPosition.left} + 200px)`,
@@ -417,16 +392,7 @@ const Table = () => {
         const isCurrentUser = playerAtThisSeat && 
             playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
         
-        // Add debugging to see why Player component might not be showing
-        if (playerAtThisSeat) {
-            console.log(`Found player at seat ${seatNumber}:`, {
-                playerAddress: playerAtThisSeat.address?.toLowerCase(),
-                userWalletAddress: userWalletAddress?.toLowerCase(),
-                isMatch: playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase(),
-                isCurrentUser
-            });
-        }
-        
+    
         // Build common props shared by all player components
         const playerProps = {
             index: seatNumber, // Use the correct seat number
@@ -471,7 +437,6 @@ const Table = () => {
                         <span
                             className="text-white text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
                             onClick={() => {
-                                console.log("Navigating to lobby with direct reload");
                                 window.location.href = "/";
                             }}
                         >
@@ -522,7 +487,6 @@ const Table = () => {
                         <div
                             className="flex items-center justify-center w-8 h-8 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300"
                             onClick={() => {
-                                console.log("Navigating to deposit page with direct reload");
                                 window.location.href = "/qr-deposit";
                             }}
                         >
@@ -575,13 +539,11 @@ const Table = () => {
                                     const playerData = tableDataValues.tableDataPlayers?.find((p: any) => p.address?.toLowerCase() === userWalletAddress);
 
                                     if (leaveTable && playerData) {
-                                        console.log("Leaving table via action...");
                                         leaveTable({
                                             amount: playerData.stack || "0",
                                             actionIndex: 0 // Adding action index of 0 as default
                                         })
                                             .then(() => {
-                                                console.log("Successfully left table");
                                                 window.location.href = "/";
                                             })
                                             .catch(err => {
@@ -589,7 +551,6 @@ const Table = () => {
                                                 window.location.href = "/";
                                             });
                                     } else {
-                                        console.log("Leaving table with direct reload");
                                         window.location.href = "/";
                                     }
                                 }
@@ -807,20 +768,10 @@ const Table = () => {
                                     <div className="absolute inset-0 z-30">
                                         {reorderedPlayerArray.map((position, positionIndex) => {
                                             const componentToRender = getComponentToRender(position, positionIndex);
-
-                                            if (DEBUG_MODE) {
-                                                debugLog(`Rendering component for seat ${positionIndex + 1}:`, {
-                                                    isVacant: !componentToRender,
-                                                    isCurrentUser: componentToRender,
-                                                    componentType: !componentToRender ? "VacantPlayer" : "OppositePlayer",
-                                                    currentUserAddress: userWalletAddress
-                                                });
-                                            }
-
                                             return (
                                                 <div key={positionIndex} className="z-[10]">
                                                     <div>
-                                                        <TurnAnimation index={positionIndex} />
+                                                        <MemoizedTurnAnimation index={positionIndex} />
                                                     </div>
                                                     {componentToRender}
                                                 </div>

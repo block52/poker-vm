@@ -40,7 +40,6 @@ export function useTableNonce() {
 
             // If it's been less than 10 seconds since the last call, use cached data
             if (timeSinceLastCall < minInterval && nonce !== null) {
-                console.log(`[useTableNonce] Rate limiting: Using cached nonce data (${Math.floor(timeSinceLastCall / 1000)}s since last call)`);
                 return nonce;
             }
 
@@ -50,10 +49,8 @@ export function useTableNonce() {
 
                 // Update shared last API call time
                 localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
-                console.log(`[useTableNonce] Making API call to /get_account/ (${Math.floor(timeSinceLastCall / 1000)}s since last call)`);
 
                 const response = await axios.get<AccountApiResponse>(`${PROXY_URL}/get_account/${address}`);
-                console.log("Nonce response:", response.data);
 
                 if (response.data?.result?.data) {
                     const { data } = response.data.result;
@@ -89,7 +86,6 @@ export function useTableNonce() {
                 return null;
             }
 
-            console.log("🔄 Refreshing nonce for address:", targetAddress);
             return await fetchNonce(targetAddress);
         },
         [fetchNonce, userAddress]

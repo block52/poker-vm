@@ -6,9 +6,8 @@ import { PROXY_URL } from "../config/constants";
 // Define the fetcher function
 const fetcher = (url: string) => {
   const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-  console.log(`[useMinAndMaxBuyIns] Fetching data at: ${new Date().toISOString()}`);
+
   return axios.get(`${url}?userAddress=${userAddress}`).then(res => {
-    console.log(`[useMinAndMaxBuyIns] Received response at: ${new Date().toISOString()}`);
     return res.data;
   });
 };
@@ -72,15 +71,6 @@ export const useMinAndMaxBuyIns = (tableId?: string) => {
       error,
       refresh: mutate
     };
-
-    console.log("[useMinAndMaxBuyIns] Returns:", {
-      minBuyInWei,
-      maxBuyInWei,
-      minBuyInFormatted,
-      maxBuyInFormatted,
-      isLoading,
-      hasError: !!error
-    });
 
     return result;
   } catch (err) {

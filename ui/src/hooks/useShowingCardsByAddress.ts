@@ -49,8 +49,6 @@ export const useShowingCardsByAddress = (tableId?: string) => {
         seat: player.seat
       })) || [];
     
-    console.log("Players showing cards:", showingPlayers);
-    
     return {
       showingPlayers,
       isShowdown,

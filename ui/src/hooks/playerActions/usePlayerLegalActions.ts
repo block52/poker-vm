@@ -65,7 +65,6 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     }
 
     try {
-        console.log("⚠️ FULL GAME DATA:", JSON.stringify(gameState, null, 2));
 
         // Try to find the current player in the table data
         let currentPlayer = null;
@@ -142,7 +141,6 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
             }
 
             actionTurnIndex = firstActionIndex;
-            console.log("⚠️ Using common action turn index:", actionTurnIndex);
         }
 
         // Extract and return all the relevant information

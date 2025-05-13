@@ -123,13 +123,6 @@ export const usePlayerSeatInfo = (tableId?: string) => {
     refresh
   };
 
-  console.log("[usePlayerSeatInfo] Returns:", {
-    currentUserSeat: result.currentUserSeat,
-    numCachedSeats: Object.keys(result.userDataBySeat).length,
-    cachedSeats: Object.keys(result.userDataBySeat),
-    isLoading: result.isLoading,
-    hasError: !!result.error
-  });
 
   return result;
 };
