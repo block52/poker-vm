@@ -156,7 +156,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._gameOptions.bigBlind;
     }
     get smallBlind() {
-        return this._gameOptions.smallBlind;
+        // return this._gameOptions.smallBlind;
+        return 3; //
     }
     get bigBlindPosition() {
         return 2; // this._bigBlindPosition;
@@ -331,24 +332,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return player;
     }
 
-    findPosition(position: string): number | undefined {
-        // start at the last acted
-        const last = this._lastActedSeat;
+    // findPosition(position: string): number | undefined {
+    //     // start at the last acted
+    //     const last = this._lastActedSeat;
 
-        return -1;
-    }
+    //     return -1;
+    // }
 
-    setPosition(position: string): void {
-
-    }
-
-    private findSBPosition(): number | undefined {
+    private findSBPosition(): number {
         const sb = this.findNextPlayerToAct(this._dealer);
         if (sb) {
             return this.getPlayerSeatNumber(sb.address);
         }
 
-        return undefined;
+        return this._dealer + 1;
     }
 
     private findNextPlayerToAct(start: number = this._lastActedSeat + 1): Player | undefined {
@@ -776,17 +773,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return player.status;
     }
 
-    /**
-     * Gets the number of active players in the game
-     * @returns The number of players with status "active"
-     */
-    getActivePlayerCount(): number {
-        // const players = this.getSeatedPlayers();
-        // const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
-        const activePlayers = this.findActivePlayers();
-        return activePlayers.length;
-    }
-
     getAllBets(): Map<string, bigint> {
         const bets = new Map<string, bigint>();
 
@@ -870,6 +856,17 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         return livePlayers;
+    }
+
+    /**
+     * Gets the number of active players in the game
+     * @returns The number of players with status "active"
+     */
+    getActivePlayerCount(): number {
+        // const players = this.getSeatedPlayers();
+        // const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+        const activePlayers = this.findActivePlayers();
+        return activePlayers.length;
     }
 
     getSeatedPlayers(): Player[] {
