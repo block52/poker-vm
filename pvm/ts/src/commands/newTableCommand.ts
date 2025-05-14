@@ -1,7 +1,7 @@
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
-import { getContractSchemaManagement, getGameManagementInstance } from "../state";
+import { getContractSchemaManagementInstance, getGameManagementInstance } from "../state/index";
 
 export class NewTableCommand implements ISignedCommand<string> {
     private readonly gameManagement: IGameManagement;
@@ -9,7 +9,7 @@ export class NewTableCommand implements ISignedCommand<string> {
 
     constructor(private readonly owner: string, private readonly schemaAddress: string, private readonly privateKey: string) {
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemas = getContractSchemaManagement();
+        this.contractSchemas = getContractSchemaManagementInstance();
     }
 
     public async execute(): Promise<ISignedResponse<string>> {

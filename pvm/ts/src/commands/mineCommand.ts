@@ -1,13 +1,12 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block, Transaction } from "../models";
 import { getGameManagementInstance } from "../state/index";
-import { getBlockchainInstance, getTransactionInstance } from "../state/index";
+import { getBlockchainInstance, getTransactionInstance, getContractSchemaManagementInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import contractSchemas from "../schema/contractSchemas";
 import { GameStateCommand } from "./gameStateCommand";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { getContractSchemaManagement } from "../state/index";
 import { IGameStateDocument } from "../models/interfaces";
 import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
@@ -25,7 +24,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
         this.blockchainManagement = getBlockchainInstance();
         this.transactionManagement = getTransactionInstance();
         this.gameStateManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagementInstance();
     }
 
     public async execute(): Promise<ISignedResponse<Block | null>> {
@@ -146,7 +145,8 @@ export class MineCommand implements ISignedCommand<Block | null> {
                         Date.now(),
                         0n,
                         undefined,
-                        `${PlayerActionType.FOLD},${turnIndex}`);
+                        `${PlayerActionType.FOLD},${turnIndex}`
+                    );
 
                     this.mempool.add(transaction);
                     console.log(`Expired action for game ${gameState.address} and player ${turn.playerId}`);

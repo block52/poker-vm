@@ -1,10 +1,9 @@
-import { PlayerActionType, TexasHoldemStateDTO, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import {  TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { getGameManagementInstance } from "../state/index";
+import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { getContractSchemaManagement } from "../state/index";
 import { Transaction } from "../models";
 import { OrderedTransaction } from "../engine/types";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
@@ -19,7 +18,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     constructor(readonly address: string, private readonly privateKey: string, private readonly caller?: string | undefined) {
         this.gameManagement = getGameManagementInstance();
         this.mempool = getMempoolInstance();
-        this.contractSchemaManagement = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagementInstance();
     }
 
     public async execute(): Promise<ISignedResponse<TexasHoldemStateDTO>> {

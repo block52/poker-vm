@@ -2,7 +2,7 @@ import { Transaction } from "../models/transaction";
 import { Account } from "../models/account";
 import { Block } from "../models";
 import { GameOptions } from "@bitcoinbrisbane/block52";
-import { IGameStateDocument } from "../models/interfaces";
+import { IContractSchemaDocument, IGameStateDocument } from "../models/interfaces";
 
 export interface IAccountManagement {
     createAccount(privateKey: string): Promise<Account>;
@@ -26,6 +26,7 @@ export interface IBlockchainManagement {
 }
 
 export interface IContractSchemaManagement {
+    getByAddress(address: string): Promise<IContractSchemaDocument>;
     getGameOptions(address: string): Promise<GameOptions>;
 }
 
