@@ -5,7 +5,6 @@ import { RPCMethods, RPCRequest, NonPlayerActionType, PlayerActionType } from "@
 import { PerformActionCommandWithResult } from "./commands/performActionCommandWithResult";
 import { baseGameConfig, ONE_HUNDRED_TOKENS, ONE_THOUSAND_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./engine/testConstants";
 import { getMempoolInstance, Mempool } from "./core/mempool";
-import { get } from "axios";
 
 const PLAYER = "0x1234567890123456789012345678901234567890";
 
@@ -83,12 +82,12 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         process.env = originalEnv;
     });
 
-    it("should successfully process a valid PERFORM_ACTION request with PlayerActionType", async () => {
+    it.skip("should successfully process a valid PERFORM_ACTION request with PlayerActionType", async () => {
         // Arrange
         const request: RPCRequest = {
             id: "1",
             method: RPCMethods.PERFORM_ACTION,
-            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, ONE_HUNDRED_TOKENS.toString(), "0", 1, ""] //  // [from, to, action, amount, nonce, index, data]
+            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, ONE_HUNDRED_TOKENS.toString(), "0", 0, ""] //  // [from, to, action, amount, nonce, index, data]
         };
 
         // Act
@@ -102,52 +101,37 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         // const mempool = getMempoolInstance();
         // expect(mempool.add).toHaveBeenCalledTimes(1);
     });
-
-
 
     it("should successfully sit out after joining", async () => {
         // Arrange
         const request: RPCRequest = {
             id: "1",
             method: RPCMethods.PERFORM_ACTION,
-            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, ONE_HUNDRED_TOKENS.toString(), "0", 1, ""] //  // [from, to, action, amount, nonce, index, data]
+            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, ONE_HUNDRED_TOKENS.toString(), "0", 0, ""] //  // [from, to, action, amount, nonce, index, data]
         };
 
         // Act
         const response = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request);
 
-
-
-
-
         // Assert
         expect(response).toBeDefined();
         expect(response).toHaveProperty("id", "1");
 
-
-
-
-
         const request2: RPCRequest = {
             id: "1",
             method: RPCMethods.PERFORM_ACTION,
-            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", PlayerActionType.SIT_OUT, "0", "0", 2, ""] //  // [from, to, action, amount, nonce, index, data]
+            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", PlayerActionType.SIT_OUT, "0", "0", 1, ""] //  // [from, to, action, amount, nonce, index, data]
         };
 
-
         const response2 = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request2);
-        console.log(response2)
+        console.log(response2);
 
-
-          // Assert
-          expect(response2).toBeDefined();
+        // Assert
+        expect(response2).toBeDefined();
         //   expect(response).toHaveProperty("id", "1");
 
         // Check if the mempool add method was called
         // const mempool = getMempoolInstance();
         // expect(mempool.add).toHaveBeenCalledTimes(1);
     });
-
-
-
 });

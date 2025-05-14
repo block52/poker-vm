@@ -471,7 +471,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check if the provided index matches the current turn index (without incrementing)
         const _turnIndex = this.getTurnIndex();
-        if (index !== _turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE) {
+        if (index !== _turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
             // hack, to roll back
             throw new Error("Invalid action index.");
         }
