@@ -35,6 +35,18 @@ jest.mock("./state/index", () => ({
         getGameState: mockGameState,
         performAction: mockPerformAction,
         getByAddress: mockSchema
+    }),
+    getContractSchemaManagementInstance: () => ({
+        getByAddress: mockSchema,
+    })
+}));
+
+
+jest.mock("./core/mempool", () => ({
+    getMempoolInstance: () => ({
+        findAll: jest.fn().mockReturnValue([]),
+        add: jest.fn(),
+        remove: jest.fn()
     })
 }));
 
@@ -59,8 +71,8 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         process.env.VALIDATOR_KEY = ZeroHash;
 
         // Spy on console.error
-        jest.spyOn(console, "error").mockImplementation(() => {});
-        jest.spyOn(console, "log").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
+        jest.spyOn(console, "log").mockImplementation(() => { });
     });
 
     afterEach(() => {

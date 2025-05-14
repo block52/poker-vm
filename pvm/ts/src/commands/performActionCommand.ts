@@ -2,8 +2,7 @@ import { NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bit
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
-import { getContractSchemaManagement } from "../state/index";
+import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
@@ -26,12 +25,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
-
-        // Debug logging to see what we're getting in the constructor
-        const indexType = Array.isArray(this.index) ? "array" : "number";
-        console.log(`PerformActionCommand created with action=${action}, index=${JSON.stringify(this.index)} (${indexType})`);
     }
 
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
