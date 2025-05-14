@@ -571,7 +571,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             case PlayerActionType.SHOW:
                 new ShowAction(this, this._update).execute(player, index, _amount);
-            default:
+                break;
+            case PlayerActionType.SIT_OUT:
+                player.updateStatus(PlayerStatus.SITTING_OUT);
+                break;
+            case PlayerActionType.SIT_IN:
+                player.updateStatus(PlayerStatus.ACTIVE);
+                break;
+            default: 
                 // do we need to roll back last acted seat?
                 break;
         }
