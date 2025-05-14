@@ -71,7 +71,15 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
             expect(game.getPlayer("0x3333333333333333333333333333333333333333")).toBeDefined();
 
-            expect(game.findNextEmptySeat()).toEqual(4);
+            // If dealer is 9, next empty seat is 1
+            expect(game.findNextEmptySeat()).toEqual(1);
+
+            // Get next to act
+            const nextToAct = game.getNextPlayerToAct();
+
+            // Get player 
+            let seat2Actions = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(seat2Actions).toBeDefined();
 
             // Perform blinds
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
@@ -80,12 +88,19 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             // Get round
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            // Get legal actions for player 0
-            const actions = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-            expect(actions).toBeDefined();
-            expect(actions.length).toEqual(2);
-            expect(actions[0].action).toEqual(NonPlayerActionType.DEAL);
-            expect(actions[1].action).toEqual(PlayerActionType.FOLD);
+            // Get legal actions for player 0 seat 5
+            let seat5Actions = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+            expect(seat5Actions).toBeDefined();
+            expect(seat5Actions.length).toEqual(1);
+            expect(seat5Actions[0].action).toEqual(PlayerActionType.FOLD);
+
+            // Get legal actions for player 1 seat 2
+            seat2Actions = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(seat2Actions).toBeDefined();
+
+            // Get legal actions for player 2 seat 8
+            const seat8Actions = game.getLegalActions("0x3333333333333333333333333333333333333333");
+            expect(seat8Actions).toBeDefined();
         });
     });
 });
