@@ -156,8 +156,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._gameOptions.bigBlind;
     }
     get smallBlind() {
-        // return this._gameOptions.smallBlind;
-        return 3; //
+        return this._gameOptions.smallBlind;
     }
     get bigBlindPosition() {
         return 2; // this._bigBlindPosition;
@@ -281,7 +280,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             // Auto join the first player
             if (this.getPlayerCount() === 1 && this.currentRound === TexasHoldemRound.PREFLOP) {
                 // post small blind
-                new SmallBlindAction(this, this._update).execute(player, 0, this._gameOptions.smallBlind);
+                new SmallBlindAction(this, this._update).execute(player, 0, this.smallBlind);
 
                 // This is the last player to act
                 this._lastActedSeat = seat;
@@ -290,7 +289,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 const turn: Turn = {
                     playerId: player.address,
                     action: PlayerActionType.SMALL_BLIND,
-                    amount: this._gameOptions.smallBlind,
+                    amount: this.smallBlind,
                     index: this.getTurnIndex()
                 };
 
@@ -585,10 +584,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Execute the specific player action
         switch (action) {
             case PlayerActionType.SMALL_BLIND:
-                new SmallBlindAction(this, this._update).execute(player, index, this._gameOptions.smallBlind);
+                new SmallBlindAction(this, this._update).execute(player, index, this.smallBlind);
                 break;
             case PlayerActionType.BIG_BLIND:
-                new BigBlindAction(this, this._update).execute(player, index, this._gameOptions.bigBlind);
+                new BigBlindAction(this, this._update).execute(player, index, this.bigBlind);
                 break;
             case PlayerActionType.FOLD:
                 // Don't update player status before executing fold
