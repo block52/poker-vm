@@ -2,10 +2,9 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Deck, Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
+import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
-import { getContractSchemaManagement } from "../state/index";
 import { TransactionResponse } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
@@ -18,7 +17,7 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
 
     constructor(private readonly address: string, private readonly privateKey: string, _seed: string | undefined = undefined) {
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
 
         // Convert the seed string to a number array for shuffling

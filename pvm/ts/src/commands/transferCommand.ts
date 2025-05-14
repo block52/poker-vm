@@ -3,11 +3,10 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
+import { getGameManagementInstance,getContractSchemaManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
 import contractSchemas from "../schema/contractSchemas";
-import { getContractSchemaManagement } from "../state/index";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
@@ -25,7 +24,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
     ) {
         console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagement();
+        this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
     }
 
