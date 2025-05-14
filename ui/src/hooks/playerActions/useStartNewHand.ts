@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { useNodeRpc } from "../../context/NodeRpcContext";
 import { TransactionResponse } from "@bitcoinbrisbane/block52";
-
-interface StartNewHandParams {
-    nonce?: number | string;
-    seed?: string;
-}
+import { StartNewHandParams } from "../../types/index";
 
 export function useStartNewHand(tableId: string | undefined) {
     const [isStartingNewHand, setIsStartingNewHand] = useState(false);

@@ -6,6 +6,11 @@ export interface LastActionType {
     amount: number;
 }
 
+export interface StartNewHandParams {
+    nonce?: number | string;
+    seed?: string;
+}
+
 export interface PlayerContextType {
     players: PlayerDTO[];
     pots: string[];
