@@ -26,6 +26,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
+        // These states are kept but we won't show the success modal
         const [joinSuccess, setJoinSuccess] = useState(false);
         const [joinResponse, setJoinResponse] = useState<any>(null);
 
@@ -66,21 +67,24 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 // Call the playerJoin method directly from the SDK
                 const response = await client.playerJoin(tableId, BigInt(buyInWei.toString()), index, account.nonce);
 
+                // Store response in state but don't show it - just for debugging if needed
                 setJoinResponse(response);
                 setJoinSuccess(true);
-                setIsJoining(false);
-
-                // Don't reload the page automatically so network requests can be inspected
-                // window.location.reload();
+                
+                // Close the modal immediately and let the page update naturally via normal data flow
+                setShowConfirmModal(false);
+                
+                // PLACEHOLDER: A future animation could be displayed here before refresh
+                // For now, we just reload the page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300); // Short delay to allow for potential animation
+                
             } catch (err) {
                 console.error("Failed to join table:", err);
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        };
-
-        const handleManualReload = () => {
-            window.location.reload();
         };
 
         return (
@@ -95,94 +99,68 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
                 {showConfirmModal && (
                     <div
-                        className="fixed inset-0 z-50 flex items-center justify-center"
-                        onClick={() => !isJoining && !joinSuccess && setShowConfirmModal(false)}
+                        className="fixed inset-0 flex items-center justify-center z-50"
+                        onClick={() => !isJoining && setShowConfirmModal(false)}
                     >
                         <div
-                            className="bg-gradient-to-b from-gray-800 to-gray-900 p-8 rounded-xl shadow-2xl w-96 border border-gray-700 relative"
+                            className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20"
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="absolute -right-8 -top-8 text-6xl opacity-10 rotate-12">♠</div>
-                            <div className="absolute -left-8 -bottom-8 text-6xl opacity-10 -rotate-12">♥</div>
-
-                            {joinSuccess ? (
-                                <>
-                                    <h2 className="text-2xl font-bold mb-4 text-white text-center flex items-center justify-center">
-                                        <span className="text-green-400 mr-2">♣</span>
-                                        Join Request Sent!
-                                        <span className="text-red-400 ml-2">♦</span>
-                                    </h2>
-
-                                    <div className="mb-4 p-3 bg-green-900/50 text-green-200 rounded-lg">
-                                        <p className="mb-2">Join request for seat {index} has been sent to the network.</p>
-                                        <p className="mb-2 text-yellow-300 text-sm">
-                                            Note: Join not confirmed by mining yet and state not persisted. Check network status.
-                                        </p>
-                                        <p className="text-xs text-gray-300">
-                                            Transaction Hash:{" "}
-                                            {joinResponse?.hash ? `${joinResponse.hash.slice(0, 10)}...${joinResponse.hash.slice(-8)}` : "N/A"}
-                                        </p>
-                                    </div>
-
-                                    <div className="mb-4 overflow-hidden bg-gray-900 rounded-lg p-2">
-                                        <pre className="text-xs text-gray-300 overflow-auto max-h-40">{JSON.stringify(joinResponse, null, 2)}</pre>
-                                    </div>
-
-                                    <button
-                                        onClick={handleManualReload}
-                                        className="w-full px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-400 transition"
-                                    >
-                                        Reload Page to See Changes
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <h2 className="text-2xl font-bold mb-4 text-white text-center flex items-center justify-center">
-                                        <span className="text-green-400 mr-2">♣</span>
-                                        Sit Here?
-                                        <span className="text-red-400 ml-2">♦</span>
-                                    </h2>
-
-                                    {joinError && <div className="mb-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm">Error: {joinError}</div>}
-
-                                    <div className="flex justify-between space-x-4 mt-6">
-                                        <button
-                                            onClick={() => setShowConfirmModal(false)}
-                                            className="px-5 py-3 bg-gray-600 text-white rounded-lg flex-1 hover:bg-gray-500 transition"
-                                            disabled={isJoining}
-                                        >
-                                            No
-                                        </button>
-                                        <button
-                                            onClick={handleConfirmSeat}
-                                            disabled={isJoining || clientLoading}
-                                            className="px-5 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg flex-1 shadow-lg hover:from-green-500 hover:to-green-400 transform hover:scale-105 transition flex items-center justify-center"
-                                        >
-                                            {isJoining ? (
-                                                <>
-                                                    <svg
-                                                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path
-                                                            className="opacity-75"
-                                                            fill="currentColor"
-                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                        ></path>
-                                                    </svg>
-                                                    Joining...
-                                                </>
-                                            ) : (
-                                                "Yes"
-                                            )}
-                                        </button>
-                                    </div>
-                                </>
+                            <h3 className="text-xl font-bold text-white mb-4">Join Seat {toDisplaySeat(index)}</h3>
+                            
+                            {joinError && (
+                                <div className="mb-4 p-3 bg-red-900/30 text-red-200 rounded-lg text-sm border border-red-500/20">
+                                    {joinError}
+                                </div>
                             )}
+                            
+                            <p className="text-gray-300 mb-6 text-center">
+                                Ready to join at seat {toDisplaySeat(index)}?
+                            </p>
+
+                            <div className="flex justify-center space-x-3">
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
+                                    disabled={isJoining}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleConfirmSeat}
+                                    disabled={isJoining || clientLoading}
+                                    className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20 flex items-center"
+                                >
+                                    {isJoining ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                ></path>
+                                            </svg>
+                                            Joining...
+                                        </>
+                                    ) : (
+                                        "Join Seat"
+                                    )}
+                                </button>
+                            </div>
                         </div>
+                    </div>
+                )}
+
+                {/* Placeholder div for potential future loading animation */}
+                {joinSuccess && !showConfirmModal && (
+                    <div id="loading-animation-placeholder" style={{ display: "none" }}>
+                        {/* Future loading animation will go here */}
                     </div>
                 )}
             </div>
