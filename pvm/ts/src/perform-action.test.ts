@@ -69,7 +69,7 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
 
         // Set up environment
         process.env = { ...originalEnv };
-        process.env.VALIDATOR_KEY = ZeroHash;
+        process.env.VALIDATOR_KEY = "0x8bf5d2b410baf602fbb1ca59ab16b1772ca0f143950e12a2d4a2ead44ab845fb";
 
         // Spy on console.error
         jest.spyOn(console, "error").mockImplementation(() => {});
