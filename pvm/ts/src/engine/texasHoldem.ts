@@ -165,7 +165,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._dealer;
     }
     get smallBlindPosition() {
-        return 1; // this._smallBlindPosition;
+        return this.findSBPosition();
     }
     get dealerPosition() {
         return this._dealer;
