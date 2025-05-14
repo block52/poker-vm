@@ -508,7 +508,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             const allowedActions = [
                 PlayerActionType.SMALL_BLIND,
                 PlayerActionType.BIG_BLIND,
-                NonPlayerActionType.JOIN
+                NonPlayerActionType.JOIN,
+                PlayerActionType.SIT_OUT,
+                PlayerActionType.SIT_IN
             ];
             
             if (!allowedActions.includes(action as any)) {
