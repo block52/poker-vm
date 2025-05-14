@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, jest, afterEach } from "@jest/globals";
 import { ethers, ZeroHash } from "ethers";
 import { RPC } from "./rpc"; // Update with your actual path
-import { RPCMethods, RPCRequest, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { RPCMethods, RPCRequest, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { PerformActionCommandWithResult } from "./commands/performActionCommandWithResult";
 import { baseGameConfig, ONE_HUNDRED_TOKENS, ONE_THOUSAND_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./engine/testConstants";
 import { getMempoolInstance, Mempool } from "./core/mempool";
@@ -102,4 +102,52 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         // const mempool = getMempoolInstance();
         // expect(mempool.add).toHaveBeenCalledTimes(1);
     });
+
+
+
+    it("should successfully sit out after joining", async () => {
+        // Arrange
+        const request: RPCRequest = {
+            id: "1",
+            method: RPCMethods.PERFORM_ACTION,
+            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, ONE_HUNDRED_TOKENS.toString(), "0", 1, ""] //  // [from, to, action, amount, nonce, index, data]
+        };
+
+        // Act
+        const response = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request);
+
+
+
+
+
+        // Assert
+        expect(response).toBeDefined();
+        expect(response).toHaveProperty("id", "1");
+
+
+
+
+
+        const request2: RPCRequest = {
+            id: "1",
+            method: RPCMethods.PERFORM_ACTION,
+            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", PlayerActionType.SIT_OUT, "0", "0", 2, ""] //  // [from, to, action, amount, nonce, index, data]
+        };
+
+
+        const response2 = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request2);
+        console.log(response2)
+
+
+          // Assert
+          expect(response2).toBeDefined();
+        //   expect(response).toHaveProperty("id", "1");
+
+        // Check if the mempool add method was called
+        // const mempool = getMempoolInstance();
+        // expect(mempool.add).toHaveBeenCalledTimes(1);
+    });
+
+
+
 });
