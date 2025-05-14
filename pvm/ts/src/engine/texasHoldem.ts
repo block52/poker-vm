@@ -383,21 +383,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return [];
         }
 
-        const nextToAct = this.getNextPlayerToAct();
-
-        // If it's not this player's turn, they can only fold if they are active
-        if (nextToAct && nextToAct.address !== player.address) {
-            // Even if it's not their turn, active players can fold
-            return [
-                {
-                    action: PlayerActionType.FOLD,
-                    min: "0",
-                    max: "0",
-                    index: this.getTurnIndex()
-                }
-            ];
-        }
-
         const verifyAction = (action: IAction): LegalActionDTO | undefined => {
             try {
                 const range = action.verify(player);
