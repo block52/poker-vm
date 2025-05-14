@@ -383,21 +383,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return [];
         }
 
-        const nextToAct = this.getNextPlayerToAct();
-
-        // If it's not this player's turn, they can only fold if they are active
-        if (nextToAct && nextToAct.address !== player.address) {
-            // Even if it's not their turn, active players can fold
-            return [
-                {
-                    action: PlayerActionType.FOLD,
-                    min: "0",
-                    max: "0",
-                    index: this.getTurnIndex()
-                }
-            ];
-        }
-
         const verifyAction = (action: IAction): LegalActionDTO | undefined => {
             try {
                 const range = action.verify(player);
@@ -499,12 +484,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case NonPlayerActionType.JOIN: {
                 // Get seat number from data using a Regex
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-                const turn = new JoinAction(this, this._update).execute(player, index, _amount, data);
-                
-                // `execute` already logged the action & incremented the index
-
-                // this.addNonPlayerAction(turn, data);
-
+                new JoinAction(this, this._update).execute(player, index, _amount, data);
                 return; // EARLY EXIT – nothing else to do for non-player action
             }
 
