@@ -532,8 +532,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check if the provided index matches the current turn index (without incrementing)
         const _turnIndex = this.getTurnIndex();
-        if (index !== _turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE) {
-            // hack, to roll back
+        if (index !== _turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
             throw new Error("Invalid action index.");
         }
 
@@ -542,18 +541,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Handle non-player actions first (JOIN, LEAVE, DEAL)
         switch (action) {
-            case NonPlayerActionType.JOIN: {
+            case NonPlayerActionType.JOIN:
                 // Get seat number from data using a Regex
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-                const turn = new JoinAction(this, this._update).execute(player, index, _amount, data);
-
-                // `execute` already logged the action & incremented the index
-
-                // this.addNonPlayerAction(turn, data);
-
-                return; // EARLY EXIT – nothing else to do for non-player action
-            }
-
+                new JoinAction(this, this._update).execute(player, index, _amount, data);
+                return;
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
                 return;
@@ -568,17 +560,23 @@ class TexasHoldemGame implements IPoker, IUpdate {
             throw new Error("Player not found.");
         }
 
-        // In ANTE round, only allow specific actions until minimum players joined
-        if (this.currentRound === TexasHoldemRound.ANTE) {
-            // Fix type error by checking whether action is in a set of allowed values
-            const allowedActions = [PlayerActionType.SMALL_BLIND, PlayerActionType.BIG_BLIND, NonPlayerActionType.JOIN];
-
-            if (!allowedActions.includes(action as any)) {
-                if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
-                    throw new Error("Not enough players to start game.");
-                }
-            }
-        }
+        // // In ANTE round, only allow specific actions until minimum players joined
+        // if (this.currentRound === TexasHoldemRound.ANTE) {
+        //     // Fix type error by checking whether action is in a set of allowed values
+        //     const allowedActions = [
+        //         PlayerActionType.SMALL_BLIND,
+        //         PlayerActionType.BIG_BLIND,
+        //         NonPlayerActionType.JOIN,
+        //         PlayerActionType.SIT_OUT,
+        //         PlayerActionType.SIT_IN
+        //     ];
+            
+        //     if (!allowedActions.includes(action as any)) {
+        //         if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
+        //             throw new Error("Not enough players to start game.");
+        //         }
+        //     }
+        // }
 
         // Get player and seat information
         const player = this.getPlayer(address);
@@ -613,7 +611,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             case PlayerActionType.SHOW:
                 new ShowAction(this, this._update).execute(player, index, _amount);
-            default:
+                break;
+            case PlayerActionType.SIT_OUT:
+                player.updateStatus(PlayerStatus.SITTING_OUT);
+                break;
+            case PlayerActionType.SIT_IN:
+                player.updateStatus(PlayerStatus.ACTIVE);
+                break;
+            default: 
                 // do we need to roll back last acted seat?
                 break;
         }
@@ -632,9 +637,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     addAction(turn: Turn, round: TexasHoldemRound = this._currentRound): void {
-        // We already validated the index in performAction, so no need to check again here
-        // This prevents the double incrementing problem
-
         const seat = this.getPlayerSeatNumber(turn.playerId);
         const timestamp = Date.now();
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };

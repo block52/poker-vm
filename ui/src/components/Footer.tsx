@@ -20,6 +20,8 @@ import { useTableBet } from "../hooks/playerActions/useTableBet";
 import { useTableMuck } from "../hooks/playerActions/useTableMuck";
 import { useTableShow } from "../hooks/playerActions/useTableShow";
 import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
+import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
+import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
 
 
 import { ethers } from "ethers";
@@ -131,6 +133,9 @@ const PokerActionPanel: React.FC = () => {
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
 
+    // Add the useTableSitIn and useTableSitOut hooks
+    const { sitIn, isLoading: isSittingIn } = useTableSitIn(tableId);
+    const { sitOut, isLoading: isSittingOut } = useTableSitOut(tableId);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -341,7 +346,6 @@ const PokerActionPanel: React.FC = () => {
         
         // Use our hook to start a new hand
         startNewHand({
-            privateKey,
             nonce: nonce || Date.now().toString(), // Use nonce from useTableNonce if available
             seed: Math.random().toString(36).substring(2, 15) // Generate a random seed
         })
@@ -356,6 +360,47 @@ const PokerActionPanel: React.FC = () => {
                 alert("Failed to start new hand. Please try again.");
             });
     };
+
+    // Add handler functions for sit-in and sit-out actions
+    const handleSitIn = useCallback(() => {
+        if (!sitIn) {
+            console.error("Hook not ready");
+            return;
+        }
+        
+        sitIn()
+            .then(() => {
+                console.log("Successfully sat in");
+                refreshNonce?.();
+                refreshNextToActInfo?.();
+            })
+            .catch(error => {
+                console.error("Failed to sit in:", error);
+            });
+    }, [sitIn, refreshNonce, refreshNextToActInfo]);
+
+    const handleSitOut = useCallback(() => {
+        if (!sitOut) {
+            console.error("Hook not ready");
+            return;
+        }
+        
+        sitOut()
+            .then(() => {
+                console.log("Successfully sat out");
+                refreshNonce?.();
+                refreshNextToActInfo?.();
+            })
+            .catch(error => {
+                console.error("Failed to sit out:", error);
+            });
+    }, [sitOut, refreshNonce, refreshNextToActInfo]);
+
+    // Check if player is sitting out
+    const isPlayerSittingOut = useMemo(() => 
+        userPlayer?.status === PlayerStatus.SITTING_OUT,
+        [userPlayer]
+    );
 
     return (
         <div className="fixed bottom-0 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
@@ -733,6 +778,33 @@ transition-all duration-200 font-medium min-w-[100px]"
                             </>
                         ) : null}
                     </>
+                )}
+                
+                {/* Sit In / Sit Out Buttons - Bottom Right Area */}
+                {isUserInTable && (
+                    <div className="fixed bottom-4 right-[30%] flex gap-2 z-20">
+                        {isPlayerSittingOut ? (
+                            <button
+                                onClick={handleSitIn}
+                                className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                                text-white font-medium py-1.5 px-4 rounded-lg shadow-md transition-all duration-200 
+                                border border-[#3a9188] hover:border-[#64ffda] flex items-center text-xs"
+                                disabled={isSittingIn}
+                            >
+                                {isSittingIn ? "SITTING IN..." : "I AM BACK"}
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSitOut}
+                                className="bg-gradient-to-r from-[#4b5563] to-[#374151] hover:from-[#374151] hover:to-[#1f2937] 
+                                text-white font-medium py-1.5 px-4 rounded-lg shadow-md transition-all duration-200 
+                                border border-[#6b7280] hover:border-[#9ca3af] flex items-center text-xs"
+                                disabled={isSittingOut}
+                            >
+                                {isSittingOut ? "SITTING OUT..." : "SIT OUT"}
+                            </button>
+                        )}
+                    </div>
                 )}
             </div>
         </div>
