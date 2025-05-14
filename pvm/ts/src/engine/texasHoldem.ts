@@ -50,8 +50,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private _winners?: Map<string, bigint>;
 
     private _dealer: number;
-    private _bigBlindPosition: number;
-    private _smallBlindPosition: number;
+    // private _bigBlindPosition: number;
+    // private _smallBlindPosition: number;
     private _actions: IAction[];
     private readonly _gameOptions: GameOptions;
 
@@ -71,7 +71,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         playerStates: Map<number, Player | null>,
         deck: string,
         winners: WinnerDTO[] = [],
-        private readonly caller?: string,
         private readonly _now: number = Date.now()
     ) {
         this._playersMap = new Map<number, Player | null>(playerStates);
@@ -96,8 +95,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         this._currentRound = _currentRound;
         this._gameOptions = gameOptions;
-        this._smallBlindPosition = this.positions.smallBlind ?? 1;
-        this._bigBlindPosition = this.positions.bigBlind ?? 2;
+        // this._smallBlindPosition = this.positions.smallBlind ?? 1;
+        // this._bigBlindPosition = this.positions.bigBlind ?? 2;
         this._dealer = this.positions.dealer ?? 9;
 
         this._rounds.set(TexasHoldemRound.ANTE, []);
@@ -160,13 +159,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._gameOptions.smallBlind;
     }
     get bigBlindPosition() {
-        return this._bigBlindPosition;
+        return 2; // this._bigBlindPosition;
     }
     get dealer() {
         return this._dealer;
     }
     get smallBlindPosition() {
-        return this._smallBlindPosition;
+        return 1; // this._smallBlindPosition;
     }
     get dealerPosition() {
         return this._dealer;
@@ -344,31 +343,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     private findSBPosition(): number | undefined {
-
-        // start from dealer position
-        let dealer = this._dealer;
-
-        if (dealer > this._gameOptions.maxPlayers) {
-            dealer = 1;
+        const sb = this.findNextPlayerToAct(this._dealer);
+        if (sb) {
+            return this.getPlayerSeatNumber(sb.address);
         }
 
-        // Search from current position to end
-        for (let i = dealer; i <= this._gameOptions.maxPlayers; i++) {
-            const player = this.getPlayerAtSeat(i);
-
-            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
-                return i
-            }
-        }
-
-        // Wrap around and search from beginning to current position
-        for (let i = 1; i < dealer; i++) {
-            const player = this.getPlayerAtSeat(i);
-
-            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
-                return i;
-            }
-        }
+        return undefined;
     }
 
     private findNextPlayerToAct(start: number = this._lastActedSeat + 1): Player | undefined {
@@ -801,8 +781,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * @returns The number of players with status "active"
      */
     getActivePlayerCount(): number {
-        const players = this.getSeatedPlayers();
-        const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+        // const players = this.getSeatedPlayers();
+        // const activePlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.ACTIVE);
+        const activePlayers = this.findActivePlayers();
         return activePlayers.length;
     }
 
@@ -976,28 +957,28 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Heads up
         if (activePlayerCount === 2) {
             // Swap the small blind and big blind positions
-            this._smallBlindPosition = bb;
-            this._bigBlindPosition = sb;
+            // this._smallBlindPosition = bb;
+            // this._bigBlindPosition = sb;
             this._dealer = sb;
         }
 
-        if (activePlayerCount > 2) {
-            for (let i = sb; i <= this._gameOptions.maxPlayers; i++) {
-                const player = this.getPlayerAtSeat(i);
-                if (player && player.status !== PlayerStatus.SITTING_OUT) {
-                    this._smallBlindPosition = i;
-                    break;
-                }
-            }
+        // if (activePlayerCount > 2) {
+        //     for (let i = sb; i <= this._gameOptions.maxPlayers; i++) {
+        //         const player = this.getPlayerAtSeat(i);
+        //         if (player && player.status !== PlayerStatus.SITTING_OUT) {
+        //             // this._smallBlindPosition = i;
+        //             break;
+        //         }
+        //     }
 
-            for (let i = bb; i <= this._gameOptions.maxPlayers; i++) {
-                const player = this.getPlayerAtSeat(i);
-                if (player && player.status !== PlayerStatus.SITTING_OUT) {
-                    this._bigBlindPosition = i;
-                    break;
-                }
-            }
-        }
+        //     for (let i = bb; i <= this._gameOptions.maxPlayers; i++) {
+        //         const player = this.getPlayerAtSeat(i);
+        //         if (player && player.status !== PlayerStatus.SITTING_OUT) {
+        //             // this._bigBlindPosition = i;
+        //             break;
+        //         }
+        //     }
+        // }
 
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
@@ -1361,7 +1342,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             players,
             json.deck,
             json.winners,
-            undefined,
             json.now ? json.now : Date.now()
         );
     }
