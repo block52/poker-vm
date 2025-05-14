@@ -471,7 +471,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check if the provided index matches the current turn index (without incrementing)
         const _turnIndex = this.getTurnIndex();
-        if (index !== _turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE) {
+        if (index !== _turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
             // hack, to roll back
             throw new Error("Invalid action index.");
         }
@@ -508,7 +508,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             const allowedActions = [
                 PlayerActionType.SMALL_BLIND,
                 PlayerActionType.BIG_BLIND,
-                NonPlayerActionType.JOIN
+                NonPlayerActionType.JOIN,
+                PlayerActionType.SIT_OUT,
+                PlayerActionType.SIT_IN
             ];
             
             if (!allowedActions.includes(action as any)) {
@@ -551,7 +553,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 break;
             case PlayerActionType.SHOW:
                 new ShowAction(this, this._update).execute(player, index, _amount);
-            default:
+                break;
+            case PlayerActionType.SIT_OUT:
+                player.updateStatus(PlayerStatus.SITTING_OUT);
+                break;
+            case PlayerActionType.SIT_IN:
+                player.updateStatus(PlayerStatus.ACTIVE);
+                break;
+            default: 
                 // do we need to roll back last acted seat?
                 break;
         }
