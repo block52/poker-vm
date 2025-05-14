@@ -3,7 +3,6 @@ import { useNodeRpc } from "../../context/NodeRpcContext";
 import { TransactionResponse } from "@bitcoinbrisbane/block52";
 
 interface StartNewHandParams {
-    privateKey: string;
     nonce?: number | string;
     seed?: string;
 }
@@ -14,7 +13,7 @@ export function useStartNewHand(tableId: string | undefined) {
     
     // Create a simple function that calls client.newHand
     const startNewHand = async (params: StartNewHandParams): Promise<TransactionResponse> => {
-        const { privateKey, seed = Math.random().toString(36).substring(2, 15), nonce } = params;
+        const { seed = Math.random().toString(36).substring(2, 15), nonce } = params;
         
         if (!tableId) {
             console.error("No table ID provided");
