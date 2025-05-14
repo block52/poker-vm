@@ -32,7 +32,7 @@ class JoinAction extends BaseAction {
 
         // Find an available seat or use the requested one
         let seat: number;
-        if (requestedSeat === undefined) {
+        if (requestedSeat === undefined || requestedSeat === "") {
             // Find the next empty seat
             seat = this.game.findNextEmptySeat();
         } else {

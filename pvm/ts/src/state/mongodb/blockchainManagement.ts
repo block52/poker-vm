@@ -110,10 +110,3 @@ export class MongoDBBlockchainManagement extends StateManager implements IBlockc
     }
 }
 
-// let instance: BlockchainManagement;
-// export const mongoBlockchainInstance = (): IBlockchainManagement => {
-//     if (!instance) {
-//         instance = new BlockchainManagement();
-//     }
-//     return instance;
-// };

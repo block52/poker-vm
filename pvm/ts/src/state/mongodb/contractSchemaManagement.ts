@@ -2,13 +2,35 @@ import { StateManager } from "../stateManager";
 import ContractSchemas from "../../schema/contractSchemas";
 import { GameOptions } from "@bitcoinbrisbane/block52";
 import { IContractSchemaManagement } from "../interfaces";
+import { IContractSchemaDocument } from "../../models/interfaces";
 
 export class ContractSchemaManagement extends StateManager implements IContractSchemaManagement {
     constructor() {
         super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
     }
 
-    async getGameOptions(address: string): Promise<GameOptions> {
+    public async getByAddress(address: string): Promise<IContractSchemaDocument> {
+        const contract = await ContractSchemas.findOne({
+            address
+        });
+
+        if (!contract) {
+            throw new Error("Contract not found");
+        }
+
+        // this is stored in MongoDB as an object / document
+        const schema: IContractSchemaDocument = {
+            address: contract.address,
+            category: contract.category,
+            name: contract.name,
+            schema: contract.schema,
+            hash: contract.hash
+        };
+
+        return schema;
+    }
+
+    public async getGameOptions(address: string): Promise<GameOptions> {
         const contract = await ContractSchemas.findOne({
             address
         });
@@ -39,7 +61,7 @@ export class ContractSchemaManagement extends StateManager implements IContractS
 }
 
 let instance: ContractSchemaManagement;
-export const getContractSchemaManagement = (): IContractSchemaManagement => {
+export const getContractSchemaManagementInstance = (): IContractSchemaManagement => {
     if (!instance) {
         instance = new ContractSchemaManagement();
     }
