@@ -7,12 +7,13 @@ import { useNodeRpc } from "../context/NodeRpcContext";
 const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
 
 interface UserWalletResult {
-    b52: any; // Kept for backward compatibility
     account: string | null;
     balance: string | null;
     privateKey: string | null;
     isLoading: boolean;
     error: Error | null;
+    accountData: AccountDTO | null; // Full account data from SDK
+    nonce: number | null; // Expose nonce directly 
     refreshBalance: () => Promise<void>;
 }
 
@@ -30,6 +31,7 @@ const useUserWallet = (): UserWalletResult => {
     const [error, setError] = useState<Error | null>(null);
     const [refreshCounter, setRefreshCounter] = useState(0);
     const [accountData, setAccountData] = useState<AccountDTO | null>(null);
+    const [nonce, setNonce] = useState<number | null>(null);
 
     const fetchBalance = useCallback(async () => {
         if (!account || !client) return;
@@ -65,12 +67,18 @@ const useUserWallet = (): UserWalletResult => {
             // Store the full account data
             setAccountData(data);
             
+            // Extract key properties
             if (data?.balance) {
                 setBalance(data.balance);
             } else {
                 console.error("[useUserWallet] Balance not found in account data:", data);
                 setBalance("0");
             }
+            
+            if (data?.nonce !== undefined) {
+                setNonce(data.nonce);
+            }
+            
         } catch (err) {
             console.error("[useUserWallet] Error fetching balance:", err);
             setError(err instanceof Error ? err : new Error("An error occurred"));
@@ -130,14 +138,15 @@ const useUserWallet = (): UserWalletResult => {
         initializeWallet();
     }, []);
 
-    // Keep the same interface for backward compatibility
+    // Return focused data instead of full client
     const result: UserWalletResult = {
         account,
         balance,
         privateKey,
         isLoading: isLoading || clientLoading,
         error,
-        b52: client, // Provide the shared client instance
+        accountData,
+        nonce,
         refreshBalance
     };
 

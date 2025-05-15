@@ -41,7 +41,7 @@ const HexagonPattern = () => {
 };
 
 const QRDeposit: React.FC = () => {
-    const { balance: b52Balance, refreshBalance } = useUserWallet();
+    const { balance: b52Balance, nonce, accountData, refreshBalance } = useUserWallet();
     const { isConnected, open, address: web3Address } = useUserWalletConnect();
     const [showQR, setShowQR] = useState<boolean>(false);
     const [latestTransaction, setLatestTransaction] = useState<EtherscanTransaction | null>(null);
@@ -614,6 +614,11 @@ const QRDeposit: React.FC = () => {
                 <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                     <p className="text-lg mb-2 text-white">Block 52 Balance:</p>
                     <p className="text-xl font-bold text-blue-400">${formatBalance(displayBalance || "0")} USDC</p>
+                    {nonce !== null && (
+                        <p className="text-sm text-gray-300 mt-2 border-t border-gray-600 pt-2">
+                            <span className="text-blue-300">Nonce:</span> {nonce}
+                        </p>
+                    )}
                 </div>
 
                 {/* Transaction Progress Bar */}
