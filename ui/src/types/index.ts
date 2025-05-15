@@ -1,13 +1,4 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, TexasHoldemStateDTO} from "@bitcoinbrisbane/block52";
-
-// GameState response type
-export interface GameStateResponse {
-  id: string;
-  result: {
-    data: TexasHoldemStateDTO;
-    signature: string;
-  }
-}
+import { LegalActionDTO, PlayerActionType, PlayerDTO} from "@bitcoinbrisbane/block52";
 
 // types.ts
 export interface LastActionType {
