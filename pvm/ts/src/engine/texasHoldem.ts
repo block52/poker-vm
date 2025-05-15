@@ -35,13 +35,6 @@ import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers } from "ethers";
 
-type Winner = {
-    amount: bigint;
-    cards: string[] | undefined;
-    name: string | undefined;
-    description: string | undefined;
-};
-
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
     private readonly _update: IUpdate;
@@ -56,8 +49,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private _deck: Deck;
     private _pots: [bigint] = [0n];
     private _sidePots = new Map<string, bigint>();
-    // private _winners = new Map<string, bigint>();
-    private _winners = new Map<string, Winner>();
+    private _winners = new Map<string, bigint>();
     private _currentRound: TexasHoldemRound;
     private _handNumber = 0;
 
@@ -85,14 +77,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Initialize winners
         for (const winner of winners) {
-            const _winner: Winner = {
-                amount: BigInt(winner.amount),
-                cards: winner.cards,
-                name: winner.name,
-                description: winner.description
-            };
-            // this._winners.set(winner.address, BigInt(winner.amount));
-            this._winners.set(winner.address, _winner);
+            this._winners.set(winner.address, BigInt(winner.amount));
         }
 
         // Initialize community cards
@@ -177,7 +162,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Rotate dealer position
         const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
         if (nextToAct) {
-            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);
+            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);   
         } else {
             this._positions.dealer = this.findNextEmptySeat();
         }
@@ -213,7 +198,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return [...this._communityCards];
     }
 
-    get winners(): Map<string, Winner> | undefined {
+    get winners(): Map<string, bigint> | undefined {
         return this._winners;
     }
 
@@ -568,7 +553,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (bb) {
             return this.getPlayerSeatNumber(bb.address);
         }
-
+        
         return this.dealerPosition + 2;
     }
 
@@ -1113,7 +1098,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         const hands = new Map<string, any>(
-            // Map player ID to their hand.  Solve works out what hand they have suck as 2 pairs, straight, etc.
             players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
         );
 
@@ -1121,25 +1105,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // If only one player is active, they win the pot
         if (activePlayers.length === 1) {
-            // this._winners = new Map<string, bigint>();
-
-            this._winners = new Map<string, Winner>();
-            const _winner: Winner = {
-                amount: this.getPot(),
-                cards: [],
-                name: "",
-                description: ""
-            };
-
+            this._winners = new Map<string, bigint>();
             const winner = activePlayers[0];
-            this._winners.set(winner.address, _winner);
+            this._winners.set(winner.address, this.getPot());
             winner.chips += this.getPot();
             return;
         }
 
         // Calculate winners for multiple active players
-        // this._winners = new Map<string, bigint>();
-        this._winners = new Map<string, Winner>();
+        this._winners = new Map<string, bigint>();
         const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
         const pot: bigint = this.getPot();
 
@@ -1150,18 +1124,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         for (const player of showingPlayers) {
             if (winningHands.includes(hands.get(player.id))) {
-                const hand = hands.get(player.id);
                 const winAmount = pot / winnersCount;
-
-                const _winner: Winner = {
-                    amount: winAmount,
-                    cards: hand.cards.map(toPokerSolverMnemonic),
-                    name: hand.name,
-                    description: hand.description
-                };
-
                 player.chips += winAmount;
-                this._winners.set(player.address, _winner);
+                this._winners.set(player.address, winAmount);
             }
         }
     }
@@ -1241,13 +1206,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Prepare winners array
         const winners: WinnerDTO[] = [];
         if (this._winners) {
-            for (const [address, winner] of this._winners.entries()) {
+            for (const [address, amount] of this._winners.entries()) {
                 winners.push({
                     address: address,
-                    amount: winner.amount.toString(),
-                    cards: winner.cards,
-                    name: winner.name,
-                    description: winner.description
+                    amount: Number(amount)
                 });
             }
         }
