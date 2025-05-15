@@ -35,6 +35,13 @@ import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
 import { ethers } from "ethers";
 
+type Winner = {
+    amount: bigint;
+    cards: string[] | undefined;
+    name: string | undefined;
+    description: string | undefined;
+};
+
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
     private readonly _update: IUpdate;
