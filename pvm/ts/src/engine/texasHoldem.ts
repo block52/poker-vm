@@ -224,6 +224,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._lastActedSeat;
     }
 
+    
+    setLastActedSeat(seat: number): void {
+        this._lastActedSeat = seat;
+    }
+
     // Game configuration getters
     get minBuyIn(): bigint {
         return this._gameOptions.minBuyIn;
