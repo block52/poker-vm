@@ -56,7 +56,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private _deck: Deck;
     private _pots: [bigint] = [0n];
     private _sidePots = new Map<string, bigint>();
-    private _winners = new Map<string, bigint>();
+    private _winners = new Map<string, Winner>();
     private _currentRound: TexasHoldemRound;
     private _handNumber = 0;
 
@@ -84,7 +84,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Initialize winners
         for (const winner of winners) {
-            this._winners.set(winner.address, BigInt(winner.amount));
+            const _winner: Winner = {
+                amount: BigInt(winner.amount),
+                cards: winner.cards,
+                name: winner.name,
+                description: winner.description
+            }
+            this._winners.set(winner.address, _winner);
         }
 
         // Initialize community cards
@@ -205,7 +211,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return [...this._communityCards];
     }
 
-    get winners(): Map<string, bigint> | undefined {
+    get winners(): Map<string, Winner> | undefined {
         return this._winners;
     }
 
@@ -1112,15 +1118,22 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // If only one player is active, they win the pot
         if (activePlayers.length === 1) {
-            this._winners = new Map<string, bigint>();
+            const _winner: Winner = {
+                amount: this.getPot(),
+                cards: activePlayers[0].holeCards?.map(card => card.mnemonic),
+                name: undefined,
+                description: undefined // Roll these back when description is available from PokerSolver
+            };
+
+            this._winners = new Map<string, Winner>();
             const winner = activePlayers[0];
-            this._winners.set(winner.address, this.getPot());
+            this._winners.set(winner.address, _winner);
             winner.chips += this.getPot();
             return;
         }
 
         // Calculate winners for multiple active players
-        this._winners = new Map<string, bigint>();
+        this._winners = new Map<string, Winner>();
         const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
         const pot: bigint = this.getPot();
 
@@ -1131,9 +1144,17 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         for (const player of showingPlayers) {
             if (winningHands.includes(hands.get(player.id))) {
+                const hand = hands.get(player.id);
+                const _winner: Winner = {
+                    amount: this.getPot(),
+                    cards: activePlayers[0].holeCards?.map(card => card.mnemonic),
+                    name: hand.name,
+                    description: hand.description
+                };
+
                 const winAmount = pot / winnersCount;
                 player.chips += winAmount;
-                this._winners.set(player.address, winAmount);
+                this._winners.set(player.address, _winner);
             }
         }
     }
