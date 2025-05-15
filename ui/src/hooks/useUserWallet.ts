@@ -1,18 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
 import { Wallet } from "ethers";
-import { NodeRpcClient } from "@bitcoinbrisbane/block52";
-import { PROXY_URL } from "../config/constants";
+import { AccountDTO } from "@bitcoinbrisbane/block52";
+import { useNodeRpc } from "../context/NodeRpcContext";
 
 // Key for storing last API call time in localStorage
 const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
 
 interface UserWalletResult {
-    b52: NodeRpcClient | null;
-    account: string | null;
-    balance: string | null;
+    // Primary account data from SDK
+    accountData: AccountDTO | null;
+    
+    // We keep privateKey separate as it's not part of AccountDTO
     privateKey: string | null;
+    
+    // Loading and error states
     isLoading: boolean;
     error: Error | null;
+    
+    // Helper function to refresh data
     refreshBalance: () => Promise<void>;
 }
 
@@ -20,16 +25,17 @@ export const STORAGE_PRIVATE_KEY = "user_eth_private_key";
 export const STORAGE_PUBLIC_KEY = "user_eth_public_key";
 
 const useUserWallet = (): UserWalletResult => {
-    const [account, setAccount] = useState<string | null>(null);
-    const [balance, setBalance] = useState<string | null>(null);
+    // Use the shared NodeRpc client from context
+    const { client, isLoading: clientLoading } = useNodeRpc();
+    
     const [privateKey, setPrivateKey] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
-    const [client, setClient] = useState<NodeRpcClient | null>(null);
     const [refreshCounter, setRefreshCounter] = useState(0);
+    const [accountData, setAccountData] = useState<AccountDTO | null>(null);
 
     const fetchBalance = useCallback(async () => {
-        if (!account || !client) return;
+        if (!client || !accountData?.address) return;
 
         // Rate limiting: Only allow API calls once every 10 seconds across all hooks
         const now = Date.now();
@@ -38,8 +44,8 @@ const useUserWallet = (): UserWalletResult => {
         const timeSinceLastCall = now - lastApiCallTime;
         const minInterval = 10000; // 10 seconds
 
-        // If it's been less than 10 seconds since the last call and we have balance data, use cached data
-        if (timeSinceLastCall < minInterval && balance !== null) {
+        // If it's been less than 10 seconds since the last call and we have data, use cached data
+        if (timeSinceLastCall < minInterval && accountData?.balance) {
             return;
         }
 
@@ -51,25 +57,27 @@ const useUserWallet = (): UserWalletResult => {
 
         try {
             // Use the SDK's getAccount method
-            const accountData = await client.getAccount(account);
+            const data = await client.getAccount(accountData.address);
+            console.log("[useUserWallet] Account data received:", {
+                address: data.address,
+                nonce: data.nonce,
+                balance: data.balance,
+                timestamp: new Date().toISOString()
+            });
             
-            if (accountData?.balance) {
-                setBalance(accountData.balance);
-            } else {
-                console.error("Balance not found in account data:", accountData);
-                setBalance("0");
-            }
+            // Store the full account data
+            setAccountData(data);
         } catch (err) {
-            console.error("Error fetching balance:", err);
+            console.error("[useUserWallet] Error fetching balance:", err);
             setError(err instanceof Error ? err : new Error("An error occurred"));
-            setBalance("0");
         } finally {
             setIsLoading(false);
         }
-    }, [account, balance, client]);
+    }, [client, accountData]);
 
     // Manual refresh function
     const refreshBalance = useCallback(async () => {
+        console.log("[useUserWallet] Manual refresh requested");
         setRefreshCounter(prev => prev + 1);
     }, []);
 
@@ -93,18 +101,28 @@ const useUserWallet = (): UserWalletResult => {
                     // Save keys in localStorage
                     localStorage.setItem(STORAGE_PRIVATE_KEY, key);
                     localStorage.setItem(STORAGE_PUBLIC_KEY, pubKey);
+                    console.log("[useUserWallet] New wallet generated:", pubKey);
+                } else {
+                    console.log("[useUserWallet] Using existing wallet:", pubKey);
                 }
 
                 // Create wallet instance from private key
                 const wallet = new Wallet(key);
-
                 setPrivateKey(key);
-                setAccount(wallet.address);
+                
+                // Initial accountData with just the address
+                setAccountData({
+                    address: wallet.address,
+                    balance: "0",
+                    nonce: 0
+                });
+                
                 setError(null);
             } catch (err) {
+                console.error("[useUserWallet] Failed to initialize wallet:", err);
                 setError(err instanceof Error ? err : new Error("Failed to initialize wallet"));
-                setAccount(null);
                 setPrivateKey(null);
+                setAccountData(null);
             } finally {
                 setIsLoading(false);
             }
@@ -113,25 +131,14 @@ const useUserWallet = (): UserWalletResult => {
         initializeWallet();
     }, []);
 
-    useEffect(() => {
-        if (privateKey) {
-            const url = PROXY_URL;
-            const client = new NodeRpcClient(url, privateKey);
-            setClient(client);
-        }
-    }, [privateKey]);
-
-    const result = {
-        account,
-        balance,
+    // Return simplified result
+    return {
+        accountData,
         privateKey,
-        isLoading,
+        isLoading: isLoading || clientLoading,
         error,
-        b52: client,
         refreshBalance
     };
-
-    return result;
 };
 
 export default useUserWallet;

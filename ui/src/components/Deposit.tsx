@@ -30,9 +30,11 @@ const Deposit: React.FC = () => {
     const [tmpDepositAmount, setTmpDepositAmount] = useState<bigint>(BigInt(0));
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
-    const { balance: b52Balance } = useUserWallet();
+    const { accountData, refreshBalance } = useUserWallet();
+    const b52Balance = accountData?.balance;
+    const nonce = accountData?.nonce;
+    const b52Address = accountData?.address;
 
- 
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -156,6 +158,13 @@ const Deposit: React.FC = () => {
                 <h4 className="border-b border-gray-600 text-blue-400 mb-4">
                     Layer 2 Block52 Balance (Poker Table): ${formatBalance(b52Balance || "0")} USDC
                 </h4>
+
+                {/* Show nonce if available */}
+                {nonce !== null && (
+                    <h4 className="border-b border-gray-600 text-blue-400 mb-4">
+                        Current nonce: {nonce}
+                    </h4>
+                )}
 
                 <div className="mb-4 relative">
                     <label htmlFor="amount" className="block text-sm font-medium text-gray-300">
