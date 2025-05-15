@@ -34,7 +34,7 @@ class SmallBlindAction extends BaseAction implements IAction {
             throw new Error("Only the small blind player can bet the small blind amount.");
         }
 
-        const actions = this.game.getActionsForRound(TexasHoldemRound.PREFLOP);
+        const actions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
 
         // Check if small blind has already been posted
         const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);

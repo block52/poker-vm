@@ -159,13 +159,12 @@ class TexasHoldemGame implements IPoker, IUpdate {
             player.reinit();
         }
 
-        // Cache values
-        const sb = this.smallBlindPosition;
-        const activePlayerCount = this.getActivePlayerCount();
-
-        // Heads up rule - swap dealer position in heads up play
-        if (activePlayerCount === 2) {
-            this._positions.dealer = sb;
+        // Rotate dealer position
+        const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
+        if (nextToAct) {
+            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);   
+        } else {
+            this._positions.dealer = this.findNextEmptySeat();
         }
 
         // Reset game state
@@ -530,9 +529,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * Finds the small blind position based on dealer position
      */
     private findSBPosition(): number {
-        const sb = this.findNextPlayerToAct(this.dealerPosition);
+        const sb = this.findNextPlayerToAct(this.dealerPosition + 1); // Start scan from the next player after the dealer
         if (sb) {
-            return this.getPlayerSeatNumber(sb.address);
+            const seat = this.getPlayerSeatNumber(sb.address);
+            return seat;
         }
 
         if (this.dealerPosition === this.maxPlayers) {
@@ -547,7 +547,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     private findBBPosition(): number {
         const sb = this.findSBPosition();
-        const start = sb === this.maxPlayers ? 1 : sb + 1;
+        const start = sb === this.maxPlayers ? 1 : sb + 1; // Start scan from the next player after the small blind
         const bb = this.findNextPlayerToAct(start);
 
         if (bb) {

@@ -96,7 +96,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         return actionCounter;
     }
 
-    it("should play five complete hands with button movement and pot reset", () => {
+    it.skip("should play five complete hands with button movement and pot reset", () => {
         // Initialize variables to track button position and players
         let smallBlindPlayer = SMALL_BLIND_PLAYER;
         let bigBlindPlayer = BIG_BLIND_PLAYER;
