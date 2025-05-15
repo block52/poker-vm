@@ -103,3 +103,10 @@ export interface PositionArray {
     right?: string;
     color?: string;
 }
+
+
+export interface LeaveTableOptions {
+    amount: string;
+    actionIndex?: number;
+    nonce?: number;
+}
