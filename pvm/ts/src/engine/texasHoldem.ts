@@ -307,15 +307,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         );
     }
 
-    private findLastActedPlayer(): Player | undefined {
-        const lastAction = this.getLastRoundAction();
-        if (!lastAction) {
-            return undefined;
-        }
-
-        return this.getPlayerAtSeat(lastAction.seat);
-    }
-
     /**
      * Gets a player by their address
      */
@@ -560,17 +551,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     private findBBPosition(): number {
         const sb = this.findSBPosition();
-        const bb = this.findNextPlayerToAct(sb);
+        const start = sb === this.maxPlayers ? 1 : sb + 1;
+        const bb = this.findNextPlayerToAct(start);
 
         if (bb) {
             return this.getPlayerSeatNumber(bb.address);
         }
-
-        if (this.dealer === this.maxPlayers) {
-            return 2;
-        }
-
-        return this.dealer + 1;
+        
+        return this.dealer + 2;
     }
 
     /**
