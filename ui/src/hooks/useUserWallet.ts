@@ -7,13 +7,17 @@ import { useNodeRpc } from "../context/NodeRpcContext";
 const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
 
 interface UserWalletResult {
-    account: string | null;
-    balance: string | null;
+    // Primary account data from SDK
+    accountData: AccountDTO | null;
+    
+    // We keep privateKey separate as it's not part of AccountDTO
     privateKey: string | null;
+    
+    // Loading and error states
     isLoading: boolean;
     error: Error | null;
-    accountData: AccountDTO | null; // Full account data from SDK
-    nonce: number | null; // Expose nonce directly 
+    
+    // Helper function to refresh data
     refreshBalance: () => Promise<void>;
 }
 
@@ -24,17 +28,14 @@ const useUserWallet = (): UserWalletResult => {
     // Use the shared NodeRpc client from context
     const { client, isLoading: clientLoading } = useNodeRpc();
     
-    const [account, setAccount] = useState<string | null>(null);
-    const [balance, setBalance] = useState<string | null>(null);
     const [privateKey, setPrivateKey] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const [refreshCounter, setRefreshCounter] = useState(0);
     const [accountData, setAccountData] = useState<AccountDTO | null>(null);
-    const [nonce, setNonce] = useState<number | null>(null);
 
     const fetchBalance = useCallback(async () => {
-        if (!account || !client) return;
+        if (!client || !accountData?.address) return;
 
         // Rate limiting: Only allow API calls once every 10 seconds across all hooks
         const now = Date.now();
@@ -43,8 +44,8 @@ const useUserWallet = (): UserWalletResult => {
         const timeSinceLastCall = now - lastApiCallTime;
         const minInterval = 10000; // 10 seconds
 
-        // If it's been less than 10 seconds since the last call and we have balance data, use cached data
-        if (timeSinceLastCall < minInterval && balance !== null) {
+        // If it's been less than 10 seconds since the last call and we have data, use cached data
+        if (timeSinceLastCall < minInterval && accountData?.balance) {
             return;
         }
 
@@ -56,7 +57,7 @@ const useUserWallet = (): UserWalletResult => {
 
         try {
             // Use the SDK's getAccount method
-            const data = await client.getAccount(account);
+            const data = await client.getAccount(accountData.address);
             console.log("[useUserWallet] Account data received:", {
                 address: data.address,
                 nonce: data.nonce,
@@ -66,27 +67,13 @@ const useUserWallet = (): UserWalletResult => {
             
             // Store the full account data
             setAccountData(data);
-            
-            // Extract key properties
-            if (data?.balance) {
-                setBalance(data.balance);
-            } else {
-                console.error("[useUserWallet] Balance not found in account data:", data);
-                setBalance("0");
-            }
-            
-            if (data?.nonce !== undefined) {
-                setNonce(data.nonce);
-            }
-            
         } catch (err) {
             console.error("[useUserWallet] Error fetching balance:", err);
             setError(err instanceof Error ? err : new Error("An error occurred"));
-            setBalance("0");
         } finally {
             setIsLoading(false);
         }
-    }, [account, balance, client]);
+    }, [client, accountData]);
 
     // Manual refresh function
     const refreshBalance = useCallback(async () => {
@@ -121,15 +108,21 @@ const useUserWallet = (): UserWalletResult => {
 
                 // Create wallet instance from private key
                 const wallet = new Wallet(key);
-
                 setPrivateKey(key);
-                setAccount(wallet.address);
+                
+                // Initial accountData with just the address
+                setAccountData({
+                    address: wallet.address,
+                    balance: "0",
+                    nonce: 0
+                });
+                
                 setError(null);
             } catch (err) {
                 console.error("[useUserWallet] Failed to initialize wallet:", err);
                 setError(err instanceof Error ? err : new Error("Failed to initialize wallet"));
-                setAccount(null);
                 setPrivateKey(null);
+                setAccountData(null);
             } finally {
                 setIsLoading(false);
             }
@@ -138,19 +131,14 @@ const useUserWallet = (): UserWalletResult => {
         initializeWallet();
     }, []);
 
-    // Return focused data instead of full client
-    const result: UserWalletResult = {
-        account,
-        balance,
+    // Return simplified result
+    return {
+        accountData,
         privateKey,
         isLoading: isLoading || clientLoading,
         error,
-        accountData,
-        nonce,
         refreshBalance
     };
-
-    return result;
 };
 
 export default useUserWallet;
