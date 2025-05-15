@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNodeRpc } from "../context/NodeRpcContext";
-
-// Interface for Account data structure
-export interface AccountData {
-  address: string;
-  balance: string;
-  nonce: number;
-}
+import { AccountDTO } from "@bitcoinbrisbane/block52";
 
 // Key for storing last API call time in localStorage
 const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
@@ -17,7 +11,7 @@ const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
  */
 export function useTableNonce() {
   const [nonce, setNonce] = useState<number | null>(null);
-  const [accountData, setAccountData] = useState<AccountData | null>(null);
+  const [accountData, setAccountData] = useState<AccountDTO | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
@@ -31,12 +25,14 @@ export function useTableNonce() {
    */
   const fetchNonce = useCallback(async (address: string): Promise<number | null> => {
     if (!address) {
+      console.log("[useTableNonce] No user address available");
       setError(new Error("No user address available"));
       setIsLoading(false);
       return null;
     }
 
     if (!client) {
+      console.log("[useTableNonce] SDK client not initialized");
       setError(new Error("SDK client not initialized"));
       setIsLoading(false);
       return null;
@@ -51,6 +47,7 @@ export function useTableNonce() {
 
     // If it's been less than 10 seconds since the last call, use cached data
     if (timeSinceLastCall < minInterval && nonce !== null) {
+      console.log("[useTableNonce] Using cached nonce:", nonce);
       return nonce;
     }
 
@@ -61,22 +58,21 @@ export function useTableNonce() {
       // Update shared last API call time
       localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
 
+      console.log("[useTableNonce] Fetching nonce for address:", address);
+      
       // Use the SDK's getAccount method
       const data = await client.getAccount(address);
 
       if (data) {
-        // Convert the response to match our expected AccountData format
-        const accountData: AccountData = {
-          address: address,
-          balance: data.balance || "0",
-          nonce: data.nonce || 0
-        };
+        // Store the account data directly from SDK
+        setAccountData(data);
+        setNonce(data.nonce);
         
-        setAccountData(accountData);
-        setNonce(accountData.nonce);
+        console.log("[useTableNonce] Nonce received:", data.nonce);
+        
         setLastRefreshTime(Date.now());
         setIsLoading(false);
-        return accountData.nonce;
+        return data.nonce;
       } else {
         throw new Error("Invalid response format");
       }
@@ -84,7 +80,7 @@ export function useTableNonce() {
       const error = err instanceof Error ? err : new Error("Error fetching nonce");
       setError(error);
       setIsLoading(false);
-      console.error("Error fetching nonce:", err);
+      console.error("[useTableNonce] Error fetching nonce:", err);
       return null;
     }
   }, [nonce, client]);
@@ -97,16 +93,18 @@ export function useTableNonce() {
     const targetAddress = address || userAddress;
     
     if (!targetAddress) {
-      console.error("No address provided for nonce refresh");
+      console.error("[useTableNonce] No address provided for nonce refresh");
       return null;
     }
     
+    console.log("[useTableNonce] Manual nonce refresh requested for:", targetAddress);
     return await fetchNonce(targetAddress);
   }, [fetchNonce, userAddress]);
 
   // Initial fetch on mount
   useEffect(() => {
     if (userAddress && client) {
+      console.log("[useTableNonce] Initial nonce fetch");
       fetchNonce(userAddress);
     }
   }, [userAddress, fetchNonce, client]);
@@ -115,7 +113,7 @@ export function useTableNonce() {
   useEffect(() => {
     const interval = setInterval(() => {
       if (userAddress && client) {
-        console.log("🔄 Scheduled nonce refresh");
+        console.log("[useTableNonce] Scheduled nonce refresh");
         fetchNonce(userAddress);
       }
     }, 15000);
