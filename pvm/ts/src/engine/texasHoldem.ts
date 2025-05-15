@@ -562,6 +562,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const sb = this.findSBPosition();
         const bb = this.findNextPlayerToAct(sb);
 
+        if (bb) {
+            return this.getPlayerSeatNumber(bb.address);
+        }
+
+        if (this.dealer === this.maxPlayers) {
+            return 2;
+        }
+
         return this.dealer + 1;
     }
 

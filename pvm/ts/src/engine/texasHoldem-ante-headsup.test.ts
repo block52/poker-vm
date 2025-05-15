@@ -56,7 +56,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
         });
 
-        it.only("should have correct legal actions after posting the small blind", () => {
+        it("should have correct legal actions after posting the small blind", () => {
             // Get legal actions for the next player
             let actual = game.getLegalActions(SMALL_BLIND_PLAYER);
             expect(actual.length).toEqual(2);
