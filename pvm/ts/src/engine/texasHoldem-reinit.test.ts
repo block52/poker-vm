@@ -62,6 +62,14 @@ describe("Texas Holdem - Reinit", () => {
             expect(game.smallBlindPosition).toEqual(2);
             expect(game.bigBlindPosition).toEqual(1);
             expect(game.communityCards.length).toEqual(0);
+
+            const player0 = game.getPlayer(SMALL_BLIND_PLAYER);
+            expect(player0).toBeDefined();
+            expect(player0?.holeCards).toBeUndefined();
+
+            const player1 = game.getPlayer(BIG_BLIND_PLAYER);
+            expect(player1).toBeDefined();
+            expect(player1?.holeCards).toBeUndefined();
         });
     });
 });
