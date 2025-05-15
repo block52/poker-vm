@@ -756,12 +756,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
     getLegalActions(address: string): LegalActionDTO[] {
         const player = this.getPlayer(address);
 
-        // // Check if player is active
-        // const isActive = player.status === PlayerStatus.ACTIVE;
-        // if (!isActive) {
-        //     return [];
-        // }
-
         const verifyAction = (action: IAction): LegalActionDTO | undefined => {
             try {
                 const range = action.verify(player);
@@ -778,15 +772,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Get all valid actions for this player
         const actions = this._actions.map(verifyAction).filter((a): a is LegalActionDTO => !!a);
-
-        // // Check if cards have been dealt already
-        // const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
-
-        // // If cards have been dealt, remove the deal action
-        // if (anyPlayerHasCards) {
-        //     return actions.filter(a => a.action !== NonPlayerActionType.DEAL);
-        // }
-
         return actions;
     }
 

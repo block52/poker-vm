@@ -20,7 +20,8 @@ class SmallBlindAction extends BaseAction implements IAction {
      * @throws Error if the player cannot post the small blind
      */
     verify(_player: Player): Range {
-        super.verify(_player);
+        // Player must be active (not sitting out)
+        super.verifyPlayerIsActive(_player);
 
         // Game must be in the ANTE round
         if (this.game.currentRound !== TexasHoldemRound.ANTE) {

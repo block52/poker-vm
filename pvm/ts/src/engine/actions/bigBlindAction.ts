@@ -9,8 +9,8 @@ class BigBlindAction extends BaseAction implements IAction {
     }
 
     verify(_player: Player): Range {
-        // Check base conditions (hand active, player's turn, player active)
-        super.verify(_player);
+        // Player must be active (not sitting out)
+        super.verifyPlayerIsActive(_player);
 
         // 1. Round state check: Big blind can only be posted during ANTE round
         if (this.game.currentRound !== TexasHoldemRound.ANTE) {
