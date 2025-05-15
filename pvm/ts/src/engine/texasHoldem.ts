@@ -32,15 +32,8 @@ import SmallBlindAction from "./actions/smallBlindAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IAction, IPoker, IUpdate, Turn, TurnWithSeat } from "./types";
+import { IAction, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
-
-type Winner = {
-    amount: bigint;
-    cards: string[] | undefined;
-    name: string | undefined;
-    description: string | undefined;
-};
 
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
