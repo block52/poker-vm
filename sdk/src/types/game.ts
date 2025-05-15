@@ -93,7 +93,10 @@ export type LegalActionDTO = {
 
 export type WinnerDTO = {
     address: string;
-    amount: number;
+    amount: string;
+    cards: string[] | undefined; // Can win with no cards
+    name: string | undefined; // Can win with no cards
+    description: string | undefined; // Can win with no cards
 };
 
 export type PlayerDTO = {
