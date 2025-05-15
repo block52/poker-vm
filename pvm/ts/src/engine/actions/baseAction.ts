@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range } from "../types";
@@ -9,6 +9,7 @@ abstract class BaseAction {
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
+        // To do: Move to deal or fold action class
         if (this.type !== PlayerActionType.FOLD && this.type !== NonPlayerActionType.DEAL) {
             const nextPlayerAddress = this.game.getNextPlayerToAct();
             if (nextPlayerAddress?.address !== player.address) 
@@ -21,6 +22,12 @@ abstract class BaseAction {
             throw new Error(`Only active player can ${this.type}.`);
 
         return undefined;
+    }
+
+    protected verifyPlayerIsActive(player: Player): void {
+        const playerStatus = this.game.getPlayerStatus(player.address);
+        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
+            throw new Error(`Only active player can ${this.type}.`);
     }
 
     execute(player: Player, index: number, amount: bigint): void {
