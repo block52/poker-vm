@@ -567,7 +567,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return this.getPlayerSeatNumber(bb.address);
         }
         
-        return this.dealerPosition + 2;
+        if (this.dealerPosition + 2 > this.maxPlayers) {
+            return 2;
+        }
+
+        if (this.dealerPosition === this.maxPlayers) {
+            return 2;
+        }
+
+        return 2;
     }
 
     /**
