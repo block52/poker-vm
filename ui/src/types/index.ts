@@ -1,6 +1,5 @@
 import { LegalActionDTO, PlayerActionType, PlayerDTO} from "@bitcoinbrisbane/block52";
 
-// types.ts
 export interface LastActionType {
     action: string;
     amount: number;

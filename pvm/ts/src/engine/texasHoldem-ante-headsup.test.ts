@@ -337,6 +337,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
             expect(game.getPlayer(SMALL_BLIND_PLAYER)).toBeDefined();
             expect(game.getPlayer(BIG_BLIND_PLAYER)).toBeDefined();
+            expect(game.dealerPosition).toEqual(1);
             expect(game.smallBlindPosition).toEqual(2);
             expect(game.bigBlindPosition).toEqual(1);
             expect(game.pot).toEqual(0n);
