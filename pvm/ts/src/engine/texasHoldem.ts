@@ -171,7 +171,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Reset game state
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
-        this._lastActedSeat = this.dealer;
+        this._lastActedSeat = this.dealerPosition;
         this._deck = new Deck(deck);
         this._pots = [0n];
         this._communityCards.length = 0;
@@ -234,12 +234,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     // Position getters
-    get dealer(): number {
-        return this._positions.dealer ?? this.maxPlayers;
-    }
-
     get dealerPosition(): number {
-        return this.dealer;
+        return this._positions.dealer ?? this.maxPlayers;
     }
 
     get bigBlindPosition(): number {
@@ -534,16 +530,16 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * Finds the small blind position based on dealer position
      */
     private findSBPosition(): number {
-        const sb = this.findNextPlayerToAct(this.dealer);
+        const sb = this.findNextPlayerToAct(this.dealerPosition);
         if (sb) {
             return this.getPlayerSeatNumber(sb.address);
         }
 
-        if (this.dealer === this.maxPlayers) {
+        if (this.dealerPosition === this.maxPlayers) {
             return 1;
         }
 
-        return this.dealer + 1;
+        return this.dealerPosition + 1;
     }
 
     /**
@@ -558,7 +554,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return this.getPlayerSeatNumber(bb.address);
         }
         
-        return this.dealer + 2;
+        return this.dealerPosition + 2;
     }
 
     /**
@@ -1196,7 +1192,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     stack: _player.chips.toString(),
                     isSmallBlind: seat === this.smallBlindPosition,
                     isBigBlind: seat === this.bigBlindPosition,
-                    isDealer: seat === this.dealer,
+                    isDealer: seat === this.dealerPosition,
                     holeCards: holeCardsDto,
                     status: _player.status,
                     lastAction: lastAction,
@@ -1236,7 +1232,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             gameOptions: gameOptions,
             smallBlindPosition: this.smallBlindPosition,
             bigBlindPosition: this.bigBlindPosition,
-            dealer: this.dealer,
+            dealer: this.dealerPosition,
             players: players,
             communityCards: this._communityCards.map(card => card.mnemonic),
             deck: this._deck.toString(),
