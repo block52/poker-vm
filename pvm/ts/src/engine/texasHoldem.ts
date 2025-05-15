@@ -413,7 +413,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return false;
         }
 
-        return this._now - lastAction.timestamp > this._now + 60 * 1000; // 60 seconds
+        return 60 * 1000 + lastAction.timestamp > this._now; // 60 seconds
     }
 
     // ==================== GAME FLOW METHODS ====================
