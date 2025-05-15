@@ -55,3 +55,10 @@ export type OrderedTransaction = {
     index: number;
     data?: any;
 };
+
+export type Winner = {
+    amount: bigint;
+    cards: string[] | undefined;
+    name: string | undefined;
+    description: string | undefined;
+};

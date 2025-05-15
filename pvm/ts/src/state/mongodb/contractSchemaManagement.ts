@@ -11,7 +11,7 @@ export class ContractSchemaManagement extends StateManager implements IContractS
 
     public async getByAddress(address: string): Promise<IContractSchemaDocument> {
         const contract = await ContractSchemas.findOne({
-            address
+            address: address
         });
 
         if (!contract) {
@@ -32,7 +32,7 @@ export class ContractSchemaManagement extends StateManager implements IContractS
 
     public async getGameOptions(address: string): Promise<GameOptions> {
         const contract = await ContractSchemas.findOne({
-            address
+            address: address
         });
 
         if (!contract) {
