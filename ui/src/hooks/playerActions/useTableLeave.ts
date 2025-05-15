@@ -1,77 +1,70 @@
-import useSWRMutation from "swr/mutation";
+import { useState } from "react";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
-import { LeaveTableOptions } from "./types";
+import { PerformActionResponse } from "@bitcoinbrisbane/block52";
+import { LeaveTableOptions } from "../../types/index";
 
+
+/**
+ * Custom hook to handle leaving a poker table
+ * @param tableId The ID of the table where the action will be performed
+ * @returns Object containing functions for performing leave table action
+ */
 export function useTableLeave(tableId: string | undefined) {
-    // Get the Node RPC client
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+    const [data, setData] = useState<PerformActionResponse | null>(null);
     const { client } = useNodeRpc();
 
-    // Create a fetcher that has access to the client
-    const leaveFetcher = async (_url: string, { arg }: { arg: LeaveTableOptions }) => {
-        const { privateKey, amount = "0", nonce = Date.now().toString(), actionIndex } = arg;
-
-        console.log("👋 Leave table attempt");
-        console.log("👋 Using amount:", amount);
-        console.log("👋 Using nonce:", nonce);
-
-        if (!privateKey) {
-            console.error("👋 Missing private key");
-            throw new Error("Missing private key");
+    /**
+     * Execute a leave table action
+     * @param options Options for leaving the table, including amount
+     * @returns Promise resolving to the result of the leave action
+     */
+    const leaveTable = async (options: LeaveTableOptions): Promise<PerformActionResponse> => {
+        if (!tableId) {
+            const err = new Error("Table ID is required");
+            setError(err);
+            return Promise.reject(err);
         }
-        
+
+        setIsLoading(true);
+        setError(null);
+
         try {
             // Check if the client is available
             if (!client) {
-                throw new Error("Node RPC client not available");
-            }
-
-            if (!tableId) {
-                throw new Error("Table ID is required");
+                const err = new Error("Node RPC client not available");
+                setError(err);
+                return Promise.reject(err);
             }
 
             // Convert the amount from string to bigint
-            const amountBigInt = BigInt(amount);
+            const amountBigInt = BigInt(options.amount);
             
-            console.log("👋 Calling playerLeave with params:", {
+            console.log("👋 Leaving table:", {
                 tableId,
                 amount: amountBigInt.toString(),
-                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString())
+                nonce: options.nonce
             });
 
             // Call playerLeave method on the client
-            const response = await client.playerLeave(
-                tableId,
-                amountBigInt,
-                typeof nonce === "number" ? nonce : parseInt(nonce.toString())
-            );
-
+            const response = await client.playerLeave(tableId, amountBigInt, options.nonce);
             console.log("👋 Leave table response:", response);
+            
+            setData(response);
             return response;
-        } catch (error) {
-            console.error("👋 Leave table error:", error);
-            throw error;
+        } catch (err) {
+            console.error("👋 Leave table error:", err);
+            setError(err instanceof Error ? err : new Error("Failed to leave table"));
+            throw err;
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const { trigger, isMutating, error, data } = useSWRMutation(
-        tableId ? `leave_${tableId}` : null, 
-        leaveFetcher
-    );
-
-    // Add better error handling
-    if (error) {
-        console.error("Leave table hook error:", error instanceof Error ? error.message : String(error));
-    }
-
-    // Get player's stack from the table data if needed
-    const leaveTableWithStack = async (options: LeaveTableOptions = {}) => {
-        return trigger(options);
-    };
-
     return {
-        leaveTable: tableId ? leaveTableWithStack : null,
-        isLeaving: isMutating,
+        leaveTable,
+        isLeaving: isLoading,
         error,
         data
     };
