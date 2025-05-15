@@ -45,10 +45,6 @@ describe("Texas Holdem - Reinit", () => {
         it("should reinit after end", () => {
             // check positions and hand number
             expect(game.getPlayerCount()).toEqual(2);
-            // expect(game.exists(SMALL_BLIND_PLAYER)).toBeTruthy();
-            // expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
-            // expect(game.getPlayer(SMALL_BLIND_PLAYER)).toBeDefined();
-            // expect(game.getPlayer(BIG_BLIND_PLAYER)).toBeDefined();
             expect(game.dealerPosition).toEqual(9);
             expect(game.smallBlindPosition).toEqual(1);
             expect(game.bigBlindPosition).toEqual(2);
