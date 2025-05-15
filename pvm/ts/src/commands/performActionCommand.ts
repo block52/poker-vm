@@ -116,10 +116,10 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
     private async isGameTransaction(address: string): Promise<Boolean> {
         console.log(`Checking if ${address} is a game transaction...`);
-        const existingContractSchema = await this.contractSchemaManagement.getByAddress(address);
+        const game = await this.gameManagement.getByAddress(address);
 
-        console.log(`Contract schema found:`, existingContractSchema);
-        const found: Boolean = existingContractSchema !== null;
+        console.log(`Game found:`, address);
+        const found: Boolean = game !== null;
 
         console.log(`Is game transaction: ${found}`);
         return found;
