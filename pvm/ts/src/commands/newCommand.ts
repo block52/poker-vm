@@ -42,16 +42,16 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
                 throw new Error(`Address ${this.address} is not a valid game contract`);
             }
 
-            const json = await this.gameManagement.getState(this.address);
+            const _game = await this.gameManagement.getByAddress(this.address);
 
-            if (!json) {
+            if (!_game?.state) {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
 
-            const gameOptions = await this.contractSchemaManagement.getGameOptions(this.address);
+            const gameOptions = await this.contractSchemaManagement.getGameOptions(_game.schemaAddress);
 
             // For existing games, handle reinitialization
-            const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
+            const game: TexasHoldemGame = TexasHoldemGame.fromJson(_game?.state, gameOptions);
             const deck = new Deck();
             deck.shuffle(this.seed);
             game.reInit(deck.toString());
@@ -91,8 +91,8 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
             // Return the signed transaction like in TransferCommand
             return signResult(txResponse, this.privateKey);
         } catch (e) {
-            console.error(`Error in deal command:`, e);
-            throw new Error("Error dealing cards");
+            console.error(`Error in new command:`, e);
+            throw new Error("Error creating new game: ");
         }
     }
 
