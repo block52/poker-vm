@@ -1209,7 +1209,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
             for (const [address, amount] of this._winners.entries()) {
                 winners.push({
                     address: address,
-                    amount: Number(amount)
+                    amount: amount.toString(),
+                    cards: undefined,
+                    name: undefined,
+                    description: undefined // Roll these back when description is available from PokerSolver
                 });
             }
         }
