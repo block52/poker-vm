@@ -84,7 +84,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 cards: winner.cards,
                 name: winner.name,
                 description: winner.description
-            }
+            };
             this._winners.set(winner.address, _winner);
         }
 
@@ -169,7 +169,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Rotate dealer position
         const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
         if (nextToAct) {
-            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);   
+            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);
         } else {
             this._positions.dealer = this.findNextEmptySeat();
         }
@@ -218,7 +218,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._lastActedSeat;
     }
 
-    
     setLastActedSeat(seat: number): void {
         this._lastActedSeat = seat;
     }
@@ -583,7 +582,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (bb) {
             return this.getPlayerSeatNumber(bb.address);
         }
-        
+
         if (this.dealerPosition + 2 > this.maxPlayers) {
             return 2;
         }
