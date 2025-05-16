@@ -18,6 +18,12 @@ class FoldAction extends BaseAction implements IAction {
      * @returns A Range object with min and max amount both set to 0 (folding costs nothing)
      */
     verify(player: Player): Range {
+
+        if (player.status === PlayerStatus.FOLDED) {
+            // Player has already folded, no need to fold again
+            throw new Error("Player has already folded.");
+        }
+
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
             // Muck cards instead of folding
             throw new Error("Fold action is not allowed during showdown round.");
