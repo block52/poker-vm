@@ -34,6 +34,9 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
+import { stat } from "fs";
+import { time } from "console";
+import moment from "moment";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
@@ -82,7 +85,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 cards: winner.cards,
                 name: winner.name,
                 description: winner.description
-            }
+            };
             this._winners.set(winner.address, _winner);
         }
 
@@ -131,7 +134,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     private loadPreviousActions(previousActions: ActionDTO[]): void {
         for (const action of previousActions) {
-            const timestamp = Date.now();
             // Create TurnWithSeat directly, preserving the original seat number
             const turnWithSeat: TurnWithSeat = {
                 playerId: action.playerId,
@@ -139,7 +141,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 amount: action.amount ? BigInt(action.amount) : undefined,
                 index: action.index,
                 seat: action.seat,
-                timestamp
+                timestamp: action.timestamp
             };
 
             // Check if the round already exists in the map
@@ -168,7 +170,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Rotate dealer position
         const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
         if (nextToAct) {
-            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);   
+            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);
         } else {
             this._positions.dealer = this.findNextEmptySeat();
         }
@@ -217,7 +219,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._lastActedSeat;
     }
 
-    
     setLastActedSeat(seat: number): void {
         this._lastActedSeat = seat;
     }
@@ -413,12 +414,33 @@ class TexasHoldemGame implements IPoker, IUpdate {
             return false;
         }
 
+        // Ignore if they're non active
+        const player = this.getPlayer(address);
+        const status = [PlayerStatus.ALL_IN, PlayerStatus.FOLDED, PlayerStatus.SITTING_OUT];
+        if (status.includes(player.status)) {
+            return false;
+        }
+
         const lastAction = this.getPlayersLastAction(address);
         if (!lastAction) {
             return false;
         }
 
-        return this._now - lastAction.timestamp > this._now + 60 * 1000; // 60 seconds
+        const ts = Date.now();
+        const actions = [PlayerActionType.SIT_OUT, PlayerActionType.FOLD, PlayerActionType.SHOW, PlayerActionType.MUCK, NonPlayerActionType.JOIN];
+
+        // Ignore actions that are not relevant to expiration
+        if (actions.includes(lastAction.action)) {
+            return false;
+        }
+
+        const expire = 60 * 1000 + lastAction.timestamp;
+        const expireTime = moment(expire);
+        console.log("Expire Time: ", expireTime.format("YYYY-MM-DD HH:mm:ss"));
+        console.log("Expire: ", expire);
+        console.log("Time:   ", ts);
+        const expired = expire < ts;
+        return expired;
     }
 
     // ==================== GAME FLOW METHODS ====================
@@ -564,7 +586,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (bb) {
             return this.getPlayerSeatNumber(bb.address);
         }
-        
+
         if (this.dealerPosition + 2 > this.maxPlayers) {
             return 2;
         }
@@ -823,7 +845,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     /**
      * Performs a poker action for a specific player
      */
-    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
+    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, timestamp?: number, data?: any): void {
         // Check action index for replay protection
         const turnIndex = this.getTurnIndex();
         if (index !== turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
@@ -895,8 +917,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         }
 
         // Record the action in the player's history
-        const timestamp = Date.now();
-        player.addAction({ playerId: address, action, amount, index }, timestamp);
+        timestamp = timestamp || Date.now();
+        player.addAction({ playerId: address, action, amount, index, timestamp });
 
         // Update the last player to act
         this._lastActedSeat = seat;
@@ -912,8 +934,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     addAction(turn: Turn, round: TexasHoldemRound = this.currentRound): void {
         const seat = this.getPlayerSeatNumber(turn.playerId);
-        const timestamp = Date.now();
-        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+        const turnWithSeat: TurnWithSeat = { ...turn, seat };
 
         this.setAction(turnWithSeat, round);
     }

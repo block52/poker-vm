@@ -14,7 +14,7 @@ class LeaveAction extends BaseAction {
     }
 
     // Override execute to handle player leaving
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number, timestamp: number): void {
         // First verify the action
         this.verify(player);
 
@@ -28,9 +28,10 @@ class LeaveAction extends BaseAction {
         // Add leave action to history BEFORE removing the player
         this.game.addNonPlayerAction({ 
             playerId: playerAddress, 
-            action: NonPlayerActionType.LEAVE, 
+            action: this.type, 
             index: index,
-            amount: playerChips // Include chips amount in the action
+            amount: playerChips, // Include chips amount in the action
+            timestamp: timestamp,
         });
 
         // Now remove player completely from the game

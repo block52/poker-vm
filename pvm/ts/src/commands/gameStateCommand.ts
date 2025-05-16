@@ -34,11 +34,11 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
-            const orderedTransactions = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
+            const orderedTransactions: OrderedTransaction[] = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
             orderedTransactions.forEach(tx => {
                 try {
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.timestamp, tx.data);
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 }
