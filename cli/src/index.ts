@@ -11,8 +11,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Default contract address on L2
-let defaultTableAddress = "0xa78eba9eda216154d263679e1cc615c7271679efa3";
-let node = "https://node1.block52.xyz"; // process.env.NODE_URL || "http://localhost:3000"; // "
+let defaultTableAddress = "0x5beefcc4e98e5f876ef6e94a2291cde322e38d03";
+let node = "http://localhost:3000"; // "
 let nonce: number = 0;
 
 let _node: NodeRpcClient;
@@ -157,7 +157,8 @@ const join = async (tableAddress: string, amount: bigint, seat: number): Promise
 
 const getGameState = async (tableAddress: string): Promise<TexasHoldemStateDTO> => {
     const rpcClient = getClient();
-    const dto = await rpcClient.getGameState(tableAddress);
+    const address = getAddress();
+    const dto = await rpcClient.getGameState(tableAddress, address);
 
     return dto;
 };
@@ -596,7 +597,7 @@ const getLegalActions = async (tableAddress: string, address: string): Promise<A
     actions.push({ action: "Exit", value: "exit" });
 
     const client = getClient();
-    const state = await client.getGameState(tableAddress);
+    const state = await client.getGameState(tableAddress, address);
 
     if (!state) {
         console.log(chalk.red("No active game found"));
