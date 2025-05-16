@@ -13,7 +13,9 @@ import BuyInModal from "./playPage/BuyInModal";
 import { useNodeRpc } from "../context/NodeRpcContext"; // Use NodeRpcContext
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { GameType, Variant } from "./types";
+import { GameWithAddress } from "../types/index";
 import { formatAddress, formatBalance } from "./common/utils";
+import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 
 // Add network display component
 const NetworkDisplay = ({ isMainnet = false }) => {
@@ -57,6 +59,9 @@ const Dashboard: React.FC = () => {
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
     const [accountNonce, setAccountNonce] = useState<number>(0); // Track nonce for transactions
+    
+    // Use the findGames hook
+    const { games, isLoading: gamesLoading, error: gamesError } = useFindGames();
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
@@ -65,7 +70,7 @@ const Dashboard: React.FC = () => {
 
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
-    const [selectedContractAddress, setSelectedContractAddress] = useState("");
+    const [selectedContractAddress, setSelectedContractAddress] = useState("0x22dfa2150160484310c5163f280f49e23b8fd34326");
     const [isCreatingGame, setIsCreatingGame] = useState(false);
     const [createGameError, setCreateGameError] = useState("");
     const [newGameAddress, setNewGameAddress] = useState("");
@@ -370,7 +375,7 @@ const Dashboard: React.FC = () => {
             {showCreateGameModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
                     <div className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20">
-                        <h3 className="text-xl font-bold text-white mb-4">Create New Game</h3>
+                        <h3 className="text-xl font-bold text-white mb-4">Create New Table</h3>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-white text-sm mb-1">Card Game Contract</label>
@@ -379,10 +384,12 @@ const Dashboard: React.FC = () => {
                                     onChange={e => setSelectedContractAddress(e.target.value)}
                                     className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                 >
-                                    <option value={DEFAULT_GAME_CONTRACT}>Texas Hold'em</option>
-                                    <option value="" disabled>Omaha (Coming Soon)</option>
-                                    <option value="" disabled>Seven Card Stud (Coming Soon)</option>
-                                    <option value="" disabled>Blackjack (Coming Soon)</option>
+                                    <React.Fragment>
+                                        <option value={DEFAULT_GAME_CONTRACT}>Texas Hold'em</option>
+                                        <option value="" disabled>Omaha (Coming Soon)</option>
+                                        <option value="" disabled>Seven Card Stud (Coming Soon)</option>
+                                        <option value="" disabled>Blackjack (Coming Soon)</option>
+                                    </React.Fragment>
                                 </select>
                             </div>
 
@@ -558,7 +565,7 @@ const Dashboard: React.FC = () => {
                                     onClick={() => setShowCreateGameModal(true)}
                                     className="block flex-1 text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
                                 >
-                                    Create New Game
+                                    Create New Table
                                 </button>
                             </div>
                             <div className="mt-2 flex justify-center">
@@ -667,6 +674,71 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Available Games Section */}
+                {games && games.length > 0 && (
+                    <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
+                        <h3 className="text-lg font-bold text-white mb-2">Available Tables</h3>
+                        <div className="space-y-3">
+                            {games.slice(0, 3).map((game, index) => (
+                                <div key={index} className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+                                                />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-300 text-xs">Texas Hold'em</p>
+                                            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+                                                <span className="text-xs text-blue-400">Min: ${game.gameOptions?.minBuyIn ? formatBalance(game.gameOptions.minBuyIn) : "0.01"}</span>
+                                                <span className="text-xs text-blue-400">Max: ${game.gameOptions?.maxBuyIn ? formatBalance(game.gameOptions.maxBuyIn) : "1.0"}</span>
+                                                <span className="text-xs text-blue-400">Blinds: ${game.gameOptions?.smallBlind ? formatBalance(game.gameOptions.smallBlind) : "0.01"}/${game.gameOptions?.bigBlind ? formatBalance(game.gameOptions.bigBlind) : "0.02"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setShowBuyInModal(true);
+                                            setBuyInTableId(game.address);
+                                        }}
+                                        title="Open buy-in modal to join this table"
+                                        className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300 shadow-md"
+                                    >
+                                        Join Table
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        {gamesLoading && (
+                            <div className="flex justify-center items-center py-3">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                            </div>
+                        )}
+                        {gamesError && (
+                            <div className="text-red-400 text-sm text-center py-2">
+                                Failed to load games. Please try again.
+                            </div>
+                        )}
+                        {games.length > 3 && (
+                            <div className="mt-2 flex justify-center">
+                                <button className="text-sm text-blue-400 hover:text-blue-300">
+                                    View more tables ({games.length - 3} more)
+                                </button>
+                            </div>
+                        )}
+                        {games.length === 0 && !gamesLoading && !gamesError && (
+                            <div className="text-gray-300 text-sm text-center py-2">
+                                No tables found. Create your own table below!
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Display new game address if available */}
                 {newGameAddress && (
                     <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
@@ -706,7 +778,7 @@ const Dashboard: React.FC = () => {
                                 <button
                                     onClick={() => {
                                         setShowBuyInModal(true);
-                                        setBuyInTableId(newGameAddress);
+                                        setBuyInTableId(DEFAULT_GAME_CONTRACT);
                                     }}
                                     className="p-2 text-green-400 hover:text-green-300 transition-colors ml-2"
                                     title="Join table"
@@ -721,7 +793,7 @@ const Dashboard: React.FC = () => {
                             <button
                                 onClick={() => {
                                     setShowBuyInModal(true);
-                                    setBuyInTableId(newGameAddress);
+                                    setBuyInTableId(DEFAULT_GAME_CONTRACT);
                                 }}
                                 className="text-sm text-blue-400 hover:text-blue-300"
                             >
@@ -796,7 +868,8 @@ const Dashboard: React.FC = () => {
                         <button
                             onClick={() => {
                                 setShowBuyInModal(true);
-                                setBuyInTableId("0x22dfa2150160484310c5163f280f49e23b8fd34326"); //Change to selected Contract for dynamic
+                                // Use the first available game address if it exists, otherwise fall back to default
+                                setBuyInTableId(games && games.length > 0 ? games[0].address : DEFAULT_GAME_CONTRACT);
                             }}
                             className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
                         >

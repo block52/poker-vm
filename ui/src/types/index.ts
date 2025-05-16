@@ -1,15 +1,5 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, TexasHoldemStateDTO} from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO} from "@bitcoinbrisbane/block52";
 
-// GameState response type
-export interface GameStateResponse {
-  id: string;
-  result: {
-    data: TexasHoldemStateDTO;
-    signature: string;
-  }
-}
-
-// types.ts
 export interface LastActionType {
     action: string;
     amount: number;
@@ -102,4 +92,17 @@ export interface PositionArray {
     bottom?: string;
     right?: string;
     color?: string;
+}
+
+
+export interface LeaveTableOptions {
+    amount: string;
+    actionIndex?: number;
+    nonce?: number;
+}
+
+// Type for game objects returned by findGames
+export interface GameWithAddress {
+    address: string;
+    gameOptions: GameOptionsDTO;
 }
