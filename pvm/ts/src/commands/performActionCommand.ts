@@ -32,9 +32,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         console.log(`Executing ${this.action} command...`);
 
-        const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
-        const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
-
         if (await !this.isGameTransaction(this.to)) {
             console.log(`Not a game transaction, checking if ${this.to} is a game...`);
             throw new Error("Not a game transaction");
@@ -73,6 +70,9 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         game.performAction(this.from, this.action, this.index, this.amount, this.data);
 
         const nonce = BigInt(this.nonce);
+
+        const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
+        const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
 
         // Create transaction with correct direction of funds flow
         // For all other actions: regular format
