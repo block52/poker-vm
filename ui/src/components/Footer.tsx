@@ -784,15 +784,26 @@ transition-all duration-200 font-medium min-w-[100px]"
                 {isUserInTable && (
                     <div className="fixed bottom-4 right-[30%] flex gap-2 z-20">
                         {isPlayerSittingOut ? (
-                            <button
-                                onClick={handleSitIn}
-                                className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                text-white font-medium py-1.5 px-4 rounded-lg shadow-md transition-all duration-200 
-                                border border-[#3a9188] hover:border-[#64ffda] flex items-center text-xs"
-                                disabled={isSittingIn}
-                            >
-                                {isSittingIn ? "SITTING IN..." : "I AM BACK"}
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleSitIn}
+                                    className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                                    text-white font-medium py-1.5 px-4 rounded-lg shadow-md transition-all duration-200 
+                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center text-xs"
+                                    disabled={isSittingIn}
+                                >
+                                    {isSittingIn ? "SITTING IN..." : "Wait for Big Blind"}
+                                </button>
+                                <button
+                                    onClick={handleSitIn}
+                                    className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
+                                    text-white font-medium py-1.5 px-4 rounded-lg shadow-md transition-all duration-200 
+                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center text-xs"
+                                    disabled={isSittingIn}
+                                >
+                                    {isSittingIn ? "SITTING IN..." : "Join Now and Post Big Blind"}
+                                </button>
+                            </div>
                         ) : (
                             <button
                                 onClick={handleSitOut}
