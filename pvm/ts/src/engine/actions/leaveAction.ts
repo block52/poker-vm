@@ -33,9 +33,9 @@ class LeaveAction extends BaseAction {
             amount: playerChips // Include chips amount in the action
         });
 
-        // Now remove player completely from the game
-        // console.log(`Removing player ${playerAddress} from seat ${seat}`);
-        // Player removal now happens in addNonPlayerAction
+        // Now remove player completely from the game using the proper method
+        this.game.leaveAtSeat(playerAddress, seat);
+        console.log(`Removed player ${playerAddress} from seat ${seat} in LeaveAction`);
     }
 }
 

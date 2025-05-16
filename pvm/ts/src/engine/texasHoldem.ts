@@ -405,6 +405,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     /**
+     * Removes a player from the game at a specific seat
+     */
+    leaveAtSeat(address: string, seat: number): void {
+        // Check if the player exists at this seat
+        const player = this._playersMap.get(seat);
+        if (!player || player.address !== address) {
+            throw new Error("Player not found at specified seat.");
+        }
+
+        // Remove player from the table
+        this._playersMap.delete(seat);
+    }
+
+    /**
      * Checks if a player's turn has expired
      */
     private expired(address: string): boolean {
@@ -840,7 +854,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 new JoinAction(this, this._update).execute(player, index, _amount, data);
                 return;
             case NonPlayerActionType.LEAVE:
-                new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
+                const leavingPlayer = this.getPlayer(address);
+                // Player will be removed in LeaveAction.execute()
+                new LeaveAction(this, this._update).execute(leavingPlayer, index);
                 return;
             case NonPlayerActionType.DEAL:
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
@@ -952,12 +968,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
             this._rounds.set(round, actions);
         } else {
             this._rounds.set(round, [turn]);
-        }
-
-        // If this is a LEAVE action, remove the player from the game
-        if (turn.action === NonPlayerActionType.LEAVE) {
-            console.log(`Removing player ${turn.playerId} from seat ${turn.seat}`);
-            this._playersMap.delete(turn.seat);
         }
     }
 
