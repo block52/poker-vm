@@ -13,6 +13,7 @@ import BuyInModal from "./playPage/BuyInModal";
 import { useNodeRpc } from "../context/NodeRpcContext"; // Use NodeRpcContext
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { GameType, Variant } from "./types";
+import { GameWithAddress } from "../types/index";
 import { formatAddress, formatBalance } from "./common/utils";
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 
@@ -69,7 +70,7 @@ const Dashboard: React.FC = () => {
 
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
-    const [selectedContractAddress, setSelectedContractAddress] = useState("");
+    const [selectedContractAddress, setSelectedContractAddress] = useState("0x22dfa2150160484310c5163f280f49e23b8fd34326");
     const [isCreatingGame, setIsCreatingGame] = useState(false);
     const [createGameError, setCreateGameError] = useState("");
     const [newGameAddress, setNewGameAddress] = useState("");
@@ -374,7 +375,7 @@ const Dashboard: React.FC = () => {
             {showCreateGameModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
                     <div className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20">
-                        <h3 className="text-xl font-bold text-white mb-4">Create New Game</h3>
+                        <h3 className="text-xl font-bold text-white mb-4">Create New Table</h3>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-white text-sm mb-1">Card Game Contract</label>
@@ -383,10 +384,12 @@ const Dashboard: React.FC = () => {
                                     onChange={e => setSelectedContractAddress(e.target.value)}
                                     className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                 >
-                                    <option value={DEFAULT_GAME_CONTRACT}>Texas Hold'em</option>
-                                    <option value="" disabled>Omaha (Coming Soon)</option>
-                                    <option value="" disabled>Seven Card Stud (Coming Soon)</option>
-                                    <option value="" disabled>Blackjack (Coming Soon)</option>
+                                    <React.Fragment>
+                                        <option value={DEFAULT_GAME_CONTRACT}>Texas Hold'em</option>
+                                        <option value="" disabled>Omaha (Coming Soon)</option>
+                                        <option value="" disabled>Seven Card Stud (Coming Soon)</option>
+                                        <option value="" disabled>Blackjack (Coming Soon)</option>
+                                    </React.Fragment>
                                 </select>
                             </div>
 
@@ -692,17 +695,18 @@ const Dashboard: React.FC = () => {
                                         <div>
                                             <p className="text-gray-300 text-xs">Texas Hold'em</p>
                                             <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-                                                <span className="text-xs text-blue-400">Min: ${game.minBuyIn ? formatBalance(game.minBuyIn) : "0.01"}</span>
-                                                <span className="text-xs text-blue-400">Max: ${game.maxBuyIn ? formatBalance(game.maxBuyIn) : "1.0"}</span>
-                                                {/* <span className="text-xs text-blue-400">Blinds: ${game.smallBlind ? formatBalance(game.smallBlind) : "0.01"}/${game.bigBlind ? formatBalance(game.bigBlind) : "0.02"}</span> */}
+                                                <span className="text-xs text-blue-400">Min: ${game.gameOptions?.minBuyIn ? formatBalance(game.gameOptions.minBuyIn) : "0.01"}</span>
+                                                <span className="text-xs text-blue-400">Max: ${game.gameOptions?.maxBuyIn ? formatBalance(game.gameOptions.maxBuyIn) : "1.0"}</span>
+                                                <span className="text-xs text-blue-400">Blinds: ${game.gameOptions?.smallBlind ? formatBalance(game.gameOptions.smallBlind) : "0.01"}/${game.gameOptions?.bigBlind ? formatBalance(game.gameOptions.bigBlind) : "0.02"}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => {
                                             setShowBuyInModal(true);
-                                            setBuyInTableId(DEFAULT_GAME_CONTRACT);
+                                            setBuyInTableId(game.address);
                                         }}
+                                        title="Open buy-in modal to join this table"
                                         className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300 shadow-md"
                                     >
                                         Join Table
@@ -864,7 +868,8 @@ const Dashboard: React.FC = () => {
                         <button
                             onClick={() => {
                                 setShowBuyInModal(true);
-                                setBuyInTableId(DEFAULT_GAME_CONTRACT);
+                                // Use the first available game address if it exists, otherwise fall back to default
+                                setBuyInTableId(games && games.length > 0 ? games[0].address : DEFAULT_GAME_CONTRACT);
                             }}
                             className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
                         >
