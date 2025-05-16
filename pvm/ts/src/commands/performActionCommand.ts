@@ -32,9 +32,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         console.log(`Executing ${this.action} command...`);
 
-        const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
-        const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
-
         if (await !this.isGameTransaction(this.to)) {
             console.log(`Not a game transaction, checking if ${this.to} is a game...`);
             throw new Error("Not a game transaction");
@@ -74,44 +71,79 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         const nonce = BigInt(this.nonce);
 
+        const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
+        const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
+
         // Create transaction with correct direction of funds flow
         // For all other actions: regular format
-        const tx: Transaction = await Transaction.create(
-            _to, // game receives funds (to)
-            _from, // player sends funds (from)
-            this.amount,
-            nonce,
-            this.privateKey,
-            `${this.action},${this.index},${this.data}`
-        );
+        const data = this.data ? `${this.action},${this.index},${this.data}` : `${this.action},${this.index}`;
 
-        await this.mempool.add(tx);
+        if (this.action !== NonPlayerActionType.LEAVE) {
+            const tx: Transaction = await Transaction.create(
+                _to, // game receives funds (to)
+                _from, // player sends funds (from)
+                this.amount,
+                nonce,
+                this.privateKey,
+                data
+            );
+
+            await this.mempool.add(tx);
+
+            const txResponse: TransactionResponse = {
+                nonce: tx.nonce.toString(),
+                to: tx.to,
+                from: tx.from,
+                value: tx.value.toString(),
+                hash: tx.hash,
+                signature: tx.signature,
+                timestamp: tx.timestamp.toString(),
+                data: tx.data
+            };
+
+            return signResult(txResponse, this.privateKey);
+        }
 
         if (this.action === NonPlayerActionType.LEAVE) {
+            const tx: Transaction = await Transaction.create(
+                _to, // game receives funds (to)
+                _from, // player sends funds (from)
+                this.amount,
+                nonce,
+                this.privateKey,
+                "" // No data for regular transactions
+            );
+
             const actionTx = await Transaction.create(
-                _to, // game address
-                _from, // player address
+                this.to,
+                this.from,
                 this.amount,
                 nonce + 1n, // Increment nonce for action transaction
                 this.privateKey,
-                `${this.action},${this.index}` // Action data
+                data
             );
 
-            await this.mempool.add(actionTx);
+            // Add both transactions to the mempool
+            const txs = await Promise.all([tx, actionTx]);
+
+            const txResponse: TransactionResponse = {
+                nonce: tx.nonce.toString(),
+                to: tx.to,
+                from: tx.from,
+                value: tx.value.toString(),
+                hash: tx.hash,
+                signature: tx.signature,
+                timestamp: tx.timestamp.toString(),
+                data: tx.data
+            };
+
+            const mempoolTxs = [this.mempool.add(txs[0]), this.mempool.add(txs[1])];
+            await Promise.all(mempoolTxs);
+
+            return signResult(txResponse, this.privateKey);
         }
 
-        const txResponse: TransactionResponse = {
-            nonce: tx.nonce.toString(),
-            to: tx.to,
-            from: tx.from,
-            value: tx.value.toString(),
-            hash: tx.hash,
-            signature: tx.signature,
-            timestamp: tx.timestamp.toString(),
-            data: tx.data
-        };
-
-        return signResult(txResponse, this.privateKey);
+        throw new Error(`Unsupported action type: ${this.action}`);
     }
 
     private async isGameTransaction(address: string): Promise<Boolean> {
