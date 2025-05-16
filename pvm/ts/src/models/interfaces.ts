@@ -42,6 +42,7 @@ export interface ITransaction {
     to: string;
     from: string;
     value: bigint;
+    timestamp: number;
     data?: string;
 }
 

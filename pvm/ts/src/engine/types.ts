@@ -53,6 +53,7 @@ export type OrderedTransaction = {
     value: bigint;
     type: PlayerActionType | NonPlayerActionType;
     index: number;
+    timestamp: number;
     data?: any;
 };
 

@@ -58,7 +58,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             try {
                 {
                     console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.timestamp, tx.data);
                 }
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
@@ -67,7 +67,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         });
 
         console.log(`Performing action ${this.action} with index ${this.index} data ${this.data}`);
-        game.performAction(this.from, this.action, this.index, this.amount, this.data);
+        const now = Date.now();
+        game.performAction(this.from, this.action, this.index, this.amount, now, this.data);
 
         const nonce = BigInt(this.nonce);
 

@@ -13,6 +13,7 @@ describe("Texas Holdem - Multiplayer", () => {
         const PLAYER_4 = "0x4444444444444444444444444444444444444444";
 
         let game: TexasHoldemGame;
+        const now = Date.now();
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
@@ -67,7 +68,7 @@ describe("Texas Holdem - Multiplayer", () => {
 
             actual = game.getLegalActions(PLAYER_1);
 
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, undefined, "seed");
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, undefined, now, "seed");
             actual = game.getLegalActions(PLAYER_1);
 
             // Should be players 3 turn

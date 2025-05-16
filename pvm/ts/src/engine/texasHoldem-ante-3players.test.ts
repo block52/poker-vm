@@ -58,10 +58,11 @@ describe("Texas Holdem - Ante - 3 Players", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
+            const now = Date.now();
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS, "5"); // seat 5
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "2"); // seat 2
-            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "8"); // seat 8
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS, now, "5"); // seat 5
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, now, "2"); // seat 2
+            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, now, "8"); // seat 8
         });
 
         it("should have the correct legal options with 3 players after blinds", () => {
