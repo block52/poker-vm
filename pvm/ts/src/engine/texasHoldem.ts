@@ -1142,17 +1142,17 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // If only one player is active, they win the pot
         if (activePlayers.length === 1) {
+            const hand = hands.get(activePlayers[0].id);
             const _winner: Winner = {
                 amount: this.getPot(),
                 cards: activePlayers[0].holeCards?.map(card => card.mnemonic),
-                name: undefined,
-                description: undefined // Roll these back when description is available from PokerSolver
+                name: hand.name,
+                description: hand.descr // Roll these back when description is available from PokerSolver
             };
 
             this._winners = new Map<string, Winner>();
-            const winner = activePlayers[0];
-            this._winners.set(winner.address, _winner);
-            winner.chips += this.getPot();
+            this._winners.set(activePlayers[0].id, _winner);
+            activePlayers[0].chips += this.getPot();
             return;
         }
 
@@ -1173,7 +1173,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     amount: this.getPot(),
                     cards: activePlayers[0].holeCards?.map(card => card.mnemonic),
                     name: hand.name,
-                    description: hand.description
+                    description: hand.descr
                 };
 
                 const winAmount = pot / winnersCount;
@@ -1258,13 +1258,13 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Prepare winners array
         const winners: WinnerDTO[] = [];
         if (this._winners) {
-            for (const [address, amount] of this._winners.entries()) {
+            for (const [address, winner] of this._winners.entries()) {
                 winners.push({
                     address: address,
-                    amount: amount.toString(),
-                    cards: undefined,
-                    name: undefined,
-                    description: undefined // Roll these back when description is available from PokerSolver
+                    amount: winner.amount.toString(),
+                    cards: winner.cards,
+                    name: winner.name,
+                    description: winner.description
                 });
             }
         }
