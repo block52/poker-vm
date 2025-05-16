@@ -36,6 +36,7 @@ import { IAction, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import { stat } from "fs";
 import { time } from "console";
+import moment from "moment";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
@@ -428,11 +429,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const ts = Date.now();
         const actions = [PlayerActionType.SIT_OUT, PlayerActionType.FOLD, PlayerActionType.SHOW, PlayerActionType.MUCK, NonPlayerActionType.JOIN];
 
-        if (!actions.includes(lastAction.action)) {
+        // Ignore actions that are not relevant to expiration
+        if (actions.includes(lastAction.action)) {
             return false;
         }
 
         const expire = 60 * 1000 + lastAction.timestamp;
+        const expireTime = moment(expire);
+        console.log("Expire Time: ", expireTime.format("YYYY-MM-DD HH:mm:ss"));
         console.log("Expire: ", expire);
         console.log("Time:   ", ts);
         const expired = expire < ts;
@@ -914,7 +918,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Record the action in the player's history
         timestamp = timestamp || Date.now();
-        player.addAction({ playerId: address, action, amount, index }, timestamp);
+        player.addAction({ playerId: address, action, amount, index, timestamp });
 
         // Update the last player to act
         this._lastActedSeat = seat;
@@ -930,8 +934,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     addAction(turn: Turn, round: TexasHoldemRound = this.currentRound): void {
         const seat = this.getPlayerSeatNumber(turn.playerId);
-        const timestamp = Date.now();
-        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+        const turnWithSeat: TurnWithSeat = { ...turn, seat };
 
         this.setAction(turnWithSeat, round);
     }

@@ -12,25 +12,22 @@ abstract class BaseAction {
         // To do: Move to deal or fold action class
         if (this.type !== PlayerActionType.FOLD && this.type !== NonPlayerActionType.DEAL) {
             const nextPlayerAddress = this.game.getNextPlayerToAct();
-            if (nextPlayerAddress?.address !== player.address) 
-                throw new Error("Must be currently active player.");
+            if (nextPlayerAddress?.address !== player.address) throw new Error("Must be currently active player.");
         }
 
         // 3. Player status check: Player must be active (not folded/all-in)
         const playerStatus = this.game.getPlayerStatus(player.address);
-        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
-            throw new Error(`Only active player can ${this.type}.`);
+        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
 
         return undefined;
     }
 
     protected verifyPlayerIsActive(player: Player): void {
         const playerStatus = this.game.getPlayerStatus(player.address);
-        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
-            throw new Error(`Only active player can ${this.type}.`);
+        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
     }
 
-    execute(player: Player, index: number, amount: bigint): void {
+    execute(player: Player, index: number, timestamp: number, amount: bigint): void {
         // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
         // the amount only specifies that over the existing maximum which the player may not yet have covered
         const deductAmount = this.getDeductAmount(player, amount);
@@ -44,7 +41,13 @@ abstract class BaseAction {
 
         const round = this.game.currentRound;
         this.game.addAction(
-            { playerId: player.address, action: !player.chips && amount ? PlayerActionType.ALL_IN : this.type, amount: amount, index: index },
+            {
+                playerId: player.address,
+                action: !player.chips && amount ? PlayerActionType.ALL_IN : this.type,
+                timestamp: timestamp,
+                amount: amount,
+                index: index
+            },
             round
         );
     }

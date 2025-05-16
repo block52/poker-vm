@@ -68,7 +68,7 @@ class CallAction extends BaseAction implements IAction {
         return { minAmount: deductAmount, maxAmount: deductAmount };
     }
 
-    execute(player: Player, index: number): void {
+    execute(player: Player, index: number, timestamp: number): void {
         // Get the valid call amount from verify
         const range = this.verify(player);
         const deductAmount = range.minAmount;
@@ -81,7 +81,13 @@ class CallAction extends BaseAction implements IAction {
 
         const round = this.game.currentRound;
         this.game.addAction(
-            { playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount, index: index },
+            {
+                playerId: player.address,
+                action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type,
+                timestamp: timestamp,
+                amount: deductAmount,
+                index: index
+            },
             round
         );
     }

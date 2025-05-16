@@ -18,7 +18,7 @@ class MuckAction extends BaseAction implements IAction {
     }
 
     // Override execute to set player's status to FOLDED
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number, timestamp: number): void {
         // First verify the action
         this.verify(player);
         
@@ -26,7 +26,7 @@ class MuckAction extends BaseAction implements IAction {
         player.updateStatus(PlayerStatus.FOLDED);
         
         // Add the action to the game
-        this.game.addAction({ playerId: player.address, action: PlayerActionType.MUCK, index: index });
+        this.game.addAction({ playerId: player.address, action: this.type, index: index, timestamp });
     }
 }
 

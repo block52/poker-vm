@@ -4,12 +4,12 @@ import { Player } from "../models/player";
 export interface IAction {
     readonly type: PlayerActionType | NonPlayerActionType;
     verify(player: Player): Range;
-    execute(player: Player, index: number, amount?: bigint): void;
+    execute(player: Player, index: number, timestamp: number, amount?: bigint): void;
 }
 
 export interface IPoker {
     getLastRoundAction(): Turn | undefined;
-    performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void;
+    performAction(address: string, action: PlayerActionType, index: number, amount?: bigint, timestamp?: number): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;
 }
 
@@ -30,10 +30,11 @@ export type Turn = {
     action: PlayerActionType | NonPlayerActionType;
     amount?: bigint;
     index: number;
+    timestamp: number;
 };
 
 // Timestamp in milliseconds is required for auto folding etc
-export type TurnWithSeat = Turn & { seat: number; timestamp: number };
+export type TurnWithSeat = Turn & { seat: number };
 
 export type LegalAction = ActionDTO;
 

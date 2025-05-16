@@ -1,4 +1,5 @@
-import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { Card, NonPlayerActionType, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { Turn } from "../engine/types";
 
 export interface IJSONModel {
     toJson(): any;
@@ -11,6 +12,16 @@ export interface IModel extends IJSONModel {
 export interface ICryptoModel extends IModel {
     calculateHash(): string;
     verify(): boolean;
+}
+
+export interface IPlayer {
+    chips: bigint;
+    holeCards: [Card, Card] | undefined;
+    lastAction: Turn | undefined;
+    lastActed?: number;
+    status: PlayerStatus;
+    addAction(action: Turn): void;
+    previousActions(): Turn[];
 }
 
 export interface IAccountDocument {
