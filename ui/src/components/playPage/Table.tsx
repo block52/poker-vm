@@ -841,11 +841,6 @@ const Table = () => {
                 </div>
             )}
 
-            {/* Add table ID display */}
-            <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
-                Table ID: {id ? id.slice(0, 8) + "..." + id.slice(-6) : "Unknown"}
-            </div>
-
             {/* Powered by Block52 */}
             <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
                 <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
