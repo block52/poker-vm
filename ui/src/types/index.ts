@@ -1,4 +1,4 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO} from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO} from "@bitcoinbrisbane/block52";
 
 export interface LastActionType {
     action: string;
@@ -99,4 +99,10 @@ export interface LeaveTableOptions {
     amount: string;
     actionIndex?: number;
     nonce?: number;
+}
+
+// Type for game objects returned by findGames
+export interface GameWithAddress {
+    address: string;
+    gameOptions: GameOptionsDTO;
 }

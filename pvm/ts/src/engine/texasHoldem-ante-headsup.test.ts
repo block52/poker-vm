@@ -352,6 +352,21 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(smallBlindPlayer?.chips).toEqual(100200000000000000000n);
             expect(bigBlindPlayer?.chips).toEqual(99800000000000000000n);
 
+            // Get legal actions for the next player.
+            // This guy should now be the small blind
+            actions = game.getLegalActions(BIG_BLIND_PLAYER);
+            expect(actions.length).toEqual(2);
+            expect(actions[0].action).toEqual(PlayerActionType.SMALL_BLIND);
+            expect(actions[1].action).toEqual(PlayerActionType.FOLD);
+
+            // Perform the small blind
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 0, ONE_TOKEN);
+
+            // Get legal actions for the next player
+            actions = game.getLegalActions(SMALL_BLIND_PLAYER);
+            expect(actions.length).toEqual(2);
+            
+            
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 0, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(ONE_TOKEN);
