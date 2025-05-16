@@ -313,10 +313,24 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             expect(game.currentRound).toEqual(TexasHoldemRound.END);
 
-            // Check the winner
+
+            // Check game states
             const gameState = game.toJson();
+            expect(gameState).toBeDefined();
+            expect(gameState.players).toBeDefined();
+            expect(gameState.players.length).toEqual(2);
+            expect(gameState.communityCards).toBeDefined();
+            expect(gameState.communityCards.length).toEqual(5);
+
+            // Check the winner
             expect(gameState.winners).toBeDefined();
             expect(gameState.winners.length).toEqual(1);
+
+            // Check hole cards
+            expect(gameState.players[0].holeCards).toBeDefined();
+            expect(gameState.players[0].holeCards?.length).toEqual(2);
+            expect(gameState.players[1].holeCards).toBeDefined();
+            expect(gameState.players[1].holeCards?.length).toEqual(2);
 
             // Check players chips
             let smallBlindPlayer = game.getPlayer(SMALL_BLIND_PLAYER);
