@@ -565,7 +565,7 @@ const Dashboard: React.FC = () => {
                                     onClick={() => setShowCreateGameModal(true)}
                                     className="block flex-1 text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
                                 >
-                                    Create New Game
+                                    Create New Table
                                 </button>
                             </div>
                             <div className="mt-2 flex justify-center">
