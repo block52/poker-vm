@@ -24,7 +24,7 @@ interface NodeRpcProviderProps {
 }
 
 // Provider component
-export const NodeRpcProvider: React.FC<NodeRpcProviderProps> = ({ children, nodeUrl = process.env.NODE_RPC_URL || "https://node1.block52.xyz/" }) => {
+export const NodeRpcProvider: React.FC<NodeRpcProviderProps> = ({ children, nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/" }) => {
     const [client, setClient] = useState<IClient | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
