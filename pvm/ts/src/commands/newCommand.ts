@@ -73,8 +73,17 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
             // Add the transaction to the mempool
             await this.mempool.add(tx);
 
+            const response: TransactionResponse = {
+                nonce: tx.nonce.toString(),
+                from: tx.from,
+                to: tx.to,
+                value: tx.value.toString(),
+                timestamp: tx.timestamp,
+                data: tx.data,
+            }
+
             // Return the signed transaction like in TransferCommand
-            return signResult(tx, this.privateKey);
+            return signResult(response, this.privateKey);
         } catch (e) {
             console.error(`Error in new command:`, e);
             throw new Error("Error creating new game: ");
