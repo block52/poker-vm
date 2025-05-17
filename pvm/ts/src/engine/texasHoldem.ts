@@ -307,7 +307,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     /**
      * Finds players who are still in the hand (not folded)
      */
-    private findLivePlayers(): Player[] {
+    findLivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter(
             (player): player is Player => player !== null && [PlayerStatus.SHOWING, PlayerStatus.ACTIVE, PlayerStatus.ALL_IN].includes(player.status)
         );

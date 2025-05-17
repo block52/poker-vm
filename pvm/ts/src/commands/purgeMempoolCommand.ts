@@ -13,7 +13,7 @@ export class PurgeMempoolCommand implements ICommand<boolean> {
             this.userName !== process.env.ADMIN_USERNAME ||
             this.password !== process.env.ADMIN_PASSWORD
         ) {
-            return false;
+            throw new Error("Invalid credentials");
         }
         this.mempool.clear();
         return true;
