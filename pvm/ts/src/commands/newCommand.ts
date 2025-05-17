@@ -75,10 +75,12 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
 
             const response: TransactionResponse = {
                 nonce: tx.nonce.toString(),
-                from: tx.from,
                 to: tx.to,
+                from: tx.from,
                 value: tx.value.toString(),
-                timestamp: tx.timestamp,
+                hash: tx.hash,
+                signature: tx.signature,
+                timestamp: tx.timestamp.toString(),
                 data: tx.data,
             }
 
