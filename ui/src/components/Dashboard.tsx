@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
     const [accountNonce, setAccountNonce] = useState<number>(0); // Track nonce for transactions
     
     // Use the findGames hook
-    const { games, isLoading: gamesLoading, error: gamesError } = useFindGames();
+    const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useFindGames();
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
@@ -148,6 +148,9 @@ const Dashboard: React.FC = () => {
 
                 // Refresh account data to get updated nonce
                 fetchAccountBalance();
+                
+                // Refresh the games list
+                await refetchGames();
             } else {
                 setCreateGameError("Failed to create table - no table ID returned");
             }
@@ -740,7 +743,7 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {/* Display new game address if available */}
-                {newGameAddress && (
+                {/* {newGameAddress && (
                     <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                         <h3 className="text-lg font-bold text-white mb-2">New Table Created!</h3>
                         <div className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
@@ -801,7 +804,7 @@ const Dashboard: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                )}
+                )} */}
 
                 <div className="space-y-6">
                     {/* Game options always visible */}
@@ -864,18 +867,19 @@ const Dashboard: React.FC = () => {
                             Full Ring
                         </button>
                     </div>
-                    <div className="flex justify-between gap-6">
-                        <button
-                            onClick={() => {
-                                setShowBuyInModal(true);
-                                // Use the first available game address if it exists, otherwise fall back to default
-                                setBuyInTableId(games && games.length > 0 ? games[0].address : DEFAULT_GAME_CONTRACT);
-                            }}
-                            className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
-                        >
-                            Choose Table
-                        </button>
-                    </div>
+                    {games && games.length > 0 && (
+                        <div className="flex justify-between gap-6">
+                            <button
+                                onClick={() => {
+                                    setShowBuyInModal(true);
+                                    setBuyInTableId(games[0].address);
+                                }}
+                                className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
+                            >
+                                Choose Table
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
