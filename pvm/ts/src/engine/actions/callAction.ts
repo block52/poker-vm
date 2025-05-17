@@ -24,6 +24,7 @@ class CallAction extends BaseAction implements IAction {
         // 2. Special case for preflop round
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             // Special case for small blind position in PREFLOP
+            const seat = this.game.getPlayerSeatNumber(player.address);
             if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
                 const amount = this.game.bigBlind - this.game.smallBlind;

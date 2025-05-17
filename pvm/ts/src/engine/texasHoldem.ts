@@ -157,7 +157,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     /**
-     * Reinitializes the game state for a new hand
+     * Reinitializes the game state for a new hand.  Todo: change to private
      */
     reInit(deck: string): void {
         // Reset all players
@@ -845,6 +845,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case NonPlayerActionType.DEAL:
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
                 this.setNextRound();
+                return;
+            case NonPlayerActionType.NEW_HAND:
+                this.reInit(data);
                 return;
         }
 

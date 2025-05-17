@@ -70,31 +70,31 @@ curl --location 'http://localhost:3000' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
-    "params": ["0xC84737526E425D7549eF20998Fa992f88EAC2484", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "deal", "123456", 0, 4],
+    "params": ["0xC84737526E425D7549eF20998Fa992f88EAC2484", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "deal", "", 0, 4, "123456789"],
     "id": 1,
     "jsonrpc": "2.0"
 }'
 
 sleep 1
 
-## Player 1 calls
-curl --location 'http://localhost:3000' \
---header 'Content-Type: application/json' \
---data '{
-    "method": "perform_action",
-    "params": ["0xC84737526E425D7549eF20998Fa992f88EAC2484", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "call", "10000000000000000", 0, 5],
-    "id": 1,
-    "jsonrpc": "2.0"
-}'
+# ## Player 1 calls
+# curl --location 'http://localhost:3000' \
+# --header 'Content-Type: application/json' \
+# --data '{
+#     "method": "perform_action",
+#     "params": ["0xC84737526E425D7549eF20998Fa992f88EAC2484", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "call", "10000000000000000", 0, 5],
+#     "id": 1,
+#     "jsonrpc": "2.0"
+# }'
 
-sleep 1
+# sleep 1
 
-## Player 2 folds
-curl --location 'http://localhost:3000' \
---header 'Content-Type: application/json' \
---data '{
-    "method": "perform_action",
-    "params": ["0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "fold", "", 0, 6],
-    "id": 1,
-    "jsonrpc": "2.0"
-}'
+# ## Player 2 folds
+# curl --location 'http://localhost:3000' \
+# --header 'Content-Type: application/json' \
+# --data '{
+#     "method": "perform_action",
+#     "params": ["0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "fold", "", 0, 6],
+#     "id": 1,
+#     "jsonrpc": "2.0"
+# }'
