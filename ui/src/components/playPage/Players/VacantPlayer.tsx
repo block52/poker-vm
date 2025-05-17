@@ -6,13 +6,7 @@ import PokerProfile from "../../../assets/PokerProfile.svg";
 import { toDisplaySeat } from "../../../utils/tableUtils";
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
 import { useNodeRpc } from "../../../context/NodeRpcContext";
-
-
-type VacantPlayerProps = {
-    left?: string;
-    top?: string;
-    index: number;
-};
+import type { VacantPlayerProps } from "../../../types/index";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index }) => {
@@ -71,14 +65,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setJoinResponse(response);
                 setJoinSuccess(true);
                 
-                // Close the modal immediately and let the page update naturally via normal data flow
+                // Close the modal immediately
                 setShowConfirmModal(false);
                 
-                // PLACEHOLDER: A future animation could be displayed here before refresh
-                // For now, we just reload the page after a short delay
-                setTimeout(() => {
-                    window.location.reload();
-                }, 300); // Short delay to allow for potential animation
                 
             } catch (err) {
                 console.error("Failed to join table:", err);

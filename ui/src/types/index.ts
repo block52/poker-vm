@@ -63,6 +63,7 @@ type Limits = {
     max: string;
 }
 
+//todo tidy up this type
 export type TableStatus = {
     isInTable: boolean;
     isPlayerTurn: boolean;
@@ -85,7 +86,7 @@ export type TableStatus = {
     isSmallBlindPosition: boolean;
 }
 
-
+// Type for PositionArray component props
 export interface PositionArray {
     left?: string;
     top?: string;
@@ -105,4 +106,11 @@ export interface LeaveTableOptions {
 export interface GameWithAddress {
     address: string;
     gameOptions: GameOptionsDTO;
+}
+
+// Type for VacantPlayer component props
+export interface VacantPlayerProps {
+    left?: string;
+    top?: string;
+    index: number;
 }
