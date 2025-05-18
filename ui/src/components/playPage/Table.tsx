@@ -148,6 +148,9 @@ const Table = () => {
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
     const [accountNonce, setAccountNonce] = useState<number>(0);
 
+    // Update to use the imported hook
+    const tableDataValues = useTableData(id);
+
     // Define calculateZoom first, before any usage
     const calculateZoom = useCallback(() => {
         const baseWidth = 2000;
@@ -193,6 +196,13 @@ const Table = () => {
 
     // Update to fetch balance when publicKey or client changes
     useEffect(() => {
+        if (publicKey && client && !clientLoading) {
+            fetchAccountBalance();
+        }
+    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+
+    // Remove the table data effect and replace with a more targeted approach
+    const updateBalanceOnPlayerJoin = useCallback(() => {
         if (publicKey && client && !clientLoading) {
             fetchAccountBalance();
         }
@@ -267,9 +277,6 @@ const Table = () => {
         return storedAddress ? storedAddress.toLowerCase() : null;
     }, []);
 
-    // Update to use the imported hook
-    const tableDataValues = useTableData(id);
-
     // Memoize user data
     const userData = useMemo(() => {
         if (currentUserSeat >= 0) {
@@ -283,23 +290,6 @@ const Table = () => {
         return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
     }, [tableDataValues.tableDataPlayers]);
 
-    // Added direct game state fetching using the NodeRpc client
-    useEffect(() => {
-        if (!client || !id) return;
-
-        const fetchTableDataDirectly = async () => {
-            try {
-                // Call the SDK function to get game state directly
-                const gameState = await client.getGameState(id, userWalletAddress?.toLowerCase() ?? "");
-                // You could update some local state with this data if needed
-            } catch (err) {
-                console.error("Error fetching game state directly:", err);
-                // We don't return early or stop rendering due to errors
-            }
-        };
-
-        fetchTableDataDirectly();
-    }, [client, id]);
 
     // Add effect to track mouse movement
     useEffect(() => {
@@ -423,7 +413,8 @@ const Table = () => {
             left: position.left,
             top: position.top,
             color: position.color,
-            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status
+            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status,
+            onJoin: updateBalanceOnPlayerJoin
         };
         
         if (!playerAtThisSeat) {
@@ -432,6 +423,7 @@ const Table = () => {
                     index={seatNumber}
                     left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
                     top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
+                    onJoin={updateBalanceOnPlayerJoin}
                 />
             );
         } 
@@ -439,7 +431,7 @@ const Table = () => {
         return isCurrentUser ? 
             <Player {...playerProps} /> : 
             <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
-    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex]);
+    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex, updateBalanceOnPlayerJoin]);
 
     const copyToClipboard = useCallback((text: string) => {
         navigator.clipboard.writeText(text);

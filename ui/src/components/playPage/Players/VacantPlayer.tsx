@@ -58,7 +58,7 @@ import type { VacantPlayerProps } from "../../../types/index";
 import PlayerPopUpCard from "./PlayerPopUpCard";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
-    ({ left, top, index }) => {
+    ({ left, top, index, onJoin }) => {
         const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData(useParams<{ id: string }>().id);
         const { id: tableId } = useParams<{ id: string }>();
         const userAddress = localStorage.getItem("user_eth_public_key");
@@ -118,12 +118,17 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setJoinResponse(response);
                 setJoinSuccess(true);
                 setShowConfirmModal(false);
+                
+                // Call onJoin after successful join
+                if (onJoin) {
+                    onJoin();
+                }
             } catch (err) {
                 console.error("Failed to join table:", err);
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [client, userAddress, privateKey, tableId, index]);
+        }, [client, userAddress, privateKey, tableId, index, onJoin]);
 
         // Memoize container styles
         const containerStyle = useMemo(() => ({

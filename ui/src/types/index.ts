@@ -110,9 +110,10 @@ export interface GameWithAddress {
 
 // Type for VacantPlayer component props
 export interface VacantPlayerProps {
-    left?: string;
-    top?: string;
     index: number;
+    left: string;
+    top: string;
+    onJoin?: () => void;
 }
 
 // Type for PlayerCard component props
