@@ -73,29 +73,28 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [joinResponse, setJoinResponse] = useState<any>(null);
         const [isCardVisible, setIsCardVisible] = useState(false);
 
+        // Memoize seat status checks
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
 
+        // Memoize handlers
         const handleJoinClick = useCallback(() => {
             if (!canJoinThisSeat) return;
             setShowConfirmModal(true);
             setJoinError(null);
             setJoinSuccess(false);
             setJoinResponse(null);
-        }, [canJoinThisSeat, index, tableId]);
+        }, [canJoinThisSeat]);
 
-        // Show join modal directly for new users, popup for seat changing
         const handleSeatClick = useCallback(() => {
             if (isUserAlreadyPlaying) {
-                // If already in table, show popup for seat changing
                 setIsCardVisible(true);
             } else if (canJoinThisSeat) {
-                // If not in table and can join, show join modal directly
                 handleJoinClick();
             }
         }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
 
-        const handleConfirmSeat = async () => {
+        const handleConfirmSeat = useCallback(async () => {
             if (!client || !userAddress || !privateKey || !tableId) {
                 setJoinError("Missing required information to join table");
                 return;
@@ -112,57 +111,68 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             setJoinSuccess(false);
 
             try {
-                // Convert the buy-in amount to bigint
                 const buyInWei = ethers.parseUnits(storedAmount, 18);
-
-                // Get the latest account info to get the current nonce
                 const account = await client.getAccount(userAddress);
-
-                // Call the playerJoin method directly from the SDK
                 const response = await client.playerJoin(tableId, BigInt(buyInWei.toString()), index, account.nonce);
-
-                // Store response in state but don't show it - just for debugging if needed
+                
                 setJoinResponse(response);
                 setJoinSuccess(true);
-                
-                // Close the modal immediately
                 setShowConfirmModal(false);
-                
-                
             } catch (err) {
                 console.error("Failed to join table:", err);
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        };
+        }, [client, userAddress, privateKey, tableId, index]);
+
+        // Memoize container styles
+        const containerStyle = useMemo(() => ({
+            left,
+            top
+        }), [left, top]);
+
+        // Memoize popup styles
+        const popupStyle = useMemo(() => ({
+            left,
+            top,
+            transform: "translate(-50%, -50%)"
+        }), [left, top]);
+
+        // Memoize popup class names
+        const popupClassName = useMemo(() => 
+            `absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
+                isCardVisible ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
+            }`,
+            [isCardVisible]
+        );
+
+        // Memoize seat text
+        const seatText = useMemo(() => ({
+            title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`,
+            subtitle: !isUserAlreadyPlaying ? (canJoinThisSeat ? "Click to Join" : "Seat Taken") : null
+        }), [isUserAlreadyPlaying, canJoinThisSeat, index]);
 
         return (
             <>
                 <div 
                     className="absolute cursor-pointer" 
-                    style={{ left, top }} 
+                    style={containerStyle}
                     onClick={handleSeatClick}
                 >
                     <div className="flex justify-center mb-2">
                         <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
                     </div>
                     <div className="text-white text-center">
-                        <div className="text-sm mb-1 whitespace-nowrap">{isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}</div>
-                        {!isUserAlreadyPlaying && <div className="whitespace-nowrap">{canJoinThisSeat ? "Click to Join" : "Seat Taken"}</div>}
+                        <div className="text-sm mb-1 whitespace-nowrap">{seatText.title}</div>
+                        {seatText.subtitle && <div className="whitespace-nowrap">{seatText.subtitle}</div>}
                     </div>
                 </div>
 
                 {/* PlayerPopUpCard - Only show for seat changing */}
                 {isUserAlreadyPlaying && (
                     <div
-                        className={`absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
-                            isCardVisible ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
-                        }`}
-                        style={{
-                            left: left,
-                            top: top,
-                            transform: "translate(-50%, -50%)"
-                        }}
+                        className={popupClassName}
+                        style={popupStyle}
                     >
                         {isCardVisible && (
                             <PlayerPopUpCard
@@ -249,7 +259,14 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             </>
         );
     },
-    (prev, next) => prev.left === next.left && prev.top === next.top && prev.index === next.index
+    (prevProps, nextProps) => {
+        // Custom comparison function for memo
+        return (
+            prevProps.left === nextProps.left &&
+            prevProps.top === nextProps.top &&
+            prevProps.index === nextProps.index
+        );
+    }
 );
 
 VacantPlayer.displayName = "VacantPlayer";
