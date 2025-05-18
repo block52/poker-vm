@@ -40,7 +40,7 @@ describe("Texas Holdem - Turn Index", () => {
             expect(game.getTurnIndex()).toBe(4);
 
             // Reinitialize game
-            game.reInit(mnemonic);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.NEW_HAND, 4, undefined, mnemonic);
 
             // Turn index should reset to 0
             expect(game.getTurnIndex()).toBe(0);
@@ -54,7 +54,8 @@ describe("Texas Holdem - Turn Index", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT);
             
             // Reset the index to ensure we start from a known state
-            game.reInit(mnemonic);
+            // Reinitialize game
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.NEW_HAND, 2, undefined, mnemonic);
         });
 
         it("should increment turn index by exactly 1 for each action", () => {
@@ -125,7 +126,7 @@ describe("Texas Holdem - Turn Index", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT);
             
             // Reset to ensure we start clean
-            game.reInit(mnemonic);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.NEW_HAND, 2, undefined, mnemonic);
         });
 
         it("should include current turn index in legal actions", () => {
@@ -170,7 +171,7 @@ describe("Texas Holdem - Turn Index", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT);
 
             // Reset to ensure we start clean
-            game.reInit(mnemonic);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.NEW_HAND, 2, undefined, mnemonic);
         });
 
         it("should throw an error if action is performed with incorrect index", () => {

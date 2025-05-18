@@ -110,7 +110,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(0, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 2
-        game.reInit(mnemonic);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, mnemonic);
         actionCounter = 0;
 
         // Hand 2 - buttons should switch positions
@@ -125,7 +125,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(1, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 3
-        game.reInit(mnemonic);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, mnemonic);
         actionCounter = 0;
 
         // Hand 3 - buttons should switch positions again
@@ -140,7 +140,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 4
-        game.reInit(mnemonic);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, mnemonic);
         actionCounter = 0;
 
         // Hand 4 - buttons should switch positions again
@@ -155,7 +155,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 5
-        game.reInit(mnemonic);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, mnemonic);
         actionCounter = 0;
 
         // Hand 5 - buttons should switch positions again
