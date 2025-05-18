@@ -83,6 +83,11 @@ export const playerPosition = {
     ]
 };
 
+export const deckPosition = {
+    left: "420px",
+    top: "-320px"
+};
+
 export const vacantPlayerPosition = {
     six: [
         {
