@@ -110,7 +110,27 @@ export interface GameWithAddress {
 
 // Type for VacantPlayer component props
 export interface VacantPlayerProps {
+    index: number;
+    left: string;
+    top: string;
+    onJoin?: () => void;
+}
+
+// Type for PlayerCard component props
+export type PlayerCardProps = {
+    id: number;
+    label: string;
+    color?: string;
+    isVacant?: boolean;  // Whether this is a vacant seat
+    onClose: () => void;
+    setStartIndex: (index: number) => void;
+};
+
+export interface PlayerProps {
     left?: string;
     top?: string;
     index: number;
+    currentIndex: number;
+    color?: string;
+    status?: string;
 }

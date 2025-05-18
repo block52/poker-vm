@@ -1,7 +1,51 @@
+/**
+ * OppositePlayer Component
+ * 
+ * This component represents other players at the poker table (not the current user).
+ * It displays:
+ * - Player's cards (face down unless showing)
+ * - Player's stack amount
+ * - Player's status (folded, all-in, etc.)
+ * - Winner information if applicable
+ * 
+ * PlayerPopUpCard Integration:
+ * The PlayerPopUpCard is a popup menu that appears when clicking on an opponent's position.
+ * It provides:
+ * 1. Seat Changing:
+ *    - Shows "SIT HERE" button
+ *    - Triggers table rotation when clicked
+ *    - Updates player positions via setStartIndex
+ * 
+ * 2. Player Information:
+ *    - Shows the seat number
+ *    - Displays player's color theme
+ *    - Future: Will show player statistics and history
+ * 
+ * 3. Interactive Features:
+ *    - Note-taking capability (placeholder)
+ *    - Player rating system (placeholder)
+ *    - Quick actions menu (placeholder)
+ * 
+ * The popup appears when:
+ * - isCardVisible === index (meaning this specific player's card should be shown)
+ * - It slides in from the top with an animation
+ * - It can be closed using the X button
+ * 
+ * Props:
+ * - left/top: Position on the table
+ * - index: Seat number
+ * - currentIndex: Current round index
+ * - color: Player's color theme
+ * - status: Player's current status
+ * - isCardVisible: Controls card visibility
+ * - setCardVisible: Function to toggle card visibility
+ * - setStartIndex: Function to change table rotation
+ */
+
 import * as React from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
-import PlayerCard from "./PlayerCard";
+import PlayerPopUpCard from "./PlayerPopUpCard";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
@@ -57,15 +101,20 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
 
     return (
         <>
+            {/* Main player display */}
             <div
                 key={index}
                 className={`${
                     isFolded ? "opacity-60" : ""
-                } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[10]`}
+                } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
                 style={{
                     left: left,
                     top: top,
                     transition: "top 1s ease, left 1s ease"
+                }}
+                onClick={() => {
+                    console.log("OppositePlayer clicked:", index);
+                    setCardVisible(index);
                 }}
             >
                 <div className="flex justify-center gap-1">
@@ -121,6 +170,16 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                 </div>
             </div>
 
+            {/* PlayerPopUpCard Integration
+                This popup menu appears when clicking on a player's position.
+                It provides:
+                1. Quick seat changing functionality
+                2. Player information display
+                3. Future features for notes and ratings
+                
+                The popup is positioned absolutely and uses animations for smooth transitions.
+                It's only rendered when isCardVisible matches this player's index.
+            */}
             <div
                 className={`absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
                     isCardVisible === index ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
@@ -132,10 +191,11 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                 }}
             >
                 {isCardVisible === index && (
-                    <PlayerCard
+                    <PlayerPopUpCard
                         id={index + 1}
                         label="SIT HERE"
                         color={color}
+                        isVacant={false}
                         setStartIndex={(index: number) => setStartIndex(index)}
                         onClose={() => setCardVisible(-1)}
                     />

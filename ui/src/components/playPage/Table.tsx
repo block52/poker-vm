@@ -1,13 +1,60 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+/**
+ * Table Component
+ * 
+ * This is the main poker table component that orchestrates the entire game interface.
+ * It manages:
+ * - Player positions and rotations
+ * - Game state and progress
+ * - Community cards
+ * - Pot amounts
+ * - Dealer button
+ * - Player actions
+ * 
+ * Key Features:
+ * - Dynamic table layout (6 or 9 players)
+ * - Real-time game state updates
+ * - Player position management
+ * - Chip position calculations
+ * - Winner animations
+ * - Sidebar for game log
+ * 
+ * Player Components:
+ * - Player: Current user's view with hole cards and controls
+ * - OppositePlayer: Other players' views with seat changing functionality
+ * - VacantPlayer: Empty seat views with direct join/seat changing
+ * 
+ * PlayerPopUpCard Integration:
+ * - Used by OppositePlayer for seat changing
+ * - Used by VacantPlayer for seat changing (only when user is already seated)
+ * - Provides consistent UI for player interactions
+ * 
+ * State Management:
+ * - Uses multiple hooks for different aspects of the game
+ * - Manages player positions and rotations
+ * - Handles game progress and round information
+ * - Controls UI elements visibility
+ * 
+ * Components Used:
+ * - Player: Current user's view
+ * - OppositePlayer: Other players' views
+ * - VacantPlayer: Empty seat views
+ * - PlayerPopUpCard: Popup for player actions
+ * - PokerActionPanel: Betting controls
+ * - PokerLog: Game history
+ */
+
+import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
+
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
+
+
 import Chip from "./common/Chip";
-// import { usePlayerContext } from "../../context/usePlayerContext";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
@@ -73,43 +120,99 @@ const DEBUG_MODE = false;
 
 //* Define the interface for the position object
 
+interface NetworkDisplayProps {
+    isMainnet?: boolean;
+}
 
-const calculateZoom = () => {
-    const baseWidth = 2000;
-    const baseHeight = 850;
-    const headerFooterHeight = 550; // Updated to account for both footers (250px + 300px)
-
-    const availableHeight = window.innerHeight - headerFooterHeight;
-    const scaleWidth = window.innerWidth / baseWidth;
-    const scaleHeight = availableHeight / baseHeight;
-
-    const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
-    return Math.min(calculatedScale, 2); // Cap at 2x
-};
-
-// Add NetworkDisplay component
-const NetworkDisplay = ({ isMainnet = false }) => {
+// Memoize the NetworkDisplay component
+const NetworkDisplay = memo(({ isMainnet = false }: NetworkDisplayProps) => {
     return (
         <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-800/60 rounded-full text-xs border border-blue-500/20">
             <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : "bg-blue-400"}`}></div>
             <span className="text-gray-300">Block52 Chain</span>
         </div>
     );
-};
+});
 
-// Replace this comparison function
-const MemoizedTurnAnimation = React.memo(TurnAnimation);
+NetworkDisplay.displayName = "NetworkDisplay";
+
+// Memoize TurnAnimation
+const MemoizedTurnAnimation = memo(TurnAnimation);
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-
-    // Add NodeRpcContext for balance
-    const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
+    const { client, isLoading: clientLoading } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
-    const [accountNonce, setAccountNonce] = useState<number>(0); // Add nonce state
+    const [accountNonce, setAccountNonce] = useState<number>(0);
+
+    // Update to use the imported hook
+    const tableDataValues = useTableData(id);
+
+    // Define calculateZoom first, before any usage
+    const calculateZoom = useCallback(() => {
+        const baseWidth = 2000;
+        const baseHeight = 850;
+        const headerFooterHeight = 550;
+
+        const availableHeight = window.innerHeight - headerFooterHeight;
+        const scaleWidth = window.innerWidth / baseWidth;
+        const scaleHeight = availableHeight / baseHeight;
+
+        const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
+        return Math.min(calculatedScale, 2);
+    }, []);
+
+    // Function to fetch account balance
+    const fetchAccountBalance = useCallback(async () => {
+        if (!client) {
+            setBalanceError(new Error("RPC client not initialized"));
+            setIsBalanceLoading(false);
+            return;
+        }
+
+        try {
+            setIsBalanceLoading(true);
+
+            if (!publicKey) {
+                setBalanceError(new Error("No address available"));
+                setIsBalanceLoading(false);
+                return;
+            }
+
+            const account = await client.getAccount(publicKey);
+            setAccountBalance(account.balance.toString());
+            setAccountNonce(account.nonce);
+            setBalanceError(null);
+        } catch (err) {
+            console.error("Error fetching account balance:", err);
+            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
+        } finally {
+            setIsBalanceLoading(false);
+        }
+    }, [client, publicKey]);
+
+    // Update to fetch balance when publicKey or client changes
+    useEffect(() => {
+        if (publicKey && client && !clientLoading) {
+            fetchAccountBalance();
+        }
+    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+
+    // Remove the table data effect and replace with a more targeted approach
+    const updateBalanceOnPlayerJoin = useCallback(() => {
+        if (publicKey && client && !clientLoading) {
+            fetchAccountBalance();
+        }
+    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+
+    // Now we can use calculateZoom in useState
+    const [zoom, setZoom] = useState(calculateZoom());
+    const [openSidebar, setOpenSidebar] = useState(false);
+    const [isCardVisible, setCardVisible] = useState(-1);
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
@@ -141,7 +244,7 @@ const Table = () => {
     // Add the useGameOptions hook
     const { gameOptions } = useGameOptions(id);
 
-    // Format small blind and big blind values
+    // Memoize formatted values
     const formattedValues = useMemo(() => ({
         smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
         bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20",
@@ -155,10 +258,6 @@ const Table = () => {
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
-    const [zoom, setZoom] = useState(calculateZoom());
-    const [openSidebar, setOpenSidebar] = useState(false);
-    const [isCardVisible, setCardVisible] = useState(-1);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
     // Add the useChipPositions hook AFTER startIndex is defined
     const { chipPositionArray } = useChipPositions(id, startIndex);
@@ -172,17 +271,13 @@ const Table = () => {
     // Keep the existing variable
     const currentUserAddress = localStorage.getItem("user_eth_public_key");
 
-    // Create a different variable for comparison purposes
-    const userWalletAddress = React.useMemo(() => {
+    // Memoize user wallet address
+    const userWalletAddress = useMemo(() => {
         const storedAddress = localStorage.getItem("user_eth_public_key");
         return storedAddress ? storedAddress.toLowerCase() : null;
-    }, [currentUserAddress]);
+    }, []);
 
-    // Update to use the imported hook
-    const tableDataValues = useTableData(id);
-
-    // Replace useUserBySeat with getUserBySeat from our new hook
-    // Get the user data for the current seat
+    // Memoize user data
     const userData = useMemo(() => {
         if (currentUserSeat >= 0) {
             return getUserBySeat(currentUserSeat);
@@ -190,28 +285,11 @@ const Table = () => {
         return null;
     }, [currentUserSeat, getUserBySeat]);
 
-    // Define activePlayers only once - rename to tableActivePlayers since we now get activePlayers from the hook
+    // Memoize table active players
     const tableActivePlayers = useMemo(() => {
         return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
-    }, [tableDataValues]);
+    }, [tableDataValues.tableDataPlayers]);
 
-    // Added direct game state fetching using the NodeRpc client
-    useEffect(() => {
-        if (!client || !id) return;
-
-        const fetchTableDataDirectly = async () => {
-            try {
-                // Call the SDK function to get game state directly
-                const gameState = await client.getGameState(id, userWalletAddress?.toLowerCase() ?? "");
-                // You could update some local state with this data if needed
-            } catch (err) {
-                console.error("Error fetching game state directly:", err);
-                // We don't return early or stop rendering due to errors
-            }
-        };
-
-        fetchTableDataDirectly();
-    }, [client, id]);
 
     // Add effect to track mouse movement
     useEffect(() => {
@@ -241,6 +319,7 @@ const Table = () => {
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
+    // Memoize reordered arrays
     const reorderedPlayerArray = useMemo(() => 
         [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
         [playerPositionArray, startIndex]
@@ -284,9 +363,10 @@ const Table = () => {
         return () => clearTimeout(timer);
     }, [currentIndex]);
 
+    // Memoize handlers
     const handleResize = useCallback(() => 
         setZoom(calculateZoom()),
-    []);
+    [calculateZoom]);
 
     useEffect(() => {
         window.addEventListener("resize", handleResize);
@@ -314,56 +394,56 @@ const Table = () => {
         setOpenSidebar(!openSidebar);
     }, [openSidebar]);
 
-    // Add this helper function for copying to clipboard
-    const copyToClipboard = useCallback((text: string) => {
-        navigator.clipboard.writeText(text);
-        // You could add a toast notification here if you want
-    }, []);
-
-    // Function to fetch account balance directly using NodeRpcClient
-    const fetchAccountBalance = useCallback(async () => {
-        if (!client) {
-            setBalanceError(new Error("RPC client not initialized"));
-            setIsBalanceLoading(false);
-            return;
-        }
-
-        try {
-            setIsBalanceLoading(true);
-
-            // Use the stored public key
-            if (!publicKey) {
-                setBalanceError(new Error("No address available"));
-                setIsBalanceLoading(false);
-                return;
-            }
-
-            const account = await client.getAccount(publicKey);
-            setAccountBalance(account.balance);
-            setAccountNonce(account.nonce); // Save the nonce
-            setBalanceError(null);
-        } catch (err) {
-            console.error("Error fetching account balance:", err);
-            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
-        } finally {
-            setIsBalanceLoading(false);
-        }
-    }, [client, publicKey, setAccountBalance, setAccountNonce, setBalanceError, setIsBalanceLoading]);
-
-    // Update to fetch balance when publicKey or client changes
-    useEffect(() => {
-        if (publicKey && client && !clientLoading) {
-            fetchAccountBalance();
-        }
-    }, [publicKey, client, clientLoading, fetchAccountBalance]);
-
-    // Format the balance
+    // Memoize formatted balance
     const balanceFormatted = useMemo(() => 
         accountBalance ? formatWeiToUSD(accountBalance) : "0.00",
         [accountBalance]
     );
 
- 
+    // Memoize the component renderer
+    const getComponentToRender = useCallback((position: PositionArray, positionIndex: number) => {
+        // Calculate the actual seat number accounting for rotation
+        const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
+
+        // Find if a player is seated at this position
+        const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
+
+        // Check if this seat belongs to the current user
+        const isCurrentUser = playerAtThisSeat && 
+            playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
+        
+        // Build common props shared by all player components
+        const playerProps = {
+            index: seatNumber,
+            currentIndex, 
+            left: position.left,
+            top: position.top,
+            color: position.color,
+            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status,
+            onJoin: updateBalanceOnPlayerJoin
+        };
+        
+        // CASE 1: No player at this seat - render vacant position
+        if (!playerAtThisSeat) {
+            return (
+                <VacantPlayer
+                    index={seatNumber}
+                    left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
+                    top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
+                    onJoin={updateBalanceOnPlayerJoin}
+                />
+            );
+        } 
+        
+        // CASE 2: Current user's seat or CASE 3: Another player's seat
+        return isCurrentUser ? 
+            <Player {...playerProps} /> : 
+            <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
+    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex, updateBalanceOnPlayerJoin]);
+
+    const copyToClipboard = useCallback((text: string) => {
+        navigator.clipboard.writeText(text);
+    }, []);
 
     if (tableDataValues.error) {
         console.error("Error loading table data:", tableDataValues.error);
@@ -377,49 +457,6 @@ const Table = () => {
         top: dealerButtonPosition.top,
         transform: "none"
     }), [dealerButtonPosition]);
-
-    /**
-     * Memoized player component renderer - critical for table rendering performance
-     */
-    const getComponentToRender = useCallback((position: PositionArray, positionIndex: number) => {
-        // Calculate the actual seat number accounting for rotation
-        const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
-        
-        // Find if a player is seated at this position (using correct seat number)
-        const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
-        
-        // Check if this seat belongs to the current user
-        const isCurrentUser = playerAtThisSeat && 
-            playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
-        
-    
-        // Build common props shared by all player components
-        const playerProps = {
-            index: seatNumber, // Use the correct seat number
-            currentIndex, 
-            left: position.left,
-            top: position.top,
-            color: position.color,
-            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status
-        };
-        
-        // CASE 1: No player at this seat - render vacant position
-        if (!playerAtThisSeat) {
-            return (
-                <VacantPlayer
-                    index={seatNumber} // Use the correct seat number
-                    left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
-                    top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
-                />
-            );
-        } 
-        
-        // CASE 2: The current user's seat - render with own controls
-        // CASE 3: Another player's seat - render opponent view
-        return isCurrentUser ? 
-            <Player {...playerProps} /> : 
-            <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
-    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex]);
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
@@ -477,7 +514,7 @@ const Table = () => {
                                                 ${balanceFormatted}
                                                 <span className="text-[10px] ml-1 text-gray-400">USDC</span>
                                             </p>
-                                            <p className="text-[8px] text-gray-400 -mt-1">nonce: {accountNonce}</p>
+                                            {/* <p className="text-[8px] text-gray-400 -mt-1">nonce: {accountNonce}</p> */}
                                         </div>
                                     </div>
                                 </>
@@ -854,4 +891,4 @@ const Table = () => {
     );
 };
 
-export default Table;
+export default memo(Table);
