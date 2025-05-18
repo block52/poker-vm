@@ -346,8 +346,8 @@ export class RPC {
                 }
 
                 case RPCMethods.NEW: {
-                    const [to, data] = request.params as RPCRequestParams[RPCMethods.NEW];
-                    const command = new NewCommand(to, validatorPrivateKey, data);
+                    const [to, nonce, index, data] = request.params as RPCRequestParams[RPCMethods.NEW];
+                    const command = new NewCommand(to, index, Number(nonce), validatorPrivateKey, data);
                     result = await command.execute();
                     break;
                 }

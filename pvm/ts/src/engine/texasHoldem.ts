@@ -157,9 +157,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     /**
-     * Reinitializes the game state for a new hand
+     * Reinitializes the game state for a new hand.  Todo: change to private
      */
-    reInit(deck: string): void {
+    private reInit(deck: string): void {
         // Reset all players
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
@@ -307,7 +307,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     /**
      * Finds players who are still in the hand (not folded)
      */
-    private findLivePlayers(): Player[] {
+    findLivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter(
             (player): player is Player => player !== null && [PlayerStatus.SHOWING, PlayerStatus.ACTIVE, PlayerStatus.ALL_IN].includes(player.status)
         );
@@ -845,6 +845,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
             case NonPlayerActionType.DEAL:
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
                 this.setNextRound();
+                return;
+            case NonPlayerActionType.NEW_HAND:
+                this.reInit(data);
                 return;
         }
 

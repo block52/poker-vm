@@ -5,7 +5,7 @@ import { ICommand, ISignedResponse } from "./interfaces";
 import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import contractSchemas from "../schema/contractSchemas";
-import { TransactionResponse } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 
@@ -15,7 +15,7 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
     private readonly mempool: Mempool;
     private readonly seed: number[];
 
-    constructor(private readonly address: string, private readonly privateKey: string, _seed: string | undefined = undefined) {
+    constructor(private readonly address: string, private readonly index: number, private readonly nonce: number, private readonly privateKey: string, _seed: string | undefined = undefined) {
         this.gameManagement = getGameManagementInstance();
         this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
@@ -54,42 +54,34 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(_game?.state, gameOptions);
             const deck = new Deck();
             deck.shuffle(this.seed);
-            game.reInit(deck.toString());
-
-            // Save the updated game state
-            const updatedJson = game.toJson();
-            await this.gameManagement.saveFromJSON(updatedJson);
-
-            // TODO: HACK - Using timestamp as nonce. This should follow the TransferCommand pattern
-            // of getting the next nonce from the account and validating it.
-            const timestampNonce = BigInt(Date.now());
+            game.performAction(this.address, NonPlayerActionType.NEW_HAND, this.index, 0n, deck.toString());
 
             // Create a transaction record for this action
-            const dealTx: Transaction = await Transaction.create(
+            const tx: Transaction = await Transaction.create(
                 this.address,
                 ethers.ZeroAddress,
                 0n, // No value transfer
-                timestampNonce,
+                BigInt(this.nonce),
                 this.privateKey,
-                `next,${deck.toString()}`
+                `new,${this.index},${deck.toString()}`
             );
 
             // Add the transaction to the mempool
-            await this.mempool.add(dealTx);
+            await this.mempool.add(tx);
 
-            const txResponse: TransactionResponse = {
-                nonce: "0",
-                from: this.address,
-                to: ethers.ZeroAddress,
-                value: "0",
-                hash: dealTx.hash,
-                signature: dealTx.signature,
-                timestamp: timestampNonce.toString(),
-                data: `next,${deck.toString()}`
+            const response: TransactionResponse = {
+                nonce: tx.nonce.toString(),
+                to: tx.to,
+                from: tx.from,
+                value: tx.value.toString(),
+                hash: tx.hash,
+                signature: tx.signature,
+                timestamp: tx.timestamp.toString(),
+                data: tx.data
             };
 
             // Return the signed transaction like in TransferCommand
-            return signResult(txResponse, this.privateKey);
+            return signResult(response, this.privateKey);
         } catch (e) {
             console.error(`Error in new command:`, e);
             throw new Error("Error creating new game: ");

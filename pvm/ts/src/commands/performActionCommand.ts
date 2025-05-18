@@ -57,7 +57,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         orderedTransactions.forEach(tx => {
             try {
                 {
-                    console.log(`Processing join action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
+                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
                     game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
                 }
             } catch (error) {

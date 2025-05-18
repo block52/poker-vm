@@ -16,7 +16,8 @@ export enum PlayerActionType {
 export enum NonPlayerActionType {
     DEAL = "deal",
     JOIN = "join",
-    LEAVE = "leave"
+    LEAVE = "leave",
+    NEW_HAND = "new-hand",
 }
 
 export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };

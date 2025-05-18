@@ -79,7 +79,7 @@ export type RPCRequestParams = {
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
     [RPCMethods.MINT]: [string]; // [depositIndex]
-    [RPCMethods.NEW]: [string, string]; // [to, data] where data is the seed
+    [RPCMethods.NEW]: [string, string, number, string]; // [to, nonce, index, data] where data is the seed
     [RPCMethods.NEW_TABLE]: [string, string]; // [from (creator), to (schema)]
     [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string]; // [from, to, action, amount, nonce, index, data]
     [RPCMethods.PURGE]: [string, string]; // [username, password]

@@ -50,7 +50,7 @@ describe("Texas Holdem - Reinit", () => {
             expect(game.bigBlindPosition).toEqual(2);
             expect(game.handNumber).toEqual(0);
 
-            game.reInit(mnemonic);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.NEW_HAND, 15, undefined, mnemonic);
             expect(game.handNumber).toEqual(1);
 
             expect(game.getPlayerCount()).toEqual(2);
