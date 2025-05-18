@@ -183,7 +183,7 @@ const Table = () => {
             }
 
             const account = await client.getAccount(publicKey);
-            setAccountBalance(account.balance);
+            setAccountBalance(account.balance.toString());
             setAccountNonce(account.nonce);
             setBalanceError(null);
         } catch (err) {
@@ -402,11 +402,17 @@ const Table = () => {
 
     // Memoize the component renderer
     const getComponentToRender = useCallback((position: PositionArray, positionIndex: number) => {
+        // Calculate the actual seat number accounting for rotation
         const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
+
+        // Find if a player is seated at this position
         const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
+
+        // Check if this seat belongs to the current user
         const isCurrentUser = playerAtThisSeat && 
             playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
         
+        // Build common props shared by all player components
         const playerProps = {
             index: seatNumber,
             currentIndex, 
@@ -417,6 +423,7 @@ const Table = () => {
             onJoin: updateBalanceOnPlayerJoin
         };
         
+        // CASE 1: No player at this seat - render vacant position
         if (!playerAtThisSeat) {
             return (
                 <VacantPlayer
@@ -428,6 +435,7 @@ const Table = () => {
             );
         } 
         
+        // CASE 2: Current user's seat or CASE 3: Another player's seat
         return isCurrentUser ? 
             <Player {...playerProps} /> : 
             <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
@@ -506,7 +514,7 @@ const Table = () => {
                                                 ${balanceFormatted}
                                                 <span className="text-[10px] ml-1 text-gray-400">USDC</span>
                                             </p>
-                                            <p className="text-[8px] text-gray-400 -mt-1">nonce: {accountNonce}</p>
+                                            {/* <p className="text-[8px] text-gray-400 -mt-1">nonce: {accountNonce}</p> */}
                                         </div>
                                     </div>
                                 </>
