@@ -9,6 +9,7 @@ import Player from "./Players/Player";
 import Chip from "./common/Chip";
 // import { usePlayerContext } from "../../context/usePlayerContext";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
+import { motion } from "framer-motion";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
@@ -756,12 +757,20 @@ const Table = () => {
                                             })}
                                             {/*//! Dealer */}
                                             {isDealerButtonVisible && (
-                                                <div
+                                                <motion.div
                                                     className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                                    style={dealerButtonStyle}
+                                                    animate={{
+                                                        left: `calc(${dealerButtonPosition.left} + 200px)`,
+                                                        top: dealerButtonPosition.top
+                                                    }}
+                                                    initial={false}
+                                                    transition={{
+                                                        duration: 0.6,
+                                                        ease: "easeInOut"
+                                                    }}
                                                 >
                                                     D
-                                                </div>
+                                                </motion.div>
                                             )}
                                         </div>
                                     </div>
