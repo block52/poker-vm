@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
+import { playerPosition, dealerPosition, vacantPlayerPosition, centerTablePosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
@@ -21,14 +21,13 @@ import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtil
 import { toDisplaySeat } from "../../utils/tableUtils";
 import { ethers } from "ethers";
 
-
 import "./Table.css"; // Import the Table CSS file
 
 //// TODO get these hooks to subscribe to the wss connection
 
 // 1. Core Data Providers
-import { useTableData } from "../../hooks/useTableData";  // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
-import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";  // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
+import { useTableData } from "../../hooks/useTableData"; // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
+import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 
 //2. Visual Position/State Providers
@@ -40,12 +39,9 @@ import { usePlayerChipData } from "../../hooks/usePlayerChipData";
 import { useTableState } from "../../hooks/useTableState"; //Provides currentRound, formattedTotalPot, tableSize, tableSize determines player layout (6 vs 9 players)
 import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGameInProgress - whether a hand is active
 
-
-
 //todo wire up to use the sdk instead of the proxy
 // 4. Player Actions
 import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
-
 
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
@@ -53,15 +49,13 @@ import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
 
-
-
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 
 import { PositionArray } from "../../types/index";
+import ChipAnimation from "./TurnAnimation/ChipAnimation";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
-
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -72,7 +66,6 @@ const DEBUG_MODE = false;
 //* SHOWDOWN - Players show their cards to determine winner
 
 //* Define the interface for the position object
-
 
 const calculateZoom = () => {
     const baseWidth = 2000;
@@ -99,6 +92,12 @@ const NetworkDisplay = ({ isMainnet = false }) => {
 
 // Replace this comparison function
 const MemoizedTurnAnimation = React.memo(TurnAnimation);
+
+interface ChipAnimationPayload {
+    seat: number;
+    amount: number;
+    isAllIn?: boolean;
+}
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
@@ -142,19 +141,23 @@ const Table = () => {
     const { gameOptions } = useGameOptions(id);
 
     // Format small blind and big blind values
-    const formattedValues = useMemo(() => ({
-        smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
-        bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20",
-    }), [gameOptions]);
+    const formattedValues = useMemo(
+        () => ({
+            smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
+            bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20"
+        }),
+        [gameOptions]
+    );
 
     // Add any variables we need
     const [seat, setSeat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
 
-    
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
+    const [chipAnimations, setChipAnimations] = useState<ChipAnimationPayload[]>([]);
+    const [potMoveTrigger, setPotMoveTrigger] = useState(false);
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
@@ -165,6 +168,10 @@ const Table = () => {
 
     // Add the usePlayerChipData hook
     const { getChipAmount } = usePlayerChipData(id);
+
+    const triggerChipAnimation = useCallback((payload: ChipAnimationPayload) => {
+        setChipAnimations(prev => [...prev, payload]);
+    }, []);
 
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
@@ -241,13 +248,13 @@ const Table = () => {
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
-    const reorderedPlayerArray = useMemo(() => 
-        [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
+    const reorderedPlayerArray = useMemo(
+        () => [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
         [playerPositionArray, startIndex]
     );
 
-    const reorderedDealerArray = useMemo(() => 
-        [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
+    const reorderedDealerArray = useMemo(
+        () => [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
         [dealerPositionArray, startIndex]
     );
 
@@ -257,6 +264,15 @@ const Table = () => {
             refreshShowingCards();
         }
     }, [currentRound, refreshShowingCards]);
+
+    // When the round ends, trigger chip animation to center pot
+    useEffect(() => {
+        if (currentRound === "turn" || currentRound === "river" || currentRound === "end") {
+            setPotMoveTrigger(true);
+            const reset = setTimeout(() => setPotMoveTrigger(false), 1000); // reset for next round
+            return () => clearTimeout(reset);
+        }
+    }, [currentRound]);
 
     // Restore the useEffect for the timer
     useEffect(() => {
@@ -284,9 +300,7 @@ const Table = () => {
         return () => clearTimeout(timer);
     }, [currentIndex]);
 
-    const handleResize = useCallback(() => 
-        setZoom(calculateZoom()),
-    []);
+    const handleResize = useCallback(() => setZoom(calculateZoom()), []);
 
     useEffect(() => {
         window.addEventListener("resize", handleResize);
@@ -358,68 +372,67 @@ const Table = () => {
     }, [publicKey, client, clientLoading, fetchAccountBalance]);
 
     // Format the balance
-    const balanceFormatted = useMemo(() => 
-        accountBalance ? formatWeiToUSD(accountBalance) : "0.00",
-        [accountBalance]
-    );
-
- 
+    const balanceFormatted = useMemo(() => (accountBalance ? formatWeiToUSD(accountBalance) : "0.00"), [accountBalance]);
 
     if (tableDataValues.error) {
         console.error("Error loading table data:", tableDataValues.error);
         // Continue rendering instead of returning early
     }
 
-
-
-    const dealerButtonStyle = useMemo(() => ({
-        left: `calc(${dealerButtonPosition.left} + 200px)`,
-        top: dealerButtonPosition.top,
-        transform: "none"
-    }), [dealerButtonPosition]);
+    const dealerButtonStyle = useMemo(
+        () => ({
+            left: `calc(${dealerButtonPosition.left} + 200px)`,
+            top: dealerButtonPosition.top,
+            transform: "none"
+        }),
+        [dealerButtonPosition]
+    );
 
     /**
      * Memoized player component renderer - critical for table rendering performance
      */
-    const getComponentToRender = useCallback((position: PositionArray, positionIndex: number) => {
-        // Calculate the actual seat number accounting for rotation
-        const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
-        
-        // Find if a player is seated at this position (using correct seat number)
-        const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
-        
-        // Check if this seat belongs to the current user
-        const isCurrentUser = playerAtThisSeat && 
-            playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
-        
-    
-        // Build common props shared by all player components
-        const playerProps = {
-            index: seatNumber, // Use the correct seat number
-            currentIndex, 
-            left: position.left,
-            top: position.top,
-            color: position.color,
-            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status
-        };
-        
-        // CASE 1: No player at this seat - render vacant position
-        if (!playerAtThisSeat) {
-            return (
-                <VacantPlayer
-                    index={seatNumber} // Use the correct seat number
-                    left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
-                    top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
-                />
+    const getComponentToRender = useCallback(
+        (position: PositionArray, positionIndex: number) => {
+            // Calculate the actual seat number accounting for rotation
+            const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
+
+            // Find if a player is seated at this position (using correct seat number)
+            const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
+
+            // Check if this seat belongs to the current user
+            const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
+
+            // Build common props shared by all player components
+            const playerProps = {
+                index: seatNumber, // Use the correct seat number
+                currentIndex,
+                left: position.left,
+                top: position.top,
+                color: position.color,
+                status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status
+            };
+
+            // CASE 1: No player at this seat - render vacant position
+            if (!playerAtThisSeat) {
+                return (
+                    <VacantPlayer
+                        index={seatNumber} // Use the correct seat number
+                        left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
+                        top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
+                    />
+                );
+            }
+
+            // CASE 2: The current user's seat - render with own controls
+            // CASE 3: Another player's seat - render opponent view
+            return isCurrentUser ? (
+                <Player {...playerProps} />
+            ) : (
+                <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />
             );
-        } 
-        
-        // CASE 2: The current user's seat - render with own controls
-        // CASE 3: Another player's seat - render opponent view
-        return isCurrentUser ? 
-            <Player {...playerProps} /> : 
-            <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
-    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex]);
+        },
+        [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex]
+    );
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
@@ -738,22 +751,26 @@ const Table = () => {
                                             </div>
 
                                             {/*//! CHIP */}
-                                            {chipPositionArray.map((position, index) => {
-                                                const chipAmount = getChipAmount(index + 1);
 
-                                                return (
-                                                    <div
-                                                        key={`key-${index}`}
-                                                        style={{
-                                                            left: position.left,
-                                                            bottom: position.bottom
-                                                        }}
-                                                        className="absolute"
-                                                    >
-                                                        <Chip amount={chipAmount} />
-                                                    </div>
-                                                );
-                                            })}
+                                            {chipAnimations.map((chip, index) => (
+                                                <ChipAnimation
+                                                    key={`chip-${index}-${chip.seat}`}
+                                                    from={{
+                                                        left: playerPositionArray[chip.seat - 1].left!,
+                                                        top: playerPositionArray[chip.seat - 1].top!
+                                                    }}
+                                                    to={{
+                                                        left: chipPositionArray[chip.seat - 1].left!,
+                                                        top: chipPositionArray[chip.seat - 1].top!
+                                                    }}
+                                                    final={{
+                                                        left: centerTablePosition.left!,
+                                                        top: centerTablePosition.top!
+                                                    }}
+                                                    amount={chip.amount}
+                                                    triggerPotMove={potMoveTrigger}
+                                                />
+                                            ))}
                                             {/*//! Dealer */}
                                             {isDealerButtonVisible && (
                                                 <div
