@@ -23,10 +23,10 @@
  * - setStartIndex: Function to change table rotation or trigger join modal
  */
 
-import { useState } from "react";
+import { memo, useState, useMemo, useCallback } from "react";
 import type { PlayerCardProps } from "../../../types/index";
 
-const PlayerPopUpCard: React.FC<PlayerCardProps> = ({ 
+const PlayerPopUpCard: React.FC<PlayerCardProps> = memo(({ 
     id, 
     label, 
     color, 
@@ -36,18 +36,46 @@ const PlayerPopUpCard: React.FC<PlayerCardProps> = ({
 }) => {
     const [note, setNote] = useState("");
 
-    const handleNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Memoize note change handler
+    const handleNoteChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         setNote(e.target.value);
-    };
+    }, []);
+
+    // Memoize action button click handler
+    const handleActionClick = useCallback(() => {
+        setStartIndex(id - 1);
+        onClose();
+    }, [setStartIndex, id, onClose]);
+
+    // Memoize container styles
+    const containerStyle = useMemo(() => ({
+        backgroundColor: color
+    }), [color]);
+
+    // Memoize rating icons
+    const ratingIcons = useMemo(() => [
+        { emoji: "🔥", bgColor: "bg-red-500" },
+        { emoji: "🍂", bgColor: "bg-orange-400" },
+        { emoji: "🌟", bgColor: "bg-yellow-400" },
+        { emoji: "🐟", bgColor: "bg-green-500" },
+        { emoji: "⛰️", bgColor: "bg-blue-500" },
+        { emoji: "🛡️", bgColor: "bg-purple-500" }
+    ], []);
 
     return (
         <div className="absolute w-64 h-56 ml-[-72px] mt-[45px] rounded-2xl shadow-lg bg-[#c0d6d9] flex flex-col items-center px-1 py-1 z-[15]">
             {/* Header Section */}
             <div className="flex justify-between items-center w-full mb-2">
-                <div style={{ backgroundColor: color }} className={"flex items-center justify-center w-7 h-7 text-white text-sm font-bold rounded-full"}>
+                <div 
+                    style={containerStyle} 
+                    className="flex items-center justify-center w-7 h-7 text-white text-sm font-bold rounded-full"
+                >
                     {id}
                 </div>
-                <button onClick={onClose} className="text-xl text-gray-700 hover:text-red-500 transition mr-2">
+                <button 
+                    onClick={onClose} 
+                    className="text-xl text-gray-700 hover:text-red-500 transition mr-2"
+                >
                     ✕
                 </button>
             </div>
@@ -56,10 +84,7 @@ const PlayerPopUpCard: React.FC<PlayerCardProps> = ({
                 {isVacant && (
                     <div
                         className="font-bold text-lg text-black bg-white py-1 w-full mb-4 rounded-2xl cursor-pointer"
-                        onClick={() => {
-                            setStartIndex(id - 1);
-                            onClose();
-                        }}
+                        onClick={handleActionClick}
                     >
                         {label}
                     </div>
@@ -79,29 +104,29 @@ const PlayerPopUpCard: React.FC<PlayerCardProps> = ({
                 {/* Rating Icons - Only show for occupied seats */}
                 {!isVacant && (
                     <div className="flex justify-around w-full">
-                        <div className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-xl cursor-pointer hover:opacity-75 transition">
-                            🔥
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-orange-400 text-white flex items-center justify-center text-xl cursor-pointer hover:opacity-75 transition">
-                            🍂
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-yellow-400 text-white flex items-center justify-center text-xl cursor-pointer hover:opacity-75 transition">
-                            🌟
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xl cursor-pointer hover:opacity-75 transition">
-                            🐟
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xl cursor-pointer hover:opacity-75 transition">
-                            ⛰️
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-xl cursor-pointer hover:opacity-75 transition">
-                            🛡️
-                        </div>
+                        {ratingIcons.map((icon, index) => (
+                            <div
+                                key={index}
+                                className={`w-8 h-8 rounded-full ${icon.bgColor} text-white flex items-center justify-center text-xl cursor-pointer hover:opacity-75 transition`}
+                            >
+                                {icon.emoji}
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
         </div>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison function for memo
+    return (
+        prevProps.id === nextProps.id &&
+        prevProps.label === nextProps.label &&
+        prevProps.color === nextProps.color &&
+        prevProps.isVacant === nextProps.isVacant
+    );
+});
+
+PlayerPopUpCard.displayName = "PlayerPopUpCard";
 
 export default PlayerPopUpCard;
