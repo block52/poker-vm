@@ -12,7 +12,7 @@ curl --location 'http://localhost:3000' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "purge",
-    "params": [],
+    "params": ["admin", "password"],
     "id": 1,
     "jsonrpc": "2.0"
 }'
@@ -24,7 +24,7 @@ curl --location 'http://localhost:3000' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
-    "params": ["0xC84737526E425D7549eF20998Fa992f88EAC2484", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "join", "1000000000000000000", 0, 0, 1],
+    "params": ["${PLAYER1}", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "join", "1000000000000000000", 0, 0, 1],
     "id": 1,
     "jsonrpc": "2.0"
 }'
