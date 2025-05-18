@@ -1,3 +1,51 @@
+/**
+ * VacantPlayer Component
+ * 
+ * This component represents an empty seat at the poker table.
+ * It displays:
+ * - Empty seat indicator
+ * - Join button for available seats
+ * - Confirmation modal for joining
+ * 
+ * Behavior:
+ * 1. For New Users (not in table):
+ *    - Clicking shows join confirmation modal directly
+ *    - No popup is shown
+ *    - Direct path to joining the table
+ * 
+ * 2. For Existing Users (already in table):
+ *    - Clicking shows "CHANGE SEAT" popup
+ *    - Popup triggers join confirmation modal
+ *    - Allows seat changing functionality
+ * 
+ * PlayerPopUpCard Integration:
+ * The PlayerPopUpCard is a popup menu that appears when clicking on a vacant seat.
+ * It serves several purposes:
+ * 1. Seat Management:
+ *    - Shows seat number and availability
+ *    - Provides "CHANGE SEAT" button for future implementation
+ *    - Will handle seat change confirmation
+ * 
+ * 2. Seat Information:
+ *    - Displays seat number
+ *    - Shows seat status (available/taken)
+ *    - Future: Will show seat preferences and history
+ * 
+ * 3. Interactive Features:
+ *    - Note-taking for seat preferences (placeholder)
+ *    - Seat rating system (placeholder)
+ *    - Quick actions menu (placeholder)
+ * 
+ * The popup appears when:
+ * - isCardVisible is true
+ * - It slides in with an animation
+ * - It can be closed using the X button
+ * 
+ * Props:
+ * - left/top: Position on the table
+ * - index: Seat number
+ */
+
 import * as React from "react";
 import { memo, useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
@@ -7,6 +55,7 @@ import { toDisplaySeat } from "../../../utils/tableUtils";
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
 import { useNodeRpc } from "../../../context/NodeRpcContext";
 import type { VacantPlayerProps } from "../../../types/index";
+import PlayerPopUpCard from "./PlayerPopUpCard";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index }) => {
@@ -20,9 +69,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
-        // These states are kept but we won't show the success modal
         const [joinSuccess, setJoinSuccess] = useState(false);
         const [joinResponse, setJoinResponse] = useState<any>(null);
+        const [isCardVisible, setIsCardVisible] = useState(false);
 
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
@@ -34,6 +83,17 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             setJoinSuccess(false);
             setJoinResponse(null);
         }, [canJoinThisSeat, index, tableId]);
+
+        // Show join modal directly for new users, popup for seat changing
+        const handleSeatClick = useCallback(() => {
+            if (isUserAlreadyPlaying) {
+                // If already in table, show popup for seat changing
+                setIsCardVisible(true);
+            } else if (canJoinThisSeat) {
+                // If not in table and can join, show join modal directly
+                handleJoinClick();
+            }
+        }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
 
         const handleConfirmSeat = async () => {
             if (!client || !userAddress || !privateKey || !tableId) {
@@ -77,14 +137,48 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         };
 
         return (
-            <div className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`} style={{ left, top }} onClick={canJoinThisSeat ? handleJoinClick : undefined}>
-                <div className={`flex justify-center mb-2 ${canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"}`}>
-                    <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
+            <>
+                <div 
+                    className="absolute cursor-pointer" 
+                    style={{ left, top }} 
+                    onClick={handleSeatClick}
+                >
+                    <div className="flex justify-center mb-2">
+                        <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
+                    </div>
+                    <div className="text-white text-center">
+                        <div className="text-sm mb-1 whitespace-nowrap">{isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}</div>
+                        {!isUserAlreadyPlaying && <div className="whitespace-nowrap">{canJoinThisSeat ? "Click to Join" : "Seat Taken"}</div>}
+                    </div>
                 </div>
-                <div className="text-white text-center">
-                    <div className="text-sm mb-1 whitespace-nowrap">{isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}</div>
-                    {!isUserAlreadyPlaying && <div className="whitespace-nowrap">{canJoinThisSeat ? "Click to Join" : "Seat Taken"}</div>}
-                </div>
+
+                {/* PlayerPopUpCard - Only show for seat changing */}
+                {isUserAlreadyPlaying && (
+                    <div
+                        className={`absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
+                            isCardVisible ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
+                        }`}
+                        style={{
+                            left: left,
+                            top: top,
+                            transform: "translate(-50%, -50%)"
+                        }}
+                    >
+                        {isCardVisible && (
+                            <PlayerPopUpCard
+                                id={index + 1}
+                                label="CHANGE SEAT"
+                                color="#4a5568"
+                                isVacant={true}
+                                setStartIndex={() => {
+                                    handleJoinClick();
+                                    setIsCardVisible(false);
+                                }}
+                                onClose={() => setIsCardVisible(false)}
+                            />
+                        )}
+                    </div>
+                )}
 
                 {showConfirmModal && (
                     <div
@@ -152,7 +246,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                         {/* Future loading animation will go here */}
                     </div>
                 )}
-            </div>
+            </>
         );
     },
     (prev, next) => prev.left === next.left && prev.top === next.top && prev.index === next.index

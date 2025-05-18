@@ -1,13 +1,59 @@
+/**
+ * Table Component
+ * 
+ * This is the main poker table component that orchestrates the entire game interface.
+ * It manages:
+ * - Player positions and rotations
+ * - Game state and progress
+ * - Community cards
+ * - Pot amounts
+ * - Dealer button
+ * - Player actions
+ * 
+ * Key Features:
+ * - Dynamic table layout (6 or 9 players)
+ * - Real-time game state updates
+ * - Player position management
+ * - Chip position calculations
+ * - Winner animations
+ * - Sidebar for game log
+ * 
+ * Player Components:
+ * - Player: Current user's view with hole cards and controls
+ * - OppositePlayer: Other players' views with seat changing functionality
+ * - VacantPlayer: Empty seat views with direct join/seat changing
+ * 
+ * PlayerPopUpCard Integration:
+ * - Used by OppositePlayer for seat changing
+ * - Used by VacantPlayer for seat changing (only when user is already seated)
+ * - Provides consistent UI for player interactions
+ * 
+ * State Management:
+ * - Uses multiple hooks for different aspects of the game
+ * - Manages player positions and rotations
+ * - Handles game progress and round information
+ * - Controls UI elements visibility
+ * 
+ * Components Used:
+ * - Player: Current user's view
+ * - OppositePlayer: Other players' views
+ * - VacantPlayer: Empty seat views
+ * - PlayerPopUpCard: Popup for player actions
+ * - PokerActionPanel: Betting controls
+ * - PokerLog: Game history
+ */
+
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import PokerLog from "../PokerLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
+
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
+
 import Player from "./Players/Player";
 import Chip from "./common/Chip";
-// import { usePlayerContext } from "../../context/usePlayerContext";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";

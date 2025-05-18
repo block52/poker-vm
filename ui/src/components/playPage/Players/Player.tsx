@@ -1,18 +1,31 @@
+/**
+ * Player Component
+ * 
+ * This component represents the current user at the poker table.
+ * It displays:
+ * - User's hole cards (face up)
+ * - User's stack amount
+ * - User's status (folded, all-in, etc.)
+ * - Winner information if applicable
+ * - Progress bar for action timing
+ * 
+ * Props:
+ * - left/top: Position on the table
+ * - index: Seat number
+ * - currentIndex: Current round index
+ * - color: Player's color theme
+ * - status: Player's current status
+ */
+
 import * as React from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
+import type { PlayerProps } from "../../../types/index";
 
-type PlayerProps = {
-    left?: string; // Position left value
-    top?: string; // Position top value
-    index: number;
-    currentIndex: number;
-    color?: string;
-    status?: string;
-};
+
 
 const Player: React.FC<PlayerProps> = ({ left, top, index, currentIndex, color, status }) => {
     const { id } = useParams<{ id: string }>();
