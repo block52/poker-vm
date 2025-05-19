@@ -19,7 +19,7 @@ export interface IClient {
     getNodes(): Promise<string[]>;
     getTransactions(): Promise<TransactionDTO[]>;
     mint(address: string, amount: string, transactionId: string): Promise<void>;
-    newHand(gameAddress: string, seed: string, index: number, nonce?: number): Promise<TransactionResponse>;
+    newHand(gameAddress: string, seed: string, nonce?: number): Promise<TransactionResponse>;
     newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
@@ -297,12 +297,11 @@ export class NodeRpcClient implements IClient {
     /**
      * Create a new game on the remote node
      * @param gameAddress The address of the game
-     * @param data The game data
-     * @param index The index of the game
+     * @param seed The seed for new deck
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async newHand(gameAddress: string, data: string, index: number, nonce?: number): Promise<TransactionResponse> {
+    public async newHand(gameAddress: string, seed: string, nonce?: number): Promise<TransactionResponse> {
         const address = this.getAddress();
 
         if (!nonce) {
@@ -310,12 +309,13 @@ export class NodeRpcClient implements IClient {
         }
 
         const signature = await this.getSignature(nonce);
+        const index = await this.getNextTurnIndex(gameAddress, address);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
             // params: [gameAddress, index, data, nonce], // [to, index, data, nonce]
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, data],  
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed],  
             signature: signature
         });
 
