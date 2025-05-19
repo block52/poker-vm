@@ -24,7 +24,8 @@ class CallAction extends BaseAction implements IAction {
         // 2. Special case for preflop round
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
             // Special case for small blind position in PREFLOP
-            if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
+            const seat = this.game.getPlayerSeatNumber(player.address);
+            if (seat === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
                 const amount = this.game.bigBlind - this.game.smallBlind;
                 return { minAmount: amount, maxAmount: amount };
@@ -32,10 +33,16 @@ class CallAction extends BaseAction implements IAction {
 
             const largestBet = this.getLargestBet();
             const playerBet = this.getSumBets(player.address);
-
-            if (this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition && largestBet === playerBet) {
+            
+            if (seat === this.game.bigBlindPosition && largestBet === playerBet) {
                 // Error message not quite right
                 throw new Error("Big blind cannot call in preflop round.");
+            }
+
+            // If the player is big blind and the largest bet is only the small bind (sb called)
+            if (seat === this.game.bigBlindPosition && largestBet === this.game.smallBlind) {
+                // Nothing to call
+                throw new Error("Small blind has only called and there is no action to call.");
             }
         }
 
