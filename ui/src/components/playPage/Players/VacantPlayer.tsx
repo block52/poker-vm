@@ -1,3 +1,51 @@
+/**
+ * VacantPlayer Component
+ * 
+ * This component represents an empty seat at the poker table.
+ * It displays:
+ * - Empty seat indicator
+ * - Join button for available seats
+ * - Confirmation modal for joining
+ * 
+ * Behavior:
+ * 1. For New Users (not in table):
+ *    - Clicking shows join confirmation modal directly
+ *    - No popup is shown
+ *    - Direct path to joining the table
+ * 
+ * 2. For Existing Users (already in table):
+ *    - Clicking shows "CHANGE SEAT" popup
+ *    - Popup triggers join confirmation modal
+ *    - Allows seat changing functionality
+ * 
+ * PlayerPopUpCard Integration:
+ * The PlayerPopUpCard is a popup menu that appears when clicking on a vacant seat.
+ * It serves several purposes:
+ * 1. Seat Management:
+ *    - Shows seat number and availability
+ *    - Provides "CHANGE SEAT" button for future implementation
+ *    - Will handle seat change confirmation
+ * 
+ * 2. Seat Information:
+ *    - Displays seat number
+ *    - Shows seat status (available/taken)
+ *    - Future: Will show seat preferences and history
+ * 
+ * 3. Interactive Features:
+ *    - Note-taking for seat preferences (placeholder)
+ *    - Seat rating system (placeholder)
+ *    - Quick actions menu (placeholder)
+ * 
+ * The popup appears when:
+ * - isCardVisible is true
+ * - It slides in with an animation
+ * - It can be closed using the X button
+ * 
+ * Props:
+ * - left/top: Position on the table
+ * - index: Seat number
+ */
+
 import * as React from "react";
 import { memo, useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
@@ -6,16 +54,11 @@ import PokerProfile from "../../../assets/PokerProfile.svg";
 import { toDisplaySeat } from "../../../utils/tableUtils";
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
 import { useNodeRpc } from "../../../context/NodeRpcContext";
-
-
-type VacantPlayerProps = {
-    left?: string;
-    top?: string;
-    index: number;
-};
+import type { VacantPlayerProps } from "../../../types/index";
+import PlayerPopUpCard from "./PlayerPopUpCard";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
-    ({ left, top, index }) => {
+    ({ left, top, index, onJoin }) => {
         const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData(useParams<{ id: string }>().id);
         const { id: tableId } = useParams<{ id: string }>();
         const userAddress = localStorage.getItem("user_eth_public_key");
@@ -26,22 +69,32 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
-        // These states are kept but we won't show the success modal
         const [joinSuccess, setJoinSuccess] = useState(false);
         const [joinResponse, setJoinResponse] = useState<any>(null);
+        const [isCardVisible, setIsCardVisible] = useState(false);
 
+        // Memoize seat status checks
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
 
+        // Memoize handlers
         const handleJoinClick = useCallback(() => {
             if (!canJoinThisSeat) return;
             setShowConfirmModal(true);
             setJoinError(null);
             setJoinSuccess(false);
             setJoinResponse(null);
-        }, [canJoinThisSeat, index, tableId]);
+        }, [canJoinThisSeat]);
 
-        const handleConfirmSeat = async () => {
+        const handleSeatClick = useCallback(() => {
+            if (isUserAlreadyPlaying) {
+                setIsCardVisible(true);
+            } else if (canJoinThisSeat) {
+                handleJoinClick();
+            }
+        }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
+
+        const handleConfirmSeat = useCallback(async () => {
             if (!client || !userAddress || !privateKey || !tableId) {
                 setJoinError("Missing required information to join table");
                 return;
@@ -58,44 +111,89 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             setJoinSuccess(false);
 
             try {
-                // Convert the buy-in amount to bigint
                 const buyInWei = ethers.parseUnits(storedAmount, 18);
-
-                // Get the latest account info to get the current nonce
                 const account = await client.getAccount(userAddress);
-
-                // Call the playerJoin method directly from the SDK
                 const response = await client.playerJoin(tableId, BigInt(buyInWei.toString()), index, account.nonce);
-
-                // Store response in state but don't show it - just for debugging if needed
+                
                 setJoinResponse(response);
                 setJoinSuccess(true);
-                
-                // Close the modal immediately and let the page update naturally via normal data flow
                 setShowConfirmModal(false);
                 
-                // PLACEHOLDER: A future animation could be displayed here before refresh
-                // For now, we just reload the page after a short delay
-                setTimeout(() => {
-                    window.location.reload();
-                }, 300); // Short delay to allow for potential animation
-                
+                // Call onJoin after successful join
+                if (onJoin) {
+                    onJoin();
+                }
             } catch (err) {
                 console.error("Failed to join table:", err);
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        };
+        }, [client, userAddress, privateKey, tableId, index, onJoin]);
+
+        // Memoize container styles
+        const containerStyle = useMemo(() => ({
+            left,
+            top
+        }), [left, top]);
+
+        // Memoize popup styles
+        const popupStyle = useMemo(() => ({
+            left,
+            top,
+            transform: "translate(-50%, -50%)"
+        }), [left, top]);
+
+        // Memoize popup class names
+        const popupClassName = useMemo(() => 
+            `absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
+                isCardVisible ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
+            }`,
+            [isCardVisible]
+        );
+
+        // Memoize seat text
+        const seatText = useMemo(() => ({
+            title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`,
+            subtitle: !isUserAlreadyPlaying ? (canJoinThisSeat ? "Click to Join" : "Seat Taken") : null
+        }), [isUserAlreadyPlaying, canJoinThisSeat, index]);
 
         return (
-            <div className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`} style={{ left, top }} onClick={canJoinThisSeat ? handleJoinClick : undefined}>
-                <div className={`flex justify-center mb-2 ${canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"}`}>
-                    <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
+            <>
+                <div 
+                    className="absolute cursor-pointer" 
+                    style={containerStyle}
+                    onClick={handleSeatClick}
+                >
+                    <div className="flex justify-center mb-2">
+                        <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
+                    </div>
+                    <div className="text-white text-center">
+                        <div className="text-sm mb-1 whitespace-nowrap">{seatText.title}</div>
+                        {seatText.subtitle && <div className="whitespace-nowrap">{seatText.subtitle}</div>}
+                    </div>
                 </div>
-                <div className="text-white text-center">
-                    <div className="text-sm mb-1 whitespace-nowrap">{isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}</div>
-                    {!isUserAlreadyPlaying && <div className="whitespace-nowrap">{canJoinThisSeat ? "Click to Join" : "Seat Taken"}</div>}
-                </div>
+
+                {/* PlayerPopUpCard - Only show for seat changing */}
+                {isUserAlreadyPlaying && (
+                    <div
+                        className={popupClassName}
+                        style={popupStyle}
+                    >
+                        {isCardVisible && (
+                            <PlayerPopUpCard
+                                id={index + 1}
+                                label="CHANGE SEAT"
+                                color="#4a5568"
+                                isVacant={true}
+                                setStartIndex={() => {
+                                    handleJoinClick();
+                                    setIsCardVisible(false);
+                                }}
+                                onClose={() => setIsCardVisible(false)}
+                            />
+                        )}
+                    </div>
+                )}
 
                 {showConfirmModal && (
                     <div
@@ -163,10 +261,17 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                         {/* Future loading animation will go here */}
                     </div>
                 )}
-            </div>
+            </>
         );
     },
-    (prev, next) => prev.left === next.left && prev.top === next.top && prev.index === next.index
+    (prevProps, nextProps) => {
+        // Custom comparison function for memo
+        return (
+            prevProps.left === nextProps.left &&
+            prevProps.top === nextProps.top &&
+            prevProps.index === nextProps.index
+        );
+    }
 );
 
 VacantPlayer.displayName = "VacantPlayer";

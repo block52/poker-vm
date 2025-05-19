@@ -7,7 +7,7 @@ export function useStartNewHand(tableId: string | undefined) {
     const [isStartingNewHand, setIsStartingNewHand] = useState(false);
     const { client } = useNodeRpc();
     
-    // Create a simple function that calls client.newHand
+    // Update to use newHand method from SDK
     const startNewHand = async (params: StartNewHandParams): Promise<TransactionResponse> => {
         const { seed = Math.random().toString(36).substring(2, 15), nonce } = params;
         
@@ -26,13 +26,18 @@ export function useStartNewHand(tableId: string | undefined) {
             console.log(`Starting new hand for table ${tableId} with seed: ${seed}`);
             
             // Convert nonce to number if needed
-            let nonceValue: number | undefined = undefined;
-            if (nonce !== undefined) {
-                nonceValue = typeof nonce === "number" ? nonce : parseInt(nonce.toString());
-            }
+            // let nonceValue: number | undefined = undefined;
+            // if (nonce !== undefined) {
+            //     nonceValue = typeof nonce === "number" ? nonce : parseInt(nonce.toString());
+            // }
             
-            // Call the newHand method directly from the client
-            const response = await client.newHand(tableId, seed, nonceValue);
+            // Use the SDK's newHand method instead of playerAction
+            const response = await client.newHand(
+                tableId,
+                // seed,
+                // nonceValue
+            );
+            
             console.log("New hand started successfully:", response);
             return response;
         } catch (error) {

@@ -197,12 +197,18 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             expect(game.currentRound).toEqual(TexasHoldemRound.END);
 
+            // Should have new hand action
+            const actions = game.getLegalActions(SMALL_BLIND_PLAYER);
+            expect(actions.length).toEqual(2);
+            expect(actions[0].action).toEqual(PlayerActionType.FOLD);
+            expect(actions[1].action).toEqual(NonPlayerActionType.NEW_HAND);
+
             // Check the winner
             const gameState = game.toJson();
             expect(gameState.winners).toBeDefined();
             expect(gameState.winners.length).toEqual(1);
 
-            game.reInit(mnemonic);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.NEW_HAND, 15, undefined, mnemonic);
             expect(game.handNumber).toEqual(1);
 
             const json: TexasHoldemStateDTO = game.toJson();
@@ -211,7 +217,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(json.players.length).toEqual(2);
 
             // Get the small blind player to leave
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.LEAVE, 15);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.LEAVE, 16);
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.exists(SMALL_BLIND_PLAYER)).toBeFalsy();
             expect(game.exists(BIG_BLIND_PLAYER)).toBeTruthy();
@@ -269,6 +275,9 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             actions = game.getLegalActions(BIG_BLIND_PLAYER);
             expect(actions.length).toEqual(3);
+            expect(actions[0].action).toEqual(PlayerActionType.FOLD); // Check, bet or fold
+            expect(actions[1].action).toEqual(PlayerActionType.CHECK); // Check, bet or fold
+            expect(actions[2].action).toEqual(PlayerActionType.BET); // Check, bet or fold
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 6, 0n);
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
@@ -327,7 +336,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(smallBlindPlayer?.chips).toEqual(100200000000000000000n);
             expect(bigBlindPlayer?.chips).toEqual(99800000000000000000n);
 
-            game.reInit(mnemonic);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.NEW_HAND, 15, undefined, mnemonic);
 
             // Check the game state after re-initialization
             expect(game.handNumber).toEqual(1);

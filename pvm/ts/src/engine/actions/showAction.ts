@@ -10,6 +10,13 @@ class ShowAction extends BaseAction implements IAction {
         // Basic validation
         super.verify(player);
 
+        const livePlayers = this.game.findLivePlayers();
+        if (livePlayers.length === 1) {
+            if (livePlayers[0].address.toLowerCase() !== player.address.toLowerCase()) {
+                return { minAmount: 0n, maxAmount: 0n };
+            }
+        }
+
         if (this.game.currentRound !== TexasHoldemRound.SHOWDOWN) {
             throw new Error("Game is not in showdown round.");
         }
@@ -18,7 +25,7 @@ class ShowAction extends BaseAction implements IAction {
     }
 
     // Override execute to set player's status to SHOWING
-    execute(player: Player, index: number, timestamp: number): void {
+    execute(player: Player, index: number): void {
         // First verify the action
         this.verify(player);
         

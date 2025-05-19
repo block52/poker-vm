@@ -34,9 +34,13 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
+<<<<<<< HEAD
 import { stat } from "fs";
 import { time } from "console";
 import moment from "moment";
+=======
+import NewHandAction from "./actions/newHandAction";
+>>>>>>> main
 
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
@@ -123,7 +127,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new CallAction(this, this._update),
             new RaiseAction(this, this._update),
             new MuckAction(this, this._update),
-            new ShowAction(this, this._update)
+            new ShowAction(this, this._update),
+            new NewHandAction(this, this._update, "")
         ];
     }
 
@@ -159,9 +164,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     /**
-     * Reinitializes the game state for a new hand
+     * Reinitializes the game state for a new hand.
      */
-    reInit(deck: string): void {
+    public reInit(deck: string): void {
         // Reset all players
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
@@ -308,7 +313,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     /**
      * Finds players who are still in the hand (not folded)
      */
-    private findLivePlayers(): Player[] {
+    findLivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter(
             (player): player is Player => player !== null && [PlayerStatus.SHOWING, PlayerStatus.ACTIVE, PlayerStatus.ALL_IN].includes(player.status)
         );
@@ -868,6 +873,11 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
                 this.setNextRound();
                 return;
+            case NonPlayerActionType.NEW_HAND:
+                const deck = new Deck();
+                deck.shuffle(data);
+                new NewHandAction(this, this._update, deck.toString()).execute(this.getPlayer(address), index);
+                return;
         }
 
         // Verify player exists in the game
@@ -906,7 +916,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 new MuckAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.SHOW:
-                new ShowAction(this, this._update).execute(player, index, _amount);
+                new ShowAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.SIT_OUT:
                 player.updateStatus(PlayerStatus.SITTING_OUT);

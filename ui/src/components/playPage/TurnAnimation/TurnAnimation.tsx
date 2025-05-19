@@ -3,24 +3,16 @@ import { useTableAnimations } from "../../../hooks/useTableAnimations";
 import { useNextToActInfo } from "../../../hooks/useNextToActInfo";
 import { useParams } from "react-router-dom";
 import { turnAnimationPosition } from "../../../utils/PositionArray";
+import { TurnAnimationProps } from "../../../types/index";
+import "./TurnAnimation.css";
 
-interface TurnAnimationProps {
-    index: number;
-}
-
-// Add React.memo to prevent re-renders when props don't change
 const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
     const { id } = useParams<{ id: string }>();
     const { tableSize } = useTableAnimations(id);
     const { nextToActInfo } = useNextToActInfo(id);
     const [isCurrentPlayersTurn, setIsCurrentPlayersTurn] = useState(false);
     
-    // Check for reduced motion preference - only calculate once
-    const prefersReducedMotion = useMemo(() => 
-        window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false, 
-    []);
-    
-    // Memoize the position calculation
+    // Memoize position to avoid unnecessary calculations
     const position = useMemo(() => {
         if (tableSize === 9) {
             return turnAnimationPosition.nine[index];
@@ -29,7 +21,7 @@ const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
         }
     }, [tableSize, index]);
 
-    // Check if it's the current player's turn
+    // Check if it's the current player's turn with useEffect
     useEffect(() => {
         const isTurn = nextToActInfo?.seat === index + 1;
         if (isCurrentPlayersTurn !== isTurn) {
@@ -50,13 +42,12 @@ const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
                 top: position.top,
             }}
         >
-            {prefersReducedMotion ? (
-                // Simplified static version for reduced motion preference
-                <div className="turn-animation-static" />
-            ) : (
-                // Single animated element instead of multiple
-                <div className="turn-animation-pulse" />
-            )}
+            {[0, 1, 2, 3].map(i => (
+                <div
+                    key={i}
+                    className={`turn-animation-ring turn-animation-ring-${i}`}
+                />
+            ))}
         </div>
     );
 });
@@ -65,4 +56,3 @@ const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
 TurnAnimation.displayName = "TurnAnimation";
 
 export default TurnAnimation;
-

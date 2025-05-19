@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNodeRpc } from "../context/NodeRpcContext";
 import { GameOptionsDTO } from "@bitcoinbrisbane/block52";
 import { GameWithAddress } from "../types/index";
@@ -13,39 +13,40 @@ export const useFindGames = () => {
     const [error, setError] = useState<string | null>(null);
     const { client } = useNodeRpc();
 
-    useEffect(() => {
-        const fetchGames = async () => {
-            if (!client) {
-                return;
-            }
+    const fetchGames = useCallback(async () => {
+        if (!client) {
+            return;
+        }
 
-            setIsLoading(true);
-            setError(null);
+        setIsLoading(true);
+        setError(null);
 
-            try {
-                // Use hardcoded min/max values as suggested
-                const minBuyIn = BigInt("10000000000000000"); // 0.01 ETH
-                const maxBuyIn = BigInt("1000000000000000000"); // 1 ETH
-                
-                const availableGames = await client.findGames(minBuyIn, maxBuyIn);
-                console.log("Available games:", availableGames);
-                // Also log stringified version for complete details
-                console.log("Available games (stringified):", JSON.stringify(availableGames, null, 2));
-                setGames(availableGames as GameWithAddress[]);
-            } catch (err: any) {
-                setError(err.message || "Failed to fetch games");
-                console.error("Error fetching games:", err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchGames();
+        try {
+            // Use hardcoded min/max values as suggested
+            const minBuyIn = BigInt("10000000000000000"); // 0.01 ETH
+            const maxBuyIn = BigInt("1000000000000000000"); // 1 ETH
+            
+            const availableGames = await client.findGames(minBuyIn, maxBuyIn);
+            console.log("Available games:", availableGames);
+            // Also log stringified version for complete details
+            console.log("Available games (stringified):", JSON.stringify(availableGames, null, 2));
+            setGames(availableGames as GameWithAddress[]);
+        } catch (err: any) {
+            setError(err.message || "Failed to fetch games");
+            console.error("Error fetching games:", err);
+        } finally {
+            setIsLoading(false);
+        }
     }, [client]);
+
+    useEffect(() => {
+        fetchGames();
+    }, [fetchGames]);
 
     return {
         games,
         isLoading,
-        error
+        error,
+        refetch: fetchGames
     };
 };

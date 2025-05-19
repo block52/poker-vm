@@ -55,8 +55,8 @@ export class Deck implements IDeck, IJSONModel {
             throw new Error(`Seed length (${seed.length}) must match cards length (${this.cards.length})`);
         }
 
-        const seedAsString = seed.join("-");
-        this.seedHash = createHash("sha256").update(seedAsString).digest("hex");
+        // const seedAsString = seed.join("-");
+        this.seedHash = createHash("sha256").update(seed.toString()).digest("hex");
 
         // Fisher-Yates shuffle
         for (let i = this.cards.length - 1; i > 0; i--) {

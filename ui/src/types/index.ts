@@ -63,6 +63,7 @@ type Limits = {
     max: string;
 }
 
+//todo tidy up this type
 export type TableStatus = {
     isInTable: boolean;
     isPlayerTurn: boolean;
@@ -85,7 +86,7 @@ export type TableStatus = {
     isSmallBlindPosition: boolean;
 }
 
-
+// Type for PositionArray component props
 export interface PositionArray {
     left?: string;
     top?: string;
@@ -105,4 +106,35 @@ export interface LeaveTableOptions {
 export interface GameWithAddress {
     address: string;
     gameOptions: GameOptionsDTO;
+}
+
+// Type for VacantPlayer component props
+export interface VacantPlayerProps {
+    index: number;
+    left: string;
+    top: string;
+    onJoin?: () => void;
+}
+
+// Type for PlayerCard component props
+export type PlayerCardProps = {
+    id: number;
+    label: string;
+    color?: string;
+    isVacant?: boolean;  // Whether this is a vacant seat
+    onClose: () => void;
+    setStartIndex: (index: number) => void;
+};
+
+export interface PlayerProps {
+    left?: string;
+    top?: string;
+    index: number;
+    currentIndex: number;
+    color?: string;
+    status?: string;
+}
+
+export interface TurnAnimationProps {
+    index: number;
 }
