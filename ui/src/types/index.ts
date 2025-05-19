@@ -134,3 +134,7 @@ export interface PlayerProps {
     color?: string;
     status?: string;
 }
+
+export interface TurnAnimationProps {
+    index: number;
+}
