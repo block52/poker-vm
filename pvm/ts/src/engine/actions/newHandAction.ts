@@ -3,6 +3,7 @@ import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, IUpdate, Range, Turn } from "../types";
 import TexasHoldemGame from "../texasHoldem";
+import { Deck } from "../../models";
 
 class NewHandAction extends BaseAction implements IAction {
     get type(): NonPlayerActionType { return NonPlayerActionType.NEW_HAND }
@@ -24,7 +25,9 @@ class NewHandAction extends BaseAction implements IAction {
     execute(player: Player, index: number): void {
         // First verify the action
         this.verify(player);
-        this.game.reInit(this.data);
+        const deck = new Deck();
+        // deck.shuffle(this.data);
+        this.game.reInit(deck.toString());
     }
 }
 
