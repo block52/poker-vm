@@ -1,6 +1,6 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic, seed } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Reinit", () => {
@@ -50,7 +50,7 @@ describe("Texas Holdem - Reinit", () => {
             expect(game.bigBlindPosition).toEqual(2);
             expect(game.handNumber).toEqual(0);
 
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.NEW_HAND, 15, undefined, mnemonic);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.NEW_HAND, 15, undefined, seed);
             expect(game.handNumber).toEqual(1);
 
             expect(game.getPlayerCount()).toEqual(2);

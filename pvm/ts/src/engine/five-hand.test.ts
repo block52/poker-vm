@@ -1,6 +1,6 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic, seed } from "./testConstants";
 
 describe("Texas Holdem - Play 5 Hands", () => {
     const THREE_TOKENS = 300000000000000000n;
@@ -110,7 +110,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(0, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 2
-        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, mnemonic);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
         actionCounter = 0;
 
         // Hand 2 - buttons should switch positions
@@ -125,7 +125,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(1, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 3
-        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, mnemonic);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
         actionCounter = 0;
 
         // Hand 3 - buttons should switch positions again
@@ -140,7 +140,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 4
-        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, mnemonic);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
         actionCounter = 0;
 
         // Hand 4 - buttons should switch positions again
@@ -155,7 +155,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 5
-        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, mnemonic);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
         actionCounter = 0;
 
         // Hand 5 - buttons should switch positions again

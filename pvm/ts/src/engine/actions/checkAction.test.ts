@@ -1,9 +1,8 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("CheckAction", () => {
@@ -26,18 +25,7 @@ describe("CheckAction", () => {
         );
         playerStates.set(0, initialPlayer);
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions, // previous
-            TexasHoldemRound.PREFLOP,
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
+        game = getDefaultGame(playerStates);
 
         updateMock = {
             addAction: jest.fn(action => {
@@ -149,7 +137,7 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
             // Mock verify to return undefined (no range)
-            jest.spyOn(action, "verify").mockReturnValue( { minAmount: 0n, maxAmount: 0n } as any);
+            jest.spyOn(action, "verify").mockReturnValue({ minAmount: 0n, maxAmount: 0n } as any);
 
             // Mock game's addAction method
             game.addAction = jest.fn();
@@ -164,12 +152,15 @@ describe("CheckAction", () => {
         it("should add CHECK action with 0 amount", () => {
             action.execute(player, 0, 0n);
 
-            expect(game.addAction).toHaveBeenCalledWith({
-                playerId: player.address,
-                action: PlayerActionType.CHECK,
-                amount: 0n,
-                index: 0
-            }, TexasHoldemRound.PREFLOP);
+            expect(game.addAction).toHaveBeenCalledWith(
+                {
+                    playerId: player.address,
+                    action: PlayerActionType.CHECK,
+                    amount: 0n,
+                    index: 0
+                },
+                TexasHoldemRound.PREFLOP
+            );
         });
 
         it.skip("should throw error if an amount is specified", () => {

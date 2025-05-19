@@ -104,7 +104,9 @@ export class GameManagement extends StateManager implements IGameManagement {
             },
             communityCards: [],
             pots: ["0"],
-            nextToAct: -1,
+            lastActedSeat: -1,
+            actionCount: 0,
+            handNumber: 0,
             round: TexasHoldemRound.ANTE,
             winners: [],
             signature: ethers.ZeroHash
