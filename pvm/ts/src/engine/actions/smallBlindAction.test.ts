@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
+import { defaultPositions, gameOptions, getDefaultGame, mnemonic } from "../testConstants";
 
 describe("SmallBlindAction", () => {
     let game: TexasHoldemGame;
@@ -25,18 +25,7 @@ describe("SmallBlindAction", () => {
         );
         playerStates.set(1, initialPlayer);
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions, // previousActions
-            TexasHoldemRound.ANTE, // Changed from ANTE to PREFLOP to match new implementation
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
+        game = getDefaultGame(playerStates);
 
         updateMock = {
             addAction: jest.fn(action => {

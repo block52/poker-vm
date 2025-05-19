@@ -131,7 +131,9 @@ export type TexasHoldemGameState = {
     deck: string;
     communityCards: string[];
     pots: string[];
-    nextToAct: number;
+    lastActedSeat: number;
+    actionCount: number;
+    handNumber: number;
     round: TexasHoldemRound;
     winners: string[];
     signature: string;
@@ -148,9 +150,10 @@ export type TexasHoldemStateDTO = {
     communityCards: string[];
     deck: string; // Assume this will be encrypted
     pots: string[];
-    lastToAct: number;
     nextToAct: number;
     previousActions: ActionDTO[];
+    actionCount: number;
+    handNumber: number;
     round: TexasHoldemRound;
     winners: WinnerDTO[];
     signature: string;

@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
 import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { defaultPositions, gameOptions, getDefaultGame, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("CheckAction", () => {
@@ -26,18 +26,7 @@ describe("CheckAction", () => {
         );
         playerStates.set(0, initialPlayer);
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions, // previous
-            TexasHoldemRound.PREFLOP,
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
+        game = getDefaultGame(playerStates);
 
         updateMock = {
             addAction: jest.fn(action => {

@@ -8,6 +8,7 @@ import {
     defaultPositions,
     FIFTY_TOKENS,
     gameOptions,
+    getDefaultGame,
     mnemonic,
     ONE_HUNDRED_TOKENS,
     ONE_THOUSAND_TOKENS,
@@ -38,18 +39,7 @@ describe("Raise Action", () => {
         );
         playerStates.set(0, initialPlayer);
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions, // previousActions
-            TexasHoldemRound.PREFLOP,
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
+        game = getDefaultGame(playerStates);
 
         updateMock = {
             addAction: jest.fn()

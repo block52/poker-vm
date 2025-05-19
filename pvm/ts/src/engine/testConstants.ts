@@ -1,6 +1,7 @@
-import { GameOptions, Positions } from "@bitcoinbrisbane/block52";
+import { ActionDTO, GameOptions, Positions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
+import { Player } from "../models/player";
 
 // Constants for testing
 export const ONE_TOKEN = 100000000000000000n;
@@ -43,6 +44,45 @@ export const baseGameConfig = {
     pot: 0n,
     players: [],
     now: Date.now()
+};
+
+export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasHoldemGame => {
+    const previousActions: ActionDTO[] = [];
+    const game = new TexasHoldemGame(
+        ethers.ZeroAddress,
+        gameOptions,
+        defaultPositions, // dealer
+        1, // nextToAct
+        previousActions,
+        0,
+        0,
+        TexasHoldemRound.PREFLOP,
+        [], // communityCards
+        [0n], // pot
+        playerStates,
+        mnemonic
+    );
+
+    return game;
+};
+
+export const getDefaultGameWithActions = (previousActions: any[] = [], playerStates: Map<number, Player | null>): TexasHoldemGame => {
+    const game = new TexasHoldemGame(
+        ethers.ZeroAddress,
+        gameOptions,
+        defaultPositions, // dealer
+        1, // nextToAct
+        previousActions,
+        0,
+        0,
+        TexasHoldemRound.PREFLOP,
+        [], // communityCards
+        [0n], // pot
+        playerStates,
+        mnemonic
+    );
+
+    return game;
 };
 
 export const fromTestJson = (json: any): TexasHoldemGame => {

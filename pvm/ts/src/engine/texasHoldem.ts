@@ -52,7 +52,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
     private _sidePots = new Map<string, bigint>();
     private _winners = new Map<string, Winner>();
     private _currentRound: TexasHoldemRound;
-    private _handNumber = 0;
 
     // Constructor
     constructor(
@@ -61,6 +60,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         private _positions: Positions,
         lastActedSeat: number,
         previousActions: ActionDTO[] = [],
+        private _handNumber: number = 0,
+        private _actionCount: number = 0,
         currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         communityCards: string[] = [],
         pots: bigint[] = [0n],
@@ -185,6 +186,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = TexasHoldemRound.ANTE;
         this._winners.clear();
         this._handNumber += 1;
+        this._actionCount += this.getPreviousActions().length;
     }
 
     // ==================== GAME STATE PROPERTIES ====================
@@ -759,7 +761,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * Returns the current turn index
      */
     getTurnIndex(): number {
-        return this.getPreviousActions().length;
+        // plus the last count
+        return this._actionCount + this.getPreviousActions().length;
     }
 
     /**
@@ -1280,7 +1283,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             communityCards: this._communityCards.map(card => card.mnemonic),
             deck: this._deck.toString(),
             pots: [this.getPot().toString()],
-            lastToAct: this._lastActedSeat,
+            actionCount: this._actionCount,
+            handNumber: this.handNumber,
             nextToAct: nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1,
             previousActions: this.getActionDTOs(),
             round: this.currentRound,
@@ -1341,8 +1345,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
             json.address,
             gameOptions,
             positions,
-            json.lastToAct as number,
+            json.lastActedSeat as number,
             json.previousActions,
+            json.handNumber,
+            json.actionCount,
             json.round,
             json.communityCards,
             json.pots,
