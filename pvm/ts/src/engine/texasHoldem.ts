@@ -848,7 +848,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this.setNextRound();
                 return;
             case NonPlayerActionType.NEW_HAND:
-                new NewHandAction(this, this._update, data).execute(this.getPlayer(address), index);
+                const deck = new Deck(data);
+                new NewHandAction(this, this._update, deck.toString()).execute(this.getPlayer(address), index);
                 return;
         }
 
