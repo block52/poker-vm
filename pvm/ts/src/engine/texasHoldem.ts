@@ -122,7 +122,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new RaiseAction(this, this._update),
             new MuckAction(this, this._update),
             new ShowAction(this, this._update),
-            new NewHandAction(this, this._update)
+            new NewHandAction(this, this._update, "")
         ];
     }
 

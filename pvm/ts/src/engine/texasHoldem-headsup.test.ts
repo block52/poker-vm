@@ -197,6 +197,12 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             expect(game.currentRound).toEqual(TexasHoldemRound.END);
 
+            // Should have new hand action
+            const actions = game.getLegalActions(SMALL_BLIND_PLAYER);
+            expect(actions.length).toEqual(2);
+            expect(actions[0].action).toEqual(PlayerActionType.FOLD);
+            expect(actions[1].action).toEqual(NonPlayerActionType.NEW_HAND);
+
             // Check the winner
             const gameState = game.toJson();
             expect(gameState.winners).toBeDefined();
