@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { TransactionResponse, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { TransactionResponse } from "@bitcoinbrisbane/block52";
 import { StartNewHandParams } from "../../types/index";
 
 export function useStartNewHand(tableId: string | undefined) {
     const [isStartingNewHand, setIsStartingNewHand] = useState(false);
     const { client } = useNodeRpc();
     
-    // Create a function that uses playerAction with NEW_HAND action type
+    // Update to use newHand method from SDK
     const startNewHand = async (params: StartNewHandParams): Promise<TransactionResponse> => {
         const { seed = Math.random().toString(36).substring(2, 15), nonce } = params;
         
@@ -26,20 +26,16 @@ export function useStartNewHand(tableId: string | undefined) {
             console.log(`Starting new hand for table ${tableId} with seed: ${seed}`);
             
             // Convert nonce to number if needed
-            let nonceValue: number | undefined = undefined;
-            if (nonce !== undefined) {
-                nonceValue = typeof nonce === "number" ? nonce : parseInt(nonce.toString());
-            }
+            // let nonceValue: number | undefined = undefined;
+            // if (nonce !== undefined) {
+            //     nonceValue = typeof nonce === "number" ? nonce : parseInt(nonce.toString());
+            // }
             
-            // Use playerAction with NEW_HAND action type
-            // Pass seed as the data parameter and "0" as the amount (not used for NEW_HAND)
-            // Cast to PlayerActionType to satisfy the type system
-            const response = await client.playerAction(
-                tableId, 
-                NonPlayerActionType.NEW_HAND as unknown as PlayerActionType, 
-                "0", 
-                nonceValue,
-                seed
+            // Use the SDK's newHand method instead of playerAction
+            const response = await client.newHand(
+                tableId,
+                // seed,
+                // nonceValue
             );
             
             console.log("New hand started successfully:", response);
