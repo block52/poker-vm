@@ -163,9 +163,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * Reinitializes the game state for a new hand.
      */
     public reInit(deck: string): void {
-        this._actionCount += this.getPreviousActions().length;
-        this._handNumber += 1;
-
         // Reset all players
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
@@ -188,6 +185,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._communityCards.length = 0;
         this._currentRound = TexasHoldemRound.ANTE;
         this._winners.clear();
+        this._handNumber += 1;
+        this._actionCount += this.getPreviousActions().length;
     }
 
     // ==================== GAME STATE PROPERTIES ====================
