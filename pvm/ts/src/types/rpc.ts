@@ -28,7 +28,7 @@ export const WRITE_METHODS = [
     RPCMethods.MINE,
     RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.MINT,
-    RPCMethods.NEW,
+    RPCMethods.NEW_HAND,
     RPCMethods.NEW_TABLE,
     RPCMethods.PERFORM_ACTION,
     RPCMethods.TRANSFER
