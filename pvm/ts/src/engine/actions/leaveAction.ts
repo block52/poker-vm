@@ -14,7 +14,7 @@ class LeaveAction extends BaseAction {
     }
 
     // Override execute to handle player leaving
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number): void {
         // First verify the action
         this.verify(player);
 
