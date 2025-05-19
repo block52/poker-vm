@@ -137,7 +137,7 @@ const NetworkDisplay = memo(({ isMainnet = false }: NetworkDisplayProps) => {
 NetworkDisplay.displayName = "NetworkDisplay";
 
 // Memoize TurnAnimation
-const MemoizedTurnAnimation = memo(TurnAnimation);
+const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
