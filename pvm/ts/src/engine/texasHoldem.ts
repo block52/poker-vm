@@ -159,7 +159,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     /**
-     * Reinitializes the game state for a new hand.  Todo: change to private
+     * Reinitializes the game state for a new hand.
      */
     public reInit(deck: string): void {
         // Reset all players
