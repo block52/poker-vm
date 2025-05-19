@@ -274,7 +274,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 5, ONE_TOKEN);
 
             actions = game.getLegalActions(BIG_BLIND_PLAYER);
-            expect(actions.length).toEqual(3);
+            expect(actions.length).toEqual(2);
+            expect(actions[0].action).toEqual(PlayerActionType.FOLD); // Check, bet or fold
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 6, 0n);
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
