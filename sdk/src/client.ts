@@ -19,7 +19,7 @@ export interface IClient {
     getNodes(): Promise<string[]>;
     getTransactions(): Promise<TransactionDTO[]>;
     mint(address: string, amount: string, transactionId: string): Promise<void>;
-    newHand(gameAddress: string, seed: string, nonce?: number): Promise<TransactionResponse>;
+    newHand(gameAddress: string, seed: string, index: number, nonce?: number): Promise<TransactionResponse>;
     newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
@@ -303,6 +303,8 @@ export class NodeRpcClient implements IClient {
      * @returns A Promise that resolves to the transaction
      */
     public async newHand(gameAddress: string, data: string, index: number, nonce?: number): Promise<TransactionResponse> {
+        const address = this.getAddress();
+
         if (!nonce) {
             nonce = await this.getNonce(this.getAddress());
         }
@@ -311,8 +313,9 @@ export class NodeRpcClient implements IClient {
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.NEW_HAND,
-            params: [gameAddress, index, data, nonce], // [to, index, data, nonce]
+            method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
+            // params: [gameAddress, index, data, nonce], // [to, index, data, nonce]
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, data],  
             signature: signature
         });
 
