@@ -34,6 +34,7 @@ import SmallBlindAction from "./actions/smallBlindAction";
 import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
+import NewHandAction from "./actions/newHandAction";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
@@ -82,7 +83,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 cards: winner.cards,
                 name: winner.name,
                 description: winner.description
-            }
+            };
             this._winners.set(winner.address, _winner);
         }
 
@@ -120,7 +121,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new CallAction(this, this._update),
             new RaiseAction(this, this._update),
             new MuckAction(this, this._update),
-            new ShowAction(this, this._update)
+            new ShowAction(this, this._update),
+            new NewHandAction(this, this._update)
         ];
     }
 
@@ -159,7 +161,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     /**
      * Reinitializes the game state for a new hand.  Todo: change to private
      */
-    private reInit(deck: string): void {
+    public reInit(deck: string): void {
         // Reset all players
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
@@ -168,7 +170,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Rotate dealer position
         const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
         if (nextToAct) {
-            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);   
+            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);
         } else {
             this._positions.dealer = this.findNextEmptySeat();
         }
@@ -217,7 +219,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._lastActedSeat;
     }
 
-    
     setLastActedSeat(seat: number): void {
         this._lastActedSeat = seat;
     }
@@ -564,7 +565,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         if (bb) {
             return this.getPlayerSeatNumber(bb.address);
         }
-        
+
         if (this.dealerPosition + 2 > this.maxPlayers) {
             return 2;
         }
@@ -847,7 +848,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 this.setNextRound();
                 return;
             case NonPlayerActionType.NEW_HAND:
-                this.reInit(data);
+                new NewHandAction(this, this._update, data).execute(this.getPlayer(address), index);
                 return;
         }
 
@@ -887,7 +888,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 new MuckAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.SHOW:
-                new ShowAction(this, this._update).execute(player, index, _amount);
+                new ShowAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.SIT_OUT:
                 player.updateStatus(PlayerStatus.SITTING_OUT);

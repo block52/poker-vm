@@ -25,7 +25,7 @@ class ShowAction extends BaseAction implements IAction {
     }
 
     // Override execute to set player's status to SHOWING
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number): void {
         // First verify the action
         this.verify(player);
         

@@ -298,20 +298,20 @@ export class NodeRpcClient implements IClient {
      * Create a new game on the remote node
      * @param gameAddress The address of the game
      * @param data The game data
+     * @param index The index of the game
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async newHand(gameAddress: string, data: string, nonce?: number): Promise<TransactionResponse> {
+    public async newHand(gameAddress: string, data: string, index: number, nonce?: number): Promise<TransactionResponse> {
         if (!nonce) {
             nonce = await this.getNonce(this.getAddress());
         }
 
         const signature = await this.getSignature(nonce);
-        const index = await this.getNextTurnIndex(gameAddress, this.getAddress());
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.NEW,
+            method: RPCMethods.NEW_HAND,
             params: [gameAddress, index, data, nonce], // [to, index, data, nonce]
             signature: signature
         });
