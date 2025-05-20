@@ -1,6 +1,5 @@
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { HandParams } from "./types";
 import { useState } from "react";
 
 /**
@@ -15,8 +14,7 @@ export const useTableBet = (tableId?: string) => {
     const { client } = useNodeRpc();
 
     // Create a fetcher that has access to the client
-    const betHand = async ({ arg }: { arg: HandParams }) => {
-        const { amount } = arg;
+    const betHand = async (options: { amount: string }) => {
 
         try {
             // Make the API call
@@ -30,7 +28,7 @@ export const useTableBet = (tableId?: string) => {
             }
 
             // Call playerAction method on the client
-            const response = await client.playerAction(tableId, PlayerActionType.BET, amount);
+            const response = await client.playerAction(tableId, PlayerActionType.BET, options.amount);
             return response;
         } catch (error) {
             console.error("🎲 Bet error:", error);

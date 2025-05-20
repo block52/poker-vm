@@ -23,7 +23,6 @@ import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
 import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
 
-
 import { ethers } from "ethers";
 
 const PokerActionPanel: React.FC = () => {
@@ -57,16 +56,10 @@ const PokerActionPanel: React.FC = () => {
     const [privateKey, setPrivateKey] = useState<string>();
 
     // Use useMemo for localStorage access
-    const userAddress = useMemo(() => 
-        localStorage.getItem("user_eth_public_key")?.toLowerCase(),
-        []
-    );
+    const userAddress = useMemo(() => localStorage.getItem("user_eth_public_key")?.toLowerCase(), []);
 
     // Determine if user is in the table using our hooks instead of accountUtils
-    const isUserInTable = useMemo(() => 
-        !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress),
-        [players, userAddress]
-    );
+    const isUserInTable = useMemo(() => !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress), [players, userAddress]);
 
     // Use nextToActInfo to determine if it's the user's turn
     const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
@@ -76,10 +69,7 @@ const PokerActionPanel: React.FC = () => {
 
     // Helper function to check if an action exists in legal actions (handles both string and enum types)
     const hasAction = (actionType: string | PlayerActionType | NonPlayerActionType) => {
-        return legalActions?.some(action => 
-            action.action === actionType || 
-            action.action?.toString() === actionType?.toString()
-        );
+        return legalActions?.some(action => action.action === actionType || action.action?.toString() === actionType?.toString());
     };
 
     // Check if actions are available using the helper function
@@ -102,33 +92,34 @@ const PokerActionPanel: React.FC = () => {
 
     // Find the specific actions
     const getActionByType = (actionType: string | PlayerActionType | NonPlayerActionType) => {
-        return legalActions?.find(action => 
-            action.action === actionType || 
-            action.action?.toString() === actionType?.toString()
-        );
+        return legalActions?.find(action => action.action === actionType || action.action?.toString() === actionType?.toString());
     };
 
     const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND) || getActionByType("small-blind");
     const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND) || getActionByType("big-blind");
-    const foldAction = getActionByType(PlayerActionType.FOLD) || getActionByType("fold");
-    const checkAction = getActionByType(PlayerActionType.CHECK) || getActionByType("check");
+    // const foldAction = getActionByType(PlayerActionType.FOLD) || getActionByType("fold");
+    // const checkAction = getActionByType(PlayerActionType.CHECK) || getActionByType("check");
     const callAction = getActionByType(PlayerActionType.CALL) || getActionByType("call");
     const betAction = getActionByType(PlayerActionType.BET) || getActionByType("bet");
     const raiseAction = getActionByType(PlayerActionType.RAISE) || getActionByType("raise");
 
     // Convert values to USDC for faster display
-    const minBet = useMemo(() =>  betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0, [betAction]);
-    const maxBet = useMemo(() =>  betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0, [betAction]);
-    const minRaise = useMemo(() => raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0, [raiseAction]);
-    const maxRaise = useMemo(() => raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0, [raiseAction]);
-    const callAmount = useMemo(() => callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0, [callAction]);
+    const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
+    const maxBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0), [betAction]);
+    const minRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0), [raiseAction]);
+    const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
+    const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
     //
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
     const [raiseInputRaw, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
     const [lastAmountSource, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
-    const isRaiseAmountInvalid = hasRaiseAction ? raiseAmount < minRaise || raiseAmount > maxRaise : hasBetAction ? raiseAmount < minBet || raiseAmount > maxBet : false;
+    const isRaiseAmountInvalid = hasRaiseAction
+        ? raiseAmount < minRaise || raiseAmount > maxRaise
+        : hasBetAction
+        ? raiseAmount < minBet || raiseAmount > maxBet
+        : false;
 
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
@@ -151,13 +142,12 @@ const PokerActionPanel: React.FC = () => {
         setPrivateKey(localKey);
     }, [privateKey]);
 
-
     const handleRaiseChange = (newAmount: number) => {
         setRaiseAmount(newAmount);
         setRaiseInputRaw(newAmount.toFixed(2));
     };
 
-    //Min Raise Text Prefill
+    // Min Raise Text Prefill
     useEffect(() => {
         if (hasRaiseAction && minRaise > 0) {
             setRaiseAmount(minRaise);
@@ -170,56 +160,45 @@ const PokerActionPanel: React.FC = () => {
 
     // Handler functions for different actions - Now use our custom hooks
     const handlePostSmallBlind = useCallback(() => {
-        if (!privateKey || !postSmallBlind) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!postSmallBlind) {
+            console.error("Hook not ready");
             return;
         }
         // Use our hook to post small blind
-        postSmallBlind({
-            privateKey,
-            actionIndex: smallBlindAction?.index || 0
-        });
-    }, [privateKey, postSmallBlind, smallBlindAction]);
+        postSmallBlind({});
+    }, [postSmallBlind]);
 
     const handlePostBigBlind = useCallback(() => {
-        if (!privateKey || !postBigBlind) {
-            console.error("Wallet keys not available or hook not ready");
+        if (!postBigBlind) {
+            console.error("Hook not ready");
             return;
         }
 
         // Use our hook to post big blind
-        postBigBlind({
-            privateKey,
-            actionIndex: bigBlindAction?.index || 0
-        });
-    }, [privateKey, postBigBlind, bigBlindAction]);
+        postBigBlind({});
+    }, [postBigBlind]);
 
     const handleCheck = useCallback(() => {
-        if (!privateKey || !checkHand) {
-            console.error("Private key not available or hook not ready");
+        if (!checkHand) {
+            console.error("Hook not ready");
             return;
         }
 
         // Use our hook to check
         checkHand({
-            privateKey,
-            actionIndex: checkAction?.index || 0,
             amount: "0" // Check doesn't require an amount
         });
-    }, [privateKey, checkHand, checkAction]);
+    }, [checkHand]);
 
     const handleFold = useCallback(() => {
-        if (!privateKey || !foldHand) {
-            console.error("Private key not available or hook not ready");
+        if (!foldHand) {
+            console.error("Hook not ready");
             return;
         }
 
         // Use our hook to fold
-        foldHand({
-            privateKey,
-            actionIndex: foldAction?.index || 0
-        });
-    }, [foldHand, foldAction, privateKey]);
+        foldHand();
+    }, [foldHand]);
 
     const handleCall = useCallback(() => {
         if (!privateKey || !callHand) {
@@ -230,9 +209,7 @@ const PokerActionPanel: React.FC = () => {
         if (callAction) {
             // Use our hook to call with the correct amount
             callHand({
-                privateKey,
-                actionIndex: callAction.index || 0,
-                amount: "0", // callAction.min.toString() // Call doesn't require an amount, the PVM should handle it
+                amount: "0" // callAction.min.toString() // Call doesn't require an amount, the PVM should handle it
             });
         } else {
             console.error("Call action not available");
@@ -240,8 +217,8 @@ const PokerActionPanel: React.FC = () => {
     }, [privateKey, callHand, callAction]);
 
     const handleBet = useCallback(() => {
-        if (!privateKey || !betHand) {
-            console.error("Private key not available or hook not ready");
+        if (!betHand) {
+            console.error("Hook not ready");
             return;
         }
 
@@ -249,14 +226,12 @@ const PokerActionPanel: React.FC = () => {
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         betHand({
-            privateKey,
-            actionIndex: betAction?.index || 0,
             amount: amountWei
         });
-    }, [privateKey, betHand, raiseAmount, betAction]);
+    }, [betHand, raiseAmount]);
 
     const handleRaise = useCallback(() => {
-        if (!privateKey || !raiseHand) {
+        if (!raiseHand) {
             console.error("Private key not available or hook not ready");
             return;
         }
@@ -265,11 +240,9 @@ const PokerActionPanel: React.FC = () => {
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         raiseHand({
-            privateKey,
-            actionIndex: raiseAction?.index || 0,
             amount: amountWei
         });
-    }, [privateKey, raiseHand, raiseAmount, raiseAction]);
+    }, [raiseHand, raiseAmount]);
 
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = hasSmallBlindAction && isUsersTurn;
@@ -279,12 +252,7 @@ const PokerActionPanel: React.FC = () => {
     const showButtons = isUserInTable;
 
     // Only show fold button if the player has the fold action and is in the table
-    const canFoldAnytime = useMemo(() =>
-        hasFoldAction && 
-        playerStatus !== PlayerStatus.FOLDED && 
-        showButtons,
-        [hasFoldAction, playerStatus, showButtons]
-    );
+    const canFoldAnytime = useMemo(() => hasFoldAction && playerStatus !== PlayerStatus.FOLDED && showButtons, [hasFoldAction, playerStatus, showButtons]);
 
     // Only show other action buttons if it's the player's turn, they have legal actions,
     // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
@@ -297,14 +265,13 @@ const PokerActionPanel: React.FC = () => {
     // Add a handler for the deal button
     const handleDeal = () => {
         // Get private key
-        if (!privateKey || !dealCards) {
+        if (!dealCards) {
             console.error("Private key not available or hook not ready");
             return;
         }
 
         // Use the hook to deal cards
         dealCards({
-            privateKey,
             actionIndex: getActionByType(NonPlayerActionType.DEAL)?.index || getActionByType("deal")?.index || 0
         });
     };
@@ -343,7 +310,7 @@ const PokerActionPanel: React.FC = () => {
             console.error("Private key not available or hook not ready");
             return;
         }
-        
+
         // Use our hook to start a new hand
         startNewHand({
             nonce: nonce || Date.now().toString(), // Use nonce from useTableNonce if available
@@ -367,7 +334,7 @@ const PokerActionPanel: React.FC = () => {
             console.error("Hook not ready");
             return;
         }
-        
+
         sitIn()
             .then(() => {
                 console.log("Successfully sat in");
@@ -384,7 +351,7 @@ const PokerActionPanel: React.FC = () => {
             console.error("Hook not ready");
             return;
         }
-        
+
         sitOut()
             .then(() => {
                 console.log("Successfully sat out");
@@ -397,10 +364,7 @@ const PokerActionPanel: React.FC = () => {
     }, [sitOut, refreshNonce, refreshNextToActInfo]);
 
     // Check if player is sitting out
-    const isPlayerSittingOut = useMemo(() => 
-        userPlayer?.status === PlayerStatus.SITTING_OUT,
-        [userPlayer]
-    );
+    const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
 
     return (
         <div className="fixed bottom-0 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
@@ -779,7 +743,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                         ) : null}
                     </>
                 )}
-                
+
                 {/* Sit In / Sit Out Buttons - Bottom Right Area */}
                 {isUserInTable && (
                     <div className="fixed bottom-4 right-[30%] flex gap-2 z-20">

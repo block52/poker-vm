@@ -17,7 +17,7 @@ export function useTableCheck(tableId?: string) {
      * @param options Object containing action parameters
      * @returns Promise resolving to the result of the action
      */
-    const checkHand = async (options: { actionIndex: number; amount?: string }) => {
+    const checkHand = async (options: { amount?: string }) => {
         if (!tableId) {
             setError("Table ID is required");
             return;

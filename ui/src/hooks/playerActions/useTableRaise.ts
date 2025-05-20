@@ -17,10 +17,7 @@ export function useTableRaise(tableId?: string) {
      * @param options Object containing action parameters
      * @returns Promise resolving to the result of the action
      */
-    const raiseHand = async (options: { 
-        actionIndex: number;
-        amount: string;
-    }) => {
+    const raiseHand = async (options: { amount: string }) => {
         if (!tableId) {
             setError("Table ID is required");
             return;
@@ -41,20 +38,14 @@ export function useTableRaise(tableId?: string) {
                 return;
             }
 
-            // Additional data with the action index
-            const data = options.actionIndex !== undefined ? 
-                JSON.stringify({ index: options.actionIndex }) : 
-                undefined;
-
             // Call the playerAction method
             const response = await client.playerAction(
                 tableId,
                 PlayerActionType.RAISE,
                 options.amount,
-                undefined, // Let the client handle the nonce
-                data
+                undefined // Let the client handle the nonce
             );
-            
+
             return response;
         } catch (err: any) {
             setError(err.message || "Failed to raise bet");
