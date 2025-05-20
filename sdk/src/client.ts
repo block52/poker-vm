@@ -319,7 +319,7 @@ export class NodeRpcClient implements IClient {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
             // params: [gameAddress, index, data, nonce], // [to, index, data, nonce]
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed],  
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed],
             signature: signature
         });
 
@@ -374,7 +374,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data],  // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -500,25 +500,28 @@ export class NodeRpcClient implements IClient {
     }
 
     private generateRandomNumber(): string {
+        // Define the length we need
+        const length = 52;
+
         // Create an array to store our random digits
-        const digits = new Array(52);
-        
+        const digits = new Array(length);
+
         // Generate random values
         const randomValues = new Uint8Array(length);
         crypto.getRandomValues(randomValues);
-        
+
         // Convert to digits 0-9 and ensure first digit isn't 0
         for (let i = 0; i < length; i++) {
             // Map the random bytes to digits 0-9
             digits[i] = randomValues[i] % 10;
         }
-        
+
         // Ensure the first digit isn't 0 to maintain the exact length
         if (digits[0] === 0) {
             digits[0] = 1 + (randomValues[0] % 9); // Random digit from 1-9
         }
-        
+
         // Join the digits into a string
-        return digits.join('');
+        return digits.join("");
     }
 }
