@@ -1,92 +1,63 @@
-import useSWRMutation from "swr/mutation";
+import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { HandParams } from "./types";
 
 /**
- * Hook to handle the raise action on a poker table
- * @param tableId The ID of the table
- * @returns Object with raiseHand function and loading state
+ * Custom hook to handle raising in a poker game
+ * @param tableId The ID of the table where the action will be performed
+ * @returns Object containing functions for raising a bet
  */
 export function useTableRaise(tableId?: string) {
-    // Get the Node RPC client
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const { client } = useNodeRpc();
 
-    // Create a fetcher that has access to the client
-    const raiseFetcher = async (_url: string, { arg }: { arg: HandParams }) => {
-        const { privateKey, actionIndex, amount, nonce = Date.now().toString() } = arg;
-
-        console.log("💰 Raise attempt");
-        console.log("💰 Using action index:", actionIndex);
-        console.log("💰 Raising amount:", amount);
-        console.log("💰 Using nonce:", nonce);
-
-        if (!privateKey) {
-            console.error("💰 Missing private key");
-            throw new Error("Missing private key");
+    /**
+     * Raises the bet on the specified table
+     * @param options Object containing action parameters
+     * @returns Promise resolving to the result of the action
+     */
+    const raiseHand = async (options: { amount: string }) => {
+        if (!tableId) {
+            setError("Table ID is required");
+            return;
         }
 
-        if (!amount) {
-            console.error("💰 Missing amount");
-            throw new Error("Raise amount is required");
+        if (!options.amount) {
+            setError("Raise amount is required");
+            return;
         }
 
-        // Format: "raise" + amount + tableId + timestamp
-        const timestamp = Math.floor(Date.now() / 1000);
-        
+        setIsLoading(true);
+        setError(null);
+
         try {
-            // Check if the client is available
+            // Make the API call
             if (!client) {
-                throw new Error("Node RPC client not available");
+                setError("Client is not initialized");
+                return;
             }
 
-            if (!tableId) {
-                throw new Error("Table ID is required");
-            }
-
-            console.log("💰 Calling playerAction with params:", {
-                tableId,
-                action: PlayerActionType.RAISE,
-                amount,
-                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
-                data: {
-                    index: actionIndex,
-                    timestamp,
-                }
-            });
-
-            // Call playerAction method on the client
+            // Call the playerAction method
             const response = await client.playerAction(
                 tableId,
                 PlayerActionType.RAISE,
-                amount,
-                typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
-                JSON.stringify({index: actionIndex})
+                options.amount,
+                undefined // Let the client handle the nonce
             );
 
-            console.log("💰 Raise response:", response);
             return response;
-        } catch (error) {
-            console.error("💰 Raise error:", error);
-            throw error;
+        } catch (err: any) {
+            setError(err.message || "Failed to raise bet");
+            throw err;
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const { trigger, isMutating, error, data } = useSWRMutation(
-        tableId ? `raise_${tableId}` : null, 
-        raiseFetcher
-    );
-
-    // Add better error handling
-    if (error) {
-        console.error("Raise hook error:", error instanceof Error ? error.message : String(error));
-    }
-
     return {
-        raiseHand: tableId 
-            ? (params: HandParams) => trigger(params)
-            : null,
-        isRaising: isMutating,
+        raiseHand,
+        isRaising: isLoading,
         error
     };
 }

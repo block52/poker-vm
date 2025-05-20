@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { HandParams } from "./types";
-// import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
 
 /**
@@ -19,7 +18,7 @@ export const useTableCall = (tableId?: string) => {
      * @param params Parameters needed for the call action
      * @returns Promise resolving to the result of the call action
      */
-    const callHand = async (params: HandParams) => {
+    const callHand = async (options: { amount?: string }) => {
         if (!tableId) {
             setError("Table ID is required");
             return;
@@ -35,7 +34,7 @@ export const useTableCall = (tableId?: string) => {
                 return;
             }
 
-            const response = await client.playerAction(tableId, PlayerActionType.CALL, params.amount);
+            const response = await client.playerAction(tableId, PlayerActionType.CALL, options.amount || "0", undefined);
             return response.data;
         } catch (err: any) {
             setError(err.message || "Failed to call");

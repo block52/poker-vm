@@ -1,82 +1,58 @@
-import useSWRMutation from "swr/mutation";
+import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { HandParams } from "./types";
 
 /**
- * Hook to handle the check action on a poker table
- * @param tableId The ID of the table
- * @returns Object with checkHand function and loading state
+ * Custom hook to handle checking in a poker game
+ * @param tableId The ID of the table where the action will be performed
+ * @returns Object containing functions for checking a hand
  */
 export function useTableCheck(tableId?: string) {
-    // Get the Node RPC client
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const { client } = useNodeRpc();
 
-    // Create a fetcher that has access to the client
-    const checkFetcher = async (_url: string, { arg }: { arg: HandParams }) => {
-        const { privateKey, actionIndex, amount, nonce = Date.now().toString() } = arg;
-
-        console.log("✅ Check attempt");
-        console.log("✅ Using action index:", actionIndex);
-        console.log("✅ Using nonce:", nonce);
-
-        if (!privateKey) {
-            console.error("✅ Missing private key");
-            throw new Error("Missing private key");
+    /**
+     * Checks the player's hand on the specified table
+     * @param options Object containing action parameters
+     * @returns Promise resolving to the result of the action
+     */
+    const checkHand = async (options: { amount?: string }) => {
+        if (!tableId) {
+            setError("Table ID is required");
+            return;
         }
-        
+
+        setIsLoading(true);
+        setError(null);
+
         try {
-            // Check if the client is available
+            // Make the API call
             if (!client) {
-                throw new Error("Node RPC client not available");
+                setError("Client is not initialized");
+                return;
             }
 
-            if (!tableId) {
-                throw new Error("Table ID is required");
-            }
-
-            console.log("✅ Calling playerAction with params:", {
-                tableId,
-                action: PlayerActionType.CHECK,
-                amount: amount || "0", // Check doesn't require an amount, but API expects it
-                nonce: typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
-                data: {
-                    index: actionIndex
-                }
-            });
-
-            // Call playerAction method on the client
+            // Call the playerAction method
             const response = await client.playerAction(
                 tableId,
                 PlayerActionType.CHECK,
-                amount || "0", // Check doesn't require an amount, but API expects it
-                typeof nonce === "number" ? nonce : parseInt(nonce.toString()),
-                JSON.stringify({index: actionIndex})
+                options.amount || "0", // Check doesn't require an amount, but API expects it
+                undefined // Let the client handle the nonce
             );
 
-            console.log("✅ Check response:", response);
             return response;
-        } catch (error) {
-            console.error("✅ Check error:", error);
-            throw error;
+        } catch (err: any) {
+            setError(err.message || "Failed to check hand");
+            throw err;
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const { trigger, isMutating, error, data } = useSWRMutation(
-        tableId ? `check_${tableId}` : null, 
-        checkFetcher
-    );
-
-    // Add better error handling
-    if (error) {
-        console.error("Check hook error:", error instanceof Error ? error.message : String(error));
-    }
-
     return {
-        checkHand: tableId 
-            ? (params: HandParams) => trigger(params)
-            : null,
-        isChecking: isMutating,
+        checkHand,
+        isChecking: isLoading,
         error
     };
 }

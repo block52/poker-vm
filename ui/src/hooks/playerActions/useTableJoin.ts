@@ -1,7 +1,6 @@
 // ui/src/hooks/useTableJoin.ts
 import useSWRMutation from "swr/mutation";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { JoinTableOptions } from "./types";
 
 async function joinTableFetcher(_url: string, { arg }: { arg: JoinTableOptions }) {

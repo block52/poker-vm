@@ -151,3 +151,8 @@ export const isUserPlaying = (tableData: TableData): boolean => {
     // Check if the user's address is in the players array
     return tableData.players.some((player: Player) => player.address.toLowerCase() === userAddress.toLowerCase());
 };
+
+export const getNonce = async (): Promise<number> => {
+    const nonce = Date.now();
+    return nonce;
+}
