@@ -309,7 +309,7 @@ export class NodeRpcClient implements IClient {
         }
 
         const signature = await this.getSignature(nonce);
-        const index = await this.getNextTurnIndex(gameAddress, address);
+        const index = await this.getNextActionIndex(gameAddress, address);
 
         if (!seed || !/^[0-9]{52}$/.test(seed)) {
             seed = this.generateRandomNumber();
@@ -364,8 +364,7 @@ export class NodeRpcClient implements IClient {
             nonce = await this.getNonce(address);
         }
 
-        const signature = await this.getSignature(nonce);
-        const index = await this.getNextTurnIndex(gameAddress, address);
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
         // Pack the seat into the data field
         const data = seat.toString();
@@ -395,8 +394,7 @@ export class NodeRpcClient implements IClient {
             nonce = await this.getNonce(address);
         }
 
-        const signature = await this.getSignature(nonce);
-        const index = await this.getNextTurnIndex(gameAddress, address);
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -422,7 +420,7 @@ export class NodeRpcClient implements IClient {
             nonce = await this.getNonce(address);
         }
 
-        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -442,7 +440,7 @@ export class NodeRpcClient implements IClient {
      */
     public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextTurnIndex(gameAddress, address)]);
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
         if (!nonce) {
             nonce = await this.getNonce(address);
@@ -474,8 +472,8 @@ export class NodeRpcClient implements IClient {
         return signature;
     }
 
-    private async getNextTurnIndex(gameAddress: string, playerId: string): Promise<number> {
-        const gameState = await this.getGameState(gameAddress, playerId);
+    private async getNextActionIndex(gameAddress: string, playerId: string): Promise<number> {
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, playerId);
         if (!gameState) {
             throw new Error("Game state not found");
         }
@@ -485,7 +483,7 @@ export class NodeRpcClient implements IClient {
         }
 
         const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
-        return lastAction.index + 1;
+        return lastAction.index + gameState.actionCount + 1;
     }
 
     private async getNonce(address: string): Promise<number> {
