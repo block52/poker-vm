@@ -269,9 +269,7 @@ const PokerActionPanel: React.FC = () => {
         }
 
         // Use the hook to deal cards
-        dealCards({
-            actionIndex: getActionByType(NonPlayerActionType.DEAL)?.index || getActionByType("deal")?.index || 0
-        });
+        dealCards();
     };
 
     // Handler for muck action
