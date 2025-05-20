@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { HandParams } from "./types";
-// import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
 
 /**

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { HandParams } from "./types";
 
 /**
  * Custom hook to handle checking in a poker game
@@ -18,10 +17,7 @@ export function useTableCheck(tableId?: string) {
      * @param options Object containing action parameters
      * @returns Promise resolving to the result of the action
      */
-    const checkHand = async (options: { 
-        actionIndex: number;
-        amount?: string;
-    }) => {
+    const checkHand = async (options: { actionIndex: number; amount?: string }) => {
         if (!tableId) {
             setError("Table ID is required");
             return;
@@ -38,9 +34,7 @@ export function useTableCheck(tableId?: string) {
             }
 
             // Additional data with the action index
-            const data = options.actionIndex !== undefined ? 
-                JSON.stringify({ index: options.actionIndex }) : 
-                undefined;
+            const data = options.actionIndex !== undefined ? JSON.stringify({ index: options.actionIndex }) : undefined;
 
             // Call the playerAction method
             const response = await client.playerAction(
@@ -50,7 +44,7 @@ export function useTableCheck(tableId?: string) {
                 undefined, // Let the client handle the nonce
                 data
             );
-            
+
             return response;
         } catch (err: any) {
             setError(err.message || "Failed to check hand");
