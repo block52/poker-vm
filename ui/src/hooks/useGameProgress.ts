@@ -1,4 +1,5 @@
 import { useGameState } from "./useGameState";
+import { GameProgressType } from "../types/index";
 
 /**
  * Custom hook to check if a game is in progress and provide game status information
@@ -15,12 +16,12 @@ import { useGameState } from "./useGameState";
  * - error: any error that occurred during data fetching
  * - refresh: function to manually refresh the game state
  */
-export const useGameProgress = (tableId?: string) => {
+export const useGameProgress = (tableId?: string): GameProgressType => {
   // Get game state from centralized hook
   const { gameState, isLoading, error, refresh } = useGameState(tableId);
 
   // Default values in case of error or loading
-  const defaultState = {
+  const defaultState: GameProgressType = {
     isGameInProgress: false,
     activePlayers: [],
     playerCount: 0,
@@ -104,7 +105,7 @@ export const useGameProgress = (tableId?: string) => {
     console.error("Error checking game progress:", err);
     return {
       ...defaultState,
-      error: err
+      error: err instanceof Error ? err : new Error(String(err))
     };
   }
 }; 
