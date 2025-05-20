@@ -311,7 +311,7 @@ export class NodeRpcClient implements IClient {
         const signature = await this.getSignature(nonce);
         const index = await this.getNextTurnIndex(gameAddress, address);
 
-        if (!seed) {
+        if (!seed || !/^[0-9]{52}$/.test(seed)) {
             seed = this.generateRandomNumber();
         }
 
