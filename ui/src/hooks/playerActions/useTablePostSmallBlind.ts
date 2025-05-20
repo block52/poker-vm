@@ -19,10 +19,7 @@ export function useTablePostSmallBlind(tableId?: string) {
      * @param options Object containing action parameters
      * @returns Promise resolving to the result of the action
      */
-    const postSmallBlind = async (options: { 
-        actionIndex: number;
-        smallBlindAmount?: string;
-    }) => {
+    const postSmallBlind = async (options: { smallBlindAmount?: string }) => {
         if (!tableId) {
             setError("Table ID is required");
             return;
@@ -40,28 +37,15 @@ export function useTablePostSmallBlind(tableId?: string) {
 
             // Use the provided amount or get from game options
             const amount = options.smallBlindAmount || gameOptions.smallBlind.toString() || DEFAULT_SMALL_BLIND;
-            
-            // Additional data with the action index
-            const data = options.actionIndex !== undefined ? 
-                JSON.stringify({ index: options.actionIndex }) : 
-                undefined;
-                
-            console.log("Posting small blind:", {
-                tableId,
-                actionIndex: options.actionIndex,
-                amount,
-                // data
-            });
 
             // Call the playerAction method
             const response = await client.playerAction(
-                tableId, 
-                PlayerActionType.SMALL_BLIND, 
+                tableId,
+                PlayerActionType.SMALL_BLIND,
                 amount,
-                undefined, // Let the client handle the nonce
-                // data
+                undefined // Let the client handle the nonce
             );
-            
+
             return response;
         } catch (err: any) {
             setError(err.message || "Failed to post small blind");
