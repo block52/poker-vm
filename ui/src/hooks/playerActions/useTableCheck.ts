@@ -33,16 +33,12 @@ export function useTableCheck(tableId?: string) {
                 return;
             }
 
-            // Additional data with the action index
-            const data = options.actionIndex !== undefined ? JSON.stringify({ index: options.actionIndex }) : undefined;
-
             // Call the playerAction method
             const response = await client.playerAction(
                 tableId,
                 PlayerActionType.CHECK,
                 options.amount || "0", // Check doesn't require an amount, but API expects it
-                undefined, // Let the client handle the nonce
-                data
+                undefined // Let the client handle the nonce
             );
 
             return response;
