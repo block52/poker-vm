@@ -381,13 +381,13 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actions[1].action).toEqual(PlayerActionType.FOLD);
 
             // Perform the small blind
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 0, ONE_TOKEN);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 16, ONE_TOKEN);
 
             // Get legal actions for the next player
             actions = game.getLegalActions(SMALL_BLIND_PLAYER);
             expect(actions.length).toEqual(2);
             
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 1, TWO_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 17, TWO_TOKENS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(THREE_TOKENS);
         });
