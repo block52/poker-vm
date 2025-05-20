@@ -195,11 +195,33 @@ const Dashboard: React.FC = () => {
         }
     }, [client, publicKey]);
 
-    useEffect(() => {
-        const localKey = localStorage.getItem("user_eth_public_key");
-        if (!localKey) return setPublicKey(undefined);
+    const generateNewWallet = () => {
+        try {
+            // Create a new random wallet
+            const newWallet = Wallet.createRandom();
+            
+            // Save to localStorage
+            localStorage.setItem(STORAGE_PRIVATE_KEY, newWallet.privateKey);
+            localStorage.setItem("user_eth_public_key", newWallet.address);
+            
+            // Update the state
+            setPublicKey(newWallet.address);
+            
+            // Force refresh data
+            fetchAccountBalance(true);
+        } catch (err) {
+            console.error("Failed to generate new wallet:", err);
+        }
+    };
 
-        setPublicKey(localKey);
+    useEffect(() => {
+        const privateKey = localStorage.getItem(STORAGE_PRIVATE_KEY);
+        if (!privateKey) {
+            // Auto-generate a wallet if no private key exists
+            generateNewWallet();
+        } else {
+            setPublicKey(localStorage.getItem("user_eth_public_key") || undefined);
+        }
     }, []);
 
     // Update to fetch balance when publicKey or client changes
