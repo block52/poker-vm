@@ -32,7 +32,7 @@ const PokerActionPanel: React.FC = () => {
     const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
 
     // Get data from our custom hooks
-    const { nonce, accountData, refreshNonce } = useTableNonce();
+    const { nonce, refreshNonce } = useTableNonce();
     const { players } = usePlayerDTO(tableId);
     const { legalActions, isPlayerTurn, playerStatus, playerSeat } = usePlayerLegalActions(tableId);
     const { dealCards, isDealing } = useTableDeal(tableId);
@@ -97,8 +97,6 @@ const PokerActionPanel: React.FC = () => {
 
     const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND) || getActionByType("small-blind");
     const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND) || getActionByType("big-blind");
-    // const foldAction = getActionByType(PlayerActionType.FOLD) || getActionByType("fold");
-    // const checkAction = getActionByType(PlayerActionType.CHECK) || getActionByType("check");
     const callAction = getActionByType(PlayerActionType.CALL) || getActionByType("call");
     const betAction = getActionByType(PlayerActionType.BET) || getActionByType("bet");
     const raiseAction = getActionByType(PlayerActionType.RAISE) || getActionByType("raise");
