@@ -11,7 +11,7 @@ PLAYER2="0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8"
 TABLE_ID="0xccd6e31012fd0ade9beb377c2f20661b832abfe7"
 
 ## Call the other bash script
-bash showdown-show.sh
+bash showdown-shows.sh
 
 sleep 1
 

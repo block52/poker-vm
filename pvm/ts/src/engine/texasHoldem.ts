@@ -165,7 +165,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
     public reInit(deck: string): void {
 
         // Cache action count
-        const actionCount = this.getPreviousActions().length;
+        let actionCount = this.getPreviousActions().length;
+
+        // Add this action to the count
+        actionCount += 1;
 
         // Reset all players
         for (const player of this.getSeatedPlayers()) {

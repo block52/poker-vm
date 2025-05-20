@@ -8,14 +8,7 @@ PLAYER2="0xccd6e31012fd0ade9beb377c2f20661b832abfe7"
 TABLE_ID="0xccd6e31012fd0ade9beb377c2f20661b832abfe7"
 
 ## Purge the mempool
-curl --location 'http://localhost:3000' \
---header 'Content-Type: application/json' \
---data '{
-    "method": "purge",
-    "params": ["admin", "password"],
-    "id": 1,
-    "jsonrpc": "2.0"
-}'
+bash 00-purge-mempool.sh
 
 sleep 1
 
