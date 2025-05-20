@@ -45,6 +45,13 @@ export function useTablePostSmallBlind(tableId?: string) {
             const data = options.actionIndex !== undefined ? 
                 JSON.stringify({ index: options.actionIndex }) : 
                 undefined;
+                
+            console.log("Posting small blind:", {
+                tableId,
+                actionIndex: options.actionIndex,
+                amount,
+                // data
+            });
 
             // Call the playerAction method
             const response = await client.playerAction(
@@ -52,7 +59,7 @@ export function useTablePostSmallBlind(tableId?: string) {
                 PlayerActionType.SMALL_BLIND, 
                 amount,
                 undefined, // Let the client handle the nonce
-                data
+                // data
             );
             
             return response;

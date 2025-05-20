@@ -52,7 +52,7 @@ export function useTablePostBigBlind(tableId?: string) {
                 PlayerActionType.BIG_BLIND, 
                 amount,
                 undefined, // Let the client handle the nonce
-                data
+                // data
             );
             
             return response;
