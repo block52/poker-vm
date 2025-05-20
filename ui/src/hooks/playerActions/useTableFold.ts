@@ -17,9 +17,7 @@ export function useTableFold(tableId?: string) {
      * @param options Object containing action parameters
      * @returns Promise resolving to the result of the action
      */
-    const foldHand = async (options: { 
-        actionIndex: number;
-    }) => {
+    const foldHand = async () => {
         if (!tableId) {
             setError("Table ID is required");
             return;
@@ -35,20 +33,14 @@ export function useTableFold(tableId?: string) {
                 return;
             }
 
-            // Additional data with the action index
-            const data = options.actionIndex !== undefined ? 
-                JSON.stringify({ index: options.actionIndex }) : 
-                undefined;
-
             // Call the playerAction method
             const response = await client.playerAction(
                 tableId,
                 PlayerActionType.FOLD,
                 "0", // Fold doesn't require an amount, but API expects it
-                undefined, // Let the client handle the nonce
-                data
+                undefined // Let the client handle the nonce
             );
-            
+
             return response;
         } catch (err: any) {
             setError(err.message || "Failed to fold hand");

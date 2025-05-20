@@ -19,10 +19,7 @@ export function useTablePostBigBlind(tableId?: string) {
      * @param options Object containing action parameters
      * @returns Promise resolving to the result of the action
      */
-    const postBigBlind = async (options: { 
-        actionIndex: number;
-        bigBlindAmount?: string;
-    }) => {
+    const postBigBlind = async (options: { bigBlindAmount?: string }) => {
         if (!tableId) {
             setError("Table ID is required");
             return;
@@ -40,21 +37,15 @@ export function useTablePostBigBlind(tableId?: string) {
 
             // Use the provided amount or get from game options
             const amount = options.bigBlindAmount || gameOptions.bigBlind.toString() || DEFAULT_BIG_BLIND;
-            
-            // Additional data with the action index
-            const data = options.actionIndex !== undefined ? 
-                JSON.stringify({ index: options.actionIndex }) : 
-                undefined;
 
             // Call the playerAction method
             const response = await client.playerAction(
-                tableId, 
-                PlayerActionType.BIG_BLIND, 
+                tableId,
+                PlayerActionType.BIG_BLIND,
                 amount,
-                undefined, // Let the client handle the nonce
-                // data
+                undefined // Let the client handle the nonce
             );
-            
+
             return response;
         } catch (err: any) {
             setError(err.message || "Failed to post big blind");
