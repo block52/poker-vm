@@ -32,11 +32,8 @@ export function useStartNewHand(tableId: string | undefined) {
             // }
             
             // Use the SDK's newHand method instead of playerAction
-            const response = await client.newHand(
-                tableId,
-                // seed,
-                // nonceValue
-            );
+            // const result = await client.newHand("0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "", 0);
+            const response = await client.newHand(tableId, "", 0);
             
             console.log("New hand started successfully:", response);
             return response;
