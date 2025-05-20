@@ -15,7 +15,7 @@ export const useTableBet = (tableId?: string) => {
     const { client } = useNodeRpc();
 
     // Create a fetcher that has access to the client
-    const bet = async ({ arg }: { arg: HandParams }) => {
+    const betHand = async ({ arg }: { arg: HandParams }) => {
         const { amount } = arg;
 
         try {
@@ -41,7 +41,7 @@ export const useTableBet = (tableId?: string) => {
     };
 
     return {
-        bet,
+        betHand,
         isLoading,
         error
     };
