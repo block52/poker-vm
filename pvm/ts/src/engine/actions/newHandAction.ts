@@ -26,7 +26,8 @@ class NewHandAction extends BaseAction implements IAction {
         // First verify the action
         this.verify(player);
         const deck = new Deck();
-        // deck.shuffle(this.data);
+        const seed = Array.from(this.data, digit => parseInt(digit, 10));
+        deck.shuffle(seed);
         this.game.reInit(deck.toString());
     }
 }
