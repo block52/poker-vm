@@ -318,8 +318,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
-            // params: [gameAddress, index, data, nonce], // [to, index, data, nonce]
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed],
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 

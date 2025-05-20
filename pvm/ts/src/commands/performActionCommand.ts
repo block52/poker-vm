@@ -37,7 +37,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error("Not a game transaction");
         }
 
-        console.log(`Processing game transaction: data=${this.action}, to=${this.to}`);
+        console.log(`Processing game transaction: action=${this.action} data=${this.data}, to=${this.to}`);
         const gameState = await this.gameManagement.getByAddress(this.to);
 
         if (!gameState) {
