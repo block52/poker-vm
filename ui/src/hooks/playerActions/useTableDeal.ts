@@ -17,9 +17,7 @@ export function useTableDeal(tableId?: string) {
      * @param options Object containing action parameters
      * @returns Promise resolving to the result of the action
      */
-    const dealCards = async (options: { 
-        actionIndex: number;
-    }) => {
+    const dealCards = async () => {
         if (!tableId) {
             setError("Table ID is required");
             return;
