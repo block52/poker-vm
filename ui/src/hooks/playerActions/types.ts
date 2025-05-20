@@ -34,10 +34,8 @@ export interface AccountApiResponse {
 
 // 
 export interface HandParams {
-    privateKey: string;
-    actionIndex: number;
+    tableId: string;
     amount: string;
-    nonce?: string | number;
 }
 
 export interface StartNewHandOptions {

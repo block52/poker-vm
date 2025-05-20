@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNodeRpc } from "../context/NodeRpcContext";
-import { GameOptionsDTO } from "@bitcoinbrisbane/block52";
 import { GameWithAddress } from "../types/index";
 
 /**
