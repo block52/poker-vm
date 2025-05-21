@@ -98,6 +98,7 @@ import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 
 import { PositionArray } from "../../types/index";
+import { motion } from "framer-motion";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -796,22 +797,22 @@ const Table = () => {
                                             </div>
 
                                             {/*//! CHIP */}
-                                            {chipPositionArray.map((position, index) => {
-                                                const chipAmount = getChipAmount(index + 1);
-
-                                                return (
-                                                    <div
-                                                        key={`key-${index}`}
-                                                        style={{
-                                                            left: position.left,
-                                                            bottom: position.bottom
-                                                        }}
-                                                        className="absolute"
-                                                    >
-                                                        <Chip amount={chipAmount} />
-                                                    </div>
-                                                );
-                                            })}
+                                            {isDealerButtonVisible && (
+                                                <motion.div
+                                                    className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
+                                                    animate={{
+                                                        left: `calc(${dealerButtonPosition.left} + 200px)`,
+                                                        top: dealerButtonPosition.top
+                                                    }}
+                                                    initial={false}
+                                                    transition={{
+                                                        duration: 0.6,
+                                                        ease: "easeInOut"
+                                                    }}
+                                                >
+                                                    D
+                                                </motion.div>
+                                            )}
                                             {/*//! Dealer */}
                                             {isDealerButtonVisible && (
                                                 <div
