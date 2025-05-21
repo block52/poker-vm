@@ -9,6 +9,19 @@ export interface GameStateReturn {
     getNestedValue: (path: string) => any;
 }
 
+// Type for action log entries
+export type ActionsLogPokerAction = {
+    action: string;
+    playerId?: string;
+    address?: string;
+    amount?: string;
+    seat?: number;
+    timestamp?: string;
+    round?: string;
+    index?: number;
+    [key: string]: any; // For any other properties
+};
+
 export interface LastActionType {
     action: string;
     amount: number;

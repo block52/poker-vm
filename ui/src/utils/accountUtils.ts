@@ -156,3 +156,21 @@ export const getNonce = async (): Promise<number> => {
     const nonce = Date.now();
     return nonce;
 }
+
+/**
+ * Format player ID for display
+ * @param playerId The player's ID or address
+ * @returns Formatted string with first 6 and last 4 characters
+ */
+export const formatPlayerId = (playerId: string) => {
+    return `${playerId.slice(0, 6)}...${playerId.slice(-4)}`;
+};
+
+/**
+ * Format amount from wei to dollars
+ * @param amount The amount in wei
+ * @returns Formatted string with dollar sign and 2 decimal places
+ */
+export const formatAmount = (amount: string) => {
+    return `$${(Number(amount) / 10**18).toFixed(2)}`;
+};
