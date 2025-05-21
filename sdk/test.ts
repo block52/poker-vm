@@ -1,6 +1,6 @@
 import { NodeRpcClient } from "./src/client";
 
-const PLAYER_1_PRIVATE_KEY = "0x04e12a56ef8a7f95d16faefdb7211a4625051538a951514909898a2ea2ede36a";
+const PLAYER_1_PRIVATE_KEY = "";
 const client = new NodeRpcClient("http://localhost:3000", PLAYER_1_PRIVATE_KEY);
 
 async function main() {
