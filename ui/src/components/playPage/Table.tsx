@@ -1,6 +1,6 @@
 /**
  * Table Component
- * 
+ *
  * This is the main poker table component that orchestrates the entire game interface.
  * It manages:
  * - Player positions and rotations
@@ -9,7 +9,7 @@
  * - Pot amounts
  * - Dealer button
  * - Player actions
- * 
+ *
  * Key Features:
  * - Dynamic table layout (6 or 9 players)
  * - Real-time game state updates
@@ -17,42 +17,41 @@
  * - Chip position calculations
  * - Winner animations
  * - Sidebar for game log
- * 
+ *
  * Player Components:
  * - Player: Current user's view with hole cards and controls
  * - OppositePlayer: Other players' views with seat changing functionality
  * - VacantPlayer: Empty seat views with direct join/seat changing
- * 
+ *
  * PlayerPopUpCard Integration:
  * - Used by OppositePlayer for seat changing
  * - Used by VacantPlayer for seat changing (only when user is already seated)
  * - Provides consistent UI for player interactions
- * 
+ *
  * State Management:
  * - Uses multiple hooks for different aspects of the game
  * - Manages player positions and rotations
  * - Handles game progress and round information
  * - Controls UI elements visibility
- * 
+ *
  * Components Used:
  * - Player: Current user's view
  * - OppositePlayer: Other players' views
  * - VacantPlayer: Empty seat views
  * - PlayerPopUpCard: Popup for player actions
  * - PokerActionPanel: Betting controls
- * - PokerLog: Game history
+ * - ActionsLog: Game history
  */
 
 import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
-import PokerLog from "../PokerLog";
+import ActionsLog from "../ActionsLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
 
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
-
 
 import Chip from "./common/Chip";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
@@ -68,14 +67,13 @@ import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtil
 import { toDisplaySeat } from "../../utils/tableUtils";
 import { ethers } from "ethers";
 
-
 import "./Table.css"; // Import the Table CSS file
 
 //// TODO get these hooks to subscribe to the wss connection
 
 // 1. Core Data Providers
-import { useTableData } from "../../hooks/useTableData";  // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
-import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo";  // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
+import { useTableData } from "../../hooks/useTableData"; // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
+import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 
 //2. Visual Position/State Providers
@@ -87,12 +85,9 @@ import { usePlayerChipData } from "../../hooks/usePlayerChipData";
 import { useTableState } from "../../hooks/useTableState"; //Provides currentRound, formattedTotalPot, tableSize, tableSize determines player layout (6 vs 9 players)
 import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGameInProgress - whether a hand is active
 
-
-
 //todo wire up to use the sdk instead of the proxy
 // 4. Player Actions
 import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
-
 
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
@@ -100,15 +95,12 @@ import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
 
-
-
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 
 import { PositionArray } from "../../types/index";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
-
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -236,7 +228,7 @@ const Table = () => {
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
 
     // Add the useGameProgress hook
-    const { isGameInProgress } = useGameProgress(id);
+    const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
 
     // Add the usePlayerDataAvailability hook
     const { isPlayerDataAvailable } = usePlayerDataAvailability(id);
@@ -245,16 +237,18 @@ const Table = () => {
     const { gameOptions } = useGameOptions(id);
 
     // Memoize formatted values
-    const formattedValues = useMemo(() => ({
-        smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
-        bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20",
-    }), [gameOptions]);
+    const formattedValues = useMemo(
+        () => ({
+            smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
+            bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20"
+        }),
+        [gameOptions]
+    );
 
     // Add any variables we need
     const [seat, setSeat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
 
-    
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
@@ -290,7 +284,6 @@ const Table = () => {
         return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
     }, [tableDataValues.tableDataPlayers]);
 
-
     // Add effect to track mouse movement
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -320,13 +313,13 @@ const Table = () => {
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
     // Memoize reordered arrays
-    const reorderedPlayerArray = useMemo(() => 
-        [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
+    const reorderedPlayerArray = useMemo(
+        () => [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
         [playerPositionArray, startIndex]
     );
 
-    const reorderedDealerArray = useMemo(() => 
-        [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
+    const reorderedDealerArray = useMemo(
+        () => [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
         [dealerPositionArray, startIndex]
     );
 
@@ -364,9 +357,7 @@ const Table = () => {
     }, [currentIndex]);
 
     // Memoize handlers
-    const handleResize = useCallback(() => 
-        setZoom(calculateZoom()),
-    [calculateZoom]);
+    const handleResize = useCallback(() => setZoom(calculateZoom()), [calculateZoom]);
 
     useEffect(() => {
         window.addEventListener("resize", handleResize);
@@ -395,51 +386,52 @@ const Table = () => {
     }, [openSidebar]);
 
     // Memoize formatted balance
-    const balanceFormatted = useMemo(() => 
-        accountBalance ? formatWeiToUSD(accountBalance) : "0.00",
-        [accountBalance]
-    );
+    const balanceFormatted = useMemo(() => (accountBalance ? formatWeiToUSD(accountBalance) : "0.00"), [accountBalance]);
 
     // Memoize the component renderer
-    const getComponentToRender = useCallback((position: PositionArray, positionIndex: number) => {
-        // Calculate the actual seat number accounting for rotation
-        const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
+    const getComponentToRender = useCallback(
+        (position: PositionArray, positionIndex: number) => {
+            // Calculate the actual seat number accounting for rotation
+            const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
 
-        // Find if a player is seated at this position
-        const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
+            // Find if a player is seated at this position
+            const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
 
-        // Check if this seat belongs to the current user
-        const isCurrentUser = playerAtThisSeat && 
-            playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
-        
-        // Build common props shared by all player components
-        const playerProps = {
-            index: seatNumber,
-            currentIndex, 
-            left: position.left,
-            top: position.top,
-            color: position.color,
-            status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status,
-            onJoin: updateBalanceOnPlayerJoin
-        };
-        
-        // CASE 1: No player at this seat - render vacant position
-        if (!playerAtThisSeat) {
-            return (
-                <VacantPlayer
-                    index={seatNumber}
-                    left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
-                    top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
-                    onJoin={updateBalanceOnPlayerJoin}
-                />
+            // Check if this seat belongs to the current user
+            const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
+
+            // Build common props shared by all player components
+            const playerProps = {
+                index: seatNumber,
+                currentIndex,
+                left: position.left,
+                top: position.top,
+                color: position.color,
+                status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status,
+                onJoin: updateBalanceOnPlayerJoin
+            };
+
+            // CASE 1: No player at this seat - render vacant position
+            if (!playerAtThisSeat) {
+                return (
+                    <VacantPlayer
+                        index={seatNumber}
+                        left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
+                        top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
+                        onJoin={updateBalanceOnPlayerJoin}
+                    />
+                );
+            }
+
+            // CASE 2: Current user's seat or CASE 3: Another player's seat
+            return isCurrentUser ? (
+                <Player {...playerProps} />
+            ) : (
+                <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />
             );
-        } 
-        
-        // CASE 2: Current user's seat or CASE 3: Another player's seat
-        return isCurrentUser ? 
-            <Player {...playerProps} /> : 
-            <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />;
-    }, [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex, updateBalanceOnPlayerJoin]);
+        },
+        [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex, updateBalanceOnPlayerJoin]
+    );
 
     const copyToClipboard = useCallback((text: string) => {
         navigator.clipboard.writeText(text);
@@ -450,13 +442,14 @@ const Table = () => {
         // Continue rendering instead of returning early
     }
 
-
-
-    const dealerButtonStyle = useMemo(() => ({
-        left: `calc(${dealerButtonPosition.left} + 200px)`,
-        top: dealerButtonPosition.top,
-        transform: "none"
-    }), [dealerButtonPosition]);
+    const dealerButtonStyle = useMemo(
+        () => ({
+            left: `calc(${dealerButtonPosition.left} + 200px)`,
+            top: dealerButtonPosition.top,
+            transform: "none"
+        }),
+        [dealerButtonPosition]
+    );
 
     return (
         <div className="relative h-screen w-full overflow-hidden">
@@ -533,7 +526,10 @@ const Table = () => {
                 </div>
 
                 {/* SUB HEADER */}
-                <div className="bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg">
+                <div
+                    className="bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg"
+                    style={{ position: "relative", zIndex: 50 }}
+                >
                     {/* Animated background overlay */}
                     <div
                         className="absolute inset-0 z-0 opacity-30 shimmer-animation"
@@ -548,18 +544,43 @@ const Table = () => {
                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#3b82f6] to-transparent opacity-50"></div>
 
                     {/* Left Section */}
-                    <div className="flex items-center z-10">
-                        <div className="flex items-center space-x-2">
-                            <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                ${formattedValues.smallBlindFormatted} / ${formattedValues.bigBlindFormatted}
-                            </span>
+                    <div className="flex items-center z-20">
+                        <div className="flex flex-col">
+                            <div className="flex items-center space-x-2">
+                                <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                    ${formattedValues.smallBlindFormatted} / ${formattedValues.bigBlindFormatted}
+                                </span>
+
+                                <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                    Hand #{handNumber}
+                                </span>
+
+                                <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                   <span>Next to act: Seat {nextToAct}</span>
+                                 
+                                </span>
+                                <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                        
+                                    <span className="ml-2">Actions: {actionCount}</span>
+                                </span>
+                            </div>
+
+                            {/* <div className="text-xs text-blue-200 ml-2 font-medium bg-black/30 px-2 py-0.5 rounded mt-1">
+                                    {nextToAct > 0 && <span>Next to act: Seat {nextToAct}</span>}
+                                    {actionCount > 0 && <span className="ml-2">Actions: {actionCount}</span>}
+                                </div> */}
                         </div>
                     </div>
 
                     {/* Right Section */}
                     <div className="flex items-center z-10 mr-3">
-                        <span className="cursor-pointer hover:text-blue-400 transition-colors duration-200 text-gray-400" onClick={onCloseSideBar}>
+                        <span 
+                            className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ${openSidebar ? "bg-blue-500/30 text-white" : "text-gray-400 hover:text-blue-400"}`} 
+                            onClick={onCloseSideBar}
+                            title="Toggle Action Log"
+                        >
                             {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
+                            {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                         </span>
                         <span
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
@@ -832,18 +853,17 @@ const Table = () => {
                         </div> */}
                     </div>
                 </div>
-                {/*//! SIDEBAR */}
+                {/*//! ACTION LOG OVERLAY */}
                 <div
-                    className={`fixed top-[0px] right-0 h-full bg-custom-header overflow-hidden transition-all duration-300 ease-in-out relative ${
-                        openSidebar ? "w-[300px]" : "w-0"
+                    className={`fixed top-[100px] right-0 transition-all duration-300 ease-in-out ${
+                        openSidebar ? "w-[250px] opacity-100" : "w-0 opacity-0"
                     }`}
                     style={{
-                        boxShadow: openSidebar ? "0px 0px 10px rgba(0,0,0,0.5)" : "none"
+                        zIndex: 1000,
+                        height: "calc(100vh - 350px)"
                     }}
                 >
-                    <div className={`transition-opacity duration-300 ${openSidebar ? "opacity-100" : "opacity-0"} absolute left-0 top-0`}>
-                        <PokerLog />
-                    </div>
+                    <ActionsLog />
                 </div>
             </div>
 

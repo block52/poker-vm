@@ -1,4 +1,26 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO} from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+
+// Type for the return value of useGameState hook
+export interface GameStateReturn {
+    gameState: TexasHoldemStateDTO | undefined;
+    error: Error | null;
+    isLoading: boolean;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+    getNestedValue: (path: string) => any;
+}
+
+// Type for action log entries
+export type ActionsLogPokerAction = {
+    action: string;
+    playerId?: string;
+    address?: string;
+    amount?: string;
+    seat?: number;
+    timestamp?: string;
+    round?: string;
+    index?: number;
+    [key: string]: any; // For any other properties
+};
 
 export interface LastActionType {
     action: string;
@@ -137,4 +159,28 @@ export interface PlayerProps {
 
 export interface TurnAnimationProps {
     index: number;
+}
+
+// Type for the return value of useGameProgress hook
+export interface GameProgressType {
+    isGameInProgress: boolean;
+    activePlayers: PlayerDTO[];
+    playerCount: number;
+    handNumber: number;
+    actionCount: number;
+    nextToAct: number;
+    previousActions: Array<{
+        action: string;
+        playerId?: string;
+        address?: string;
+        amount?: string;
+        seat?: number;
+        timestamp?: string;
+        round?: string;
+        index?: number;
+        [key: string]: any;
+    }>;
+    isLoading: boolean;
+    error: Error | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
