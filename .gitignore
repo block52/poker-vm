@@ -449,3 +449,7 @@ ui/yarn-debug.log*
 ui/yarn-error.log*
 ui/yarn.lock
 ui/.DS_Store
+sdk/test.js
+sdk/src/types/chain.js
+sdk/src/types/game.js
+sdk/src/types/rpc.js
