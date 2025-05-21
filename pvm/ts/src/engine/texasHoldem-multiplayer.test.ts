@@ -67,7 +67,7 @@ describe("Texas Holdem - Multiplayer", () => {
 
             actual = game.getLegalActions(PLAYER_1);
 
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 8, undefined, "seed");
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 7, undefined, "seed");
             actual = game.getLegalActions(PLAYER_1);
 
             // Should be players 3 turn
@@ -81,7 +81,7 @@ describe("Texas Holdem - Multiplayer", () => {
             // expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Open the action for player 3
-            game.performAction(PLAYER_3, PlayerActionType.BET, 9, TWO_TOKENS);
+            game.performAction(PLAYER_3, PlayerActionType.BET, 8, TWO_TOKENS);
             expect(game.pot).toEqual(500000000000000000n);
 
             // Should be players 4 turn
@@ -95,7 +95,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Call from player 4
-            game.performAction(PLAYER_4, PlayerActionType.CALL, 10, TWO_TOKENS);
+            game.performAction(PLAYER_4, PlayerActionType.CALL, 9, TWO_TOKENS);
             expect(game.pot).toEqual(700000000000000000n);
 
             // Should be players 1 turn
@@ -110,7 +110,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Call from player 1
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 11);
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 10);
             expect(game.pot).toEqual(800000000000000000n);
 
             // Should be players 2 turn
