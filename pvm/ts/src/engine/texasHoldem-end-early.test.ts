@@ -13,27 +13,27 @@ describe("Texas Holdem - Hand ends early tests", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
         });
 
         it("should end the hand if everyone else has folded", () => {
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
 
             // Add a DEAL action to advance from ANTE to PREFLOP
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 4);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 5);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
             // Now we're in PREFLOP round, so CALL is a valid action
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.RAISE, 5, THREE_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.RAISE, 6, THREE_TOKENS);
 
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
 
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.FOLD, 6);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.FOLD, 7);
 
             // Check that the game in show down, player can still show or muck but still win.
             expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);

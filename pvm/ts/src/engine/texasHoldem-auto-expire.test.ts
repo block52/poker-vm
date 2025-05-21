@@ -14,12 +14,12 @@ describe("Texas Holdem - Auto Expire", () => {
         beforeEach(() => {
             baseGameConfig.now = 0;
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(SEAT_1, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
-            game.performAction(SEAT_2, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(SEAT_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(SEAT_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
 
             // Post blinds
-            game.performAction(SEAT_1, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
-            game.performAction(SEAT_2, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+            game.performAction(SEAT_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
+            game.performAction(SEAT_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
         });
 
         it("should have correct legal actions after turn", () => {
