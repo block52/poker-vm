@@ -479,7 +479,7 @@ export class NodeRpcClient implements IClient {
         }
 
         if (!gameState.previousActions || gameState.previousActions.length === 0) {
-            return 0;
+            return 0 + gameState.actionCount;
         }
 
         const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
