@@ -479,11 +479,11 @@ export class NodeRpcClient implements IClient {
         }
 
         if (!gameState.previousActions || gameState.previousActions.length === 0) {
-            return 0 + gameState.actionCount;
+            return gameState.actionCount;
         }
 
         const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
-        return lastAction.index + gameState.actionCount + 1;
+        return lastAction.index + gameState.actionCount;
     }
 
     private async getNonce(address: string): Promise<number> {
