@@ -13,33 +13,33 @@ describe("Texas Holdem - Reinit", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            expect(game.handNumber).toEqual(0);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            expect(game.handNumber).toEqual(1);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
 
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 4);
-
-            // Both check
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 5, 0n);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 6, 0n);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 5);
 
             // Both check
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 7, 0n);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 8, 0n);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 6, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 7, 0n);
 
             // Both check
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 9, 0n);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 10, 0n);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 8, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 9, 0n);
 
             // Both check
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 11, 0n);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 12, 0n);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 10, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 11, 0n);
+
+            // Both check
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 12, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 13, 0n);
 
             // Both reveal cards
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SHOW, 13, 0n);
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SHOW, 14, 0n);
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SHOW, 14, 0n);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SHOW, 15, 0n);
         });
 
         it("should reinit after end", () => {
@@ -48,10 +48,16 @@ describe("Texas Holdem - Reinit", () => {
             expect(game.dealerPosition).toEqual(9);
             expect(game.smallBlindPosition).toEqual(1);
             expect(game.bigBlindPosition).toEqual(2);
-            expect(game.handNumber).toEqual(0);
-
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.NEW_HAND, 15, undefined, seed);
             expect(game.handNumber).toEqual(1);
+            expect(game.getActionIndex()).toEqual(16); // 15 actions performed (1-15)
+
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.NEW_HAND, 16, undefined, seed); // 16th action
+            expect(game.handNumber).toEqual(2);
+            expect(game.getActionIndex()).toEqual(17); // 0 actions performed (16 + 1 for next action index) New hand counts as an action
+            
+            const json = game.toJson();
+            expect(json).toBeDefined();
+            expect(json.actionCount).toEqual(16);
 
             expect(game.getPlayerCount()).toEqual(2);
             expect(game.exists(SMALL_BLIND_PLAYER)).toBeTruthy();
