@@ -169,5 +169,5 @@ export interface GameProgressType {
     }>;
     isLoading: boolean;
     error: Error | null;
-    refresh: () => Promise<void | TexasHoldemStateDTO | undefined>;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }

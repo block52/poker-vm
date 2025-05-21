@@ -1,5 +1,6 @@
 import { useGameState } from "./useGameState";
 import { GameProgressType } from "../types/index";
+import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to check if a game is in progress and provide game status information
@@ -18,7 +19,12 @@ import { GameProgressType } from "../types/index";
  */
 export const useGameProgress = (tableId?: string): GameProgressType => {
   // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh } = useGameState(tableId);
+  const { gameState, isLoading, error, refresh: gameStateRefresh } = useGameState(tableId);
+
+  // Wrap the refresh function to ensure correct return type
+  const refresh = async (): Promise<TexasHoldemStateDTO | undefined> => {
+    return gameStateRefresh();
+  };
 
   // Default values in case of error or loading
   const defaultState: GameProgressType = {
