@@ -25,13 +25,14 @@ class DealAction extends BaseAction implements IAction {
 
         // 2. Player count check: Need at least minimum players
         const count = this.game.getPlayerCount();
-        if (count < 2) { // Using hardcoded minimum player count since gameOptions is private
+        if (count < 2) {
+            // Using hardcoded minimum player count since gameOptions is private
             throw new Error("Not enough players to deal.");
         }
 
         // 3. Blind posting check: Both blinds must be posted
         const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
-        
+
         // Check if small blind has been posted
         const smallBlindAction = anteActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
         if (!smallBlindAction) {
@@ -49,7 +50,7 @@ class DealAction extends BaseAction implements IAction {
         const playerSeat = this.game.getPlayerSeatNumber(player.address);
         const isDealer = playerSeat === this.game.dealerPosition;
         const isSmallBlind = playerSeat === this.game.smallBlindPosition;
-        
+
         if (!isDealer && !isSmallBlind) {
             throw new Error("Only the dealer or small blind can initiate the deal.");
         }
@@ -57,7 +58,7 @@ class DealAction extends BaseAction implements IAction {
         return { minAmount: 0n, maxAmount: 0n };
     }
 
-    execute(player: Player, index: number): void {
+    execute(player: Player, index: number, timestamp: number): void {
         // Verify the action (this will throw if invalid)
         this.verify(player);
 
@@ -68,7 +69,8 @@ class DealAction extends BaseAction implements IAction {
         this.game.addNonPlayerAction({
             playerId: player.address,
             action: NonPlayerActionType.DEAL,
-            index: index
+            index: index,
+            timestamp: timestamp
         });
     }
 }

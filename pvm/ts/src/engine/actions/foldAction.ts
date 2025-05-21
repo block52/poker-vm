@@ -40,9 +40,9 @@ class FoldAction extends BaseAction implements IAction {
      * 
      * @param player The player performing the fold action
      * @param index The sequential action index for this game
-     * @param amount Optional amount parameter (unused for fold)
+     * @param timestamp The timestamp of the action
      */
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number, timestamp: number): void {
         // First verify the action
         this.verify(player);
         
@@ -51,7 +51,7 @@ class FoldAction extends BaseAction implements IAction {
         
         // Add the action to the game
         const round = this.game.currentRound;
-        this.game.addAction({ playerId: player.address, action: PlayerActionType.FOLD, index: index }, round);
+        this.game.addAction({ playerId: player.address, action: this.type, index: index, timestamp }, round);
     }
 }
 

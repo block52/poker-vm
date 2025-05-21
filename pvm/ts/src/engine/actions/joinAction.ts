@@ -20,7 +20,7 @@ class JoinAction extends BaseAction {
     }
 
     // Override execute to handle player joining
-    execute(player: Player, index: number, amount?: bigint, requestedSeat?: string): void {
+    execute(player: Player, index: number, timestamp: number, amount: bigint, requestedSeat?: string): void {
         // First verify the action
         const range = this.verify(player);
 
@@ -54,9 +54,10 @@ class JoinAction extends BaseAction {
         this.game.addNonPlayerAction(
             {
                 playerId: player.address,
-                action: NonPlayerActionType.JOIN,
+                action: this.type,
                 index: index,
-                amount: buyIn
+                amount: buyIn,
+                timestamp: timestamp,
             },
             seat.toString()
         );

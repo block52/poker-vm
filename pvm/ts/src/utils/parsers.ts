@@ -29,7 +29,8 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
                 to: tx.to,
                 value: tx.value,
                 type: action,
-                index: index
+                index: index,
+                timestamp: tx.timestamp,
             };
         }
     }
@@ -53,6 +54,7 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         value: tx.value,
         type: action,
         index: index,
+        timestamp: tx.timestamp,
         data
         // data: match[3] ? match[3].trim() : null
     };

@@ -3,6 +3,11 @@ import { IJSONModel } from "./interfaces";
 import { Turn } from "../engine/types";
 import { Stack } from "../core/datastructures/stack";
 
+/**
+ * Represents a player in the game.
+ * @class Player
+ * @implements {IJSONModel}
+ */
 export class Player implements IJSONModel {
     chips: bigint = 0n;
     holeCards: [Card, Card] | undefined;
@@ -39,12 +44,12 @@ export class Player implements IJSONModel {
         this.status = status;
     }
 
-    addAction(action: Turn, timestamp: number): void {
+    addAction(action: Turn): void {
         this._previousActions.push(action);
 
         // Could peek at the top of the stack to get the last action.
         this.lastAction = action;
-        this.lastActed = timestamp;
+        this.lastActed = action.timestamp;
     };
 
     previousActions(): Turn[] {

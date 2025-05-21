@@ -33,7 +33,7 @@ class ShowAction extends BaseAction implements IAction {
         player.updateStatus(PlayerStatus.SHOWING);
         
         // Add the action to the game
-        this.game.addAction({ playerId: player.address, action: PlayerActionType.SHOW, index: index });
+        this.game.addAction({ playerId: player.address, action: this.type, index: index, timestamp: timestamp });
     }
 }
 
