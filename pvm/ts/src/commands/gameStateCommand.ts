@@ -29,6 +29,8 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
 
+            // Hash the gameState.state and compare it with the one in cache
+
             const gameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
             const game = TexasHoldemGame.fromJson(gameState.state, gameOptions);
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
