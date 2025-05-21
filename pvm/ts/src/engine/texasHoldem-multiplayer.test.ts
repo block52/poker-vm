@@ -16,10 +16,10 @@ describe("Texas Holdem - Multiplayer", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS);
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
-            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS);
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS);
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS);
         });
 
         it("should have the correct players pre flop", () => {
@@ -37,7 +37,7 @@ describe("Texas Holdem - Multiplayer", () => {
         });
 
         it("should have correct legal actions after posting the blinds", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 5, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // Get legal actions for the next player
@@ -52,7 +52,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(nextToAct?.address).toEqual(PLAYER_2);
 
             // Perform the big blind action
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 5, TWO_TOKENS);
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 6, TWO_TOKENS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // // Should have the deal action
@@ -62,12 +62,12 @@ describe("Texas Holdem - Multiplayer", () => {
 
             // Now deal the cards
             expect(() => {
-                game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 6);
+                game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 7);
             }).toThrow("Only the dealer or small blind can initiate the deal.");
 
             actual = game.getLegalActions(PLAYER_1);
 
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 6, undefined, "seed");
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 8, undefined, "seed");
             actual = game.getLegalActions(PLAYER_1);
 
             // Should be players 3 turn
@@ -81,7 +81,7 @@ describe("Texas Holdem - Multiplayer", () => {
             // expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Open the action for player 3
-            game.performAction(PLAYER_3, PlayerActionType.BET, 7, TWO_TOKENS);
+            game.performAction(PLAYER_3, PlayerActionType.BET, 9, TWO_TOKENS);
             expect(game.pot).toEqual(500000000000000000n);
 
             // Should be players 4 turn
@@ -95,7 +95,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Call from player 4
-            game.performAction(PLAYER_4, PlayerActionType.CALL, 8, TWO_TOKENS);
+            game.performAction(PLAYER_4, PlayerActionType.CALL, 10, TWO_TOKENS);
             expect(game.pot).toEqual(700000000000000000n);
 
             // Should be players 1 turn
@@ -110,7 +110,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Call from player 1
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 9);
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 11);
             expect(game.pot).toEqual(800000000000000000n);
 
             // Should be players 2 turn
@@ -121,6 +121,7 @@ describe("Texas Holdem - Multiplayer", () => {
             // expect(actual.length).toEqual(3); // Fold, check, raise
 
             const json = game.toJson();
+            expect(json).toBeDefined();
         });
     });
 });
