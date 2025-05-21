@@ -5,7 +5,7 @@ export interface GameStateReturn {
     gameState: TexasHoldemStateDTO | undefined;
     error: Error | null;
     isLoading: boolean;
-    refresh: () => Promise<void | TexasHoldemStateDTO | undefined>;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
     getNestedValue: (path: string) => any;
 }
 

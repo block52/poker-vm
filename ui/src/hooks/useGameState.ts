@@ -59,11 +59,16 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
   
   const isLoading = clientLoading || dataLoading;
   
+  // Wrap mutate to ensure it returns the correct type
+  const refresh = async (): Promise<TexasHoldemStateDTO | undefined> => {
+    return mutate();
+  };
+  
   return { 
     gameState, 
     error, 
     isLoading, 
-    refresh: mutate,
+    refresh,
     // Helper function to safely extract nested properties
     getNestedValue: (path: string) => {
       if (!gameState) return undefined;
