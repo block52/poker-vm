@@ -133,7 +133,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
                 const expirationDate = new Date(turn.timestamp);
                 expirationDate.setSeconds(expirationDate.getSeconds() + gameOptions.timeout);
 
-                const turnIndex = game.getTurnIndex();
+                const turnIndex = game.getActionIndex();
 
                 if (now > expirationDate) {
                     const transaction = new Transaction(
