@@ -66,6 +66,14 @@ async function main() {
   // p2 show
   const showResult2 = await client2.playerAction("0xccd6e31012fd0ade9beb377c2f20661b832abfe7", PlayerActionType.SHOW, "0xccd6e31012fd0ade9beb377c2f20661b832abfe7");
   console.log(showResult2);
+
+  // new hand
+  const newHandResult = await client1.newHand("0xccd6e31012fd0ade9beb377c2f20661b832abfe7");
+  console.log(newHandResult);
+
+  // now repost small blind
+  const sbResult2 = await client2.playerAction("0xccd6e31012fd0ade9beb377c2f20661b832abfe7", PlayerActionType.SMALL_BLIND, "10000000000000000");
+  console.log(sbResult2);
 }
 
 main().catch((error) => {
