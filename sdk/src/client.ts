@@ -515,43 +515,43 @@ export class NodeRpcClient implements IClient {
         return signature;
     }
 
-    // private async getNextActionIndex(gameAddress: string, playerId: string): Promise<number> {
-    //     try {
-    //         const gameState = await this.getGameState(gameAddress, playerId);
-    //         if (!gameState) {
-    //             throw new Error("Game state not found");
-    //         }
-
-    //         if (!gameState.previousActions || gameState.previousActions.length === 0) {
-    //             return 1;
-    //         }
-
-    //         const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
-    //         return lastAction.index + 1;
-    //     } catch (error) {
-    //         console.error(`Error getting next action index: ${(error as Error).message}`);
-    //         throw error; // Rethrow the error to be handled by the caller
-    //     }
-    // }
-
     private async getNextActionIndex(gameAddress: string, playerId: string): Promise<number> {
         try {
-            const legalActions = await this.getLegalActions(gameAddress, playerId);
-            if (!legalActions || legalActions.length === 0) {
-                throw new Error("No legal actions found");
+            const gameState = await this.getGameState(gameAddress, playerId);
+            if (!gameState) {
+                throw new Error("Game state not found");
             }
 
-            // Find the action with the highest index
-            const action = legalActions.reduce((prev, current) => {
-                return prev.index > current.index ? prev : current;
-            });
+            if (!gameState.previousActions || gameState.previousActions.length === 0) {
+                return 1;
+            }
 
-            return action.index;
+            const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
+            return lastAction.index + 1;
         } catch (error) {
             console.error(`Error getting next action index: ${(error as Error).message}`);
             throw error; // Rethrow the error to be handled by the caller
         }
     }
+
+    // private async getNextActionIndex(gameAddress: string, playerId: string): Promise<number> {
+    //     try {
+    //         const legalActions = await this.getLegalActions(gameAddress, playerId);
+    //         if (!legalActions || legalActions.length === 0) {
+    //             throw new Error("No legal actions found");
+    //         }
+
+    //         // Find the action with the highest index
+    //         const action = legalActions.reduce((prev, current) => {
+    //             return prev.index > current.index ? prev : current;
+    //         });
+
+    //         return action.index;
+    //     } catch (error) {
+    //         console.error(`Error getting next action index: ${(error as Error).message}`);
+    //         throw error; // Rethrow the error to be handled by the caller
+    //     }
+    // }
 
     private async getNonce(address: string): Promise<number> {
         const response = await this.getAccount(address);
