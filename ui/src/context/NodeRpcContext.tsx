@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { NodeRpcClient, IClient } from "@bitcoinbrisbane/block52";
 import { ErrorLog } from "../types/index";
-import { v4 as uuidv4 } from "uuid";
 
 // Define the context shape
 interface NodeRpcContextType {
@@ -41,7 +40,7 @@ export const NodeRpcProvider: React.FC<NodeRpcProviderProps> = ({ children, node
     // Function to log errors
     const logError = useCallback((message: string, severity: "error" | "warning" | "info", source: "API" | "UI" | "System", details?: any) => {
         const newError: ErrorLog = {
-            id: uuidv4(),
+            id: crypto.randomUUID(),
             message,
             timestamp: new Date(),
             severity,
@@ -70,36 +69,7 @@ export const NodeRpcProvider: React.FC<NodeRpcProviderProps> = ({ children, node
 
                 // Create a new client instance using the official NodeRpcClient
                 const newClient = new NodeRpcClient(nodeUrl, privateKey);
-                
-                // Wrap client methods to catch errors
-                const clientProxy = new Proxy(newClient, {
-                    get(target, prop, receiver) {
-                        const original = Reflect.get(target, prop, receiver);
-                        
-                        if (typeof original === "function" && prop !== "constructor") {
-                            return async function(...args: any[]) {
-                                try {
-                                    const result = await original.apply(target, args);
-                                   
-                                    return result;
-                                } catch (err) {
-                                    // Log errors from API calls
-                                    const errorMessage = err instanceof Error ? err.message : String(err);
-                                    logError(
-                                        `${String(prop)} failed: ${errorMessage}`, 
-                                        "error", 
-                                        "API", 
-                                        { method: prop, args, error: err }
-                                    );
-                                    throw err;
-                                }
-                            };
-                        }
-                        return original;
-                    }
-                });
-                
-                setClient(clientProxy as IClient);
+                setClient(newClient);
                 setIsLoading(false);
             } catch (err) {
                 console.error("Failed to initialize NodeRpcClient", err);
