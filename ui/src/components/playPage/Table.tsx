@@ -47,7 +47,9 @@ import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import ActionsLog from "../ActionsLog";
+import ErrorsPanel from "../ErrorsPanel";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
+import { FaCode } from "react-icons/fa";
 
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
@@ -133,7 +135,7 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const { client, isLoading: clientLoading } = useNodeRpc();
+    const { client, isLoading: clientLoading, errorLogs, clearErrorLogs, setLogSuccessfulCalls } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
@@ -205,6 +207,8 @@ const Table = () => {
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [debugMode, setDebugMode] = useState(false);
+
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
@@ -521,6 +525,22 @@ const Table = () => {
                             }}
                         >
                             <RiMoneyDollarCircleLine className="text-[#ffffff] hover:scale-110 transition-transform duration-200" size={20} />
+                        </div>
+                        
+                        {/* Dev Mode Toggle Button */}
+                        <div
+                            className={`flex items-center justify-center w-8 h-8 ml-2 cursor-pointer rounded-full shadow-md border transition-all duration-300 ${
+                                debugMode 
+                                    ? "bg-gradient-to-br from-[#4a2c50] to-[#2a1e3b] border-[#ff6b6b]" 
+                                    : "bg-gradient-to-br from-[#2c3e50] to-[#1e293b] border-[#3a546d] hover:border-[#ffffff]"
+                            }`}
+                            onClick={() => setDebugMode(prev => !prev)}
+                            title="Developer Mode"
+                        >
+                            <FaCode 
+                                className={`${debugMode ? "text-[#ff6b6b]" : "text-[#ffffff]"} hover:scale-110 transition-transform duration-200`} 
+                                size={16} 
+                            />
                         </div>
                     </div>
                 </div>
@@ -907,6 +927,13 @@ const Table = () => {
                     <img src="/block52.png" alt="Block52 Logo" className="h-12 w-auto object-contain interaction-none" />
                 </div>
             </div>
+
+            {/* Debug Error Panel */}
+            {debugMode && (
+                <div className="fixed bottom-24 left-4 w-64 z-50">
+                    <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
+                </div>
+            )}
         </div>
     );
 };
