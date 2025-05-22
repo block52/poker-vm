@@ -60,7 +60,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         private _positions: Positions,
         lastActedSeat: number,
         previousActions: ActionDTO[] = [],
-        private _handNumber: number = 0,
+        private _handNumber: number = 1,
         private _actionCount: number = 0,
         currentRound: TexasHoldemRound = TexasHoldemRound.ANTE,
         communityCards: string[] = [],
@@ -76,6 +76,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         this._currentRound = currentRound;
         this._gameOptions = gameOptions;
         this._lastActedSeat = lastActedSeat;
+
+        // Hack for old test data
+        if (this.handNumber === 0) this._handNumber = 1;
 
         // Initialize winners
         for (const winner of winners) {
@@ -163,12 +166,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
      * Reinitializes the game state for a new hand.
      */
     public reInit(deck: string): void {
-
         // Cache action count
-        let actionCount = this.getPreviousActions().length;
-
-        // Add this action to the count
-        actionCount += 1;
+        // This is the action count before reinit, so we can use it to determine the next action index
+        const actionCount = this.getPreviousActions().length + 1;  // This is the next count, so need to add 1
 
         // Reset all players
         for (const player of this.getSeatedPlayers()) {
@@ -767,9 +767,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
     /**
      * Returns the current turn index
      */
-    getTurnIndex(): number {
+    getActionIndex(): number {
         // plus the last count
-        return this._actionCount + this.getPreviousActions().length;
+        return this._actionCount + this.getPreviousActions().length + 1; // +1 for the next action
     }
 
     /**
@@ -785,7 +785,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     action: action.type,
                     min: range.minAmount.toString(),
                     max: range.maxAmount.toString(),
-                    index: this.getTurnIndex()
+                    index: this.getActionIndex()
                 };
             } catch {
                 return undefined;
@@ -836,8 +836,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check action index for replay protection
-        const turnIndex = this.getTurnIndex();
-        if (index !== turnIndex && action !== NonPlayerActionType.JOIN && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
+        const actionIndex = this.getActionIndex();
+        if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
             throw new Error("Invalid action index.");
         }
 

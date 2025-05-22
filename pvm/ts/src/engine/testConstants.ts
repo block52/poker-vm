@@ -56,8 +56,8 @@ export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasH
         defaultPositions, // dealer
         1, // nextToAct
         previousActions,
-        0,
-        0,
+        1, // handNumber
+        0, // actionCount
         TexasHoldemRound.PREFLOP,
         [], // communityCards
         [0n], // pot

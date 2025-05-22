@@ -11,7 +11,7 @@ PLAYER2="0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8"
 TABLE_ID="0xccd6e31012fd0ade9beb377c2f20661b832abfe7"
 
 ## Call the other bash script
-bash showdown.sh
+bash 02-showdown.sh
 
 sleep 1
 
@@ -20,7 +20,7 @@ curl --location 'http://localhost:3000' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
-    "params": ["0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "show", "", 0, 9],
+    "params": ["0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "show", "", 0, 10],
     "id": 1,
     "jsonrpc": "2.0"
 }'

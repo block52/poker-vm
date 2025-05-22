@@ -61,7 +61,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
 
                 console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
-                game.performAction(this.from, NonPlayerActionType.JOIN, game.getTurnIndex(), this.amount);
+                game.performAction(this.from, NonPlayerActionType.JOIN, game.getActionIndex(), this.amount);
                 console.log(`Join successful`);
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, "JOIN");
@@ -91,7 +91,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                 console.log(`Player ${this.to} leaving game...`);
                 const player = game.getPlayer(this.from);
                 const stack = player?.chips ?? 0n;
-                game.performAction(this.to, NonPlayerActionType.LEAVE, game.getTurnIndex(), stack);
+                game.performAction(this.to, NonPlayerActionType.LEAVE, game.getActionIndex(), stack);
                 console.log(`Leave successful, returning ${stack} chips`);
 
                 const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "leave");

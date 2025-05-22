@@ -1,6 +1,6 @@
 {
     "name": "@bitcoinbrisbane/block52",
-    "version": "1.0.130",
+    "version": "1.0.135",
     "author": "@bitcoinbrisbane",
     "license": "MIT",
     "description": "SDK for interacting with the Block52 Node",
@@ -18,6 +18,7 @@
     "dependencies": {
         "axios": "^1.8.1",
         "bigunit": "^1.2.5",
+        "dotenv": "^16.5.0",
         "ethers": "^6.13.4"
     },
     "devDependencies": {

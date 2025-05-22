@@ -1,5 +1,13 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { GameOptionsDTO, NonPlayerActionType, PerformActionResponse, PlayerActionType, TexasHoldemStateDTO, TransactionResponse } from "./types/game";
+import {
+    GameOptionsDTO,
+    LegalActionDTO,
+    NonPlayerActionType,
+    PerformActionResponse,
+    PlayerActionType,
+    TexasHoldemStateDTO,
+    TransactionResponse
+} from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
@@ -15,6 +23,7 @@ export interface IClient {
     getBlocks(count?: number): Promise<BlockDTO[]>;
     getGameState(gameAddress: string, caller: string): Promise<TexasHoldemStateDTO>;
     getLastBlock(): Promise<BlockDTO>;
+    getLegalActions(gameAddress: string, caller: string): Promise<LegalActionDTO[]>;
     getMempool(): Promise<TransactionDTO[]>;
     getNodes(): Promise<string[]>;
     getTransactions(): Promise<TransactionDTO[]>;
@@ -295,6 +304,29 @@ export class NodeRpcClient implements IClient {
     }
 
     /**
+     * Get the state of a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param playerId The address of the player
+     * @returns A Promise that resolves to a TexasHoldemState object
+     */
+    public async getLegalActions(gameAddress: string, playerId: string): Promise<LegalActionDTO[]> {
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, playerId);
+
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
+
+        // Find the player
+        const player = gameState.players.find(p => p.address === playerId);
+        if (!player) {
+            throw new Error("Player not found in game state");
+        }
+
+        // Get the legal actions for the player
+        return player.legalActions;
+    }
+
+    /**
      * Create a new game on the remote node
      * @param gameAddress The address of the game
      * @param seed The seed for new deck
@@ -388,22 +420,33 @@ export class NodeRpcClient implements IClient {
      * @returns
      */
     public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<PerformActionResponse> {
-        const address = this.getAddress();
+        try {
+            const address = this.getAddress();
 
-        if (!nonce) {
-            nonce = await this.getNonce(address);
+            if (!nonce) {
+                nonce = await this.getNonce(address);
+            }
+
+            const legalActions = await this.getLegalActions(gameAddress, address);
+            const legalAction = legalActions.find(a => a.action === action);
+            if (!legalAction) {
+                throw new Error(`Illegal action: ${action}`);
+            }
+
+            const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
+
+            const { data: body } = await axios.post(this.url, {
+                id: 1, // this.getRequestId(),
+                method: RPCMethods.PERFORM_ACTION,
+                params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
+                signature: signature
+            });
+
+            return body.result.data;
+        } catch (error) {
+            console.error(`Error in playerAction: ${(error as Error).message}`);
+            throw error; // Rethrow the error to be handled by the caller
         }
-
-        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
-
-        const { data: body } = await axios.post(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
-            signature: signature
-        });
-
-        return body.result.data;
     }
 
     /**
@@ -473,18 +516,42 @@ export class NodeRpcClient implements IClient {
     }
 
     private async getNextActionIndex(gameAddress: string, playerId: string): Promise<number> {
-        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, playerId);
-        if (!gameState) {
-            throw new Error("Game state not found");
-        }
+        try {
+            const gameState = await this.getGameState(gameAddress, playerId);
+            if (!gameState) {
+                throw new Error("Game state not found");
+            }
 
-        if (!gameState.previousActions || gameState.previousActions.length === 0) {
-            return 0 + gameState.actionCount;
-        }
+            if (!gameState.previousActions || gameState.previousActions.length === 0) {
+                return gameState.actionCount + 1;
+            }
 
-        const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
-        return lastAction.index + gameState.actionCount + 1;
+            const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
+            return gameState.actionCount + lastAction.index + 1;
+        } catch (error) {
+            console.error(`Error getting next action index: ${(error as Error).message}`);
+            throw error; // Rethrow the error to be handled by the caller
+        }
     }
+
+    // private async getNextActionIndex(gameAddress: string, playerId: string): Promise<number> {
+    //     try {
+    //         const legalActions = await this.getLegalActions(gameAddress, playerId);
+    //         if (!legalActions || legalActions.length === 0) {
+    //             throw new Error("No legal actions found");
+    //         }
+
+    //         // Find the action with the highest index
+    //         const action = legalActions.reduce((prev, current) => {
+    //             return prev.index > current.index ? prev : current;
+    //         });
+
+    //         return action.index;
+    //     } catch (error) {
+    //         console.error(`Error getting next action index: ${(error as Error).message}`);
+    //         throw error; // Rethrow the error to be handled by the caller
+    //     }
+    // }
 
     private async getNonce(address: string): Promise<number> {
         const response = await this.getAccount(address);
