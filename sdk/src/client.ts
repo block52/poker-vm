@@ -523,11 +523,11 @@ export class NodeRpcClient implements IClient {
             }
 
             if (!gameState.previousActions || gameState.previousActions.length === 0) {
-                return 1;
+                return gameState.actionCount + 1;
             }
 
             const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
-            return lastAction.index + 1;
+            return gameState.actionCount + lastAction.index + 1;
         } catch (error) {
             console.error(`Error getting next action index: ${(error as Error).message}`);
             throw error; // Rethrow the error to be handled by the caller
