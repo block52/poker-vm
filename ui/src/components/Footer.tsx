@@ -3,7 +3,6 @@ import * as React from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
-import { useTableNonce } from "../hooks/useTableNonce";
 
 // Import our custom hooks
 import { usePlayerDTO } from "../hooks/usePlayerDTO";
@@ -32,7 +31,6 @@ const PokerActionPanel: React.FC = () => {
     const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
 
     // Get data from our custom hooks
-    const { nonce, refreshNonce } = useTableNonce();
     const { players } = usePlayerDTO(tableId);
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions(tableId);
     const { dealCards, isDealing } = useTableDeal(tableId);
@@ -309,13 +307,11 @@ const PokerActionPanel: React.FC = () => {
 
         // Use our hook to start a new hand
         startNewHand({
-            nonce: nonce || Date.now().toString(), // Use nonce from useTableNonce if available
             seed: Math.random().toString(36).substring(2, 15) // Generate a random seed
         })
             .then(result => {
                 console.log("New hand started successfully:", result);
                 // Force refresh all game state
-                refreshNonce?.();
                 refreshNextToActInfo?.();
             })
             .catch(error => {
@@ -334,13 +330,12 @@ const PokerActionPanel: React.FC = () => {
         sitIn()
             .then(() => {
                 console.log("Successfully sat in");
-                refreshNonce?.();
                 refreshNextToActInfo?.();
             })
             .catch(error => {
                 console.error("Failed to sit in:", error);
             });
-    }, [sitIn, refreshNonce, refreshNextToActInfo]);
+    }, [sitIn, refreshNextToActInfo]);
 
     const handleSitOut = useCallback(() => {
         if (!sitOut) {
@@ -351,13 +346,12 @@ const PokerActionPanel: React.FC = () => {
         sitOut()
             .then(() => {
                 console.log("Successfully sat out");
-                refreshNonce?.();
                 refreshNextToActInfo?.();
             })
             .catch(error => {
                 console.error("Failed to sit out:", error);
             });
-    }, [sitOut, refreshNonce, refreshNextToActInfo]);
+    }, [sitOut, refreshNextToActInfo]);
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
