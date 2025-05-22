@@ -47,7 +47,9 @@ import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import ActionsLog from "../ActionsLog";
+import ErrorsPanel from "../ErrorsPanel";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
+import { FaCode } from "react-icons/fa";
 
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
@@ -133,7 +135,7 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const { client, isLoading: clientLoading } = useNodeRpc();
+    const { client, isLoading: clientLoading, errorLogs, clearErrorLogs } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
@@ -205,6 +207,8 @@ const Table = () => {
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [debugMode, setDebugMode] = useState(false);
+
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
@@ -582,6 +586,20 @@ const Table = () => {
                             {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                             {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                         </span>
+                        
+                        {/* Dev Mode Toggle Button */}
+                        <span
+                            className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ml-2 ${
+                                debugMode 
+                                    ? "bg-red-500/30 text-red-400" 
+                                    : "text-gray-400 hover:text-blue-400"
+                            }`}
+                            onClick={() => setDebugMode(prev => !prev)}
+                            title="Developer Mode"
+                        >
+                            <FaCode size={16} />
+                        </span>
+                        
                         <span
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
                             onClick={() => {
@@ -907,6 +925,13 @@ const Table = () => {
                     <img src="/block52.png" alt="Block52 Logo" className="h-12 w-auto object-contain interaction-none" />
                 </div>
             </div>
+
+            {/* Debug Error Panel */}
+            {debugMode && (
+                <div className="fixed bottom-24 left-4 w-64 z-50">
+                    <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
+                </div>
+            )}
         </div>
     );
 };

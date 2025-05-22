@@ -22,6 +22,16 @@ export type ActionsLogPokerAction = {
     [key: string]: any; // For any other properties
 };
 
+// Type for error logs
+export interface ErrorLog {
+    id: string;
+    message: string;
+    timestamp: Date;
+    severity: "error" | "warning" | "info";
+    source: "API" | "UI" | "System";
+    details?: any;
+}
+
 export interface LastActionType {
     action: string;
     amount: number;
