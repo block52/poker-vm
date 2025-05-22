@@ -30,10 +30,9 @@ const Deposit: React.FC = () => {
     const [tmpDepositAmount, setTmpDepositAmount] = useState<bigint>(BigInt(0));
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
-    const { accountData, refreshBalance } = useUserWallet();
+    const { accountData } = useUserWallet();
     const b52Balance = accountData?.balance;
     const nonce = accountData?.nonce;
-    const b52Address = accountData?.address;
 
     const navigate = useNavigate();
 

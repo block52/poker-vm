@@ -34,7 +34,7 @@ const PokerActionPanel: React.FC = () => {
     // Get data from our custom hooks
     const { nonce, refreshNonce } = useTableNonce();
     const { players } = usePlayerDTO(tableId);
-    const { legalActions, isPlayerTurn, playerStatus, playerSeat } = usePlayerLegalActions(tableId);
+    const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions(tableId);
     const { dealCards, isDealing } = useTableDeal(tableId);
     const { checkHand } = useTableCheck(tableId);
     const { foldHand } = useTableFold(tableId);
@@ -111,7 +111,7 @@ const PokerActionPanel: React.FC = () => {
     //
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
     const [raiseInputRaw, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
-    const [lastAmountSource, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
+    const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
     const isRaiseAmountInvalid = hasRaiseAction
         ? raiseAmount < minRaise || raiseAmount > maxRaise

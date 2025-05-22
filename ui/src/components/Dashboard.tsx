@@ -13,7 +13,6 @@ import BuyInModal from "./playPage/BuyInModal";
 import { useNodeRpc } from "../context/NodeRpcContext"; // Use NodeRpcContext
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { GameType, Variant } from "./types";
-import { GameWithAddress } from "../types/index";
 import { formatAddress, formatBalance } from "./common/utils";
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 
@@ -133,9 +132,6 @@ const Dashboard: React.FC = () => {
                 return;
             }
             
-            // Show creating message with selected game type
-            const gameTypeName = "Texas Hold'em"; // Could be dynamic based on selection
-
             // Create the new table using the client's newTable method
             // We use the current user's public key as the "from" parameter
             // The "to" parameter is the game contract schema address
@@ -232,7 +228,7 @@ const Dashboard: React.FC = () => {
                 fetchAccountBalance();
             }
         }
-    }, [publicKey, clientLoading, fetchAccountBalance]);
+    }, [publicKey, clientLoading, fetchAccountBalance, client]);
 
 
     const handleGameVariant = (variant: Variant) => {
