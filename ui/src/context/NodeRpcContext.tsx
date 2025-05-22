@@ -11,8 +11,6 @@ interface NodeRpcContextType {
     errorLogs: ErrorLog[];
     clearErrorLogs: () => void;
     logError: (message: string, severity: "error" | "warning" | "info", source: "API" | "UI" | "System", details?: any) => void;
-    logSuccessfulCalls: boolean;
-    setLogSuccessfulCalls: (value: boolean) => void;
 }
 
 // Create the context with default values
@@ -23,8 +21,6 @@ const NodeRpcContext = createContext<NodeRpcContextType>({
     errorLogs: [],
     clearErrorLogs: () => {},
     logError: () => {},
-    logSuccessfulCalls: false,
-    setLogSuccessfulCalls: () => {}
 });
 
 // Custom hook to use the context
@@ -41,7 +37,6 @@ export const NodeRpcProvider: React.FC<NodeRpcProviderProps> = ({ children, node
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const [errorLogs, setErrorLogs] = useState<ErrorLog[]>([]);
-    const [logSuccessfulCalls, setLogSuccessfulCalls] = useState(false);
 
     // Function to log errors
     const logError = useCallback((message: string, severity: "error" | "warning" | "info", source: "API" | "UI" | "System", details?: any) => {
@@ -132,7 +127,7 @@ export const NodeRpcProvider: React.FC<NodeRpcProviderProps> = ({ children, node
 
         window.addEventListener("storage", handleStorageChange);
         return () => window.removeEventListener("storage", handleStorageChange);
-    }, [nodeUrl, logError, logSuccessfulCalls]);
+    }, [nodeUrl, logError]);
 
     const value = {
         client,
@@ -141,8 +136,6 @@ export const NodeRpcProvider: React.FC<NodeRpcProviderProps> = ({ children, node
         errorLogs,
         clearErrorLogs,
         logError,
-        logSuccessfulCalls,
-        setLogSuccessfulCalls
     };
 
     return <NodeRpcContext.Provider value={value}>{children}</NodeRpcContext.Provider>;

@@ -135,7 +135,7 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = () => {
     const { id } = useParams<{ id: string }>();
-    const { client, isLoading: clientLoading, errorLogs, clearErrorLogs, setLogSuccessfulCalls } = useNodeRpc();
+    const { client, isLoading: clientLoading, errorLogs, clearErrorLogs } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);

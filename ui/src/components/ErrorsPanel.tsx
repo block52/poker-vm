@@ -31,9 +31,9 @@ const ErrorsPanel: React.FC<ErrorsPanelProps> = ({ errors = [], onClear }) => {
   return (
     <div className={`text-white rounded w-full h-full overflow-y-auto scrollbar-hide bg-black/30 backdrop-blur-sm ${isCollapsed ? "h-[40px]" : ""}`}>
       <div className="flex justify-between items-center p-2 border-b border-white/20">
-        <div className="flex items-center">
+        <div className="flex items-center whitespace-nowrap">
           <MdBugReport size={16} className="text-red-400 mr-2" />
-          <h3 className="text-sm font-semibold">Error Log</h3>
+          <h4 className="text-xs font-semibold">Blockchain Debug Mode</h4>
           <span className="ml-2 text-xs bg-red-500/30 text-white px-1.5 rounded-full">
             {actionErrors.length}
           </span>
