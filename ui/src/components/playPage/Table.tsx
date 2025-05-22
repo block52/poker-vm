@@ -526,22 +526,6 @@ const Table = () => {
                         >
                             <RiMoneyDollarCircleLine className="text-[#ffffff] hover:scale-110 transition-transform duration-200" size={20} />
                         </div>
-                        
-                        {/* Dev Mode Toggle Button */}
-                        <div
-                            className={`flex items-center justify-center w-8 h-8 ml-2 cursor-pointer rounded-full shadow-md border transition-all duration-300 ${
-                                debugMode 
-                                    ? "bg-gradient-to-br from-[#4a2c50] to-[#2a1e3b] border-[#ff6b6b]" 
-                                    : "bg-gradient-to-br from-[#2c3e50] to-[#1e293b] border-[#3a546d] hover:border-[#ffffff]"
-                            }`}
-                            onClick={() => setDebugMode(prev => !prev)}
-                            title="Developer Mode"
-                        >
-                            <FaCode 
-                                className={`${debugMode ? "text-[#ff6b6b]" : "text-[#ffffff]"} hover:scale-110 transition-transform duration-200`} 
-                                size={16} 
-                            />
-                        </div>
                     </div>
                 </div>
 
@@ -602,6 +586,20 @@ const Table = () => {
                             {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                             {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                         </span>
+                        
+                        {/* Dev Mode Toggle Button */}
+                        <span
+                            className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ml-2 ${
+                                debugMode 
+                                    ? "bg-red-500/30 text-red-400" 
+                                    : "text-gray-400 hover:text-blue-400"
+                            }`}
+                            onClick={() => setDebugMode(prev => !prev)}
+                            title="Developer Mode"
+                        >
+                            <FaCode size={16} />
+                        </span>
+                        
                         <span
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
                             onClick={() => {
