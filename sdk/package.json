@@ -10,7 +10,7 @@
         "build": "tsc",
         "clean": "rm -rf dist",
         "prepare": "rm -rf dist && npm run build",
-        "test": "npx tsx test.ts"
+        "test": "npx ts-node test.ts"
     },
     "files": [
         "dist"
