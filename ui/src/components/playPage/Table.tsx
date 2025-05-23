@@ -452,7 +452,7 @@ const Table = () => {
     );
 
     return (
-        <div className="relative h-screen w-full overflow-hidden">
+        <div className="table-container">
             {/*//! HEADER - CASINO STYLE */}
             <div className="flex-shrink-0">
                 <div className="w-[100vw] h-[65px] bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-center flex items-center justify-between px-4 z-10 relative overflow-hidden border-b-2 border-[#3a546d]">
@@ -526,22 +526,12 @@ const Table = () => {
                 </div>
 
                 {/* SUB HEADER */}
-                <div
-                    className="bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg"
-                    style={{ position: "relative", zIndex: 50 }}
-                >
+                <div className="bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg sub-header">
                     {/* Animated background overlay */}
-                    <div
-                        className="absolute inset-0 z-0 opacity-30 shimmer-animation"
-                        style={{
-                            backgroundImage:
-                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
-                            backgroundSize: "200% 100%"
-                        }}
-                    />
+                    <div className="sub-header-overlay shimmer-animation" />
 
                     {/* Bottom edge shadow */}
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#3b82f6] to-transparent opacity-50"></div>
+                    <div className="sub-header-shadow" />
 
                     {/* Left Section */}
                     <div className="flex items-center z-20">
@@ -634,14 +624,8 @@ const Table = () => {
             {/*//! BODY */}
             <div className="flex w-full flex-grow overflow-visible">
                 {/*//! TABLE + FOOTER */}
-                <div
-                    className={"flex-grow flex flex-col justify-between transition-all duration-250 overflow-visible"}
-                    style={{
-                        transition: "margin 0.3s ease"
-                    }}
-                >
-                    {" "}
-                    <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
+                <div className="flex-grow flex flex-col justify-between transition-all duration-250 overflow-visible body-container">
+                    <div className="background-hexagon">
                         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                             <defs>
                                 <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
@@ -657,17 +641,10 @@ const Table = () => {
                         </svg>
                     </div>
                     {/* Animated background overlay */}
-                    <div
-                        className="absolute inset-0 z-0 opacity-30 shimmer-animation"
-                        style={{
-                            backgroundImage:
-                                "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
-                            backgroundSize: "200% 100%"
-                        }}
-                    />
+                    <div className="background-shimmer shimmer-animation" />
                     {/* Animated overlay */}
                     <div
-                        className="absolute inset-0 z-0 opacity-20"
+                        className="background-animated"
                         style={{
                             backgroundImage: `
                                     repeating-linear-gradient(
@@ -678,15 +655,12 @@ const Table = () => {
                                         rgba(50, 79, 151, 0.1) 75%,
                                         rgba(42, 72, 143, 0.1) 100%
                                     )
-                                `,
-                            backgroundSize: "400% 400%",
-                            animation: "gradient 15s ease infinite",
-                            transition: "background 0.5s ease"
+                                `
                         }}
                     />
                     {/* Base gradient background */}
                     <div
-                        className="absolute inset-0 z-0"
+                        className="background-base"
                         style={{
                             backgroundImage: `
                                     radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
@@ -694,10 +668,7 @@ const Table = () => {
                                     radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
                                     radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
                                     radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%)
-                                `,
-                            backgroundColor: "#111827",
-                            filter: "blur(60px)",
-                            transition: "all 0.3s ease-out"
+                                `
                         }}
                     />
                     {/*//! TABLE */}
@@ -707,16 +678,7 @@ const Table = () => {
                         <div
                             className="zoom-wrapper"
                             style={{
-                                position: "absolute",
-                                top: "50%",
-                                left: "50%",
-                                transform: `translate(-50%, -50%) scale(${zoom})`,
-                                transformOrigin: "center center",
-                                width: "1600px",
-                                height: "850px",
-                                maxWidth: "100vw",
-                                maxHeight: "calc(100vh - 180px)", // leave room for header/footer
-                                overflow: "visible" // ensure nothing is cut off
+                                transform: `translate(-50%, -50%) scale(${zoom})`
                             }}
                         >
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
@@ -724,34 +686,14 @@ const Table = () => {
                                     <div className="h-full flex align-center justify-center">
                                         <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center shadow-[0_7px_15px_rgba(0,0,0,0.6)]">
                                             {/* //! Table */}
-                                            <div
-                                                className="absolute z-0 pointer-events-none"
-                                                style={{
-                                                    bottom: "15px", // Inside the table bounds
-                                                    left: "50%",
-                                                    transform: "translate(-50%, 30%)"
-                                                }}
-                                            >
+                                            <div className="table-logo">
                                                 <img
                                                     src={placeholderLogo}
                                                     alt="Placeholder Logo"
-                                                    style={{
-                                                        width: "300px", // You can tweak this — it's now relative to the table
-                                                        opacity: 0.3,
-                                                        objectFit: "contain"
-                                                    }}
                                                 />
                                             </div>
                                             <div className="flex flex-col items-center justify-center -mt-20">
-                                                <div
-                                                    style={{
-                                                        fontSize: "20px",
-                                                        backgroundColor: "rgba(0,0,0,0.25)",
-                                                        borderRadius: "9999px",
-                                                        color: "rgb(255, 255, 255)",
-                                                        padding: "3px 8px"
-                                                    }}
-                                                >
+                                                <div className="pot-display">
                                                     Total Pot:
                                                     <span style={{ fontWeight: "700px" }}>
                                                         {" "}
@@ -763,16 +705,7 @@ const Table = () => {
                                                                   .toFixed(2) || formattedTotalPot}
                                                     </span>
                                                 </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: "18px",
-                                                        backgroundColor: "rgba(0,0,0,0.25)",
-                                                        borderRadius: "9999px",
-                                                        color: "rgb(255, 255, 255)",
-                                                        padding: "3px 8px",
-                                                        marginTop: "4px"
-                                                    }}
-                                                >
+                                                <div className="pot-display-secondary">
                                                     Main Pot:
                                                     <span style={{ fontWeight: "700px" }}>
                                                         {" "}
@@ -811,11 +744,11 @@ const Table = () => {
                                                 return (
                                                     <div
                                                         key={`key-${index}`}
+                                                        className="chip-position"
                                                         style={{
                                                             left: position.left,
                                                             bottom: position.bottom
                                                         }}
-                                                        className="absolute"
                                                     >
                                                         <Chip amount={chipAmount} />
                                                     </div>
@@ -824,14 +757,14 @@ const Table = () => {
                                             {/*//! Dealer */}
                                             {isDealerButtonVisible && (
                                                 <motion.div
-     className="absolute z-50 w-12 h-12 flex items-center justify-center"
-     style={dealerButtonStyle}
-     initial={false}
-     animate={dealerButtonStyle}
-     transition={{ duration: 0.6, ease: "easeInOut" }}
- >
-     <img src={CustomDealer} alt="Dealer Button" />
- </motion.div>
+                                                    className="dealer-button"
+                                                    style={dealerButtonStyle}
+                                                    initial={false}
+                                                    animate={dealerButtonStyle}
+                                                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                                                >
+                                                    <img src={CustomDealer} alt="Dealer Button" />
+                                                </motion.div>
                                             )}
                                         </div>
                                     </div>
@@ -866,13 +799,7 @@ const Table = () => {
                     </div>
                 </div>
                 {/*//! ACTION LOG OVERLAY */}
-                <div
-                    className={`fixed top-[100px] right-0 transition-all duration-300 ease-in-out ${openSidebar ? "w-[250px] opacity-100" : "w-0 opacity-0"}`}
-                    style={{
-                        zIndex: 1000,
-                        height: "calc(100vh - 350px)"
-                    }}
-                >
+                <div className={`action-log-overlay ${openSidebar ? "action-log-open" : "action-log-closed"}`}>
                     <ActionsLog />
                 </div>
             </div>
@@ -909,18 +836,18 @@ const Table = () => {
             )}
 
             {/* Powered by Block52 */}
-            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
-                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
-                    <div className="text-left mb-1">
-                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+            <div className="powered-by-block52">
+                <div className="powered-by-content">
+                    <div className="powered-by-text">
+                        <span className="text-xs text-white font-medium tracking-wide">POWERED BY</span>
                     </div>
-                    <img src="/block52.png" alt="Block52 Logo" className="h-12 w-auto object-contain interaction-none" />
+                    <img src="/block52.png" alt="Block52 Logo" className="powered-by-logo" />
                 </div>
             </div>
 
             {/* Debug Error Panel */}
             {debugMode && (
-                <div className="fixed bottom-24 left-4 w-64 z-50">
+                <div className="debug-panel">
                     <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
                 </div>
             )}
