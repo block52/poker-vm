@@ -1345,12 +1345,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
         // Create winners array
         const winners: WinnerDTO[] = json.winners || [];
 
+        // Reconstruct lastActedSeat from nextToAct
+        // If nextToAct is seat N, then lastActedSeat should be N-1 (with wrapping)
+        // hack for now need to consider what happens when we get to 9 and how this resets but this works for heads-up.
+        let lastActedSeat = json.nextToAct - 1;
+        if (lastActedSeat < 1) {
+            lastActedSeat = gameOptions.maxPlayers;
+        }
+
         // Create and return new game instance
         return new TexasHoldemGame(
             json.address,
             gameOptions,
             positions,
-            json.lastActedSeat as number,
+            lastActedSeat,
             json.previousActions,
             json.handNumber,
             json.actionCount,
