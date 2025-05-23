@@ -96,10 +96,7 @@ import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
-import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
-
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
-
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
 
@@ -235,9 +232,6 @@ const Table = () => {
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
-
-    // Add the usePlayerDataAvailability hook
-    const { isPlayerDataAvailable } = usePlayerDataAvailability(id);
 
     // Add the useGameOptions hook
     const { gameOptions } = useGameOptions(id);
@@ -560,19 +554,14 @@ const Table = () => {
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                                     Hand #{handNumber}
                                 </span>
-
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                    <span>Next to act: Seat {nextToAct}</span>
+                                    <span className="ml-2">Actions # {actionCount}</span>
                                 </span>
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                    <span className="ml-2">Actions: {actionCount}</span>
+                                    <span>Next To Act: Seat {nextToAct}</span>
                                 </span>
+                                
                             </div>
-
-                            {/* <div className="text-xs text-blue-200 ml-2 font-medium bg-black/30 px-2 py-0.5 rounded mt-1">
-                                    {nextToAct > 0 && <span>Next to act: Seat {nextToAct}</span>}
-                                    {actionCount > 0 && <span className="ml-2">Actions: {actionCount}</span>}
-                                </div> */}
                         </div>
                     </div>
 
@@ -913,7 +902,7 @@ const Table = () => {
                 </div>
             )}
             {/* Show a message when the hand is over */}
-            {isPlayerDataAvailable && !isGameInProgress && tableActivePlayers.length > 0 && (
+            {!isGameInProgress && tableActivePlayers.length > 0 && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
                     <span>Hand complete - waiting for next hand</span>
                 </div>
