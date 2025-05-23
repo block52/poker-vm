@@ -590,7 +590,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
     transition-all duration-200"
-                                                onClick={() => handleRaiseChange(Math.max(raiseAmount - bigBlindStep, hasBetAction ? minBet : minRaise))}
+                                                onClick={() => handleRaiseChange(Math.max(raiseAmount - bigBlindStep, hasRaiseAction ? minRaise : minBet))}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 -
@@ -599,8 +599,8 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
-                                                min={hasBetAction ? minBet : minRaise}
-                                                max={hasBetAction ? maxBet : maxRaise}
+                                                min={hasRaiseAction ? minRaise : minBet}
+                                                max={hasRaiseAction ? maxRaise : maxBet}
                                                 step={0.01}
                                                 value={raiseAmount}
                                                 onChange={e => {
@@ -625,7 +625,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
     transition-all duration-200"
-                                                onClick={() => handleRaiseChange(Math.min(raiseAmount + bigBlindStep, hasBetAction ? maxBet : maxRaise))}
+                                                onClick={() => handleRaiseChange(Math.min(raiseAmount + bigBlindStep, hasRaiseAction ? maxRaise : maxBet))}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 +
