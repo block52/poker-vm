@@ -54,7 +54,7 @@ import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
 
 import Chip from "./common/Chip";
-import CustomDealer from "./../../../public/CustomDealer.svg"
+import CustomDealer from "../../assets/CustomDealer.svg";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
@@ -817,19 +817,14 @@ const Table = () => {
                                             {/*//! Dealer */}
                                             {isDealerButtonVisible && (
                                                 <motion.div
-                                                    className="absolute z-50 w-12 h-12 flex items-center justify-center"
-                                                    animate={{
-                                                        left: `calc(${dealerButtonPosition.left} + 200px)`,
-                                                        top: dealerButtonPosition.top
-                                                    }}
-                                                    initial={false}
-                                                    transition={{
-                                                        duration: 0.6,
-                                                        ease: "easeInOut"
-                                                    }}
-                                                >
-                                                    <img src="/CustomDealer.svg" />    
-                                                </motion.div>
+     className="absolute z-50 w-12 h-12 flex items-center justify-center"
+     style={dealerButtonStyle}
+     initial={false}
+     animate={dealerButtonStyle}
+     transition={{ duration: 0.6, ease: "easeInOut" }}
+ >
+     <img src={CustomDealer} alt="Dealer Button" />
+ </motion.div>
                                             )}
                                         </div>
                                     </div>
