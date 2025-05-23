@@ -96,10 +96,7 @@ import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
-import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability";
-
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
-
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
 
@@ -235,9 +232,6 @@ const Table = () => {
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
-
-    // Add the usePlayerDataAvailability hook
-    const { isPlayerDataAvailable } = usePlayerDataAvailability(id);
 
     // Add the useGameOptions hook
     const { gameOptions } = useGameOptions(id);
@@ -908,7 +902,7 @@ const Table = () => {
                 </div>
             )}
             {/* Show a message when the hand is over */}
-            {isPlayerDataAvailable && !isGameInProgress && tableActivePlayers.length > 0 && (
+            {!isGameInProgress && tableActivePlayers.length > 0 && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
                     <span>Hand complete - waiting for next hand</span>
                 </div>
