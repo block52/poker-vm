@@ -21,6 +21,7 @@ import { useTableShow } from "../hooks/playerActions/useTableShow";
 import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
 import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
+import { DEFAULT_BIG_BLIND, useGameOptions } from "../hooks/useGameOptions";
 
 import { ethers } from "ethers";
 
@@ -33,6 +34,7 @@ const PokerActionPanel: React.FC = () => {
     // Get data from our custom hooks
     const { players } = usePlayerDTO(tableId);
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions(tableId);
+    const { gameOptions } = useGameOptions(tableId);
     const { dealCards, isDealing } = useTableDeal(tableId);
     const { checkHand } = useTableCheck(tableId);
     const { foldHand } = useTableFold(tableId);
@@ -70,6 +72,8 @@ const PokerActionPanel: React.FC = () => {
         return legalActions?.some(action => action.action === actionType || action.action?.toString() === actionType?.toString());
     };
 
+    // Extract and format Big Blind Value
+
     // Check if actions are available using the helper function
     const hasDealAction = hasAction(NonPlayerActionType.DEAL) || hasAction(NonPlayerActionType.DEAL);
     const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND) || hasAction(PlayerActionType.SMALL_BLIND);
@@ -106,7 +110,13 @@ const PokerActionPanel: React.FC = () => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    //
+    // Big Blind Value
+    const bigBlindStep = useMemo(() => {
+        const step = Number(ethers.formatUnits(gameOptions.bigBlind ?? BigInt(DEFAULT_BIG_BLIND), 18));
+        return step;
+    }, [gameOptions.bigBlind]);
+
+    // Slider Input State
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
     const [raiseInputRaw, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
@@ -574,7 +584,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
     transition-all duration-200"
-                                                onClick={() => handleRaiseChange(Math.max(raiseAmount - 0.1, hasBetAction ? minBet : minRaise))}
+                                                onClick={() => handleRaiseChange(Math.max(raiseAmount - bigBlindStep, hasBetAction ? minBet : minRaise))}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 -
@@ -609,7 +619,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
     transition-all duration-200"
-                                                onClick={() => handleRaiseChange(Math.min(raiseAmount + 0.1, hasBetAction ? maxBet : maxRaise))}
+                                                onClick={() => handleRaiseChange(Math.min(raiseAmount + bigBlindStep, hasBetAction ? maxBet : maxRaise))}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 +
