@@ -128,14 +128,76 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
         });
 
-        it("should return correct range for a raise", () => {
+        it("should return 1 BB when there has been no previous bet or raise", () => {
+            // simulate only the blinds, no BET or RAISE in the round
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                { action: PlayerActionType.SMALL_BLIND, amount: FIFTY_TOKENS, playerId: player.address, index: 0, seat: 2, timestamp: Date.now() },
+                { action: PlayerActionType.BIG_BLIND, amount: TEN_TOKENS, playerId: player.address, index: 0, seat: 3, timestamp: Date.now() }
+            ]);
+
             const range = action.verify(player);
-
-            // Min amount should be previous bet + big blind
-            const expectedMinAmount = 40000000000000000000n; // 40 tokens
-
             expect(range).toEqual({
-                minAmount: expectedMinAmount,
+                minAmount: game.bigBlind,
+                maxAmount: player.chips
+            });
+        });
+
+        it("should allow the small blind to re-open preflop at exactly 1 BB", () => {
+            // ensure we’re in PREFLOP and that our test player *is* the small blind
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+            jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(game.smallBlindPosition);
+
+            const range = action.verify(player);
+            expect(range).toEqual({
+                minAmount: game.bigBlind,
+                maxAmount: player.chips
+            });
+        });
+
+        it("should require exactly double the last bet when there’s a bet but no raise", () => {
+            // stub a single BET and no RAISE in the history
+            const lastBetAmount = TWENTY_TOKENS;
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                { action: PlayerActionType.BET, amount: lastBetAmount, playerId: player.address, index: 0, seat: 2, timestamp: Date.now() }
+            ]);
+
+            // getSumBets(player) returns 0 by default in your beforeEach, so
+            // minRaise = 2 * lastBetAmount
+            const range = action.verify(player);
+            expect(range).toEqual({
+                minAmount: lastBetAmount * 2n,
+                maxAmount: player.chips
+            });
+        });
+
+        it("should return correct range for a raise (bet + raise scenario)", () => {
+            // 1) Force PREFLOP
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+
+            // 2) Stub both a BET of 20 tokens and a RAISE to 50 tokens
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                {
+                    playerId: player.address,
+                    action: PlayerActionType.BET,
+                    amount: TWENTY_TOKENS,
+                    index: 0,
+                    seat: 2,
+                    timestamp: Date.now()
+                },
+                {
+                    playerId: player.address,
+                    action: PlayerActionType.RAISE,
+                    amount: FIFTY_TOKENS,
+                    index: 1,
+                    seat: 2,
+                    timestamp: Date.now()
+                }
+            ]);
+
+            // 3) Verify: diff = 50 − 20 = 30; min = 50 + 30 = 80
+            const range = action.verify(player);
+            expect(range).toEqual({
+                minAmount: FIFTY_TOKENS + (FIFTY_TOKENS - TWENTY_TOKENS), // 80 tokens
                 maxAmount: player.chips
             });
         });
@@ -161,7 +223,12 @@ describe("Raise Action", () => {
                 }
             ]);
 
-            expect(() => action.verify(player)).toThrow("No previous bet to raise.");
+            // expect(() => action.verify(player)).toThrow("No previous bet to raise.");
+            const range = action.verify(player);
+            expect(range).toEqual({
+                minAmount: game.bigBlind,
+                maxAmount: player.chips
+            });
         });
 
         it("should bet all the players chips if less than the raised amount", () => {
