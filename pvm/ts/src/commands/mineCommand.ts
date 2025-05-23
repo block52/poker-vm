@@ -225,17 +225,8 @@ export class MineCommand implements ISignedCommand<Block | null> {
                 validTxs.push(result);
             }
         }
-        
-        // for (let i = 0; i < txs.length; i++) {
-        //     const tx = txs[i];
-        //     const exists = await this.transactionManagement.exists(tx.hash);
-
-        //     if (exists) {
-        //         duplicateCount++;
-        //         continue;
-        //     }
-        //     validTxs.push(tx);
-        // }
+        console.log(`Duplicate transactions: ${duplicateCount}`);
+        console.log(`Valid transactions: ${validTxs.length}`);
         return validTxs;
     }
 }
