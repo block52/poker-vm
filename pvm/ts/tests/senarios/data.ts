@@ -1,8 +1,4 @@
-import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import TexasHoldemGame from "./texasHoldem";
-import { fromTestJson } from "./testConstants";
-
-const test_json = {
+export const test_json = {
     "id": "1",
     "result": {
         "data": {
@@ -169,30 +165,3 @@ const test_json = {
         "signature": "0x7ad21711ed2e9b07bb993445de702236356f49b70480a99ba52a587cf9c02a7645d2cf4758d109501bc74d97852afb3b780d5874c068489e1bedc4260c166adc1b"
     }
 }
-
-// This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
-describe.skip("Texas Holdem - Turn - Heads Up", () => {
-    describe("Turn tests", () => {
-
-        const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
-        const SEAT_2 = "0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD";
-
-        let game: TexasHoldemGame;
-
-        beforeEach(() => {
-            game = fromTestJson(test_json);
-        });
-
-        it("should have correct legal actions after turn", () => {
-            // Check the current round
-            expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
-
-            // Get legal actions for the next player
-            let actual = game.getLegalActions(SEAT_1);
-            expect(actual).toBeDefined();
-            // expect(actual.length).toEqual(1);
-            // expect(actual[0].action).toEqual(PlayerActionType.SMALL_BLIND);
-            // expect(actual[1].action).toEqual(PlayerActionType.FOLD);
-        });
-    });
-});

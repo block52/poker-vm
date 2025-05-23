@@ -71,8 +71,8 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
     private async processGameTransactions(txs: Transaction[]) {
         console.log(`Processing ${txs.length} game transactions`);
-        const validGameTxs = await this.filterGameTransactions(txs);
 
+        const validGameTxs = await this.filterGameTransactions(txs);
         console.log(`Valid game transactions: ${validGameTxs.length}`);
 
         // find unique to addresses from the transactions
@@ -161,16 +161,35 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
     private async filterGameTransactions(txs: Transaction[]): Promise<Transaction[]> {
         const validTxs: Transaction[] = [];
+        // Cache into memory
 
+        // Get unique addresses from the transactions
+        const uniqueAddresses = new Set<string>();
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
-            const schema = await contractSchemas.findOne({ address: tx.to });
 
-            if (!schema) {
+            // Check if the address is already in the cache
+            if (uniqueAddresses.has(tx.to)) {
+                continue; // Skip if already processed
+            }
+            
+            uniqueAddresses.add(tx.to);
+        }
+
+        // Iterate over the unique addresses
+        for (const address of uniqueAddresses) {
+            const game = await this.gameStateManagement.getByAddress(address);
+
+            if (!game) {
+                console.log(`Game not found for address ${address}`);
                 continue;
             }
 
-            validTxs.push(tx);
+            // Check if the transaction is valid
+            const tx = txs.find((tx) => tx.to === address);
+            if (tx) {
+                validTxs.push(tx);
+            }
         }
 
         return validTxs;
@@ -190,16 +209,33 @@ export class MineCommand implements ISignedCommand<Block | null> {
         const validTxs: Transaction[] = [];
         let duplicateCount = 0;
 
-        for (let i = 0; i < txs.length; i++) {
-            const tx = txs[i];
+        // Do in parallel
+        const promises = txs.map(async (tx) => {
             const exists = await this.transactionManagement.exists(tx.hash);
-
             if (exists) {
                 duplicateCount++;
-                continue;
+                return null;
             }
-            validTxs.push(tx);
+            return tx;
+        });
+
+        const results = await Promise.all(promises);
+        for (const result of results) {
+            if (result) {
+                validTxs.push(result);
+            }
         }
+        
+        // for (let i = 0; i < txs.length; i++) {
+        //     const tx = txs[i];
+        //     const exists = await this.transactionManagement.exists(tx.hash);
+
+        //     if (exists) {
+        //         duplicateCount++;
+        //         continue;
+        //     }
+        //     validTxs.push(tx);
+        // }
         return validTxs;
     }
 }
