@@ -1,18 +1,18 @@
 {
-  "compilerOptions": {
-    "lib": ["es2020", "dom"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "target": "ES2020",
-    "types": ["node", "jest"],
-    "sourceMap": true,
-    "outDir": "dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "cli"]
+    "compilerOptions": {
+        "lib": ["es2020", "dom"],
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "target": "ES2020",
+        "types": ["node", "jest"],
+        "sourceMap": true,
+        "outDir": "dist",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true
+    },
+    "include": ["src/**/*.ts", "tests/senario.test.ts"],
+    "exclude": ["node_modules", "dist", "cli"]
 }
