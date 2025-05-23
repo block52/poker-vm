@@ -483,11 +483,12 @@ export class NodeRpcClient implements IClient {
      */
     public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
-
+        
         if (!nonce) {
             nonce = await this.getNonce(address);
         }
+
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -500,15 +501,9 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
-    private async getSignature(nonce?: number): Promise<string> {
+    private async getSignature(nonce: number): Promise<string> {
         if (!this.wallet) {
             throw new Error("Cannot transfer funds without a private key");
-        }
-
-        const address = this.wallet.address;
-
-        if (!nonce) {
-            nonce = await this.getNonce(address);
         }
 
         const signature = await this.wallet.signMessage(nonce.toString());
