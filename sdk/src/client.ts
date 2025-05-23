@@ -337,7 +337,7 @@ export class NodeRpcClient implements IClient {
         const address = this.getAddress();
 
         if (!nonce) {
-            nonce = await this.getNonce(this.getAddress());
+            nonce = await this.getNonce(address);
         }
 
         const signature = await this.getSignature(nonce);
@@ -366,7 +366,8 @@ export class NodeRpcClient implements IClient {
      */
     public async newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string> {
         if (!nonce) {
-            nonce = await this.getNonce(this.getAddress());
+            const address = this.getAddress();
+            nonce = await this.getNonce(address);
         }
 
         const signature = await this.getSignature(nonce);
