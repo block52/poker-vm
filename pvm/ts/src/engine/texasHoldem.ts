@@ -1290,7 +1290,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             pots: [this.getPot().toString()],
             actionCount: this._actionCount,
             handNumber: this.handNumber,
-            nextToAct: nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : -1,
+            nextToAct: nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : 1,
             previousActions: this.getActionDTOs(),
             round: this.currentRound,
             winners: winners,
