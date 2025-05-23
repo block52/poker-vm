@@ -19,7 +19,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
     private readonly gameStateManagement: IGameManagement;
     private readonly contractSchemaManagement: IContractSchemaManagement;
 
-    constructor(private readonly privateKey: string) {
+    constructor(private readonly privateKey: string, private readonly expire: boolean = false) {
         this.mempool = getMempoolInstance();
         this.blockchainManagement = getBlockchainInstance();
         this.transactionManagement = getTransactionInstance();
@@ -28,7 +28,11 @@ export class MineCommand implements ISignedCommand<Block | null> {
     }
 
     public async execute(): Promise<ISignedResponse<Block | null>> {
-        await this.expireActions();
+        if (this.expire) {
+            console.log("Expiring actions");
+            await this.expireActions();
+        }
+        
         const txs = this.mempool.get();
 
         const validTxs: Transaction[] = this.validate(txs);
