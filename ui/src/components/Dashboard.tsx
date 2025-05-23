@@ -16,6 +16,13 @@ import { GameType, Variant } from "./types";
 import { formatAddress, formatBalance } from "./common/utils";
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 
+// Password protection utils
+import { 
+    checkAuthCookie, 
+    handlePasswordSubmit as utilHandlePasswordSubmit,
+    handlePasswordKeyPress as utilHandlePasswordKeyPress 
+} from "../utils/passworProtectionUtils";
+
 // Add network display component
 const NetworkDisplay = ({ isMainnet = false }) => {
     return (
@@ -96,22 +103,20 @@ const Dashboard: React.FC = () => {
 
     // Password validation function
     const handlePasswordSubmit = () => {
-        if (passwordInput === "123") {
-            setIsAuthenticated(true);
-            setPasswordError("");
-            setPasswordInput("");
-        } else {
-            setPasswordError("Invalid password. Please try again.");
-            setPasswordInput("");
-        }
+        utilHandlePasswordSubmit(passwordInput, setIsAuthenticated, setPasswordError, setPasswordInput);
     };
 
     // Handle Enter key press in password input
     const handlePasswordKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-            handlePasswordSubmit();
-        }
+        utilHandlePasswordKeyPress(e, passwordInput, setIsAuthenticated, setPasswordError, setPasswordInput);
     };
+
+    // Check for existing auth cookie on component mount
+    useEffect(() => {
+        if (checkAuthCookie()) {
+            setIsAuthenticated(true);
+        }
+    }, []);
 
     // Add effect to track mouse movement
     const handleMouseMove = useCallback((e: MouseEvent) => {
