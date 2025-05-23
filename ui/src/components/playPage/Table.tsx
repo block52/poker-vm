@@ -56,6 +56,7 @@ import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
 
 import Chip from "./common/Chip";
+import CustomDealer from "../../assets/CustomDealer.svg";
 import TurnAnimation from "./TurnAnimation/TurnAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
@@ -100,6 +101,7 @@ import { usePlayerDataAvailability } from "../../hooks/usePlayerDataAvailability
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 
 import { PositionArray } from "../../types/index";
+import { motion } from "framer-motion";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -560,11 +562,9 @@ const Table = () => {
                                 </span>
 
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                   <span>Next to act: Seat {nextToAct}</span>
-                                 
+                                    <span>Next to act: Seat {nextToAct}</span>
                                 </span>
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                        
                                     <span className="ml-2">Actions: {actionCount}</span>
                                 </span>
                             </div>
@@ -578,8 +578,10 @@ const Table = () => {
 
                     {/* Right Section */}
                     <div className="flex items-center z-10 mr-3">
-                        <span 
-                            className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ${openSidebar ? "bg-blue-500/30 text-white" : "text-gray-400 hover:text-blue-400"}`} 
+                        <span
+                            className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ${
+                                openSidebar ? "bg-blue-500/30 text-white" : "text-gray-400 hover:text-blue-400"
+                            }`}
                             onClick={onCloseSideBar}
                             title="Toggle Action Log"
                         >
@@ -832,12 +834,15 @@ const Table = () => {
                                             })}
                                             {/*//! Dealer */}
                                             {isDealerButtonVisible && (
-                                                <div
-                                                    className="absolute z-50 bg-white text-black font-bold rounded-full w-8 h-8 flex items-center justify-center border-2 border-black"
-                                                    style={dealerButtonStyle}
-                                                >
-                                                    D
-                                                </div>
+                                                <motion.div
+     className="absolute z-50 w-12 h-12 flex items-center justify-center"
+     style={dealerButtonStyle}
+     initial={false}
+     animate={dealerButtonStyle}
+     transition={{ duration: 0.6, ease: "easeInOut" }}
+ >
+     <img src={CustomDealer} alt="Dealer Button" />
+ </motion.div>
                                             )}
                                         </div>
                                     </div>
@@ -873,9 +878,7 @@ const Table = () => {
                 </div>
                 {/*//! ACTION LOG OVERLAY */}
                 <div
-                    className={`fixed top-[100px] right-0 transition-all duration-300 ease-in-out ${
-                        openSidebar ? "w-[250px] opacity-100" : "w-0 opacity-0"
-                    }`}
+                    className={`fixed top-[100px] right-0 transition-all duration-300 ease-in-out ${openSidebar ? "w-[250px] opacity-100" : "w-0 opacity-0"}`}
                     style={{
                         zIndex: 1000,
                         height: "calc(100vh - 350px)"
