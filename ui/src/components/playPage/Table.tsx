@@ -560,19 +560,14 @@ const Table = () => {
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                                     Hand #{handNumber}
                                 </span>
-
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                    <span>Next to act: Seat {nextToAct}</span>
+                                    <span className="ml-2">Actions # {actionCount}</span>
                                 </span>
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                    <span className="ml-2">Actions: {actionCount}</span>
+                                    <span>Next To Act: Seat {nextToAct}</span>
                                 </span>
+                                
                             </div>
-
-                            {/* <div className="text-xs text-blue-200 ml-2 font-medium bg-black/30 px-2 py-0.5 rounded mt-1">
-                                    {nextToAct > 0 && <span>Next to act: Seat {nextToAct}</span>}
-                                    {actionCount > 0 && <span className="ml-2">Actions: {actionCount}</span>}
-                                </div> */}
                         </div>
                     </div>
 
