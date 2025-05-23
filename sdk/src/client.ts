@@ -52,7 +52,7 @@ export class NodeRpcClient implements IClient {
     }
 
     /**
-     * Get a random request ID
+     * Get next request ID
      * @returns The request ID
      */
     private getRequestId(): string {
@@ -337,7 +337,7 @@ export class NodeRpcClient implements IClient {
         const address = this.getAddress();
 
         if (!nonce) {
-            nonce = await this.getNonce(this.getAddress());
+            nonce = await this.getNonce(address);
         }
 
         const signature = await this.getSignature(nonce);
@@ -366,7 +366,8 @@ export class NodeRpcClient implements IClient {
      */
     public async newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string> {
         if (!nonce) {
-            nonce = await this.getNonce(this.getAddress());
+            const address = this.getAddress();
+            nonce = await this.getNonce(address);
         }
 
         const signature = await this.getSignature(nonce);
@@ -483,11 +484,12 @@ export class NodeRpcClient implements IClient {
      */
     public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
-
+        
         if (!nonce) {
             nonce = await this.getNonce(address);
         }
+
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -500,15 +502,9 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
-    private async getSignature(nonce?: number): Promise<string> {
+    private async getSignature(nonce: number): Promise<string> {
         if (!this.wallet) {
             throw new Error("Cannot transfer funds without a private key");
-        }
-
-        const address = this.wallet.address;
-
-        if (!nonce) {
-            nonce = await this.getNonce(address);
         }
 
         const signature = await this.wallet.signMessage(nonce.toString());
@@ -533,25 +529,6 @@ export class NodeRpcClient implements IClient {
             throw error; // Rethrow the error to be handled by the caller
         }
     }
-
-    // private async getNextActionIndex(gameAddress: string, playerId: string): Promise<number> {
-    //     try {
-    //         const legalActions = await this.getLegalActions(gameAddress, playerId);
-    //         if (!legalActions || legalActions.length === 0) {
-    //             throw new Error("No legal actions found");
-    //         }
-
-    //         // Find the action with the highest index
-    //         const action = legalActions.reduce((prev, current) => {
-    //             return prev.index > current.index ? prev : current;
-    //         });
-
-    //         return action.index;
-    //     } catch (error) {
-    //         console.error(`Error getting next action index: ${(error as Error).message}`);
-    //         throw error; // Rethrow the error to be handled by the caller
-    //     }
-    // }
 
     private async getNonce(address: string): Promise<number> {
         const response = await this.getAccount(address);
