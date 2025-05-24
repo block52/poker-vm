@@ -150,6 +150,7 @@ export type TexasHoldemStateDTO = {
     communityCards: string[];
     deck: string; // Assume this will be encrypted
     pots: string[];
+    lastActedSeat: number;
     nextToAct: number;
     previousActions: ActionDTO[];
     actionCount: number;

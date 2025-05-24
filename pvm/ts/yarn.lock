@@ -278,13 +278,14 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitcoinbrisbane/block52@1.0.131":
-  version "1.0.131"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.131.tgz#9d8093e7212cf31957d79fe6a624d8c4ae677d1b"
-  integrity sha512-ZqwnG3fX4u0Cmre7aZG2rGHek8VHcynhbU6+azSC3bQsiIYiSxAb8dAOZIrzGSpYYGwwTNCSpI4WMysZt8QgpA==
+"@bitcoinbrisbane/block52@1.0.137":
+  version "1.0.137"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.137.tgz#45fed15f650a9dd4ffdbace82f1f1e213f0f2325"
+  integrity sha512-5kzS6psH9T17rVhAEJAlgNNSPaGdGPCLvImJRVU/gOc82V4PFynS6tNBQ7pHECljcUgKk4lmoKaT5emqPpadPw==
   dependencies:
     axios "^1.8.1"
     bigunit "^1.2.5"
+    dotenv "^16.5.0"
     ethers "^6.13.4"
 
 "@cspotcode/source-map-support@^0.8.0":
@@ -1278,7 +1279,7 @@ diff@^4.0.1:
   resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.2.tgz#60f3aecb89d5fae520c11aa19efc2bb982aade7d"
   integrity sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
 
-dotenv@^16.4.5:
+dotenv@^16.4.5, dotenv@^16.5.0:
   version "16.5.0"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.5.0.tgz#092b49f25f808f020050051d1ff258e404c78692"
   integrity sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==
