@@ -39,8 +39,8 @@ describe("Texas Holdem - Data driven", () => {
             const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
             const SEAT_2 = "0xc264FEDe83B081C089530BA0b8770C98266d058a";
 
-            game = fromTestJson(test_753)
-            // Check who is next to act
+            game = fromTestJson(test_753);
+            // Check who is next to act (seat 2 after dealing)
             expect(game.currentPlayerId).toEqual(SEAT_2);
             expect(game.smallBlindPosition).toEqual(2);
             expect(game.bigBlindPosition).toEqual(1);
