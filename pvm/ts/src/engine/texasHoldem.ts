@@ -913,7 +913,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         player.addAction({ playerId: address, action, amount, index }, timestamp);
 
         // Update the last player to act
-        this._lastActedSeat = seat;
+        if (action.toString() !== NonPlayerActionType.DEAL) {
+            this._lastActedSeat = seat;            
+        }
 
         // Check if the round has ended and advance if needed
         if (this.hasRoundEnded(this.currentRound)) {
