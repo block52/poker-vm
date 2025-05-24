@@ -42,6 +42,8 @@ describe("Texas Holdem - Data driven", () => {
             game = fromTestJson(test_753)
             // Check who is next to act
             expect(game.currentPlayerId).toEqual(SEAT_2);
+            expect(game.smallBlindPosition).toEqual(2);
+            expect(game.bigBlindPosition).toEqual(1);
 
             const actual = game.getLegalActions(SEAT_2);
             expect(actual).toBeDefined();
