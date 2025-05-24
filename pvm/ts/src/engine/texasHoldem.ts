@@ -1353,9 +1353,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         //     lastActedSeat = gameOptions.maxPlayers;
         // }
 
-        let lastActedSeat: number = 1;
+        let lastActedSeat: number = json.smallBlindPosition;
         if (json.previousActions && json.previousActions.length > 0) {
-            lastActedSeat = json.previousActions[json.previousActions.length - 1]?.seat || 1;
+            lastActedSeat = json.previousActions[json.previousActions.length - 1]?.seat;
         }
 
         // Create and return new game instance
