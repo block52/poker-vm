@@ -129,17 +129,14 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
         connection.isConnecting = false;
         connection.reconnectAttempts = 0;
         
-        // Send subscription message
+        // Send subscription message - data will come via onmessage
         ws.send(JSON.stringify({
           action: "subscribe",
           tableAddress: tableId,
           playerId: userAddress
         }));
-
-        // Notify all subscribers of connection success
-        connection.subscribers.forEach(callback => {
-          // Don't change game state on connection, wait for data
-        });
+        
+        // No need to notify subscribers here - wait for actual game data
       };
 
       ws.onmessage = (event) => {
@@ -243,6 +240,6 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
     error, 
     isLoading, 
     refresh,
-    isConnected: !!tableId && !!userAddress && globalConnections.get(`${tableId}-${userAddress}`)?.ws?.readyState === WebSocket.OPEN
+    isConnected: !!tableId && !!userAddress && !!globalConnections.get(`${tableId}-${userAddress}`)?.ws && globalConnections.get(`${tableId}-${userAddress}`)?.ws?.readyState === WebSocket.OPEN
   };
-}; 
+};
