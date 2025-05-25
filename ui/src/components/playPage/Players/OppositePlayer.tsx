@@ -118,7 +118,8 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                 }}
             >
                 <div className="flex justify-center gap-1">
-                    {holeCards && holeCards.length === 2 ? (
+                    {/* Check raw playerData for any cards (including ??) to show card backs */}
+                    {playerData?.holeCards && playerData.holeCards.length === 2 ? (
                         isShowingCards && showingCards ? (
                             // Show the actual cards if player is showing
                             <>
@@ -126,7 +127,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                                 <img src={`/cards/${showingCards[1]}.svg`} alt="Player Card 2" className="w-[35%] h-[auto]" />
                             </>
                         ) : (
-                            // Show card backs if not showing
+                            // Show card backs if player has any cards (even placeholders ??)
                             <>
                                 <img src="/cards/BackCustom.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
                                 <img src="/cards/BackCustom.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
