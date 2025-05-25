@@ -6,7 +6,7 @@ export interface GameStateReturn {
     error: Error | null;
     isLoading: boolean;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
-    getNestedValue: (path: string) => any;
+    isConnected: boolean;
 }
 
 // Type for action log entries
