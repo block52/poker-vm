@@ -10,14 +10,23 @@ const ActionsLog: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { previousActions, refresh } = useGameProgress(id);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [lastRefreshTime, setLastRefreshTime] = React.useState<number>(0);
     
-    // Handle manual refresh
+    // Handle manual refresh with debounce
     const handleRefresh = () => {
-        if (refresh && !isRefreshing) {
+        const now = Date.now();
+        const timeSinceLastRefresh = now - lastRefreshTime;
+        const debounceDelay = 2000; // 2 seconds between manual refreshes
+        
+        if (refresh && !isRefreshing && timeSinceLastRefresh >= debounceDelay) {
             setIsRefreshing(true);
+            setLastRefreshTime(now);
+            
             refresh().finally(() => {
                 setTimeout(() => setIsRefreshing(false), 500);
             });
+        } else if (timeSinceLastRefresh < debounceDelay) {
+            console.log(`⏳ Please wait ${Math.ceil((debounceDelay - timeSinceLastRefresh) / 1000)}s before refreshing again`);
         }
     };
 
@@ -29,7 +38,7 @@ const ActionsLog: React.FC = () => {
                     onClick={handleRefresh} 
                     disabled={isRefreshing}
                     className={`text-white/70 hover:text-white/90 transition-all ${isRefreshing ? "animate-spin" : ""}`}
-                    title="Refresh actions"
+                    title="Refresh actions (2s cooldown)"
                 >
                     <IoMdRefresh size={16} />
                 </button>
