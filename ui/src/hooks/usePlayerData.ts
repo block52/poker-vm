@@ -20,12 +20,10 @@ export const usePlayerData = (tableId?: string, seatIndex?: number) => {
   // Get player data from the table state
   const playerData = React.useMemo(() => {
     if (!gameState || !seatIndex) {
-      console.log(`No player data - gameState exists: ${!!gameState}, seatIndex: ${seatIndex}`);
       return null;
     }
     
     if (!gameState.players) {
-      console.log("Game state has no players array");
       return null;
     }
     
@@ -62,7 +60,6 @@ export const usePlayerData = (tableId?: string, seatIndex?: number) => {
     
     // Clear cached cards when transitioning from end to ante (new hand)
     if (lastRoundRef.current === "end" && currentRound === "ante") {
-      console.log(`🎴 Clearing cached cards for new hand - Round: ${currentRound}`);
       lastValidHoleCardsRef.current = [];
     }
     
@@ -80,11 +77,8 @@ export const usePlayerData = (tableId?: string, seatIndex?: number) => {
       );
       
       if (isValidCards) {
-        console.log(`🎴 Caching new cards: ${currentCards[0]}, ${currentCards[1]}`);
         lastValidHoleCardsRef.current = [...currentCards];
         return lastValidHoleCardsRef.current;
-      } else {
-        console.log(`🎴 Rejecting placeholder cards: ${currentCards[0]}, ${currentCards[1]}`);
       }
     }
     
