@@ -38,8 +38,39 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
+import { getSocketService } from "./core/socketserver";
 
 export class RPC {
+    // Helper function to broadcast game state updates via WebSocket
+    private static async broadcastGameStateUpdate(contractAddress: string, userAddress: string) {
+        try {
+            const socketService = getSocketService();
+            if (!socketService) {
+                console.log("No socket service available for broadcasting");
+                return;
+            }
+
+            // Get current game state to broadcast
+            const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
+            const gameStateCommand = new GameStateCommand(contractAddress, validatorPrivateKey, userAddress);
+            const gameStateResult = await gameStateCommand.execute();
+            
+            if (gameStateResult && gameStateResult.data) {
+                console.log(`Broadcasting game state update for table ${contractAddress}`);
+                
+                // Get all subscribers for this table
+                const subscribers = socketService.getSubscribers(contractAddress);
+                
+                // Send update to each subscribed player
+                for (const playerId of subscribers) {
+                    socketService.sendGameStateToPlayer(contractAddress, playerId, gameStateResult.data);
+                }
+            }
+        } catch (error) {
+            console.error("Error broadcasting game state update:", error);
+        }
+    }
+
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
         // console.log(request);
         if (!request) {
@@ -320,6 +351,7 @@ export class RPC {
                     const command = new TransferCommand(from, to, BigInt(amount), nonce, data, validatorPrivateKey);
                     result = await command.execute();
 
+                    // Note: TRANSFER is for token transfers, not game actions, so we don't broadcast game state
                     break;
                 }
 
@@ -342,6 +374,11 @@ export class RPC {
                     const _action = action as PlayerActionType | NonPlayerActionType;
                     const command = new PerformActionCommandWithResult(from, to, Number(index), BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey, data);
                     result = await command.execute();
+                    
+                    // Broadcast game state update to all players at this table
+                    if (result && to) {
+                        await this.broadcastGameStateUpdate(to, from);
+                    }
                     break;
                 }
 
