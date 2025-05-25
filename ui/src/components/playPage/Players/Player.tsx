@@ -18,7 +18,7 @@
  */
 
 import * as React from "react";
-import { memo, useMemo, useCallback } from "react";
+import { memo, useMemo, useCallback, useRef } from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
@@ -30,6 +30,18 @@ const Player: React.FC<PlayerProps> = memo(({ left, top, index, currentIndex, co
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
     const { winnerInfo } = useWinnerInfo(id);
+
+    // Keep reference to last valid player data
+    const lastValidPlayerDataRef = useRef<any>(null);
+
+    // Memoize player data - only update when we have new valid data
+    const displayPlayerData = useMemo(() => {
+        if (playerData) {
+            lastValidPlayerDataRef.current = playerData;
+            return playerData;
+        }
+        return lastValidPlayerDataRef.current;
+    }, [playerData]);
 
     // Memoize winner check
     const isWinner = useMemo(() => {
@@ -83,8 +95,8 @@ const Player: React.FC<PlayerProps> = memo(({ left, top, index, currentIndex, co
         backgroundColor: isWinner ? "#2c8a3c" : "green"
     }), [isWinner]);
 
-    if (!playerData) {
-        console.log(`No player data found for player at seat ${index}`);
+    // Only return empty if we truly never had any player data
+    if (!displayPlayerData) {
         return <></>;
     }
 
