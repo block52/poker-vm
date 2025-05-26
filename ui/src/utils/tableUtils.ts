@@ -265,40 +265,6 @@ export const isPlayerTurnToPostBlind = (tableData: TableData, playerAddress: str
 };
 
 /**
- * Gets the winner information from the table data if available
- * @param tableData The table data object
- * @returns An object with winner information or null if no winner
- */
-export const getWinnerInfo = (tableData: any) => {
-    if (!tableData || !tableData.winners || tableData.winners.length === 0) {
-        return null;
-    }
-
-    const winners = tableData.winners;
-    const result = [];
-
-    for (const winner of winners) {
-        // Find the player's seat from their address
-        const playerSeat = tableData.players.find((p: Player) => p.address?.toLowerCase() === winner.address?.toLowerCase())?.seat;
-
-        if (playerSeat !== undefined) {
-            // Format the winning amount to a readable format (ETH to dollars)
-            const winAmount = Number(ethers.formatUnits(winner.amount.toString(), 18));
-            const formattedAmount = formatWinningAmount(winAmount.toString());
-
-            result.push({
-                seat: playerSeat,
-                address: winner.address,
-                amount: winner.amount,
-                formattedAmount
-            });
-        }
-    }
-
-    return result.length > 0 ? result : null;
-};
-
-/**
  * Converts a backend seat number to a display seat number
  * Since the backend is already using 1-based seat numbers,
  * this function now simply returns the input

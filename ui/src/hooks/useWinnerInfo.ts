@@ -1,14 +1,14 @@
 import { useGameState } from "./useGameState";
-import { PlayerDTO, PlayerStatus, TexasHoldemGameState, TexasHoldemStateDTO, WinnerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerDTO, PlayerStatus, TexasHoldemStateDTO, WinnerDTO } from "@bitcoinbrisbane/block52";
 import { formatWeiToDollars } from "../utils/numberUtils";
-import { GameStateReturn, Player, WinnerInfoReturn } from "../types/index";
+import { WinnerInfoReturn } from "../types/index";
 
 /**
  * Extract winner information from game state
  * @param gameData The parsed game data
  * @returns Array of winner information or null if no winners
  */
-export function getWinnerInfo(gameData: TexasHoldemStateDTO) {
+function getWinnerInfo(gameData: TexasHoldemStateDTO) {
     if (!gameData) return null;
 
     // Check for explicit winners array in the game data
