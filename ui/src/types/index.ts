@@ -194,3 +194,11 @@ export interface GameProgressType {
     error: Error | null;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
+
+// Type for the return value of useCardAnimations hook
+export interface CardAnimationsReturn {
+    flipped1: boolean;
+    flipped2: boolean;
+    flipped3: boolean;
+    showThreeCards: boolean;
+}

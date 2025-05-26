@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useGameState } from "./useGameState";
+import { CardAnimationsReturn } from "../types/index";
 
 /**
  * Custom hook to handle card animations
  * @param tableId The ID of the table
  * @returns Object containing animation state for cards
  */
-export const useCardAnimations = (tableId?: string) => {
+export const useCardAnimations = (tableId?: string): CardAnimationsReturn => {
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
