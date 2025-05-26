@@ -1,13 +1,32 @@
 import React from "react";
 import { useGameState } from "./useGameState"
 import { ethers } from "ethers";
+import { PlayerDTO } from "@bitcoinbrisbane/block52";
+
+export type VacantSeatResponse = {
+  isUserAlreadyPlaying: boolean;
+  tableInfo: {
+    smallBlindWei: string;
+    bigBlindWei: string;
+    smallBlindDisplay: string;
+    bigBlindDisplay: string;
+    dealerPosition: number;
+    smallBlindPosition: number;
+    bigBlindPosition: number;
+    players: PlayerDTO[];
+  };
+  isSeatVacant: (seatIndex: number) => boolean;
+  canJoinSeat: (seatIndex: number) => boolean;
+  isLoading: boolean;
+  error?: Error | null;
+};
 
 /**
  * Custom hook to manage data for vacant seats
  * @param tableId The ID of the table
  * @returns Object containing seat vacancy data
  */
-export const useVacantSeatData = (tableId?: string) => {
+export const useVacantSeatData = (tableId?: string): VacantSeatResponse => {
   // Get game state from centralized hook
   const { gameState, isLoading, error } = useGameState(tableId);
   
@@ -21,7 +40,7 @@ export const useVacantSeatData = (tableId?: string) => {
     
     if (!gameState.players) return false;
     
-    return gameState.players.some((player: any) => 
+    return gameState.players.some((player: PlayerDTO) => 
       player.address?.toLowerCase() === userAddress
     );
   }, [gameState, userAddress]);
@@ -62,10 +81,10 @@ export const useVacantSeatData = (tableId?: string) => {
     
     // Check if any player occupies this seat
     const isOccupied = gameState.players.some(
-      (player: any) => 
+      (player: PlayerDTO) => 
         player.seat === seatIndex && 
         player.address && 
-        player.address !== "0x0000000000000000000000000000000000000000"
+        player.address !== ethers.ZeroAddress
     );
     
     return !isOccupied;

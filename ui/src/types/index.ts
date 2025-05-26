@@ -194,3 +194,18 @@ export interface GameProgressType {
     error: Error | null;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
+
+export type WinnerInfoReturn = {
+    winnerInfo:
+        | {
+              seat: number;
+              address: string;
+              amount: string | number;
+              formattedAmount: string;
+              winType?: string;
+          }[]
+        | null;
+    // isLoading: boolean;
+    error: Error | null;
+    // refresh: () => void;
+};
