@@ -1,7 +1,6 @@
 import { useGameState } from "./useGameState";
 import { useCallback, useMemo } from "react";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
-import useSWR from "swr";
 
 // Define the nextToActInfo type
 export interface NextToActInfo {
@@ -48,22 +47,12 @@ export const whoIsNextToAct = (gameData: any): NextToActInfo | null => {
 
 /**
  * Custom hook to fetch and provide information about who is next to act
+ * Uses real-time WebSocket data - no polling needed
  * @param tableId The ID of the table to fetch state for
  * @returns Object containing next-to-act information
  */
 export const useNextToActInfo = (tableId?: string) => {
-    // Memoize the lastRefresh reference to avoid unnecessary rerenders
-    const lastRefreshRef = useCallback(() => {
-        let lastTime = 0;
-        return {
-            get: () => lastTime,
-            set: (time: number) => {
-                lastTime = time;
-            }
-        };
-    }, [])();
-
-    // Get game state from centralized hook
+    // Get game state from centralized WebSocket hook
     const { gameState, isLoading, error, refresh } = useGameState(tableId);
 
     // Memoize the nextToActInfo calculation to avoid recomputing on every render
@@ -84,27 +73,6 @@ export const useNextToActInfo = (tableId?: string) => {
             return null;
         }
     }, [gameState, isLoading, error]);
-
-    // Memoize the fetcher function to avoid recreation on every render
-    const fetcher = useCallback(async () => {
-        const now = Date.now();
-        // Refresh if more than 3 seconds have elapsed
-        if (now - lastRefreshRef.get() >= 3000) {
-            await refresh();
-            lastRefreshRef.set(now);
-        }
-        return null;
-    }, [refresh, lastRefreshRef]);
-
-    // Custom more frequent refresh using SWR
-    useSWR(tableId ? `next-to-act-${tableId}` : null, fetcher, {
-        refreshInterval: 3000,
-        revalidateOnFocus: true,
-        // Reduce unnecessary revalidations
-        dedupingInterval: 1000,
-        // Prevent additional renders from focus events when tab switching
-        focusThrottleInterval: 5000
-    });
 
     // Memoize the manual refresh function to maintain reference equality
     const manualRefresh = useCallback(() => {
