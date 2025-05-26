@@ -139,7 +139,7 @@ const Table = () => {
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
-    const [accountNonce, setAccountNonce] = useState<number>(0);
+
 
     // Update to use the imported hook
     const tableDataValues = useTableData(id);
@@ -177,7 +177,7 @@ const Table = () => {
 
             const account = await client.getAccount(publicKey);
             setAccountBalance(account.balance.toString());
-            setAccountNonce(account.nonce);
+       
             setBalanceError(null);
         } catch (err) {
             console.error("Error fetching account balance:", err);
