@@ -197,7 +197,6 @@ export interface CardAnimationsReturn {
 export interface TableStateReturn {
     currentRound: TexasHoldemRound;
     totalPot: string;
-    formattedTotalPot: string;
     tableSize: number;
     tableType: GameType;
     roundType: TexasHoldemRound;

@@ -1,4 +1,3 @@
-import { ethers } from "ethers";
 import { useGameState } from "./useGameState";
 import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
 import { TableStateReturn, GameStateReturn } from "../types/index";
@@ -14,10 +13,9 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number):
   const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId, autoRefreshIntervalMs);
 
   // Default values in case of error or loading
-  const defaultState = {
+  const defaultState: TableStateReturn = {
     currentRound: TexasHoldemRound.PREFLOP,
     totalPot: "0",
-    formattedTotalPot: "0.00",
     tableSize: 9,
     tableType: GameType.CASH,
     roundType: TexasHoldemRound.PREFLOP,
@@ -33,17 +31,14 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number):
 
   try {
     // Calculate the total pot from all pots
-    let totalPotWei = "0";
+    let totalPot = "0";
     if (gameState.pots && Array.isArray(gameState.pots)) {
-      totalPotWei = gameState.pots.reduce((sum: string, pot: string) => {
+      totalPot = gameState.pots.reduce((sum: string, pot: string) => {
         const sumBigInt = BigInt(sum);
         const potBigInt = BigInt(pot);
         return (sumBigInt + potBigInt).toString();
       }, "0");
     }
-
-    // Format total pot value to display format
-    const formattedTotalPot = ethers.formatUnits(totalPotWei, 18);
 
     // Extract the current round
     const currentRound = gameState.round || TexasHoldemRound.PREFLOP;
@@ -61,8 +56,7 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number):
 
     const result: TableStateReturn = {
       currentRound,
-      totalPot: totalPotWei,
-      formattedTotalPot,
+      totalPot: totalPot,
       tableSize,
       tableType: tableType as GameType,
       roundType,

@@ -99,6 +99,7 @@ import { useGameOptions } from "../../hooks/useGameOptions";
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
+import { PlayerStatus } from "@bitcoinbrisbane/block52";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -225,7 +226,7 @@ const Table = () => {
     const { leaveTable, isLeaving } = useTableLeave(id);
 
     // Add the useTableState hook to get table state properties
-    const { currentRound, formattedTotalPot, tableSize } = useTableState(id, 5000);
+    const { currentRound, totalPot, tableSize } = useTableState(id, 5000);
 
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
@@ -246,12 +247,12 @@ const Table = () => {
     );
 
     // Add any variables we need
-    const [seat, setSeat] = useState<number>(0);
+    const [seat, ] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
 
     const [currentIndex, setCurrentIndex] = useState<number>(1);
     const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
-    const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
+    const [, setDealerPositionArray] = useState<PositionArray[]>([]);
 
     // Add the useChipPositions hook AFTER startIndex is defined
     const { chipPositionArray } = useChipPositions(id, startIndex);
@@ -261,9 +262,6 @@ const Table = () => {
 
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
-
-    // Keep the existing variable
-    const currentUserAddress = localStorage.getItem("user_eth_public_key");
 
     // Memoize user wallet address
     const userWalletAddress = useMemo(() => {
@@ -316,11 +314,6 @@ const Table = () => {
     const reorderedPlayerArray = useMemo(
         () => [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
         [playerPositionArray, startIndex]
-    );
-
-    const reorderedDealerArray = useMemo(
-        () => [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
-        [dealerPositionArray, startIndex]
     );
 
     // Add useEffect to refresh showing cards when the round is showdown or end
@@ -587,7 +580,7 @@ const Table = () => {
                                 // Check player status
                                 if (
                                     tableDataValues.tableDataPlayers?.some(
-                                        (p: any) => p.address?.toLowerCase() === userWalletAddress && p.status !== "folded" && p.status !== "sitting-out"
+                                        (p: any) => p.address?.toLowerCase() === userWalletAddress && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.SITTING_OUT
                                     )
                                 ) {
                                     alert("You must fold your hand before leaving the table.");
@@ -702,7 +695,7 @@ const Table = () => {
                                                             ? "0.00"
                                                             : tableDataValues.tableDataPots
                                                                   ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
-                                                                  .toFixed(2) || formattedTotalPot}
+                                                                  .toFixed(2) || totalPot}
                                                     </span>
                                                 </div>
                                                 <div className="pot-display-secondary">
