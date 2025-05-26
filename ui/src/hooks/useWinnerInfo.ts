@@ -15,7 +15,7 @@ function getWinnerInfo(gameData: TexasHoldemStateDTO) {
     if (gameData.winners && gameData.winners.length > 0) {
         return gameData.winners.map((winner: WinnerDTO) => {
             // Get the player object for this winner to find their seat
-            const player = gameData.players?.find((p: any) => p.address?.toLowerCase() === winner.address?.toLowerCase());
+            const player = gameData.players?.find((p: PlayerDTO) => p.address?.toLowerCase() === winner.address?.toLowerCase());
 
             return {
                 seat: player?.seat || 0,
