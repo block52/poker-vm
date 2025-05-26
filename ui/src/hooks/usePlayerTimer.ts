@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useGameState } from "./useGameState";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
-import useSWR from "swr";
 
 /**
  * Custom hook to manage player timer information
+ * Uses real-time WebSocket data - no polling needed
  * @param tableId The ID of the table
  * @param playerIndex The index of the player to check
  * @returns Object containing player status and timer information
@@ -13,25 +13,9 @@ export const usePlayerTimer = (tableId?: string, playerIndex?: number) => {
   const [progress, setProgress] = useState(0);
   const [playerStatus, setPlayerStatus] = useState<PlayerStatus>(PlayerStatus.NOT_ACTED);
   const [timeoutValue, setTimeoutValue] = useState(30); // Default to 30 seconds
-  const [lastRefresh, setLastRefresh] = useState(0);
   
-  // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh } = useGameState(tableId);
-  
-  // Custom more frequent refresh for this critical hook - timer needs 1-second updates
-  useSWR(
-    tableId && playerIndex !== undefined ? `player-timer-${tableId}-${playerIndex}` : null,
-    async () => {
-      const now = Date.now();
-      // Refresh if more than 1 second has elapsed
-      if (now - lastRefresh >= 1000) {
-        await refresh();
-        setLastRefresh(now);
-      }
-      return null;
-    },
-    { refreshInterval: 1000, revalidateOnFocus: true }
-  );
+  // Get game state from centralized WebSocket hook
+  const { gameState, isLoading, error } = useGameState(tableId);
 
   // Update player status and timeout whenever data changes
   useEffect(() => {
