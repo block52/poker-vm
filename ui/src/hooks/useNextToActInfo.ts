@@ -10,7 +10,7 @@ import { NextToActInfoReturn, GameStateReturn } from "../types/index";
  */
 export const useNextToActInfo = (tableId?: string): NextToActInfoReturn => {
     // Get game state from centralized hook
-    const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId);
+    const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
     // Calculate next-to-act information
     const result = useMemo(() => {
@@ -22,8 +22,7 @@ export const useNextToActInfo = (tableId?: string): NextToActInfoReturn => {
             availableActions: [],
             timeRemaining: 30,
             isLoading,
-            error,
-            refresh
+            error
         };
 
         try {
@@ -59,8 +58,7 @@ export const useNextToActInfo = (tableId?: string): NextToActInfoReturn => {
                 availableActions,
                 timeRemaining,
                 isLoading: false,
-                error: null,
-                refresh
+                error: null
             };
         } catch (err) {
             console.error("Error parsing next-to-act info:", err);
@@ -69,7 +67,7 @@ export const useNextToActInfo = (tableId?: string): NextToActInfoReturn => {
                 error: err instanceof Error ? err : new Error("Error parsing next-to-act info")
             };
         }
-    }, [gameState, isLoading, error, refresh]);
+    }, [gameState, isLoading, error]);
 
     return result;
 };

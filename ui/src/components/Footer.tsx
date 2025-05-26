@@ -47,7 +47,7 @@ const PokerActionPanel: React.FC = () => {
     const { showCards, isShowing } = useTableShow(tableId);
 
     // Use the useNextToActInfo hook
-    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
+    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState(tableId);
@@ -321,8 +321,6 @@ const PokerActionPanel: React.FC = () => {
         })
             .then(result => {
                 console.log("New hand started successfully:", result);
-                // Force refresh all game state
-                refreshNextToActInfo?.();
             })
             .catch(error => {
                 console.error("Failed to start new hand:", error);
@@ -340,12 +338,11 @@ const PokerActionPanel: React.FC = () => {
         sitIn()
             .then(() => {
                 console.log("Successfully sat in");
-                refreshNextToActInfo?.();
             })
             .catch(error => {
                 console.error("Failed to sit in:", error);
             });
-    }, [sitIn, refreshNextToActInfo]);
+    }, [sitIn]);
 
     const handleSitOut = useCallback(() => {
         if (!sitOut) {
@@ -356,12 +353,11 @@ const PokerActionPanel: React.FC = () => {
         sitOut()
             .then(() => {
                 console.log("Successfully sat out");
-                refreshNextToActInfo?.();
             })
             .catch(error => {
                 console.error("Failed to sit out:", error);
             });
-    }, [sitOut, refreshNextToActInfo]);
+    }, [sitOut]);
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);

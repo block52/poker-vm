@@ -15,16 +15,10 @@ import { TexasHoldemStateDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
  * - previousActions: array of previous actions in the current hand
  * - isLoading: boolean indicating if data is being loaded
  * - error: any error that occurred during data fetching
- * - refresh: function to manually refresh the game state
  */
 export const useGameProgress = (tableId?: string): GameProgressReturn => {
   // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh: gameStateRefresh }: GameStateReturn = useGameState(tableId);
-
-  // Wrap the refresh function to ensure correct return type
-  const refresh = async (): Promise<TexasHoldemStateDTO | undefined> => {
-    return gameStateRefresh();
-  };
+  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
   // Default values in case of error or loading
   const defaultState: GameProgressReturn = {
@@ -36,8 +30,7 @@ export const useGameProgress = (tableId?: string): GameProgressReturn => {
     nextToAct: 0,
     previousActions: [],
     isLoading,
-    error,
-    refresh
+    error
   };
 
   // If still loading or error occurred, return default values
@@ -104,8 +97,7 @@ export const useGameProgress = (tableId?: string): GameProgressReturn => {
       nextToAct: extractValue("nextToAct") || 0,
       previousActions: extractValue("previousActions") || [],
       isLoading: false,
-      error: null,
-      refresh
+      error: null
     };
   } catch (err) {
     console.error("Error checking game progress:", err);

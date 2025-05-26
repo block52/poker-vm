@@ -1,38 +1,18 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useGameProgress } from "../hooks/useGameProgress";
-import { IoMdRefresh } from "react-icons/io";
 import { formatPlayerId, formatAmount } from "../utils/accountUtils";
 import { ActionDTO } from "@bitcoinbrisbane/block52";
 
 // Simple component to display only the action log
 const ActionsLog: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { previousActions, refresh } = useGameProgress(id);
-    const [isRefreshing, setIsRefreshing] = React.useState(false);
-    
-    // Handle manual refresh
-    const handleRefresh = () => {
-        if (refresh && !isRefreshing) {
-            setIsRefreshing(true);
-            refresh().finally(() => {
-                setTimeout(() => setIsRefreshing(false), 500);
-            });
-        }
-    };
+    const { previousActions } = useGameProgress(id);
 
     return (
         <div className="text-white rounded w-full h-full overflow-y-auto scrollbar-hide bg-black/30 backdrop-blur-sm">
             <div className="flex justify-between items-center p-2 border-b border-white/20">
                 <h3 className="text-sm font-semibold">Action Log</h3>
-                <button 
-                    onClick={handleRefresh} 
-                    disabled={isRefreshing}
-                    className={`text-white/70 hover:text-white/90 transition-all ${isRefreshing ? "animate-spin" : ""}`}
-                    title="Refresh actions"
-                >
-                    <IoMdRefresh size={16} />
-                </button>
             </div>
             
             {previousActions && previousActions.length > 0 ? (

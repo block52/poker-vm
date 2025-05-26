@@ -173,27 +173,16 @@ export interface TurnAnimationProps {
 }
 
 // Type for the return value of useGameProgress hook
-export interface GameProgressType {
+export interface GameProgressReturn {
     isGameInProgress: boolean;
     activePlayers: PlayerDTO[];
     playerCount: number;
     handNumber: number;
     actionCount: number;
     nextToAct: number;
-    previousActions: Array<{
-        action: string;
-        playerId?: string;
-        address?: string;
-        amount?: string;
-        seat?: number;
-        timestamp?: string;
-        round?: string;
-        index?: number;
-        [key: string]: any;
-    }>;
+    previousActions: ActionDTO[];
     isLoading: boolean;
     error: Error | null;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of useCardAnimations hook
@@ -239,20 +228,6 @@ export interface FindGamesReturn {
     refetch: () => Promise<void>;
 }
 
-// Type for the return value of useGameProgress hook
-export interface GameProgressReturn {
-    isGameInProgress: boolean;
-    activePlayers: PlayerDTO[];
-    playerCount: number;
-    handNumber: number;
-    actionCount: number;
-    nextToAct: number;
-    previousActions: ActionDTO[];
-    isLoading: boolean;
-    error: Error | null;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
-}
-
 // Type for the return value of useMinAndMaxBuyIns hook
 export interface MinAndMaxBuyInsReturn {
     minBuyInWei: string;
@@ -273,5 +248,4 @@ export interface NextToActInfoReturn {
     timeRemaining: number;
     isLoading: boolean;
     error: Error | null;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
