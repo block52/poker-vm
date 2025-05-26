@@ -252,19 +252,19 @@ export interface FindGamesReturn {
 }
 
 export type VacantSeatResponse = {
-  isUserAlreadyPlaying: boolean;
-  tableInfo: {
-    smallBlind: string;
-    bigBlind: string;
-    smallBlindDisplay: string;
-    bigBlindDisplay: string;
-    dealerPosition: number;
-    smallBlindPosition: number;
-    bigBlindPosition: number;
-    players: PlayerDTO[];
-  };
-  isSeatVacant: (seatIndex: number) => boolean;
-  canJoinSeat: (seatIndex: number) => boolean;
-  isLoading: boolean;
-  error?: Error | null;
+    isUserAlreadyPlaying: boolean;
+    tableInfo: {
+        smallBlind: string;
+        bigBlind: string;
+        smallBlindDisplay: string;
+        bigBlindDisplay: string;
+        dealerPosition: number;
+        smallBlindPosition: number;
+        bigBlindPosition: number;
+        players: PlayerDTO[];
+    };
+    isSeatVacant: (seatIndex: number) => boolean;
+    canJoinSeat: (seatIndex: number) => boolean;
+    isLoading: boolean;
+    error?: Error | null;
 };
