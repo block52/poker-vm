@@ -1,15 +1,11 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
-import { IUpdate, Turn, TurnWithSeat } from "../types";
+import { IUpdate, TurnWithSeat } from "../types";
 import {
-    defaultPositions,
     FIFTY_TOKENS,
-    gameOptions,
     getDefaultGame,
-    mnemonic,
     ONE_HUNDRED_TOKENS,
     ONE_THOUSAND_TOKENS,
     ONE_TOKEN,
@@ -23,8 +19,6 @@ describe("Raise Action", () => {
     let updateMock: IUpdate;
     let action: RaiseAction;
     let player: Player;
-
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state
