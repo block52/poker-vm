@@ -223,6 +223,10 @@ describe("Raise Action", () => {
             const result = (action as any).getDeductAmount(player, amount);
             expect(result).toBe(player.chips);
         });
+
+        it("should return the min amount as double the largest bet", () => {
+            
+        }
     });
 
     describe("execute", () => {
