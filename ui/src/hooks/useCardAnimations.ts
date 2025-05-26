@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useGameState } from "./useGameState";
-import { CardAnimationsReturn } from "../types/index";
+import { CardAnimationsReturn, GameStateReturn } from "../types/index";
 
 /**
  * Custom hook to handle card animations
@@ -13,7 +13,7 @@ export const useCardAnimations = (tableId?: string): CardAnimationsReturn => {
     const [flipped3, setFlipped3] = useState(false);
 
     // Get the data to determine if we should show animations
-    const { gameState } = useGameState(tableId);
+    const { gameState }: GameStateReturn = useGameState(tableId);
 
     // Derived state to replace showThreeCards
     const communityCards = gameState?.communityCards || [];
