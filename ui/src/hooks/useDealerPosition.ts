@@ -1,14 +1,15 @@
 import { dealerPosition } from "../utils/PositionArray";
 import { useGameState } from "./useGameState";
+import { DealerPositionReturn, GameStateReturn } from "../types/index";
 
 /**
  * Custom hook to fetch and provide dealer button position
  * @param tableId The ID of the table to fetch state for
  * @returns Object containing dealer button position and visibility state
  */
-export const useDealerPosition = (tableId?: string) => {
+export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
     // Get game state from centralized hook
-    const { gameState, isLoading, error } = useGameState(tableId);
+    const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
     // Default values in case of error or loading
     const defaultState = {
@@ -54,7 +55,7 @@ export const useDealerPosition = (tableId?: string) => {
         console.error("Error parsing dealer position:", err);
         return {
             ...defaultState,
-            error: err
+            error: err as Error
         };
     }
 };

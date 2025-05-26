@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import { useGameState } from "./useGameState";
 import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
+import { TableStateReturn, GameStateReturn } from "../types/index";
 
 /**
  * Custom hook to fetch and provide table state information
@@ -8,9 +9,9 @@ import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
  * @param autoRefreshIntervalMs Optional refresh interval in ms, default value to pass to useGameState
  * @returns Object containing table state properties including round, pot, size, type
  */
-export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number) => {
+export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number): TableStateReturn => {
   // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh } = useGameState(tableId, autoRefreshIntervalMs);
+  const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId, autoRefreshIntervalMs);
 
   // Default values in case of error or loading
   const defaultState = {
@@ -58,12 +59,12 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number) 
     // Round type is the same as current round in this context
     const roundType = currentRound;
 
-    const result = {
+    const result: TableStateReturn = {
       currentRound,
       totalPot: totalPotWei,
       formattedTotalPot,
       tableSize,
-      tableType,
+      tableType: tableType as GameType,
       roundType,
       isLoading: false,
       error: null,
@@ -75,7 +76,7 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number) 
     console.error("Error parsing table state:", err);
     return {
       ...defaultState,
-      error: err
+      error: err as Error
     };
   }
 };

@@ -1,4 +1,4 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
 
 // Type for the return value of useGameState hook
 export interface GameStateReturn {
@@ -135,6 +135,7 @@ export interface LeaveTableOptions {
 }
 
 // Type for game objects returned by findGames
+// The 'address' comes from the SDK's findGames() method return
 export interface GameWithAddress {
     address: string;
     gameOptions: GameOptionsDTO;
@@ -193,4 +194,47 @@ export interface GameProgressType {
     isLoading: boolean;
     error: Error | null;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of useCardAnimations hook
+export interface CardAnimationsReturn {
+    flipped1: boolean;
+    flipped2: boolean;
+    flipped3: boolean;
+    showThreeCards: boolean;
+}
+
+// Type for the return value of useTableState hook
+export interface TableStateReturn {
+    currentRound: TexasHoldemRound;
+    totalPot: string;
+    formattedTotalPot: string;
+    tableSize: number;
+    tableType: GameType;
+    roundType: TexasHoldemRound;
+    isLoading: boolean;
+    error: Error | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of useChipPositions hook
+export interface ChipPositionsReturn {
+    chipPositionArray: PositionArray[];
+    tableSize: number;
+}
+
+// Type for the return value of useDealerPosition hook
+export interface DealerPositionReturn {
+    dealerButtonPosition: { left: string; top: string };
+    isDealerButtonVisible: boolean;
+    isLoading: boolean;
+    error: Error | null;
+}
+
+// Type for the return value of useFindGames hook
+export interface FindGamesReturn {
+    games: GameWithAddress[];
+    isLoading: boolean;
+    error: string | null;
+    refetch: () => Promise<void>;
 }
