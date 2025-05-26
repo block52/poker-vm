@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { GameStateReturn } from "../types/index";
 
@@ -29,15 +29,18 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
-  // Get user address from localStorage
+  // Get user address from localStorage - memoize to prevent changes
   const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
 
-  // Create a subscription callback that updates this hook's state
-  const subscriptionCallback = useCallback((newGameState: TexasHoldemStateDTO | null) => {
+  // Create a stable subscription callback using useRef to avoid dependency issues
+  const subscriptionCallbackRef = useRef<(newGameState: TexasHoldemStateDTO | null) => void>(() => {});
+  
+  // Update the ref when the callback logic changes
+  subscriptionCallbackRef.current = (newGameState: TexasHoldemStateDTO | null) => {
     setGameState(newGameState);
     setIsLoading(false);
     setError(null);
-  }, []);
+  };
 
   // Subscribe to global connection for this table
   useEffect(() => {
@@ -60,18 +63,31 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
         reconnectTimeout: null
       };
       globalConnections.set(connectionKey, connection);
+      console.log(`🔌 Created connection pool for table ${tableId.slice(0, 8)}...`);
     }
 
+    // Create a stable callback wrapper
+    const stableCallback = (newGameState: TexasHoldemStateDTO | null) => {
+      if (subscriptionCallbackRef.current) {
+        subscriptionCallbackRef.current(newGameState);
+      }
+    };
+
     // Add this hook as a subscriber
-    connection.subscribers.add(subscriptionCallback);
+    connection.subscribers.add(stableCallback);
+    
+    // Only log subscriber count occasionally to reduce spam
+    if (connection.subscribers.size % 10 === 1 || connection.subscribers.size <= 3) {
+      console.log(`📝 Subscribers for table ${tableId.slice(0, 8)}...: ${connection.subscribers.size}`);
+    }
 
     // If we already have game state, update immediately
     if (connection.lastGameState) {
-      subscriptionCallback(connection.lastGameState);
+      stableCallback(connection.lastGameState);
     }
 
     // Connect if not already connected or connecting
-    if (!connection.ws || connection.ws.readyState === WebSocket.CLOSED) {
+    if (!connection.ws || (connection.ws.readyState !== WebSocket.OPEN && connection.ws.readyState !== WebSocket.CONNECTING && !connection.isConnecting)) {
       connectToTable(connectionKey, tableId, userAddress);
     }
 
@@ -79,34 +95,49 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
     return () => {
       const conn = globalConnections.get(connectionKey);
       if (conn) {
-        conn.subscribers.delete(subscriptionCallback);
+        conn.subscribers.delete(stableCallback);
         
-        // If no more subscribers, close the connection
+        // Only log cleanup occasionally to reduce spam
+        if (conn.subscribers.size % 10 === 0 || conn.subscribers.size <= 3) {
+          console.log(`🗑️ Subscribers for table ${tableId.slice(0, 8)}...: ${conn.subscribers.size} remaining`);
+        }
+        
+        // If no more subscribers, close the connection after a small delay
+        // This handles React StrictMode's rapid mount/unmount cycles
         if (conn.subscribers.size === 0) {
+          // Clear any existing timeout
           if (conn.reconnectTimeout) {
             clearTimeout(conn.reconnectTimeout);
           }
-          if (conn.ws && conn.ws.readyState === WebSocket.OPEN) {
-            conn.ws.send(JSON.stringify({
-              action: "unsubscribe",
-              tableAddress: tableId,
-              playerId: userAddress
-            }));
-            conn.ws.close();
-          }
-          globalConnections.delete(connectionKey);
           
-          // Clear any pending refresh debounce
-          const refreshKey = `refresh-${connectionKey}`;
-          const refreshTimeout = refreshDebounceMap.get(refreshKey);
-          if (refreshTimeout) {
-            clearTimeout(refreshTimeout);
-            refreshDebounceMap.delete(refreshKey);
-          }
+          // Set a small delay before actually closing to handle rapid remounts
+          conn.reconnectTimeout = setTimeout(() => {
+            const finalConn = globalConnections.get(connectionKey);
+            if (finalConn && finalConn.subscribers.size === 0) {
+              console.log(`🔌 Closing connection for table ${tableId.slice(0, 8)}... (no more subscribers)`);
+              if (finalConn.ws && finalConn.ws.readyState === WebSocket.OPEN) {
+                finalConn.ws.send(JSON.stringify({
+                  action: "unsubscribe",
+                  tableAddress: tableId,
+                  playerId: userAddress
+                }));
+                finalConn.ws.close();
+              }
+              globalConnections.delete(connectionKey);
+              
+              // Clear any pending refresh debounce
+              const refreshKey = `refresh-${connectionKey}`;
+              const refreshTimeout = refreshDebounceMap.get(refreshKey);
+              if (refreshTimeout) {
+                clearTimeout(refreshTimeout);
+                refreshDebounceMap.delete(refreshKey);
+              }
+            }
+          }, 100); // 100ms delay to handle StrictMode
         }
       }
     };
-  }, [tableId, userAddress, subscriptionCallback]);
+  }, [tableId, userAddress]); // Removed subscriptionCallback from dependencies
 
   // Function to connect to a table
   const connectToTable = (connectionKey: string, tableId: string, userAddress: string) => {
