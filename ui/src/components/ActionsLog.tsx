@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useGameProgress } from "../hooks/useGameProgress";
 import { IoMdRefresh } from "react-icons/io";
 import { formatPlayerId, formatAmount } from "../utils/accountUtils";
-import { ActionsLogPokerAction } from "../types/index";
+import { ActionDTO } from "@bitcoinbrisbane/block52";
 
 // Simple component to display only the action log
 const ActionsLog: React.FC = () => {
@@ -37,11 +37,11 @@ const ActionsLog: React.FC = () => {
             
             {previousActions && previousActions.length > 0 ? (
                 <div className="space-y-0.5 p-2">
-                    {previousActions.map((action: ActionsLogPokerAction, index: number) => (
+                    {previousActions.map((action: ActionDTO, index: number) => (
                         <div key={index} className="text-xs py-1 border-b border-white/10">
                             <div className="flex justify-between">
                                 <span className="font-mono text-blue-300/90">
-                                    {formatPlayerId((action.playerId || action.address) as string)}
+                                    {formatPlayerId(action.playerId)}
                                 </span>
                                 <span className="text-gray-400 text-[10px]">
                                     Seat {action.seat}

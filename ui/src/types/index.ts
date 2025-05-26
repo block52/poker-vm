@@ -1,4 +1,4 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType, ActionDTO } from "@bitcoinbrisbane/block52";
 
 // Type for the return value of useGameState hook
 export interface GameStateReturn {
@@ -237,4 +237,29 @@ export interface FindGamesReturn {
     isLoading: boolean;
     error: string | null;
     refetch: () => Promise<void>;
+}
+
+// Type for the return value of useGameProgress hook
+export interface GameProgressReturn {
+    isGameInProgress: boolean;
+    activePlayers: PlayerDTO[];
+    playerCount: number;
+    handNumber: number;
+    actionCount: number;
+    nextToAct: number;
+    previousActions: ActionDTO[];
+    isLoading: boolean;
+    error: Error | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of useMinAndMaxBuyIns hook
+export interface MinAndMaxBuyInsReturn {
+    minBuyInWei: string;
+    maxBuyInWei: string;
+    minBuyInFormatted: string;
+    maxBuyInFormatted: string;
+    isLoading: boolean;
+    error: Error | null;
+    refresh: () => Promise<void>;
 }

@@ -1,6 +1,6 @@
 import { useGameState } from "./useGameState";
-import { GameProgressType } from "../types/index";
-import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { GameProgressReturn, GameStateReturn } from "../types/index";
+import { TexasHoldemStateDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to check if a game is in progress and provide game status information
@@ -17,9 +17,9 @@ import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
  * - error: any error that occurred during data fetching
  * - refresh: function to manually refresh the game state
  */
-export const useGameProgress = (tableId?: string): GameProgressType => {
+export const useGameProgress = (tableId?: string): GameProgressReturn => {
   // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh: gameStateRefresh } = useGameState(tableId);
+  const { gameState, isLoading, error, refresh: gameStateRefresh }: GameStateReturn = useGameState(tableId);
 
   // Wrap the refresh function to ensure correct return type
   const refresh = async (): Promise<TexasHoldemStateDTO | undefined> => {
@@ -27,7 +27,7 @@ export const useGameProgress = (tableId?: string): GameProgressType => {
   };
 
   // Default values in case of error or loading
-  const defaultState: GameProgressType = {
+  const defaultState: GameProgressReturn = {
     isGameInProgress: false,
     activePlayers: [],
     playerCount: 0,
@@ -53,7 +53,7 @@ export const useGameProgress = (tableId?: string): GameProgressType => {
 
     // Filter for active players (not folded and not sitting out)
     const activePlayers = gameState.players.filter(
-      (player: any) => player.status !== "folded" && player.status !== "sitting-out"
+      (player: any) => player.status !== PlayerStatus.FOLDED && player.status !== PlayerStatus.SITTING_OUT
     );
 
     // Game is in progress if there are at least 2 active players
