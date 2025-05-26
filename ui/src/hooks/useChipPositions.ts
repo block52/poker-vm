@@ -1,17 +1,7 @@
 import { useState, useEffect } from "react";
 import { chipPosition } from "../utils/PositionArray";
 import { useTableState } from "./useTableState";
-
-/**
- * Interface for position objects
- */
-interface PositionArray {
-  left?: string;
-  top?: string;
-  bottom?: string;
-  right?: string;
-  color?: string;
-}
+import { ChipPositionsReturn, TableStateReturn, PositionArray } from "../types/index";
 
 /**
  * Custom hook to manage chip positions based on table size
@@ -19,11 +9,11 @@ interface PositionArray {
  * @param startIndex Optional starting index for reordering positions
  * @returns Object containing chip positions and utility functions
  */
-export const useChipPositions = (tableId?: string, startIndex: number = 0) => {
+export const useChipPositions = (tableId?: string, startIndex: number = 0): ChipPositionsReturn => {
   const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
   
   // Get table state to access tableSize
-  const { tableSize } = useTableState(tableId);
+  const { tableSize }: TableStateReturn = useTableState(tableId);
   
   // Set initial chip positions based on table size
   useEffect(() => {

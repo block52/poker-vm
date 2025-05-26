@@ -15,6 +15,7 @@ import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { GameType, Variant } from "./types";
 import { formatAddress, formatBalance } from "./common/utils";
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
+import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Password protection utils
 import { 
@@ -73,7 +74,7 @@ const Dashboard: React.FC = () => {
     const [accountNonce, setAccountNonce] = useState<number>(0); // Track nonce for transactions
     
     // Use the findGames hook
-    const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useFindGames();
+    const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
