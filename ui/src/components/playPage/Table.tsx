@@ -216,7 +216,7 @@ const Table = () => {
     const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
 
     // Add the useNextToActInfo hook
-    const { nextToActInfo } = useNextToActInfo(id);
+    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(id);
 
     // Add the useShowingCardsByAddress hook
     const { showingPlayers, isShowdown, refresh: refreshShowingCards } = useShowingCardsByAddress(id);
@@ -815,14 +815,14 @@ const Table = () => {
                 </div>
             )}
             {/* Add an indicator for whose turn it is */}
-            {nextToActInfo && isGameInProgress && (
+            {nextToActSeat && isGameInProgress && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
-                    {nextToActInfo.isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
+                    {isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
                         <span className="text-white">Your turn to act!</span>
                     ) : (
                         <span>
                             Waiting for{" "}
-                            {nextToActInfo.seat === 1 ? "Small Blind" : nextToActInfo.seat === 2 ? "Big Blind" : `player at position ${nextToActInfo.seat + 1}`}{" "}
+                            {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`}{" "}
                             to act
                         </span>
                     )}
@@ -846,11 +846,9 @@ const Table = () => {
             </div>
 
             {/* Debug Error Panel */}
-            {debugMode && (
-                <div className="debug-panel">
-                    <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
-                </div>
-            )}
+            <div className={`debug-panel ${debugMode ? "block" : "hidden" }`}>
+                <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
+            </div>
         </div>
     );
 };

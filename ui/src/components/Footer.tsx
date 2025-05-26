@@ -47,7 +47,7 @@ const PokerActionPanel: React.FC = () => {
     const { showCards, isShowing } = useTableShow(tableId);
 
     // Use the useNextToActInfo hook
-    const { nextToActInfo, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
+    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState(tableId);
@@ -62,7 +62,7 @@ const PokerActionPanel: React.FC = () => {
     const isUserInTable = useMemo(() => !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress), [players, userAddress]);
 
     // Use nextToActInfo to determine if it's the user's turn
-    const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
+    const isUsersTurn = isCurrentUserTurn || isPlayerTurn;
 
     // Replace userPlayer with direct checks from our hook data
     const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
