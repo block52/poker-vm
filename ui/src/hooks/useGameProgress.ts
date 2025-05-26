@@ -1,7 +1,7 @@
 import { useGameState } from "./useGameState";
 import { GameProgressType } from "../types/index";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback } from "react";
 
 /**
  * Custom hook to check if a game is in progress and provide game status information
@@ -19,44 +19,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
  * - refresh: function to manually refresh the game state
  */
 export const useGameProgress = (tableId?: string): GameProgressType => {
-  // Get game state from centralized hook
+  // Get game state from centralized hook - no throttling, direct stream
   const { gameState, isLoading, error, refresh: gameStateRefresh } = useGameState(tableId);
-  
-  // Throttled state to limit updates to once per second
-  const [throttledGameState, setThrottledGameState] = useState<TexasHoldemStateDTO | null>(null);
-  const lastUpdateTimeRef = useRef<number>(0);
-  const throttleDelay = 1000; // 1 second throttle
-
-  // Throttle game state updates
-  useEffect(() => {
-    if (!gameState) {
-      setThrottledGameState(null);
-      return;
-    }
-
-    const now = Date.now();
-    if (now - lastUpdateTimeRef.current >= throttleDelay) {
-      setThrottledGameState(gameState);
-      lastUpdateTimeRef.current = now;
-      
-      // Debug logging only when state actually updates (throttled)
-      console.log("Game State in useGameProgress (throttled):", {
-        handNumber: gameState.handNumber,
-        actionCount: gameState.actionCount,
-        nextToAct: gameState.nextToAct,
-        hasPlayers: !!gameState.players?.length
-      });
-    } else {
-      // Schedule update after throttle delay
-      const timeUntilNextUpdate = throttleDelay - (now - lastUpdateTimeRef.current);
-      const timeoutId = setTimeout(() => {
-        setThrottledGameState(gameState);
-        lastUpdateTimeRef.current = Date.now();
-      }, timeUntilNextUpdate);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [gameState]);
 
   // Wrap the refresh function to ensure correct return type
   const refresh = useCallback(async (): Promise<TexasHoldemStateDTO | undefined> => {
@@ -78,18 +42,18 @@ export const useGameProgress = (tableId?: string): GameProgressType => {
   };
 
   // If still loading or error occurred, return default values
-  if (isLoading || error || !throttledGameState) {
+  if (isLoading || error || !gameState) {
     return defaultState;
   }
 
   try {
-    if (!throttledGameState.players) {
+    if (!gameState.players) {
       console.warn("No players data found in API response");
       return defaultState;
     }
 
     // Filter for active players (not folded and not sitting out)
-    const activePlayers = throttledGameState.players.filter(
+    const activePlayers = gameState.players.filter(
       (player: any) => player.status !== "folded" && player.status !== "sitting-out"
     );
 
@@ -99,21 +63,21 @@ export const useGameProgress = (tableId?: string): GameProgressType => {
     // Extract values, checking different possible locations in the object structure
     const extractValue = (key: string): any => {
       // First check direct properties we know exist on TexasHoldemStateDTO
-      if (key === "handNumber" && typeof throttledGameState.handNumber !== "undefined") {
-        return throttledGameState.handNumber;
+      if (key === "handNumber" && typeof gameState.handNumber !== "undefined") {
+        return gameState.handNumber;
       }
-      if (key === "actionCount" && typeof throttledGameState.actionCount !== "undefined") {
-        return throttledGameState.actionCount;
+      if (key === "actionCount" && typeof gameState.actionCount !== "undefined") {
+        return gameState.actionCount;
       }
-      if (key === "nextToAct" && typeof throttledGameState.nextToAct !== "undefined") {
-        return throttledGameState.nextToAct;
+      if (key === "nextToAct" && typeof gameState.nextToAct !== "undefined") {
+        return gameState.nextToAct;
       }
-      if (key === "previousActions" && Array.isArray(throttledGameState.previousActions)) {
-        return throttledGameState.previousActions;
+      if (key === "previousActions" && Array.isArray(gameState.previousActions)) {
+        return gameState.previousActions;
       }
       
       // Then check if it's in data.result structure (using type assertion to avoid TS errors)
-      const gameStateAny = throttledGameState as any;
+      const gameStateAny = gameState as any;
       if (gameStateAny.result?.data && typeof gameStateAny.result.data[key] !== "undefined") {
         return gameStateAny.result.data[key];
       }
