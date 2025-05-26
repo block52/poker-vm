@@ -1,4 +1,4 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
 
 // Type for the return value of useGameState hook
 export interface GameStateReturn {
@@ -201,4 +201,17 @@ export interface CardAnimationsReturn {
     flipped2: boolean;
     flipped3: boolean;
     showThreeCards: boolean;
+}
+
+// Type for the return value of useTableState hook
+export interface TableStateReturn {
+    currentRound: TexasHoldemRound;
+    totalPot: string;
+    formattedTotalPot: string;
+    tableSize: number;
+    tableType: GameType;
+    roundType: TexasHoldemRound;
+    isLoading: boolean;
+    error: Error | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
