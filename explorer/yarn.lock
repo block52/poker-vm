@@ -191,12 +191,12 @@
     "@babel/helper-validator-identifier" "^7.25.7"
     to-fast-properties "^2.0.0"
 
-"@bitcoinbrisbane/block52@1.0.50":
-  version "1.0.50"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.50.tgz#e105c05fb1806d78083212509ab3b1d42f6d9be9"
-  integrity sha512-APBNvG7889e+s4VMYi/o1myz/a1Bwp8RcfBifK1YVNG14AItOUTTbuTFjsGHem3IMsknN9VI09OYEBaAhB1MCQ==
+"@bitcoinbrisbane/block52@1.0.84":
+  version "1.0.84"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.84.tgz#2125d1b78c9a5206f5c2126a3a89ad068b306f5f"
+  integrity sha512-xSOSxClHGRKEBbUi/+xEOS9Mrcpsd5aGxMqnqnvlS03AVEE6FnzthDZ5gGV7t+irFXcoRB+BmYgniUOgqlwYnw==
   dependencies:
-    axios "^1.7.9"
+    axios "^1.8.1"
     bigunit "^1.2.5"
     ethers "^6.13.4"
 
@@ -863,10 +863,10 @@ autoprefixer@^10.4.21:
     picocolors "^1.1.1"
     postcss-value-parser "^4.2.0"
 
-axios@^1.7.9:
-  version "1.7.9"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.9.tgz#d7d071380c132a24accda1b2cfc1535b79ec650a"
-  integrity sha512-LhLcE7Hbiryz8oMDdDptSrWowmB4Bl6RCt6sIJKpRB4XtVf0iEgewX3au/pJqm+Py1kCASkb/FFKjxQaLtxJvw==
+axios@^1.8.1:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.9.0.tgz#25534e3b72b54540077d33046f77e3b8d7081901"
+  integrity sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.0"
