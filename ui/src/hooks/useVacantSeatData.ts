@@ -2,24 +2,19 @@ import React from "react";
 import { useGameState } from "./useGameState"
 import { ethers } from "ethers";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
+import { VacantSeatResponse } from "../types/index";
 
-export type VacantSeatResponse = {
-  isUserAlreadyPlaying: boolean;
-  tableInfo: {
-    smallBlindWei: string;
-    bigBlindWei: string;
-    smallBlindDisplay: string;
-    bigBlindDisplay: string;
-    dealerPosition: number;
-    smallBlindPosition: number;
-    bigBlindPosition: number;
-    players: PlayerDTO[];
-  };
-  isSeatVacant: (seatIndex: number) => boolean;
-  canJoinSeat: (seatIndex: number) => boolean;
-  isLoading: boolean;
-  error?: Error | null;
+const defaultVacantSeatResponse: VacantSeatResponse = {
+  smallBlind: "0",
+  bigBlind: "0",
+  smallBlindDisplay: "0.00",
+  bigBlindDisplay: "0.00",
+  dealerPosition: 0,
+  smallBlindPosition: 0,
+  bigBlindPosition: 0,
+  players: []
 };
+
 
 /**
  * Custom hook to manage data for vacant seats
@@ -47,30 +42,23 @@ export const useVacantSeatData = (tableId?: string): VacantSeatResponse => {
   
   // Get blind values from table data
   const tableInfo = React.useMemo(() => {
-    if (!gameState) return {
-      smallBlindWei: "0",
-      bigBlindWei: "0",
-      smallBlindDisplay: "0.00",
-      bigBlindDisplay: "0.00",
-      dealerPosition: 0,
-      smallBlindPosition: 0,
-      bigBlindPosition: 0,
-      players: []
-    };
+    if (!gameState) return defaultVacantSeatResponse;
     
-    const smallBlindWei = gameState.gameOptions?.smallBlind || "0";
-    const bigBlindWei = gameState.gameOptions?.bigBlind || "0";
+    const smallBlind = gameState.gameOptions?.smallBlind || "0";
+    const bigBlind = gameState.gameOptions?.bigBlind || "0";
     
-    return {
-      smallBlindWei,
-      bigBlindWei,
-      smallBlindDisplay: ethers.formatUnits(smallBlindWei, 18),
-      bigBlindDisplay: ethers.formatUnits(bigBlindWei, 18),
+    const response: VacantSeatResponse = {
+      smallBlind,
+      bigBlind,
+      smallBlindDisplay: ethers.formatUnits(smallBlind, 18),
+      bigBlindDisplay: ethers.formatUnits(smallBlind, 18),
       dealerPosition: gameState.dealer || 0,
       smallBlindPosition: gameState.gameOptions?.smallBlind || 0,
       bigBlindPosition: gameState.gameOptions?.bigBlind || 0,
       players: gameState.players || []
     };
+
+    return response;
   }, [gameState]);
   
   // Function to check if a specific seat is vacant

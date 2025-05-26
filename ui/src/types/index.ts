@@ -1,4 +1,4 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
 
 // Type for the return value of useGameState hook
 export interface GameStateReturn {
@@ -78,7 +78,7 @@ export type Player = {
     seat: number;
     legalActions: LegalActionDTO[];
     timeout: number;
-}
+};
 
 export type TableData = {
     smallBlindPosition: number;
@@ -88,12 +88,12 @@ export type TableData = {
     players: Player[];
     round: string;
     pots: string[];
-}
+};
 
 type Limits = {
     min: string;
     max: string;
-}
+};
 
 //todo tidy up this type
 export type TableStatus = {
@@ -116,7 +116,7 @@ export type TableStatus = {
     smallBlindAmount: string;
     bigBlindAmount: string;
     isSmallBlindPosition: boolean;
-}
+};
 
 // Type for PositionArray component props
 export interface PositionArray {
@@ -127,7 +127,6 @@ export interface PositionArray {
     color?: string;
 }
 
-
 export interface LeaveTableOptions {
     amount: string;
     actionIndex?: number;
@@ -135,6 +134,7 @@ export interface LeaveTableOptions {
 }
 
 // Type for game objects returned by findGames
+// The 'address' comes from the SDK's findGames() method return
 export interface GameWithAddress {
     address: string;
     gameOptions: GameOptionsDTO;
@@ -153,7 +153,7 @@ export type PlayerCardProps = {
     id: number;
     label: string;
     color?: string;
-    isVacant?: boolean;  // Whether this is a vacant seat
+    isVacant?: boolean; // Whether this is a vacant seat
     onClose: () => void;
     setStartIndex: (index: number) => void;
 };
@@ -205,7 +205,66 @@ export type WinnerInfoReturn = {
               winType?: string;
           }[]
         | null;
-    // isLoading: boolean;
     error: Error | null;
-    // refresh: () => void;
+};
+
+// Type for the return value of useCardAnimations hook
+export interface CardAnimationsReturn {
+    flipped1: boolean;
+    flipped2: boolean;
+    flipped3: boolean;
+    showThreeCards: boolean;
+}
+
+// Type for the return value of useTableState hook
+export interface TableStateReturn {
+    currentRound: TexasHoldemRound;
+    totalPot: string;
+    formattedTotalPot: string;
+    tableSize: number;
+    tableType: GameType;
+    roundType: TexasHoldemRound;
+    isLoading: boolean;
+    error: Error | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of useChipPositions hook
+export interface ChipPositionsReturn {
+    chipPositionArray: PositionArray[];
+    tableSize: number;
+}
+
+// Type for the return value of useDealerPosition hook
+export interface DealerPositionReturn {
+    dealerButtonPosition: { left: string; top: string };
+    isDealerButtonVisible: boolean;
+    isLoading: boolean;
+    error: Error | null;
+}
+
+// Type for the return value of useFindGames hook
+export interface FindGamesReturn {
+    games: GameWithAddress[];
+    isLoading: boolean;
+    error: string | null;
+    refetch: () => Promise<void>;
+}
+
+export type VacantSeatResponse = {
+  isUserAlreadyPlaying: boolean;
+  tableInfo: {
+    smallBlind: string;
+    bigBlind: string;
+    smallBlindDisplay: string;
+    bigBlindDisplay: string;
+    dealerPosition: number;
+    smallBlindPosition: number;
+    bigBlindPosition: number;
+    players: PlayerDTO[];
+  };
+  isSeatVacant: (seatIndex: number) => boolean;
+  canJoinSeat: (seatIndex: number) => boolean;
+  isLoading: boolean;
+  error?: Error | null;
 };

@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNodeRpc } from "../context/NodeRpcContext";
-import { GameWithAddress } from "../types/index";
+import { GameWithAddress, FindGamesReturn } from "../types/index";
 
 /**
  * Custom hook to find available games
  * @returns Object containing available games and loading state
  */
-export const useFindGames = () => {
+export const useFindGames = (): FindGamesReturn => {
     const [games, setGames] = useState<GameWithAddress[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
