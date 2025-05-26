@@ -48,7 +48,7 @@ export const useVacantSeatData = (tableId?: string): VacantSeatResponse => {
             smallBlind,
             bigBlind,
             smallBlindDisplay: ethers.formatUnits(smallBlind, 18),
-            bigBlindDisplay: ethers.formatUnits(smallBlind, 18),
+            bigBlindDisplay: ethers.formatUnits(bigBlind, 18),
             dealerPosition: gameState.dealer,
             smallBlindPosition: gameState.smallBlindPosition,
             bigBlindPosition: gameState.bigBlindPosition,
