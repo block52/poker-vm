@@ -265,7 +265,6 @@ export type TableInfo = {
 
 export type VacantSeatResponse = {
     isUserAlreadyPlaying: boolean;
-    tableInfo: TableInfo;
     isSeatVacant: (seatIndex: number) => boolean;
     canJoinSeat: (seatIndex: number) => boolean;
     isLoading: boolean;

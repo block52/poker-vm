@@ -2,18 +2,7 @@ import React from "react";
 import { useGameState } from "./useGameState";
 import { ethers } from "ethers";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
-import { TableInfo, VacantSeatResponse } from "../types/index";
-
-const defaultTableInfo: TableInfo = {
-    smallBlind: "0",
-    bigBlind: "0",
-    smallBlindDisplay: "0.00",
-    bigBlindDisplay: "0.00",
-    dealerPosition: 0,
-    smallBlindPosition: 0,
-    bigBlindPosition: 0,
-    players: []
-};
+import { VacantSeatResponse } from "../types/index";
 
 /**
  * Custom hook to manage data for vacant seats
@@ -37,26 +26,6 @@ export const useVacantSeatData = (tableId?: string): VacantSeatResponse => {
         return gameState.players.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
     }, [gameState, userAddress]);
 
-    // Get blind values from table data
-    const tableInfo = React.useMemo(() => {
-        if (!gameState) return defaultTableInfo;
-
-        const smallBlind = gameState.gameOptions?.smallBlind || "0";
-        const bigBlind = gameState.gameOptions?.bigBlind || "0";
-
-        const response: TableInfo = {
-            smallBlind,
-            bigBlind,
-            smallBlindDisplay: ethers.formatUnits(smallBlind, 18),
-            bigBlindDisplay: ethers.formatUnits(bigBlind, 18),
-            dealerPosition: gameState.dealer,
-            smallBlindPosition: gameState.smallBlindPosition,
-            bigBlindPosition: gameState.bigBlindPosition,
-            players: gameState.players || []
-        };
-
-        return response;
-    }, [gameState]);
 
     // Function to check if a specific seat is vacant
     const isSeatVacant = React.useCallback(
@@ -88,7 +57,6 @@ export const useVacantSeatData = (tableId?: string): VacantSeatResponse => {
 
     return {
         isUserAlreadyPlaying,
-        tableInfo,
         isSeatVacant,
         canJoinSeat,
         isLoading,
