@@ -263,3 +263,20 @@ export interface MinAndMaxBuyInsReturn {
     error: Error | null;
     refresh: () => Promise<void>;
 }
+
+// Type for next-to-act information
+export interface NextToActInfo {
+    seat: number;
+    player: PlayerDTO;
+    isCurrentUserTurn: boolean;
+    availableActions: LegalActionDTO[];
+    timeRemaining: number;
+}
+
+// Type for the return value of useNextToActInfo hook
+export interface NextToActInfoReturn {
+    nextToActInfo: NextToActInfo | null;
+    isLoading: boolean;
+    error: Error | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
