@@ -1,10 +1,14 @@
 import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType, ActionDTO } from "@bitcoinbrisbane/block52";
 
-// Type for the return value of useGameState hook
-export interface GameStateReturn {
-    gameState: TexasHoldemStateDTO | undefined;
-    error: Error | null;
+// Base type for all hook returns with common loading and error state
+export interface BaseHookReturn {
     isLoading: boolean;
+    error: Error | null;
+}
+
+// Type for the return value of useGameState hook
+export interface GameStateReturn extends BaseHookReturn {
+    gameState: TexasHoldemStateDTO | undefined;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
     getNestedValue: (path: string) => any;
 }
@@ -127,7 +131,6 @@ export interface PositionArray {
     color?: string;
 }
 
-
 export interface LeaveTableOptions {
     amount: string;
     actionIndex?: number;
@@ -173,7 +176,7 @@ export interface TurnAnimationProps {
 }
 
 // Type for the return value of useGameProgress hook
-export interface GameProgressReturn {
+export interface GameProgressReturn extends BaseHookReturn {
     isGameInProgress: boolean;
     activePlayers: PlayerDTO[];
     playerCount: number;
@@ -181,8 +184,6 @@ export interface GameProgressReturn {
     actionCount: number;
     nextToAct: number;
     previousActions: ActionDTO[];
-    isLoading: boolean;
-    error: Error | null;
 }
 
 // Type for the return value of useCardAnimations hook
@@ -194,15 +195,13 @@ export interface CardAnimationsReturn {
 }
 
 // Type for the return value of useTableState hook
-export interface TableStateReturn {
+export interface TableStateReturn extends BaseHookReturn {
     currentRound: TexasHoldemRound;
     totalPot: string;
     formattedTotalPot: string;
     tableSize: number;
     tableType: GameType;
     roundType: TexasHoldemRound;
-    isLoading: boolean;
-    error: Error | null;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
@@ -213,39 +212,31 @@ export interface ChipPositionsReturn {
 }
 
 // Type for the return value of useDealerPosition hook
-export interface DealerPositionReturn {
+export interface DealerPositionReturn extends BaseHookReturn {
     dealerButtonPosition: { left: string; top: string };
     isDealerButtonVisible: boolean;
-    isLoading: boolean;
-    error: Error | null;
 }
 
 // Type for the return value of useFindGames hook
-export interface FindGamesReturn {
+export interface FindGamesReturn extends BaseHookReturn {
     games: GameWithAddress[];
-    isLoading: boolean;
-    error: string | null;
     refetch: () => Promise<void>;
 }
 
 // Type for the return value of useMinAndMaxBuyIns hook
-export interface MinAndMaxBuyInsReturn {
+export interface MinAndMaxBuyInsReturn extends BaseHookReturn {
     minBuyInWei: string;
     maxBuyInWei: string;
     minBuyInFormatted: string;
     maxBuyInFormatted: string;
-    isLoading: boolean;
-    error: Error | null;
     refresh: () => Promise<void>;
 }
 
 // Type for the return value of useNextToActInfo hook
-export interface NextToActInfoReturn {
+export interface NextToActInfoReturn extends BaseHookReturn {
     seat: number | null;
     player: PlayerDTO | null;
     isCurrentUserTurn: boolean;
     availableActions: LegalActionDTO[];
     timeRemaining: number;
-    isLoading: boolean;
-    error: Error | null;
 }
