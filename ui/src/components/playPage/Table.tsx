@@ -757,11 +757,12 @@ const Table = () => {
                                             {/*//! Dealer */}
                                             {isDealerButtonVisible && (
                                                 <motion.div
+                                                    key={`dealer-${dealerButtonPosition.left}-${dealerButtonPosition.top}`}
                                                     className="dealer-button"
                                                     style={dealerButtonStyle}
                                                     initial={false}
-                                                    animate={dealerButtonStyle}
                                                     transition={{ duration: 0.6, ease: "easeInOut" }}
+                                                    layout
                                                 >
                                                     <img src={CustomDealer} alt="Dealer Button" />
                                                 </motion.div>

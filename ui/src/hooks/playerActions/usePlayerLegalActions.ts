@@ -1,11 +1,10 @@
 import { useGameState } from "../useGameState";
-import { useState } from "react";
-import useSWR from "swr";
 import { PlayerLegalActionsResult } from "./types";
 import { LegalActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to fetch the legal actions for the current player
+ * Uses real-time WebSocket data - no polling needed
  * @param tableId The table ID
  * @returns Object containing the player's legal actions and related information
  */
@@ -13,26 +12,8 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     // Get the user's address from localStorage
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
 
-    // State for frequent refreshes
-    const [lastRefresh, setLastRefresh] = useState(0);
-
-    // Get game state from centralized hook
+    // Get game state from centralized WebSocket hook
     const { gameState, isLoading, error, refresh } = useGameState(tableId);
-
-    // Custom more frequent refresh for this critical hook
-    useSWR(
-        tableId ? `legal-actions-${tableId}` : null,
-        async () => {
-            const now = Date.now();
-            // Refresh if more than 5 seconds have elapsed
-            if (now - lastRefresh >= 5000) {
-                await refresh();
-                setLastRefresh(now);
-            }
-            return null;
-        },
-        { refreshInterval: 5000, revalidateOnFocus: true }
-    );
 
     // Default return value for error/loading states
     const defaultReturn: PlayerLegalActionsResult = {
