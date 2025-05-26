@@ -2,9 +2,9 @@ import React from "react";
 import { useGameState } from "./useGameState";
 import { ethers } from "ethers";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
-import { VacantSeatResponse } from "../types/index";
+import { TableInfo, VacantSeatResponse } from "../types/index";
 
-const defaultVacantSeatResponse: VacantSeatResponse = {
+const defaultTableInfo: TableInfo = {
     smallBlind: "0",
     bigBlind: "0",
     smallBlindDisplay: "0.00",
@@ -39,19 +39,19 @@ export const useVacantSeatData = (tableId?: string): VacantSeatResponse => {
 
     // Get blind values from table data
     const tableInfo = React.useMemo(() => {
-        if (!gameState) return defaultVacantSeatResponse;
+        if (!gameState) return defaultTableInfo;
 
         const smallBlind = gameState.gameOptions?.smallBlind || "0";
         const bigBlind = gameState.gameOptions?.bigBlind || "0";
 
-        const response: VacantSeatResponse = {
+        const response: TableInfo = {
             smallBlind,
             bigBlind,
             smallBlindDisplay: ethers.formatUnits(smallBlind, 18),
             bigBlindDisplay: ethers.formatUnits(smallBlind, 18),
-            dealerPosition: gameState.dealer || 0,
-            smallBlindPosition: gameState.gameOptions?.smallBlind || 0,
-            bigBlindPosition: gameState.gameOptions?.bigBlind || 0,
+            dealerPosition: gameState.dealer,
+            smallBlindPosition: gameState.smallBlindPosition,
+            bigBlindPosition: gameState.bigBlindPosition,
             players: gameState.players || []
         };
 

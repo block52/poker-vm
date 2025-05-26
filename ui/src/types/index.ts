@@ -1,4 +1,5 @@
 import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
+import { T } from "framer-motion/dist/types.d-CtuPurYT";
 
 // Type for the return value of useGameState hook
 export interface GameStateReturn {
@@ -251,18 +252,20 @@ export interface FindGamesReturn {
     refetch: () => Promise<void>;
 }
 
+export type TableInfo = {
+    smallBlind: string;
+    bigBlind: string;
+    smallBlindDisplay: string;
+    bigBlindDisplay: string;
+    dealerPosition: number;
+    smallBlindPosition: number;
+    bigBlindPosition: number;
+    players: PlayerDTO[];
+};
+
 export type VacantSeatResponse = {
     isUserAlreadyPlaying: boolean;
-    tableInfo: {
-        smallBlind: string;
-        bigBlind: string;
-        smallBlindDisplay: string;
-        bigBlindDisplay: string;
-        dealerPosition: number;
-        smallBlindPosition: number;
-        bigBlindPosition: number;
-        players: PlayerDTO[];
-    };
+    tableInfo: TableInfo;
     isSeatVacant: (seatIndex: number) => boolean;
     canJoinSeat: (seatIndex: number) => boolean;
     isLoading: boolean;
