@@ -215,3 +215,9 @@ export interface TableStateReturn {
     error: Error | null;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
+
+// Type for the return value of useChipPositions hook
+export interface ChipPositionsReturn {
+    chipPositionArray: PositionArray[];
+    tableSize: number;
+}
