@@ -236,3 +236,14 @@ export interface PlayerChipDataReturn extends BaseHookReturn {
     }>;
     getChipAmount: (seatIndex: number) => number;
 }
+
+// Type for the return value of usePlayerData hook
+export interface PlayerDataReturn extends BaseHookReturn {
+    playerData: PlayerDTO | null;
+    stackValue: number;
+    isFolded: boolean;
+    isAllIn: boolean;
+    holeCards: string[];
+    round: TexasHoldemRound | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}

@@ -5,7 +5,6 @@ import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 
 // Import our custom hooks
-import { usePlayerDTO } from "../hooks/usePlayerDTO";
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
 import { useTableDeal } from "../hooks/playerActions/useTableDeal";
 import { useTableCheck } from "../hooks/playerActions/useTableCheck";
@@ -22,6 +21,7 @@ import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
 import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
 import { DEFAULT_BIG_BLIND, useGameOptions } from "../hooks/useGameOptions";
+import { useGameState } from "../hooks/useGameState";
 
 import { ethers } from "ethers";
 
@@ -32,7 +32,8 @@ const PokerActionPanel: React.FC = () => {
     const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
 
     // Get data from our custom hooks
-    const { players } = usePlayerDTO(tableId);
+    const { gameState } = useGameState(tableId);
+    const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions(tableId);
     const { gameOptions } = useGameOptions(tableId);
     const { dealCards, isDealing } = useTableDeal(tableId);
