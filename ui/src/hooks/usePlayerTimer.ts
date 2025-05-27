@@ -10,72 +10,72 @@ import { PlayerTimerReturn, GameStateReturn } from "../types/index";
  * @returns Object containing player status and timer information
  */
 export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTimerReturn => {
-  const [progress, setProgress] = useState(0);
-  
-  // Get game state from centralized hook
-  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
-  
-  // Find the player by seat number
-  const player = useMemo((): PlayerDTO | null => {
-    if (!gameState?.players || playerSeat === undefined) {
-      return null;
-    }
-    
-    return gameState.players.find((p: PlayerDTO) => p.seat === playerSeat) || null;
-  }, [gameState, playerSeat]);
+    const [progress, setProgress] = useState(0);
 
-  // Get player status
-  const playerStatus = useMemo((): PlayerStatus => {
-    if (!player?.status) {
-      return PlayerStatus.NOT_ACTED;
-    }
-    return player.status;
-  }, [player]);
+    // Get game state from centralized hook
+    const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
-  // Get timeout value
-  const timeoutValue = useMemo((): number => {
-    return player?.timeout || 30; // Default to 30 seconds
-  }, [player]);
+    // Find the player by seat number
+    const player = useMemo((): PlayerDTO | null => {
+        if (!gameState?.players || playerSeat === undefined) {
+            return null;
+        }
 
-  // Reset progress when player or status changes
-  useEffect(() => {
-    setProgress(0);
-  }, [player, playerStatus]);
+        return gameState.players.find((p: PlayerDTO) => p.seat === playerSeat) || null;
+    }, [gameState, playerSeat]);
 
-  // Handle timer progression
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    // Get player status
+    const playerStatus = useMemo((): PlayerStatus => {
+        if (!player?.status) {
+            return PlayerStatus.NOT_ACTED;
+        }
+        return player.status;
+    }, [player]);
 
-    if (playerStatus === PlayerStatus.TURN) {
-      setProgress(0); // Reset progress when turn starts
+    // Get timeout value
+    const timeoutValue = useMemo((): number => {
+        return player?.timeout || 30; // Default to 30 seconds
+    }, [player]);
 
-      interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= timeoutValue) {
-            clearInterval(interval!);
-            return prev;
-          }
-          return prev + 1; // Increment progress
-        });
-      }, 1000); // Update every second
-    }
+    // Reset progress when player or status changes
+    useEffect(() => {
+        setProgress(0);
+    }, [player, playerStatus]);
 
-    return () => {
-      if (interval) clearInterval(interval);
+    // Handle timer progression
+    useEffect(() => {
+        let interval: NodeJS.Timeout | null = null;
+
+        if (playerStatus === PlayerStatus.TURN) {
+            setProgress(0); // Reset progress when turn starts
+
+            interval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev >= timeoutValue) {
+                        clearInterval(interval!);
+                        return prev;
+                    }
+                    return prev + 1; // Increment progress
+                });
+            }, 1000); // Update every second
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [playerStatus, timeoutValue]);
+
+    // Calculate derived values
+    const timeRemaining = useMemo(() => Math.max(0, timeoutValue - progress), [timeoutValue, progress]);
+    const isActive = useMemo(() => playerStatus === PlayerStatus.TURN, [playerStatus]);
+
+    return {
+        playerStatus,
+        timeoutValue,
+        progress,
+        timeRemaining,
+        isActive,
+        isLoading,
+        error
     };
-  }, [playerStatus, timeoutValue]);
-
-  // Calculate derived values
-  const timeRemaining = useMemo(() => Math.max(0, timeoutValue - progress), [timeoutValue, progress]);
-  const isActive = useMemo(() => playerStatus === PlayerStatus.TURN, [playerStatus]);
-
-  return {
-    playerStatus,
-    timeoutValue,
-    progress,
-    timeRemaining,
-    isActive,
-    isLoading,
-    error
-  };
-}; 
+};
