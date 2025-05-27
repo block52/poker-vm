@@ -100,7 +100,6 @@ export const playerPosition = {
 export const vacantPlayerPosition = {
     two: [
         {
-            //* 1 green
             left: "450px",
             top: "390px",
         },
@@ -188,12 +187,10 @@ export const vacantPlayerPosition = {
 export const chipPosition = {
     two: [
         {
-            //* 1 green
             left: "450px",
             top: "390px",
         },
         {
-            //* 2 orange
             left: "155px",
             top: "374px",
         }
