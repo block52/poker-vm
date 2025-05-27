@@ -1,6 +1,7 @@
 import { useGameState } from "./useGameState";
 import { formatWeiToDollars } from "../utils/numberUtils";
 import { PlayerChipDataReturn, GameStateReturn } from "../types/index";
+import { PlayerDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to fetch and provide player chip data for each seat
@@ -35,7 +36,7 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
       stack: string;
       sumOfBets: string;
       formattedSumOfBets: string;
-    }>, player: any) => {
+    }>, player: PlayerDTO) => {
       if (player && typeof player.seat === "number") {
         acc[player.seat] = {
           stack: player.stack || "0",

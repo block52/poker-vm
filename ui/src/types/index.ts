@@ -1,4 +1,18 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType, ActionDTO } from "@bitcoinbrisbane/block52";
+import { 
+    LegalActionDTO, 
+    PlayerActionType, 
+    NonPlayerActionType,
+    PlayerDTO, 
+    GameOptionsDTO, 
+    TexasHoldemStateDTO, 
+    TexasHoldemRound, 
+    GameType, 
+    ActionDTO,
+    PlayerStatus,
+    AccountDTO,
+    TransactionDTO,
+    PerformActionResponse
+} from "@bitcoinbrisbane/block52";
 
 // Base type for all hook returns with common loading and error state
 export interface BaseHookReturn {
@@ -12,19 +26,6 @@ export interface GameStateReturn extends BaseHookReturn {
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
     getNestedValue: (path: string) => any;
 }
-
-// Type for action log entries
-export type ActionsLogPokerAction = {
-    action: string;
-    playerId?: string;
-    address?: string;
-    amount?: string;
-    seat?: number;
-    timestamp?: string;
-    round?: string;
-    index?: number;
-    [key: string]: any; // For any other properties
-};
 
 // Type for error logs
 export interface ErrorLog {
@@ -60,12 +61,6 @@ export interface PlayerContextType {
     nextToAct: number;
     playerSeats: number[];
     communityCards: string[];
-    // updatePlayer: (index: number, updatedPlayer: Player) => void;
-    // setPlayerBalance: (index: number, balance: number) => void;
-    // setPlayerPot: (index: number, balance: number) => void;
-    // handleStatusChange: (index: number, choice: number, updatedPlayers: Player[]) => void;
-    // moveToNextPlayer: (index: number, updatedPlayers: Player[]) => void;
-    // changeToThinkingBeforeTimeout: () => void;
     setPlayerAction: (action: PlayerActionType, amount?: number) => void;
     dealerIndex: number;
     lastPot: number;
@@ -77,19 +72,12 @@ export interface PlayerContextType {
     error: Error | null;
 }
 
-export type Player = {
-    address: string;
-    seat: number;
-    legalActions: LegalActionDTO[];
-    timeout: number;
-}
-
 export type TableData = {
     smallBlindPosition: number;
     bigBlindPosition: number;
     nextToAct: number;
     dealer: number;
-    players: Player[];
+    players: PlayerDTO[];
     round: string;
     pots: string[];
 }
@@ -105,7 +93,7 @@ export type TableStatus = {
     isPlayerTurn: boolean;
     seat: number;
     stack: string;
-    status: string;
+    status: PlayerStatus;
     availableActions: LegalActionDTO[];
     canPostSmallBlind: boolean;
     canPostBigBlind: boolean;
