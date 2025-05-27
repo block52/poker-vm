@@ -785,7 +785,8 @@ const Table = () => {
                             </div>
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
-                            {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>}
+                            {/* Debug feature removed - hand_strength is not part of PlayerDTO */}
+                            {/* {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>} */}
                         </div>
                     </div>
                     {/*//! FOOTER */}

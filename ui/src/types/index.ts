@@ -247,3 +247,11 @@ export interface PlayerDataReturn extends BaseHookReturn {
     round: TexasHoldemRound | null;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
+
+// Type for the return value of usePlayerSeatInfo hook
+export interface PlayerSeatInfoReturn extends BaseHookReturn {
+    currentUserSeat: number;
+    userDataBySeat: Record<number, PlayerDTO>;
+    getUserBySeat: (seat: number) => PlayerDTO | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
