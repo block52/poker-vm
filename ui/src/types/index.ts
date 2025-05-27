@@ -312,3 +312,24 @@ export interface TableDataReturn extends BaseHookReturn {
 export interface TableTurnIndexReturn extends BaseHookReturn {
     nextTurnIndex: number;
 }
+
+export interface VacantSeatResponse extends BaseHookReturn {
+    isUserAlreadyPlaying: boolean;
+    isSeatVacant: (seatIndex: number) => boolean;
+    canJoinSeat: (seatIndex: number) => boolean;
+}
+
+
+export interface WinnerInfo {
+    seat: number;
+    address: string;
+    amount: string | number;
+    formattedAmount: string;
+    winType?: string;
+}
+
+
+export interface WinnerInfoReturn {
+    winnerInfo: WinnerInfo[] | null;
+    error: Error | null;
+}
