@@ -9,7 +9,7 @@ import "./TurnAnimation.css";
 const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
     const { id } = useParams<{ id: string }>();
     const { tableSize } = useTableAnimations(id);
-    const { nextToActInfo } = useNextToActInfo(id);
+    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(id);
     const [isCurrentPlayersTurn, setIsCurrentPlayersTurn] = useState(false);
     
     // Memoize position to avoid unnecessary calculations
@@ -23,11 +23,9 @@ const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
 
     // Check if it's the current player's turn with useEffect
     useEffect(() => {
-        const isTurn = nextToActInfo?.seat === index + 1;
-        if (isCurrentPlayersTurn !== isTurn) {
-            setIsCurrentPlayersTurn(isTurn);
-        }
-    }, [nextToActInfo?.seat, index, isCurrentPlayersTurn]);
+        const isTurn = nextToActSeat === index + 1;
+        setIsCurrentPlayersTurn(isTurn);
+    }, [nextToActSeat, index]);
 
     // Don't render anything if it's not this player's turn or position isn't available
     if (!isCurrentPlayersTurn || !position) {

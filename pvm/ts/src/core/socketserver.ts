@@ -4,6 +4,8 @@ import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import url from "url";
 import { verify } from "crypto";
 import { verifySignature } from "../utils/crypto";
+import { GameStateCommand } from "../commands";
+import { ZeroAddress, ZeroHash } from "ethers";
 
 // Map of table addresses to map of player IDs to WebSocket connections
 const tableSubscriptions: Map<string, Map<string, WebSocket>> = new Map();
@@ -42,7 +44,7 @@ export class SocketService implements SocketServiceInterface {
     private readonly maxConnections: number;
     private activeConnections: number = 0;
 
-    constructor(server: HttpServer, maxConnections: number = 100) {
+    constructor(server: HttpServer, private readonly validatorPrivateKey: string, maxConnections: number = 100) {
         this.wss = new WebSocket.Server({ server });
         this.maxConnections = maxConnections;
         this.setupSocketEvents();
@@ -60,7 +62,7 @@ export class SocketService implements SocketServiceInterface {
     private setupSocketEvents() {
         console.log("Setting up WebSocket events");
 
-        this.wss.on("connection", (ws: WebSocket, req: any) => {
+        this.wss.on("connection", async (ws: WebSocket, req: any) => {
             // Check if we've reached the connection limit
             if (this.activeConnections >= this.maxConnections) {
                 console.log(`Connection limit reached (${this.maxConnections}). Rejecting new connection.`);
@@ -81,12 +83,12 @@ export class SocketService implements SocketServiceInterface {
                 this.subscribeToTable(tableAddress, playerId, ws);
                 console.log(`Auto-subscribed player ${playerId} to table ${tableAddress}`);
 
-                // Send confirmation message
-                this.sendMessage(ws, {
-                    type: "subscribed",
-                    tableAddress,
-                    playerId
-                });
+                // Get initial game state for this table
+                const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey);
+                const state = await gameStateCommand.execute();
+
+                // Send initial game state to the newly connected player
+                this.sendGameStateToPlayer(tableAddress, playerId, state.data);
             }
 
             // Handle messages from client
@@ -317,7 +319,8 @@ export class SocketService implements SocketServiceInterface {
 let socketServiceInstance: SocketService | null = null;
 export function initSocketServer(server: HttpServer, maxConnections: number = 100): SocketService {
     if (!socketServiceInstance) {
-        socketServiceInstance = new SocketService(server, maxConnections);
+        const validatorKey = process.env.VALIDATOR_KEY || ZeroHash;
+        socketServiceInstance = new SocketService(server, validatorKey, maxConnections);
     }
     return socketServiceInstance;
 }

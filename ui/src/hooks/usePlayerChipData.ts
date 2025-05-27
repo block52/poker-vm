@@ -1,19 +1,19 @@
 import { useGameState } from "./useGameState";
-import { formatWeiToDollars } from "../utils/numberUtils";
+import { PlayerChipDataReturn, GameStateReturn } from "../types/index";
+import { PlayerDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to fetch and provide player chip data for each seat
  * @param tableId The ID of the table to fetch data for
  * @returns Object containing player chip data mapped by seat
  */
-export const usePlayerChipData = (tableId?: string) => {
+export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
   // Get game state from centralized hook
-  const { gameState, isLoading, error } = useGameState(tableId);
+  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
   // Default values in case of error or loading
-  const defaultState = {
-    chipDataBySeat: {},
-    getChipAmount: (seatIndex: number): number => 0,
+  const defaultState: PlayerChipDataReturn = {
+    getChipAmount: (seatIndex: number): string => "0",
     isLoading,
     error
   };
@@ -24,32 +24,21 @@ export const usePlayerChipData = (tableId?: string) => {
   }
 
   try {
-    if (!gameState.players) {
+    if (!gameState.players || !Array.isArray(gameState.players)) {
       console.warn("No players data found in API response");
       return defaultState;
     }
 
-    // Create a map of player chip data by seat
-    const chipDataBySeat = gameState.players.reduce((acc: any, player: any) => {
-      if (player && player.seat !== undefined) {
-        acc[player.seat] = {
-          stack: player.stack || "0",
-          sumOfBets: player.sumOfBets || "0",
-          formattedSumOfBets: formatWeiToDollars(player.sumOfBets || "0")
-        };
-      }
-      return acc;
-    }, {});
-
     // Function to get chip amount for a given seat
-    const getChipAmount = (seatIndex: number): number => {
-      const playerData = chipDataBySeat[seatIndex];
-      if (!playerData) return 0;
-      return parseFloat(formatWeiToDollars(playerData.sumOfBets));
+    const getChipAmount = (seatIndex: number): string => {
+      const player = gameState.players.find((p: PlayerDTO) => p && p.seat === seatIndex);
+      if (player && player.stack) {
+        return player.stack; // Return the raw stack amount as string (in Wei)
+      }
+      return "0"; // Return "0" if no player or chips data found
     };
     
     return {
-      chipDataBySeat,
       getChipAmount,
       isLoading: false,
       error: null
@@ -58,7 +47,7 @@ export const usePlayerChipData = (tableId?: string) => {
     console.error("Error parsing player chip data:", err);
     return {
       ...defaultState,
-      error: err
+      error: err instanceof Error ? err : new Error("Error parsing player chip data")
     };
   }
 }; 
