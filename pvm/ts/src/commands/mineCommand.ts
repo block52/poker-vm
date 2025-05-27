@@ -79,6 +79,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
         const uniqueAddresses = new Set<string>();
         for (let i = 0; i < validGameTxs.length; i++) {
             const tx = validGameTxs[i];
+            console.log(`Adding tx ${tx.to}: ${tx.hash} for processing`);
             uniqueAddresses.add(tx.to);
         }
 
@@ -203,13 +204,15 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
             // Check if the transaction is valid
             if (tx.verify()) {
+                console.log(`Valid transaction for address ${tx.to}: ${tx.hash}`);
                 validTxs.push(tx);
             } else {
                 console.warn(`Invalid transaction for address ${tx.to}: ${tx.hash}`);
             }
         }
 
-        return validTxs;
+        console.log(`Filtered game transactions: ${validTxs.length}`);
+        return validTxs.sort((a, b) => a.timestamp - b.timestamp);
     }
 
     private validate(txs: Transaction[]): Transaction[] {
