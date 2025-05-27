@@ -117,3 +117,45 @@ export const convertAmountToBigInt = (amount: string, decimals: number): bigint 
     if (!decimals || !amount || !+amount) return BigInt(0);
     return BigUnit.from(+amount, decimals).toBigInt();
 };
+
+// Format USDC amounts (6 decimals) to simple dollar format
+export const formatUSDCToSimpleDollars = (usdcAmount: string | bigint | undefined | null): string => {
+    try {
+        // Handle undefined or null values
+        if (usdcAmount === undefined || usdcAmount === null) {
+            return "0.00";
+        }
+        
+        const usdcValue = ethers.formatUnits(usdcAmount.toString(), 6);
+        return parseFloat(usdcValue).toFixed(2);
+    } catch (error) {
+        console.error("Error formatting USDC amount:", error);
+        return "0.00";
+    }
+};
+
+// Format chip amounts that are stored in Wei format but represent USDC values
+// 
+// The poker system stores chip amounts in Wei format (18 decimals) internally,
+// but these represent USDC values which use 6 decimals. To convert properly:
+// 1. Divide by 10^14 to convert from 18-decimal format to 6-decimal format
+// 2. Format using ethers.formatUnits with 6 decimals
+// 
+// Example: 960000000000000000000 (Wei format) -> 9.60 (USDC)
+export const formatChipAmount = (chipAmount: string | bigint | undefined | null): string => {
+    try {
+        // Handle undefined or null values
+        if (chipAmount === undefined || chipAmount === null) {
+            return "0.00";
+        }
+        
+        // Convert from Wei format (18 decimals) to USDC-compatible format
+        // Divide by 10^14 to get the correct USDC amount, then format with 6 decimals
+        const converted = BigInt(chipAmount.toString()) / BigInt("100000000000000");
+        const usdcValue = ethers.formatUnits(converted.toString(), 6);
+        return parseFloat(usdcValue).toFixed(2);
+    } catch (error) {
+        console.error("Error formatting chip amount:", error);
+        return "0.00";
+    }
+};

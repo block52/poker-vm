@@ -13,7 +13,7 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
 
   // Default values in case of error or loading
   const defaultState: PlayerChipDataReturn = {
-    getChipAmount: (seatIndex: number): number => 0,
+    getChipAmount: (seatIndex: number): string => "0",
     isLoading,
     error
   };
@@ -30,12 +30,12 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
     }
 
     // Function to get chip amount for a given seat
-    const getChipAmount = (seatIndex: number): number => {
+    const getChipAmount = (seatIndex: number): string => {
       const player = gameState.players.find((p: PlayerDTO) => p && p.seat === seatIndex);
       if (player && player.stack) {
-        return Number(player.stack); // Return the stack amount for the player
+        return player.stack; // Return the raw stack amount as string (in Wei)
       }
-      return 0; // Return 0 if no player or chips data found
+      return "0"; // Return "0" if no player or chips data found
     };
     
     return {
