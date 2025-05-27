@@ -111,9 +111,9 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             setJoinSuccess(false);
 
             try {
-                const buyInWei = ethers.parseUnits(storedAmount, 18);
+                const buyIn = ethers.parseUnits(storedAmount, 18);
                 const account = await client.getAccount(userAddress);
-                const response = await client.playerJoin(tableId, BigInt(buyInWei.toString()), index, account.nonce);
+                const response = await client.playerJoin(tableId, BigInt(buyIn.toString()), index, account.nonce);
                 
                 setJoinResponse(response);
                 setJoinSuccess(true);

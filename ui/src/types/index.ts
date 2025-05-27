@@ -68,6 +68,13 @@ export interface PlayerContextType {
     error: Error | null;
 }
 
+export type Player = {
+    address: string;
+    seat: number;
+    legalActions: LegalActionDTO[];
+    timeout: number;
+};
+
 export type TableData = {
     smallBlindPosition: number;
     bigBlindPosition: number;
@@ -76,12 +83,12 @@ export type TableData = {
     players: PlayerDTO[];
     round: string;
     pots: string[];
-}
+};
 
 type Limits = {
     min: string;
     max: string;
-}
+};
 
 //todo tidy up this type
 export type TableStatus = {
@@ -104,7 +111,7 @@ export type TableStatus = {
     smallBlindAmount: string;
     bigBlindAmount: string;
     isSmallBlindPosition: boolean;
-}
+};
 
 // Type for PositionArray component props
 export interface PositionArray {
@@ -141,7 +148,7 @@ export type PlayerCardProps = {
     id: number;
     label: string;
     color?: string;
-    isVacant?: boolean;  // Whether this is a vacant seat
+    isVacant?: boolean; // Whether this is a vacant seat
     onClose: () => void;
     setStartIndex: (index: number) => void;
 };
