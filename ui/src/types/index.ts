@@ -227,8 +227,6 @@ export interface FindGamesReturn extends BaseHookReturn {
 export interface MinAndMaxBuyInsReturn extends BaseHookReturn {
     minBuyInWei: string;
     maxBuyInWei: string;
-    minBuyInFormatted: string;
-    maxBuyInFormatted: string;
     refresh: () => Promise<void>;
 }
 

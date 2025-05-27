@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
 import { useNodeRpc } from "../../context/NodeRpcContext";
+import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
 
 interface BuyInModalProps {
     tableId: string;
@@ -17,7 +18,11 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
     const [, setBalanceError] = useState<Error | null>(null);
     const [publicKey, ] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
-    const { minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted } = useMinAndMaxBuyIns(tableId);
+    const { minBuyInWei, maxBuyInWei } = useMinAndMaxBuyIns(tableId);
+
+    // Format the buy-in values using utility functions
+    const minBuyInFormatted = formatWeiToSimpleDollars(minBuyInWei);
+    const maxBuyInFormatted = formatWeiToSimpleDollars(maxBuyInWei);
 
     // ──────────── derive big/small blind ────────────
     // maxBuyIn = 100 × bigBlind  ⇒  bigBlind = maxBuyIn / 100
