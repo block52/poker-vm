@@ -309,3 +309,8 @@ export interface TableDataReturn extends BaseHookReturn {
     tableDataSignature: string;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
+
+// Type for the return value of useTableTurnIndex hook
+export interface TableTurnIndexReturn extends BaseHookReturn {
+    nextTurnIndex: number;
+}
