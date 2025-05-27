@@ -22,7 +22,7 @@ import {
     checkAuthCookie, 
     handlePasswordSubmit as utilHandlePasswordSubmit,
     handlePasswordKeyPress as utilHandlePasswordKeyPress 
-} from "../utils/passworProtectionUtils";
+} from "../utils/passwordProtectionUtils";
 
 // Add network display component
 const NetworkDisplay = ({ isMainnet = false }) => {
