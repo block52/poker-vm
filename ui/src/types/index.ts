@@ -264,3 +264,17 @@ export interface PlayerTimerReturn extends BaseHookReturn {
     timeRemaining: number;
     isActive: boolean;
 }
+
+// Type for showing cards data
+export interface ShowingCardData {
+    address: string;
+    holeCards: string[];
+    seat: number;
+}
+
+// Type for the return value of useShowingCardsByAddress hook
+export interface ShowingCardsByAddressReturn extends BaseHookReturn {
+    showingPlayers: ShowingCardData[];
+    isShowdown: boolean;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
