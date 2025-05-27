@@ -31,8 +31,8 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
 
         // Handle dealer button
         if (gameState.dealer !== undefined && gameState.dealer !== null) {
-            // If dealer position is 9, treat it as 0 for UI consistency
-            const dealerSeat = gameState.dealer === 9 ? 0 : gameState.dealer;
+            // Mapping exactly to GameState
+            const dealerSeat = gameState.dealer;
             const dealerPos = dealerPosition.nine[dealerSeat];
 
             if (dealerPos) {

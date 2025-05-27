@@ -208,7 +208,6 @@ const Table = () => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [debugMode, setDebugMode] = useState(false);
 
-
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
 
@@ -367,6 +366,10 @@ const Table = () => {
     useEffect(() => {
         //* set the number of players
         switch (tableSize) {
+            case 2:
+                setPlayerPositionArray(playerPosition.two);
+                setDealerPositionArray(dealerPosition.two);
+                break;
             case 6:
                 setPlayerPositionArray(playerPosition.six);
                 setDealerPositionArray(dealerPosition.six);
@@ -416,8 +419,20 @@ const Table = () => {
                 return (
                     <VacantPlayer
                         index={seatNumber}
-                        left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
-                        top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
+                        left={
+                            tableSize === 2
+                                ? vacantPlayerPosition.two[positionIndex].left
+                                : tableSize === 6
+                                ? vacantPlayerPosition.six[positionIndex].left
+                                : vacantPlayerPosition.nine[positionIndex].left
+                        }
+                        top={
+                            tableSize === 2
+                                ? vacantPlayerPosition.two[positionIndex].top
+                                : tableSize === 6
+                                ? vacantPlayerPosition.six[positionIndex].top
+                                : vacantPlayerPosition.nine[positionIndex].top
+                        }
                         onJoin={updateBalanceOnPlayerJoin}
                     />
                 );
@@ -550,7 +565,6 @@ const Table = () => {
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                                     <span>Next To Act: Seat {nextToAct}</span>
                                 </span>
-                                
                             </div>
                         </div>
                     </div>
@@ -567,20 +581,18 @@ const Table = () => {
                             {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                             {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                         </span>
-                        
+
                         {/* Dev Mode Toggle Button */}
                         <span
                             className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ml-2 ${
-                                debugMode 
-                                    ? "bg-red-500/30 text-red-400" 
-                                    : "text-gray-400 hover:text-blue-400"
+                                debugMode ? "bg-red-500/30 text-red-400" : "text-gray-400 hover:text-blue-400"
                             }`}
                             onClick={() => setDebugMode(prev => !prev)}
                             title="Developer Mode"
                         >
                             <FaCode size={16} />
                         </span>
-                        
+
                         <span
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
                             onClick={() => {
@@ -687,10 +699,7 @@ const Table = () => {
                                         <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center shadow-[0_7px_15px_rgba(0,0,0,0.6)]">
                                             {/* //! Table */}
                                             <div className="table-logo">
-                                                <img
-                                                    src={placeholderLogo}
-                                                    alt="Placeholder Logo"
-                                                />
+                                                <img src={placeholderLogo} alt="Placeholder Logo" />
                                             </div>
                                             <div className="flex flex-col items-center justify-center -mt-20">
                                                 <div className="pot-display">

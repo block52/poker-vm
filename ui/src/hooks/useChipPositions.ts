@@ -20,6 +20,9 @@ export const useChipPositions = (tableId?: string, startIndex: number = 0): Chip
     if (!tableSize) return;
     
     switch (tableSize) {
+      case 2:
+        setChipPositionArray(chipPosition.two);
+        break;
       case 6:
         setChipPositionArray(chipPosition.six);
         break;

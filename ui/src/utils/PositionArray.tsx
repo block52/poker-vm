@@ -1,4 +1,18 @@
 export const playerPosition = {
+    two: [
+        {
+            //* 1 green
+            left: "450px",
+            top: "390px",
+            color: "#4ade80"
+        },
+        {
+            //* 2 orange
+            left: "155px",
+            top: "374px",
+            color: "#f97316"
+        }
+    ],
     six: [
         {
             left: "40%",
@@ -84,7 +98,19 @@ export const playerPosition = {
 };
 
 export const vacantPlayerPosition = {
-    six: [
+    two: [
+        {
+            //* 1 green
+            left: "450px",
+            top: "390px",
+        },
+        {
+            
+            left: "155px",
+            top: "374px",
+        }
+    ],
+        six: [
         {
             left: "40%",
             top: "100%"
@@ -160,6 +186,18 @@ export const vacantPlayerPosition = {
 };
 
 export const chipPosition = {
+    two: [
+        {
+            //* 1 green
+            left: "450px",
+            top: "390px",
+        },
+        {
+            //* 2 orange
+            left: "155px",
+            top: "374px",
+        }
+    ],
     six: [
         {
             left: "40%",
@@ -236,6 +274,16 @@ export const chipPosition = {
 };
 
 export const dealerPosition = {
+    two: [
+        {
+            left: "450px",
+            top: "390px",
+        },
+        {
+            left: "155px",
+            top: "374px",
+        }
+    ],
     six: [
         {
             left: "40%",
@@ -312,6 +360,16 @@ export const dealerPosition = {
 };
 
 export const turnAnimationPosition = {
+        two: [
+        {
+            left: "450px",
+            top: "390px",
+        },
+        {
+            left: "155px",
+            top: "374px",
+        }
+    ],
     six: [
         {
             left: "40%",

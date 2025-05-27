@@ -16,8 +16,10 @@ const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
     const position = useMemo(() => {
         if (tableSize === 9) {
             return turnAnimationPosition.nine[index];
-        } else {
+        } else if (tableSize === 6) {
             return turnAnimationPosition.six[index];
+        } else {
+            return turnAnimationPosition.two[index];
         }
     }, [tableSize, index]);
 
