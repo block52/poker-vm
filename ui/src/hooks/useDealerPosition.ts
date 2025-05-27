@@ -1,4 +1,3 @@
-import { dealerPosition } from "../utils/PositionArray";
 import { useGameState } from "./useGameState";
 import { DealerPositionReturn, GameStateReturn } from "../types/index";
 
@@ -12,7 +11,7 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
     const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
     // Default values in case of error or loading
-    const defaultState = {
+    const defaultState: DealerPositionReturn = {
         dealerButtonPosition: { left: "0px", top: "0px" },
         isDealerButtonVisible: false,
         isLoading,
@@ -26,31 +25,17 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
 
     try {
         // Default state if dealer position isn't set
-        let dealerButtonPosition = { left: "0px", top: "0px" };
-        let isDealerButtonVisible = false;
+        const dealerButtonPosition = { left: "0px", top: "0px" };
+        const isDealerButtonVisible = true;
 
-        // Handle dealer button
-        if (gameState.dealer !== undefined && gameState.dealer !== null) {
-            // If dealer position is 9, treat it as 0 for UI consistency
-            const dealerSeat = gameState.dealer === 9 ? 0 : gameState.dealer;
-            const dealerPos = dealerPosition.nine[dealerSeat];
-
-            if (dealerPos) {
-                // Set the position based on dealer's seat
-                dealerButtonPosition = {
-                    left: dealerPos.left,
-                    top: dealerPos.top
-                };
-                isDealerButtonVisible = true;
-            }
-        }
-
-        return {
+        const data: DealerPositionReturn = {
             dealerButtonPosition,
             isDealerButtonVisible,
             isLoading: false,
             error: null
         };
+
+        return data;
     } catch (err) {
         console.error("Error parsing dealer position:", err);
         return {

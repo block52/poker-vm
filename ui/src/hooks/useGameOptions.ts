@@ -1,30 +1,23 @@
-import { useGameState } from "./useGameState"
-import { GameOptions } from "@bitcoinbrisbane/block52";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { useGameState } from "./useGameState";
+import { GameOptionsDTO } from "@bitcoinbrisbane/block52";
+import { GameOptionsReturn, GameStateReturn } from "../types/index";
 
-// Define default values
+// Define default values as strings (matching GameOptionsDTO)
 export const DEFAULT_SMALL_BLIND = "100000000000000000"; // 0.1 ETH
 export const DEFAULT_BIG_BLIND = "200000000000000000"; // 0.2 ETH
-export const DEFAULT_MIN_BUY_IN = "10000000000000000"; // 0.01 ETH
-export const DEFAULT_MAX_BUY_IN = "1000000000000000000"; // 1 ETH
+export const DEFAULT_MIN_BUY_IN = "10000000000000000000"; // 10 ETH
+export const DEFAULT_MAX_BUY_IN = "100000000000000000000"; // 100 ETH
 
-// Default values in case of error or loading
-const defaultOptions: GameOptions = {
-    minBuyIn: BigInt(DEFAULT_MIN_BUY_IN),
-    maxBuyIn: BigInt(DEFAULT_MAX_BUY_IN),
+// Default options using Required<GameOptionsDTO> format
+const defaultOptions: Required<GameOptionsDTO> = {
+    minBuyIn: DEFAULT_MIN_BUY_IN,
+    maxBuyIn: DEFAULT_MAX_BUY_IN,
     maxPlayers: 9,
     minPlayers: 2,
-    smallBlind: BigInt(DEFAULT_SMALL_BLIND),
-    bigBlind: BigInt(DEFAULT_BIG_BLIND),
+    smallBlind: DEFAULT_SMALL_BLIND,
+    bigBlind: DEFAULT_BIG_BLIND,
     timeout: 300
-};
-
-// Helper to safely convert values to bigint
-const toBigInt = (value: any): bigint => {
-    if (typeof value === "string") return BigInt(value);
-    if (typeof value === "bigint") return value;
-    if (typeof value === "number") return BigInt(value);
-    return BigInt(0);
 };
 
 /**
@@ -32,58 +25,38 @@ const toBigInt = (value: any): bigint => {
  * @param tableId The table ID to fetch options for
  * @returns Object containing game options and loading state
  */
-export const useGameOptions = (tableId?: string) => {
-    // Use centralized game state but with custom refresh values
-    const [options, setOptions] = useState<GameOptions>(defaultOptions);
-    const { gameState, isLoading, error, refresh } = useGameState(tableId);
+export const useGameOptions = (tableId?: string): GameOptionsReturn => {
+    // Get game state from centralized hook
+    const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId);
 
-    // Store refresh time to limit how often we check for game option changes
-    const [lastRefreshTime, setLastRefreshTime] = useState(0);
-
-    // Process game options when game state changes
-    useEffect(() => {
-        // Only update if we have gameState and enough time has passed (30s interval)
-        const now = Date.now();
-        if (gameState && (!lastRefreshTime || now - lastRefreshTime > 30000)) {
-            try {
-                const gameOptions = gameState.gameOptions;
-
-                if (!gameOptions) {
-                    console.warn("No game options found in table data");
-                    return;
-                }
-
-                // Use the game options from the API with fallbacks to defaults
-                const newOptions: GameOptions = {
-                    minBuyIn: toBigInt(gameOptions.minBuyIn || defaultOptions.minBuyIn),
-                    maxBuyIn: toBigInt(gameOptions.maxBuyIn || defaultOptions.maxBuyIn),
-                    maxPlayers: gameOptions.maxPlayers || defaultOptions.maxPlayers,
-                    minPlayers: gameOptions.minPlayers || defaultOptions.minPlayers,
-                    smallBlind: toBigInt(gameOptions.smallBlind || defaultOptions.smallBlind),
-                    bigBlind: toBigInt(gameOptions.bigBlind || defaultOptions.bigBlind),
-                    timeout: gameOptions.timeout || defaultOptions.timeout
-                };
-
-                setOptions(newOptions);
-                setLastRefreshTime(now);
-            } catch (err) {
-                console.error("Error parsing game options:", err);
-            }
+    // Memoize game options processing
+    const gameOptions = useMemo((): Required<GameOptionsDTO> => {
+        if (!gameState?.gameOptions) {
+            return defaultOptions;
         }
-    }, [gameState, lastRefreshTime]);
 
-    // If still loading or error occurred, return default values
-    if (isLoading || error || !gameState) {
-        return {
-            gameOptions: defaultOptions,
-            isLoading,
-            error,
-            refresh
-        };
-    }
+        try {
+            const options = gameState.gameOptions;
+            
+            // Use the game options from the API with fallbacks to defaults
+            // Ensure all properties are present and not undefined
+            return {
+                minBuyIn: options.minBuyIn ?? defaultOptions.minBuyIn,
+                maxBuyIn: options.maxBuyIn ?? defaultOptions.maxBuyIn,
+                maxPlayers: options.maxPlayers ?? defaultOptions.maxPlayers,
+                minPlayers: options.minPlayers ?? defaultOptions.minPlayers,
+                smallBlind: options.smallBlind ?? defaultOptions.smallBlind,
+                bigBlind: options.bigBlind ?? defaultOptions.bigBlind,
+                timeout: options.timeout ?? defaultOptions.timeout
+            };
+        } catch (err) {
+            console.error("Error parsing game options:", err);
+            return defaultOptions;
+        }
+    }, [gameState]);
 
     return {
-        gameOptions: options,
+        gameOptions,
         isLoading,
         error,
         refresh

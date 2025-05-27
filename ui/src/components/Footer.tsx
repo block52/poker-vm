@@ -5,7 +5,6 @@ import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 
 // Import our custom hooks
-import { usePlayerDTO } from "../hooks/usePlayerDTO";
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
 import { useTableDeal } from "../hooks/playerActions/useTableDeal";
 import { useTableCheck } from "../hooks/playerActions/useTableCheck";
@@ -22,6 +21,7 @@ import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
 import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
 import { DEFAULT_BIG_BLIND, useGameOptions } from "../hooks/useGameOptions";
+import { useGameState } from "../hooks/useGameState";
 
 import { ethers } from "ethers";
 
@@ -32,7 +32,8 @@ const PokerActionPanel: React.FC = () => {
     const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
 
     // Get data from our custom hooks
-    const { players } = usePlayerDTO(tableId);
+    const { gameState } = useGameState(tableId);
+    const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions(tableId);
     const { gameOptions } = useGameOptions(tableId);
     const { dealCards, isDealing } = useTableDeal(tableId);
@@ -47,7 +48,7 @@ const PokerActionPanel: React.FC = () => {
     const { showCards, isShowing } = useTableShow(tableId);
 
     // Use the useNextToActInfo hook
-    const { nextToActInfo, refresh: refreshNextToActInfo } = useNextToActInfo(tableId);
+    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState(tableId);
@@ -62,7 +63,7 @@ const PokerActionPanel: React.FC = () => {
     const isUserInTable = useMemo(() => !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress), [players, userAddress]);
 
     // Use nextToActInfo to determine if it's the user's turn
-    const isUsersTurn = nextToActInfo?.isCurrentUserTurn || isPlayerTurn;
+    const isUsersTurn = isCurrentUserTurn || isPlayerTurn;
 
     // Replace userPlayer with direct checks from our hook data
     const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
@@ -72,19 +73,17 @@ const PokerActionPanel: React.FC = () => {
         return legalActions?.some(action => action.action === actionType || action.action?.toString() === actionType?.toString());
     };
 
-    // Extract and format Big Blind Value
-
     // Check if actions are available using the helper function
-    const hasDealAction = hasAction(NonPlayerActionType.DEAL) || hasAction(NonPlayerActionType.DEAL);
-    const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND) || hasAction(PlayerActionType.SMALL_BLIND);
-    const hasBigBlindAction = hasAction(PlayerActionType.BIG_BLIND) || hasAction(PlayerActionType.BIG_BLIND);
-    const hasFoldAction = hasAction(PlayerActionType.FOLD) || hasAction(PlayerActionType.FOLD);
-    const hasCheckAction = hasAction(PlayerActionType.CHECK) || hasAction(PlayerActionType.CHECK);
-    const hasCallAction = hasAction(PlayerActionType.CALL) || hasAction(PlayerActionType.CALL);
-    const hasBetAction = hasAction(PlayerActionType.BET) || hasAction(PlayerActionType.BET);
-    const hasRaiseAction = hasAction(PlayerActionType.RAISE) || hasAction(PlayerActionType.RAISE);
-    const hasMuckAction = hasAction(PlayerActionType.MUCK) || hasAction(PlayerActionType.MUCK);
-    const hasShowAction = hasAction(PlayerActionType.SHOW) || hasAction(PlayerActionType.SHOW);
+    const hasDealAction = hasAction(NonPlayerActionType.DEAL);
+    const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND);
+    const hasBigBlindAction = hasAction(PlayerActionType.BIG_BLIND);
+    const hasFoldAction = hasAction(PlayerActionType.FOLD);
+    const hasCheckAction = hasAction(PlayerActionType.CHECK);
+    const hasCallAction = hasAction(PlayerActionType.CALL);
+    const hasBetAction = hasAction(PlayerActionType.BET);
+    const hasRaiseAction = hasAction(PlayerActionType.RAISE);
+    const hasMuckAction = hasAction(PlayerActionType.MUCK);
+    const hasShowAction = hasAction(PlayerActionType.SHOW);
 
     // Only show deal button if player has the deal action
     const shouldShowDealButton = hasDealAction;
@@ -97,11 +96,11 @@ const PokerActionPanel: React.FC = () => {
         return legalActions?.find(action => action.action === actionType || action.action?.toString() === actionType?.toString());
     };
 
-    const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND) || getActionByType("small-blind");
-    const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND) || getActionByType("big-blind");
-    const callAction = getActionByType(PlayerActionType.CALL) || getActionByType("call");
-    const betAction = getActionByType(PlayerActionType.BET) || getActionByType("bet");
-    const raiseAction = getActionByType(PlayerActionType.RAISE) || getActionByType("raise");
+    const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND);
+    const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND);
+    const callAction = getActionByType(PlayerActionType.CALL);
+    const betAction = getActionByType(PlayerActionType.BET);
+    const raiseAction = getActionByType(PlayerActionType.RAISE);
 
     // Convert values to USDC for faster display
     const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
@@ -321,8 +320,6 @@ const PokerActionPanel: React.FC = () => {
         })
             .then(result => {
                 console.log("New hand started successfully:", result);
-                // Force refresh all game state
-                refreshNextToActInfo?.();
             })
             .catch(error => {
                 console.error("Failed to start new hand:", error);
@@ -340,12 +337,11 @@ const PokerActionPanel: React.FC = () => {
         sitIn()
             .then(() => {
                 console.log("Successfully sat in");
-                refreshNextToActInfo?.();
             })
             .catch(error => {
                 console.error("Failed to sit in:", error);
             });
-    }, [sitIn, refreshNextToActInfo]);
+    }, [sitIn]);
 
     const handleSitOut = useCallback(() => {
         if (!sitOut) {
@@ -356,12 +352,11 @@ const PokerActionPanel: React.FC = () => {
         sitOut()
             .then(() => {
                 console.log("Successfully sat out");
-                refreshNextToActInfo?.();
             })
             .catch(error => {
                 console.error("Failed to sit out:", error);
             });
-    }, [sitOut, refreshNextToActInfo]);
+    }, [sitOut]);
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);

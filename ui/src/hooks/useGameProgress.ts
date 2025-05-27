@@ -1,6 +1,6 @@
 import { useGameState } from "./useGameState";
-import { GameProgressType } from "../types/index";
-import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { GameProgressReturn, GameStateReturn } from "../types/index";
+import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to check if a game is in progress and provide game status information
@@ -15,103 +15,57 @@ import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
  * - previousActions: array of previous actions in the current hand
  * - isLoading: boolean indicating if data is being loaded
  * - error: any error that occurred during data fetching
- * - refresh: function to manually refresh the game state
  */
-export const useGameProgress = (tableId?: string): GameProgressType => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh: gameStateRefresh } = useGameState(tableId);
+export const useGameProgress = (tableId?: string): GameProgressReturn => {
+    // Get game state from centralized hook
+    const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
-  // Wrap the refresh function to ensure correct return type
-  const refresh = async (): Promise<TexasHoldemStateDTO | undefined> => {
-    return gameStateRefresh();
-  };
+    // Default values in case of error or loading
+    const defaultState: GameProgressReturn = {
+        isGameInProgress: false,
+        activePlayers: [],
+        playerCount: 0,
+        handNumber: 0,
+        actionCount: 0,
+        nextToAct: 0,
+        previousActions: [],
+        isLoading,
+        error
+    };
 
-  // Default values in case of error or loading
-  const defaultState: GameProgressType = {
-    isGameInProgress: false,
-    activePlayers: [],
-    playerCount: 0,
-    handNumber: 0,
-    actionCount: 0,
-    nextToAct: 0,
-    previousActions: [],
-    isLoading,
-    error,
-    refresh
-  };
-
-  // If still loading or error occurred, return default values
-  if (isLoading || error || !gameState) {
-    return defaultState;
-  }
-
-  try {
-    if (!gameState.players) {
-      console.warn("No players data found in API response");
-      return defaultState;
+    // If still loading or error occurred, return default values
+    if (isLoading || error || !gameState) {
+        return defaultState;
     }
 
-    // Filter for active players (not folded and not sitting out)
-    const activePlayers = gameState.players.filter(
-      (player: any) => player.status !== "folded" && player.status !== "sitting-out"
-    );
+    try {
+        if (!gameState.players) {
+            console.warn("No players data found in API response");
+            return defaultState;
+        }
 
-    // Game is in progress if there are at least 2 active players
-    const isGameInProgress = activePlayers.length > 1;
-    
-    // Debug handNumber value
-    console.log("Game State in useGameProgress:", {
-      handNumber: gameState.handNumber,
-      actionCount: gameState.actionCount,
-      nextToAct: gameState.nextToAct,
-      gameStateKeys: Object.keys(gameState),
-      previousActions: gameState.previousActions
-    });
-    
-    // Extract values, checking different possible locations in the object structure
-    const extractValue = (key: string): any => {
-      // First check direct properties we know exist on TexasHoldemStateDTO
-      if (key === "handNumber" && typeof gameState.handNumber !== "undefined") {
-        return gameState.handNumber;
-      }
-      if (key === "actionCount" && typeof gameState.actionCount !== "undefined") {
-        return gameState.actionCount;
-      }
-      if (key === "nextToAct" && typeof gameState.nextToAct !== "undefined") {
-        return gameState.nextToAct;
-      }
-      if (key === "previousActions" && Array.isArray(gameState.previousActions)) {
-        return gameState.previousActions;
-      }
-      
-      // Then check if it's in data.result structure (using type assertion to avoid TS errors)
-      const gameStateAny = gameState as any;
-      if (gameStateAny.result?.data && typeof gameStateAny.result.data[key] !== "undefined") {
-        return gameStateAny.result.data[key];
-      }
-      
-      // Default values based on key type
-      if (key === "previousActions") return [];
-      return 0;
-    };
-    
-    return {
-      isGameInProgress,
-      activePlayers,
-      playerCount: activePlayers.length,
-      handNumber: extractValue("handNumber") || 0,
-      actionCount: extractValue("actionCount") || 0,
-      nextToAct: extractValue("nextToAct") || 0,
-      previousActions: extractValue("previousActions") || [],
-      isLoading: false,
-      error: null,
-      refresh
-    };
-  } catch (err) {
-    console.error("Error checking game progress:", err);
-    return {
-      ...defaultState,
-      error: err instanceof Error ? err : new Error(String(err))
-    };
-  }
-}; 
+        // Filter for active players (not folded and not sitting out)
+        const activePlayers = gameState.players.filter((player: PlayerDTO) => player.status !== PlayerStatus.FOLDED && player.status !== PlayerStatus.SITTING_OUT);
+
+        // Game is in progress if there are at least 2 active players
+        const isGameInProgress = activePlayers.length > 1;
+
+        return {
+            isGameInProgress,
+            activePlayers,
+            playerCount: activePlayers.length,
+            handNumber: gameState.handNumber || 0,
+            actionCount: gameState.actionCount || 0,
+            nextToAct: gameState.nextToAct || 0,
+            previousActions: gameState.previousActions || [],
+            isLoading: false,
+            error: null
+        };
+    } catch (err) {
+        console.error("Error checking game progress:", err);
+        return {
+            ...defaultState,
+            error: err instanceof Error ? err : new Error(String(err))
+        };
+    }
+};
