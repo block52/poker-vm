@@ -283,3 +283,9 @@ export interface ShowingCardsByAddressReturn extends BaseHookReturn {
 export interface TableAnimationsReturn extends BaseHookReturn {
     tableSize: number;
 }
+
+// Type for the return value of useGameOptions hook
+export interface GameOptionsReturn extends BaseHookReturn {
+    gameOptions: Required<GameOptionsDTO>;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}

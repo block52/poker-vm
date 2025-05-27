@@ -239,8 +239,8 @@ const Table = () => {
     // Memoize formatted values
     const formattedValues = useMemo(
         () => ({
-            smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
-            bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20"
+            smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind) : "0.10",
+            bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind) : "0.20"
         }),
         [gameOptions]
     );
