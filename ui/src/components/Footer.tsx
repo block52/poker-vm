@@ -72,19 +72,17 @@ const PokerActionPanel: React.FC = () => {
         return legalActions?.some(action => action.action === actionType || action.action?.toString() === actionType?.toString());
     };
 
-    // Extract and format Big Blind Value
-
     // Check if actions are available using the helper function
-    const hasDealAction = hasAction(NonPlayerActionType.DEAL) || hasAction(NonPlayerActionType.DEAL);
-    const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND) || hasAction(PlayerActionType.SMALL_BLIND);
-    const hasBigBlindAction = hasAction(PlayerActionType.BIG_BLIND) || hasAction(PlayerActionType.BIG_BLIND);
-    const hasFoldAction = hasAction(PlayerActionType.FOLD) || hasAction(PlayerActionType.FOLD);
-    const hasCheckAction = hasAction(PlayerActionType.CHECK) || hasAction(PlayerActionType.CHECK);
-    const hasCallAction = hasAction(PlayerActionType.CALL) || hasAction(PlayerActionType.CALL);
-    const hasBetAction = hasAction(PlayerActionType.BET) || hasAction(PlayerActionType.BET);
-    const hasRaiseAction = hasAction(PlayerActionType.RAISE) || hasAction(PlayerActionType.RAISE);
-    const hasMuckAction = hasAction(PlayerActionType.MUCK) || hasAction(PlayerActionType.MUCK);
-    const hasShowAction = hasAction(PlayerActionType.SHOW) || hasAction(PlayerActionType.SHOW);
+    const hasDealAction = hasAction(NonPlayerActionType.DEAL);
+    const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND);
+    const hasBigBlindAction = hasAction(PlayerActionType.BIG_BLIND);
+    const hasFoldAction = hasAction(PlayerActionType.FOLD);
+    const hasCheckAction = hasAction(PlayerActionType.CHECK);
+    const hasCallAction = hasAction(PlayerActionType.CALL);
+    const hasBetAction = hasAction(PlayerActionType.BET);
+    const hasRaiseAction = hasAction(PlayerActionType.RAISE);
+    const hasMuckAction = hasAction(PlayerActionType.MUCK);
+    const hasShowAction = hasAction(PlayerActionType.SHOW);
 
     // Only show deal button if player has the deal action
     const shouldShowDealButton = hasDealAction;
@@ -97,11 +95,11 @@ const PokerActionPanel: React.FC = () => {
         return legalActions?.find(action => action.action === actionType || action.action?.toString() === actionType?.toString());
     };
 
-    const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND) || getActionByType("small-blind");
-    const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND) || getActionByType("big-blind");
-    const callAction = getActionByType(PlayerActionType.CALL) || getActionByType("call");
-    const betAction = getActionByType(PlayerActionType.BET) || getActionByType("bet");
-    const raiseAction = getActionByType(PlayerActionType.RAISE) || getActionByType("raise");
+    const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND);
+    const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND);
+    const callAction = getActionByType(PlayerActionType.CALL);
+    const betAction = getActionByType(PlayerActionType.BET);
+    const raiseAction = getActionByType(PlayerActionType.RAISE);
 
     // Convert values to USDC for faster display
     const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
