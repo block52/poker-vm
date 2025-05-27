@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNodeRpc } from "../context/NodeRpcContext";
 import { GameWithAddress, FindGamesReturn } from "../types/index";
+import { GameOptionsDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to find available games
@@ -25,7 +26,7 @@ export const useFindGames = (): FindGamesReturn => {
             const minBuyIn = BigInt("10000000000000000"); // 0.01 ETH
             const maxBuyIn = BigInt("1000000000000000000"); // 1 ETH
             
-            const availableGames = await client.findGames(minBuyIn, maxBuyIn);
+            const availableGames: GameOptionsDTO[] = await client.findGames(minBuyIn, maxBuyIn);
             console.log("Available games:", availableGames);
             // Also log stringified version for complete details
             console.log("Available games (stringified):", JSON.stringify(availableGames, null, 2));
