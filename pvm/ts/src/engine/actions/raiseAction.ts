@@ -1,7 +1,7 @@
 import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
-import { IAction, Range } from "../types";
+import { IAction, Range, TurnWithSeat } from "../types";
 
 class RaiseAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -82,7 +82,7 @@ class RaiseAction extends BaseAction implements IAction {
     }
 
     // Find the last bet or raise in the current round
-    private findLastBetOrRaise() {
+    private findLastBetOrRaise(): TurnWithSeat | undefined {
         const actions = this.game.getActionsForRound(this.game.currentRound);
         for (let i = actions.length - 1; i >= 0; i--) {
             if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {

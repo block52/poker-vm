@@ -224,9 +224,20 @@ describe("Raise Action", () => {
             expect(result).toBe(player.chips);
         });
 
-        it("should return the min amount as double the largest bet", () => {
+        it.only("should return the min amount as double the largest bet", () => {
+            // Need to mock a bet action to avoid throwing error in verify
+            const lastBet: TurnWithSeat = {
+                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                action: PlayerActionType.BET,
+                amount: 20000000000000000000n,
+                index: 0,
+                seat: 2,
+                timestamp: Date.now()
+            };
+
+            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
             
-        }
+        });
     });
 
     describe("execute", () => {
