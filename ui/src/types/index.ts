@@ -289,3 +289,23 @@ export interface GameOptionsReturn extends BaseHookReturn {
     gameOptions: Required<GameOptionsDTO>;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
+
+// Type for the return value of useTableData hook
+export interface TableDataReturn extends BaseHookReturn {
+    tableDataType: string;
+    tableDataAddress: string;
+    tableDataSmallBlind: string;
+    tableDataBigBlind: string;
+    tableDataSmallBlindPosition: number;
+    tableDataBigBlindPosition: number;
+    tableDataDealer: number;
+    tableDataPlayers: PlayerDTO[];
+    tableDataCommunityCards: string[];
+    tableDataDeck: string;
+    tableDataPots: string[];
+    tableDataNextToAct: number;
+    tableDataRound: TexasHoldemRound;
+    tableDataWinners: string[];
+    tableDataSignature: string;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
