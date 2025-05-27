@@ -238,3 +238,13 @@ export interface NextToActInfoReturn extends BaseHookReturn {
     availableActions: LegalActionDTO[];
     timeRemaining: number;
 }
+
+// Type for the return value of usePlayerChipData hook
+export interface PlayerChipDataReturn extends BaseHookReturn {
+    chipDataBySeat: Record<number, {
+        stack: string;
+        sumOfBets: string;
+        formattedSumOfBets: string;
+    }>;
+    getChipAmount: (seatIndex: number) => number;
+}

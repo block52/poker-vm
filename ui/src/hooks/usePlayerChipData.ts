@@ -1,17 +1,18 @@
 import { useGameState } from "./useGameState";
 import { formatWeiToDollars } from "../utils/numberUtils";
+import { PlayerChipDataReturn, GameStateReturn } from "../types/index";
 
 /**
  * Custom hook to fetch and provide player chip data for each seat
  * @param tableId The ID of the table to fetch data for
  * @returns Object containing player chip data mapped by seat
  */
-export const usePlayerChipData = (tableId?: string) => {
+export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
   // Get game state from centralized hook
-  const { gameState, isLoading, error } = useGameState(tableId);
+  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
   // Default values in case of error or loading
-  const defaultState = {
+  const defaultState: PlayerChipDataReturn = {
     chipDataBySeat: {},
     getChipAmount: (seatIndex: number): number => 0,
     isLoading,
@@ -24,14 +25,18 @@ export const usePlayerChipData = (tableId?: string) => {
   }
 
   try {
-    if (!gameState.players) {
+    if (!gameState.players || !Array.isArray(gameState.players)) {
       console.warn("No players data found in API response");
       return defaultState;
     }
 
     // Create a map of player chip data by seat
-    const chipDataBySeat = gameState.players.reduce((acc: any, player: any) => {
-      if (player && player.seat !== undefined) {
+    const chipDataBySeat = gameState.players.reduce((acc: Record<number, {
+      stack: string;
+      sumOfBets: string;
+      formattedSumOfBets: string;
+    }>, player: any) => {
+      if (player && typeof player.seat === "number") {
         acc[player.seat] = {
           stack: player.stack || "0",
           sumOfBets: player.sumOfBets || "0",
@@ -58,7 +63,7 @@ export const usePlayerChipData = (tableId?: string) => {
     console.error("Error parsing player chip data:", err);
     return {
       ...defaultState,
-      error: err
+      error: err instanceof Error ? err : new Error("Error parsing player chip data")
     };
   }
 }; 
