@@ -36,7 +36,7 @@ export const useNextToActInfo = (tableId?: string): NextToActInfoReturn => {
             }
 
             // Find the player who is next to act
-            const player = gameState.players.find((p: any) => p && p.seat === nextToActSeat);
+            const player = gameState.players.find((p: PlayerDTO) => p && p.seat === nextToActSeat);
             if (!player) {
                 return defaultValues;
             }

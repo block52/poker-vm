@@ -225,11 +225,6 @@ export interface NextToActInfoReturn extends BaseHookReturn {
 
 // Type for the return value of usePlayerChipData hook
 export interface PlayerChipDataReturn extends BaseHookReturn {
-    chipDataBySeat: Record<number, {
-        stack: string;
-        sumOfBets: string;
-        formattedSumOfBets: string;
-    }>;
     getChipAmount: (seatIndex: number) => number;
 }
 

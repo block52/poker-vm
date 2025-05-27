@@ -262,8 +262,6 @@ const Table = () => {
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
-    // Keep the existing variable
-    const currentUserAddress = localStorage.getItem("user_eth_public_key");
 
     // Memoize user wallet address
     const userWalletAddress = useMemo(() => {
