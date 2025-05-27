@@ -278,3 +278,8 @@ export interface ShowingCardsByAddressReturn extends BaseHookReturn {
     isShowdown: boolean;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
+
+// Type for the return value of useTableAnimations hook
+export interface TableAnimationsReturn extends BaseHookReturn {
+    tableSize: number;
+}
