@@ -27,42 +27,6 @@ function getWinnerInfo(gameData: TexasHoldemStateDTO) {
         });
     }
 
-    // Check for "win by fold" scenario - when all players except one have folded
-    const totalPlayersAtTable = gameData.players?.filter((p: PlayerDTO) => p).length || 0;
-
-    // Only proceed with win detection if there are at least 2 players
-    if (totalPlayersAtTable >= 2) {
-        const activePlayers = gameData.players?.filter((p: PlayerDTO) => p && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.ACTIVE) || [];
-
-        // Check if this is a real win-by-fold situation
-        const somePlayersHaveFolded = gameData.players?.some((p: PlayerDTO) => p && p.status === PlayerStatus.FOLDED);
-        const hasPreviousActions = gameData.previousActions?.length > 0;
-
-        // Only declare a winner if:
-        // 1. Only one player remains active AND
-        // 2. The hand has started AND
-        // 3. Either some players folded OR there were previous actions
-        if (activePlayers.length === 1 && (somePlayersHaveFolded || hasPreviousActions)) {
-            // Calculate pot amount
-            let potAmount = "0";
-            if (gameData.pots && Array.isArray(gameData.pots)) {
-                potAmount = gameData.pots.reduce((sum: string, pot: string) => {
-                    return (BigInt(sum) + BigInt(pot)).toString();
-                }, "0");
-            }
-
-            const winner = {
-                seat: activePlayers[0].seat,
-                address: activePlayers[0].address,
-                amount: potAmount,
-                formattedAmount: formatWeiToDollars(potAmount),
-                winType: "fold" // Add this to distinguish win by fold
-            };
-
-            return [winner];
-        }
-    }
-
     // No winners yet
     return null;
 }
