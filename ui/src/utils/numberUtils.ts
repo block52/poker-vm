@@ -106,3 +106,14 @@ export const formatWinningAmount = (amount: string): string => {
         maximumFractionDigits: 2
     });
 };
+
+/**
+ * Converts a string amount to BigInt using specified decimals
+ * @param amount The amount as a string
+ * @param decimals The number of decimals to use for conversion
+ * @returns BigInt representation of the amount
+ */
+export const convertAmountToBigInt = (amount: string, decimals: number): bigint => {
+    if (!decimals || !amount || !+amount) return BigInt(0);
+    return BigUnit.from(+amount, decimals).toBigInt();
+};
