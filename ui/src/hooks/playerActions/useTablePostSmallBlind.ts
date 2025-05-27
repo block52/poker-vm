@@ -36,7 +36,7 @@ export function useTablePostSmallBlind(tableId?: string) {
             }
 
             // Use the provided amount or get from game options
-            const amount = options.smallBlindAmount || gameOptions.smallBlind.toString() || DEFAULT_SMALL_BLIND;
+            const amount = options.smallBlindAmount || gameOptions.smallBlind || DEFAULT_SMALL_BLIND;
 
             // Call the playerAction method
             const response = await client.playerAction(

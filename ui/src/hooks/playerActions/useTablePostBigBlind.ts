@@ -36,7 +36,7 @@ export function useTablePostBigBlind(tableId?: string) {
             }
 
             // Use the provided amount or get from game options
-            const amount = options.bigBlindAmount || gameOptions.bigBlind.toString() || DEFAULT_BIG_BLIND;
+            const amount = options.bigBlindAmount || gameOptions.bigBlind || DEFAULT_BIG_BLIND;
 
             // Call the playerAction method
             const response = await client.playerAction(

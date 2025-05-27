@@ -1,47 +1,38 @@
-import { useGameState } from "./useGameState"
 import { useMemo } from "react";
+import { useGameState } from "./useGameState";
+import { TableAnimationsReturn, GameStateReturn } from "../types/index";
 
 /**
  * Custom hook to provide table animation-related information
  * @param tableId The ID of the table to fetch state for
  * @returns Object containing table animation properties such as tableSize
  */
-export const useTableAnimations = (tableId?: string) => {
+export const useTableAnimations = (tableId?: string): TableAnimationsReturn => {
   // Get game state from centralized hook
-  const { gameState, isLoading, error } = useGameState(tableId);
+  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
 
-  // Default value for tableSize - define outside useMemo to avoid recalculation
-  const defaultTableSize = 9;
-
-  // Memoize the result to prevent unnecessary recalculations
-  return useMemo(() => {
-    // If still loading or error occurred, return default values
-    if (isLoading || error || !gameState) {
-      return {
-        tableSize: defaultTableSize,
-        isLoading,
-        error
-      };
+  // Memoize the table size calculation
+  const tableSize = useMemo((): number => {
+    const defaultTableSize = 9;
+    
+    if (!gameState?.gameOptions) {
+      return defaultTableSize;
     }
 
     try {
       // Extract table size (maximum players) from game options
-      const tableSize = gameState.gameOptions?.maxPlayers || 
-                        gameState.gameOptions?.minPlayers || 
-                        defaultTableSize;
-      
-      return {
-        tableSize,
-        isLoading: false,
-        error: null
-      };
+      return gameState.gameOptions.maxPlayers || 
+             gameState.gameOptions.minPlayers || 
+             defaultTableSize;
     } catch (err) {
-      console.error("Error parsing table animations data:", err);
-      return {
-        tableSize: defaultTableSize,
-        isLoading: false,
-        error: err
-      };
+      console.error("Error parsing table size from game options:", err);
+      return defaultTableSize;
     }
-  }, [gameState, isLoading, error]); // Only recalculate when these dependencies change
+  }, [gameState]);
+
+  return {
+    tableSize,
+    isLoading,
+    error
+  };
 }; 
