@@ -1,7 +1,6 @@
 import { 
     LegalActionDTO, 
     PlayerActionType, 
-    NonPlayerActionType,
     PlayerDTO, 
     GameOptionsDTO, 
     TexasHoldemStateDTO, 
@@ -9,9 +8,6 @@ import {
     GameType, 
     ActionDTO,
     PlayerStatus,
-    AccountDTO,
-    TransactionDTO,
-    PerformActionResponse
 } from "@bitcoinbrisbane/block52";
 
 // Base type for all hook returns with common loading and error state
