@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
-import { Player, TableData, TableStatus } from "../types/index";
-import { LegalActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { TableData, TableStatus } from "../types/index";
+import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 
 // TODO: Seems to be the same action type?
 export const getSignature = async (
@@ -72,7 +72,7 @@ export const getUserTableStatus = (tableData: any): TableStatus | undefined => {
     const playersArray = actualTableData.players || [];
 
     // Find the player in the table
-    const player = playersArray.find((p: Player) => p.address?.toLowerCase() === userAddress.toLowerCase());
+    const player = playersArray.find((p: PlayerDTO) => p.address?.toLowerCase() === userAddress.toLowerCase());
     // console.log("Found player:", player);
 
     if (!player) {
@@ -149,7 +149,7 @@ export const isUserPlaying = (tableData: TableData): boolean => {
     if (!userAddress) return false;
 
     // Check if the user's address is in the players array
-    return tableData.players.some((player: Player) => player.address.toLowerCase() === userAddress.toLowerCase());
+    return tableData.players.some((player: PlayerDTO) => player.address.toLowerCase() === userAddress.toLowerCase());
 };
 
 export const getNonce = async (): Promise<number> => {

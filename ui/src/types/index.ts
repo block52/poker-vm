@@ -1,26 +1,27 @@
-import { LegalActionDTO, PlayerActionType, PlayerDTO, GameOptionsDTO, TexasHoldemStateDTO, TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
+import { 
+    LegalActionDTO, 
+    PlayerActionType, 
+    PlayerDTO, 
+    GameOptionsDTO, 
+    TexasHoldemStateDTO, 
+    TexasHoldemRound, 
+    GameType, 
+    ActionDTO,
+    PlayerStatus,
+} from "@bitcoinbrisbane/block52";
+
+// Base type for all hook returns with common loading and error state
+export interface BaseHookReturn {
+    isLoading: boolean;
+    error: Error | null;
+}
 
 // Type for the return value of useGameState hook
-export interface GameStateReturn {
+export interface GameStateReturn extends BaseHookReturn {
     gameState: TexasHoldemStateDTO | undefined;
-    error: Error | null;
-    isLoading: boolean;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
     getNestedValue: (path: string) => any;
 }
-
-// Type for action log entries
-export type ActionsLogPokerAction = {
-    action: string;
-    playerId?: string;
-    address?: string;
-    amount?: string;
-    seat?: number;
-    timestamp?: string;
-    round?: string;
-    index?: number;
-    [key: string]: any; // For any other properties
-};
 
 // Type for error logs
 export interface ErrorLog {
@@ -56,12 +57,6 @@ export interface PlayerContextType {
     nextToAct: number;
     playerSeats: number[];
     communityCards: string[];
-    // updatePlayer: (index: number, updatedPlayer: Player) => void;
-    // setPlayerBalance: (index: number, balance: number) => void;
-    // setPlayerPot: (index: number, balance: number) => void;
-    // handleStatusChange: (index: number, choice: number, updatedPlayers: Player[]) => void;
-    // moveToNextPlayer: (index: number, updatedPlayers: Player[]) => void;
-    // changeToThinkingBeforeTimeout: () => void;
     setPlayerAction: (action: PlayerActionType, amount?: number) => void;
     dealerIndex: number;
     lastPot: number;
@@ -85,7 +80,7 @@ export type TableData = {
     bigBlindPosition: number;
     nextToAct: number;
     dealer: number;
-    players: Player[];
+    players: PlayerDTO[];
     round: string;
     pots: string[];
 };
@@ -101,7 +96,7 @@ export type TableStatus = {
     isPlayerTurn: boolean;
     seat: number;
     stack: string;
-    status: string;
+    status: PlayerStatus;
     availableActions: LegalActionDTO[];
     canPostSmallBlind: boolean;
     canPostBigBlind: boolean;
@@ -172,41 +167,15 @@ export interface TurnAnimationProps {
 }
 
 // Type for the return value of useGameProgress hook
-export interface GameProgressType {
+export interface GameProgressReturn extends BaseHookReturn {
     isGameInProgress: boolean;
     activePlayers: PlayerDTO[];
     playerCount: number;
     handNumber: number;
     actionCount: number;
     nextToAct: number;
-    previousActions: Array<{
-        action: string;
-        playerId?: string;
-        address?: string;
-        amount?: string;
-        seat?: number;
-        timestamp?: string;
-        round?: string;
-        index?: number;
-        [key: string]: any;
-    }>;
-    isLoading: boolean;
-    error: Error | null;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+    previousActions: ActionDTO[];
 }
-
-export type WinnerInfoReturn = {
-    winnerInfo:
-        | {
-              seat: number;
-              address: string;
-              amount: string | number;
-              formattedAmount: string;
-              winType?: string;
-          }[]
-        | null;
-    error: Error | null;
-};
 
 // Type for the return value of useCardAnimations hook
 export interface CardAnimationsReturn {
@@ -217,15 +186,13 @@ export interface CardAnimationsReturn {
 }
 
 // Type for the return value of useTableState hook
-export interface TableStateReturn {
+export interface TableStateReturn extends BaseHookReturn {
     currentRound: TexasHoldemRound;
     totalPot: string;
     formattedTotalPot: string;
     tableSize: number;
     tableType: GameType;
     roundType: TexasHoldemRound;
-    isLoading: boolean;
-    error: Error | null;
     refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
@@ -236,36 +203,112 @@ export interface ChipPositionsReturn {
 }
 
 // Type for the return value of useDealerPosition hook
-export interface DealerPositionReturn {
+export interface DealerPositionReturn extends BaseHookReturn {
     dealerButtonPosition: { left: string; top: string };
     isDealerButtonVisible: boolean;
-    isLoading: boolean;
-    error: Error | null;
 }
 
 // Type for the return value of useFindGames hook
-export interface FindGamesReturn {
+export interface FindGamesReturn extends BaseHookReturn {
     games: GameWithAddress[];
-    isLoading: boolean;
-    error: string | null;
     refetch: () => Promise<void>;
 }
 
-export type TableInfo = {
-    smallBlind: string;
-    bigBlind: string;
-    smallBlindDisplay: string;
-    bigBlindDisplay: string;
-    dealerPosition: number;
-    smallBlindPosition: number;
-    bigBlindPosition: number;
-    players: PlayerDTO[];
-};
+// Type for the return value of useMinAndMaxBuyIns hook
+export interface MinAndMaxBuyInsReturn extends BaseHookReturn {
+    minBuyInWei: string;
+    maxBuyInWei: string;
+    refresh: () => Promise<void>;
+}
 
-export type VacantSeatResponse = {
-    isUserAlreadyPlaying: boolean;
-    isSeatVacant: (seatIndex: number) => boolean;
-    canJoinSeat: (seatIndex: number) => boolean;
-    isLoading: boolean;
-    error?: Error | null;
-};
+// Type for the return value of useNextToActInfo hook
+export interface NextToActInfoReturn extends BaseHookReturn {
+    seat: number | null;
+    player: PlayerDTO | null;
+    isCurrentUserTurn: boolean;
+    availableActions: LegalActionDTO[];
+    timeRemaining: number;
+}
+
+// Type for the return value of usePlayerChipData hook
+export interface PlayerChipDataReturn extends BaseHookReturn {
+    getChipAmount: (seatIndex: number) => number;
+}
+
+// Type for the return value of usePlayerData hook
+export interface PlayerDataReturn extends BaseHookReturn {
+    playerData: PlayerDTO | null;
+    stackValue: number;
+    isFolded: boolean;
+    isAllIn: boolean;
+    holeCards: string[];
+    round: TexasHoldemRound | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of usePlayerSeatInfo hook
+export interface PlayerSeatInfoReturn extends BaseHookReturn {
+    currentUserSeat: number;
+    userDataBySeat: Record<number, PlayerDTO>;
+    getUserBySeat: (seat: number) => PlayerDTO | null;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of usePlayerTimer hook
+export interface PlayerTimerReturn extends BaseHookReturn {
+    playerStatus: PlayerStatus;
+    timeoutValue: number;
+    progress: number;
+    timeRemaining: number;
+    isActive: boolean;
+}
+
+// Type for showing cards data
+export interface ShowingCardData {
+    address: string;
+    holeCards: string[];
+    seat: number;
+}
+
+// Type for the return value of useShowingCardsByAddress hook
+export interface ShowingCardsByAddressReturn extends BaseHookReturn {
+    showingPlayers: ShowingCardData[];
+    isShowdown: boolean;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of useTableAnimations hook
+export interface TableAnimationsReturn extends BaseHookReturn {
+    tableSize: number;
+}
+
+// Type for the return value of useGameOptions hook
+export interface GameOptionsReturn extends BaseHookReturn {
+    gameOptions: Required<GameOptionsDTO>;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of useTableData hook
+export interface TableDataReturn extends BaseHookReturn {
+    tableDataType: string;
+    tableDataAddress: string;
+    tableDataSmallBlind: string;
+    tableDataBigBlind: string;
+    tableDataSmallBlindPosition: number;
+    tableDataBigBlindPosition: number;
+    tableDataDealer: number;
+    tableDataPlayers: PlayerDTO[];
+    tableDataCommunityCards: string[];
+    tableDataDeck: string;
+    tableDataPots: string[];
+    tableDataNextToAct: number;
+    tableDataRound: TexasHoldemRound;
+    tableDataWinners: string[];
+    tableDataSignature: string;
+    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
+}
+
+// Type for the return value of useTableTurnIndex hook
+export interface TableTurnIndexReturn extends BaseHookReturn {
+    nextTurnIndex: number;
+}

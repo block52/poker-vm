@@ -913,7 +913,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         player.addAction({ playerId: address, action, amount, index }, timestamp);
 
         // Update the last player to act
-        this._lastActedSeat = seat;
+        if (action.toString() !== NonPlayerActionType.DEAL) {
+            this._lastActedSeat = seat;            
+        }
 
         // Check if the round has ended and advance if needed
         if (this.hasRoundEnded(this.currentRound)) {
@@ -1288,6 +1290,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
             communityCards: this._communityCards.map(card => card.mnemonic),
             deck: this._deck.toString(),
             pots: [this.getPot().toString()],
+            lastActedSeat: this.lastActedSeat,
             actionCount: this._actionCount,
             handNumber: this.handNumber,
             nextToAct: nextPlayerToAct ? this.getPlayerSeatNumber(nextPlayerToAct.address) : 1,
@@ -1346,13 +1349,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         const winners: WinnerDTO[] = json.winners || [];
 
         // Reconstruct lastActedSeat from nextToAct
-        // If nextToAct is seat N, then lastActedSeat should be N-1 (with wrapping)
-        // hack for now need to consider what happens when we get to 9 and how this resets but this works for heads-up.
-        // let lastActedSeat = json.nextToAct;
-        // if (lastActedSeat < 1) {
-        //     lastActedSeat = gameOptions.maxPlayers;
-        // }
-
         let lastActedSeat: number = json.smallBlindPosition;
         if (json.previousActions && json.previousActions.length > 0) {
             lastActedSeat = json.previousActions[json.previousActions.length - 1]?.seat;

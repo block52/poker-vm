@@ -139,7 +139,7 @@ const Table = () => {
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
-    const [accountNonce, setAccountNonce] = useState<number>(0);
+
 
     // Update to use the imported hook
     const tableDataValues = useTableData(id);
@@ -177,7 +177,7 @@ const Table = () => {
 
             const account = await client.getAccount(publicKey);
             setAccountBalance(account.balance.toString());
-            setAccountNonce(account.nonce);
+       
             setBalanceError(null);
         } catch (err) {
             console.error("Error fetching account balance:", err);
@@ -216,7 +216,7 @@ const Table = () => {
     const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
 
     // Add the useNextToActInfo hook
-    const { nextToActInfo } = useNextToActInfo(id);
+    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(id);
 
     // Add the useShowingCardsByAddress hook
     const { showingPlayers, isShowdown, refresh: refreshShowingCards } = useShowingCardsByAddress(id);
@@ -239,8 +239,8 @@ const Table = () => {
     // Memoize formatted values
     const formattedValues = useMemo(
         () => ({
-            smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind.toString()) : "0.10",
-            bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind.toString()) : "0.20"
+            smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind) : "0.10",
+            bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind) : "0.20"
         }),
         [gameOptions]
     );
@@ -262,8 +262,6 @@ const Table = () => {
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
-    // Keep the existing variable
-    const currentUserAddress = localStorage.getItem("user_eth_public_key");
 
     // Memoize user wallet address
     const userWalletAddress = useMemo(() => {
@@ -785,7 +783,8 @@ const Table = () => {
                             </div>
                         </div>
                         <div className="flex justify-end mr-3 mb-1">
-                            {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>}
+                            {/* Debug feature removed - hand_strength is not part of PlayerDTO */}
+                            {/* {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>} */}
                         </div>
                     </div>
                     {/*//! FOOTER */}
@@ -815,14 +814,14 @@ const Table = () => {
                 </div>
             )}
             {/* Add an indicator for whose turn it is */}
-            {nextToActInfo && isGameInProgress && (
+            {nextToActSeat && isGameInProgress && (
                 <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
-                    {nextToActInfo.isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
+                    {isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
                         <span className="text-white">Your turn to act!</span>
                     ) : (
                         <span>
                             Waiting for{" "}
-                            {nextToActInfo.seat === 1 ? "Small Blind" : nextToActInfo.seat === 2 ? "Big Blind" : `player at position ${nextToActInfo.seat + 1}`}{" "}
+                            {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`}{" "}
                             to act
                         </span>
                     )}
@@ -846,11 +845,9 @@ const Table = () => {
             </div>
 
             {/* Debug Error Panel */}
-            {debugMode && (
-                <div className="debug-panel">
-                    <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
-                </div>
-            )}
+            <div className={`debug-panel ${debugMode ? "block" : "hidden" }`}>
+                <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
+            </div>
         </div>
     );
 };

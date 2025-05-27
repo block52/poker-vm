@@ -4,7 +4,8 @@
 
 import { ethers } from "ethers";
 import { formatWinningAmount } from "./numberUtils";
-import { TableData, Player } from "../types/index";
+import { TableData } from "../types/index";
+import { PlayerDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * Determines which player is next to act based on table data
@@ -23,7 +24,7 @@ export const whoIsNextToAct = (tableData: TableData) => {
     }
 
     // Find the player object for the next to act seat
-    const nextPlayer = tableData.players?.find((player: Player) => player.seat === nextToActSeat);
+    const nextPlayer = tableData.players?.find((player: PlayerDTO) => player.seat === nextToActSeat);
 
     // Get the current user's address
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
@@ -223,7 +224,7 @@ export const hasPostedBlind = (tableData: any, playerAddress: string, blindType:
     );
 
     // Also check the lastAction field on the player object
-    const player = tableData.players?.find((p: Player) => p.address?.toLowerCase() === normalizedAddress);
+    const player = tableData.players?.find((p: PlayerDTO) => p.address?.toLowerCase() === normalizedAddress);
     const hasPostedInLastAction = player?.lastAction?.action === (blindType === "small" ? "post small blind" : "post big blind");
 
     return hasPosted || hasPostedInLastAction;
@@ -244,7 +245,7 @@ export const isPlayerTurnToPostBlind = (tableData: TableData, playerAddress: str
     const normalizedAddress = playerAddress.toLowerCase();
 
     // Get the player object
-    const player = tableData.players?.find((p: Player) => p.address?.toLowerCase() === normalizedAddress);
+    const player = tableData.players?.find((p: PlayerDTO) => p.address?.toLowerCase() === normalizedAddress);
     if (!player) return false;
 
     // Check if this player is in the small/big blind position
@@ -262,6 +263,40 @@ export const isPlayerTurnToPostBlind = (tableData: TableData, playerAddress: str
     // It's the player's turn to post a blind if they're in position, it's their turn,
     // they haven't posted yet, and they have the legal action to do so
     return isInBlindPosition && isPlayerTurn && !alreadyPosted && canPostBlind;
+};
+
+/**
+ * Gets the winner information from the table data if available
+ * @param tableData The table data object
+ * @returns An object with winner information or null if no winner
+ */
+export const getWinnerInfo = (tableData: any) => {
+    if (!tableData || !tableData.winners || tableData.winners.length === 0) {
+        return null;
+    }
+
+    const winners = tableData.winners;
+    const result = [];
+
+    for (const winner of winners) {
+        // Find the player's seat from their address
+        const playerSeat = tableData.players.find((p: PlayerDTO) => p.address?.toLowerCase() === winner.address?.toLowerCase())?.seat;
+
+        if (playerSeat !== undefined) {
+            // Format the winning amount to a readable format (ETH to dollars)
+            const winAmount = Number(ethers.formatUnits(winner.amount.toString(), 18));
+            const formattedAmount = formatWinningAmount(winAmount.toString());
+
+            result.push({
+                seat: playerSeat,
+                address: winner.address,
+                amount: winner.amount,
+                formattedAmount
+            });
+        }
+    }
+
+    return result.length > 0 ? result : null;
 };
 
 /**
