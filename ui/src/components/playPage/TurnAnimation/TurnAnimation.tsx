@@ -24,10 +24,8 @@ const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
     // Check if it's the current player's turn with useEffect
     useEffect(() => {
         const isTurn = nextToActSeat === index + 1;
-        if (isCurrentPlayersTurn !== isTurn) {
-            setIsCurrentPlayersTurn(isTurn);
-        }
-    }, [nextToActSeat, index, isCurrentPlayersTurn]);
+        setIsCurrentPlayersTurn(isTurn);
+    }, [nextToActSeat, index]);
 
     // Don't render anything if it's not this player's turn or position isn't available
     if (!isCurrentPlayersTurn || !position) {

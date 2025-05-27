@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { chipPosition } from "../utils/PositionArray";
 import { useTableState } from "./useTableState";
 import { ChipPositionsReturn, TableStateReturn, PositionArray } from "../types/index";
@@ -11,6 +11,7 @@ import { ChipPositionsReturn, TableStateReturn, PositionArray } from "../types/i
  */
 export const useChipPositions = (tableId?: string, startIndex: number = 0): ChipPositionsReturn => {
   const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
+  const lastStartIndexRef = useRef<number>(startIndex);
   
   // Get table state to access tableSize
   const { tableSize }: TableStateReturn = useTableState(tableId);
@@ -19,29 +20,31 @@ export const useChipPositions = (tableId?: string, startIndex: number = 0): Chip
   useEffect(() => {
     if (!tableSize) return;
     
+    let baseArray: PositionArray[];
     switch (tableSize) {
       case 6:
-        setChipPositionArray(chipPosition.six);
+        baseArray = chipPosition.six;
         break;
       case 9:
-        setChipPositionArray(chipPosition.nine);
+        baseArray = chipPosition.nine;
         break;
       default:
-        setChipPositionArray([]);
+        baseArray = [];
     }
-  }, [tableSize]);
-  
-  // Reorder positions based on startIndex if needed
-  useEffect(() => {
-    if (chipPositionArray.length === 0 || startIndex === 0) return;
     
-    const reorderedChipArray = [
-      ...chipPositionArray.slice(startIndex),
-      ...chipPositionArray.slice(0, startIndex)
-    ];
+    // Apply reordering if needed
+    if (startIndex > 0 && baseArray.length > 0) {
+      const reorderedArray = [
+        ...baseArray.slice(startIndex),
+        ...baseArray.slice(0, startIndex)
+      ];
+      setChipPositionArray(reorderedArray);
+    } else {
+      setChipPositionArray(baseArray);
+    }
     
-    setChipPositionArray(reorderedChipArray);
-  }, [startIndex, chipPositionArray.length, chipPositionArray]);
+    lastStartIndexRef.current = startIndex;
+  }, [tableSize, startIndex]);
   
   return {
     chipPositionArray,
