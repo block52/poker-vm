@@ -34,11 +34,6 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
       return;
     }
 
-    // Prevent concurrent subscription attempts
-    if (isSubscribingRef.current) {
-      console.log(`[GameStateContext] Subscription in progress, ignoring duplicate request for: ${tableId}`);
-      return;
-    }
 
     isSubscribingRef.current = true;
 
