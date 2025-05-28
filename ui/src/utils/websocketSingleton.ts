@@ -7,6 +7,7 @@ class WebSocketSingleton {
   private subscriptions: Map<string, { 
     ws: WebSocket; 
     callbacks: Set<GameStateCallback>; 
+    errorCallbacks: Set<(error: Error) => void>;
     isConnecting: boolean;
     closeTimeout?: NodeJS.Timeout;
   }> = new Map();
@@ -24,7 +25,8 @@ class WebSocketSingleton {
   public subscribeToTable(
     tableAddress: string,
     playerId: string,
-    callback: GameStateCallback
+    callback: GameStateCallback,
+    onError?: (error: Error) => void
   ): () => void {
     const subscriptionKey = `${tableAddress}-${playerId}`;
     
@@ -41,11 +43,17 @@ class WebSocketSingleton {
         console.log(`Reusing existing connection for table ${tableAddress}`);
         // Add callback to existing connection
         existing.callbacks.add(callback);
+        if (onError) {
+          existing.errorCallbacks.add(onError);
+        }
         return () => this.removeCallback(subscriptionKey, callback);
       } else if (existing.isConnecting) {
         console.log(`Adding callback to pending connection for table ${tableAddress}`);
         // Add callback to pending connection
         existing.callbacks.add(callback);
+        if (onError) {
+          existing.errorCallbacks.add(onError);
+        }
         return () => this.removeCallback(subscriptionKey, callback);
       }
     }
@@ -62,7 +70,11 @@ class WebSocketSingleton {
     // Create new subscription with callback set
     const callbacks = new Set<GameStateCallback>();
     callbacks.add(callback);
-    this.subscriptions.set(subscriptionKey, { ws, callbacks, isConnecting: true });
+    const errorCallbacks = new Set<(error: Error) => void>();
+    if (onError) {
+      errorCallbacks.add(onError);
+    }
+    this.subscriptions.set(subscriptionKey, { ws, callbacks, errorCallbacks, isConnecting: true });
 
     ws.onopen = () => {
       console.log(`WebSocket connected to table ${tableAddress} for player ${playerId}`);
@@ -91,12 +103,24 @@ class WebSocketSingleton {
 
     ws.onclose = () => {
       console.log(`WebSocket disconnected from table ${tableAddress}`);
+      // Call error callbacks for unexpected disconnections
+      const subscription = this.subscriptions.get(subscriptionKey);
+      if (subscription) {
+        const error = new Error(`WebSocket connection closed for table ${tableAddress}`);
+        subscription.errorCallbacks.forEach(cb => cb(error));
+      }
       // Clean up the subscription
       this.subscriptions.delete(subscriptionKey);
     };
 
     ws.onerror = (error) => {
       console.error("WebSocket error:", error);
+      // Call error callbacks
+      const subscription = this.subscriptions.get(subscriptionKey);
+      if (subscription) {
+        const err = new Error(`WebSocket error for table ${tableAddress}`);
+        subscription.errorCallbacks.forEach(cb => cb(err));
+      }
       // Clean up on error
       this.subscriptions.delete(subscriptionKey);
     };

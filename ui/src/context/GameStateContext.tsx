@@ -38,29 +38,30 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
     console.log(`[GameStateContext] Subscribing to table: ${tableId}`);
 
-    try {
-      //TODO centralised this to a function
-      const playerAddress = localStorage.getItem("user_eth_public_key");
-      if (!playerAddress) {
-        console.error("[GameStateContext] No player address found");
-        return;
-      }
-      
-      // Singleton handles all the complexity now
-      wsInstance.subscribeToTable(
-        tableId,
-        playerAddress,
-        (newGameState: TexasHoldemStateDTO) => {
-          setGameState(newGameState);
-          setError(null);
-          setIsLoading(false);
-        }
-      );
-    } catch (err) {
-      console.error(`[GameStateContext] Failed to subscribe to table ${tableId}:`, err);
-      setError(err instanceof Error ? err : new Error("Subscription failed"));
+    //TODO centralised this to a function
+    const playerAddress = localStorage.getItem("user_eth_public_key");
+    if (!playerAddress) {
+      console.error("[GameStateContext] No player address found");
+      setError(new Error("No player address found"));
       setIsLoading(false);
+      return;
     }
+    
+    // Singleton handles all the complexity now
+    wsInstance.subscribeToTable(
+      tableId,
+      playerAddress,
+      (newGameState: TexasHoldemStateDTO) => {
+        setGameState(newGameState);
+        setError(null);
+        setIsLoading(false);
+      },
+      (error: Error) => {
+        console.error(`[GameStateContext] WebSocket error for table ${tableId}:`, error);
+        setError(error);
+        setIsLoading(false);
+      }
+    );
   }, [currentTableId, wsInstance]);
 
   const unsubscribeFromTable = useCallback(() => {
