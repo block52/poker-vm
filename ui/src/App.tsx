@@ -9,9 +9,8 @@ import { projectId, metadata, networks, wagmiAdapter } from "./config";
 import { mainnet } from "@reown/appkit/networks";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
-
 import QRDeposit from "./components/QRDeposit";
-
+import { GameStateProvider } from "./context/GameStateContext";
 
 const queryClient = new QueryClient();
 
@@ -31,12 +30,10 @@ createAppKit({
     allWallets: "SHOW"
 });
 
-
 // Main App content to be wrapped with providers
 function AppContent() {
     return (
         <div className="bg-[#2c3245] min-h-screen">
-          
             <Routes>
                 <Route path="/table/:id" element={<Table />} />
                 <Route path="/deposit" element={<Deposit />} />
@@ -66,7 +63,9 @@ function App() {
         <Router>
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-                    <AppContent />
+                    <GameStateProvider>
+                        <AppContent />
+                    </GameStateProvider>
                 </WagmiProvider>
             </QueryClientProvider>
         </Router>

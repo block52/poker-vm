@@ -1,17 +1,23 @@
-import { useMemo } from "react";
-import { useGameState } from "./useGameState";
+import { useMemo, useCallback } from "react";
+import { useGameStateContext } from "../context/GameStateContext";
 import { formatWeiToSimpleDollars } from "../utils/numberUtils";
 import { PlayerDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { TableDataReturn, GameStateReturn } from "../types/index";
+import { TableDataReturn } from "../types/index";
 
 /**
  * Custom hook to provide formatted table data
- * @param tableId The ID of the table to fetch data for
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing formatted table data and loading/error states
  */
 export const useTableData = (tableId?: string): TableDataReturn => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId);
+  // Get game state directly from Context - no additional WebSocket connections
+  const { gameState, isLoading, error } = useGameStateContext();
+
+  // Manual refresh function (no-op since WebSocket provides real-time data)
+  const refresh = useCallback(async () => {
+    console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
+    return gameState;
+  }, [gameState]);
 
   // Memoize the processed table data
   const tableData = useMemo((): Omit<TableDataReturn, "isLoading" | "error" | "refresh"> => {

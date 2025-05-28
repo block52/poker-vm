@@ -1,12 +1,12 @@
-import { useGameState } from "../useGameState";
-import { useState } from "react";
+import { useGameStateContext } from "../../context/GameStateContext";
+import { useState, useCallback } from "react";
 import useSWR from "swr";
 import { PlayerLegalActionsResult } from "./types";
 import { LegalActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to fetch the legal actions for the current player
- * @param tableId The table ID
+ * @param tableId The table ID (not used - Context manages subscription)
  * @returns Object containing the player's legal actions and related information
  */
 export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResult {
@@ -16,8 +16,14 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     // State for frequent refreshes
     const [lastRefresh, setLastRefresh] = useState(0);
 
-    // Get game state from centralized hook
-    const { gameState, isLoading, error, refresh } = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
+
+    // Manual refresh function (no-op since WebSocket provides real-time data)
+    const refresh = useCallback(async () => {
+        console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
+        return gameState;
+    }, [gameState]);
 
     // Custom more frequent refresh for this critical hook
     useSWR(

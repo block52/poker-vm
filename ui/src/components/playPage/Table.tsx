@@ -99,6 +99,8 @@ import { useGameOptions } from "../../hooks/useGameOptions";
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
+import { useGameStateContext } from "../../context/GameStateContext";
+import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -279,7 +281,8 @@ const Table = () => {
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
-        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
+        const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
+        return activePlayers;
     }, [tableDataValues.tableDataPlayers]);
 
     // Add effect to track mouse movement
@@ -393,7 +396,7 @@ const Table = () => {
             const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
 
             // Find if a player is seated at this position
-            const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
+            const playerAtThisSeat = tableActivePlayers.find((p: PlayerDTO) => p.seat === seatNumber);
 
             // Check if this seat belongs to the current user
             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
@@ -405,7 +408,7 @@ const Table = () => {
                 left: position.left,
                 top: position.top,
                 color: position.color,
-                status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status,
+                status: tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.seat === seatNumber)?.status,
                 onJoin: updateBalanceOnPlayerJoin
             };
 
@@ -448,6 +451,16 @@ const Table = () => {
         }),
         [dealerButtonPosition]
     );
+
+    // This component manages the subscription:
+    const { subscribeToTable } = useGameStateContext();
+    useEffect(() => {
+        if (id) {
+            subscribeToTable(id);
+        }
+    }, [id]);
+
+
 
     return (
         <div className="table-container">
@@ -585,13 +598,13 @@ const Table = () => {
                                 // Check player status
                                 if (
                                     tableDataValues.tableDataPlayers?.some(
-                                        (p: any) => p.address?.toLowerCase() === userWalletAddress && p.status !== "folded" && p.status !== "sitting-out"
+                                        (p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.SITTING_OUT
                                     )
                                 ) {
                                     alert("You must fold your hand before leaving the table.");
                                 } else {
                                     // Get player's current stack if they are seated
-                                    const playerData = tableDataValues.tableDataPlayers?.find((p: any) => p.address?.toLowerCase() === userWalletAddress);
+                                    const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
 
                                     if (leaveTable && playerData) {
                                         leaveTable({

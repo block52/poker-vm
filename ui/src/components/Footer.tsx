@@ -21,7 +21,7 @@ import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
 import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
 import { DEFAULT_BIG_BLIND, useGameOptions } from "../hooks/useGameOptions";
-import { useGameState } from "../hooks/useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
 
@@ -31,8 +31,8 @@ const PokerActionPanel: React.FC = () => {
     // Add the useStartNewHand hook
     const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
 
-    // Get data from our custom hooks
-    const { gameState } = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions(tableId);
     const { gameOptions } = useGameOptions(tableId);
