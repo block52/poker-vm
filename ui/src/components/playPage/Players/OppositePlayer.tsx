@@ -1,13 +1,13 @@
 /**
  * OppositePlayer Component
- * 
+ *
  * This component represents other players at the poker table (not the current user).
  * It displays:
  * - Player's cards (face down unless showing)
  * - Player's stack amount
  * - Player's status (folded, all-in, etc.)
  * - Winner information if applicable
- * 
+ *
  * PlayerPopUpCard Integration:
  * The PlayerPopUpCard is a popup menu that appears when clicking on an opponent's position.
  * It provides:
@@ -15,22 +15,22 @@
  *    - Shows "SIT HERE" button
  *    - Triggers table rotation when clicked
  *    - Updates player positions via setStartIndex
- * 
+ *
  * 2. Player Information:
  *    - Shows the seat number
  *    - Displays player's color theme
  *    - Future: Will show player statistics and history
- * 
+ *
  * 3. Interactive Features:
  *    - Note-taking capability (placeholder)
  *    - Player rating system (placeholder)
  *    - Quick actions menu (placeholder)
- * 
+ *
  * The popup appears when:
  * - isCardVisible === index (meaning this specific player's card should be shown)
  * - It slides in from the top with an animation
  * - It can be closed using the X button
- * 
+ *
  * Props:
  * - left/top: Position on the table
  * - index: Seat number
@@ -69,11 +69,17 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
     const { winnerInfo } = useWinnerInfo(id);
     const { showingPlayers } = useShowingCardsByAddress(id);
 
+    // 1) detect when any winner exists
+    const hasWinner = React.useMemo(() => Array.isArray(winnerInfo) && winnerInfo.length > 0, [winnerInfo]);
+
     // Check if this player is a winner
     const isWinner = React.useMemo(() => {
         if (!winnerInfo) return false;
         return winnerInfo.some((winner: any) => winner.seat === index);
     }, [winnerInfo, index]);
+
+    // 2) dim non-winners when someone has won
+    const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : isFolded ? "opacity-60" : "opacity-100";
 
     // Get winner amount if this player is a winner
     const winnerAmount = React.useMemo(() => {
@@ -104,9 +110,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
             {/* Main player display */}
             <div
                 key={index}
-                className={`${
-                    isFolded ? "opacity-60" : ""
-                } absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
+                className={`${opacityClass} absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
                 style={{
                     left: left,
                     top: top,
@@ -140,7 +144,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                     <div
                         style={{ backgroundColor: isWinner ? "#2c8a3c" : color }}
                         className={`b-[0%] mt-[auto] w-full h-[55px] shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${
-                            isWinner ? "animate-pulse" : ""
+                            isWinner 
                         }`}
                     >
                         {/* Progress bar is not shown in showdown */}

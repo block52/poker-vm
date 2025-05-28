@@ -57,8 +57,8 @@ import Player from "./Players/Player";
 
 import Chip from "./common/Chip";
 import CustomDealer from "../../assets/CustomDealer.svg";
-import TurnAnimation from "./TurnAnimation/TurnAnimation";
-import WinAnimation from "./TurnAnimation/WinAnimation";
+import TurnAnimation from "./Animations/TurnAnimation";
+import WinAnimation from "./Animations/WinAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
