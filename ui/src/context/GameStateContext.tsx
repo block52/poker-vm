@@ -66,7 +66,8 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
   const unsubscribeFromTable = useCallback(() => {
     if (currentTableId) {
       console.log(`[GameStateContext] Unsubscribing from table: ${currentTableId}`);
-      // Singleton handles cleanup internally
+      // Singleton handles cleanup internally  so we don't need to hadle it here.
+      // wsInstance.unsubscribeFromTable(currentTableId);
     }
     setCurrentTableId(null);
     setGameState(undefined);
@@ -74,15 +75,6 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
     setError(null);
   }, [currentTableId]);
 
-  // Cleanup on unmount - singleton handles the actual WebSocket cleanup
-  useEffect(() => {
-    return () => {
-      if (currentTableId) {
-        console.log("[GameStateContext] Component unmounting, cleaning up subscription");
-        // Singleton will handle cleanup when callbacks are removed
-      }
-    };
-  }, [currentTableId]);
 
   const contextValue: GameStateContextType = {
     gameState,
