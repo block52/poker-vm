@@ -166,6 +166,10 @@ export interface TurnAnimationProps {
     index: number;
 }
 
+export interface WinAnimationProps {
+    index: number;
+}
+
 // Type for the return value of useGameProgress hook
 export interface GameProgressReturn extends BaseHookReturn {
     isGameInProgress: boolean;
