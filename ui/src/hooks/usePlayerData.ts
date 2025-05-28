@@ -17,12 +17,10 @@ export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataR
   // Get player data from the table state
   const playerData = React.useMemo((): PlayerDTO | null => {
     if (!gameState || !seatIndex) {
-      console.log(`No player data - gameState exists: ${!!gameState}, seatIndex: ${seatIndex}`);
       return null;
     }
     
     if (!gameState.players) {
-      console.log("Game state has no players array");
       return null;
     }
     

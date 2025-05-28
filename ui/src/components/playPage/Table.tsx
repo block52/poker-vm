@@ -279,7 +279,8 @@ const Table = () => {
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
-        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
+        const activePlayers = tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
+        return activePlayers;
     }, [tableDataValues.tableDataPlayers]);
 
     // Add effect to track mouse movement

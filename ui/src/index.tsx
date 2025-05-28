@@ -33,11 +33,11 @@ function onRenderCallback(
 }
 
 root.render(
-    <React.StrictMode>
+    // <React.StrictMode>
         <Profiler id="AppRoot" onRender={onRenderCallback}>
             <NodeRpcProvider nodeUrl={url}>
                 <App />
             </NodeRpcProvider>
         </Profiler>
-    </React.StrictMode>
+    // </React.StrictMode>
 );
