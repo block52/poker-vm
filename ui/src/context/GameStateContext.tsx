@@ -37,7 +37,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
   // WebSocket management - direct in Context (no Singleton needed)
   const [currentTableId, setCurrentTableId] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const wsUrl = import.meta.env.VITE_NODE_WS_URL || "ws://node1.block52.xyz";
+  const wsUrl = import.meta.env.VITE_NODE_WS_URL || "wss://node1.block52.xyz";
 
   const subscribeToTable = useCallback((tableId: string) => {
     // Simple duplicate check
