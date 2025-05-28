@@ -390,6 +390,16 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return -1; // No seats available
     }
 
+    getAvailableSeats(): number[] {
+        const availableSeats: number[] = [];
+        for (const [seat, player] of this._playersMap.entries()) {
+            if (player === null) {
+                availableSeats.push(seat);
+            }
+        }
+        return availableSeats;
+    }
+
     /**
      * Adds a player to the game at a specific seat
      */
