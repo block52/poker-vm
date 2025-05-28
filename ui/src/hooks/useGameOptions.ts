@@ -1,7 +1,7 @@
-import { useMemo } from "react";
-import { useGameState } from "./useGameState";
+import { useMemo, useCallback } from "react";
+import { useGameStateContext } from "../context/GameStateContext";
 import { GameOptionsDTO } from "@bitcoinbrisbane/block52";
-import { GameOptionsReturn, GameStateReturn } from "../types/index";
+import { GameOptionsReturn } from "../types/index";
 
 // Define default values as strings (matching GameOptionsDTO)
 export const DEFAULT_SMALL_BLIND = "100000000000000000"; // 0.1 ETH
@@ -22,12 +22,18 @@ const defaultOptions: Required<GameOptionsDTO> = {
 
 /**
  * Custom hook to fetch game options for a table
- * @param tableId The table ID to fetch options for
+ * @param tableId The table ID (not used - Context manages subscription)
  * @returns Object containing game options and loading state
  */
 export const useGameOptions = (tableId?: string): GameOptionsReturn => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
+
+    // Manual refresh function (no-op since WebSocket provides real-time data)
+    const refresh = useCallback(async () => {
+        console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
+        return gameState;
+    }, [gameState]);
 
     // Memoize game options processing
     const gameOptions = useMemo((): Required<GameOptionsDTO> => {

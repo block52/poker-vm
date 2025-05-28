@@ -1,15 +1,15 @@
 import { useMemo } from "react";
-import { useGameState } from "./useGameState";
-import { TableTurnIndexReturn, GameStateReturn } from "../types/index";
+import { useGameStateContext } from "../context/GameStateContext";
+import { TableTurnIndexReturn } from "../types/index";
 
 /**
  * Custom hook to get the next turn index for actions at a table
- * @param tableId The table ID
+ * @param tableId The table ID (not used - Context manages subscription)
  * @returns Object containing the next turn index and loading/error states
  */
 export function useTableTurnIndex(tableId?: string): TableTurnIndexReturn {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
+  // Get game state directly from Context - no additional WebSocket connections
+  const { gameState, isLoading, error } = useGameStateContext();
 
   // Memoize the next turn index calculation
   const nextTurnIndex = useMemo((): number => {

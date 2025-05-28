@@ -1,15 +1,15 @@
 import { useMemo } from "react";
-import { useGameState } from "./useGameState";
-import { TableAnimationsReturn, GameStateReturn } from "../types/index";
+import { useGameStateContext } from "../context/GameStateContext";
+import { TableAnimationsReturn } from "../types/index";
 
 /**
  * Custom hook to provide table animation-related information
- * @param tableId The ID of the table to fetch state for
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing table animation properties such as tableSize
  */
 export const useTableAnimations = (tableId?: string): TableAnimationsReturn => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
+  // Get game state directly from Context - no additional WebSocket connections
+  const { gameState, isLoading, error } = useGameStateContext();
 
   // Memoize the table size calculation
   const tableSize = useMemo((): number => {

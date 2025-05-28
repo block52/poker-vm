@@ -1,16 +1,22 @@
 import { useMemo, useCallback } from "react";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
-import { useGameState } from "./useGameState";
-import { PlayerSeatInfoReturn, GameStateReturn } from "../types/index";
+import { useGameStateContext } from "../context/GameStateContext";
+import { PlayerSeatInfoReturn } from "../types/index";
 
 /**
  * Custom hook to manage player seat information
- * @param tableId The ID of the table
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing player seat information and related functions
  */
 export const usePlayerSeatInfo = (tableId?: string): PlayerSeatInfoReturn => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
+
+    // Manual refresh function (no-op since WebSocket provides real-time data)
+    const refresh = useCallback(async () => {
+        console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
+        return gameState;
+    }, [gameState]);
 
     // Get user address from local storage
     const userWalletAddress = useMemo(() => {

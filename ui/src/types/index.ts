@@ -16,13 +16,6 @@ export interface BaseHookReturn {
     error: Error | null;
 }
 
-// Type for the return value of useGameState hook
-export interface GameStateReturn extends BaseHookReturn {
-    gameState: TexasHoldemStateDTO | undefined;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
-    getNestedValue: (path: string) => any;
-}
-
 // Type for error logs
 export interface ErrorLog {
     id: string;

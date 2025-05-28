@@ -1,10 +1,10 @@
-import { useGameState } from "./useGameState";
-import { GameProgressReturn, GameStateReturn } from "../types/index";
+import { useGameStateContext } from "../context/GameStateContext";
+import { GameProgressReturn } from "../types/index";
 import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to check if a game is in progress and provide game status information
- * @param tableId The ID of the table to check
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing:
  * - isGameInProgress: boolean indicating if a game is currently being played
  * - activePlayers: array of players who are not folded or sitting out
@@ -17,8 +17,8 @@ import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
  * - error: any error that occurred during data fetching
  */
 export const useGameProgress = (tableId?: string): GameProgressReturn => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Default values in case of error or loading
     const defaultState: GameProgressReturn = {

@@ -1,17 +1,17 @@
 import React from "react";
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { ethers } from "ethers";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import { VacantSeatResponse } from "../types/index";
 
 /**
  * Custom hook to manage data for vacant seats
- * @param tableId The ID of the table
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing seat vacancy data
  */
 export const useVacantSeatData = (tableId?: string): VacantSeatResponse => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error } = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
 
     const userAddress = React.useMemo(() => {
         return localStorage.getItem("user_eth_public_key")?.toLowerCase() || null;

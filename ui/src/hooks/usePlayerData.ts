@@ -1,28 +1,30 @@
 import React from "react";
 import { ethers } from "ethers";
 import { PlayerStatus, PlayerDTO } from "@bitcoinbrisbane/block52";
-import { useGameState } from "./useGameState";
-import { PlayerDataReturn, GameStateReturn } from "../types/index";
+import { PlayerDataReturn } from "../types/index";
+import { useGameStateContext } from "../context/GameStateContext";
 
 /**
  * Custom hook to fetch player data for a specific seat
- * @param tableId The ID of the table
+ * 
+ * SIMPLIFIED: Uses GameStateContext directly instead of useGameState
+ * This prevents creating multiple WebSocket connections for the same table
+ * 
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @param seatIndex The seat index to get player data for
  * @returns Object with player data and utility functions
  */
 export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataReturn => {
-  // Use useGameState hook instead of making our own API call
-  const { gameState, error, isLoading, refresh }: GameStateReturn = useGameState(tableId);
+  // Get game state directly from Context - no additional WebSocket connections
+  const { gameState, error, isLoading } = useGameStateContext();
   
   // Get player data from the table state
   const playerData = React.useMemo((): PlayerDTO | null => {
     if (!gameState || !seatIndex) {
-      console.log(`No player data - gameState exists: ${!!gameState}, seatIndex: ${seatIndex}`);
       return null;
     }
     
     if (!gameState.players) {
-      console.log("Game state has no players array");
       return null;
     }
     
@@ -52,6 +54,12 @@ export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataR
   
   const round = React.useMemo(() => {
     return gameState?.round || null;
+  }, [gameState]);
+
+  // Manual refresh function (no-op since WebSocket provides real-time data)
+  const refresh = React.useCallback(async () => {
+    console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
+    return gameState;
   }, [gameState]);
   
   return {

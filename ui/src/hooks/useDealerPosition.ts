@@ -1,15 +1,15 @@
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { DealerPositionReturn } from "../types/index";
 import { dealerPosition } from "../utils/PositionArray";
 
 /**
  * Custom hook to fetch and provide dealer button position
- * @param tableId The ID of the table to fetch state for
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing dealer button position and visibility state
  */
 export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
-    // Use the centralized game state hook
-    const { gameState, isLoading, error } = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Default values in case of error or loading
     const defaultState: DealerPositionReturn = {
