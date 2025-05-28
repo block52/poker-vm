@@ -57,7 +57,8 @@ import Player from "./Players/Player";
 
 import Chip from "./common/Chip";
 import CustomDealer from "../../assets/CustomDealer.svg";
-import TurnAnimation from "./TurnAnimation/TurnAnimation";
+import TurnAnimation from "./Animations/TurnAnimation";
+import WinAnimation from "./Animations/WinAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
@@ -91,6 +92,9 @@ import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGame
 //todo wire up to use the sdk instead of the proxy
 // 4. Player Actions
 import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
+
+// 5. Winner Info
+import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner information for animations
 
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
@@ -142,9 +146,11 @@ const Table = () => {
     const [balanceError, setBalanceError] = useState<Error | null>(null);
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
-
     // Update to use the imported hook
     const tableDataValues = useTableData(id);
+
+    // invoke hook for seat loop
+    const { winnerInfo } = useWinnerInfo(id);
 
     // Define calculateZoom first, before any usage
     const calculateZoom = useCallback(() => {
@@ -179,7 +185,7 @@ const Table = () => {
 
             const account = await client.getAccount(publicKey);
             setAccountBalance(account.balance.toString());
-       
+
             setBalanceError(null);
         } catch (err) {
             console.error("Error fetching account balance:", err);
@@ -210,7 +216,6 @@ const Table = () => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [debugMode, setDebugMode] = useState(false);
 
-
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
 
@@ -218,7 +223,13 @@ const Table = () => {
     const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
 
     // Add the useNextToActInfo hook
-    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(id);
+    const {
+        seat: nextToActSeat,
+        player: nextToActPlayer,
+        isCurrentUserTurn,
+        availableActions: nextToActAvailableActions,
+        timeRemaining
+    } = useNextToActInfo(id);
 
     // Add the useShowingCardsByAddress hook
     const { showingPlayers, isShowdown, refresh: refreshShowingCards } = useShowingCardsByAddress(id);
@@ -263,7 +274,6 @@ const Table = () => {
 
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
-
 
     // Memoize user wallet address
     const userWalletAddress = useMemo(() => {
@@ -323,6 +333,9 @@ const Table = () => {
         () => [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
         [dealerPositionArray, startIndex]
     );
+
+    // Winner animations
+    const hasWinner = Array.isArray(winnerInfo) && winnerInfo.length > 0;
 
     // Add useEffect to refresh showing cards when the round is showdown or end
     useEffect(() => {
@@ -561,7 +574,6 @@ const Table = () => {
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                                     <span>Next To Act: Seat {nextToAct}</span>
                                 </span>
-                                
                             </div>
                         </div>
                     </div>
@@ -578,20 +590,18 @@ const Table = () => {
                             {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                             {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                         </span>
-                        
+
                         {/* Dev Mode Toggle Button */}
                         <span
                             className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ml-2 ${
-                                debugMode 
-                                    ? "bg-red-500/30 text-red-400" 
-                                    : "text-gray-400 hover:text-blue-400"
+                                debugMode ? "bg-red-500/30 text-red-400" : "text-gray-400 hover:text-blue-400"
                             }`}
                             onClick={() => setDebugMode(prev => !prev)}
                             title="Developer Mode"
                         >
                             <FaCode size={16} />
                         </span>
-                        
+
                         <span
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
                             onClick={() => {
@@ -698,10 +708,7 @@ const Table = () => {
                                         <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center shadow-[0_7px_15px_rgba(0,0,0,0.6)]">
                                             {/* //! Table */}
                                             <div className="table-logo">
-                                                <img
-                                                    src={placeholderLogo}
-                                                    alt="Placeholder Logo"
-                                                />
+                                                <img src={placeholderLogo} alt="Placeholder Logo" />
                                             </div>
                                             <div className="flex flex-col items-center justify-center -mt-20">
                                                 <div className="pot-display">
@@ -781,12 +788,18 @@ const Table = () => {
                                     </div>
                                     <div className="absolute inset-0 z-30">
                                         {reorderedPlayerArray.map((position, positionIndex) => {
+                                            const seatNum = ((positionIndex + startIndex) % tableSize) + 1;
+                                            const isWinnerSeat = !!winnerInfo?.some(w => w.seat === seatNum);
                                             const componentToRender = getComponentToRender(position, positionIndex);
+
                                             return (
                                                 <div key={positionIndex} className="z-[10]">
-                                                    <div>
-                                                        <MemoizedTurnAnimation index={positionIndex} />
-                                                    </div>
+                                                    {/* turn indicator only when no winner yet */}
+                                                    {!hasWinner && <MemoizedTurnAnimation index={positionIndex} />}
+
+                                                    {/* winner ripple when hand is over and this seat won */}
+                                                    {isWinnerSeat && <WinAnimation index={positionIndex} />}
+
                                                     {componentToRender}
                                                 </div>
                                             );
@@ -833,9 +846,8 @@ const Table = () => {
                         <span className="text-white">Your turn to act!</span>
                     ) : (
                         <span>
-                            Waiting for{" "}
-                            {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`}{" "}
-                            to act
+                            Waiting for {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to
+                            act
                         </span>
                     )}
                 </div>
@@ -858,7 +870,7 @@ const Table = () => {
             </div>
 
             {/* Debug Error Panel */}
-            <div className={`debug-panel ${debugMode ? "block" : "hidden" }`}>
+            <div className={`debug-panel ${debugMode ? "block" : "hidden"}`}>
                 <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
             </div>
         </div>
