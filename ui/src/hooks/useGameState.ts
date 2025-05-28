@@ -26,7 +26,7 @@ export const useGameState = (tableId?: string, autoRefreshIntervalMs: number = 1
       lastTableIdRef.current = undefined;
       unsubscribeFromTable();
     }
-  }, [tableId, subscribeToTable, unsubscribeFromTable]);
+  }, [tableId]);
 
   // Manual refresh function (no-op since WebSocket provides real-time data)
   const refresh = useCallback(async (): Promise<TexasHoldemStateDTO | undefined> => {
