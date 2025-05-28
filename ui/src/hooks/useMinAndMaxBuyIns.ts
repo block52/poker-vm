@@ -1,14 +1,20 @@
-import { useGameState } from "./useGameState";
-import { MinAndMaxBuyInsReturn, GameStateReturn } from "../types/index";
+import { useCallback } from "react";
+import { useGameStateContext } from "../context/GameStateContext";
+import { MinAndMaxBuyInsReturn } from "../types/index";
 
 /**
  * Custom hook to fetch min and max buy-in values for a table
- * @param tableId The table ID to fetch limits for
+ * @param tableId The table ID (not used - Context manages subscription)
  * @returns Object containing min/max buy-in values in wei
  */
 export const useMinAndMaxBuyIns = (tableId?: string): MinAndMaxBuyInsReturn => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
+  // Get game state directly from Context - no additional WebSocket connections
+  const { gameState, isLoading, error } = useGameStateContext();
+
+  // Manual refresh function (no-op since WebSocket provides real-time data)
+  const refresh = useCallback(async () => {
+    console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
+  }, []);
 
   // Default values in case of error or loading
   const defaultValues: MinAndMaxBuyInsReturn = {
@@ -16,7 +22,7 @@ export const useMinAndMaxBuyIns = (tableId?: string): MinAndMaxBuyInsReturn => {
     maxBuyInWei: "1000000000000000000", // 1 ETH
     isLoading,
     error,
-    refresh: async () => {} // Will be replaced below
+    refresh
   };
 
   // If still loading or error occurred, return default values
@@ -42,7 +48,7 @@ export const useMinAndMaxBuyIns = (tableId?: string): MinAndMaxBuyInsReturn => {
       maxBuyInWei,
       isLoading: false,
       error: null,
-      refresh: async () => {} // No longer needed since useGameState handles refreshing
+      refresh
     };
 
     return result;

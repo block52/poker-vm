@@ -1,16 +1,20 @@
-import { useGameState } from "./useGameState";
 import { useMemo } from "react";
-import { PlayerDTO, LegalActionDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
-import { NextToActInfoReturn, GameStateReturn } from "../types/index";
+import { PlayerDTO, LegalActionDTO } from "@bitcoinbrisbane/block52";
+import { NextToActInfoReturn } from "../types/index";
+import { useGameStateContext } from "../context/GameStateContext";
 
 /**
  * Custom hook to fetch and provide information about who is next to act
- * @param tableId The ID of the table to fetch state for
+ * 
+ * SIMPLIFIED: Uses GameStateContext directly instead of useGameState
+ * This prevents creating multiple WebSocket connections for the same table
+ * 
+ * @param tableId The ID of the table to fetch state for (not used - Context manages subscription)
  * @returns Object containing next-to-act information
  */
 export const useNextToActInfo = (tableId?: string): NextToActInfoReturn => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Calculate next-to-act information
     const result = useMemo(() => {

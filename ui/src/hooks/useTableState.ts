@@ -1,17 +1,24 @@
+import { useCallback } from "react";
 import { ethers } from "ethers";
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
-import { TableStateReturn, GameStateReturn } from "../types/index";
+import { TableStateReturn } from "../types/index";
 
 /**
  * Custom hook to fetch and provide table state information
- * @param tableId The ID of the table to fetch state for
- * @param autoRefreshIntervalMs Optional refresh interval in ms, default value to pass to useGameState
+ * @param tableId The ID of the table (not used - Context manages subscription)
+ * @param autoRefreshIntervalMs Optional refresh interval (not used - WebSocket provides real-time data)
  * @returns Object containing table state properties including round, pot, size, type
  */
 export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number): TableStateReturn => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId, autoRefreshIntervalMs);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
+
+    // Manual refresh function (no-op since WebSocket provides real-time data)
+    const refresh = useCallback(async () => {
+        console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
+        return gameState;
+    }, [gameState]);
 
     // Default values in case of error or loading
     const defaultState = {

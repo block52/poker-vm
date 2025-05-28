@@ -1,19 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { PlayerStatus, PlayerDTO } from "@bitcoinbrisbane/block52";
-import { PlayerTimerReturn, GameStateReturn } from "../types/index";
+import { PlayerTimerReturn } from "../types/index";
 
 /**
  * Custom hook to manage player timer information
- * @param tableId The ID of the table
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @param playerSeat The seat number of the player to check (1-based)
  * @returns Object containing player status and timer information
  */
 export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTimerReturn => {
     const [progress, setProgress] = useState(0);
 
-    // Get game state from centralized hook
-    const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Find the player by seat number
     const player = useMemo((): PlayerDTO | null => {

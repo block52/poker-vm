@@ -99,6 +99,7 @@ import { useGameOptions } from "../../hooks/useGameOptions";
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
+import { useGameStateContext } from "../../context/GameStateContext";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -449,6 +450,16 @@ const Table = () => {
         }),
         [dealerButtonPosition]
     );
+
+    // This component manages the subscription:
+    const { subscribeToTable } = useGameStateContext();
+    useEffect(() => {
+        if (id) {
+            subscribeToTable(id);
+        }
+    }, [id]);
+
+
 
     return (
         <div className="table-container">

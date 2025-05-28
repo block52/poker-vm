@@ -1,6 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
-import WebSocketSingleton from "../utils/websocketSingleton";
+
+/**
+ * GameStateContext - Centralized WebSocket state management
+ * 
+ * SIMPLIFIED ARCHITECTURE:
+ * Components → useGameState → GameStateContext → WebSocket (direct)
+ * 
+ * BENEFITS:
+ * - No more WebSocketSingleton complexity
+ * - No more callback system needed
+ * - Context manages ONE WebSocket connection per table
+ * - All components read from Context state automatically
+ * - Stable React lifecycle management
+ */
 
 interface GameStateContextType {
   gameState: TexasHoldemStateDTO | undefined;
@@ -21,15 +34,22 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   
-  // Simplified state management - singleton handles complexity
+  // WebSocket management - direct in Context (no Singleton needed)
   const [currentTableId, setCurrentTableId] = useState<string | null>(null);
-  const wsInstance = WebSocketSingleton.getInstance();
+  const wsRef = useRef<WebSocket | null>(null);
+  const wsUrl = import.meta.env.VITE_NODE_WS_URL || "ws://node1.block52.xyz";
 
   const subscribeToTable = useCallback((tableId: string) => {
-    // Simple duplicate check - singleton handles the rest
-    if (currentTableId === tableId) {
+    // Simple duplicate check
+    if (currentTableId === tableId && wsRef.current?.readyState === WebSocket.OPEN) {
       console.log(`[GameStateContext] Already subscribed to table: ${tableId}`);
       return;
+    }
+
+    // Clean up existing connection
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
     }
 
     setIsLoading(true);
@@ -38,7 +58,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
     console.log(`[GameStateContext] Subscribing to table: ${tableId}`);
 
-    //TODO centralised this to a function
+    // Get player address
     const playerAddress = localStorage.getItem("user_eth_public_key");
     if (!playerAddress) {
       console.error("[GameStateContext] No player address found");
@@ -47,35 +67,70 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
       return;
     }
     
-    // Singleton handles all the complexity now
-    wsInstance.subscribeToTable(
-      tableId,
-      playerAddress,
-      (newGameState: TexasHoldemStateDTO) => {
-        setGameState(newGameState);
-        setError(null);
-        setIsLoading(false);
-      },
-      (error: Error) => {
-        console.error(`[GameStateContext] WebSocket error for table ${tableId}:`, error);
-        setError(error);
-        setIsLoading(false);
+    // Create WebSocket connection with URL parameters for auto-subscription
+    const fullWsUrl = `${wsUrl}?tableAddress=${tableId}&playerId=${playerAddress}`;
+    const ws = new WebSocket(fullWsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log(`[GameStateContext] WebSocket connected to table ${tableId}`);
+      setIsLoading(false);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        
+        if (message.type === "gameStateUpdate" && message.tableAddress === tableId) {
+          console.log(`[GameStateContext] Received game state update for table ${tableId}`);
+          setGameState(message.gameState);
+          setError(null);
+        }
+      } catch (err) {
+        console.error("[GameStateContext] Error parsing WebSocket message:", err);
+        setError(new Error("Error parsing WebSocket message"));
       }
-    );
-  }, [currentTableId, wsInstance]);
+    };
+
+    ws.onclose = () => {
+      console.log(`[GameStateContext] WebSocket disconnected from table ${tableId}`);
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("[GameStateContext] WebSocket error:", error);
+      setError(new Error(`WebSocket connection error for table ${tableId}`));
+      setIsLoading(false);
+    };
+  }, [currentTableId, wsUrl]);
 
   const unsubscribeFromTable = useCallback(() => {
     if (currentTableId) {
       console.log(`[GameStateContext] Unsubscribing from table: ${currentTableId}`);
-      // Singleton handles cleanup internally  so we don't need to hadle it here.
-      // wsInstance.unsubscribeFromTable(currentTableId);
     }
+    
+    // Clean up WebSocket connection
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    
     setCurrentTableId(null);
     setGameState(undefined);
     setIsLoading(false);
     setError(null);
   }, [currentTableId]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
 
   const contextValue: GameStateContextType = {
     gameState,
