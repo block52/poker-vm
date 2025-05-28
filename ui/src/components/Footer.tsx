@@ -279,6 +279,12 @@ const PokerActionPanel: React.FC = () => {
         dealCards();
     };
 
+    useEffect(() => {
+        if (hasDealAction && !isDealing) {
+            handleDeal();
+        }
+    }, [hasDealAction, dealCards, isDealing, handleDeal]);
+
     // Handler for muck action
     const handleMuck = () => {
         if (!muckCards || !privateKey) {
@@ -365,7 +371,7 @@ const PokerActionPanel: React.FC = () => {
         <div className="fixed bottom-0 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
             <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
-                {shouldShowDealButton && (
+                {/* {shouldShowDealButton && (
                     <div className="flex justify-center mb-3">
                         <button
                             onClick={handleDeal}
@@ -387,7 +393,7 @@ const PokerActionPanel: React.FC = () => {
                             {isDealing ? "DEALING..." : "DEAL"}
                         </button>
                     </div>
-                )}
+                )} */}
 
                 {/* New Hand Button - Show when the round is "end" */}
                 {currentRound === "end" && (
