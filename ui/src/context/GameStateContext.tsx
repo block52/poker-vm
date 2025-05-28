@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import WebSocketSingleton from "../utils/websocketSingleton";
 
@@ -21,80 +21,63 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   
-  // Use refs to prevent React StrictMode issues
-  const currentTableIdRef = useRef<string | null>(null);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
-  const isSubscribingRef = useRef<boolean>(false);
+  // Simplified state management - singleton handles complexity
+  const [currentTableId, setCurrentTableId] = useState<string | null>(null);
   const wsInstance = WebSocketSingleton.getInstance();
 
   const subscribeToTable = useCallback((tableId: string) => {
-    // Prevent duplicate subscriptions
-    if (currentTableIdRef.current === tableId && unsubscribeRef.current) {
+    // Simple duplicate check - singleton handles the rest
+    if (currentTableId === tableId) {
       console.log(`[GameStateContext] Already subscribed to table: ${tableId}`);
       return;
     }
 
-
-    isSubscribingRef.current = true;
-
-    // Clean up previous subscription
-    if (unsubscribeRef.current) {
-      console.log("[GameStateContext] Cleaning up previous subscription");
-      unsubscribeRef.current();
-      unsubscribeRef.current = null;
-    }
-
     setIsLoading(true);
     setError(null);
-    currentTableIdRef.current = tableId;
+    setCurrentTableId(tableId);
 
     console.log(`[GameStateContext] Subscribing to table: ${tableId}`);
 
     try {
       const playerAddress = localStorage.getItem("user_eth_public_key");
       
-      const unsubscribe = wsInstance.subscribeToTable(
+      // Singleton handles all the complexity now
+      wsInstance.subscribeToTable(
         tableId,
-        playerAddress || "0x0000000000000000000000000000000000000000", // Use actual player ID
+        playerAddress || "0x0000000000000000000000000000000000000000",
         (newGameState: TexasHoldemStateDTO) => {
           setGameState(newGameState);
           setError(null);
           setIsLoading(false);
         }
       );
-
-      unsubscribeRef.current = unsubscribe;
     } catch (err) {
       console.error(`[GameStateContext] Failed to subscribe to table ${tableId}:`, err);
       setError(err instanceof Error ? err : new Error("Subscription failed"));
       setIsLoading(false);
-    } finally {
-      isSubscribingRef.current = false;
     }
-  }, [wsInstance]);
+  }, [currentTableId, wsInstance]);
 
   const unsubscribeFromTable = useCallback(() => {
-    if (unsubscribeRef.current) {
-      console.log(`[GameStateContext] Unsubscribing from table: ${currentTableIdRef.current}`);
-      unsubscribeRef.current();
-      unsubscribeRef.current = null;
+    if (currentTableId) {
+      console.log(`[GameStateContext] Unsubscribing from table: ${currentTableId}`);
+      // Singleton handles cleanup internally
     }
-    currentTableIdRef.current = null;
+    setCurrentTableId(null);
     setGameState(undefined);
     setIsLoading(false);
     setError(null);
-    isSubscribingRef.current = false;
-  }, []);
+  }, [currentTableId]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - singleton handles the actual WebSocket cleanup
   useEffect(() => {
     return () => {
-      if (unsubscribeRef.current) {
+      if (currentTableId) {
         console.log("[GameStateContext] Component unmounting, cleaning up subscription");
-        unsubscribeRef.current();
+        // Singleton will handle cleanup when callbacks are removed
       }
     };
-  }, []);
+  }, [currentTableId]);
 
   const contextValue: GameStateContextType = {
     gameState,

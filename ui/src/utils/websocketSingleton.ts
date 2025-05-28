@@ -28,7 +28,7 @@ class WebSocketSingleton {
   ): () => void {
     const subscriptionKey = `${tableAddress}-${playerId}`;
     
-    // Check if we already have an active subscription
+    // Enhanced duplicate prevention - singleton handles this internally now
     const existing = this.subscriptions.get(subscriptionKey);
     if (existing) {
       // Cancel any pending close timeout
@@ -195,6 +195,25 @@ class WebSocketSingleton {
     this.subscriptions.forEach((subscription, key) => {
       this.unsubscribeFromTable(key);
     });
+  }
+
+  // New method: Check if already subscribed to a table
+  public isSubscribedToTable(tableAddress: string, playerId: string): boolean {
+    const subscriptionKey = `${tableAddress}-${playerId}`;
+    const subscription = this.subscriptions.get(subscriptionKey);
+    return subscription !== undefined && 
+           (subscription.ws.readyState === WebSocket.OPEN || subscription.isConnecting);
+  }
+
+  // New method: Get current subscription status
+  public getSubscriptionStatus(tableAddress: string, playerId: string): "none" | "connecting" | "connected" | "error" {
+    const subscriptionKey = `${tableAddress}-${playerId}`;
+    const subscription = this.subscriptions.get(subscriptionKey);
+    
+    if (!subscription) return "none";
+    if (subscription.isConnecting) return "connecting";
+    if (subscription.ws.readyState === WebSocket.OPEN) return "connected";
+    return "error";
   }
 }
 
