@@ -10,7 +10,7 @@ class WebSocketSingleton {
     isConnecting: boolean;
     closeTimeout?: NodeJS.Timeout;
   }> = new Map();
-  private wsUrl: string = "ws://localhost:3000";
+  private wsUrl: string = import.meta.env.VITE_NODE_WS_URL || "ws://node1.block52.xyz";
 
   private constructor() {}
 
