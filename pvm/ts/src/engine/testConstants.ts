@@ -6,6 +6,7 @@ import { Player } from "../models/player";
 // Constants for testing
 export const ONE_TOKEN = 100000000000000000n;
 export const TWO_TOKENS = 200000000000000000n;
+export const FIVE_TOKENS = 500000000000000000n;
 export const TEN_TOKENS = 1000000000000000000n;
 export const TWENTY_TOKENS = 20000000000000000000n;
 export const FIFTY_TOKENS = 50000000000000000000n;

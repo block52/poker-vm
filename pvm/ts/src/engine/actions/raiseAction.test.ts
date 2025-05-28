@@ -12,7 +12,8 @@ import {
     TWO_TOKENS,
     TEN_TOKENS,
     TWENTY_TOKENS,
-    TWO_THOUSAND_TOKENS
+    TWO_THOUSAND_TOKENS,
+    FIVE_TOKENS
 } from "../testConstants";
 
 describe("Raise Action", () => {
@@ -57,7 +58,7 @@ describe("Raise Action", () => {
         jest.spyOn(game, "getActionsForRound").mockReturnValue([
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: 50000000000000000000n,
+                amount: ONE_TOKEN,
                 action: PlayerActionType.SMALL_BLIND,
                 index: 0,
                 seat: 2,
@@ -65,7 +66,7 @@ describe("Raise Action", () => {
             },
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: 10000000000000000000n,
+                amount: TWO_TOKENS,
                 action: PlayerActionType.BIG_BLIND,
                 index: 0,
                 seat: 3,
@@ -73,7 +74,7 @@ describe("Raise Action", () => {
             },
             {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                amount: 50000000000000000000n,
+                amount: FIVE_TOKENS,
                 action: PlayerActionType.BET,
                 index: 0,
                 seat: 4,
@@ -118,12 +119,32 @@ describe("Raise Action", () => {
         };
 
         beforeEach(() => {
-            const now = Date.now();
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
         });
 
         it.only("should return correct range for a raise", () => {
+            const range = action.verify(player);
+
+            // Min amount should be previous bet + big blind
+            const expectedMinAmount = 40000000000000000000n; // 4 tokens
+
+            expect(range).toEqual({
+                minAmount: expectedMinAmount,
+                maxAmount: player.chips
+            });
+        });
+
+        it.only("should return correct range for a re raise", () => {
+            const raiseBet: TurnWithSeat = {
+                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                action: PlayerActionType.BET,
+                amount: 50000000000000000000n, //  5 tokens
+                index: 0,
+                seat: 2,
+                timestamp: Date.now()
+            };
+            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(raiseBet);
             const range = action.verify(player);
 
             // Min amount should be previous bet + big blind
