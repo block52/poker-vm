@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import RaiseAction from "./raiseAction";
@@ -9,6 +9,7 @@ import {
     ONE_HUNDRED_TOKENS,
     ONE_THOUSAND_TOKENS,
     ONE_TOKEN,
+    TWO_TOKENS,
     TEN_TOKENS,
     TWENTY_TOKENS,
     TWO_THOUSAND_TOKENS
@@ -110,7 +111,7 @@ describe("Raise Action", () => {
         const lastBet: TurnWithSeat = {
             playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
             action: PlayerActionType.BET,
-            amount: FIFTY_TOKENS, // 50 tokens
+            amount: TWO_TOKENS, //  2
             index: 0,
             seat: 2,
             timestamp: Date.now()
@@ -122,11 +123,11 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
         });
 
-        it("should return correct range for a raise", () => {
+        it.only("should return correct range for a raise", () => {
             const range = action.verify(player);
 
             // Min amount should be previous bet + big blind
-            const expectedMinAmount = 40000000000000000000n; // 40 tokens
+            const expectedMinAmount = 40000000000000000000n; // 4 tokens
 
             expect(range).toEqual({
                 minAmount: expectedMinAmount,
@@ -222,21 +223,6 @@ describe("Raise Action", () => {
 
             const result = (action as any).getDeductAmount(player, amount);
             expect(result).toBe(player.chips);
-        });
-
-        it.only("should return the min amount as double the largest bet", () => {
-            // Need to mock a bet action to avoid throwing error in verify
-            const lastBet: TurnWithSeat = {
-                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                action: PlayerActionType.BET,
-                amount: 20000000000000000000n,
-                index: 0,
-                seat: 2,
-                timestamp: Date.now()
-            };
-
-            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
-            
         });
     });
 
