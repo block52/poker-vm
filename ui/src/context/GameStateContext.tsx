@@ -39,12 +39,17 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
     console.log(`[GameStateContext] Subscribing to table: ${tableId}`);
 
     try {
+      //TODO centralised this to a function
       const playerAddress = localStorage.getItem("user_eth_public_key");
+      if (!playerAddress) {
+        console.error("[GameStateContext] No player address found");
+        return;
+      }
       
       // Singleton handles all the complexity now
       wsInstance.subscribeToTable(
         tableId,
-        playerAddress || "0x0000000000000000000000000000000000000000",
+        playerAddress,
         (newGameState: TexasHoldemStateDTO) => {
           setGameState(newGameState);
           setError(null);
