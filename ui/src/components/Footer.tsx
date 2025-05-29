@@ -35,7 +35,7 @@ const PokerActionPanel: React.FC = () => {
     const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions();
-    const { gameOptions } = useGameOptions(tableId);
+    const { gameOptions } = useGameOptions();
     const { dealCards, isDealing } = useTableDeal(tableId);
     const { checkHand } = useTableCheck(tableId);
     const { foldHand } = useTableFold(tableId);

@@ -244,7 +244,7 @@ const Table = () => {
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
 
     // Add the useGameOptions hook
-    const { gameOptions } = useGameOptions(id);
+    const { gameOptions } = useGameOptions();
 
     // Memoize formatted values
     const formattedValues = useMemo(

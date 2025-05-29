@@ -276,7 +276,6 @@ export interface TableAnimationsReturn extends BaseHookReturn {
 // Type for the return value of useGameOptions hook
 export interface GameOptionsReturn extends BaseHookReturn {
     gameOptions: Required<GameOptionsDTO>;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of useTableData hook
