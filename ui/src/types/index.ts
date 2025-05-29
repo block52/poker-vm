@@ -295,7 +295,6 @@ export interface TableDataReturn extends BaseHookReturn {
     tableDataRound: TexasHoldemRound;
     tableDataWinners: string[];
     tableDataSignature: string;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of useTableTurnIndex hook

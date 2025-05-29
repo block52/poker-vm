@@ -146,7 +146,7 @@ const Table = () => {
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
     // Update to use the imported hook
-    const tableDataValues = useTableData(id);
+    const tableDataValues = useTableData();
 
     // invoke hook for seat loop
     const { winnerInfo } = useWinnerInfo(id);
