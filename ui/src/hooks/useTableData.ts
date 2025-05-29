@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import { useGameStateContext } from "../context/GameStateContext";
 import { formatWeiToSimpleDollars } from "../utils/numberUtils";
 import { PlayerDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
@@ -6,21 +6,19 @@ import { TableDataReturn } from "../types/index";
 
 /**
  * Custom hook to provide formatted table data
- * @param tableId The ID of the table (not used - Context manages subscription)
+ * 
+ * NOTE: Table data is handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time table data from that context.
+ * 
  * @returns Object containing formatted table data and loading/error states
  */
-export const useTableData = (tableId?: string): TableDataReturn => {
-  // Get game state directly from Context - no additional WebSocket connections
+export const useTableData = (): TableDataReturn => {
+  // Get game state directly from Context - real-time data via WebSocket
   const { gameState, isLoading, error } = useGameStateContext();
 
-  // Manual refresh function (no-op since WebSocket provides real-time data)
-  const refresh = useCallback(async () => {
-    console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
-    return gameState;
-  }, [gameState]);
-
   // Memoize the processed table data
-  const tableData = useMemo((): Omit<TableDataReturn, "isLoading" | "error" | "refresh"> => {
+  const tableData = useMemo((): Omit<TableDataReturn, "isLoading" | "error"> => {
     // Default empty state
     const defaultData = {
       tableDataType: "cash",
@@ -35,7 +33,7 @@ export const useTableData = (tableId?: string): TableDataReturn => {
       tableDataDeck: "",
       tableDataPots: ["0"],
       tableDataNextToAct: -1,
-      tableDataRound: "preflop" as TexasHoldemRound,
+      tableDataRound: TexasHoldemRound.PREFLOP,
       tableDataWinners: [] as string[],
       tableDataSignature: ""
     };
@@ -75,7 +73,6 @@ export const useTableData = (tableId?: string): TableDataReturn => {
   return {
     ...tableData,
     isLoading,
-    error,
-    refresh
+    error
   };
 }; 

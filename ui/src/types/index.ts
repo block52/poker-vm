@@ -190,7 +190,6 @@ export interface TableStateReturn extends BaseHookReturn {
     tableSize: number;
     tableType: GameType;
     roundType: TexasHoldemRound;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of useChipPositions hook
@@ -215,7 +214,6 @@ export interface FindGamesReturn extends BaseHookReturn {
 export interface MinAndMaxBuyInsReturn extends BaseHookReturn {
     minBuyInWei: string;
     maxBuyInWei: string;
-    refresh: () => Promise<void>;
 }
 
 // Type for the return value of useNextToActInfo hook
@@ -240,15 +238,12 @@ export interface PlayerDataReturn extends BaseHookReturn {
     isAllIn: boolean;
     holeCards: string[];
     round: TexasHoldemRound | null;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of usePlayerSeatInfo hook
 export interface PlayerSeatInfoReturn extends BaseHookReturn {
     currentUserSeat: number;
     userDataBySeat: Record<number, PlayerDTO>;
-    getUserBySeat: (seat: number) => PlayerDTO | null;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of usePlayerTimer hook
@@ -281,7 +276,6 @@ export interface TableAnimationsReturn extends BaseHookReturn {
 // Type for the return value of useGameOptions hook
 export interface GameOptionsReturn extends BaseHookReturn {
     gameOptions: Required<GameOptionsDTO>;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of useTableData hook
@@ -301,7 +295,6 @@ export interface TableDataReturn extends BaseHookReturn {
     tableDataRound: TexasHoldemRound;
     tableDataWinners: string[];
     tableDataSignature: string;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of useTableTurnIndex hook
