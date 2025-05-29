@@ -231,14 +231,12 @@ const Table = () => {
         timeRemaining
     } = useNextToActInfo(id);
 
-    // Add the useShowingCardsByAddress hook
-    const { showingPlayers, isShowdown, refresh: refreshShowingCards } = useShowingCardsByAddress(id);
 
     // Add the useTableLeave hook
     const { leaveTable, isLeaving } = useTableLeave(id);
 
     // Add the useTableState hook to get table state properties
-    const { currentRound, formattedTotalPot, tableSize } = useTableState(id, 5000);
+    const { formattedTotalPot, tableSize } = useTableState(id, 5000);
 
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
@@ -336,13 +334,6 @@ const Table = () => {
 
     // Winner animations
     const hasWinner = Array.isArray(winnerInfo) && winnerInfo.length > 0;
-
-    // Add useEffect to refresh showing cards when the round is showdown or end
-    useEffect(() => {
-        if (currentRound === "showdown" || currentRound === "end") {
-            refreshShowingCards();
-        }
-    }, [currentRound, refreshShowingCards]);
 
     // Restore the useEffect for the timer
     useEffect(() => {
