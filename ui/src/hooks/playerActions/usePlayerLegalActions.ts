@@ -1,6 +1,6 @@
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerLegalActionsResult } from "./types";
-import { LegalActionDTO, PlayerActionType, PlayerDTO, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to fetch the legal actions for the current player
