@@ -77,7 +77,7 @@ import "./Table.css"; // Import the Table CSS file
 
 // 1. Core Data Providers
 import { useTableData } from "../../hooks/useTableData"; // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
-import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
+import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides currentUserSeat - the current user's seat position and userDataBySeat - object for direct seat-to-player lookup
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 
 //2. Visual Position/State Providers
@@ -219,7 +219,7 @@ const Table = () => {
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
 
     // Add the usePlayerSeatInfo hook
-    const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
+    const { currentUserSeat, userDataBySeat } = usePlayerSeatInfo();
 
     // Add the useNextToActInfo hook
     const {
@@ -281,10 +281,10 @@ const Table = () => {
     // Memoize user data
     const userData = useMemo(() => {
         if (currentUserSeat >= 0) {
-            return getUserBySeat(currentUserSeat);
+            return userDataBySeat[currentUserSeat] || null;
         }
         return null;
-    }, [currentUserSeat, getUserBySeat]);
+    }, [currentUserSeat, userDataBySeat]);
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {

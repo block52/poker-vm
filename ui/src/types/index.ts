@@ -244,8 +244,6 @@ export interface PlayerDataReturn extends BaseHookReturn {
 export interface PlayerSeatInfoReturn extends BaseHookReturn {
     currentUserSeat: number;
     userDataBySeat: Record<number, PlayerDTO>;
-    getUserBySeat: (seat: number) => PlayerDTO | null;
-    refresh: () => Promise<TexasHoldemStateDTO | undefined>;
 }
 
 // Type for the return value of usePlayerTimer hook
