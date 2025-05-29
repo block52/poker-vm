@@ -217,7 +217,7 @@ const Table = () => {
     const [debugMode, setDebugMode] = useState(false);
 
     // Use the hook directly instead of getting it from context
-    const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
+    const { legalActions: playerLegalActions } = usePlayerLegalActions();
 
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
