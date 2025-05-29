@@ -4,14 +4,18 @@ import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/bl
 
 /**
  * Custom hook to fetch the legal actions for the current player
- * @param tableId The ID of the table to fetch state for (required - Context manages subscription)
+ * 
+ * NOTE: Table identification and player legal actions are handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId (player address) parameters. This hook reads the real-time legal actions from that context.
+ * 
  * @returns Object containing the player's legal actions and related information
  */
-export function usePlayerLegalActions(tableId: string): PlayerLegalActionsResult {
+export function usePlayerLegalActions(): PlayerLegalActionsResult {
     // Get the user's address from localStorage
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
 
-    // Get game state directly from Context - no additional WebSocket connections
+    // Get game state directly from Context - table ID managed by subscription
     const { gameState, isLoading, error } = useGameStateContext();
 
     // Default return value for error/loading states
