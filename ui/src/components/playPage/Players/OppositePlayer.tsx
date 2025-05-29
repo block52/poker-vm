@@ -67,7 +67,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
     const { winnerInfo } = useWinnerInfo(id);
-    const { showingPlayers } = useShowingCardsByAddress(id);
+    const { showingPlayers } = useShowingCardsByAddress();
 
     // 1) detect when any winner exists
     const hasWinner = React.useMemo(() => Array.isArray(winnerInfo) && winnerInfo.length > 0, [winnerInfo]);

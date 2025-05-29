@@ -1,22 +1,20 @@
-import { useMemo, useCallback } from "react";
+import { useMemo} from "react";
 import { useGameStateContext } from "../context/GameStateContext";
 import { PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ShowingCardsByAddressReturn, ShowingCardData } from "../types/index";
 
 /**
  * Custom hook to get hole cards of players who have shown their cards
- * @param tableId The ID of the table (not used - Context manages subscription)
+ * 
+ * NOTE: Player showing status and hole cards are handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time showing cards data from that context.
+ * 
  * @returns Object containing all players with "showing" status and their cards
  */
-export const useShowingCardsByAddress = (tableId?: string): ShowingCardsByAddressReturn => {
-  // Get game state directly from Context - no additional WebSocket connections
+export const useShowingCardsByAddress = (): ShowingCardsByAddressReturn => {
+  // Get game state directly from Context - real-time data via WebSocket
   const { gameState, isLoading, error } = useGameStateContext();
-  
-  // Manual refresh function (no-op since WebSocket provides real-time data)
-  const refresh = useCallback(async () => {
-    console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
-    return gameState;
-  }, [gameState]);
   
   // Check if round is showdown or end
   const isShowdown = useMemo((): boolean => {
@@ -50,7 +48,6 @@ export const useShowingCardsByAddress = (tableId?: string): ShowingCardsByAddres
     showingPlayers,
     isShowdown,
     isLoading,
-    error,
-    refresh
+    error
   };
 }; 

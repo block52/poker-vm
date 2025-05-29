@@ -34,7 +34,7 @@ const PokerActionPanel: React.FC = () => {
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
-    const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions(tableId);
+    const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions();
     const { gameOptions } = useGameOptions(tableId);
     const { dealCards, isDealing } = useTableDeal(tableId);
     const { checkHand } = useTableCheck(tableId);
