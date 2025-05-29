@@ -1,6 +1,8 @@
 import { PlayerChipDataReturn } from "../types/index";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import { useGameStateContext } from "../context/GameStateContext";
+import { ActionDTO } from "@bitcoinbrisbane/block52/dist/types/game";
+import { formatChipAmount } from "../utils/numberUtils";
 
 /**
  * Custom hook to fetch and provide player chip data for each seat
@@ -33,14 +35,37 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
       return defaultState;
     }
 
+
+    
+
     // Function to get chip amount for a given seat
-    const getChipAmount = (seatIndex: number): string => {
-      const player = gameState.players.find((p: PlayerDTO) => p && p.seat === seatIndex);
-      if (player && player.stack) {
-        return player.stack; // Return the raw stack amount as string (in Wei)
-      }
-      return "0"; // Return "0" if no player or chips data found
+const getChipAmount = (seatIndex: number): string => {
+      // grab the actions array (or empty)
+      const actions: ActionDTO[] = gameState.previousActions ?? [];
+
+      //read Current round from GameState
+      // const currentHand = gameState.handNumber;
+
+      // filter by seat
+      const myActions = actions.filter(a => a.seat === seatIndex);
+
+      //To Do Helper to format chip amount 
+
+      // initial value 0 to prevent enpty array error, return new total at each step
+      const sumOfBets = myActions.reduce((total, action) => total + (action.amount ?? 0), 0 );
+
+      // Che
+      console.log(`Sum of Bets are: ${sumOfBets}`);
+
+      // const formattedAmount = sumOfBets / 10e18;
+      
+      // console.log(`Formatted Amount is: ${formattedAmount}`);
+
+
+      return sumOfBets.toString();
     };
+
+
     
     return {
       getChipAmount,
