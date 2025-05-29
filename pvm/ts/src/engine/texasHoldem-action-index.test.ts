@@ -29,8 +29,8 @@ describe("Texas Holdem - Action Index", () => {
 
         it.only("should reset turn index to 0 when game is reinitialized", () => {
             // Add players
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, 1);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, 2);
 
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3, gameOptions.smallBlind);
@@ -50,8 +50,8 @@ describe("Texas Holdem - Action Index", () => {
     describe("Action Index Increments", () => {
         beforeEach(() => {
             // Add two players for the tests
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, 1);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, 2);
             
             // Reset the index to ensure we start from a known state
             // Reinitialize game
