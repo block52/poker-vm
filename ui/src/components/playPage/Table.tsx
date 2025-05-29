@@ -98,7 +98,6 @@ import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner in
 
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
-import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 import { PositionArray } from "../../types/index";
@@ -236,7 +235,7 @@ const Table = () => {
     const { leaveTable, isLeaving } = useTableLeave(id);
 
     // Add the useTableState hook to get table state properties
-    const { formattedTotalPot, tableSize } = useTableState(id, 5000);
+    const { currentRound, formattedTotalPot, tableSize } = useTableState();
 
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);

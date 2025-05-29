@@ -7,15 +7,15 @@ import { useGameStateContext } from "../context/GameStateContext";
 /**
  * Custom hook to fetch player data for a specific seat
  * 
- * SIMPLIFIED: Uses GameStateContext directly instead of useGameState
- * This prevents creating multiple WebSocket connections for the same table
+ * NOTE: Player data is handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time player data from that context.
  * 
- * @param tableId The ID of the table (not used - Context manages subscription)
  * @param seatIndex The seat index to get player data for
  * @returns Object with player data and utility functions
  */
-export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataReturn => {
-  // Get game state directly from Context - no additional WebSocket connections
+export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
+  // Get game state directly from Context - real-time data via WebSocket
   const { gameState, error, isLoading } = useGameStateContext();
   
   // Get player data from the table state
@@ -56,12 +56,6 @@ export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataR
     return gameState?.round || null;
   }, [gameState]);
 
-  // Manual refresh function (no-op since WebSocket provides real-time data)
-  const refresh = React.useCallback(async () => {
-    console.log("Refresh called - WebSocket provides real-time data, no manual refresh needed");
-    return gameState;
-  }, [gameState]);
-  
   return {
     playerData,
     stackValue,
@@ -70,7 +64,6 @@ export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataR
     holeCards,
     round,
     isLoading,
-    error,
-    refresh
+    error
   };
 }; 

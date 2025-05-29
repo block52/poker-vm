@@ -65,7 +65,7 @@ type OppositePlayerProps = {
 
 const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
     const { id } = useParams<{ id: string }>();
-    const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
+    const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo(id);
     const { showingPlayers } = useShowingCardsByAddress();
 

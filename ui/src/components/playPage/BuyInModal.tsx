@@ -18,7 +18,7 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
     const [, setBalanceError] = useState<Error | null>(null);
     const [publicKey, ] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
-    const { minBuyInWei, maxBuyInWei } = useMinAndMaxBuyIns(tableId);
+    const { minBuyInWei, maxBuyInWei } = useMinAndMaxBuyIns();
 
     // Format the buy-in values using utility functions
     const minBuyInFormatted = formatWeiToSimpleDollars(minBuyInWei);

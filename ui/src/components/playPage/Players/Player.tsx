@@ -10,7 +10,7 @@ import type { PlayerProps } from "../../../types/index";
 const Player: React.FC<PlayerProps> = memo(
   ({ left, top, index, currentIndex, color, status }) => {
     const { id } = useParams<{ id: string }>();
-    const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(id, index);
+    const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo(id);
 
     // 1) detect when any winner exists
