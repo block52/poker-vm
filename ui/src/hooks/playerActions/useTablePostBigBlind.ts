@@ -12,7 +12,7 @@ export function useTablePostBigBlind(tableId?: string) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { client } = useNodeRpc();
-    const { gameOptions } = useGameOptions(tableId);
+    const { gameOptions } = useGameOptions();
 
     /**
      * Posts a big blind on the specified table

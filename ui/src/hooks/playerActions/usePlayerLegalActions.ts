@@ -62,13 +62,8 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
                 currentPlayer = gameState.players?.find((player: PlayerDTO) => player.address?.toLowerCase().includes(userAddress.substring(0, 10).toLowerCase())) ?? null;
             }
 
-            isPlayerInGame = currentPlayer === undefined || currentPlayer === null;
-
-            // if (currentPlayer) {
-            //     isPlayerInGame = true;
-            // } else {
-            //     isPlayerInGame = false;
-            // }
+            isPlayerInGame = !!currentPlayer;
+           
         }
 
         // If no player found with the user's address, use the first player with legal actions

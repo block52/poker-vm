@@ -35,7 +35,7 @@ const PokerActionPanel: React.FC = () => {
     const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions();
-    const { gameOptions } = useGameOptions(tableId);
+    const { gameOptions } = useGameOptions();
     const { dealCards, isDealing } = useTableDeal(tableId);
     const { checkHand } = useTableCheck(tableId);
     const { foldHand } = useTableFold(tableId);
@@ -51,7 +51,7 @@ const PokerActionPanel: React.FC = () => {
     const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
-    const { currentRound, formattedTotalPot } = useTableState(tableId);
+    const { currentRound, formattedTotalPot } = useTableState();
 
     const [publicKey, setPublicKey] = useState<string>();
     const [privateKey, setPrivateKey] = useState<string>();

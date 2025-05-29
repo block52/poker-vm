@@ -77,7 +77,7 @@ import "./Table.css"; // Import the Table CSS file
 
 // 1. Core Data Providers
 import { useTableData } from "../../hooks/useTableData"; // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
-import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
+import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides currentUserSeat - the current user's seat position and userDataBySeat - object for direct seat-to-player lookup
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 
 //2. Visual Position/State Providers
@@ -98,7 +98,6 @@ import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner in
 
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
-import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 import { PositionArray } from "../../types/index";
@@ -147,7 +146,7 @@ const Table = () => {
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
     // Update to use the imported hook
-    const tableDataValues = useTableData(id);
+    const tableDataValues = useTableData();
 
     // invoke hook for seat loop
     const { winnerInfo } = useWinnerInfo(id);
@@ -220,7 +219,7 @@ const Table = () => {
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
 
     // Add the usePlayerSeatInfo hook
-    const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
+    const { currentUserSeat, userDataBySeat } = usePlayerSeatInfo();
 
     // Add the useNextToActInfo hook
     const {
@@ -236,7 +235,7 @@ const Table = () => {
     const { leaveTable, isLeaving } = useTableLeave(id);
 
     // Add the useTableState hook to get table state properties
-    const { formattedTotalPot, tableSize } = useTableState(id, 5000);
+    const { currentRound, formattedTotalPot, tableSize } = useTableState();
 
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
@@ -245,7 +244,7 @@ const Table = () => {
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
 
     // Add the useGameOptions hook
-    const { gameOptions } = useGameOptions(id);
+    const { gameOptions } = useGameOptions();
 
     // Memoize formatted values
     const formattedValues = useMemo(
@@ -282,10 +281,10 @@ const Table = () => {
     // Memoize user data
     const userData = useMemo(() => {
         if (currentUserSeat >= 0) {
-            return getUserBySeat(currentUserSeat);
+            return userDataBySeat[currentUserSeat] || null;
         }
         return null;
-    }, [currentUserSeat, getUserBySeat]);
+    }, [currentUserSeat, userDataBySeat]);
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
