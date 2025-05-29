@@ -362,7 +362,7 @@ const PokerActionPanel: React.FC = () => {
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
+        <div className="fixed bottom-20 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
             <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
@@ -741,13 +741,13 @@ transition-all duration-200 font-medium min-w-[100px]"
 
                 {/* Sit In / Sit Out Buttons - Bottom Right Area */}
                 {isUserInTable && (
-                    <div className="fixed bottom-4 right-[30%] flex gap-2 z-20">
+                    <div className="fixed bottom-4 right-4 flex gap-2 z-30">
                         {isPlayerSittingOut ? (
                             <button
                                 onClick={handleSitIn}
                                 className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                text-white font-medium py-1.5 px-4 rounded-lg shadow-md transition-all duration-200 
-                                border border-[#3a9188] hover:border-[#64ffda] flex items-center text-xs"
+                                text-white font-medium py-2 px-6 rounded-lg shadow-lg transition-all duration-200 
+                                border border-[#3a9188] hover:border-[#64ffda] flex items-center text-sm transform hover:scale-105"
                                 disabled={isSittingIn}
                             >
                                 {isSittingIn ? "SITTING IN..." : "I AM BACK"}
@@ -756,8 +756,8 @@ transition-all duration-200 font-medium min-w-[100px]"
                             <button
                                 onClick={handleSitOut}
                                 className="bg-gradient-to-r from-[#4b5563] to-[#374151] hover:from-[#374151] hover:to-[#1f2937] 
-                                text-white font-medium py-1.5 px-4 rounded-lg shadow-md transition-all duration-200 
-                                border border-[#6b7280] hover:border-[#9ca3af] flex items-center text-xs"
+                                text-white font-medium py-2 px-6 rounded-lg shadow-lg transition-all duration-200 
+                                border border-[#6b7280] hover:border-[#9ca3af] flex items-center text-sm transform hover:scale-105"
                                 disabled={isSittingOut}
                             >
                                 {isSittingOut ? "SITTING OUT..." : "SIT OUT"}

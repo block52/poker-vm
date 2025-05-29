@@ -28,13 +28,6 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
         // Get dealer seat from game state
         const dealerSeat = gameState.dealer;
         
-        // Debug logging to see what we're getting
-        console.log("🎯 Dealer Position Debug:", {
-            dealerSeat,
-            gameStateDealer: gameState.dealer,
-            tableSize: gameState.gameOptions?.maxPlayers
-        });
-        
         // Default position if no dealer seat is set
         let dealerButtonPosition = { left: "0px", top: "0px" };
         let isDealerButtonVisible = false;
@@ -62,14 +55,6 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
             // Get position from dealer position array based on table size
             const positions = tableSize === 6 ? dealerPosition.six : dealerPosition.nine;
             
-            console.log("🎯 Dealer Position Calculation:", {
-                dealerSeat,
-                dealerIndex,
-                tableSize,
-                positionsLength: positions.length,
-                selectedPosition: positions[dealerIndex]
-            });
-            
             if (dealerIndex < positions.length) {
                 dealerButtonPosition = {
                     left: positions[dealerIndex].left || "0px",
@@ -77,7 +62,6 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
                 };
                 isDealerButtonVisible = true;
                 
-                console.log("🎯 Final Dealer Button Position:", dealerButtonPosition);
             }
         }
 
