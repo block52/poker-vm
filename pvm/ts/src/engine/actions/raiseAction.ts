@@ -3,6 +3,10 @@ import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, TurnWithSeat } from "../types";
 
+type BetOrRaise = TurnWithSeat & {
+    increase: bigint; // Amount by which the bet or raise was increased
+}
+
 class RaiseAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
         return PlayerActionType.RAISE;
@@ -62,10 +66,10 @@ class RaiseAction extends BaseAction implements IAction {
         // Standard minimum raise is double the previous bet/raise
         // But in all cases, a player must add at least the big blind
         const doubleLastBet = largestBet * 2n;
-        const lastBetPlusBigBlind = largestBet + this.game.bigBlind;
+        const increment = this.findRaiseIncrement(lastBetOrRaise);
         
         // Use the larger of the two options for minimum raise
-        const minRaise = doubleLastBet > lastBetPlusBigBlind ? doubleLastBet : lastBetPlusBigBlind;
+        const minRaise = doubleLastBet > increment + largestBet ? doubleLastBet : increment + largestBet;
         
         // Calculate how much more the player needs to add
         let minAmountToAdd = minRaise - playerCurrentBet;
@@ -84,12 +88,36 @@ class RaiseAction extends BaseAction implements IAction {
     // Find the last bet or raise in the current round
     private findLastBetOrRaise(): TurnWithSeat | undefined {
         const actions = this.game.getActionsForRound(this.game.currentRound);
-        for (let i = actions.length - 1; i >= 0; i--) {
-            if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
-                return actions[i];
+
+        // Filter for bets and raises
+        const betOrRaiseActions = actions.filter(action =>
+            action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE
+        );
+
+        return betOrRaiseActions.length > 0 ? betOrRaiseActions[betOrRaiseActions.length - 1] : undefined;
+
+        // for (let i = actions.length - 1; i >= 0; i--) {
+        //     if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
+        //         return actions[i];
+        //     }
+        // }
+    }
+
+        // Find the last bet or raise in the current round
+    private findRaiseIncrement(lastBetOrRaise: TurnWithSeat): bigint {
+        // const lastBetOrRaise = this.findLastBetOrRaise();
+        const actions = this.game.getActionsForRound(this.game.currentRound);
+
+        if (!lastBetOrRaise) return 0n;
+
+        for (let i = lastBetOrRaise.index - 1; i >= 0; i--) {
+            if (actions[i].action === PlayerActionType.RAISE || actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.CALL) {
+                // Return the increment amount from the last raise or bet
+                return (lastBetOrRaise.amount || 0n) + (actions[i].amount || 0n);
             }
         }
-        return undefined;
+
+        return 0n; // Placeholder, as the increment logic is not defined in the original code
     }
 
     protected getDeductAmount(player: Player, amount?: bigint): bigint {
