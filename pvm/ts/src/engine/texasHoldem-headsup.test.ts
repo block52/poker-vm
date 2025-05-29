@@ -1,6 +1,6 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Ante - Heads Up", () => {
@@ -35,7 +35,6 @@ describe("Texas Holdem - Ante - Heads Up", () => {
     });
 
     describe("Heads up", () => {
-
         const SMALL_BLIND_PLAYER = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
         const BIG_BLIND_PLAYER = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
 
@@ -43,8 +42,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
         });
 
         it("should have the correct players pre flop", () => {
@@ -95,10 +94,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         it("should have correct legal actions after posting blinds", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
-            
+
             // Add a DEAL action to advance from ANTE to PREFLOP
             game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 5);
-            
+
             // Now we're in PREFLOP round, so CALL is a valid action
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 6, ONE_TOKEN);
 
@@ -113,7 +112,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
-            
+
             // Add a DEAL action to advance from ANTE to PREFLOP
             game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 5);
 
@@ -123,7 +122,6 @@ describe("Texas Holdem - Ante - Heads Up", () => {
     });
 
     describe("Heads up end to end", () => {
-
         const SMALL_BLIND_PLAYER = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
         const BIG_BLIND_PLAYER = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
 
@@ -132,8 +130,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             expect(game.handNumber).toEqual(1);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
 
             const json: TexasHoldemStateDTO = game.toJson();
             expect(json).toBeDefined();
@@ -234,8 +232,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             expect(game.handNumber).toEqual(1);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
         });
 
         it("should do end to end with legal actions", () => {
@@ -316,7 +314,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actions.length).toEqual(2); // Muck or Show
             expect(actions[0].action).toEqual(PlayerActionType.MUCK);
             expect(actions[1].action).toEqual(PlayerActionType.SHOW);
-            
+
             // Both reveal cards
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.SHOW, 15, 0n);
 

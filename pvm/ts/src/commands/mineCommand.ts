@@ -199,24 +199,39 @@ export class MineCommand implements ISignedCommand<Block | null> {
         const validTxs: Transaction[] = [];
         let duplicateCount = 0;
 
-        // Do in parallel
-        const promises = txs.map(async (tx) => {
+        // // Do in parallel
+        // const promises = txs.map(async (tx) => {
+        //     const exists = await this.transactionManagement.exists(tx.hash);
+        //     if (exists) {
+        //         duplicateCount++;
+        //         return null;
+        //     }
+        //     return tx;
+        // });
+
+        for (let i = 0; i < txs.length; i++) {
+            const tx = txs[i];
             const exists = await this.transactionManagement.exists(tx.hash);
             if (exists) {
+                console.warn(`Duplicate transaction found: ${tx.hash}`);
                 duplicateCount++;
-                return null;
+                continue;
             }
-            return tx;
-        });
-
-        const results = await Promise.all(promises);
-        for (const result of results) {
-            if (result) {
-                validTxs.push(result);
-            }
+            console.log(`Adding transaction: ${tx.hash}`);
+            validTxs.push(tx);
         }
-        console.log(`Duplicate transactions: ${duplicateCount}`);
-        console.log(`Valid transactions: ${validTxs.length}`);
+
+        // // const results = await Promise.all(promises);
+        // for (const result of results) {
+        //     if (result) {
+        //         validTxs.push(result);
+        //     }
+        // }
+
+        validTxs.sort((a, b) => a.timestamp - b.timestamp);
+
+        console.log(`MineCommand: Duplicate transactions: ${duplicateCount}`);
+        console.log(`MineCommand: Valid transactions: ${validTxs.length}`);
         return validTxs;
     }
 }
