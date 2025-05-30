@@ -50,7 +50,7 @@ export class Transaction implements ITransaction, ICryptoModel, IJSONModel {
     }
 
     public calculateHash(): string {
-        return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.nonce}`).digest("hex");
+        return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.index}${this.nonce}`).digest("hex");
     }
 
     public static async create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Promise<Transaction> {
@@ -59,7 +59,7 @@ export class Transaction implements ITransaction, ICryptoModel, IJSONModel {
         // const signature = await signData(privateKey, _data);
         // const hash = createHash("sha256").update(_data).digest("hex");
 
-        const hash = createHash("sha256").update(`${to}${from}${value}${nonce}${data}`).digest("hex");
+        const hash = createHash("sha256").update(`${to}${from}${value}${nonce}${timestamp}${data}`).digest("hex");
         const signature = await signData(privateKey, hash);
 
         return new Transaction(to, from, value, hash, signature, timestamp, nonce, undefined, data);
