@@ -142,7 +142,8 @@ const Dashboard: React.FC = () => {
     }, [handleMouseMove]);
 
     // Game contract addresses - in a real app, these would come from the API
-    const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd34326"; // Example address
+    // const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd34326"; // Example address
+    const DEFAULT_GAME_CONTRACT = "0xfe4ddc39ff3d703ee2d91021a52bc69b0680e2186a"; // Example address
 
     // Function to handle creating a new game using NodeRpcClient directly
     const handleCreateNewGame = async () => {
