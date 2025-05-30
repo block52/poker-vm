@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { PlayerChipDataReturn } from "../types/index";
 import { useGameStateContext } from "../context/GameStateContext";
 import { ActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
@@ -14,6 +15,73 @@ import { ActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState, isLoading, error } = useGameStateContext();
+
+    // Memoized calculation of all player chip amounts
+    const playerChipAmounts = useMemo(() => {
+        const amounts: Record<number, string> = {};
+        
+        // Handle loading, error, or invalid game state
+        if (isLoading || error || !gameState || !gameState.players || !Array.isArray(gameState.players) || !gameState.previousActions || !Array.isArray(gameState.previousActions)) {
+            return amounts; // Return empty object for all invalid states
+        }
+
+        // Define betting actions inside useMemo to avoid dependency changes
+        const bettingActions = [
+            PlayerActionType.SMALL_BLIND,
+            PlayerActionType.BIG_BLIND, 
+            PlayerActionType.BET,
+            PlayerActionType.CALL,
+            PlayerActionType.RAISE,
+            PlayerActionType.ALL_IN
+        ];
+        
+        gameState.players.forEach(player => {
+            if (!player.seat || !player.address) return;
+            
+            const playerActions = gameState.previousActions.filter((action: ActionDTO) => {
+                // Validate action structure
+                if (!action || !action.playerId || !action.action) {
+                    return false;
+                }
+
+                // Only include this player's actions
+                if (action.playerId !== player.address) {
+                    return false;
+                }
+                
+                // Only include betting actions that represent chips on the table
+                return bettingActions.includes(action.action as PlayerActionType);
+            });
+            
+            let sumOfBets = BigInt(0);
+            for (const action of playerActions) {
+                try {
+                    // Only place where we need try-catch - BigInt conversion can fail
+                    const amount = BigInt(action.amount || "0");
+                    sumOfBets += amount;
+                } catch (err) {
+                    console.warn(`[usePlayerChipData] Invalid amount: ${action.amount}, ${err}`);
+                    // Continue with other actions instead of failing completely
+                }
+            }
+            
+            amounts[player.seat] = sumOfBets.toString();
+        });
+        
+        return amounts;
+    }, [gameState, isLoading, error]);
+
+    // Simplified function to get chip amount for a given seat
+    const getChipAmount = (seatIndex: number): string => {
+        // Input validation
+        if (!Number.isInteger(seatIndex) || seatIndex < 1) {
+            console.warn(`[usePlayerChipData] Invalid seat index: ${seatIndex}`);
+            return "0";
+        }
+        
+        // Return cached value
+        return playerChipAmounts[seatIndex] || "0";
+    };
 
     // Default values in case of error or loading
     const defaultState: PlayerChipDataReturn = {
@@ -47,71 +115,6 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
             error: null
         };
     }
-
-    // Define betting actions once
-    const bettingActions = [
-        PlayerActionType.SMALL_BLIND,
-        PlayerActionType.BIG_BLIND, 
-        PlayerActionType.BET,
-        PlayerActionType.CALL,
-        PlayerActionType.RAISE,
-        PlayerActionType.ALL_IN
-    ];
-
-    // Function to get chip amount for a given seat
-    const getChipAmount = (seatIndex: number): string => {
-        // Input validation
-        if (!Number.isInteger(seatIndex) || seatIndex < 1) {
-            console.warn(`[usePlayerChipData] Invalid seat index: ${seatIndex}`);
-            return "0";
-        }
-
-        // 1. Find the player sitting at this seat
-        const playerAtSeat = gameState.players.find(player => player.seat === seatIndex);
-        
-        // If no player at this seat, return "0" (this is normal)
-        if (!playerAtSeat) {
-            return "0";
-        }
-
-        // Validate player data
-        if (!playerAtSeat.address) {
-            console.warn(`[usePlayerChipData] Player at seat ${seatIndex} has no address`);
-            return "0";
-        }
-
-        // 2. Get all previous actions for this player by filtering by playerId (address)
-        const playerActions = gameState.previousActions.filter((action: ActionDTO) => {
-            // Validate action structure
-            if (!action || !action.playerId || !action.action) {
-                return false;
-            }
-
-            // Only include this player's actions
-            if (action.playerId !== playerAtSeat.address) {
-                return false;
-            }
-            
-            // 3. Only include betting actions that represent chips on the table
-            return bettingActions.includes(action.action as PlayerActionType);
-        });
-
-        // 4. Sum up all the amounts from this player's betting actions
-        let sumOfBets = BigInt(0);
-        
-        for (const action of playerActions) {
-            try {
-                // Only place where we need try-catch - BigInt conversion can fail
-                const amount = BigInt(action.amount || "0");
-                sumOfBets += amount;
-                } catch (err) {
-                    console.warn(`[usePlayerChipData] Invalid amount in action: ${action}, ${err}`);
-                // Continue with other actions instead of failing completely
-            }
-        }
-        
-        return sumOfBets.toString();
-    };
 
     return {
         getChipAmount,
