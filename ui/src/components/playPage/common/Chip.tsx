@@ -1,7 +1,7 @@
-import { formatChipAmount } from "../../../utils/numberUtils";
+import { formatWeiToSimpleDollars } from "../../../utils/numberUtils";
 
 type ChipProps = {
-    amount: string | number;
+    amount: string | bigint;
 };
 
 const Chip: React.FC<ChipProps> = ({ amount }) => {
@@ -10,9 +10,9 @@ const Chip: React.FC<ChipProps> = ({ amount }) => {
     const numericAmount = Number(amountStr);
     
     if (numericAmount > 0) {
-        // Format the chip amount properly from Wei-stored USDC to readable dollar amounts
-        // This handles the conversion from Wei format to proper USDC display
-        const formattedAmount = formatChipAmount(amountStr);
+        // Format the chip amount properly from Wei-stored amounts to readable dollar amounts
+        // Since sumOfBets is already in Wei format representing dollar amounts, we use the simple conversion
+        const formattedAmount = formatWeiToSimpleDollars(amountStr);
         
         return (
             <div className="relative h-[20px] pl-[10px] pr-[10px] rounded-full bg-[#00000054] flex items-center">
