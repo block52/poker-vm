@@ -378,8 +378,7 @@ const PokerActionPanel: React.FC = () => {
 
         // Check if DEAL action is available in legal actions
         const hasDealAction = legalActions.some(action => 
-            action.action === NonPlayerActionType.DEAL || 
-            action.action?.toString() === NonPlayerActionType.DEAL?.toString()
+            action.action === NonPlayerActionType.DEAL
         );
 
         if (hasDealAction) {
