@@ -1,7 +1,7 @@
 import { formatWeiToSimpleDollars } from "../../../utils/numberUtils";
 
 type ChipProps = {
-    amount: string | number;
+    amount: string | bigint;
 };
 
 const Chip: React.FC<ChipProps> = ({ amount }) => {
