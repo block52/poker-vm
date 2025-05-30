@@ -21,7 +21,7 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
         const amounts: Record<number, string> = {};
         
         // Handle loading, error, or invalid game state
-        if (isLoading || error || !gameState || !gameState.players || !Array.isArray(gameState.players) || !gameState.previousActions || !Array.isArray(gameState.previousActions)) {
+        if (!gameState || !gameState.players || !Array.isArray(gameState.players) || !gameState.previousActions || !Array.isArray(gameState.previousActions)) {
             return amounts; // Return empty object for all invalid states
         }
 
@@ -69,7 +69,7 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
         });
         
         return amounts;
-    }, [gameState, isLoading, error]);
+    }, [gameState]);
 
     // Simplified function to get chip amount for a given seat
     const getChipAmount = (seatIndex: number): string => {
