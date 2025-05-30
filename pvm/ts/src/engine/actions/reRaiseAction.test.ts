@@ -104,16 +104,6 @@ describe("Re Raise Action", () => {
         bets.set(PLAYER_4, 1300000000000000000n); // 13 tokens
         jest.spyOn(game, "getBets").mockReturnValue(bets);
 
-        // const turn = {
-        //     playerId: "0x2222222222222222222222222222222222222222",
-        //     action: PlayerActionType.BET,
-        //     amount: FIFTY_TOKENS, // 50 tokens
-        //     seat: 2,
-        //     timestamp: Date.now(),
-        //     index: 0
-        // };
-
-        // jest.spyOn(game, "getLastRoundAction").mockReturnValue(turn);
 
         // Mock addAction method on game
         game.addAction = jest.fn();
