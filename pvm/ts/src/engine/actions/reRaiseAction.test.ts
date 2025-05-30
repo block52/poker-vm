@@ -2,19 +2,8 @@ import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisba
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import RaiseAction from "./raiseAction";
-import { IUpdate, TurnWithSeat } from "../types";
-import {
-    FIFTY_TOKENS,
-    getDefaultGame,
-    ONE_HUNDRED_TOKENS,
-    ONE_THOUSAND_TOKENS,
-    ONE_TOKEN,
-    TWO_TOKENS,
-    TEN_TOKENS,
-    TWENTY_TOKENS,
-    TWO_THOUSAND_TOKENS,
-    FIVE_TOKENS
-} from "../testConstants";
+import { IUpdate } from "../types";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, ONE_TOKEN, TWO_TOKENS, FIVE_TOKENS } from "../testConstants";
 
 describe("Re Raise Action", () => {
     let game: TexasHoldemGame;
@@ -23,7 +12,6 @@ describe("Re Raise Action", () => {
     let player: Player;
 
     beforeEach(() => {
-
         const PLAYER_1 = "0x11111111111111111111111111111111111111111"; // Mock player address
         const PLAYER_2 = "0x22222222222222222222222222222222222222222"; // Mock player address
         const PLAYER_3 = "0x33333333333333333333333333333333333333333"; // Mock player address
@@ -31,7 +19,7 @@ describe("Re Raise Action", () => {
 
         // Setup initial game state
         const playerStates = new Map<number, Player | null>();
-        
+
         const p1 = new Player(
             PLAYER_1,
             undefined, // lastAction
@@ -94,7 +82,7 @@ describe("Re Raise Action", () => {
                 index: 3,
                 seat: 4,
                 timestamp: Date.now()
-            },
+            }
         ]);
 
         const bets = new Map<string, bigint>();
@@ -103,7 +91,6 @@ describe("Re Raise Action", () => {
         bets.set(PLAYER_3, FIVE_TOKENS); // 5 tokens
         bets.set(PLAYER_4, 1300000000000000000n); // 13 tokens
         jest.spyOn(game, "getBets").mockReturnValue(bets);
-
 
         // Mock addAction method on game
         game.addAction = jest.fn();
