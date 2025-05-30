@@ -8,6 +8,8 @@ import "./WinAnimation.css";
 
 import DollarChip from "./../../../assets/DollarChip.svg";
 
+import DollarChip2 from "./../../../assets/DollarChip2.svg";
+
 const WinAnimation: React.FC<WinAnimationProps> = React.memo(({ index }) => {
   const { id } = useParams<{ id: string }>();
   const { tableSize } = useTableAnimations(id);
@@ -51,7 +53,7 @@ const WinAnimation: React.FC<WinAnimationProps> = React.memo(({ index }) => {
             key={i}
             className="bubble"
             style={{
-              backgroundImage: `url(${DollarChip})`,
+              backgroundImage: `url(${DollarChip2})`,
               // you can still override size, timing, etc. in CSS
             }}
           />

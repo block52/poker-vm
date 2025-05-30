@@ -3,6 +3,10 @@ import * as React from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
+import { formatWeiToSimpleDollars, formatWeiToUSD } from "../utils/numberUtils";
+import { useNodeRpc } from "../context/NodeRpcContext"; // Import NodeRpcContext
+import DollarChip from "./../assets/DollarChip.svg";
+import dollarchip2 from "./../assets/DollarChip2.svg";
 
 // Import our custom hooks
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
@@ -46,9 +50,21 @@ const PokerActionPanel: React.FC = () => {
     const { betHand } = useTableBet(tableId);
     const { muckCards, isMucking } = useTableMuck(tableId);
     const { showCards, isShowing } = useTableShow(tableId);
+    const { client, isLoading: clientLoading, errorLogs, clearErrorLogs } = useNodeRpc();
+
+    const [accountBalance, setAccountBalance] = useState<string>("0");
+    const [balanceError, setBalanceError] = useState<Error | null>(null);
+
+    const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
 
     // Use the useNextToActInfo hook
-    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(tableId);
+    const {
+        seat: nextToActSeat,
+        player: nextToActPlayer,
+        isCurrentUserTurn,
+        availableActions: nextToActAvailableActions,
+        timeRemaining
+    } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState();
@@ -72,6 +88,46 @@ const PokerActionPanel: React.FC = () => {
     const hasAction = (actionType: string | PlayerActionType | NonPlayerActionType) => {
         return legalActions?.some(action => action.action === actionType || action.action?.toString() === actionType?.toString());
     };
+
+    // Function to fetch account balance
+    const fetchAccountBalance = useCallback(async () => {
+        if (!client) {
+            setBalanceError(new Error("RPC client not initialized"));
+            setIsBalanceLoading(false);
+            return;
+        }
+
+        try {
+            setIsBalanceLoading(true);
+
+            if (!publicKey) {
+                setBalanceError(new Error("No address available"));
+                setIsBalanceLoading(false);
+                return;
+            }
+
+            const account = await client.getAccount(publicKey);
+            setAccountBalance(account.balance.toString());
+
+            setBalanceError(null);
+        } catch (err) {
+            console.error("Error fetching account balance:", err);
+            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
+        } finally {
+            setIsBalanceLoading(false);
+        }
+    }, [client, publicKey]);
+
+    // Update to fetch balance when publicKey or client changes
+    useEffect(() => {
+        if (publicKey && client && !clientLoading) {
+            fetchAccountBalance();
+        }
+    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+
+    // Memopize the account balance formatting
+    const balanceFormatted = useMemo(() => (accountBalance ? formatWeiToUSD(accountBalance) : "0.00"), [accountBalance]);
+    console.log("Account Balance From footer:", balanceFormatted);
 
     // Check if actions are available using the helper function
     const hasDealAction = hasAction(NonPlayerActionType.DEAL);
@@ -119,6 +175,38 @@ const PokerActionPanel: React.FC = () => {
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
     const [raiseInputRaw, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
+
+    //Buy In modal
+    const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+    const [buyAmountRaw, setBuyAmountRaw] = useState<string>("");
+
+    // TODO: replace with your real wallet‐balance hook
+    const walletBalance = useMemo(() => balanceFormatted, []);
+
+    // How much the user already has o the table
+    const onTableBalance = useMemo(() => (userPlayer ? Number(ethers.formatUnits(userPlayer.stack || "0", 18)) : 0), [userPlayer]);
+
+    // What Players can top up
+    const maxTableBuyIn = useMemo(() => {
+        try {
+            // gameOptions.maxBuyIn is a BigInt in wei (18 decimals)
+            const raw = gameOptions.maxBuyIn ?? BigInt(0);
+            return Number(ethers.formatUnits(raw, 18));
+        } catch (err) {
+            console.error("maxTableBuyIn error:", err);
+            return 0;
+        }
+    }, [gameOptions.maxBuyIn]);
+
+    const availableToBuy = useMemo(() => {
+        try {
+            // never negative; cap by walletBalance
+            return Math.min(walletBalance, Math.max(0, maxTableBuyIn - onTableBalance));
+        } catch (err) {
+            console.error("availableToBuy error:", err);
+            return 0;
+        }
+    }, [walletBalance, maxTableBuyIn, onTableBalance]);
 
     const isRaiseAmountInvalid = hasRaiseAction
         ? raiseAmount < minRaise || raiseAmount > maxRaise
@@ -267,6 +355,49 @@ const PokerActionPanel: React.FC = () => {
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
 
+    // Buy in Handlers
+    // HANDLERS
+    const openBuyModal = useCallback(() => {
+        try {
+            setBuyAmountRaw("");
+            setIsBuyModalOpen(true);
+        } catch (err) {
+            console.error("openBuyModal error:", err);
+        }
+    }, []);
+
+    const closeBuyModal = useCallback(() => {
+        try {
+            setIsBuyModalOpen(false);
+        } catch (err) {
+            console.error("closeBuyModal error:", err);
+        }
+    }, []);
+
+    const handleMaxBuy = useCallback(() => {
+        try {
+            setBuyAmountRaw(availableToBuy.toFixed(2));
+        } catch (err) {
+            console.error("handleMaxBuy error:", err);
+        }
+    }, [availableToBuy]);
+
+    const handleBuyConfirm = useCallback(() => {
+        try {
+            const raw = Number(buyAmountRaw);
+            if (isNaN(raw) || raw <= 0) {
+                console.warn("Invalid buy amount:", buyAmountRaw);
+                return;
+            }
+            const amt = Math.min(raw, availableToBuy);
+            // TODO: call your buy-in hook here with `amt`
+            console.log("BUY CHIPS →", amt);
+            setIsBuyModalOpen(false);
+        } catch (err) {
+            console.error("handleBuyConfirm error:", err);
+        }
+    }, [buyAmountRaw, availableToBuy]);
+
     // Add a handler for the deal button
     const handleDeal = () => {
         // Get private key
@@ -362,7 +493,89 @@ const PokerActionPanel: React.FC = () => {
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
 
     return (
-        <div className="fixed bottom-20 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
+        <div className="fixed bottom-20 left-0 right-0 text-white  p-4 pb-6 flex justify-center items-center relative">
+            {/* Left side Component*/}
+            <div className="fixed bottom-40 left-4 z-30">
+                <div className="relative inline-block text-left">
+                    {/* Trigger */}
+                    <button onClick={openBuyModal} className="flex items-center space-x-1 cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155]
+hover:from-[#D1B000] hover:to-[#A38A00]
+active:bg-white/10 active:scale-105
+px-6 py-2 rounded-lg border border-[#3a546d]
+hover:border-[#FFDE2E] hover:shadow-[0_0_10px_rgba(255, 222, 46, 1)]
+transition-all duration-200 font-medium min-w-[100px]">
+                        {/* Chip Icon */}
+                        <img src= {dollarchip2} alt="Dollar Chip" className="h-5 w-5" />
+
+                        <span>Buy chips</span>
+
+                        {/* arrow flips when open */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className={`h-4 w-4 transform transition-transform duration-200 ${isBuyModalOpen ? "rotate-180" : ""}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    {isBuyModalOpen && (
+                        <>
+                            {/* Backdrop */}
+                            <div className="fixed inset-0 bg-black bg-opacity-50 z-30" onClick={closeBuyModal} />
+
+                            {/* Panel */}
+                            <div
+                                className={`
+            absolute bottom-full left-0 mb-2 z-50
+            w-64 sm:w-72
+            bg-gray-800 text-white rounded-lg shadow-lg
+            transform transition-all duration-200 origin-bottom
+            ${isBuyModalOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
+          `}
+                                style={{ pointerEvents: isBuyModalOpen ? "auto" : "none" }}
+                            >
+                                <div className="p-4 z-50">
+                                    <h3 className="text-center font-bold mb-2">Buy Chips</h3>
+                                    <div className="text-center mb-3 text-sm">
+                                        Playable balance
+                                        <br />
+                                        <strong>${balanceFormatted}</strong>
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        value={buyAmountRaw}
+                                        onChange={e => setBuyAmountRaw(e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full bg-gray-700 text-white rounded px-2 py-1 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    />
+
+                                    <div className="flex justify-between items-center mb-3 text-xs text-gray-400">
+                                        <button onClick={handleMaxBuy} className="underline">
+                                            MAX
+                                        </button>
+                                        <span>
+                                            Max. <strong>${availableToBuy.toFixed(2)}</strong>
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        onClick={handleBuyConfirm}
+                                        disabled={!buyAmountRaw || Number(buyAmountRaw) <= 0}
+                                        className="w-full bg-green-600 hover:bg-green-700 py-2 rounded disabled:opacity-50"
+                                    >
+                                        BUY
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+
             <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
