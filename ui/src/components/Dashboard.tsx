@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
 
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
-    const [selectedContractAddress, setSelectedContractAddress] = useState("0x22dfa2150160484310c5163f280f49e23b8fd34326");
+    const [selectedContractAddress, setSelectedContractAddress] = useState("0xfe4ddc39ff3d703ee2d91021a52bc69b0680e2186a");
     const [isCreatingGame, setIsCreatingGame] = useState(false);
     const [createGameError, setCreateGameError] = useState("");
     const [newGameAddress, setNewGameAddress] = useState("");
@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
             // Create the new table using the client's newTable method
             // We use the current user's public key as the "from" parameter
             // The "to" parameter is the game contract schema address
-            const result = await client.newTable(publicKey, gameContractAddress);
+            const result = await client.newTable(publicKey, DEFAULT_GAME_CONTRACT);
             
             if (result) {
                 // The result is the table ID (contract address)
