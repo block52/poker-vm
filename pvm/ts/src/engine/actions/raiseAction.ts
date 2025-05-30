@@ -98,12 +98,6 @@ class RaiseAction extends BaseAction implements IAction {
         );
 
         return betOrRaiseActions.length > 0 ? betOrRaiseActions[betOrRaiseActions.length - 1] : undefined;
-
-        // for (let i = actions.length - 1; i >= 0; i--) {
-        //     if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
-        //         return actions[i];
-        //     }
-        // }
     }
 
     // Find the last bet or raise in the current round
