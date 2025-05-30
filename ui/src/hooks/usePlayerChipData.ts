@@ -90,30 +90,9 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
         error
     };
 
-    // Early returns for expected states
+    // Early return only for loading/error states
     if (isLoading || error) {
         return defaultState;
-    }
-
-    // Defensive programming: validate gameState structure
-    if (!gameState) {
-        console.warn("[usePlayerChipData] No game state available");
-        return { ...defaultState, error: new Error("No game state available") };
-    }
-
-    if (!gameState.players || !Array.isArray(gameState.players)) {
-        console.warn("[usePlayerChipData] No players data found in game state");
-        return { ...defaultState, error: new Error("No players data found") };
-    }
-
-    if (!gameState.previousActions || !Array.isArray(gameState.previousActions)) {
-        console.warn("[usePlayerChipData] No previous actions found in game state");
-        // This might be normal for a new game, so don't error out
-        return {
-            getChipAmount: () => "0",
-            isLoading: false,
-            error: null
-        };
     }
 
     return {
