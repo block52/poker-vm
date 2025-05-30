@@ -33,11 +33,19 @@ function onRenderCallback(
 }
 
 root.render(
-    <React.StrictMode>
+    // React StrictMode is temporarily disabled because it causes effects to run twice in development,
+    // which creates rapid WebSocket connect/disconnect cycles. This leads to:
+    // 1. Multiple subscription attempts to the same table
+    // 2. Premature connection closures due to callback cleanup
+    // 3. Unstable real-time data flow
+    // The WebSocket singleton has debouncing to handle some re-renders, but StrictMode's
+    // double-execution pattern is too aggressive for real-time connections.
+    // TODO: Re-enable StrictMode and improve WebSocket resilience for production
+    // <React.StrictMode>
         <Profiler id="AppRoot" onRender={onRenderCallback}>
             <NodeRpcProvider nodeUrl={url}>
                 <App />
             </NodeRpcProvider>
         </Profiler>
-    </React.StrictMode>
+    // </React.StrictMode>
 );

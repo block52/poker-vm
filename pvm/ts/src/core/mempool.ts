@@ -7,7 +7,7 @@ export class Mempool {
     private readonly txMap = new Map<string, Transaction>();
     private readonly transactionManagement: ITransactionManagement;
 
-    constructor(readonly maxSize: number = 100) {
+    constructor(readonly maxSize: number = 4000) {
         this.transactionManagement = getTransactionInstance();
     }
 

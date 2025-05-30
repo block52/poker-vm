@@ -1,15 +1,19 @@
-import { useGameState } from "./useGameState";
-import { PlayerChipDataReturn, GameStateReturn } from "../types/index";
+import { PlayerChipDataReturn } from "../types/index";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
+import { useGameStateContext } from "../context/GameStateContext";
 
 /**
  * Custom hook to fetch and provide player chip data for each seat
- * @param tableId The ID of the table to fetch data for
+ * 
+ * SIMPLIFIED: Uses GameStateContext directly instead of useGameState
+ * This prevents creating multiple WebSocket connections for the same table
+ * 
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing player chip data mapped by seat
  */
 export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error }: GameStateReturn = useGameState(tableId);
+  // Get game state directly from Context - no additional WebSocket connections
+  const { gameState, isLoading, error } = useGameStateContext();
 
   // Default values in case of error or loading
   const defaultState: PlayerChipDataReturn = {

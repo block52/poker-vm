@@ -57,7 +57,8 @@ import Player from "./Players/Player";
 
 import Chip from "./common/Chip";
 import CustomDealer from "../../assets/CustomDealer.svg";
-import TurnAnimation from "./TurnAnimation/TurnAnimation";
+import TurnAnimation from "./Animations/TurnAnimation";
+import WinAnimation from "./Animations/WinAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
@@ -76,7 +77,7 @@ import "./Table.css"; // Import the Table CSS file
 
 // 1. Core Data Providers
 import { useTableData } from "../../hooks/useTableData"; // Used to create tableActivePlayers (filtered players), Contains seat numbers, addresses, and player statuses
-import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides currentUserSeat - the current user's seat position and getUserBySeat - function to get player data by seat number
+import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides currentUserSeat - the current user's seat position and userDataBySeat - object for direct seat-to-player lookup
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 
 //2. Visual Position/State Providers
@@ -92,13 +93,17 @@ import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGame
 // 4. Player Actions
 import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
 
+// 5. Winner Info
+import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner information for animations
+
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
-import { useShowingCardsByAddress } from "../../hooks/useShowingCardsByAddress";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
+import { useGameStateContext } from "../../context/GameStateContext";
+import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 
 // Enable this to see verbose logging
 const DEBUG_MODE = false;
@@ -140,9 +145,11 @@ const Table = () => {
     const [balanceError, setBalanceError] = useState<Error | null>(null);
     const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
-
     // Update to use the imported hook
-    const tableDataValues = useTableData(id);
+    const tableDataValues = useTableData();
+
+    // invoke hook for seat loop
+    const { winnerInfo } = useWinnerInfo(id);
 
     // Define calculateZoom first, before any usage
     const calculateZoom = useCallback(() => {
@@ -177,7 +184,7 @@ const Table = () => {
 
             const account = await client.getAccount(publicKey);
             setAccountBalance(account.balance.toString());
-       
+
             setBalanceError(null);
         } catch (err) {
             console.error("Error fetching account balance:", err);
@@ -208,24 +215,27 @@ const Table = () => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [debugMode, setDebugMode] = useState(false);
 
-
     // Use the hook directly instead of getting it from context
-    const { legalActions: playerLegalActions } = usePlayerLegalActions(id);
+    const { legalActions: playerLegalActions } = usePlayerLegalActions();
 
     // Add the usePlayerSeatInfo hook
-    const { currentUserSeat, getUserBySeat } = usePlayerSeatInfo(id);
+    const { currentUserSeat, userDataBySeat } = usePlayerSeatInfo();
 
     // Add the useNextToActInfo hook
-    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(id);
+    const {
+        seat: nextToActSeat,
+        player: nextToActPlayer,
+        isCurrentUserTurn,
+        availableActions: nextToActAvailableActions,
+        timeRemaining
+    } = useNextToActInfo(id);
 
-    // Add the useShowingCardsByAddress hook
-    const { showingPlayers, isShowdown, refresh: refreshShowingCards } = useShowingCardsByAddress(id);
 
     // Add the useTableLeave hook
     const { leaveTable, isLeaving } = useTableLeave(id);
 
     // Add the useTableState hook to get table state properties
-    const { currentRound, formattedTotalPot, tableSize } = useTableState(id, 5000);
+    const { currentRound, formattedTotalPot, tableSize } = useTableState();
 
     // Add the useDealerPosition hook
     const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
@@ -234,7 +244,7 @@ const Table = () => {
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
 
     // Add the useGameOptions hook
-    const { gameOptions } = useGameOptions(id);
+    const { gameOptions } = useGameOptions();
 
     // Memoize formatted values
     const formattedValues = useMemo(
@@ -262,7 +272,6 @@ const Table = () => {
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
-
     // Memoize user wallet address
     const userWalletAddress = useMemo(() => {
         const storedAddress = localStorage.getItem("user_eth_public_key");
@@ -272,14 +281,15 @@ const Table = () => {
     // Memoize user data
     const userData = useMemo(() => {
         if (currentUserSeat >= 0) {
-            return getUserBySeat(currentUserSeat);
+            return userDataBySeat[currentUserSeat] || null;
         }
         return null;
-    }, [currentUserSeat, getUserBySeat]);
+    }, [currentUserSeat, userDataBySeat]);
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
-        return tableDataValues.tableDataPlayers?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
+        const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
+        return activePlayers;
     }, [tableDataValues.tableDataPlayers]);
 
     // Add effect to track mouse movement
@@ -321,12 +331,8 @@ const Table = () => {
         [dealerPositionArray, startIndex]
     );
 
-    // Add useEffect to refresh showing cards when the round is showdown or end
-    useEffect(() => {
-        if (currentRound === "showdown" || currentRound === "end") {
-            refreshShowingCards();
-        }
-    }, [currentRound, refreshShowingCards]);
+    // Winner animations
+    const hasWinner = Array.isArray(winnerInfo) && winnerInfo.length > 0;
 
     // Restore the useEffect for the timer
     useEffect(() => {
@@ -393,7 +399,7 @@ const Table = () => {
             const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
 
             // Find if a player is seated at this position
-            const playerAtThisSeat = tableActivePlayers.find((p: any) => p.seat === seatNumber);
+            const playerAtThisSeat = tableActivePlayers.find((p: PlayerDTO) => p.seat === seatNumber);
 
             // Check if this seat belongs to the current user
             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
@@ -405,7 +411,7 @@ const Table = () => {
                 left: position.left,
                 top: position.top,
                 color: position.color,
-                status: tableDataValues.tableDataPlayers?.find((p: any) => p.seat === seatNumber)?.status,
+                status: tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.seat === seatNumber)?.status,
                 onJoin: updateBalanceOnPlayerJoin
             };
 
@@ -448,6 +454,16 @@ const Table = () => {
         }),
         [dealerButtonPosition]
     );
+
+    // This component manages the subscription:
+    const { subscribeToTable } = useGameStateContext();
+    useEffect(() => {
+        if (id) {
+            subscribeToTable(id);
+        }
+    }, [id]);
+
+
 
     return (
         <div className="table-container">
@@ -548,7 +564,6 @@ const Table = () => {
                                 <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                                     <span>Next To Act: Seat {nextToAct}</span>
                                 </span>
-                                
                             </div>
                         </div>
                     </div>
@@ -565,33 +580,31 @@ const Table = () => {
                             {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
                             {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                         </span>
-                        
+
                         {/* Dev Mode Toggle Button */}
                         <span
                             className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ml-2 ${
-                                debugMode 
-                                    ? "bg-red-500/30 text-red-400" 
-                                    : "text-gray-400 hover:text-blue-400"
+                                debugMode ? "bg-red-500/30 text-red-400" : "text-gray-400 hover:text-blue-400"
                             }`}
                             onClick={() => setDebugMode(prev => !prev)}
                             title="Developer Mode"
                         >
                             <FaCode size={16} />
                         </span>
-                        
+
                         <span
                             className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
                             onClick={() => {
                                 // Check player status
                                 if (
                                     tableDataValues.tableDataPlayers?.some(
-                                        (p: any) => p.address?.toLowerCase() === userWalletAddress && p.status !== "folded" && p.status !== "sitting-out"
+                                        (p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.SITTING_OUT
                                     )
                                 ) {
                                     alert("You must fold your hand before leaving the table.");
                                 } else {
                                     // Get player's current stack if they are seated
-                                    const playerData = tableDataValues.tableDataPlayers?.find((p: any) => p.address?.toLowerCase() === userWalletAddress);
+                                    const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
 
                                     if (leaveTable && playerData) {
                                         leaveTable({
@@ -685,10 +698,7 @@ const Table = () => {
                                         <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center shadow-[0_7px_15px_rgba(0,0,0,0.6)]">
                                             {/* //! Table */}
                                             <div className="table-logo">
-                                                <img
-                                                    src={placeholderLogo}
-                                                    alt="Placeholder Logo"
-                                                />
+                                                <img src={placeholderLogo} alt="Placeholder Logo" />
                                             </div>
                                             <div className="flex flex-col items-center justify-center -mt-20">
                                                 <div className="pot-display">
@@ -768,12 +778,18 @@ const Table = () => {
                                     </div>
                                     <div className="absolute inset-0 z-30">
                                         {reorderedPlayerArray.map((position, positionIndex) => {
+                                            const seatNum = ((positionIndex + startIndex) % tableSize) + 1;
+                                            const isWinnerSeat = !!winnerInfo?.some(w => w.seat === seatNum);
                                             const componentToRender = getComponentToRender(position, positionIndex);
+
                                             return (
                                                 <div key={positionIndex} className="z-[10]">
-                                                    <div>
-                                                        <MemoizedTurnAnimation index={positionIndex} />
-                                                    </div>
+                                                    {/* turn indicator only when no winner yet */}
+                                                    {!hasWinner && <MemoizedTurnAnimation index={positionIndex} />}
+
+                                                    {/* winner ripple when hand is over and this seat won */}
+                                                    {isWinnerSeat && <WinAnimation index={positionIndex} />}
+
                                                     {componentToRender}
                                                 </div>
                                             );
@@ -820,9 +836,8 @@ const Table = () => {
                         <span className="text-white">Your turn to act!</span>
                     ) : (
                         <span>
-                            Waiting for{" "}
-                            {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`}{" "}
-                            to act
+                            Waiting for {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to
+                            act
                         </span>
                     )}
                 </div>
@@ -845,7 +860,7 @@ const Table = () => {
             </div>
 
             {/* Debug Error Panel */}
-            <div className={`debug-panel ${debugMode ? "block" : "hidden" }`}>
+            <div className={`debug-panel ${debugMode ? "block" : "hidden"}`}>
                 <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
             </div>
         </div>

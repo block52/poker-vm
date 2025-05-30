@@ -1,4 +1,4 @@
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { PlayerDTO, PlayerStatus, TexasHoldemStateDTO, WinnerDTO } from "@bitcoinbrisbane/block52";
 import { formatWeiToDollars } from "../utils/numberUtils";
 import { WinnerInfoReturn } from "../types/index";
@@ -33,12 +33,12 @@ function getWinnerInfo(gameData: TexasHoldemStateDTO) {
 
 /**
  * Custom hook to fetch and provide winner information
- * @param tableId The ID of the table to fetch state for
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing winner information
  */
 export const useWinnerInfo = (tableId?: string): WinnerInfoReturn => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error } = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Default values in case of error or loading
     const defaultState: WinnerInfoReturn = {

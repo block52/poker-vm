@@ -1,38 +1,22 @@
-import { useGameState } from "../useGameState";
-import { useState } from "react";
-import useSWR from "swr";
+import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerLegalActionsResult } from "./types";
-import { LegalActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to fetch the legal actions for the current player
- * @param tableId The table ID
+ * 
+ * NOTE: Table identification and player legal actions are handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId (player address) parameters. This hook reads the real-time legal actions from that context.
+ * 
  * @returns Object containing the player's legal actions and related information
  */
-export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResult {
+export function usePlayerLegalActions(): PlayerLegalActionsResult {
     // Get the user's address from localStorage
     const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
 
-    // State for frequent refreshes
-    const [lastRefresh, setLastRefresh] = useState(0);
-
-    // Get game state from centralized hook
-    const { gameState, isLoading, error, refresh } = useGameState(tableId);
-
-    // Custom more frequent refresh for this critical hook
-    useSWR(
-        tableId ? `legal-actions-${tableId}` : null,
-        async () => {
-            const now = Date.now();
-            // Refresh if more than 5 seconds have elapsed
-            if (now - lastRefresh >= 5000) {
-                await refresh();
-                setLastRefresh(now);
-            }
-            return null;
-        },
-        { refreshInterval: 5000, revalidateOnFocus: true }
-    );
+    // Get game state directly from Context - table ID managed by subscription
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Default return value for error/loading states
     const defaultReturn: PlayerLegalActionsResult = {
@@ -45,7 +29,6 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
         playerSeat: null,
         isLoading,
         error,
-        refresh,
         foldActionIndex: null,
         actionTurnIndex: 0,
         isPlayerInGame: false
@@ -67,25 +50,20 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
     try {
 
         // Try to find the current player in the table data
-        let currentPlayer = null;
+        let currentPlayer: PlayerDTO | null = null;
         let isPlayerInGame = false;
 
         if (userAddress && gameState.players?.length > 0) {
             // Try to find player with exact address match
-            currentPlayer = gameState.players?.find((player: any) => player.address?.toLowerCase() === userAddress);
+            currentPlayer = gameState.players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress) ?? null;
 
             // If not found, try with case-insensitive comparison
             if (!currentPlayer) {
-                currentPlayer = gameState.players?.find((player: any) => player.address?.toLowerCase().includes(userAddress.substring(0, 10).toLowerCase()));
+                currentPlayer = gameState.players?.find((player: PlayerDTO) => player.address?.toLowerCase().includes(userAddress.substring(0, 10).toLowerCase())) ?? null;
             }
 
-            isPlayerInGame = currentPlayer === undefined || currentPlayer === null;
-
-            // if (currentPlayer) {
-            //     isPlayerInGame = true;
-            // } else {
-            //     isPlayerInGame = false;
-            // }
+            isPlayerInGame = !!currentPlayer;
+           
         }
 
         // If no player found with the user's address, use the first player with legal actions
@@ -111,10 +89,10 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
         }
 
         // Check if it's the player's turn
-        const isPlayerTurn = gameState.nextToAct === currentPlayer.seat;
+        const isPlayerTurn: boolean = gameState.nextToAct === currentPlayer.seat;
 
         // Find the fold action index
-        let foldActionIndex = null;
+        let foldActionIndex: number | null = null;
         if (Array.isArray(currentPlayer.legalActions)) {
             const foldAction = currentPlayer.legalActions.find((action: LegalActionDTO) => action.action === PlayerActionType.FOLD);
             if (foldAction) {
@@ -124,7 +102,7 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
 
         // Calculate the common action turn index
         // Get all indices from all legal actions
-        let actionTurnIndex = 0;
+        let actionTurnIndex: number = 0;
         if (Array.isArray(currentPlayer.legalActions) && currentPlayer.legalActions.length > 0) {
             // Get the first index - all actions should have the same index
             const firstActionIndex = currentPlayer.legalActions[0].index;
@@ -144,8 +122,7 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
         }
 
         // Extract and return all the relevant information
-        // TODO: MAKE A STRONG TYPE
-        const result = {
+        const result: PlayerLegalActionsResult = {
             legalActions: Array.isArray(currentPlayer.legalActions) ? currentPlayer.legalActions : [],
             isSmallBlindPosition: currentPlayer.isSmallBlind || gameState.smallBlindPosition === currentPlayer.seat,
             isBigBlindPosition: currentPlayer.isBigBlind || gameState.bigBlindPosition === currentPlayer.seat,
@@ -155,7 +132,6 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
             playerSeat: currentPlayer.seat || null,
             isLoading: false,
             error: null,
-            refresh,
             foldActionIndex,
             actionTurnIndex, // Add the common action turn index
             isPlayerInGame // Add the flag indicating if the player is in the game
@@ -166,7 +142,7 @@ export function usePlayerLegalActions(tableId?: string): PlayerLegalActionsResul
         console.error("⚠️ Error parsing player legal actions:", err);
         return {
             ...defaultReturn,
-            error: err
+            error: err instanceof Error ? err : new Error("Unknown error occurred")
         };
     }
 }

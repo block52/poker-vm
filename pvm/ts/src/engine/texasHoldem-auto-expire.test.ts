@@ -14,8 +14,8 @@ describe("Texas Holdem - Auto Expire", () => {
         beforeEach(() => {
             baseGameConfig.now = 0;
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(SEAT_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
-            game.performAction(SEAT_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
+            game.performAction(SEAT_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
+            game.performAction(SEAT_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
 
             // Post blinds
             game.performAction(SEAT_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);

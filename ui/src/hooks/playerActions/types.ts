@@ -1,6 +1,7 @@
 import { LegalActionDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { BaseHookReturn } from "../../types/index";
 
-export interface PlayerLegalActionsResult {
+export interface PlayerLegalActionsResult extends BaseHookReturn {
     legalActions: LegalActionDTO[];
     isSmallBlindPosition: boolean;
     isBigBlindPosition: boolean;
@@ -8,9 +9,6 @@ export interface PlayerLegalActionsResult {
     isPlayerTurn: boolean;
     playerStatus: PlayerStatus | null;
     playerSeat: number | null;
-    isLoading: boolean;
-    error: any;
-    refresh: () => void;
     foldActionIndex: number | null;
     actionTurnIndex: number;
     isPlayerInGame: boolean;

@@ -1,20 +1,24 @@
 import { useMemo } from "react";
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { formatWeiToSimpleDollars } from "../utils/numberUtils";
 import { PlayerDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { TableDataReturn, GameStateReturn } from "../types/index";
+import { TableDataReturn } from "../types/index";
 
 /**
  * Custom hook to provide formatted table data
- * @param tableId The ID of the table to fetch data for
+ * 
+ * NOTE: Table data is handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time table data from that context.
+ * 
  * @returns Object containing formatted table data and loading/error states
  */
-export const useTableData = (tableId?: string): TableDataReturn => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId);
+export const useTableData = (): TableDataReturn => {
+  // Get game state directly from Context - real-time data via WebSocket
+  const { gameState, isLoading, error } = useGameStateContext();
 
   // Memoize the processed table data
-  const tableData = useMemo((): Omit<TableDataReturn, "isLoading" | "error" | "refresh"> => {
+  const tableData = useMemo((): Omit<TableDataReturn, "isLoading" | "error"> => {
     // Default empty state
     const defaultData = {
       tableDataType: "cash",
@@ -29,7 +33,7 @@ export const useTableData = (tableId?: string): TableDataReturn => {
       tableDataDeck: "",
       tableDataPots: ["0"],
       tableDataNextToAct: -1,
-      tableDataRound: "preflop" as TexasHoldemRound,
+      tableDataRound: TexasHoldemRound.PREFLOP,
       tableDataWinners: [] as string[],
       tableDataSignature: ""
     };
@@ -69,7 +73,6 @@ export const useTableData = (tableId?: string): TableDataReturn => {
   return {
     ...tableData,
     isLoading,
-    error,
-    refresh
+    error
   };
 }; 

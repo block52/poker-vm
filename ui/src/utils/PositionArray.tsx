@@ -1,4 +1,18 @@
 export const playerPosition = {
+    two: [
+        {
+            //* 1 green
+            left: "450px",
+            top: "390px",
+            color: "#4ade80"
+        },
+        {
+            //* 2 orange
+            left: "155px",
+            top: "374px",
+            color: "#f97316"
+        }
+    ],
     six: [
         {
             left: "40%",
@@ -84,7 +98,17 @@ export const playerPosition = {
 };
 
 export const vacantPlayerPosition = {
-    six: [
+    two: [
+        {
+            left: "450px",
+            top: "390px",
+        },
+        {
+            left: "155px",
+            top: "374px",
+        }
+    ],
+        six: [
         {
             left: "40%",
             top: "100%"
@@ -160,6 +184,16 @@ export const vacantPlayerPosition = {
 };
 
 export const chipPosition = {
+    two: [
+        {
+            left: "450px",
+            top: "390px",
+        },
+        {
+            left: "155px",
+            top: "374px",
+        }
+    ],
     six: [
         {
             left: "40%",
@@ -236,6 +270,16 @@ export const chipPosition = {
 };
 
 export const dealerPosition = {
+    two: [
+        {
+            left: "450px",
+            top: "390px",
+        },
+        {
+            left: "155px",
+            top: "374px",
+        }
+    ],
     six: [
         {
             left: "40%",
@@ -312,6 +356,93 @@ export const dealerPosition = {
 };
 
 export const turnAnimationPosition = {
+        two: [
+        {
+            left: "450px",
+            top: "390px",
+        },
+        {
+            left: "155px",
+            top: "374px",
+        }
+    ],
+    six: [
+        {
+            left: "40%",
+            top: "100%"
+        },
+        {
+            left: "17%",
+            top: "32%"
+        },
+        {
+            left: "40%",
+            top: "-35%"
+        },
+        {
+            left: "60%",
+            top: "-35%"
+        },
+        {
+            left: "83%",
+            top: "32%"
+        },
+        {
+            left: "60%",
+            top: "100%"
+        }
+    ],
+    nine: [
+        {
+            left: "450px",
+            top: "470px"
+        },
+        {
+            left: "155px",
+            top: "460px"
+        },
+        {
+            left: "-104px",
+            top: "320px"
+        },
+        {
+            left: "-59px",
+            top: "69px"
+        },
+        {
+            left: "267px",
+            top: "-10px"
+        },
+        {
+            left: "600px",
+            top: "-10px"
+        },
+        {
+            left: "960px",
+            top: "69px"
+        },
+        {
+            left: "999px",
+            top: "320px"
+        },
+        {
+            left: "740px",
+            top: "460px"
+        }
+    ]
+};
+
+export const winAnimationPosition = {
+        two: [
+        {
+            left: "450px",
+            top: "390px",
+        },
+        {
+            left: "155px",
+            top: "374px",
+        }
+    ],
     six: [
         {
             left: "40%",

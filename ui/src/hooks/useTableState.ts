@@ -1,17 +1,20 @@
 import { ethers } from "ethers";
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
-import { TableStateReturn, GameStateReturn } from "../types/index";
+import { TableStateReturn } from "../types/index";
 
 /**
  * Custom hook to fetch and provide table state information
- * @param tableId The ID of the table to fetch state for
- * @param autoRefreshIntervalMs Optional refresh interval in ms, default value to pass to useGameState
+ * 
+ * NOTE: Table state information is handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time table state data from that context.
+ * 
  * @returns Object containing table state properties including round, pot, size, type
  */
-export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number): TableStateReturn => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId, autoRefreshIntervalMs);
+export const useTableState = (): TableStateReturn => {
+    // Get game state directly from Context - real-time data via WebSocket
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Default values in case of error or loading
     const defaultState = {
@@ -22,8 +25,7 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number):
         tableType: GameType.CASH,
         roundType: TexasHoldemRound.PREFLOP,
         isLoading,
-        error,
-        refresh
+        error
     };
 
     // If still loading or error occurred, return default values
@@ -65,8 +67,7 @@ export const useTableState = (tableId?: string, autoRefreshIntervalMs?: number):
             tableType: tableType as GameType,
             roundType,
             isLoading: false,
-            error: null,
-            refresh
+            error: null
         };
 
         return result;

@@ -507,7 +507,9 @@ export class NodeRpcClient implements IClient {
             throw new Error("Cannot transfer funds without a private key");
         }
 
-        const signature = await this.wallet.signMessage(nonce.toString());
+        const timestamp = Math.floor(Date.now());
+        const message = `${timestamp}-${nonce}`;
+        const signature = await this.wallet.signMessage(message);
         return signature;
     }
 
