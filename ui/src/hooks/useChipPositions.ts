@@ -14,7 +14,7 @@ export const useChipPositions = (tableId?: string, startIndex: number = 0): Chip
   const lastStartIndexRef = useRef<number>(startIndex);
   
   // Get table state to access tableSize
-  const { tableSize }: TableStateReturn = useTableState(tableId);
+  const { tableSize }: TableStateReturn = useTableState();
   
   // Set initial chip positions based on table size
   useEffect(() => {

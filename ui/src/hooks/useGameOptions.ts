@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { GameOptionsDTO } from "@bitcoinbrisbane/block52";
-import { GameOptionsReturn, GameStateReturn } from "../types/index";
+import { GameOptionsReturn } from "../types/index";
 
 // Define default values as strings (matching GameOptionsDTO)
 export const DEFAULT_SMALL_BLIND = "100000000000000000"; // 0.1 ETH
@@ -22,12 +22,16 @@ const defaultOptions: Required<GameOptionsDTO> = {
 
 /**
  * Custom hook to fetch game options for a table
- * @param tableId The table ID to fetch options for
+ * 
+ * NOTE: Game options are handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time game options from that context.
+ * 
  * @returns Object containing game options and loading state
  */
-export const useGameOptions = (tableId?: string): GameOptionsReturn => {
-    // Get game state from centralized hook
-    const { gameState, isLoading, error, refresh }: GameStateReturn = useGameState(tableId);
+export const useGameOptions = (): GameOptionsReturn => {
+    // Get game state directly from Context - real-time data via WebSocket
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Memoize game options processing
     const gameOptions = useMemo((): Required<GameOptionsDTO> => {
@@ -58,7 +62,6 @@ export const useGameOptions = (tableId?: string): GameOptionsReturn => {
     return {
         gameOptions,
         isLoading,
-        error,
-        refresh
+        error
     };
 };

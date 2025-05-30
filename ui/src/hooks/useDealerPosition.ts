@@ -1,15 +1,15 @@
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
 import { DealerPositionReturn } from "../types/index";
 import { dealerPosition } from "../utils/PositionArray";
 
 /**
  * Custom hook to fetch and provide dealer button position
- * @param tableId The ID of the table to fetch state for
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing dealer button position and visibility state
  */
 export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
-    // Use the centralized game state hook
-    const { gameState, isLoading, error } = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState, isLoading, error } = useGameStateContext();
 
     // Default values in case of error or loading
     const defaultState: DealerPositionReturn = {
@@ -27,13 +27,6 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
     try {
         // Get dealer seat from game state
         const dealerSeat = gameState.dealer;
-        
-        // Debug logging to see what we're getting
-        console.log("🎯 Dealer Position Debug:", {
-            dealerSeat,
-            gameStateDealer: gameState.dealer,
-            tableSize: gameState.gameOptions?.maxPlayers
-        });
         
         // Default position if no dealer seat is set
         let dealerButtonPosition = { left: "0px", top: "0px" };
@@ -62,14 +55,6 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
             // Get position from dealer position array based on table size
             const positions = tableSize === 6 ? dealerPosition.six : dealerPosition.nine;
             
-            console.log("🎯 Dealer Position Calculation:", {
-                dealerSeat,
-                dealerIndex,
-                tableSize,
-                positionsLength: positions.length,
-                selectedPosition: positions[dealerIndex]
-            });
-            
             if (dealerIndex < positions.length) {
                 dealerButtonPosition = {
                     left: positions[dealerIndex].left || "0px",
@@ -77,7 +62,6 @@ export const useDealerPosition = (tableId?: string): DealerPositionReturn => {
                 };
                 isDealerButtonVisible = true;
                 
-                console.log("🎯 Final Dealer Button Position:", dealerButtonPosition);
             }
         }
 

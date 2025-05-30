@@ -1,28 +1,30 @@
 import React from "react";
 import { ethers } from "ethers";
 import { PlayerStatus, PlayerDTO } from "@bitcoinbrisbane/block52";
-import { useGameState } from "./useGameState";
-import { PlayerDataReturn, GameStateReturn } from "../types/index";
+import { PlayerDataReturn } from "../types/index";
+import { useGameStateContext } from "../context/GameStateContext";
 
 /**
  * Custom hook to fetch player data for a specific seat
- * @param tableId The ID of the table
+ * 
+ * NOTE: Player data is handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time player data from that context.
+ * 
  * @param seatIndex The seat index to get player data for
  * @returns Object with player data and utility functions
  */
-export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataReturn => {
-  // Use useGameState hook instead of making our own API call
-  const { gameState, error, isLoading, refresh }: GameStateReturn = useGameState(tableId);
+export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
+  // Get game state directly from Context - real-time data via WebSocket
+  const { gameState, error, isLoading } = useGameStateContext();
   
   // Get player data from the table state
   const playerData = React.useMemo((): PlayerDTO | null => {
     if (!gameState || !seatIndex) {
-      console.log(`No player data - gameState exists: ${!!gameState}, seatIndex: ${seatIndex}`);
       return null;
     }
     
     if (!gameState.players) {
-      console.log("Game state has no players array");
       return null;
     }
     
@@ -53,7 +55,7 @@ export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataR
   const round = React.useMemo(() => {
     return gameState?.round || null;
   }, [gameState]);
-  
+
   return {
     playerData,
     stackValue,
@@ -62,7 +64,6 @@ export const usePlayerData = (tableId?: string, seatIndex?: number): PlayerDataR
     holeCards,
     round,
     isLoading,
-    error,
-    refresh
+    error
   };
 }; 
