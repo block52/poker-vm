@@ -1,6 +1,6 @@
 import { PlayerChipDataReturn } from "../types/index";
 import { useGameStateContext } from "../context/GameStateContext";
-import { ActionDTO } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to fetch and provide player chip data for each seat
@@ -35,16 +35,44 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
 
         // Function to get chip amount for a given seat
         const getChipAmount = (seatIndex: number): string => {
-            // grab the actions array (or empty)
+            // 1. Find the player sitting at this seat
+            const playerAtSeat = gameState.players.find(player => player.seat === seatIndex);
+            console.log(`Player at seat ${seatIndex}:`, playerAtSeat);
+            
+            // If no player at this seat, return "0"
+            if (!playerAtSeat) {
+                return "0";
+            }
+            
+            // 2. Get all previous actions for this player by filtering by playerId (address)
             const actions: ActionDTO[] = gameState.previousActions ?? [];
-
-            // filter by seat
-            const myActions = actions.filter(a => a.seat === seatIndex);
-
-            // initial value 0 to prevent enpty array error, return new total at each step
-            const sumOfBets: bigint = myActions.reduce((total, action) => total + BigInt(action.amount ?? 0), BigInt(0));
-            console.log(`Sum of Bets are: ${sumOfBets}`);
-
+            const playerActions = actions.filter(action => {
+                // Only include this player's actions
+                if (action.playerId !== playerAtSeat.address) return false;
+                
+                // 3. Only include betting actions that represent chips on the table
+                // Exclude JOIN, LEAVE, DEAL, and other non-betting actions
+                const bettingActions = [
+                    PlayerActionType.SMALL_BLIND,
+                    PlayerActionType.BIG_BLIND, 
+                    PlayerActionType.BET,
+                    PlayerActionType.CALL,
+                    PlayerActionType.RAISE,
+                    PlayerActionType.ALL_IN
+                ];
+                
+                return bettingActions.includes(action.action as PlayerActionType);
+            });
+            
+            // 4. Sum up all the amounts from this player's betting actions
+            const sumOfBets: bigint = playerActions.reduce((total, action) => {
+                const amount = BigInt(action.amount ?? 0);
+                return total + amount;
+            }, BigInt(0));
+            
+            console.log(`Seat ${seatIndex} - Player: ${playerAtSeat.address}, Betting Actions:`, playerActions);
+            console.log(`Seat ${seatIndex} - Sum of betting amounts: ${sumOfBets.toString()}`);
+            
             return sumOfBets.toString();
         };
 
