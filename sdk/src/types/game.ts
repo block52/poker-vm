@@ -179,7 +179,6 @@ export type GameOptionsResponse = {
     gameOptions: GameOptionsDTO;
 };
 
-
 export type TransactionResponse = {
     nonce: string;
     to: string;
@@ -195,7 +194,6 @@ export type GameStateResponse = {
     state: TexasHoldemStateDTO;
 }
 
-// export type PerformActionResponse = GameStateResponse & TransactionResponse;
 export type PerformActionResponse= {
     state: TexasHoldemStateDTO;
     nonce: string;
