@@ -543,3 +543,86 @@ export const test_753 = {
         "signature": "0xcc22a3ff1ea830b675154517cc600e2fa5b03f2fc05c6ec8b75ee48ba188dbdf654ddd896c245131185cabace555aadc9d86f6b06aa96892ba36aceca263ac181b"
     }
 }
+
+export const test_792 = {
+    "id": "1",
+    "result": {
+        "data": {
+            "type": "cash",
+            "address": "0x5beefcc4e98e5f876ef6e94a2291cde322e38d03",
+            "gameOptions": {
+                "minBuyIn": "10000000000000000",
+                "maxBuyIn": "1000000000000000000",
+                "maxPlayers": 9,
+                "minPlayers": 2,
+                "smallBlind": "10000000000000000",
+                "bigBlind": "20000000000000000",
+                "timeout": 300
+            },
+            "smallBlindPosition": 1,
+            "bigBlindPosition": 1,
+            "dealer": 9,
+            "players": [
+                {
+                    "address": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 1,
+                    "stack": "1000000000000000000",
+                    "isSmallBlind": true,
+                    "isBigBlind": true,
+                    "isDealer": false,
+                    "status": "active",
+                    "lastAction": {
+                        "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                        "seat": 1,
+                        "action": "join",
+                        "amount": "1000000000000000000",
+                        "round": "ante",
+                        "index": 1,
+                        "timestamp": 1748406236197
+                    },
+                    "legalActions": [
+                        {
+                            "action": "post-small-blind",
+                            "min": "10000000000000000",
+                            "max": "10000000000000000",
+                            "index": 2
+                        },
+                        {
+                            "action": "fold",
+                            "min": "0",
+                            "max": "0",
+                            "index": 2
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            ],
+            "communityCards": [],
+            "deck": "[9S]-8D-10H-JC-8S-5C-JH-AS-4S-9H-5S-9D-JD-10S-7C-6S-QS-AH-3H-10D-6C-8C-KD-2D-5H-AC-4D-7D-7S-2C-5D-KH-QC-KC-9C-7H-10C-3C-3D-2S-JS-KS-6H-2H-4C-6D-QH-3S-QD-4H-AD-8H",
+            "pots": [
+                "0"
+            ],
+            "lastActedSeat": 1,
+            "actionCount": 0,
+            "handNumber": 1,
+            "nextToAct": 1,
+            "previousActions": [
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 1,
+                    "action": "join",
+                    "amount": "1000000000000000000",
+                    "round": "ante",
+                    "index": 1,
+                    "timestamp": 1748406236197
+                }
+            ],
+            "round": "ante",
+            "winners": [],
+            "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "signature": "0x8fc819041a693e9f8c01035ec4dec254f4ed744ba738ce8de9a53833e308794776fdb707c2562265f79272293cc74bd65aa3a23a66aa8994fa2bd2e574a50ac81c"
+    }
+}
