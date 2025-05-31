@@ -72,14 +72,14 @@ describe("Re Raise Action", () => {
                 amount: FIVE_TOKENS,
                 action: PlayerActionType.BET,
                 index: 3,
-                seat: 4,
+                seat: 3,
                 timestamp: Date.now()
             },
             {
                 playerId: PLAYER_4,
                 amount: 1300000000000000000n, // 13 tokens
                 action: PlayerActionType.RAISE,
-                index: 3,
+                index: 4,
                 seat: 4,
                 timestamp: Date.now()
             }

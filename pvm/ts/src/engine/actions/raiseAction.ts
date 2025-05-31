@@ -66,7 +66,6 @@ class RaiseAction extends BaseAction implements IAction {
 
         // Calculate minimum raise amount
         const playerCurrentBet = this.getSumBets(player.address);
-        
         const increment = this.findPreviousBetOrRaise(lastBetOrRaise.index);
         const delta = BigInt(lastBetOrRaise.amount || 0n) - BigInt(increment?.amount || 0n);
         
@@ -98,26 +97,31 @@ class RaiseAction extends BaseAction implements IAction {
     }
 
     // Find the last bet or raise in the current round
-    private findPreviousBetOrRaise(start: number): TurnWithSeat | undefined {
-        // const actions = this.game.getActionsForRound(this.game.currentRound);
+    private findPreviousBetOrRaise(startIndex: number): TurnWithSeat | undefined {
+        // Sort actions by index to ensure we process them in the correct order
+        const actions = this.roundActions.sort((a, b) => a.index - b.index);
 
-        // Filter for bets and raises
-        const betOrRaiseActions = this.roundActions.filter(action =>
-            action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE
-        );
+        // // Find the element in the array at the start index
+        // if (startIndex < 0 || startIndex >= actions.length) {
+        //     return undefined;
+        // }
 
-        // If no actions found, return undefined
-        if (betOrRaiseActions.length === 0) return undefined;
-
-        if (start < 0 || start - 1 > betOrRaiseActions.length) {
-            return undefined;
+        let start = 0;
+        for (let j = 0; j < actions.length; j++) {
+            if (actions[j].index === startIndex) {
+                start = j;
+                break;
+            }
         }
 
         for (let i = start - 1; i >= 0; i--) {
-            if (betOrRaiseActions[i].action === PlayerActionType.BET || betOrRaiseActions[i].action === PlayerActionType.RAISE) {
-                return betOrRaiseActions[i];
+            const action = this.roundActions[i];
+            if (action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE) {
+                return action;
             }
         }
+
+        return undefined
     }
 
     protected getDeductAmount(player: Player, amount?: bigint): bigint {
