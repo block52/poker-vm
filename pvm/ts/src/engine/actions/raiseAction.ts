@@ -3,11 +3,10 @@ import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, TurnWithSeat } from "../types";
 
-type BetOrRaise = TurnWithSeat & {
-    increase: bigint; // Amount by which the bet or raise was increased
-}
-
 class RaiseAction extends BaseAction implements IAction {
+
+    private readonly roundActions: TurnWithSeat[] = [];
+
     get type(): PlayerActionType {
         return PlayerActionType.RAISE;
     }
@@ -53,6 +52,12 @@ class RaiseAction extends BaseAction implements IAction {
             }
         }
 
+        // Cache the actions for the current round
+        this.roundActions.length = 0;
+        this.game.getActionsForRound(this.game.currentRound).forEach(action => {
+            this.roundActions.push(action);
+        });
+
         // 4. Need a previous bet or raise to raise
         const lastBetOrRaise = this.findLastBetOrRaise();
         if (!lastBetOrRaise) {
@@ -60,21 +65,15 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         // Calculate minimum raise amount
-        const largestBet = this.getLargestBet();
         const playerCurrentBet = this.getSumBets(player.address);
         
-        // Standard minimum raise is double the previous bet/raise
-        // But in all cases, a player must add at least the big blind
-        const doubleLastBet = largestBet * 2n;
-        // const increment = this.findRaiseIncrement(lastBetOrRaise);
         const increment = this.findPreviousBetOrRaise(lastBetOrRaise.index);
         const delta = BigInt(lastBetOrRaise.amount || 0n) - BigInt(increment?.amount || 0n);
         
-        // Use the larger of the two options for minimum raise
-        // const minRaise = doubleLastBet > delta ? doubleLastBet : delta;
-        
-        // Calculate how much more the player needs to add
-        // let minAmountToAdd = minRaise - playerCurrentBet;
+        if (delta <= 0n) {
+            throw new Error("Invalid raise amount. Must be greater than the last bet.");
+        }
+
         let minAmountToAdd = delta - playerCurrentBet;
         
         // If player doesn't have enough for the minimum raise, they can go all-in
@@ -90,10 +89,8 @@ class RaiseAction extends BaseAction implements IAction {
 
     // Find the last bet or raise in the current round
     private findLastBetOrRaise(): TurnWithSeat | undefined {
-        const actions = this.game.getActionsForRound(this.game.currentRound);
-
         // Filter for bets and raises
-        const betOrRaiseActions = actions.filter(action =>
+        const betOrRaiseActions = this.roundActions.filter(action =>
             action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE
         );
 
@@ -102,10 +99,10 @@ class RaiseAction extends BaseAction implements IAction {
 
     // Find the last bet or raise in the current round
     private findPreviousBetOrRaise(start: number): TurnWithSeat | undefined {
-        const actions = this.game.getActionsForRound(this.game.currentRound);
+        // const actions = this.game.getActionsForRound(this.game.currentRound);
 
         // Filter for bets and raises
-        const betOrRaiseActions = actions.filter(action =>
+        const betOrRaiseActions = this.roundActions.filter(action =>
             action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE
         );
 
@@ -113,31 +110,14 @@ class RaiseAction extends BaseAction implements IAction {
         if (betOrRaiseActions.length === 0) return undefined;
 
         if (start < 0 || start - 1 > betOrRaiseActions.length) {
-            throw new Error("Invalid start index for finding previous bet or raise.");
+            return undefined;
         }
 
         for (let i = start - 1; i >= 0; i--) {
-            if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
-                return actions[i];
+            if (betOrRaiseActions[i].action === PlayerActionType.BET || betOrRaiseActions[i].action === PlayerActionType.RAISE) {
+                return betOrRaiseActions[i];
             }
         }
-    }
-
-        // Find the last bet or raise in the current round
-    private findRaiseIncrement(lastBetOrRaise: TurnWithSeat): bigint {
-        // const lastBetOrRaise = this.findLastBetOrRaise();
-        const actions = this.game.getActionsForRound(this.game.currentRound);
-
-        if (!lastBetOrRaise) return 0n;
-
-        for (let i = lastBetOrRaise.index - 1; i >= 0; i--) {
-            if (actions[i].action === PlayerActionType.RAISE || actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.CALL) {
-                // Return the increment amount from the last raise or bet
-                return (lastBetOrRaise.amount || 0n) + (actions[i].amount || 0n);
-            }
-        }
-
-        return 0n; // Placeholder, as the increment logic is not defined in the original code
     }
 
     protected getDeductAmount(player: Player, amount?: bigint): bigint {
