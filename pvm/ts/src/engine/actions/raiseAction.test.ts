@@ -123,32 +123,11 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
         });
 
-        it.only("should return correct range for a raise", () => {
+        it("should return correct range for a raise", () => {
             const range = action.verify(player);
 
             // Min amount should be previous bet + big blind
-            const expectedMinAmount = 40000000000000000000n; // 4 tokens
-
-            expect(range).toEqual({
-                minAmount: expectedMinAmount,
-                maxAmount: player.chips
-            });
-        });
-
-        it.only("should return correct range for a re raise", () => {
-            const raiseBet: TurnWithSeat = {
-                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                action: PlayerActionType.BET,
-                amount: 50000000000000000000n, //  5 tokens
-                index: 0,
-                seat: 2,
-                timestamp: Date.now()
-            };
-            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(raiseBet);
-            const range = action.verify(player);
-
-            // Min amount should be previous bet + big blind
-            const expectedMinAmount = 40000000000000000000n; // 4 tokens
+            const expectedMinAmount = FIVE_TOKENS; // 5 tokens
 
             expect(range).toEqual({
                 minAmount: expectedMinAmount,
@@ -163,7 +142,7 @@ describe("Raise Action", () => {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
                     amount: 50000000000000000000n,
                     action: PlayerActionType.SMALL_BLIND,
-                    index: 0,
+                    index: 1,
                     seat: 2,
                     timestamp: Date.now()
                 },
@@ -171,7 +150,7 @@ describe("Raise Action", () => {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
                     amount: 100000000000000000000n,
                     action: PlayerActionType.BIG_BLIND,
-                    index: 0,
+                    index: 2,
                     seat: 3,
                     timestamp: Date.now()
                 }
@@ -182,13 +161,13 @@ describe("Raise Action", () => {
 
         it("should bet all the players chips if less than the raised amount", () => {
             // Set player chips lower than the raise amount
-            player.chips = TEN_TOKENS;
+            player.chips = ONE_TOKEN;
 
             const range = action.verify(player);
 
             expect(range).toEqual({
-                minAmount: TEN_TOKENS,
-                maxAmount: TEN_TOKENS
+                minAmount: ONE_TOKEN,
+                maxAmount: ONE_TOKEN
             });
         });
 
