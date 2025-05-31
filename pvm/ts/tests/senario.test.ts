@@ -49,7 +49,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual).toBeDefined();
         });
 
-        it.only("should test bug 792", () => {
+        it("should test bug 792", () => {
             const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
 
             game = fromTestJson(test_json);
