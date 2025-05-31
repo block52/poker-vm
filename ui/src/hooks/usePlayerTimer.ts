@@ -33,7 +33,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
     const seatKey = `${tableId}-${playerSeat}`;
 
     // useRef to hold latest values for the callback
-    const latestValuesRef = useRef({
+    const latestValues = useRef({
         legalActions,
         foldHand,
         checkHand,
@@ -88,7 +88,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
     }, [TIMEOUT_DURATION]);
 
     // Update ref with latest values on each render
-    latestValuesRef.current = {
+    latestValues.current = {
         legalActions,
         foldHand,
         checkHand,
@@ -142,7 +142,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
     // Auto-action logic (check first, then fold if check not available)
     const handleAutoAction = useCallback(async () => {
         // Get latest values from ref
-        const { legalActions, foldHand, checkHand, isFolding, lastAutoFoldTime, timeoutInSeconds } = latestValuesRef.current;
+        const { legalActions, foldHand, checkHand, isFolding, lastAutoFoldTime, timeoutInSeconds } = latestValues.current;
         
         if (!isNextToAct || !isCurrentUser || !tableId || isFolding) {
             return;
@@ -242,6 +242,8 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         error,
         extendTime,
         hasUsedExtension: extensionInfo.hasUsedExtension,
-        canExtend: isNextToAct && isCurrentUser && !extensionInfo.hasUsedExtension && timeRemaining <= 10
+        canExtend: isNextToAct && isCurrentUser && !extensionInfo.hasUsedExtension && timeRemaining <= 10,
+        isCurrentUser,
+        isCurrentUserTurn: isCurrentUser && isNextToAct
     };
 };

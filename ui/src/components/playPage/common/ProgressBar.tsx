@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { usePlayerTimer } from "../../../hooks/usePlayerTimer";
 import { useGameOptions } from "../../../hooks/useGameOptions";
-import { useGameStateContext } from "../../../context/GameStateContext";
 
 
 type ProgressBarProps = {
@@ -17,28 +16,14 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
         timeoutValue, 
         extendTime, 
         hasUsedExtension, 
-        canExtend 
+        canExtend,
+        isCurrentUserTurn
     } = usePlayerTimer(id, index);
     const { gameOptions } = useGameOptions();
-    const { gameState } = useGameStateContext();
     
     // State for extension UI feedback only
     const [showExtensionPopup, setShowExtensionPopup] = useState(false);
     const [isExtending, setIsExtending] = useState(false);
-
-    // Check if this seat belongs to the current user
-    const isCurrentUser = useMemo(() => {
-        const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-        if (!userAddress || !gameState?.players) return false;
-        
-        const playerAtThisSeat = gameState.players.find(p => p.seat === index);
-        return playerAtThisSeat?.address?.toLowerCase() === userAddress;
-    }, [gameState?.players, index]);
-
-    // Check if it's currently this user's turn
-    const isCurrentUserTurn = useMemo(() => {
-        return isCurrentUser && gameState?.nextToAct === index;
-    }, [isCurrentUser, gameState?.nextToAct, index]);
 
     // Get the timeout duration from game options
     const timeoutDuration = useMemo(() => {

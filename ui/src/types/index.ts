@@ -249,6 +249,8 @@ export interface PlayerTimerReturn extends BaseHookReturn {
     extendTime?: () => void;
     hasUsedExtension?: boolean;
     canExtend?: boolean;
+    isCurrentUser?: boolean;
+    isCurrentUserTurn?: boolean;
 }
 
 // Type for showing cards data
