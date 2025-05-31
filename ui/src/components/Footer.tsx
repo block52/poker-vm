@@ -20,7 +20,7 @@ import { useTableShow } from "../hooks/playerActions/useTableShow";
 import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
 import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
-import { DEFAULT_BIG_BLIND, useGameOptions } from "../hooks/useGameOptions";
+import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
@@ -114,11 +114,15 @@ const PokerActionPanel: React.FC = () => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    // Big Blind Value
+    // Big Blind Value - handle null gameOptions
     const bigBlindStep = useMemo(() => {
-        const step = Number(ethers.formatUnits(gameOptions.bigBlind ?? BigInt(DEFAULT_BIG_BLIND), 18));
+        if (!gameOptions?.bigBlind) {
+            console.warn("Big blind value not available from game options");
+            return 0.02; // Fallback value for display purposes
+        }
+        const step = Number(ethers.formatUnits(gameOptions.bigBlind, 18));
         return step;
-    }, [gameOptions.bigBlind]);
+    }, [gameOptions?.bigBlind]);
 
     // Slider Input State
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
