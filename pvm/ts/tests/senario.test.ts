@@ -1,7 +1,7 @@
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson } from "../src/engine/testConstants";
-import { test_json, test_735, test_753 } from "./senarios/data";
+import { test_json, test_735, test_753, test_792 } from "./senarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Data driven", () => {
@@ -52,7 +52,7 @@ describe("Texas Holdem - Data driven", () => {
         it("should test bug 792", () => {
             const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
 
-            game = fromTestJson(test_json);
+            game = fromTestJson(test_792);
             const actual = game.getLegalActions(SEAT_1);
             expect(actual).toBeDefined();
             expect(actual.length).toEqual(1);

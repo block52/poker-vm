@@ -28,6 +28,10 @@ class SmallBlindAction extends BaseAction implements IAction {
             throw new Error("Can only bet small blind amount when in ante.");
         }
 
+        if (this.game.getActivePlayerCount() < 2) {
+            throw new Error("Cannot post small blind with less than 2 players.");
+        }
+
         // Player must be in the small blind position
         const seat = this.game.getPlayerSeatNumber(_player.address);
         if (seat !== this.game.smallBlindPosition) {
