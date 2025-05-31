@@ -1,6 +1,7 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
 import {
     GameOptionsDTO,
+    GameOptionsResponse,
     LegalActionDTO,
     NonPlayerActionType,
     PerformActionResponse,
@@ -15,7 +16,7 @@ import { Wallet } from "ethers";
 
 export interface IClient {
     deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<PerformActionResponse>;
-    findGames(min?: bigint, max?: bigint): Promise<GameOptionsDTO[]>;
+    findGames(min?: bigint, max?: bigint): Promise<GameOptionsResponse[]>;
     getAccount(address: string): Promise<AccountDTO>;
     getBlock(index: number): Promise<BlockDTO>;
     getBlockByHash(hash: string): Promise<BlockDTO>;
@@ -77,7 +78,7 @@ export class NodeRpcClient implements IClient {
      * @param bigBlind The maximum bigBlind amount
      * @returns A Promise resolving to an array of GameOptionsDTO objects
      */
-    public async findGames(smallBlind?: bigint, bigBlind?: bigint): Promise<GameOptionsDTO[]> {
+    public async findGames(smallBlind?: bigint, bigBlind?: bigint): Promise<GameOptionsResponse[]> {
         const query = "" + (smallBlind ? `sb=${smallBlind}` : "") + (bigBlind ? `,bb=${bigBlind}` : "");
 
         // If no query is provided, return an empty array
@@ -85,7 +86,7 @@ export class NodeRpcClient implements IClient {
             return [];
         }
 
-        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<GameOptionsDTO[]> }>(this.url, {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<GameOptionsResponse[]> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.FIND_CONTRACT,
             params: [query]
