@@ -66,6 +66,12 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         return gameState?.nextToAct === playerSeat;
     }, [gameState?.nextToAct, playerSeat]);
 
+    // Count active players 
+    const activePlayerCount = useMemo((): number => {
+        if (!gameState?.players) return 0;
+        return gameState.players.length;
+    }, [gameState?.players]);
+
     // Check if this player is the current user
     const isCurrentUser = useMemo((): boolean => {
         const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
@@ -237,12 +243,12 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         timeoutValue: timeoutInSeconds, // Dynamic timeout from game options
         progress: Math.ceil(timeoutInSeconds - timeRemaining), // Progress in seconds elapsed
         timeRemaining,
-        isActive: isNextToAct,
+        isActive: isNextToAct && activePlayerCount >= 2, // Only show timer with 2+ players
         isLoading,
         error,
         extendTime,
         hasUsedExtension: extensionInfo.hasUsedExtension,
-        canExtend: isNextToAct && isCurrentUser && !extensionInfo.hasUsedExtension && timeRemaining <= 10,
+        canExtend: isNextToAct && isCurrentUser && !extensionInfo.hasUsedExtension && timeRemaining <= 10 && activePlayerCount >= 2,
         isCurrentUser,
         isCurrentUserTurn: isCurrentUser && isNextToAct
     };
