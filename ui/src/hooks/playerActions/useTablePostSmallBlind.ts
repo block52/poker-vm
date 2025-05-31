@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { useGameOptions, DEFAULT_SMALL_BLIND } from "../useGameOptions";
+import { useGameOptions } from "../useGameOptions";
 
 /**
  * Custom hook to handle posting small blind at a poker table
@@ -36,7 +36,12 @@ export function useTablePostSmallBlind(tableId?: string) {
             }
 
             // Use the provided amount or get from game options
-            const amount = options.smallBlindAmount || gameOptions.smallBlind || DEFAULT_SMALL_BLIND;
+            const amount = options.smallBlindAmount || gameOptions?.smallBlind;
+            
+            if (!amount) {
+                setError("Small blind amount not available from game options");
+                return;
+            }
 
             // Call the playerAction method
             const response = await client.playerAction(
