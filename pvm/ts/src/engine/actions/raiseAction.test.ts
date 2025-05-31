@@ -1,21 +1,19 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
-import { IUpdate, Turn, TurnWithSeat } from "../types";
+import { IUpdate, TurnWithSeat } from "../types";
 import {
-    defaultPositions,
     FIFTY_TOKENS,
-    gameOptions,
     getDefaultGame,
-    mnemonic,
     ONE_HUNDRED_TOKENS,
     ONE_THOUSAND_TOKENS,
     ONE_TOKEN,
+    TWO_TOKENS,
     TEN_TOKENS,
     TWENTY_TOKENS,
-    TWO_THOUSAND_TOKENS
+    TWO_THOUSAND_TOKENS,
+    FIVE_TOKENS
 } from "../testConstants";
 
 describe("Raise Action", () => {
@@ -23,8 +21,6 @@ describe("Raise Action", () => {
     let updateMock: IUpdate;
     let action: RaiseAction;
     let player: Player;
-
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state
@@ -62,7 +58,7 @@ describe("Raise Action", () => {
         jest.spyOn(game, "getActionsForRound").mockReturnValue([
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: 50000000000000000000n,
+                amount: ONE_TOKEN,
                 action: PlayerActionType.SMALL_BLIND,
                 index: 0,
                 seat: 2,
@@ -70,7 +66,7 @@ describe("Raise Action", () => {
             },
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: 10000000000000000000n,
+                amount: TWO_TOKENS,
                 action: PlayerActionType.BIG_BLIND,
                 index: 0,
                 seat: 3,
@@ -78,7 +74,7 @@ describe("Raise Action", () => {
             },
             {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                amount: 50000000000000000000n,
+                amount: FIVE_TOKENS,
                 action: PlayerActionType.BET,
                 index: 0,
                 seat: 4,
@@ -116,14 +112,13 @@ describe("Raise Action", () => {
         const lastBet: TurnWithSeat = {
             playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
             action: PlayerActionType.BET,
-            amount: FIFTY_TOKENS, // 50 tokens
+            amount: TWO_TOKENS, //  2
             index: 0,
             seat: 2,
             timestamp: Date.now()
         };
 
         beforeEach(() => {
-            const now = Date.now();
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
         });
@@ -132,7 +127,7 @@ describe("Raise Action", () => {
             const range = action.verify(player);
 
             // Min amount should be previous bet + big blind
-            const expectedMinAmount = 40000000000000000000n; // 40 tokens
+            const expectedMinAmount = FIVE_TOKENS; // 5 tokens
 
             expect(range).toEqual({
                 minAmount: expectedMinAmount,
@@ -147,7 +142,7 @@ describe("Raise Action", () => {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
                     amount: 50000000000000000000n,
                     action: PlayerActionType.SMALL_BLIND,
-                    index: 0,
+                    index: 1,
                     seat: 2,
                     timestamp: Date.now()
                 },
@@ -155,7 +150,7 @@ describe("Raise Action", () => {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
                     amount: 100000000000000000000n,
                     action: PlayerActionType.BIG_BLIND,
-                    index: 0,
+                    index: 2,
                     seat: 3,
                     timestamp: Date.now()
                 }
@@ -166,13 +161,13 @@ describe("Raise Action", () => {
 
         it("should bet all the players chips if less than the raised amount", () => {
             // Set player chips lower than the raise amount
-            player.chips = TEN_TOKENS;
+            player.chips = ONE_TOKEN;
 
             const range = action.verify(player);
 
             expect(range).toEqual({
-                minAmount: TEN_TOKENS,
-                maxAmount: TEN_TOKENS
+                minAmount: ONE_TOKEN,
+                maxAmount: ONE_TOKEN
             });
         });
 

@@ -1,5 +1,3 @@
-version: '3.1'
-
 services:
   local_pvm_mongo:
     container_name: local_pvm_mongodb

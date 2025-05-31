@@ -75,10 +75,10 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(PLAYER_3);
             actual = game.getLegalActions(PLAYER_3);
-            expect(actual.length).toEqual(3); // Fold, call, raise
+            expect(actual.length).toEqual(3); // Fold, bet, call
             expect(actual[0].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(PlayerActionType.BET);
             expect(actual[2].action).toEqual(PlayerActionType.CALL);
-            // expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Open the action for player 3
             game.performAction(PLAYER_3, PlayerActionType.BET, 8, TWO_TOKENS);
@@ -118,7 +118,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(PLAYER_2);
             actual = game.getLegalActions(PLAYER_2);
-            // expect(actual.length).toEqual(3); // Fold, check, raise
+            expect(actual.length).toEqual(3); // Fold, call, raise
 
             const json = game.toJson();
             expect(json).toBeDefined();
