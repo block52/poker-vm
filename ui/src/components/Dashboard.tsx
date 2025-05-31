@@ -329,7 +329,8 @@ const Dashboard: React.FC = () => {
     const handleGameType = (type: GameType) => {
         if (type === GameType.CASH) {
             setTypeSelected("cash");
-        } else if (type === GameType.TOURNAMENT) {
+        } 
+        if (type === GameType.TOURNAMENT) {
             setTypeSelected("tournament");
         }
     };
