@@ -29,7 +29,7 @@ const PokerActionPanel: React.FC = () => {
     const { id: tableId } = useParams<{ id: string }>();
 
     // Add ref to track if we're already attempting to auto-deal
-    const autoDealAttemptRef = useRef<boolean>(false);
+    const attemptToAutoDeal = useRef<boolean>(false);
 
     // Add the useStartNewHand hook
     const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
@@ -51,7 +51,10 @@ const PokerActionPanel: React.FC = () => {
     const { showCards, isShowing } = useTableShow(tableId);
 
     // Use the useNextToActInfo hook
-    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(tableId);
+    const {
+        isCurrentUserTurn,
+        timeRemaining
+    } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState();
@@ -77,7 +80,6 @@ const PokerActionPanel: React.FC = () => {
     };
 
     // Check if actions are available using the helper function
-    const hasDealAction = hasAction(NonPlayerActionType.DEAL);
     const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND);
     const hasBigBlindAction = hasAction(PlayerActionType.BIG_BLIND);
     const hasFoldAction = hasAction(PlayerActionType.FOLD);
@@ -270,18 +272,6 @@ const PokerActionPanel: React.FC = () => {
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
 
-    // Add a handler for the deal button
-    const handleDeal = () => {
-        // Get private key
-        if (!dealCards) {
-            console.error("Private key not available or hook not ready");
-            return;
-        }
-
-        // Use the hook to deal cards
-        dealCards();
-    };
-
     // Handler for muck action
     const handleMuck = () => {
         if (!muckCards || !privateKey) {
@@ -372,19 +362,17 @@ const PokerActionPanel: React.FC = () => {
         }
 
         // Only proceed if we have the necessary data
-        if (!legalActions || !dealCards || isDealing || autoDealAttemptRef.current) {
+        if (!legalActions || !dealCards || isDealing || attemptToAutoDeal.current) {
             return;
         }
 
         // Check if DEAL action is available in legal actions
-        const hasDealAction = legalActions.some(action => 
-            action.action === NonPlayerActionType.DEAL
-        );
+        const hasDealAction = legalActions.some(action => action.action === NonPlayerActionType.DEAL);
 
         if (hasDealAction) {
             // Set flag to prevent multiple attempts
-            autoDealAttemptRef.current = true;
-            
+            attemptToAutoDeal.current = true;
+
             // Small delay to ensure state is settled before dealing
             const dealTimeout = setTimeout(() => {
                 dealCards()
@@ -396,17 +384,17 @@ const PokerActionPanel: React.FC = () => {
                     })
                     .finally(() => {
                         // Reset flag after attempt
-                        autoDealAttemptRef.current = false;
+                        attemptToAutoDeal.current = false;
                     });
             }, 100);
 
             // Cleanup timeout if component unmounts or dependencies change
             return () => {
                 clearTimeout(dealTimeout);
-                autoDealAttemptRef.current = false;
+                attemptToAutoDeal.current = false;
             };
         }
-    }, [isCurrentUserTurn, legalActions]); // Reduced dependencies - only what we actually need
+    }, [dealCards, isCurrentUserTurn, isDealing, legalActions]); // Reduced dependencies - only what we actually need
 
     return (
         <div className="fixed bottom-20 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
