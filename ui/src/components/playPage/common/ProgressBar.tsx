@@ -22,7 +22,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
     const { gameOptions } = useGameOptions();
     
     // State for extension UI feedback only
-    const [showExtensionPopup, setShowExtensionPopup] = useState(false);
     const [isExtending, setIsExtending] = useState(false);
 
     // Get the timeout duration from game options
@@ -31,27 +30,19 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
         return Math.floor((gameOptions.timeout * 100) / 1000); // Convert deciseconds to seconds
     }, [gameOptions]);
 
-    // Show popup based on canExtend from timer hook
-    useEffect(() => {
-        if (canExtend && isCurrentUserTurn && !isExtending) {
-            setShowExtensionPopup(true);
-        } else {
-            setShowExtensionPopup(false);
-        }
-    }, [canExtend, isCurrentUserTurn, isExtending]);
+    // Compute showExtensionPopup directly (no useEffect needed)
+    const showExtensionPopup = canExtend && isCurrentUserTurn && !isExtending;
 
-    // Reset extending state when turn changes
+    // Reset extending state when turn changes (simplified dependency)
     useEffect(() => {
-        if (!isActive || !isCurrentUserTurn) {
-            setShowExtensionPopup(false);
+        if (!isActive) {
             setIsExtending(false);
         }
-    }, [isActive, isCurrentUserTurn]);
+    }, [isActive]);
 
     // Handle time extension using the timer hook function
     const handleExtendTime = () => {
         setIsExtending(true);
-        setShowExtensionPopup(false);
         
         // Use the timer hook's extend function
         extendTime?.();
