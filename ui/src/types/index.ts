@@ -3,11 +3,11 @@ import {
     PlayerActionType, 
     PlayerDTO, 
     GameOptionsDTO, 
-    TexasHoldemStateDTO, 
     TexasHoldemRound, 
     GameType, 
     ActionDTO,
     PlayerStatus,
+    GameOptionsResponse,
 } from "@bitcoinbrisbane/block52";
 
 // Base type for all hook returns with common loading and error state
@@ -121,13 +121,6 @@ export interface LeaveTableOptions {
     nonce?: number;
 }
 
-// Type for game objects returned by findGames
-// The 'address' comes from the SDK's findGames() method return
-export interface GameWithAddress {
-    address: string;
-    gameOptions: GameOptionsDTO;
-}
-
 // Type for VacantPlayer component props
 export interface VacantPlayerProps {
     index: number;
@@ -206,7 +199,7 @@ export interface DealerPositionReturn extends BaseHookReturn {
 
 // Type for the return value of useFindGames hook
 export interface FindGamesReturn extends BaseHookReturn {
-    games: GameWithAddress[];
+    games: GameOptionsResponse[];
     refetch: () => Promise<void>;
 }
 
