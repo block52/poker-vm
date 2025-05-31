@@ -48,5 +48,15 @@ describe("Texas Holdem - Data driven", () => {
             const actual = game.getLegalActions(SEAT_2);
             expect(actual).toBeDefined();
         });
+
+        it.only("should test bug 792", () => {
+            const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
+
+            game = fromTestJson(test_json);
+            const actual = game.getLegalActions(SEAT_1);
+            expect(actual).toBeDefined();
+            expect(actual.length).toEqual(1);
+            expect(actual[0].action).toEqual("fold");
+        });
     });
 });
