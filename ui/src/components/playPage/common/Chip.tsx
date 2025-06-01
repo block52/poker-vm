@@ -1,10 +1,11 @@
+import React from "react";
 import { formatWeiToSimpleDollars } from "../../../utils/numberUtils";
 
 type ChipProps = {
     amount: string | bigint;
 };
 
-const Chip: React.FC<ChipProps> = ({ amount }) => {
+const Chip: React.FC<ChipProps> = React.memo(({ amount }) => {
     // Convert amount to string and check if it's greater than 0
     const amountStr = amount.toString();
     const numericAmount = Number(amountStr);
@@ -24,6 +25,6 @@ const Chip: React.FC<ChipProps> = ({ amount }) => {
         );
     }
     return null;
-};
+});
 
 export default Chip;

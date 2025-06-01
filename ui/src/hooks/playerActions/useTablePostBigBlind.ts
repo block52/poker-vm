@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
-import { useGameOptions, DEFAULT_BIG_BLIND } from "../useGameOptions";
+import { useGameOptions } from "../useGameOptions";
 
 /**
  * Custom hook to handle posting big blind at a poker table
@@ -36,7 +36,12 @@ export function useTablePostBigBlind(tableId?: string) {
             }
 
             // Use the provided amount or get from game options
-            const amount = options.bigBlindAmount || gameOptions.bigBlind || DEFAULT_BIG_BLIND;
+            const amount = options.bigBlindAmount || gameOptions?.bigBlind;
+            
+            if (!amount) {
+                setError("Big blind amount not available from game options");
+                return;
+            }
 
             // Call the playerAction method
             const response = await client.playerAction(

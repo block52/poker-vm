@@ -20,12 +20,13 @@ import { useTableShow } from "../hooks/playerActions/useTableShow";
 import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
 import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
 import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
-import { DEFAULT_BIG_BLIND, useGameOptions } from "../hooks/useGameOptions";
+import { usePlayerTimer } from "../hooks/usePlayerTimer";
+import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
 
-const PokerActionPanel: React.FC = () => {
+const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
 
     // Add ref to track if we're already attempting to auto-deal
@@ -114,11 +115,15 @@ const PokerActionPanel: React.FC = () => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    // Big Blind Value
+    // Big Blind Value - handle null gameOptions
     const bigBlindStep = useMemo(() => {
-        const step = Number(ethers.formatUnits(gameOptions.bigBlind ?? BigInt(DEFAULT_BIG_BLIND), 18));
+        if (!gameOptions?.bigBlind) {
+            console.warn("Big blind value not available from game options");
+            return 0.02; // Fallback value for display purposes
+        }
+        const step = Number(ethers.formatUnits(gameOptions.bigBlind, 18));
         return step;
-    }, [gameOptions.bigBlind]);
+    }, [gameOptions?.bigBlind]);
 
     // Slider Input State
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
@@ -137,6 +142,28 @@ const PokerActionPanel: React.FC = () => {
     // Add the useTableSitIn and useTableSitOut hooks
     const { sitIn, isLoading: isSittingIn } = useTableSitIn(tableId);
     const { sitOut, isLoading: isSittingOut } = useTableSitOut(tableId);
+
+    // Add timer extension functionality for the footer button
+    const userSeat = userPlayer?.seat;
+    const { extendTime, canExtend } = usePlayerTimer(tableId, userSeat);
+    
+    // Get the timeout duration from game options for display
+    const timeoutDuration = useMemo(() => {
+        if (!gameOptions?.timeout) return 30;
+        // Timeout now comes as milliseconds directly, convert to seconds
+        return Math.floor(gameOptions.timeout / 1000);
+    }, [gameOptions]);
+
+    // Handler for footer extension button
+    const handleExtendTimeFromFooter = useCallback(() => {
+        if (!extendTime || !canExtend) {
+            console.log("Cannot extend time - not available or already used");
+            return;
+        }
+        
+        extendTime();
+        console.log(`⏰ Time extended by ${timeoutDuration} seconds from footer button`);
+    }, [extendTime, canExtend, timeoutDuration]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -768,6 +795,31 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             >
                                                 ALL-IN
                                             </button>
+                                            {/* Extension Button - beside ALL-IN */}
+                                            {canExtend && isUsersTurn && (
+                                                <button
+                                                    onClick={handleExtendTimeFromFooter}
+                                                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600
+                                                    px-2 py-1.5 rounded-lg w-full border border-blue-400 hover:border-blue-300 shadow-md
+                                                    transition-all duration-200 text-xs font-medium transform hover:scale-105 flex items-center justify-center gap-1"
+                                                >
+                                                    <svg 
+                                                        className="w-3 h-3 text-white" 
+                                                        fill="none" 
+                                                        stroke="currentColor" 
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        {/* Clock circle */}
+                                                        <circle cx="12" cy="12" r="8" strokeWidth="2"/>
+                                                        {/* Clock hands */}
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2"/>
+                                                        {/* Plus symbol in corner */}
+                                                        <circle cx="18" cy="6" r="3" fill="currentColor"/>
+                                                        <path stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 6h2M18 5v2"/>
+                                                    </svg>
+                                                    +{timeoutDuration}s
+                                                </button>
+                                            )}
                                         </div>
                                     </>
                                 )}
@@ -805,7 +857,7 @@ transition-all duration-200 font-medium min-w-[100px]"
             </div>
         </div>
     );
-};
+});
 
 export default PokerActionPanel;
 

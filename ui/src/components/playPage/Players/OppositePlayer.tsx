@@ -63,7 +63,7 @@ type OppositePlayerProps = {
     setStartIndex: (index: number) => void;
 };
 
-const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
+const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo(id);
@@ -207,6 +207,16 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
             </div>
         </>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison function - only re-render if meaningful props change
+    return (
+        prevProps.left === nextProps.left &&
+        prevProps.top === nextProps.top &&
+        prevProps.index === nextProps.index &&
+        prevProps.color === nextProps.color &&
+        prevProps.isCardVisible === nextProps.isCardVisible
+        // Note: setCardVisible and setStartIndex are function props that shouldn't cause re-renders
+    );
+});
 
 export default OppositePlayer;
