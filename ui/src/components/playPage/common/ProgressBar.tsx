@@ -8,30 +8,17 @@ type ProgressBarProps = {
     index: number;
 };
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
+const ProgressBar: React.FC<ProgressBarProps> = React.memo(({ index }) => {
     const { id } = useParams<{ id: string }>();
     const { 
         isActive, 
         timeRemaining, 
         timeoutValue, 
-        extendTime, 
-        hasUsedExtension, 
-        canExtend,
-        isCurrentUserTurn
+        hasUsedExtension
     } = usePlayerTimer(id, index);
-    const { gameOptions } = useGameOptions();
     
     // State for extension UI feedback only
     const [isExtending, setIsExtending] = useState(false);
-
-    // Get the timeout duration from game options
-    const timeoutDuration = useMemo(() => {
-        if (!gameOptions?.timeout) return 30;
-        return Math.floor((gameOptions.timeout * 100) / 1000); // Convert deciseconds to seconds
-    }, [gameOptions]);
-
-    // Compute showExtensionPopup directly (no useEffect needed)
-    const showExtensionPopup = canExtend && isCurrentUserTurn && !isExtending;
 
     // Reset extending state when turn changes (simplified dependency)
     useEffect(() => {
@@ -39,19 +26,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
             setIsExtending(false);
         }
     }, [isActive]);
-
-    // Handle time extension using the timer hook function
-    const handleExtendTime = () => {
-        setIsExtending(true);
-        
-        // Use the timer hook's extend function
-        extendTime?.();
-        
-        // Show brief feedback then reset
-        setTimeout(() => {
-            setIsExtending(false);
-        }, 1500);
-    };
 
     // If player is not active, don't show progress bar
     if (!isActive) {
@@ -82,37 +56,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
                 ></div>
             </div>
             
-            {/* Extension Popup - Only show for current user on their turn */}
-            {showExtensionPopup && isCurrentUserTurn && (
-                <div className="absolute right-[-120px] top-[-40px] z-50 animate-pulse">
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-lg shadow-lg border border-blue-400 flex items-center gap-2 cursor-pointer hover:from-blue-500 hover:to-blue-600 transition-all duration-200 transform hover:scale-105"
-                         onClick={handleExtendTime}>
-                        {/* Stopwatch Icon */}
-                        <svg 
-                            className="w-4 h-4 text-white animate-spin" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                        >
-                            <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth={2} 
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
-                            />
-                        </svg>
-                        <span className="text-sm font-medium">+{timeoutDuration}s</span>
-                    </div>
-                    
-                    {/* Pointer arrow */}
-                    <div className="absolute left-[-8px] top-1/2 transform -translate-y-1/2">
-                        <div className="w-0 h-0 border-t-[8px] border-t-transparent border-r-[8px] border-r-blue-600 border-b-[8px] border-b-transparent"></div>
-                    </div>
-                </div>
-            )}
-            
             {/* Extension in progress indicator */}
-            {isExtending && isCurrentUserTurn && (
+            {isExtending && (
                 <div className="absolute right-[-80px] top-[-20px] z-50">
                     <div className="bg-green-600 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
                         <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,6 +69,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ index }) => {
             )}
         </div>
     );
-};
+});
 
 export default ProgressBar;

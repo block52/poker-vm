@@ -1,17 +1,54 @@
 import * as React from "react";
-import { memo, useMemo, useCallback } from "react";
+import { memo, useMemo, useCallback, useState, useEffect } from "react";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
+import { usePlayerTimer } from "../../../hooks/usePlayerTimer";
 import { useParams } from "react-router-dom";
 import type { PlayerProps } from "../../../types/index";
+import { useGameStateContext } from "../../../context/GameStateContext";
 
 const Player: React.FC<PlayerProps> = memo(
   ({ left, top, index, currentIndex, color, status }) => {
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo(id);
+    const { 
+        extendTime, 
+        canExtend, 
+        isCurrentUserTurn 
+    } = usePlayerTimer(id, index);
+    
+    // State for extension UI feedback
+    const [isExtending, setIsExtending] = useState(false);
+
+    // Handle time extension
+    const handleExtendTime = () => {
+        setIsExtending(true);
+        
+        // Use the timer hook's extend function
+        extendTime?.();
+        
+        // Show brief feedback then reset
+        setTimeout(() => {
+            setIsExtending(false);
+        }, 1500);
+    };
+
+    // Reset extending state when it's not the player's turn
+    useEffect(() => {
+        if (!isCurrentUserTurn) {
+            setIsExtending(false);
+        }
+    }, [isCurrentUserTurn]);
+
+    // Get player count to determine if timer should be active
+    const { gameState } = useGameStateContext();
+    const playerCount = gameState?.players?.length || 0;
+    
+    // Only show timer extension when there are 2+ players
+    const shouldShowTimerExtension = playerCount >= 2 && canExtend && isCurrentUserTurn && !isExtending;
 
     // 1) detect when any winner exists
     const hasWinner = useMemo(
@@ -43,9 +80,29 @@ const Player: React.FC<PlayerProps> = memo(
 
     // 5) render hole cards
     const renderCards = useCallback(() => {
+      console.log(`🃏 Player ${index} renderCards called:`, {
+        holeCards,
+        hasCards: !!holeCards,
+        cardCount: holeCards?.length,
+        playerData: !!playerData,
+        seat: index
+      });
+      
       if (!holeCards || holeCards.length !== 2) {
+        console.log(`⚠️ Player ${index} - No cards to render:`, {
+          holeCards,
+          reason: !holeCards ? "holeCards is null/undefined" : `cardCount=${holeCards.length}, expected 2`
+        });
         return <div className="w-[120px] h-[80px]"></div>;
       }
+      
+      console.log(`✅ Player ${index} - Rendering cards:`, {
+        card1: holeCards[0],
+        card2: holeCards[1],
+        card1Path: `/cards/${holeCards[0]}.svg`,
+        card2Path: `/cards/${holeCards[1]}.svg`
+      });
+      
       return (
         <>
           <img
@@ -53,16 +110,20 @@ const Player: React.FC<PlayerProps> = memo(
             width={60}
             height={80}
             className="mb-[11px]"
+            onError={(e) => console.error(`❌ Player ${index} card1 failed to load:`, `/cards/${holeCards[0]}.svg`)}
+            onLoad={() => console.log(`✅ Player ${index} card1 loaded:`, `/cards/${holeCards[0]}.svg`)}
           />
           <img
             src={`/cards/${holeCards[1]}.svg`}
             width={60}
             height={80}
             className="mb-[11px]"
+            onError={(e) => console.error(`❌ Player ${index} card2 failed to load:`, `/cards/${holeCards[1]}.svg`)}
+            onLoad={() => console.log(`✅ Player ${index} card2 loaded:`, `/cards/${holeCards[1]}.svg`)}
           />
         </>
       );
-    }, [holeCards]);
+    }, [holeCards, index]);
 
     // 6) status text for folded, all-in, or winner
     const statusText = useMemo(() => {
@@ -129,7 +190,13 @@ const Player: React.FC<PlayerProps> = memo(
             {statusText}
           </div>
           <div className="absolute top-[-10px] w-full">
-            <Badge count={index} value={stackValue} color={color} />
+            <Badge 
+                count={index} 
+                value={stackValue} 
+                color={color}
+                canExtend={shouldShowTimerExtension}
+                onExtend={shouldShowTimerExtension ? handleExtendTime : undefined}
+            />
           </div>
         </div>
       </div>

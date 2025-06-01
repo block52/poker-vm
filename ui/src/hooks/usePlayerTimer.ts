@@ -194,14 +194,18 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         }
     }, [isNextToAct, isCurrentUser, tableId, playerSeat]);
 
-    // Update current time every second
+    // Update current time every second - ONLY for active players
     useEffect(() => {
+        if (!isNextToAct) {
+            return; // Don't run timer for inactive players
+        }
+        
         const interval = setInterval(() => {
             setCurrentTime(Date.now());
         }, 1000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [isNextToAct]); // Re-run effect when player becomes active/inactive
 
     // Auto-action when timer expires
     useEffect(() => {

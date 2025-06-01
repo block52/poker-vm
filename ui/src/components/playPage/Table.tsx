@@ -137,7 +137,7 @@ NetworkDisplay.displayName = "NetworkDisplay";
 // Memoize TurnAnimation
 const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
-const Table = () => {
+const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
     const { client, isLoading: clientLoading, errorLogs, clearErrorLogs } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
@@ -865,6 +865,6 @@ const Table = () => {
             </div>
         </div>
     );
-};
+});
 
-export default memo(Table);
+export default Table;

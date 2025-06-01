@@ -83,6 +83,50 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
         
         if (message.type === "gameStateUpdate" && message.tableAddress === tableId) {
           console.log(`[GameStateContext] Received game state update for table ${tableId}`);
+          
+          // DEBUG: Log hole card data for all players to detect if backend sends undefined/null cards
+          if (message.gameState?.players) {
+            const playerAddress = localStorage.getItem("user_eth_public_key");
+            const currentUser = message.gameState.players.find((player: any) => 
+              player.address?.toLowerCase() === playerAddress?.toLowerCase()
+            );
+            
+            console.log("🃏 [GameStateContext] Hole Cards Debug:", {
+              timestamp: new Date().toISOString(),
+              totalPlayers: message.gameState.players.length,
+              round: message.gameState.round,
+              shouldHaveCards: ["preflop", "flop", "turn", "river", "showdown"].includes(message.gameState.round),
+              source: "WebSocket gameStateUpdate message",
+              note: "This shows raw backend data - compare with Player component logs",
+              currentUserData: currentUser ? {
+                seat: currentUser.seat,
+                address: currentUser.address?.substring(0, 8) + "...",
+                holeCards: currentUser.holeCards,
+                hasCards: !!currentUser.holeCards,
+                cardCount: currentUser.holeCards?.length || 0,
+                status: currentUser.status
+              } : "Current user not found in players"
+            });
+            
+            // Only check current user's hole cards (opposite players should have hidden cards)
+            // And only during rounds where cards should actually be dealt
+            const roundsWithCards = ["preflop", "flop", "turn", "river", "showdown"];
+            if (currentUser && roundsWithCards.includes(message.gameState.round) && 
+                (!currentUser.holeCards || currentUser.holeCards.length !== 2)) {
+              console.warn("🚨 [WebSocket/Backend Data Issue] PVM backend sent invalid hole cards via WebSocket:", {
+                seat: currentUser.seat,
+                address: currentUser.address?.substring(0, 8) + "...",
+                holeCards: currentUser.holeCards,
+                issue: !currentUser.holeCards ? "Backend sent null/undefined cards" : `Backend sent wrong count: ${currentUser.holeCards.length}`,
+                round: message.gameState.round,
+                source: "WebSocket gameStateUpdate message",
+                note: "This is NOT a frontend rendering issue - backend data is invalid"
+              });
+            }
+          } else {
+            console.warn("⚠️ [GameStateContext] No players data in game state update");
+          }
+          
           setGameState(message.gameState);
           setError(null);
         }
