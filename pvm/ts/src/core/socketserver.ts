@@ -85,7 +85,7 @@ export class SocketService implements SocketServiceInterface {
                     console.log(`Auto-subscribed player ${playerId} to table ${tableAddress}`);
 
                     // Get initial game state for this table
-                    const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey);
+                    const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, playerId);
                     const state = await gameStateCommand.execute();
 
                     // Send initial game state to the newly connected player
