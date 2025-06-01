@@ -70,25 +70,32 @@ export class SocketService implements SocketServiceInterface {
                 return;
             }
 
-            this.activeConnections++;
-            console.log(`WebSocket connected from ${req.socket.remoteAddress}`);
+            try {
+                this.activeConnections++;
+                console.log(`WebSocket connected from ${req.socket.remoteAddress}`);
 
-            // Try to get tableAddress and playerId from URL query parameters
-            const parsedUrl = url.parse(req.url || "", true);
-            const tableAddress = parsedUrl.query.tableAddress as string;
-            const playerId = parsedUrl.query.playerId as string;
+                // Try to get tableAddress and playerId from URL query parameters
+                const parsedUrl = url.parse(req.url || "", true);
+                const tableAddress = parsedUrl.query.tableAddress as string;
+                const playerId = parsedUrl.query.playerId as string;
 
-            // If tableAddress and playerId are provided in URL, auto-subscribe
-            if (tableAddress && playerId) {
-                this.subscribeToTable(tableAddress, playerId, ws);
-                console.log(`Auto-subscribed player ${playerId} to table ${tableAddress}`);
+                // If tableAddress and playerId are provided in URL, auto-subscribe
+                if (tableAddress && playerId) {
+                    this.subscribeToTable(tableAddress, playerId, ws);
+                    console.log(`Auto-subscribed player ${playerId} to table ${tableAddress}`);
 
-                // Get initial game state for this table
-                const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey);
-                const state = await gameStateCommand.execute();
+                    // Get initial game state for this table
+                    const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey);
+                    const state = await gameStateCommand.execute();
 
-                // Send initial game state to the newly connected player
-                this.sendGameStateToPlayer(tableAddress, playerId, state.data);
+                    // Send initial game state to the newly connected player
+                    this.sendGameStateToPlayer(tableAddress, playerId, state.data);
+                }
+            } catch (error) {
+                this.activeConnections--;
+                console.error("Error during WebSocket connection setup:", error);
+                ws.close(1011, "Internal server error"); // 1011 = "Unexpected condition"
+                return;
             }
 
             // Handle messages from client
