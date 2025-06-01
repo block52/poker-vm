@@ -150,7 +150,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Get the timeout duration from game options for display
     const timeoutDuration = useMemo(() => {
         if (!gameOptions?.timeout) return 30;
-        return Math.floor((gameOptions.timeout * 100) / 1000); // Convert deciseconds to seconds
+        // Timeout now comes as milliseconds directly, convert to seconds
+        return Math.floor(gameOptions.timeout / 1000);
     }, [gameOptions]);
 
     // Handler for footer extension button
