@@ -21,7 +21,7 @@ export class Account {
         return {
             address: this.address,
             balance: this.balance.toString(),
-            nonce: 0
+            nonce: this.nonce
         };
     }
 
