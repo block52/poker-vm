@@ -36,8 +36,8 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         const fromAccount = accountResponse.data;
         console.log(`Account balance for ${this.from}: ${fromAccount.balance} ${fromAccount.nonce}`);
 
-        if (this.nonce !== fromAccount.getNextNonce()) {
-            console.log(`Invalid nonce: expected=${fromAccount.getNextNonce()}, provided=${this.nonce}`);
+        if (this.nonce !== fromAccount.nonce) {
+            console.log(`Invalid nonce: expected=${fromAccount.nonce}, provided=${this.nonce}`);
             throw new Error("Invalid nonce");
         }
 
