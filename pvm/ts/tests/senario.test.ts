@@ -25,7 +25,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual).toBeDefined();
         });
 
-        it.skip("should test bug 735", () => {
+        it.only("should test bug 735", () => {
             game = fromTestJson(test_735)
             // Check the current round
             expect(game.currentRound).toEqual(TexasHoldemRound.END);
