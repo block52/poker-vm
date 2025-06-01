@@ -78,14 +78,18 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         return player?.address?.toLowerCase() === userAddress;
     }, [player]);
 
-    // Timer configuration - get from game options (convert deciseconds to milliseconds)
+    // Timer configuration - get from game options (now in milliseconds)
     const TIMEOUT_DURATION = useMemo((): number => {
         if (!gameOptions?.timeout) {
             console.warn("No timeout value from game options, using default 30 seconds");
             return 30000; // 30 seconds default if no game options
         }
-        // Convert deciseconds to milliseconds: timeout * 100
-        return gameOptions.timeout * 100;
+        
+        // Log the raw timeout value to verify units
+        console.log(`🕐 Raw timeout from gameOptions: ${gameOptions.timeout} (assuming milliseconds)`);
+        
+        // Timeout now comes as milliseconds directly (e.g., 3000ms = 3 seconds)
+        return gameOptions.timeout;
     }, [gameOptions]);
 
     // Calculate timeout in seconds for display
