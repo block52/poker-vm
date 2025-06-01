@@ -29,6 +29,25 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
     // Get game options for timeout value
     const { gameOptions } = useGameOptions();
 
+    // Timer configuration - get from game options (now in milliseconds)
+    const TIMEOUT_DURATION = useMemo((): number => {
+        if (!gameOptions?.timeout) {
+            console.warn("No timeout value from game options, using default 30 seconds");
+            return 30000; // 30 seconds default if no game options
+        }
+        
+        // Log the raw timeout value to verify units
+        console.log(`🕐 Raw timeout from gameOptions: ${gameOptions.timeout} (assuming milliseconds)`);
+        
+        // Timeout now comes as milliseconds directly (e.g., 3000ms = 3 seconds)
+        return gameOptions.timeout;
+    }, [gameOptions]);
+
+    // Calculate timeout in seconds for display
+    const timeoutInSeconds = useMemo((): number => {
+        return Math.floor(TIMEOUT_DURATION / 1000);
+    }, [TIMEOUT_DURATION]);
+
     // Create unique key for this seat
     const seatKey = `${tableId}-${playerSeat}`;
 
@@ -39,7 +58,8 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         checkHand,
         isFolding,
         lastAutoFoldTime,
-        timeoutInSeconds: 30
+        timeoutInSeconds,
+        isExecutingAutoAction: false
     });
 
     // Find the player by seat number
@@ -78,25 +98,6 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         return player?.address?.toLowerCase() === userAddress;
     }, [player]);
 
-    // Timer configuration - get from game options (now in milliseconds)
-    const TIMEOUT_DURATION = useMemo((): number => {
-        if (!gameOptions?.timeout) {
-            console.warn("No timeout value from game options, using default 30 seconds");
-            return 30000; // 30 seconds default if no game options
-        }
-        
-        // Log the raw timeout value to verify units
-        console.log(`🕐 Raw timeout from gameOptions: ${gameOptions.timeout} (assuming milliseconds)`);
-        
-        // Timeout now comes as milliseconds directly (e.g., 3000ms = 3 seconds)
-        return gameOptions.timeout;
-    }, [gameOptions]);
-
-    // Calculate timeout in seconds for display
-    const timeoutInSeconds = useMemo((): number => {
-        return Math.floor(TIMEOUT_DURATION / 1000);
-    }, [TIMEOUT_DURATION]);
-
     // Update ref with latest values on each render
     latestValues.current = {
         legalActions,
@@ -104,7 +105,8 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         checkHand,
         isFolding,
         lastAutoFoldTime,
-        timeoutInSeconds
+        timeoutInSeconds,
+        isExecutingAutoAction: false
     };
 
     // Get extension info for this seat
@@ -151,10 +153,17 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
 
     // Auto-action logic (check first, then fold if check not available)
     const handleAutoAction = useCallback(async () => {
+        // Use a flag to prevent concurrent executions
+        if (latestValues.current.isExecutingAutoAction) {
+            return;
+        }
+        latestValues.current.isExecutingAutoAction = true;
+        
         // Get latest values from ref
         const { legalActions, foldHand, checkHand, isFolding, lastAutoFoldTime, timeoutInSeconds } = latestValues.current;
         
         if (!isNextToAct || !isCurrentUser || !tableId || isFolding) {
+            latestValues.current.isExecutingAutoAction = false;
             return;
         }
 
@@ -162,12 +171,14 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         const timeSinceLastAutoFold = Date.now() - lastAutoFoldTime;
         if (timeSinceLastAutoFold < 5000) { // 5 second cooldown
             console.log("Auto-action cooldown active, skipping");
+            latestValues.current.isExecutingAutoAction = false;
             return;
         }
 
         // Check if player has legal actions (can actually act)
         if (!legalActions || legalActions.length === 0) {
             console.log("No legal actions available for auto-action");
+            latestValues.current.isExecutingAutoAction = false;
             return;
         }
 
@@ -177,6 +188,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
 
         if (!canCheck && !canFold) {
             console.log("Neither check nor fold is a legal action for auto-action");
+            latestValues.current.isExecutingAutoAction = false;
             return;
         }
 
@@ -195,6 +207,8 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         } catch (error) {
             console.error("❌ Failed to auto-action:", error);
             // Don't throw here as it would break the component
+        } finally {
+            latestValues.current.isExecutingAutoAction = false;
         }
     }, [isNextToAct, isCurrentUser, tableId, playerSeat]);
 
