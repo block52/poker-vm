@@ -58,6 +58,34 @@ export class ContractSchemaManagement extends StateManager implements IContractS
 
         return options;
     }
+
+    public static parseSchema(schema: string): GameOptions {
+
+        // Example schema: "category,name,2,10,1000,2000,50000,1000000,30000"
+        // Ensure the schema is a valid string via a Regular Expression
+        if (!/^[^,]+,[^,]+(?:,\d+)+$/.test(schema)) {
+            throw new Error("Invalid schema format");
+        }
+
+        const args = schema.split(",");
+        if (args.length < 8) {
+            throw new Error("Invalid schema");
+        }
+
+        const timeout = args[8] ? parseInt(args[8]) : 30000; // Default timeout of 30 seconds
+
+        const options: GameOptions = {
+            minBuyIn: BigInt(args[6]),
+            maxBuyIn: BigInt(args[7]),
+            minPlayers: parseInt(args[2]),
+            maxPlayers: parseInt(args[3]),
+            smallBlind: BigInt(args[4]),
+            bigBlind: BigInt(args[5]),
+            timeout: timeout
+        };
+
+        return options;
+    }
 }
 
 let instance: ContractSchemaManagement;

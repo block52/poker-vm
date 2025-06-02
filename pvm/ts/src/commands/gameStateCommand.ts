@@ -1,4 +1,4 @@
-import {  TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import {  GameOptions, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
@@ -29,7 +29,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
 
-            const gameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
+            const gameOptions: GameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
             const game = TexasHoldemGame.fromJson(gameState.state, gameOptions);
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
