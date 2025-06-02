@@ -5,7 +5,6 @@ import { getGameManagementInstance, getContractSchemaManagementInstance } from "
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { Transaction } from "../models";
-import { OrderedTransaction } from "../engine/types";
 import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 
@@ -17,8 +16,8 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     // This will be shared secret later
     constructor(readonly address: string, private readonly privateKey: string, private readonly caller?: string | undefined) {
         this.gameManagement = getGameManagementInstance();
-        this.mempool = getMempoolInstance();
         this.contractSchemaManagement = getContractSchemaManagementInstance();
+        this.mempool = getMempoolInstance();
     }
 
     public async execute(): Promise<ISignedResponse<TexasHoldemStateDTO>> {

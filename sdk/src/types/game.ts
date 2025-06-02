@@ -176,6 +176,7 @@ export type Card = {
 
 export type GameOptionsResponse = {
     address: string;
+    schemaAddress: string;
     gameOptions: GameOptionsDTO;
 };
 
