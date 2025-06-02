@@ -7,7 +7,12 @@ export class NewTableCommand implements ISignedCommand<string> {
     private readonly gameManagement: IGameManagement;
     private readonly contractSchemas: IContractSchemaManagement;
 
-    constructor(private readonly owner: string, private readonly schemaAddress: string, private readonly privateKey: string) {
+    constructor(
+        private readonly owner: string, 
+        private readonly schemaAddress: string, 
+        private readonly nonce: bigint,
+        private readonly privateKey: string
+    ) {
         this.gameManagement = getGameManagementInstance();
         this.contractSchemas = getContractSchemaManagementInstance();
     }
@@ -19,7 +24,7 @@ export class NewTableCommand implements ISignedCommand<string> {
             throw new Error(`Game options not found for schema address: ${this.schemaAddress}`);
         }
 
-        const address = await this.gameManagement.create(0n, this.schemaAddress, gameOptions);
+        const address = await this.gameManagement.create(this.nonce, this.schemaAddress, gameOptions);
 
         return signResult(address, this.privateKey);
     }
