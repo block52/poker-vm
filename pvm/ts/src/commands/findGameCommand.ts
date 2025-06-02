@@ -49,13 +49,19 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
                         address: game.address,
                         gameOptions: {
                             smallBlind: gameOptions?.smallBlind.toString(),
-                            bigBlind: gameOptions?.bigBlind.toString()
+                            bigBlind: gameOptions?.bigBlind.toString(),
+                            minBuyIn: gameOptions?.minBuyIn.toString(),
+                            maxBuyIn: gameOptions?.maxBuyIn.toString(),
+                            minPlayers: gameOptions?.minPlayers,
+                            maxPlayers: gameOptions?.maxPlayers,
+                            timeout: gameOptions?.timeout
                         }
                     };
 
                     results.push(result);
                 }
-                
+
+                return await signResult(results, this.privateKey);
             }
 
             for (const game of games) {
