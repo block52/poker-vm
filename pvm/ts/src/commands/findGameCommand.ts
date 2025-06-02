@@ -47,6 +47,7 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
 
                     const result: GameOptionsResponse = {
                         address: game.address,
+                        schemaAddress: game.schemaAddress,
                         gameOptions: {
                             smallBlind: gameOptions?.smallBlind.toString(),
                             bigBlind: gameOptions?.bigBlind.toString(),
@@ -85,6 +86,7 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
                 if (shouldInclude) {
                     results.push({
                         address: game.address,
+                        schemaAddress: game.schemaAddress,
                         gameOptions: {
                             smallBlind: game.state?.smallBlind.toString(),
                             bigBlind: game.state?.bigBlind.toString()
