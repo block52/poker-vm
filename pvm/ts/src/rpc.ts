@@ -354,8 +354,9 @@ export class RPC {
                 }
 
                 case RPCMethods.NEW_TABLE: {
-                    const [to, owner] = request.params as RPCRequestParams[RPCMethods.NEW_TABLE];
-                    const command = new NewTableCommand(to, owner, validatorPrivateKey);
+                    // The SDK sends [schemaAddress, owner, nonce] but the type only expects 2 params
+                    const [schemaAddress, owner, nonce] = request.params as [string, string, number];
+                    const command = new NewTableCommand(owner, schemaAddress, BigInt(nonce || 0), validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

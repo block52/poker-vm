@@ -828,32 +828,6 @@ transition-all duration-200 font-medium min-w-[100px]"
                     </>
                 )}
 
-                {/* Sit In / Sit Out Buttons - Bottom Right Area */}
-                {isUserInTable && (
-                    <div className="fixed bottom-4 right-4 flex gap-2 z-30">
-                        {isPlayerSittingOut ? (
-                            <button
-                                onClick={handleSitIn}
-                                className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                text-white font-medium py-2 px-6 rounded-lg shadow-lg transition-all duration-200 
-                                border border-[#3a9188] hover:border-[#64ffda] flex items-center text-sm transform hover:scale-105"
-                                disabled={isSittingIn}
-                            >
-                                {isSittingIn ? "SITTING IN..." : "I AM BACK"}
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSitOut}
-                                className="bg-gradient-to-r from-[#4b5563] to-[#374151] hover:from-[#374151] hover:to-[#1f2937] 
-                                text-white font-medium py-2 px-6 rounded-lg shadow-lg transition-all duration-200 
-                                border border-[#6b7280] hover:border-[#9ca3af] flex items-center text-sm transform hover:scale-105"
-                                disabled={isSittingOut}
-                            >
-                                {isSittingOut ? "SITTING OUT..." : "SIT OUT"}
-                            </button>
-                        )}
-                    </div>
-                )}
             </div>
         </div>
     );
