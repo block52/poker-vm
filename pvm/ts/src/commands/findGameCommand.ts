@@ -43,7 +43,7 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
                 const results: GameOptionsResponse[] = [];
                 for (const game of games) {
 
-                    const gameOptions: GameOptions = await this.contractSchemaManagement.getGameOptions(game.address);
+                    const gameOptions: GameOptions = await this.contractSchemaManagement.getGameOptions(game.schemaAddress);
 
                     const result: GameOptionsResponse = {
                         address: game.address,
