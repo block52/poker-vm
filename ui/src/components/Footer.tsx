@@ -90,12 +90,13 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const hasRaiseAction = hasAction(PlayerActionType.RAISE);
     const hasMuckAction = hasAction(PlayerActionType.MUCK);
     const hasShowAction = hasAction(PlayerActionType.SHOW);
+    const hasDealAction = hasAction(NonPlayerActionType.DEAL);
 
-    // Only show deal button if player has the deal action (now unused since we auto-deal)
-    // const shouldShowDealButton = hasDealAction;
+    // Show deal button if player has the deal action
+    const shouldShowDealButton = hasDealAction && isUsersTurn;
 
-    // Since we're auto-dealing now, we don't need to hide other buttons when deal is available
-    const hideOtherButtons = false;
+    // Hide other buttons when deal is available since dealing should be prioritized
+    const hideOtherButtons = shouldShowDealButton;
 
     // Find the specific actions
     const getActionByType = (actionType: string | PlayerActionType | NonPlayerActionType) => {
@@ -327,6 +328,23 @@ const PokerActionPanel: React.FC = React.memo(() => {
         });
     };
 
+    // Handler for deal action
+    const handleDeal = useCallback(() => {
+        if (!dealCards) {
+            console.error("Hook not ready");
+            return;
+        }
+
+        // Use our hook to deal cards
+        dealCards()
+            .then(() => {
+                console.log("Deal completed successfully");
+            })
+            .catch(error => {
+                console.error("Failed to deal:", error);
+            });
+    }, [dealCards]);
+
     // Add the handleStartNewHand function after the other handler functions
     const handleStartNewHand = () => {
         if (!privateKey || !startNewHand) {
@@ -382,52 +400,51 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
 
     // Auto-deal logic: Automatically deal when DEAL action is available for current user
-    useEffect(() => {
-        // Early return if it's not the user's turn - no need to check anything else
-        if (!isCurrentUserTurn) {
-            return;
-        }
+    // useEffect(() => {
+    //     // Early return if it's not the user's turn - no need to check anything else
+    //     if (!isCurrentUserTurn) {
+    //         return;
+    //     }
 
-        // Only proceed if we have the necessary data
-        if (!legalActions || !dealCards || isDealing || attemptToAutoDeal.current) {
-            return;
-        }
+    //     // Only proceed if we have the necessary data
+    //     if (!legalActions || !dealCards || isDealing || attemptToAutoDeal.current) {
+    //         return;
+    //     }
 
-        // Check if DEAL action is available in legal actions
-        const hasDealAction = legalActions.some(action => action.action === NonPlayerActionType.DEAL);
+    //     // Check if DEAL action is available in legal actions
+    //     const hasDealAction = legalActions.some(action => action.action === NonPlayerActionType.DEAL);
 
-        if (hasDealAction) {
-            // Set flag to prevent multiple attempts
-            attemptToAutoDeal.current = true;
+    //     if (hasDealAction) {
+    //         // Set flag to prevent multiple attempts
+    //         attemptToAutoDeal.current = true;
 
-            // Small delay to ensure state is settled before dealing
-            const dealTimeout = setTimeout(() => {
-                dealCards()
-                    .then(() => {
-                        console.log("✅ Auto-deal completed successfully");
-                    })
-                    .catch(error => {
-                        console.error("❌ Auto-deal failed:", error);
-                    })
-                    .finally(() => {
-                        // Reset flag after attempt
-                        attemptToAutoDeal.current = false;
-                    });
-            }, 100);
+    //         // Small delay to ensure state is settled before dealing
+    //         const dealTimeout = setTimeout(() => {
+    //             dealCards()
+    //                 .then(() => {
+    //                     console.log("✅ Auto-deal completed successfully");
+    //                 })
+    //                 .catch(error => {
+    //                     console.error("❌ Auto-deal failed:", error);
+    //                 })
+    //                 .finally(() => {
+    //                     // Reset flag after attempt
+    //                     attemptToAutoDeal.current = false;
+    //                 });
+    //         }, 100);
 
-            // Cleanup timeout if component unmounts or dependencies change
-            return () => {
-                clearTimeout(dealTimeout);
-                attemptToAutoDeal.current = false;
-            };
-        }
-    }, [dealCards, isCurrentUserTurn, isDealing, legalActions]); // Reduced dependencies - only what we actually need
+    //         // Cleanup timeout if component unmounts or dependencies change
+    //         return () => {
+    //             clearTimeout(dealTimeout);
+    //             attemptToAutoDeal.current = false;
+    //         };
+    //     }
+    // }, [dealCards, isCurrentUserTurn, isDealing, legalActions]); // Reduced dependencies - only what we actually need
 
     return (
         <div className="fixed bottom-20 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
             <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
-                {/* COMMENTED OUT - Auto-deal is now handled automatically
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-3">
                         <button
@@ -451,7 +468,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                         </button>
                     </div>
                 )}
-                */}
 
                 {/* New Hand Button - Show when the round is "end" */}
                 {currentRound === "end" && (
@@ -795,7 +811,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             >
                                                 ALL-IN
                                             </button>
-                                            {/* Extension Button - beside ALL-IN */}
+                                            {/* COMMENTED OUT - Time extension button disabled
                                             {canExtend && isUsersTurn && (
                                                 <button
                                                     onClick={handleExtendTimeFromFooter}
@@ -809,17 +825,15 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                         stroke="currentColor" 
                                                         viewBox="0 0 24 24"
                                                     >
-                                                        {/* Clock circle */}
                                                         <circle cx="12" cy="12" r="8" strokeWidth="2"/>
-                                                        {/* Clock hands */}
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2"/>
-                                                        {/* Plus symbol in corner */}
                                                         <circle cx="18" cy="6" r="3" fill="currentColor"/>
                                                         <path stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 6h2M18 5v2"/>
                                                     </svg>
                                                     +{timeoutDuration}s
                                                 </button>
                                             )}
+                                            */}
                                         </div>
                                     </>
                                 )}
