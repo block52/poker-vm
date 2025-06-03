@@ -91,7 +91,7 @@ const Dashboard: React.FC = () => {
 
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
-    const [selectedContractAddress, setSelectedContractAddress] = useState("0xfe4ddc39ff3d703ee2d91021a52bc69b0680e2186a");
+    const [selectedContractAddress, setSelectedContractAddress] = useState("0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7");
     const [createGameError, setCreateGameError] = useState("");
 
     // Buy In Modal
@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
 
     // Game contract addresses - in a real app, these would come from the API
     // const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd34326"; // Example address
-    const DEFAULT_GAME_CONTRACT = "0xfe4ddc39ff3d703ee2d91021a52bc69b0680e2186a"; // Example address
+    const DEFAULT_GAME_CONTRACT = "0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7"; // Example address
 
     // Function to handle creating a new game using NodeRpcClient directly
     const handleCreateNewGame = async () => {
