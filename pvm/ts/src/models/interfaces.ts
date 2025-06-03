@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 
 export interface IJSONModel {
     toJson(): any;
@@ -34,7 +34,7 @@ export interface IBlockDocument {
 
 export interface IGameStateDocument {
     address: string;
-    schemaAddress: string;
+    gameOptions: GameOptions;
     state: any;
 }
 

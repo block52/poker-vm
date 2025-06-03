@@ -2,22 +2,19 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Deck, Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
+import { getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
-import contractSchemas from "../schema/contractSchemas";
 import { NonPlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
-import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
+import { IGameManagement } from "../state/interfaces";
 
 export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly gameManagement: IGameManagement;
-    private readonly contractSchemaManagement: IContractSchemaManagement;
     private readonly mempool: Mempool;
     private readonly seed: number[];
 
     constructor(private readonly address: string, private readonly index: number, private readonly nonce: number, private readonly privateKey: string, _seed: string | undefined = undefined) {
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
 
         // Convert the seed string to a number array for shuffling
@@ -47,9 +44,8 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
             if (!_game?.state) {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
-
-            const gameOptions = await this.contractSchemaManagement.getGameOptions(_game.schemaAddress);
-
+            
+            const gameOptions = await this.gameManagement.getGameOptions(this.address);
             // For existing games, handle reinitialization
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(_game?.state, gameOptions);
             const deck = new Deck();
@@ -89,7 +85,7 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
     }
 
     private async isGameContract(address: string): Promise<boolean> {
-        const existingContractSchema = await contractSchemas.find({ address: address });
+        const existingContractSchema = await this.gameManagement.getByAddress(address);
         return existingContractSchema !== undefined;
     }
 }

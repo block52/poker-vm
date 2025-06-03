@@ -1,30 +1,27 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block, Transaction } from "../models";
 import { getGameManagementInstance } from "../state/index";
-import { getBlockchainInstance, getTransactionInstance, getContractSchemaManagementInstance } from "../state/index";
+import { getBlockchainInstance, getTransactionInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import contractSchemas from "../schema/contractSchemas";
 import { GameStateCommand } from "./gameStateCommand";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { IGameStateDocument } from "../models/interfaces";
 import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
-import { IBlockchainManagement, IContractSchemaManagement, IGameManagement, ITransactionManagement } from "../state/interfaces";
+import { IBlockchainManagement, IGameManagement, ITransactionManagement } from "../state/interfaces";
 
 export class MineCommand implements ISignedCommand<Block | null> {
     private readonly mempool: Mempool;
     private readonly blockchainManagement: IBlockchainManagement;
     private readonly transactionManagement: ITransactionManagement;
     private readonly gameStateManagement: IGameManagement;
-    private readonly contractSchemaManagement: IContractSchemaManagement;
 
     constructor(private readonly privateKey: string, private readonly expire: boolean = false) {
         this.mempool = getMempoolInstance();
         this.blockchainManagement = getBlockchainInstance();
         this.transactionManagement = getTransactionInstance();
         this.gameStateManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagementInstance();
     }
 
     public async execute(): Promise<ISignedResponse<Block | null>> {
@@ -113,30 +110,15 @@ export class MineCommand implements ISignedCommand<Block | null> {
             return;
         }
 
-        const gameOptionsCache = new Map<string, GameOptions>();
-
-        for (let i = 0; i < gameStateAddresses.length; i++) {
-            const address = gameStateAddresses[i];
-            // Todo: do in parallel
-            const gameOptions = await this.contractSchemaManagement.getGameOptions(address);
-            gameOptionsCache.set(address, gameOptions);
-        }
-
         const now = new Date();
         for (let i = 0; i < gameStates.length; i++) {
             const gameState = gameStates[i];
-            const gameOptions = gameOptionsCache.get(gameState.address);
 
-            if (!gameOptions) {
-                console.warn(`Game options not found for address ${gameState.address}`);
-                continue;
-            }
-
-            const game = TexasHoldemGame.fromJson(gameState.state, gameOptions);
+            const game = TexasHoldemGame.fromJson(gameState.state, gameState.gameOptions);
             const turn = game.getLastRoundAction();
             if (turn) {
                 const expirationDate = new Date(turn.timestamp);
-                expirationDate.setSeconds(expirationDate.getSeconds() + gameOptions.timeout);
+                expirationDate.setSeconds(expirationDate.getSeconds() + gameState.gameOptions.timeout);
 
                 const turnIndex = game.getActionIndex();
 

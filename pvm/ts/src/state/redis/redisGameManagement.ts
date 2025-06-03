@@ -55,6 +55,10 @@ export class RedisGameManagement implements IGameManagement, IDB {
         throw new Error("Method not implemented.");
     }
 
+    public getGameOptions(address: string): Promise<GameOptions> {
+        throw new Error("Method not implemented.");
+    }
+
     public getState(address: string): Promise<any | null> {
         throw new Error("Method not implemented.");
     }
@@ -137,24 +141,26 @@ export class RedisGameManagement implements IGameManagement, IDB {
      * @param nonce Game nonce
      * @param contractSchemaAddress Contract schema address
      * @param gameOptions Game options
+     * @param timestamp Optional timestamp for uniqueness
      */
-    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
+    public async create(nonce: bigint, owner: string, gameOptions: GameOptions, timestamp?: string): Promise<string> {
         await this.connect();
 
         // Generate a unique ID for the game
         const gameId = this.generateGameId();
 
         // Create game address (this might need to be adjusted based on your actual logic)
-        const gameAddress = this.generateGameAddress(contractSchemaAddress, nonce);
+        const gameAddress = this.generateGameAddress(owner, nonce, timestamp);
 
         // Prepare game state document
         const gameState: IGameStateDocument = {
             address: gameAddress,
-            schemaAddress: contractSchemaAddress,
+            gameOptions: gameOptions,
             state: {
                 nonce: nonce.toString(),
                 options: gameOptions,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                timestamp: timestamp
             }
         };
 
@@ -249,9 +255,9 @@ export class RedisGameManagement implements IGameManagement, IDB {
      * Generate a game address based on contract schema and nonce
      * Note: This is a simplified implementation, adjust as needed
      */
-    private generateGameAddress(contractSchemaAddress: string, nonce: bigint): string {
+    private generateGameAddress(contractSchemaAddress: string, nonce: bigint, timestamp?: string): string {
         const hash = crypto.createHash("sha256");
-        hash.update(`${contractSchemaAddress}:${nonce.toString()}`);
+        hash.update(`${contractSchemaAddress}:${nonce.toString()}:${timestamp || ''}`);
         return "0x" + hash.digest("hex").substring(0, 40);
     }
 
@@ -261,7 +267,7 @@ export class RedisGameManagement implements IGameManagement, IDB {
     private parseGameState(data: Record<string, string>): IGameStateDocument {
         return {
             address: data.address,
-            schemaAddress: data.schemaAddress,
+            gameOptions: JSON.parse(data.gameOptions || '{}') as GameOptions,
             state: JSON.parse(data.state || '{}')
         };
     }
@@ -270,11 +276,13 @@ export class RedisGameManagement implements IGameManagement, IDB {
      * Serialize a game state for Redis storage
      */
     private serializeGameState(gameState: IGameStateDocument): Record<string, string> {
-        return {
-            address: gameState.address,
-            schemaAddress: gameState.schemaAddress,
-            state: JSON.stringify(gameState.state || {})
-        };
+        // return {
+        //     address: gameState.address,
+        //     gameOptions: gameState.gameOptions,
+        //     state: JSON.stringify(gameState.state || {})
+        // };
+
+        throw new Error("Method serializeGameState not implemented yet");
     }
 
     /**

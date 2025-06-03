@@ -15,12 +15,9 @@ import { ResetCommand } from "./resetCommand";
 import { BlockCommand, BlockCommandParams } from "./blockCommand";
 import { BurnCommand } from "./burnCommand";
 import { CreateAccountCommand } from "./createAccountCommand";
-import { CreateContractSchemaCommand } from "./contractSchema/createContractSchemaCommand";
 import { FindGameStateCommand } from "./findGameCommand";
 import { GameStateCommand } from "./gameStateCommand";
-import { GetAllContractSchemasCommand } from "./contractSchema/getAllContractSchemasCommand";
 import { GetBlocksCommand } from "./getBlocksCommand";
-import { GetContractSchemaCommand } from "./contractSchema/getContractSchemaCommand";
 import { GetNodesCommand } from "./getNodesCommand";
 import { GetTransactionCommand } from "./getTransactionCommand";
 import { MempoolCommand } from "./mempoolCommand";
@@ -43,13 +40,10 @@ export {
     BurnCommand,
     ChallengeCommand,
     CreateAccountCommand,
-    CreateContractSchemaCommand,
     DeployContractCommand,
     FindGameStateCommand,
     GameStateCommand,
-    GetAllContractSchemasCommand,
     GetBlocksCommand,
-    GetContractSchemaCommand,
     GetNodesCommand,
     GetTransactionCommand,
     GetTransactionsCommand,

@@ -21,7 +21,7 @@ export class GameManagement extends StateManager implements IGameManagement {
             // this is stored in MongoDB as an object / document
             const state: IGameStateDocument = {
                 address: gameState.address,
-                schemaAddress: gameState.schemaAddress,
+                gameOptions: gameState.gameOptions,
                 state: gameState.state
             };
             return state;
@@ -37,7 +37,7 @@ export class GameManagement extends StateManager implements IGameManagement {
             // this is stored in MongoDB as an object / document
             const state: IGameStateDocument = {
                 address: gameState.address,
-                schemaAddress: gameState.schemaAddress,
+                gameOptions: gameState.gameOptions,
                 state: gameState.state
             };
             return state;
@@ -51,7 +51,7 @@ export class GameManagement extends StateManager implements IGameManagement {
             // this is stored in MongoDB as an object / document
             const state: IGameStateDocument = {
                 address: gameState.address,
-                schemaAddress: gameState.schemaAddress,
+                gameOptions: gameState.gameOptions,
                 state: gameState.state
             };
             return state;
@@ -74,12 +74,28 @@ export class GameManagement extends StateManager implements IGameManagement {
         return null;
     }
 
-    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
-        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
+    public async getGameOptions(address: string): Promise<GameOptions> {
+        const game = await GameState.findOne({
+            address
+        });
+
+        if (!game) {
+            throw new Error(`Game not found for address: ${address}`);
+        }
+
+        return game.gameOptions as GameOptions;
+    }
+
+    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions, timestamp?: string): Promise<string> {
+        // Include timestamp in digest for uniqueness if provided
+        const timestampPart = timestamp ? `-${timestamp}` : "";
+        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}${timestampPart}`;
         const address = createAddress(digest);
 
         // Creating a log to confirm what's happening
-        console.log(`Creating game with address: ${address} (using contract schema address directly)`);
+        console.log(`Creating game with digest: ${digest}`);
+        console.log(`Generated address: ${address}`);
+        console.log(`Timestamp used: ${timestamp || "none"}`);
 
         // Todo: Add deck
         const deck = new Deck();
@@ -114,7 +130,7 @@ export class GameManagement extends StateManager implements IGameManagement {
 
         const game = new GameState({
             address: address,
-            schemaAddress: contractSchemaAddress,
+            gameOptions: gameOptions,
             state
         });
 
@@ -154,6 +170,34 @@ export class GameManagement extends StateManager implements IGameManagement {
         } else {
             await game.save();
         }
+    }
+
+    public static parseSchema(schema: string): GameOptions {
+
+        // Example schema: "category,name,2,10,1000,2000,50000,1000000,30000"
+        // Ensure the schema is a valid string via a Regular Expression
+        if (!/^[^,]+,[^,]+(?:,\d+)+$/.test(schema)) {
+            throw new Error("Invalid schema format");
+        }
+
+        const args = schema.split(",");
+        if (args.length < 8) {
+            throw new Error("Invalid schema");
+        }
+
+        const timeout = args[8] ? parseInt(args[8]) : 30000; // Default timeout of 30 seconds
+
+        const options: GameOptions = {
+            minBuyIn: BigInt(args[6]),
+            maxBuyIn: BigInt(args[7]),
+            minPlayers: parseInt(args[2]),
+            maxPlayers: parseInt(args[3]),
+            smallBlind: BigInt(args[4]),
+            bigBlind: BigInt(args[5]),
+            timeout: timeout
+        };
+
+        return options;
     }
 }
 

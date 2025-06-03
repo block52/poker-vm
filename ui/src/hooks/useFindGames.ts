@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNodeRpc } from "../context/NodeRpcContext";
 import { FindGamesReturn } from "../types/index";
-import { GameOptionsDTO, GameOptionsResponse } from "@bitcoinbrisbane/block52";
+import { GameOptionsResponse } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to find available games
@@ -26,11 +26,28 @@ export const useFindGames = (): FindGamesReturn => {
             const minBuyIn = BigInt("10000000000000000"); // 0.01 ETH
             const maxBuyIn = BigInt("1000000000000000000"); // 1 ETH
             
-            const availableGames: GameOptionsDTO[] = await client.findGames(minBuyIn, maxBuyIn);
+            const availableGames: GameOptionsResponse[] = await client.findGames(minBuyIn, maxBuyIn);
             console.log("Available games:", availableGames);
             // Also log stringified version for complete details
             console.log("Available games (stringified):", JSON.stringify(availableGames, null, 2));
-            setGames(availableGames as GameOptionsResponse[]);
+            
+            // Debug: Check for duplicate addresses
+            const addresses = availableGames.map(game => game.address);
+            const uniqueAddresses = Array.from(new Set(addresses));
+            console.log("🔍 Address Analysis:");
+            console.log("All addresses:", addresses);
+            console.log("Unique addresses:", uniqueAddresses);
+            console.log(`Total games: ${availableGames.length}, Unique addresses: ${uniqueAddresses.length}`);
+            
+            if (addresses.length !== uniqueAddresses.length) {
+                console.warn("⚠️ DUPLICATE ADDRESSES DETECTED! Same table returned multiple times.");
+                console.warn("This suggests either:");
+                console.warn("1. Backend is returning the same table multiple times");
+                console.warn("2. Table creation is not generating unique addresses");
+                console.warn("3. Database has duplicate entries");
+            }
+            
+            setGames(availableGames);
         } catch (err: any) {
             const errorMessage = err.message || "Failed to fetch games";
             setError(new Error(errorMessage));
