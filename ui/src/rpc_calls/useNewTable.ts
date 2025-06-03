@@ -42,7 +42,7 @@ export const useNewTable = (): UseNewTableReturn => {
             console.log(`Game Options: ${gameOptionsString}`);
             
             // Make direct RPC call
-            const rpcUrl = import.meta.env.VITE_NODE_RPC_URL;
+            const rpcUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
             const requestId = Math.random().toString(36).substring(7);
             
             const rpcRequest = {
