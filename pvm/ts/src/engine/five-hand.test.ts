@@ -11,9 +11,9 @@ describe("Texas Holdem - Play 5 Hands", () => {
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        expect(game.handNumber).toEqual(0);
-        game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS, 1);
-        game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, 2);
+        expect(game.handNumber).toEqual(1);
+        game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, 1);
+        game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, 2);
     });
 
     /**
@@ -85,29 +85,34 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter += 1;
 
         game.performAction(bigBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n);
+
+        // Verify the game state after showdown
         expect(game.currentRound).toEqual(TexasHoldemRound.END);
-        actionCounter += 1;
+        expect(game.pot).toBeGreaterThan(0n);
+        expect(game.handNumber).toEqual(handNumber);
+        expect(game.winners).toBeDefined();
 
         // Verify winners exist
         const gameState = game.toJson();
         expect(gameState.winners).toBeDefined();
         expect(gameState.winners.length).toBeGreaterThan(0);
 
+        actionCounter += 1;
         return actionCounter;
     }
 
-    it.skip("should play five complete hands with button movement and pot reset", () => {
+    it.only("should play five complete hands with button movement and pot reset", () => {
         // Initialize variables to track button position and players
         let smallBlindPlayer = SMALL_BLIND_PLAYER;
         let bigBlindPlayer = BIG_BLIND_PLAYER;
-        let actionCounter = 2; // Start at 2 since JOIN actions were 0 and 1
+        let actionCounter = 3; // Start at 3 since JOIN actions were 1 and 2
 
         // Hand 1
         // Verify initial button positions for hand 1
         expect(game.smallBlindPosition).toEqual(1);
         expect(game.bigBlindPosition).toEqual(2);
 
-        actionCounter = playCompleteHand(0, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(1, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 2
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
@@ -117,12 +122,12 @@ describe("Texas Holdem - Play 5 Hands", () => {
         [smallBlindPlayer, bigBlindPlayer] = [bigBlindPlayer, smallBlindPlayer];
 
         // Verify button positions for hand 2
-        expect(game.handNumber).toEqual(1);
+        expect(game.handNumber).toEqual(2);
         expect(game.smallBlindPosition).toEqual(2);
         expect(game.bigBlindPosition).toEqual(1);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(1, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 3
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
