@@ -14,6 +14,7 @@ export enum PlayerActionType {
 }
 
 export enum NonPlayerActionType {
+    BUY_IN = "buy-in",
     DEAL = "deal",
     JOIN = "join",
     LEAVE = "leave",

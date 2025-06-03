@@ -856,6 +856,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
         // Handle non-player actions first
         switch (action) {
+            case NonPlayerActionType.BUY_IN:
+                new BuyInAction(this, this._update).execute(playerToBuyIn, index, _amount, data);
+                return;
             case NonPlayerActionType.JOIN:
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
                 new JoinAction(this, this._update).execute(player, index, _amount, data);
