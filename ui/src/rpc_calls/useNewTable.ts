@@ -43,6 +43,12 @@ export const useNewTable = (): UseNewTableReturn => {
             
             // Make direct RPC call
             const rpcUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
+            console.log("🌐 Environment Check:");
+            console.log(`VITE_NODE_RPC_URL env var: ${import.meta.env.VITE_NODE_RPC_URL}`);
+            console.log(`Final RPC URL being used: ${rpcUrl}`);
+            console.log(`Is production: ${import.meta.env.PROD}`);
+            console.log(`Mode: ${import.meta.env.MODE}`);
+            
             const requestId = Math.random().toString(36).substring(7);
             
             const rpcRequest = {
@@ -61,13 +67,21 @@ export const useNewTable = (): UseNewTableReturn => {
                 body: JSON.stringify(rpcRequest)
             });
 
+            console.log("📥 Response received:");
+            console.log(`Status: ${response.status} ${response.statusText}`);
+            console.log("Headers:", Object.fromEntries(response.headers.entries()));
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error("❌ HTTP Error Response Body:", errorText);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
 
             const data = await response.json();
+            console.log("✅ Response data:", data);
             
             if (data.error) {
+                console.error("❌ RPC Error:", data.error);
                 throw new Error(data.error);
             }
 
