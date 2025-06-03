@@ -7,8 +7,8 @@ const gameStateSchema = new Schema<IGameStateDocument>(
             type: String,
             required: true
         },
-        schemaAddress: {
-            type: String,
+        gameOptions: {
+            type: Object,
             required: true
         },
         state: {

@@ -2,7 +2,7 @@ import { Transaction } from "../models/transaction";
 import { Account } from "../models/account";
 import { Block } from "../models";
 import { GameOptions } from "@bitcoinbrisbane/block52";
-import { IContractSchemaDocument, IGameStateDocument } from "../models/interfaces";
+import { IGameStateDocument } from "../models/interfaces";
 
 export interface IAccountManagement {
     createAccount(privateKey: string): Promise<Account>;
@@ -25,17 +25,17 @@ export interface IBlockchainManagement {
     reset(): Promise<void>;
 }
 
-export interface IContractSchemaManagement {
-    getByAddress(address: string): Promise<IContractSchemaDocument>;
-    getGameOptions(address: string): Promise<GameOptions>;
-}
+// export interface IContractSchemaManagement {
+//     getByAddress(address: string): Promise<IContractSchemaDocument>;
+//     getGameOptions(address: string): Promise<GameOptions>;
+// }
 
 export interface IGameManagement {
     getAll(): Promise<IGameStateDocument[]>;
-    getAllBySchemaAddress(schemaAddress: string): Promise<IGameStateDocument[]>;
     getByAddress(address: string): Promise<IGameStateDocument | null>;
+    getGameOptions(address: string): Promise<GameOptions>;
     getState(address: string): Promise<any | null>;
-    create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string>;
+    create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string>;
     saveFromJSON(json: any): Promise<void>;
 }
 

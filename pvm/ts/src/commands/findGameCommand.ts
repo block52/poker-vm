@@ -1,19 +1,17 @@
-import { getContractSchemaManagementInstance, getGameManagementInstance } from "../state/index";
+import { getGameManagementInstance } from "../state/index";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { signResult } from "./abstractSignedCommand";
-import { GameOptions, GameOptionsResponse } from "@bitcoinbrisbane/block52";
-import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
+import { GameOptions, GameOptionsDTO, GameOptionsResponse } from "@bitcoinbrisbane/block52";
+import { IGameManagement } from "../state/interfaces";
 
 export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[]> {
     private readonly gameManagement: IGameManagement;
-    private readonly contractSchemaManagement: IContractSchemaManagement;
     private readonly sb?: bigint;
     private readonly bb?: bigint;
 
     // TODO: Create more specific types for min and max
     constructor(private readonly privateKey: string, query: string) {
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagementInstance();
 
         if (query) {
             const params = query.split(",");
@@ -35,28 +33,25 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
 
     public async execute(): Promise<ISignedResponse<GameOptionsResponse[]>> {
         try {
-            const results = [];
+            const results: GameOptionsResponse[] = [];
             const games = await this.gameManagement.getAll();
 
             if (!this.sb && !this.bb) {
-                // If no filters are applied, return all games
-                const results: GameOptionsResponse[] = [];
                 for (const game of games) {
 
-                    const gameOptions: GameOptions = await this.contractSchemaManagement.getGameOptions(game.schemaAddress);
+                    const gameOptions: GameOptionsDTO = {
+                        minBuyIn: game.gameOptions.minBuyIn?.toString(),
+                        maxBuyIn: game.gameOptions.maxBuyIn?.toString(),
+                        minPlayers: game.gameOptions.minPlayers,
+                        maxPlayers: game.gameOptions.maxPlayers,
+                        smallBlind: game.state?.smallBlind?.toString() || "0",
+                        bigBlind: game.state?.bigBlind?.toString() || "1000000000000000000000000",
+                        timeout: game.gameOptions.timeout
+                    };
 
                     const result: GameOptionsResponse = {
                         address: game.address,
-                        schemaAddress: game.schemaAddress,
-                        gameOptions: {
-                            smallBlind: gameOptions?.smallBlind.toString(),
-                            bigBlind: gameOptions?.bigBlind.toString(),
-                            minBuyIn: gameOptions?.minBuyIn.toString(),
-                            maxBuyIn: gameOptions?.maxBuyIn.toString(),
-                            minPlayers: gameOptions?.minPlayers,
-                            maxPlayers: gameOptions?.maxPlayers,
-                            timeout: gameOptions?.timeout
-                        }
+                        gameOptions: gameOptions
                     };
 
                     results.push(result);
@@ -84,13 +79,20 @@ export class FindGameStateCommand implements ISignedCommand<GameOptionsResponse[
 
                 // Add to results if it passes all defined filters
                 if (shouldInclude) {
+
+                    const gameOptions: GameOptionsDTO = {
+                        minBuyIn: game.gameOptions.minBuyIn?.toString(),
+                        maxBuyIn: game.gameOptions.maxBuyIn?.toString(),
+                        minPlayers: game.gameOptions.minPlayers,
+                        maxPlayers: game.gameOptions.maxPlayers,
+                        smallBlind: sb.toString(),
+                        bigBlind: bb.toString(),
+                        timeout: game.gameOptions.timeout
+                    };
+
                     results.push({
                         address: game.address,
-                        schemaAddress: game.schemaAddress,
-                        gameOptions: {
-                            smallBlind: game.state?.smallBlind.toString(),
-                            bigBlind: game.state?.bigBlind.toString()
-                        }
+                        gameOptions: gameOptions
                     });
                 }
             }

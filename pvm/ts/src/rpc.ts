@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import {
     AccountCommand,
@@ -7,11 +7,9 @@ import {
     BlockCommandParams,
     BurnCommand,
     CreateAccountCommand,
-    CreateContractSchemaCommand,
     DeployContractCommand,
     FindGameStateCommand,
     GameStateCommand,
-    GetAllContractSchemasCommand,
     GetBlocksCommand,
     GetNodesCommand,
     GetTransactionCommand,
@@ -38,6 +36,7 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
+import { GameManagement } from "./state/mongodb/gameManagement";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -185,12 +184,6 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.GET_CONTRACT_SCHEMA: {
-                    const command = new GetAllContractSchemasCommand(10, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
-
                 case RPCMethods.GET_LAST_BLOCK: {
                     const params: BlockCommandParams = {
                         index: undefined,
@@ -323,12 +316,12 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.CREATE_CONTRACT_SCHEMA: {
-                    const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
-                    const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
+                // case RPCMethods.CREATE_CONTRACT_SCHEMA: {
+                //     const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
+                //     const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
+                //     result = await command.execute();
+                //     break;
+                // }
 
                 case RPCMethods.CREATE_ACCOUNT: {
                     const [privateKey] = request.params as RPCRequestParams[RPCMethods.CREATE_ACCOUNT];
@@ -355,8 +348,9 @@ export class RPC {
 
                 case RPCMethods.NEW_TABLE: {
                     // The SDK sends [schemaAddress, owner, nonce] but the type only expects 2 params
-                    const [schemaAddress, owner, nonce] = request.params as [string, string, number];
-                    const command = new NewTableCommand(owner, schemaAddress, BigInt(nonce || 0), validatorPrivateKey);
+                    const [gameOptionsString, owner, nonce] = request.params as [string, string, number];
+                    const gameOptions: GameOptions = GameManagement.parseSchema(gameOptionsString);
+                    const command = new NewTableCommand(owner, gameOptions, BigInt(nonce || 0), validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

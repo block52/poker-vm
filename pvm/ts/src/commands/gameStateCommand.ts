@@ -1,22 +1,20 @@
-import {  GameOptions, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
+import { getGameManagementInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { Transaction } from "../models";
-import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
+import { IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: IGameManagement;
     private readonly mempool: Mempool;
-    private readonly contractSchemaManagement: IContractSchemaManagement;
 
     // This will be shared secret later
     constructor(readonly address: string, private readonly privateKey: string, private readonly caller?: string | undefined) {
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
     }
 
@@ -28,8 +26,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
 
-            const gameOptions: GameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
-            const game = TexasHoldemGame.fromJson(gameState.state, gameOptions);
+            const game = TexasHoldemGame.fromJson(gameState.state, gameState.gameOptions);
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined);
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 

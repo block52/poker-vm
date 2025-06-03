@@ -55,6 +55,10 @@ export class RedisGameManagement implements IGameManagement, IDB {
         throw new Error("Method not implemented.");
     }
 
+    public getGameOptions(address: string): Promise<GameOptions> {
+        throw new Error("Method not implemented.");
+    }
+
     public getState(address: string): Promise<any | null> {
         throw new Error("Method not implemented.");
     }
@@ -138,19 +142,19 @@ export class RedisGameManagement implements IGameManagement, IDB {
      * @param contractSchemaAddress Contract schema address
      * @param gameOptions Game options
      */
-    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
+    public async create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {
         await this.connect();
 
         // Generate a unique ID for the game
         const gameId = this.generateGameId();
 
         // Create game address (this might need to be adjusted based on your actual logic)
-        const gameAddress = this.generateGameAddress(contractSchemaAddress, nonce);
+        const gameAddress = this.generateGameAddress(owner, nonce);
 
         // Prepare game state document
         const gameState: IGameStateDocument = {
             address: gameAddress,
-            schemaAddress: contractSchemaAddress,
+            gameOptions: gameOptions,
             state: {
                 nonce: nonce.toString(),
                 options: gameOptions,
@@ -261,7 +265,7 @@ export class RedisGameManagement implements IGameManagement, IDB {
     private parseGameState(data: Record<string, string>): IGameStateDocument {
         return {
             address: data.address,
-            schemaAddress: data.schemaAddress,
+            gameOptions: JSON.parse(data.gameOptions || '{}') as GameOptions,
             state: JSON.parse(data.state || '{}')
         };
     }
@@ -270,11 +274,13 @@ export class RedisGameManagement implements IGameManagement, IDB {
      * Serialize a game state for Redis storage
      */
     private serializeGameState(gameState: IGameStateDocument): Record<string, string> {
-        return {
-            address: gameState.address,
-            schemaAddress: gameState.schemaAddress,
-            state: JSON.stringify(gameState.state || {})
-        };
+        // return {
+        //     address: gameState.address,
+        //     gameOptions: gameState.gameOptions,
+        //     state: JSON.stringify(gameState.state || {})
+        // };
+
+        throw new Error("Method serializeGameState not implemented yet");
     }
 
     /**
