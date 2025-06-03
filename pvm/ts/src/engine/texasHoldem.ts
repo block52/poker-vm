@@ -1177,14 +1177,15 @@ class TexasHoldemGame implements IPoker, IUpdate {
         for (const player of showingPlayers) {
             if (winningHands.includes(hands.get(player.id))) {
                 const hand = hands.get(player.id);
+                const winAmount = pot / winnersCount;
                 const _winner: Winner = {
-                    amount: this.getPot(),
+                    amount: winAmount,
                     cards: player.holeCards?.map(card => card.mnemonic),
                     name: hand.name,
                     description: hand.descr
                 };
 
-                const winAmount = pot / winnersCount;
+                // const winAmount = pot / winnersCount;
                 player.chips += winAmount;
                 this._winners.set(player.address, _winner);
             }
