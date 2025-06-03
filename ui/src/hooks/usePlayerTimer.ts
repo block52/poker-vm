@@ -225,16 +225,16 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         return () => clearInterval(interval);
     }, [isNextToAct]); // Re-run effect when player becomes active/inactive
 
-    // Auto-action when timer expires
-    useEffect(() => {
-        if (timeRemaining === 0 && isNextToAct && isCurrentUser && !isFolding) {
-            const timeoutId = setTimeout(() => {
-                handleAutoAction();
-            }, 500); // Small delay to ensure state is stable
+    // Auto-action when timer expires - COMMENTED OUT TO DISABLE AUTO-FOLD/AUTO-CHECK
+    // useEffect(() => {
+    //     if (timeRemaining === 0 && isNextToAct && isCurrentUser && !isFolding) {
+    //         const timeoutId = setTimeout(() => {
+    //             handleAutoAction();
+    //         }, 500); // Small delay to ensure state is stable
 
-            return () => clearTimeout(timeoutId);
-        }
-    }, [timeRemaining, isNextToAct, isCurrentUser, isFolding, handleAutoAction]);
+    //         return () => clearTimeout(timeoutId);
+    //     }
+    // }, [timeRemaining, isNextToAct, isCurrentUser, isFolding, handleAutoAction]);
 
     // Reset auto-action timer when next to act changes
     useEffect(() => {

@@ -844,9 +844,10 @@ const Dashboard: React.FC = () => {
                                             </div>
                                             <button
                                                 onClick={() => {
-                                                    window.open(`/table/${game.address}`, "_blank");
+                                                    setShowBuyInModal(true);
+                                                    setBuyInTableId(game.address);
                                                 }}
-                                                title="Open table in new tab"
+                                                title="Join this table"
                                                 className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300 shadow-md"
                                             >
                                                 Join Table
@@ -922,10 +923,11 @@ const Dashboard: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => {
-                                                window.open(`/table/${newTableAddress}`, "_blank");
+                                                setShowBuyInModal(true);
+                                                setBuyInTableId(newTableAddress);
                                             }}
                                             className="p-2 text-blue-400 hover:text-blue-300 transition-colors ml-1"
-                                            title="Join this table in new tab"
+                                            title="Join this table"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -936,7 +938,8 @@ const Dashboard: React.FC = () => {
                                 <div className="mt-3 flex justify-center">
                                     <button
                                         onClick={() => {
-                                            window.open(`/table/${newTableAddress}`, "_blank");
+                                            setShowBuyInModal(true);
+                                            setBuyInTableId(newTableAddress);
                                         }}
                                         className="w-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
                                     >
@@ -1011,9 +1014,10 @@ const Dashboard: React.FC = () => {
                                 <div className="flex justify-between gap-6">
                                     <button
                                         onClick={() => {
-                                            window.open(`/table/${games[0].address}`, "_blank");
+                                            setShowBuyInModal(true);
+                                            setBuyInTableId(games[0].address);
                                         }}
-                                        title="Open table in new tab"
+                                        title="Join this table"
                                         className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
                                     >
                                         Choose Table

@@ -195,7 +195,7 @@ const Player: React.FC<PlayerProps> = memo(
                 value={stackValue} 
                 color={color}
                 canExtend={shouldShowTimerExtension}
-                onExtend={shouldShowTimerExtension ? handleExtendTime : undefined}
+                // onExtend={shouldShowTimerExtension ? handleExtendTime : undefined}
             />
           </div>
         </div>
