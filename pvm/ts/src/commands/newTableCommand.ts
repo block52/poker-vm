@@ -11,14 +11,21 @@ export class NewTableCommand implements ISignedCommand<string> {
         private readonly owner: string, 
         private readonly gameOptions: GameOptions, 
         private readonly nonce: bigint,
-        private readonly privateKey: string
+        private readonly privateKey: string,
+        private readonly timestamp?: string
     ) {
         this.gameManagement = getGameManagementInstance();
     }
 
     public async execute(): Promise<ISignedResponse<string>> {
-        const address = await this.gameManagement.create(this.nonce, this.owner, this.gameOptions);
-
+        console.log("⚡ NewTableCommand.execute() called:");
+        console.log(`Owner: ${this.owner}`);
+        console.log(`Nonce: ${this.nonce}`);
+        console.log(`Timestamp: ${this.timestamp || "not provided"}`);
+        
+        const address = await this.gameManagement.create(this.nonce, this.owner, this.gameOptions, this.timestamp);
+        
+        console.log(`✅ Table created with address: ${address}`);
         return signResult(address, this.privateKey);
     }
 }

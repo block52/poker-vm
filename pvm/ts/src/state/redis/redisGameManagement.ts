@@ -141,15 +141,16 @@ export class RedisGameManagement implements IGameManagement, IDB {
      * @param nonce Game nonce
      * @param contractSchemaAddress Contract schema address
      * @param gameOptions Game options
+     * @param timestamp Optional timestamp for uniqueness
      */
-    public async create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {
+    public async create(nonce: bigint, owner: string, gameOptions: GameOptions, timestamp?: string): Promise<string> {
         await this.connect();
 
         // Generate a unique ID for the game
         const gameId = this.generateGameId();
 
         // Create game address (this might need to be adjusted based on your actual logic)
-        const gameAddress = this.generateGameAddress(owner, nonce);
+        const gameAddress = this.generateGameAddress(owner, nonce, timestamp);
 
         // Prepare game state document
         const gameState: IGameStateDocument = {
@@ -158,7 +159,8 @@ export class RedisGameManagement implements IGameManagement, IDB {
             state: {
                 nonce: nonce.toString(),
                 options: gameOptions,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                timestamp: timestamp
             }
         };
 
@@ -253,9 +255,9 @@ export class RedisGameManagement implements IGameManagement, IDB {
      * Generate a game address based on contract schema and nonce
      * Note: This is a simplified implementation, adjust as needed
      */
-    private generateGameAddress(contractSchemaAddress: string, nonce: bigint): string {
+    private generateGameAddress(contractSchemaAddress: string, nonce: bigint, timestamp?: string): string {
         const hash = crypto.createHash("sha256");
-        hash.update(`${contractSchemaAddress}:${nonce.toString()}`);
+        hash.update(`${contractSchemaAddress}:${nonce.toString()}:${timestamp || ''}`);
         return "0x" + hash.digest("hex").substring(0, 40);
     }
 

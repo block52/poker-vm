@@ -35,7 +35,7 @@ export interface IGameManagement {
     getByAddress(address: string): Promise<IGameStateDocument | null>;
     getGameOptions(address: string): Promise<GameOptions>;
     getState(address: string): Promise<any | null>;
-    create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string>;
+    create(nonce: bigint, owner: string, gameOptions: GameOptions, timestamp?: string): Promise<string>;
     saveFromJSON(json: any): Promise<void>;
 }
 

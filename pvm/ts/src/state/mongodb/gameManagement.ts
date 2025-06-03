@@ -86,12 +86,16 @@ export class GameManagement extends StateManager implements IGameManagement {
         return game.gameOptions as GameOptions;
     }
 
-    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
-        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
+    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions, timestamp?: string): Promise<string> {
+        // Include timestamp in digest for uniqueness if provided
+        const timestampPart = timestamp ? `-${timestamp}` : "";
+        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}${timestampPart}`;
         const address = createAddress(digest);
 
         // Creating a log to confirm what's happening
-        console.log(`Creating game with address: ${address} (using contract schema address directly)`);
+        console.log(`Creating game with digest: ${digest}`);
+        console.log(`Generated address: ${address}`);
+        console.log(`Timestamp used: ${timestamp || "none"}`);
 
         // Todo: Add deck
         const deck = new Deck();

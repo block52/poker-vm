@@ -16,6 +16,8 @@ import { GameType, Variant } from "./types";
 import { formatAddress, formatBalance } from "./common/utils";
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
+import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
+import { useNewTable } from "../rpc_calls/useNewTable"; // Import useNewTable hook
 
 // Password protection utils
 import { 
@@ -76,6 +78,12 @@ const Dashboard: React.FC = () => {
     // Use the findGames hook
     const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
 
+    // Add useAccount hook to get account nonce
+    const { account, isLoading: accountLoading, error: accountError, refetch: refetchAccount } = useAccount(publicKey);
+    
+    // Add useNewTable hook for creating tables
+    const { createTable, isCreating: isCreatingTable, error: createTableError, newTableAddress } = useNewTable();
+
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
     const [importError, setImportError] = useState("");
@@ -84,9 +92,7 @@ const Dashboard: React.FC = () => {
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
     const [selectedContractAddress, setSelectedContractAddress] = useState("0xfe4ddc39ff3d703ee2d91021a52bc69b0680e2186a");
-    const [isCreatingGame, setIsCreatingGame] = useState(false);
     const [createGameError, setCreateGameError] = useState("");
-    const [newGameAddress, setNewGameAddress] = useState("");
 
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -147,46 +153,34 @@ const Dashboard: React.FC = () => {
 
     // Function to handle creating a new game using NodeRpcClient directly
     const handleCreateNewGame = async () => {
-        if (!client) {
-            setCreateGameError("Client not initialized");
+        if (!publicKey) {
+            setCreateGameError("No wallet address available. Please create or import a wallet first.");
             return;
         }
 
-        setIsCreatingGame(true);
+        if (!account) {
+            setCreateGameError("Account data not loaded. Please wait and try again.");
+            return;
+        }
+
         setCreateGameError("");
 
         try {
-            const gameContractAddress = selectedContractAddress || DEFAULT_GAME_CONTRACT;
+            // Use the createTable function from useNewTable hook
+            const tableAddress = await createTable(publicKey, account.nonce);
             
-            if (!publicKey) {
-                setCreateGameError("No wallet address available. Please create or import a wallet first.");
-                setIsCreatingGame(false);
-                return;
-            }
-            
-            // Create the new table using the client's newTable method
-            // We use the current user's public key as the "from" parameter
-            // The "to" parameter is the game contract schema address
-            const result = await client.newTable(publicKey, DEFAULT_GAME_CONTRACT);
-            
-            if (result) {
-                // The result is the table ID (contract address)
-                setNewGameAddress(result);
+            if (tableAddress) {
                 setShowCreateGameModal(false);
-
+                
                 // Refresh account data to get updated nonce
-                fetchAccountBalance();
+                await refetchAccount();
                 
                 // Refresh the games list
                 await refetchGames();
-            } else {
-                setCreateGameError("Failed to create table - no table ID returned");
             }
         } catch (error: any) {
             console.error("Error creating table:", error);
             setCreateGameError(error.message || "An unexpected error occurred");
-        } finally {
-            setIsCreatingGame(false);
         }
     };
 
@@ -535,6 +529,7 @@ const Dashboard: React.FC = () => {
                                     </div>
 
                                     {createGameError && <p className="text-red-500 text-sm">{createGameError}</p>}
+                                    {createTableError && <p className="text-red-500 text-sm">{createTableError.message}</p>}
 
                                     <div className="flex justify-end space-x-3">
                                         <button
@@ -548,12 +543,12 @@ const Dashboard: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={handleCreateNewGame}
-                                            disabled={isCreatingGame}
+                                            disabled={isCreatingTable || accountLoading}
                                             className={`px-4 py-2 text-sm ${
-                                                isCreatingGame ? "bg-gray-500" : "bg-blue-600 hover:bg-blue-700"
+                                                isCreatingTable || accountLoading ? "bg-gray-500" : "bg-blue-600 hover:bg-blue-700"
                                             } text-white rounded-lg transition duration-300 shadow-md flex items-center`}
                                         >
-                                            {isCreatingGame ? (
+                                            {isCreatingTable ? (
                                                 <>
                                                     <svg
                                                         className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
@@ -570,6 +565,8 @@ const Dashboard: React.FC = () => {
                                                     </svg>
                                                     Creating Table...
                                                 </>
+                                            ) : accountLoading ? (
+                                                "Loading Account..."
                                             ) : (
                                                 "Create Game"
                                             )}
@@ -624,7 +621,7 @@ const Dashboard: React.FC = () => {
                                         <div className="flex items-center justify-between p-2 bg-gray-800/60 rounded-lg border border-blue-500/10">
                                             <p className="font-mono text-blue-400 text-sm tracking-wider">{formatAddress(publicKey)}</p>
                                             <div className="flex items-center">
-                                                <span className="text-xs text-gray-400 mr-2">Nonce: {accountNonce}</span>
+                                                <span className="text-xs text-gray-400 mr-2">Nonce: {account?.nonce || 0}</span>
                                                 <button
                                                     onClick={() => {
                                                         navigator.clipboard.writeText(publicKey || "");
@@ -657,12 +654,14 @@ const Dashboard: React.FC = () => {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-white font-bold">
-                                                {isBalanceLoading ? (
+                                                {accountLoading ? (
                                                     <span className="text-gray-400">Loading...</span>
-                                                ) : balanceError ? (
+                                                ) : accountError ? (
                                                     <span className="text-red-400">Error</span>
+                                                ) : account ? (
+                                                    `$${formatBalance(account.balance || "0")}`
                                                 ) : (
-                                                    `$${formatBalance(accountBalance || "0")}`
+                                                    <span className="text-gray-400">No data</span>
                                                 )}
                                             </p>
                                             <button
@@ -835,6 +834,7 @@ const Dashboard: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-gray-300 text-xs">Texas Hold'em</p>
+                                                    <p className="text-gray-500 text-xs font-mono mb-1">{formatAddress(game.address)}</p>
                                                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
                                                         <span className="text-xs text-blue-400">Min: ${game.gameOptions?.minBuyIn ? formatBalance(game.gameOptions.minBuyIn) : "0.01"}</span>
                                                         <span className="text-xs text-blue-400">Max: ${game.gameOptions?.maxBuyIn ? formatBalance(game.gameOptions.maxBuyIn) : "1.0"}</span>
@@ -844,10 +844,9 @@ const Dashboard: React.FC = () => {
                                             </div>
                                             <button
                                                 onClick={() => {
-                                                    setShowBuyInModal(true);
-                                                    setBuyInTableId(game.address);
+                                                    window.open(`/table/${game.address}`, "_blank");
                                                 }}
-                                                title="Open buy-in modal to join this table"
+                                                title="Open table in new tab"
                                                 className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300 shadow-md"
                                             >
                                                 Join Table
@@ -880,14 +879,19 @@ const Dashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Display new game address if available */}
-                        {/* {newGameAddress && (
-                            <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
-                                <h3 className="text-lg font-bold text-white mb-2">New Table Created!</h3>
-                                <div className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
+                        {/* Display new table address if available */}
+                        {/* {newTableAddress && (
+                            <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-green-500/20 hover:border-green-500/30 transition-all duration-300">
+                                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    New Table Created Successfully!
+                                </h3>
+                                <div className="p-3 bg-gray-800/60 rounded-lg border border-green-500/10 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center animate-pulse">
-                                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center animate-pulse">
+                                            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path
                                                     strokeLinecap="round"
                                                     strokeLinejoin="round"
@@ -897,15 +901,15 @@ const Dashboard: React.FC = () => {
                                             </svg>
                                         </div>
                                         <div>
-                                            <p className="text-gray-300 text-xs">Table ID</p>
-                                            <p className="font-mono text-blue-400 text-sm">{formatAddress(newGameAddress)}</p>
+                                            <p className="text-gray-300 text-xs">Table Address (Game Hash)</p>
+                                            <p className="font-mono text-green-400 text-sm break-all">{newTableAddress}</p>
                                         </div>
                                     </div>
-                                    <div className="flex">
+                                    <div className="flex gap-1">
                                         <button
-                                            onClick={() => navigator.clipboard.writeText(newGameAddress)}
-                                            className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
-                                            title="Copy table ID"
+                                            onClick={() => navigator.clipboard.writeText(newTableAddress)}
+                                            className="p-2 text-green-400 hover:text-green-300 transition-colors"
+                                            title="Copy table address"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path
@@ -918,11 +922,10 @@ const Dashboard: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => {
-                                                setShowBuyInModal(true);
-                                                setBuyInTableId(DEFAULT_GAME_CONTRACT);
+                                                window.open(`/table/${newTableAddress}`, "_blank");
                                             }}
-                                            className="p-2 text-green-400 hover:text-green-300 transition-colors ml-2"
-                                            title="Join table"
+                                            className="p-2 text-blue-400 hover:text-blue-300 transition-colors ml-1"
+                                            title="Join this table in new tab"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -930,15 +933,14 @@ const Dashboard: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
-                                <div className="mt-2 flex justify-center">
+                                <div className="mt-3 flex justify-center">
                                     <button
                                         onClick={() => {
-                                            setShowBuyInModal(true);
-                                            setBuyInTableId(DEFAULT_GAME_CONTRACT);
+                                            window.open(`/table/${newTableAddress}`, "_blank");
                                         }}
-                                        className="text-sm text-blue-400 hover:text-blue-300"
+                                        className="w-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
                                     >
-                                        Buy in to join this table
+                                        Join Your New Table
                                     </button>
                                 </div>
                             </div>
@@ -1009,9 +1011,9 @@ const Dashboard: React.FC = () => {
                                 <div className="flex justify-between gap-6">
                                     <button
                                         onClick={() => {
-                                            setShowBuyInModal(true);
-                                            setBuyInTableId(games[0].address);
+                                            window.open(`/table/${games[0].address}`, "_blank");
                                         }}
+                                        title="Open table in new tab"
                                         className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
                                     >
                                         Choose Table
