@@ -168,8 +168,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                         <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
                     </div>
                     <div className="text-white text-center">
-                        <div className="text-sm mb-1 whitespace-nowrap">{seatText.title}</div>
-                        {seatText.subtitle && <div className="whitespace-nowrap">{seatText.subtitle}</div>}
+                        <div className="text-lg sm:text-sm mb-1 whitespace-nowrap font-medium">{seatText.title}</div>
+                        {seatText.subtitle && <div className="text-base sm:text-xs whitespace-nowrap">{seatText.subtitle}</div>}
                     </div>
                 </div>
 

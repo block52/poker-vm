@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { useNodeRpc } from "../../context/NodeRpcContext";
+import { useGameStateContext } from "../../context/GameStateContext";
 
 /**
  * Custom hook to handle dealing cards in a poker game
@@ -11,6 +12,7 @@ export function useTableDeal(tableId?: string) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { client } = useNodeRpc();
+    const { gameState } = useGameStateContext();
 
     /**
      * Deals cards on the specified table
@@ -22,6 +24,28 @@ export function useTableDeal(tableId?: string) {
             setError("Table ID is required");
             return;
         }
+
+        // 🃏 DEBUG: Log WebSocket/game state before deal action
+        console.log("🔥 [DEAL ACTION STARTING]", {
+            timestamp: new Date().toISOString(),
+            tableId,
+            gameStateBeforeDeal: {
+                round: gameState?.round,
+                nextToAct: gameState?.nextToAct,
+                players: gameState?.players?.map(p => ({
+                    seat: p.seat,
+                    address: p.address?.substring(0, 8) + "...",
+                    status: p.status,
+                    hasLegalActions: !!p.legalActions?.length,
+                    legalActions: p.legalActions?.map(action => action.action)
+                })),
+                hasGameState: !!gameState,
+                dealerSeat: gameState?.dealer,
+                smallBlindSeat: gameState?.smallBlindPosition,
+                bigBlindSeat: gameState?.bigBlindPosition
+            },
+            source: "useTableDeal.dealCards"
+        });
 
         setIsLoading(true);
         setError(null);
@@ -45,8 +69,22 @@ export function useTableDeal(tableId?: string) {
                 undefined // Let the client handle the nonce
             );
             
+            console.log("✅ [DEAL ACTION SUCCESS]", { tableId, response });
             return response;
         } catch (err: any) {
+            // 🚨 Enhanced error logging for deal action
+            console.error("❌ [DEAL ACTION FAILED]", {
+                timestamp: new Date().toISOString(),
+                tableId,
+                error: err.message,
+                gameStateAtError: {
+                    round: gameState?.round,
+                    nextToAct: gameState?.nextToAct,
+                    hasGameState: !!gameState
+                },
+                source: "useTableDeal.dealCards"
+            });
+            
             setError(err.message || "Failed to deal cards");
             throw err;
         } finally {

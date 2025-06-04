@@ -116,11 +116,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    // Big Blind Value - handle null gameOptions
+    // Big Blind Value - handle null gameOptions during loading
     const bigBlindStep = useMemo(() => {
         if (!gameOptions?.bigBlind) {
-            console.warn("Big blind value not available from game options");
-            return 0.02; // Fallback value for display purposes
+            return 0.02; // Fallback value during loading or when not available
         }
         const step = Number(ethers.formatUnits(gameOptions.bigBlind, 18));
         return step;
@@ -222,11 +221,30 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
+        // 🔍 DEBUG: Log frontend state when CHECK button is clicked
+        console.log("🎯 [CHECK BUTTON CLICKED]", {
+            timestamp: new Date().toISOString(),
+            frontendState: {
+                hasCheckAction,
+                isUsersTurn,
+                legalActions: legalActions?.map(action => ({ action: action.action, min: action.min, max: action.max })),
+                currentRound,
+                playerStatus,
+                isUserInTable,
+                userPlayer: userPlayer ? {
+                    seat: userPlayer.seat,
+                    status: userPlayer.status,
+                    stack: userPlayer.stack
+                } : null
+            },
+            source: "Footer.handleCheck"
+        });
+
         // Use our hook to check
         checkHand({
             amount: "0" // Check doesn't require an amount
         });
-    }, [checkHand]);
+    }, [checkHand, hasCheckAction, isUsersTurn, legalActions, currentRound, playerStatus, isUserInTable, userPlayer]);
 
     const handleFold = useCallback(() => {
         if (!foldHand) {
@@ -335,6 +353,28 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
+        // 🃏 DEBUG: Log frontend state when DEAL button is clicked
+        console.log("🎯 [DEAL BUTTON CLICKED]", {
+            timestamp: new Date().toISOString(),
+            frontendState: {
+                hasDealAction,
+                shouldShowDealButton,
+                isUsersTurn,
+                isCurrentUserTurn,
+                legalActions: legalActions?.map(action => ({ action: action.action, min: action.min, max: action.max })),
+                currentRound,
+                playerStatus,
+                isUserInTable,
+                userPlayer: userPlayer ? {
+                    seat: userPlayer.seat,
+                    status: userPlayer.status,
+                    stack: userPlayer.stack
+                } : null,
+                isDealing
+            },
+            source: "Footer.handleDeal"
+        });
+
         // Use our hook to deal cards
         dealCards()
             .then(() => {
@@ -343,7 +383,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
             .catch(error => {
                 console.error("Failed to deal:", error);
             });
-    }, [dealCards]);
+    }, [dealCards, hasDealAction, shouldShowDealButton, isUsersTurn, isCurrentUserTurn, legalActions, currentRound, playerStatus, isUserInTable, userPlayer, isDealing]);
 
     // Add the handleStartNewHand function after the other handler functions
     const handleStartNewHand = () => {
