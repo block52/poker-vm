@@ -227,7 +227,7 @@ const Table = React.memo(() => {
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [mousePosition, setMousePosition] = useState({ x: 20, y: 30 }); // Default static position
     const [debugMode, setDebugMode] = useState(false);
 
     // Use the hook directly instead of getting it from context
@@ -307,30 +307,36 @@ const Table = React.memo(() => {
         return activePlayers;
     }, [tableDataValues.tableDataPlayers]);
 
+    // Optimize window width detection - only check on resize
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 414);
+
     // Add effect to track mouse movement
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            // Only update if no animation frame is pending
-            if (!animationFrameRef.current) {
-                animationFrameRef.current = requestAnimationFrame(() => {
-                    // Calculate mouse position as percentage of window
-                    const x = (e.clientX / window.innerWidth) * 100;
-                    const y = (e.clientY / window.innerHeight) * 100;
-                    setMousePosition({ x, y });
-                    animationFrameRef.current = undefined;
-                });
-            }
-        };
+        // Only track mouse on desktop for performance
+        if (window.innerWidth > 768) {
+            const handleMouseMove = (e: MouseEvent) => {
+                // Only update if no animation frame is pending
+                if (!animationFrameRef.current) {
+                    animationFrameRef.current = requestAnimationFrame(() => {
+                        // Calculate mouse position as percentage of window
+                        const x = (e.clientX / window.innerWidth) * 100;
+                        const y = (e.clientY / window.innerHeight) * 100;
+                        setMousePosition({ x, y });
+                        animationFrameRef.current = undefined;
+                    });
+                }
+            };
 
-        window.addEventListener("mousemove", handleMouseMove);
+            window.addEventListener("mousemove", handleMouseMove);
 
-        // Cleanup function to remove event listener and cancel any pending animation frames
-        return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
-            }
-        };
+            // Cleanup function to remove event listener and cancel any pending animation frames
+            return () => {
+                window.removeEventListener("mousemove", handleMouseMove);
+                if (animationFrameRef.current) {
+                    cancelAnimationFrame(animationFrameRef.current);
+                }
+            };
+        }
     }, []);
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
@@ -376,7 +382,10 @@ const Table = React.memo(() => {
     }, [currentIndex]);
 
     // Memoize handlers
-    const handleResize = useCallback(() => setZoom(calculateZoom()), [calculateZoom]);
+    const handleResize = useCallback(() => {
+        setZoom(calculateZoom());
+        setIsMobile(window.innerWidth <= 414);
+    }, [calculateZoom]);
 
     useEffect(() => {
         window.addEventListener("resize", handleResize);
@@ -669,45 +678,18 @@ const Table = React.memo(() => {
                     </div>
                     {/* Animated background overlay */}
                     <div className="background-shimmer shimmer-animation" />
-                    {/* Animated overlay */}
-                    <div
-                        className="background-animated"
-                        style={{
-                            backgroundImage: `
-                                    repeating-linear-gradient(
-                                        ${45 + mousePosition.x / 10}deg,
-                                        rgba(42, 72, 143, 0.1) 0%,
-                                        rgba(61, 89, 161, 0.1) 25%,
-                                        rgba(30, 52, 107, 0.1) 50%,
-                                        rgba(50, 79, 151, 0.1) 75%,
-                                        rgba(42, 72, 143, 0.1) 100%
-                                    )
-                                `
-                        }}
-                    />
-                    {/* Base gradient background */}
-                    <div
-                        className="background-base"
-                        style={{
-                            backgroundImage: `
-                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
-                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%)
-                                `
-                        }}
-                    />
+                    {/* Optimized static animated overlay */}
+                    <div className="background-animated-static" />
+                    {/* Optimized static base gradient */}
+                    <div className="background-base-static" />
                     {/*//! TABLE */}
                     <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-250px)] sm:min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Hexagon pattern overlay */}
 
                         <div
-                            className="zoom-wrapper"
+                            className={`${isMobile ? "zoom-wrapper-mobile" : "zoom-wrapper-desktop"}`}
                             style={{
-                                transform: `translate(-50%, -50%) scale(${zoom})`,
-                                left: "50%",
-                                top: window.innerWidth <= 414 ? "47%" : "50%"
+                                transform: `translate(-50%, -50%) scale(${zoom})`
                             }}
                         >
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
