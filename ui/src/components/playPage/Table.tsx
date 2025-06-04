@@ -678,10 +678,22 @@ const Table = React.memo(() => {
                     </div>
                     {/* Animated background overlay */}
                     <div className="background-shimmer shimmer-animation" />
-                    {/* Optimized static animated overlay */}
-                    <div className="background-animated-static" />
-                    {/* Optimized static base gradient */}
-                    <div className="background-base-static" />
+                    {/* Dynamic animated overlay with mouse tracking on desktop */}
+                    <div 
+                        className="background-animated-static"
+                        style={window.innerWidth > 768 ? {
+                            background: `repeating-linear-gradient(${45 + mousePosition.x / 10}deg, rgba(42, 72, 143, 0.1) 0%, rgba(61, 89, 161, 0.1) 25%, rgba(30, 52, 107, 0.1) 50%, rgba(50, 79, 151, 0.1) 75%, rgba(42, 72, 143, 0.1) 100%)`,
+                            transition: "background 0.3s ease"
+                        } : {}}
+                    />
+                    {/* Dynamic base gradient with mouse tracking on desktop */}
+                    <div 
+                        className="background-base-static"
+                        style={window.innerWidth > 768 ? {
+                            background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%), radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%), #111827`,
+                            transition: "background 0.3s ease"
+                        } : {}}
+                    />
                     {/*//! TABLE */}
                     <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-250px)] sm:min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Hexagon pattern overlay */}
