@@ -1184,8 +1184,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
                     name: hand.name,
                     description: hand.descr
                 };
-
-                // const winAmount = pot / winnersCount;
                 player.chips += winAmount;
                 this._winners.set(player.address, _winner);
             }
