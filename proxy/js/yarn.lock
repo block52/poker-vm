@@ -39,10 +39,10 @@
     call-me-maybe "^1.0.1"
     z-schema "^5.0.1"
 
-"@bitcoinbrisbane/block52@1.0.87":
-  version "1.0.87"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.87.tgz#8d3d3d51b8c6f015723c22d76fa3abd22f138b53"
-  integrity sha512-TnXLQVdcKnxw49Bd1COCBXuxp7vWue1WPnltnRFNYw2J4Tym5MCMiwLQb9rcrOuHRb2v3QLkqHdyi9wY+kL1gw==
+"@bitcoinbrisbane/block52@1.0.99":
+  version "1.0.99"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.99.tgz#e2daae24b8aae099d6b826febb7299445ead0868"
+  integrity sha512-hfq9zQZ8OVDUXAlGsIJcWbZB6rjubgmt8E27nv7QRVmgIPUsZnrD15A8HqySDhKbsPqtL6yZC4rk2H14qn010w==
   dependencies:
     axios "^1.8.1"
     bigunit "^1.2.5"
@@ -2293,10 +2293,10 @@ mongodb@~6.16.0:
     bson "^6.10.3"
     mongodb-connection-string-url "^3.0.0"
 
-mongoose@^8.12.1:
-  version "8.14.1"
-  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-8.14.1.tgz#3f2a2b4efab38e5aa740e78606529b4643d6ba74"
-  integrity sha512-ijd12vjqUBr5Btqqflu0c/o8Oed5JpdaE0AKO9TjGxCgywYwnzt6ynR1ySjhgxGxrYVeXC0t1P11f1zlRiE93Q==
+mongoose@^8.14.3:
+  version "8.15.1"
+  resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-8.15.1.tgz#d0c5224a01ea8a8f96f5fd5f8557675a054d0a6f"
+  integrity sha512-RhQ4DzmBi5BNGcS0w4u1vdMRIKcteXTCNzDt1j7XRcdWYBz1MjMjulBhPaeC5jBCHOD1yinuOFTTSOWLLGexWw==
   dependencies:
     bson "^6.10.3"
     kareem "2.6.3"
