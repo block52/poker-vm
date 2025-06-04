@@ -442,20 +442,20 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // }, [dealCards, isCurrentUserTurn, isDealing, legalActions]); // Reduced dependencies - only what we actually need
 
     return (
-        <div className="fixed bottom-20 left-0 right-0 text-white p-4 pb-6 flex justify-center items-center relative">
-            <div className="flex flex-col w-[850px] space-y-3 justify-center rounded-lg relative z-10">
+        <div className="fixed bottom-12 lg:bottom-1 left-0 right-0 text-white p-2 lg:p-1 pb-4 lg:pb-1 flex justify-center items-center relative">
+            <div className="flex flex-col w-full lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 justify-center rounded-lg relative z-10">
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
-                    <div className="flex justify-center mb-3">
+                    <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={handleDeal}
                             className="bg-gradient-to-r from-[#1e40af]/90 to-[#3b82f6]/90 hover:from-[#1e40af] hover:to-[#60a5fa] 
-                            text-white font-bold py-3 px-8 rounded-lg shadow-md 
+                            text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base
                             border border-[#3b82f6]/50 backdrop-blur-sm transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                             disabled={isDealing}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -471,16 +471,16 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
                 {/* New Hand Button - Show when the round is "end" */}
                 {currentRound === "end" && (
-                    <div className="flex justify-center mb-3">
+                    <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={handleStartNewHand}
                             className="bg-gradient-to-r from-[#6366f1] to-[#4f46e5] hover:from-[#4f46e5] hover:to-[#4338ca] 
-                            text-white font-bold py-3 px-8 rounded-lg shadow-lg 
+                            text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 border-[#818cf8] transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
                             disabled={isStartingNewHand}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -495,16 +495,16 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
                 {/* Muck Button - Show when action is available */}
                 {hasMuckAction && (
-                    <div className="flex justify-center mb-3">
+                    <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={handleMuck}
                             className="bg-gradient-to-r from-[#4b5563] to-[#374151] hover:from-[#374151] hover:to-[#1f2937] 
-                            text-white font-bold py-3 px-8 rounded-lg shadow-lg 
+                            text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 border-[#6b7280] transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
                             disabled={isMucking}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -519,16 +519,16 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
                 {/* Show Button - Show when action is available */}
                 {hasShowAction && (
-                    <div className="flex justify-center mb-3">
+                    <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={handleShow}
                             className="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#60a5fa] 
-                            text-white font-bold py-3 px-8 rounded-lg shadow-lg 
+                            text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 border-[#3b82f6] transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
                             disabled={isShowing}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path
                                     strokeLinecap="round"
@@ -546,16 +546,16 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {!hideOtherButtons && (
                     <>
                         {/* Player Action Buttons Container */}
-                        <div className="flex justify-center items-center gap-2">
+                        <div className="flex justify-center items-center gap-1 lg:gap-2">
                             {showSmallBlindButton && playerStatus !== "folded" && (
                                 <button
                                     onClick={handlePostSmallBlind}
                                     className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                    text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
-                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
+                                    text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm
+                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-1 lg:mr-2"
                                 >
                                     <span className="mr-1">Post Small Blind</span>
-                                    <span className="bg-[#0f172a80] backdrop-blur-sm px-2 py-1 rounded text-[#60a5fa] text-sm border border-[#3a9188]/20">
+                                    <span className="bg-[#0f172a80] backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-[#60a5fa] text-xs border border-[#3a9188]/20">
                                         ${Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2)}
                                     </span>
                                 </button>
@@ -565,11 +565,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                 <button
                                     onClick={handlePostBigBlind}
                                     className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                    text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-200 
-                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-2"
+                                    text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm
+                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-1 lg:mr-2"
                                 >
                                     <span className="mr-1">Post Big Blind</span>
-                                    <span className="bg-[#0f172a80] px-2 py-1 rounded text-[#60a5fa] text-sm">
+                                    <span className="bg-[#0f172a80] px-1 lg:px-2 py-1 rounded text-[#60a5fa] text-xs">
                                         ${Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2)}
                                     </span>
                                 </button>
@@ -579,9 +579,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                     className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155]
 hover:from-[#991b1b] hover:to-[#b91c1c]
 active:bg-white/10 active:scale-105
-px-6 py-2 rounded-lg border border-[#3a546d]
+px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border border-[#3a546d] text-xs lg:text-sm
 hover:border-[#ef4444] hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]
-transition-all duration-200 font-medium min-w-[100px]"
+transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                     onClick={handleFold}
                                 >
                                     FOLD
@@ -589,22 +589,22 @@ transition-all duration-200 font-medium min-w-[100px]"
                             )}
                             {/* Show a message if the player has folded */}
                             {userPlayer?.status === "folded" && (
-                                <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
+                                <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">You have folded this hand</div>
                             )}
                         </div>
 
                         {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
                         {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
                             <>
-                                <div className="flex justify-between gap-2">
+                                <div className="flex justify-between gap-1 lg:gap-2">
                                     {canFoldAnytime && (
                                         <button
                                             className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155]
 hover:from-[#991b1b] hover:to-[#b91c1c]
 active:bg-white/10 active:scale-105
-px-6 py-2 rounded-lg border border-[#3a546d]
+px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border border-[#3a546d] text-xs lg:text-sm
 hover:border-[#ef4444] hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]
-transition-all duration-200 font-medium min-w-[100px]"
+transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             onClick={handleFold}
                                         >
                                             FOLD
@@ -612,13 +612,13 @@ transition-all duration-200 font-medium min-w-[100px]"
                                     )}
                                     {/* Show a message if the player has folded */}
                                     {userPlayer?.status === "folded" && (
-                                        <div className="text-gray-400 py-2 px-4 bg-gray-800 bg-opacity-50 rounded-lg">You have folded this hand</div>
+                                        <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">You have folded this hand</div>
                                     )}
 
                                     {hasCheckAction && (
                                         <button
                                             className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
-                                            px-4 py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
+                                            px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCheck}
                                         >
@@ -628,7 +628,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                     {hasCallAction && (
                                         <button
                                             className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e40af]/90 hover:to-[#3b82f6]/90 active:from-[#3b82f6] active:to-[#60a5fa]
-                                            px-4 py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e40af]/50 active:border-[#60a5fa]/70 shadow-md backdrop-blur-sm
+                                            px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e40af]/50 active:border-[#60a5fa]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCall}
                                         >
@@ -642,7 +642,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             className={`${
                                                 isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
                                             } bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce]/90 hover:to-[#9333ea]/90 active:from-[#9333ea] active:to-[#a855f7]
-    px-4 py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm
+    px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
     transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
                                         >
                                             {hasRaiseAction ? "RAISE" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
@@ -654,10 +654,10 @@ transition-all duration-200 font-medium min-w-[100px]"
                                 {(hasBetAction || hasRaiseAction) && (
                                     <>
                                         {/* Slider and Controls */}
-                                        <div className="flex items-center space-x-4 bg-[#0f172a40] backdrop-blur-sm p-3 rounded-lg border border-[#3a546d]/50 shadow-inner">
+                                        <div className="flex items-center space-x-2 lg:space-x-4 bg-[#0f172a40] backdrop-blur-sm p-2 lg:p-3 rounded-lg border border-[#3a546d]/50 shadow-inner">
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-    py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
+    py-1 px-2 lg:px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda] text-xs lg:text-sm
     transition-all duration-200"
                                                 onClick={() => handleRaiseChange(Math.max(raiseAmount - bigBlindStep, hasBetAction ? minBet : minRaise))}
                                                 disabled={!isPlayerTurn}
@@ -692,7 +692,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             />
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-    py-1 px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda]
+    py-1 px-2 lg:px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda] text-xs lg:text-sm
     transition-all duration-200"
                                                 onClick={() => handleRaiseChange(Math.min(raiseAmount + bigBlindStep, hasBetAction ? maxBet : maxRaise))}
                                                 disabled={!isPlayerTurn}
@@ -701,7 +701,7 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             </button>
 
                                             {/* Inline Input Box and Min/Max */}
-                                            <div className="flex flex-col items-end gap-1 w-[120px]">
+                                            <div className="flex flex-col items-end gap-1 w-[100px] lg:w-[120px]">
                                                 <input
                                                     type="text"
                                                     inputMode="decimal"
@@ -727,14 +727,14 @@ transition-all duration-200 font-medium min-w-[100px]"
                                                             }
                                                         }
                                                     }}
-                                                    className={`px-2 py-1 rounded text-sm w-full bg-[#1e293b] transition-all duration-200 border ${
+                                                    className={`px-1 lg:px-2 py-1 rounded text-xs lg:text-sm w-full bg-[#1e293b] transition-all duration-200 border ${
                                                         isRaiseAmountInvalid ? "border-red-500 text-red-400 focus:ring-red-500" : "border-[#3a546d] text-white"
                                                     }`}
                                                     disabled={!isPlayerTurn}
                                                 />
 
                                                 <div
-                                                    className={`text-[10px] w-full text-right leading-snug ${
+                                                    className={`text-[8px] lg:text-[10px] w-full text-right leading-snug ${
                                                         isRaiseAmountInvalid ? "text-red-400" : "text-gray-400"
                                                     }`}
                                                 >
@@ -745,11 +745,11 @@ transition-all duration-200 font-medium min-w-[100px]"
                                         </div>
 
                                         {/* Additional Options */}
-                                        <div className="flex justify-between gap-2 mb-1">
+                                        <div className="flex justify-between gap-1 lg:gap-2 mb-1">
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
-                                                transition-all duration-200 text-xs transform hover:scale-105"
+                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md text-[10px] lg:text-xs
+                                                transition-all duration-200 transform hover:scale-105"
                                                 onClick={() => {
                                                     const newAmt = Math.max(totalPot / 4, hasBetAction ? minBet : minRaise);
                                                     handleRaiseChange(newAmt);
@@ -761,8 +761,8 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             </button>
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
-                                                transition-all duration-200 text-xs transform hover:scale-105"
+                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md text-[10px] lg:text-xs
+                                                transition-all duration-200 transform hover:scale-105"
                                                 onClick={() => {
                                                     const newAmt = Math.max(totalPot / 2, hasBetAction ? minBet : minRaise);
                                                     handleRaiseChange(newAmt);
@@ -774,8 +774,8 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             </button>
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
-                                                transition-all duration-200 text-xs transform hover:scale-105"
+                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md text-[10px] lg:text-xs
+                                                transition-all duration-200 transform hover:scale-105"
                                                 onClick={() => {
                                                     const newAmt = Math.max((totalPot * 3) / 4, hasBetAction ? minBet : minRaise);
                                                     handleRaiseChange(newAmt);
@@ -787,8 +787,8 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             </button>
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md
-                                                transition-all duration-200 text-xs transform hover:scale-105"
+                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md text-[10px] lg:text-xs
+                                                transition-all duration-200 transform hover:scale-105"
                                                 onClick={() => {
                                                     const newAmt = Math.max(totalPot, hasBetAction ? minBet : minRaise);
                                                     handleRaiseChange(newAmt);
@@ -800,8 +800,8 @@ transition-all duration-200 font-medium min-w-[100px]"
                                             </button>
                                             <button
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce] hover:to-[#9333ea] active:from-[#9333ea] active:to-[#a855f7]
-                                                px-2 py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#7e22ce] active:border-[#c084fc] shadow-md
-                                                transition-all duration-200 text-xs font-medium transform active:scale-105"
+                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#7e22ce] active:border-[#c084fc] shadow-md text-[10px] lg:text-xs
+                                                transition-all duration-200 font-medium transform active:scale-105"
                                                 onClick={() => {
                                                     const newAmt = hasBetAction ? maxBet : maxRaise;
                                                     handleRaiseChange(newAmt);

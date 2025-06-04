@@ -249,7 +249,7 @@
     left: 1rem;
     display: flex;
     align-items: center;
-    z-index: 10;
+    z-index: 5;
     opacity: 0.3;
 }
 
