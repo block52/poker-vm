@@ -111,6 +111,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         // Verify initial button positions for hand 1
         expect(game.smallBlindPosition).toEqual(1);
         expect(game.bigBlindPosition).toEqual(2);
+        expect(game.dealerPosition).toEqual(9);
 
         actionCounter = playCompleteHand(1, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
@@ -142,7 +143,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.bigBlindPosition).toEqual(2);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 4
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
@@ -157,7 +158,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.bigBlindPosition).toEqual(1);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(4, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 5
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
@@ -172,7 +173,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.bigBlindPosition).toEqual(2);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(4, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(5, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Final verification - check chip counts after 5 hands
         // Winner determination is deterministic with the set mnemonic, so we can check exact values

@@ -35,10 +35,12 @@ import PokerSolver from "pokersolver";
 import { IAction, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
+import { DealerPositionManager } from "./dealerManager";
 
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
     private readonly _update: IUpdate;
+    private readonly dealerManager: DealerPositionManager;
     private readonly _playersMap: Map<number, Player | null>;
     private readonly _rounds = new Map<TexasHoldemRound, TurnWithSeat[]>();
     private readonly _communityCards: Card[] = [];
@@ -128,6 +130,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new ShowAction(this, this._update),
             new NewHandAction(this, this._update, "")
         ];
+
+        this.dealerManager = new DealerPositionManager(this);
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -254,16 +258,24 @@ class TexasHoldemGame implements IPoker, IUpdate {
     }
 
     // Position getters
-    get dealerPosition(): number {
-        return this._positions.dealer ?? this.maxPlayers;
+    get dealerPosition(): number | undefined {
+        return this._positions.dealer;
+    }
+
+    setDealerPosition(seat: number): void {
+        if (seat < 1 || seat > this.maxPlayers) {
+            throw new Error("Invalid dealer position.");
+        }
+        this._positions.dealer = seat;
     }
 
     get bigBlindPosition(): number {
-        return this.findBBPosition();
+        return this.dealerManager.getBigBlindPosition();
     }
 
     get smallBlindPosition(): number {
-        return this.findSBPosition();
+        return this.dealerManager.getSmallBlindPosition();
+        // return this.findSBPosition();
     }
 
     // Pot getters
@@ -310,7 +322,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     /**
      * Finds players with ACTIVE status
      */
-    private findActivePlayers(): Player[] {
+    findActivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.status === PlayerStatus.ACTIVE);
     }
 
@@ -556,45 +568,49 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this.findNextPlayerToAct();
     }
 
-    /**
-     * Finds the small blind position based on dealer position
-     */
-    private findSBPosition(): number {
-        const sb = this.findNextPlayerToAct(this.dealerPosition + 1); // Start scan from the next player after the dealer
-        if (sb) {
-            const seat = this.getPlayerSeatNumber(sb.address);
-            return seat;
-        }
-
-        if (this.dealerPosition === this.maxPlayers) {
-            return 1;
-        }
-
-        return this.dealerPosition + 1;
+    private findDealerPosition(): number | undefined {
+        return this.dealerManager.getCurrentDealerSeat();
     }
 
-    /**
-     * Finds the big blind position based on dealer position
-     */
-    private findBBPosition(): number {
-        const sb = this.findSBPosition();
-        const start = sb === this.maxPlayers ? 1 : sb + 1; // Start scan from the next player after the small blind
-        const bb = this.findNextPlayerToAct(start);
+    // /**
+    //  * Finds the small blind position based on dealer position
+    //  */
+    // private findSBPosition(): number {
+    //     const sb = this.findNextPlayerToAct(this.dealerPosition + 1); // Start scan from the next player after the dealer
+    //     if (sb) {
+    //         const seat = this.getPlayerSeatNumber(sb.address);
+    //         return seat;
+    //     }
 
-        if (bb) {
-            return this.getPlayerSeatNumber(bb.address);
-        }
+    //     if (this.dealerPosition === this.maxPlayers) {
+    //         return 1;
+    //     }
 
-        if (this.dealerPosition + 2 > this.maxPlayers) {
-            return 2;
-        }
+    //     return this.dealerPosition + 1;
+    // }
 
-        if (this.dealerPosition === this.maxPlayers) {
-            return 2;
-        }
+    // /**
+    //  * Finds the big blind position based on dealer position
+    //  */
+    // private findBBPosition(): number {
+    //     const sb = this.findSBPosition();
+    //     const start = sb === this.maxPlayers ? 1 : sb + 1; // Start scan from the next player after the small blind
+    //     const bb = this.findNextPlayerToAct(start);
 
-        return 2;
-    }
+    //     if (bb) {
+    //         return this.getPlayerSeatNumber(bb.address);
+    //     }
+
+    //     if (this.dealerPosition + 2 > this.maxPlayers) {
+    //         return 2;
+    //     }
+
+    //     if (this.dealerPosition === this.maxPlayers) {
+    //         return 2;
+    //     }
+
+    //     return 2;
+    // }
 
     /**
      * Finds the next player to act, starting from a specified position
