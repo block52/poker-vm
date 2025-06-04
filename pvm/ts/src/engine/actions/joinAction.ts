@@ -56,8 +56,10 @@ class JoinAction extends BaseAction {
 
         this.game.joinAtSeat(player, seat);
 
+        this.game.dealerManager.handlePlayerJoin(seat);
+
         // Set this seat as the last acted seat to help determine next player
-        this.game.setLastActedSeat(seat);
+        // this.game.setLastActedSeat(seat);
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction(

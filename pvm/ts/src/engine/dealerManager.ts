@@ -1,6 +1,6 @@
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
-import TexasHoldemGame from "./TexasHoldemGame";
+import TexasHoldemGame from "../engine/texasHoldem";
 
 /**
  * Standalone dealer position manager that works with TexasHoldemGame instances
@@ -16,8 +16,8 @@ export class DealerPositionManager {
      * Initializes the dealer position when the game starts
      */
     public initializeDealerPosition(): number {
-        const activePlayers = this.game.findActivePlayers();
-        
+        const activePlayers: Player[] = this.game.findActivePlayers();
+
         if (activePlayers.length < 2) {
             throw new Error("Not enough players to start the game");
         }
@@ -25,7 +25,7 @@ export class DealerPositionManager {
         // Start with the first active player as dealer
         const firstActivePlayer = activePlayers[0];
         const dealerSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
-        
+
         // Update the game's dealer position
         this.setDealerPosition(dealerSeat);
         return dealerSeat;
@@ -41,14 +41,14 @@ export class DealerPositionManager {
         }
 
         const activePlayers = this.game.findActivePlayers();
-        
+
         if (activePlayers.length < 2) {
             throw new Error("Not enough players to continue");
         }
 
         // Find the next active player after the current dealer
         const nextDealer = this.findNextActivePlayer(currentDealer);
-        
+
         if (nextDealer) {
             const nextDealerSeat = this.game.getPlayerSeatNumber(nextDealer.address);
             this.setDealerPosition(nextDealerSeat);
@@ -67,7 +67,7 @@ export class DealerPositionManager {
      */
     public getDealerPosition(): number {
         const currentDealerSeat = this.getCurrentDealerSeat();
-        
+
         // If dealer position is not set, initialize it
         if (!currentDealerSeat) {
             return this.initializeDealerPosition();
@@ -87,7 +87,7 @@ export class DealerPositionManager {
      */
     private findNextActivePlayer(startSeat: number): Player | undefined {
         const maxSeats = this.game.maxPlayers;
-        
+
         // Start searching from the next seat after startSeat
         let searchSeat = startSeat + 1;
         if (searchSeat > maxSeats) {
@@ -118,13 +118,13 @@ export class DealerPositionManager {
      */
     public handlePlayerLeave(leavingSeat: number): void {
         const currentDealerSeat = this.getCurrentDealerSeat();
-        
+
         // If the leaving player is the dealer, rotate to next player
         if (currentDealerSeat === leavingSeat) {
             const remainingPlayers = this.game.findActivePlayers().filter(
                 p => this.game.getPlayerSeatNumber(p.address) !== leavingSeat
             );
-            
+
             if (remainingPlayers.length >= 2) {
                 this.rotateDealer();
             } else if (remainingPlayers.length === 1) {
@@ -140,7 +140,7 @@ export class DealerPositionManager {
      */
     public handlePlayerJoin(newPlayerSeat: number): void {
         const activePlayers = this.game.findActivePlayers();
-        
+
         if (activePlayers.length === 1) {
             // First player becomes dealer by default
             this.setDealerPosition(newPlayerSeat);
@@ -156,7 +156,7 @@ export class DealerPositionManager {
      */
     public handleHeadsUpDealer(): number {
         const activePlayers = this.game.findActivePlayers();
-        
+
         if (activePlayers.length !== 2) {
             return this.rotateDealer();
         }
@@ -166,7 +166,7 @@ export class DealerPositionManager {
         const otherPlayer = activePlayers.find(
             p => this.game.getPlayerSeatNumber(p.address) !== currentDealerSeat
         );
-        
+
         if (otherPlayer) {
             const newDealerSeat = this.game.getPlayerSeatNumber(otherPlayer.address);
             this.setDealerPosition(newDealerSeat);
@@ -181,7 +181,7 @@ export class DealerPositionManager {
      */
     public validateDealerPosition(): boolean {
         const dealerSeat = this.getCurrentDealerSeat();
-        
+
         if (!dealerSeat) {
             return false;
         }
@@ -236,14 +236,14 @@ export class DealerPositionManager {
      * Helper method to check if a player is active
      */
     private isPlayerActive(player: Player): boolean {
-        return player.status === PlayerStatus.ACTIVE || 
-               player.status === PlayerStatus.NOT_ACTED;
+        return player.status === PlayerStatus.ACTIVE ||
+            player.status === PlayerStatus.NOT_ACTED;
     }
 
     /**
      * Helper method to get current dealer seat from game
      */
-    private getCurrentDealerSeat(): number | undefined {
+    getCurrentDealerSeat(): number | undefined {
         // Access the dealer position from the game's positions object
         return (this.game as any)._positions?.dealer;
     }
@@ -260,7 +260,7 @@ export class DealerPositionManager {
      */
     public handleNewHand(): number {
         const activePlayers = this.game.findActivePlayers();
-        
+
         if (activePlayers.length === 2) {
             // Heads-up: dealer alternates each hand
             return this.handleHeadsUpDealer();

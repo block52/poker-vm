@@ -40,7 +40,7 @@ import { DealerPositionManager } from "./dealerManager";
 class TexasHoldemGame implements IPoker, IUpdate {
     // Private fields
     private readonly _update: IUpdate;
-    private readonly dealerManager: DealerPositionManager;
+    public readonly dealerManager: DealerPositionManager;
     private readonly _playersMap: Map<number, Player | null>;
     private readonly _rounds = new Map<TexasHoldemRound, TurnWithSeat[]>();
     private readonly _communityCards: Card[] = [];
@@ -179,18 +179,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
             player.reinit();
         }
 
-        // Rotate dealer position
-        const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
-        if (nextToAct) {
-            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);
-        } else {
-            this._positions.dealer = this.findNextEmptySeat();
-        }
+        // // Rotate dealer position
+        // const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
+        // if (nextToAct) {
+        //     this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);
+        // } else {
+        //     this._positions.dealer = this.findNextEmptySeat();
+        // }
+
+        this.dealerManager.handleNewHand();
 
         // Reset game state
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
-        this._lastActedSeat = this.dealerPosition;
+        this._lastActedSeat = this.dealerPosition || 1; // Default to seat 1 if no dealer position set
         this._deck = new Deck(deck);
         this._pots = [0n];
         this._communityCards.length = 0;
@@ -232,9 +234,9 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._lastActedSeat;
     }
 
-    setLastActedSeat(seat: number): void {
-        this._lastActedSeat = seat;
-    }
+    // setLastActedSeat(seat: number): void {
+    //     this._lastActedSeat = seat;
+    // }
 
     // Game configuration getters
     get minBuyIn(): bigint {

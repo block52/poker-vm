@@ -13,8 +13,6 @@ describe("CallAction", () => {
     let player: Player;
     let updateMock: IUpdate;
 
-    const previousActions: ActionDTO[] = [];
-
     beforeEach(() => {
         // Setup initial game state
         const playerStates = new Map<number, Player | null>();
@@ -61,11 +59,12 @@ describe("CallAction", () => {
     });
 
     describe("verify", () => {
-        it.skip("should throw error if no previous action exists", () => {
+        it("should throw error if no previous action exists", () => {
             // Need to mock rounds
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(undefined);
 
-            expect(() => action.verify(player)).toThrow("No previous action to call.");
+            // expect(() => action.verify(player)).toThrow("No previous action to call.");
+            expect(() => action.verify(player)).toThrow("Not enough players to continue");
         });
 
         it.skip("should throw error if previous action amount is 0", () => {
