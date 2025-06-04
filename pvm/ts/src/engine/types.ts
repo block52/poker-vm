@@ -13,6 +13,17 @@ export interface IPoker {
     getBets(round: TexasHoldemRound): Map<string, bigint>;
 }
 
+/**
+ * Interface defining what the DealerPositionManager needs from the game
+ */
+export interface IDealerGameInterface {
+    findActivePlayers(): Player[];
+    getPlayerAtSeat(seat: number): Player | undefined;
+    getPlayerSeatNumber(playerId: string): number;
+    // getDealerPosition(): number | undefined;
+    // setDealerPosition(seat: number): void;
+}
+
 export type PlayerState = {
     address: string;
     chips: bigint;

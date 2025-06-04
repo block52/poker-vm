@@ -245,7 +245,7 @@ export class DealerPositionManager {
      */
     getCurrentDealerSeat(): number | undefined {
         // Access the dealer position from the game's positions object
-        return (this.game as any)._positions?.dealer;
+        return this.game.previousPositions.dealer;
     }
 
     /**

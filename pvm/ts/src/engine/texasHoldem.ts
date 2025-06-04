@@ -32,15 +32,16 @@ import SmallBlindAction from "./actions/smallBlindAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IAction, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
+import { IAction, IDealerGameInterface, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./dealerManager";
 
-class TexasHoldemGame implements IPoker, IUpdate {
+class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
-    private readonly _update: IUpdate;
     public readonly dealerManager: DealerPositionManager;
+
+    private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
     private readonly _rounds = new Map<TexasHoldemRound, TurnWithSeat[]>();
     private readonly _communityCards: Card[] = [];
@@ -59,7 +60,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     constructor(
         address: string,
         gameOptions: GameOptions,
-        private _positions: Positions,
+        public previousPositions: Positions,
         lastActedSeat: number,
         previousActions: ActionDTO[] = [],
         private _handNumber: number = 1,
@@ -261,14 +262,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     // Position getters
     get dealerPosition(): number | undefined {
-        return this._positions.dealer;
+        return this.previousPositions.dealer;
     }
 
     setDealerPosition(seat: number): void {
         if (seat < 1 || seat > this.maxPlayers) {
             throw new Error("Invalid dealer position.");
         }
-        this._positions.dealer = seat;
+        this.previousPositions.dealer = seat;
     }
 
     get bigBlindPosition(): number {
@@ -1307,7 +1308,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         };
 
         // Return the complete state DTO
-        return {
+        const state: TexasHoldemStateDTO = {
             type: "cash",
             address: this._address,
             gameOptions: gameOptions,
@@ -1327,6 +1328,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             winners: winners,
             signature: ethers.ZeroHash
         };
+
+        return state;
     }
 
     /**
