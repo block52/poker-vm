@@ -161,7 +161,22 @@ const Table = React.memo(() => {
         const scaleWidth = window.innerWidth / baseWidth;
         const scaleHeight = availableHeight / baseHeight;
 
-        const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
+        // More conservative scaling to prevent cutoff
+        let calculatedScale;
+        if (window.innerWidth <= 414) {
+            // For small mobile: very conservative scaling to prevent cutoff
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.6;
+        } else if (window.innerWidth <= 768) {
+            // For tablets/large mobile: moderate scaling
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.8;
+        } else if (window.innerWidth <= 1024) {
+            // For iPad/small desktop: slightly increased
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.75;
+        } else {
+            // For desktop: original scaling
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
+        }
+        
         return Math.min(calculatedScale, 2);
     }, []);
 
@@ -684,13 +699,15 @@ const Table = React.memo(() => {
                         }}
                     />
                     {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-250px)] sm:min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Hexagon pattern overlay */}
 
                         <div
                             className="zoom-wrapper"
                             style={{
-                                transform: `translate(-50%, -50%) scale(${zoom})`
+                                transform: `translate(-50%, -50%) scale(${zoom})`,
+                                left: "50%",
+                                top: window.innerWidth <= 414 ? "47%" : "50%"
                             }}
                         >
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
@@ -805,7 +822,7 @@ const Table = React.memo(() => {
                         </div>
                     </div>
                     {/*//! FOOTER */}
-                    <div className="w-full flex justify-center items-center h-[250px] bg-transparent z-[10]">
+                    <div className="w-full flex justify-center items-center h-[200px] sm:h-[250px] bg-transparent z-[10]">
                         <div className="max-w-[700px] w-full flex justify-center items-center h-full">
                             <PokerActionPanel />
                         </div>
