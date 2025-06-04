@@ -99,7 +99,7 @@ const Player: React.FC<PlayerProps> = memo(
             height={80}
             className="mb-[11px]"
             onError={(e) => console.error(`❌ Player ${index} card1 failed to load:`, `/cards/${holeCards[0]}.svg`)}
-            onLoad={() => console.log(`✅ Player ${index} card1 loaded:`, `/cards/${holeCards[0]}.svg`)}
+            // onLoad={() => console.log(`✅ Player ${index} card1 loaded:`, `/cards/${holeCards[0]}.svg`)}
           />
           <img
             src={`/cards/${holeCards[1]}.svg`}
@@ -107,7 +107,7 @@ const Player: React.FC<PlayerProps> = memo(
             height={80}
             className="mb-[11px]"
             onError={(e) => console.error(`❌ Player ${index} card2 failed to load:`, `/cards/${holeCards[1]}.svg`)}
-            onLoad={() => console.log(`✅ Player ${index} card2 loaded:`, `/cards/${holeCards[1]}.svg`)}
+            // onLoad={() => console.log(`✅ Player ${index} card2 loaded:`, `/cards/${holeCards[1]}.svg`)}
           />
         </>
       );
