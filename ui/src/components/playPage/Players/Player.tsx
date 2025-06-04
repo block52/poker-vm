@@ -80,28 +80,16 @@ const Player: React.FC<PlayerProps> = memo(
 
     // 5) render hole cards
     const renderCards = useCallback(() => {
-      console.log(`🃏 Player ${index} renderCards called:`, {
-        holeCards,
-        hasCards: !!holeCards,
-        cardCount: holeCards?.length,
-        playerData: !!playerData,
-        seat: index
-      });
       
       if (!holeCards || holeCards.length !== 2) {
-        console.log(`⚠️ Player ${index} - No cards to render:`, {
-          holeCards,
-          reason: !holeCards ? "holeCards is null/undefined" : `cardCount=${holeCards.length}, expected 2`
-        });
+        // console.log(`⚠️ Player ${index} - No cards to render:`, {
+        //   holeCards,
+        //   reason: !holeCards ? "holeCards is null/undefined" : `cardCount=${holeCards.length}, expected 2`
+        // });
         return <div className="w-[120px] h-[80px]"></div>;
       }
       
-      console.log(`✅ Player ${index} - Rendering cards:`, {
-        card1: holeCards[0],
-        card2: holeCards[1],
-        card1Path: `/cards/${holeCards[0]}.svg`,
-        card2Path: `/cards/${holeCards[1]}.svg`
-      });
+     
       
       return (
         <>

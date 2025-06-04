@@ -116,11 +116,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    // Big Blind Value - handle null gameOptions
+    // Big Blind Value - handle null gameOptions during loading
     const bigBlindStep = useMemo(() => {
         if (!gameOptions?.bigBlind) {
-            console.warn("Big blind value not available from game options");
-            return 0.02; // Fallback value for display purposes
+            return 0.02; // Fallback value during loading or when not available
         }
         const step = Number(ethers.formatUnits(gameOptions.bigBlind, 18));
         return step;

@@ -32,12 +32,12 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
     // Timer configuration - get from game options (now in milliseconds)
     const TIMEOUT_DURATION = useMemo((): number => {
         if (!gameOptions?.timeout) {
-            console.warn("No timeout value from game options, using default 30 seconds");
+            // console.warn("No timeout value from game options, using default 30 seconds");
             return 30000; // 30 seconds default if no game options
         }
         
         // Log the raw timeout value to verify units
-        console.log(`🕐 Raw timeout from gameOptions: ${gameOptions.timeout} (assuming milliseconds)`);
+        // console.log(`🕐 Raw timeout from gameOptions: ${gameOptions.timeout} (assuming milliseconds)`);
         
         // Timeout now comes as milliseconds directly (e.g., 3000ms = 3 seconds)
         return gameOptions.timeout;
@@ -148,7 +148,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
             hasUsedExtension: true 
         });
 
-        console.log(`⏰ Time extended by ${timeoutInSeconds} seconds for seat ${playerSeat}`);
+        // console.log(`⏰ Time extended by ${timeoutInSeconds} seconds for seat ${playerSeat}`);
     }, [isNextToAct, isCurrentUser, extensionInfo.hasUsedExtension, seatKey, lastActionTimestamp, timeoutInSeconds, playerSeat]);
 
     // Auto-action logic (check first, then fold if check not available)
@@ -170,7 +170,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         // Prevent multiple auto-actions in quick succession
         const timeSinceLastAutoFold = Date.now() - lastAutoFoldTime;
         if (timeSinceLastAutoFold < 5000) { // 5 second cooldown
-            console.log("Auto-action cooldown active, skipping");
+            // console.log("Auto-action cooldown active, skipping");
             latestValues.current.isExecutingAutoAction = false;
             return;
         }
@@ -256,7 +256,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
     useEffect(() => {
         if (process.env.NODE_ENV === "development" && isNextToAct && isCurrentUser) {
             const extensionStatus = extensionInfo.hasUsedExtension ? " (EXTENDED)" : "";
-            console.log(`🕐 Timer for seat ${playerSeat}: ${timeRemaining}s remaining (timeout: ${timeoutInSeconds}s)${extensionStatus}`);
+            // console.log(`🕐 Timer for seat ${playerSeat}: ${timeRemaining}s remaining (timeout: ${timeoutInSeconds}s)${extensionStatus}`);
         }
     }, [timeRemaining, isNextToAct, isCurrentUser, playerSeat, timeoutInSeconds, extensionInfo.hasUsedExtension]);
 
