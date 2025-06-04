@@ -33,6 +33,15 @@ export function useTableCheck(tableId?: string) {
                 return;
             }
 
+            // 🔍 DEBUG: Log game state before check action
+            console.log("🃏 [CHECK ACTION DEBUG]", {
+                timestamp: new Date().toISOString(),
+                tableId,
+                action: "CHECK",
+                amount: options.amount || "0",
+                source: "useTableCheck.checkHand"
+            });
+
             // Call the playerAction method
             const response = await client.playerAction(
                 tableId,
@@ -41,8 +50,19 @@ export function useTableCheck(tableId?: string) {
                 undefined // Let the client handle the nonce
             );
 
+            console.log("✅ [CHECK ACTION SUCCESS]", { tableId, response });
             return response;
         } catch (err: any) {
+            // 🚨 Enhanced error logging for illegal action
+            console.error("❌ [CHECK ACTION FAILED]", {
+                timestamp: new Date().toISOString(),
+                tableId,
+                error: err.message,
+                action: "CHECK",
+                amount: options.amount || "0",
+                source: "useTableCheck.checkHand"
+            });
+            
             setError(err.message || "Failed to check hand");
             throw err;
         } finally {

@@ -82,6 +82,18 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
         const message = JSON.parse(event.data);
         
         if (message.type === "gameStateUpdate" && message.tableAddress === tableId) {
+          // 🔍 DEBUG: Log game state change timing for race condition debugging
+          console.log("🔄 [GAME STATE UPDATE]", {
+            timestamp: new Date().toISOString(),
+            tableId,
+            newRound: message.gameState?.round,
+            playerTurnInfo: {
+              nextToAct: message.gameState?.nextToAct,
+              currentActorSeat: message.gameState?.players?.find((p: any) => p.address?.toLowerCase() === localStorage.getItem("user_eth_public_key")?.toLowerCase())?.seat
+            },
+            source: "WebSocket gameStateUpdate"
+          });
+          
           console.log(`[GameStateContext] Received game state update for table ${tableId}`);
           
           // DEBUG: Log hole card data for all players to detect if backend sends undefined/null cards
