@@ -38,6 +38,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/rpc/blocks", async (req, res) => {
+    console.log( "call ")
     try {
         logger.info("Fetching blocks directly from RPC");
         const blocks = await rpcService.getBlocks();

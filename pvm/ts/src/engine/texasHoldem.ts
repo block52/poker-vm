@@ -1198,7 +1198,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 const hand = hands.get(player.id);
                 const _winner: Winner = {
                     amount: this.getPot(),
-                    cards: activePlayers[0].holeCards?.map(card => card.mnemonic),
+                    cards: player.holeCards?.map(card => card.mnemonic),
                     name: hand.name,
                     description: hand.descr
                 };
