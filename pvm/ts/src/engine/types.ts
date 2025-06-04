@@ -8,6 +8,8 @@ export interface IAction {
 }
 
 export interface IPoker {
+    smallBlind: bigint;
+    bigBlind: bigint;
     getLastRoundAction(): Turn | undefined;
     performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;
@@ -17,11 +19,39 @@ export interface IPoker {
  * Interface defining what the DealerPositionManager needs from the game
  */
 export interface IDealerGameInterface {
+    lastActedSeat: number;
+    // dealerPosition: number;
+    minPlayers: number;
+    maxPlayers: number;
     findActivePlayers(): Player[];
     getPlayerAtSeat(seat: number): Player | undefined;
     getPlayerSeatNumber(playerId: string): number;
+
     // getDealerPosition(): number | undefined;
     // setDealerPosition(seat: number): void;
+}
+
+/**
+ * Interface defining the dealer position management contract
+ */
+export interface IDealerPositionManager {
+    // Core dealer position methods
+    initializeDealerPosition(): number;
+    rotateDealer(): number;
+    getDealerPosition(): number;
+    
+    // Event handlers
+    handlePlayerLeave(seat: number): void;
+    handlePlayerJoin(seat: number): void;
+    handleNewHand(): number;
+    handleHeadsUpDealer(): number;
+    
+    // Position getters
+    getSmallBlindPosition(): number;
+    getBigBlindPosition(): number;
+    
+    // Validation
+    validateDealerPosition(): boolean;
 }
 
 export type PlayerState = {
@@ -53,9 +83,11 @@ export interface IUpdate {
 }
 
 export interface IGame extends IUpdate {
+    reinit(deck: any): void;
     getPlayers(): Player[];
     getPlayerStatus(): PlayerStatus;
     join(player: Player, chips: bigint): void;
+    leave(player: Player): void;
 }
 
 export type OrderedTransaction = {

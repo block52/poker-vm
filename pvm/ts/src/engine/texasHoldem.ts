@@ -32,14 +32,14 @@ import SmallBlindAction from "./actions/smallBlindAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IAction, IDealerGameInterface, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
+import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./dealerManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
-    public readonly dealerManager: DealerPositionManager;
+    public readonly dealerManager: IDealerPositionManager;
 
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
@@ -60,7 +60,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     constructor(
         address: string,
         gameOptions: GameOptions,
-        public previousPositions: Positions,
+        // public previousPositions: Positions,
+        private _dealerPosition: number,
         lastActedSeat: number,
         previousActions: ActionDTO[] = [],
         private _handNumber: number = 1,
@@ -71,7 +72,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         playerStates: Map<number, Player | null> = new Map(),
         deck: string = "",
         winners: WinnerDTO[] = [],
-        private readonly _now: number = Date.now()
+        private readonly _now: number = Date.now(),
+        dealerManager?: IDealerPositionManager
     ) {
         this._address = address;
         this._playersMap = new Map<number, Player | null>(playerStates);
@@ -132,7 +134,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new NewHandAction(this, this._update, "")
         ];
 
-        this.dealerManager = new DealerPositionManager(this);
+        this.dealerManager = dealerManager || new DealerPositionManager(this);
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -193,7 +195,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Reset game state
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
-        this._lastActedSeat = this.dealerPosition || 1; // Default to seat 1 if no dealer position set
+        this._lastActedSeat = this.dealerPosition; // Default to seat 1 if no dealer position set
         this._deck = new Deck(deck);
         this._pots = [0n];
         this._communityCards.length = 0;
@@ -248,6 +250,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return this._gameOptions.maxBuyIn;
     }
 
+    get minPlayers(): number {
+        return this._gameOptions.minPlayers;
+    }
+
     get maxPlayers(): number {
         return this._gameOptions.maxPlayers;
     }
@@ -261,15 +267,16 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     // Position getters
-    get dealerPosition(): number | undefined {
-        return this.previousPositions.dealer;
+    get dealerPosition(): number {
+        // get form dealer manager
+        return this._dealerPosition;
     }
 
     setDealerPosition(seat: number): void {
         if (seat < 1 || seat > this.maxPlayers) {
             throw new Error("Invalid dealer position.");
         }
-        this.previousPositions.dealer = seat;
+        this._dealerPosition = seat; // todo?
     }
 
     get bigBlindPosition(): number {
@@ -569,10 +576,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     getNextPlayerToAct(): Player | undefined {
         return this.findNextPlayerToAct();
-    }
-
-    private findDealerPosition(): number | undefined {
-        return this.dealerManager.getCurrentDealerSeat();
     }
 
     // /**
@@ -1369,12 +1372,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             players.set(p.seat, player);
         });
 
-        // Create positions object
-        const positions: Positions = {
-            dealer: json.dealer,
-            smallBlind: json.smallBlindPosition,
-            bigBlind: json.bigBlindPosition
-        };
+        // // Create positions object
+        // const positions: Positions = {
+        //     dealer: json.dealer,
+        //     smallBlind: json.smallBlindPosition,
+        //     bigBlind: json.bigBlindPosition
+        // };
+
+        const dealerPosition = json.dealer;
 
         // Create winners array
         const winners: WinnerDTO[] = json.winners || [];
@@ -1389,7 +1394,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return new TexasHoldemGame(
             json.address,
             gameOptions,
-            positions,
+            dealerPosition,
             lastActedSeat,
             json.previousActions,
             json.handNumber,

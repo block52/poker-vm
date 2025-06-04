@@ -48,11 +48,11 @@ export enum TexasHoldemRound {
     END = "end"
 }
 
-export type Positions = {
-    dealer?: number;
-    // smallBlind?: number;
-    // bigBlind?: number;
-}
+// export type Positions = {
+//     dealer?: number;
+//     // smallBlind?: number;
+//     // bigBlind?: number;
+// }
 
 export type GameOptions = {
     minBuyIn: bigint;
@@ -126,7 +126,7 @@ export type TexasHoldemGameState = {
     smallBlind: string;
     bigBlind: string;
     dealer: number;
-    positions: Positions;
+    // positions: Positions;
     players: string[];
     deck: string;
     communityCards: string[];

@@ -1,14 +1,14 @@
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
-import TexasHoldemGame from "../engine/texasHoldem";
+import { IDealerGameInterface, IDealerPositionManager } from "./types";
 
 /**
  * Standalone dealer position manager that works with TexasHoldemGame instances
  */
-export class DealerPositionManager {
-    private readonly game: TexasHoldemGame;
+export class DealerPositionManager implements IDealerPositionManager {
+    private readonly game: IDealerGameInterface;
 
-    constructor(game: TexasHoldemGame) {
+    constructor(game: IDealerGameInterface) {
         this.game = game;
     }
 
