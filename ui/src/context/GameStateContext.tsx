@@ -29,6 +29,71 @@ interface GameStateProviderProps {
   children: React.ReactNode;
 }
 
+// 🔍 DEBUG: Enhanced logging utility for easy data export
+const debugLogs: any[] = [];
+const debugLog = (eventType: string, data: any) => {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    eventType,
+    data
+  };
+  
+  // Console log as before
+  console.log(`🔄 [${eventType}]`, data);
+  
+  // Store in array for easy export
+  debugLogs.push(logEntry);
+  
+  // Keep only last 100 entries to prevent memory issues
+  if (debugLogs.length > 100) {
+    debugLogs.shift();
+  }
+  
+  // Store in localStorage for persistence
+  try {
+    localStorage.setItem("pokerDebugLogs", JSON.stringify(debugLogs.slice(-20))); // Keep last 20
+  } catch (e) {
+    // localStorage might be full, ignore
+  }
+};
+
+// Expose debug functions to window for easy console access
+if (typeof window !== "undefined") {
+  // Make debugLogs globally accessible
+  (window as any).debugLogs = debugLogs;
+  
+  (window as any).exportDebugLogs = () => {
+    const dataStr = JSON.stringify(debugLogs, null, 2);
+    console.log("=== COPYABLE DEBUG LOGS ===");
+    console.log(dataStr);
+    
+    // Also download as file
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `poker-debug-${new Date().toISOString().slice(0, 19)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    return dataStr;
+  };
+  
+  (window as any).clearDebugLogs = () => {
+    debugLogs.length = 0;
+    localStorage.removeItem("pokerDebugLogs");
+    console.log("Debug logs cleared");
+  };
+  
+  (window as any).getLastDebugLogs = (count = 10) => {
+    const recent = debugLogs.slice(-count);
+    console.table(recent);
+    console.log("=== COPYABLE RECENT LOGS ===");
+    console.log(JSON.stringify(recent, null, 2));
+    return recent;
+  };
+}
+
 export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }) => {
   const [gameState, setGameState] = useState<TexasHoldemStateDTO | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -83,7 +148,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
         
         if (message.type === "gameStateUpdate" && message.tableAddress === tableId) {
           // 🔍 DEBUG: Log game state change timing for race condition debugging
-          console.log("🔄 [GAME STATE UPDATE]", {
+          debugLog("GAME STATE UPDATE", {
             timestamp: new Date().toISOString(),
             tableId,
             newRound: message.gameState?.round,
@@ -95,6 +160,32 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
           });
           
           console.log(`[GameStateContext] Received game state update for table ${tableId}`);
+          
+          // 🔍 DEBUG: Log before and after state to see if React state actually updates
+          debugLog("REACT STATE DEBUG - BEFORE", {
+            timestamp: new Date().toISOString(),
+            previousNextToAct: gameState?.nextToAct,
+            newNextToAct: message.gameState?.nextToAct,
+            previousPlayerCount: gameState?.players?.length,
+            newPlayerCount: message.gameState?.players?.length,
+            willUpdate: true,
+            source: "GameStateContext setState"
+          });
+          
+          // Update the React state
+          setGameState(message.gameState);
+          setError(null);
+          
+          // 🔍 DEBUG: Log immediately after state update (this may still show old state due to async nature)
+          setTimeout(() => {
+            debugLog("REACT STATE DEBUG - AFTER", {
+              timestamp: new Date().toISOString(),
+              currentNextToAct: gameState?.nextToAct,
+              expectedNextToAct: message.gameState?.nextToAct,
+              stateUpdated: gameState?.nextToAct === message.gameState?.nextToAct,
+              source: "GameStateContext setState verification"
+            });
+          }, 10); // Small delay to see if state updated
           
           // DEBUG: Log hole card data for all players to detect if backend sends undefined/null cards
           if (message.gameState?.players) {
@@ -138,9 +229,6 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
           } else {
             console.warn("⚠️ [GameStateContext] No players data in game state update");
           }
-          
-          setGameState(message.gameState);
-          setError(null);
         }
       } catch (err) {
         console.error("[GameStateContext] Error parsing WebSocket message:", err);

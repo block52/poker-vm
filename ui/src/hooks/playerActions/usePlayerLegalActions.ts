@@ -3,6 +3,21 @@ import { PlayerLegalActionsResult } from "./types";
 import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 import { useRef } from "react";
 
+// 🔍 DEBUG: Enhanced logging utility for easy data export (same as GameStateContext)
+const debugLog = (eventType: string, data: any) => {
+  console.log(`🔄 [${eventType}]`, data);
+  
+  // Access the global debug logs array if it exists
+  if (typeof window !== "undefined" && (window as any).debugLogs) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      eventType,
+      data
+    };
+    (window as any).debugLogs.push(logEntry);
+  }
+};
+
 /**
  * Custom hook to fetch the legal actions for the current player
  * 
@@ -18,6 +33,20 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
 
     // Get game state directly from Context - table ID managed by subscription
     const { gameState, isLoading, error } = useGameStateContext();
+    
+    // 🔍 DEBUG: Log every time this hook executes to track re-renders
+    debugLog("usePlayerLegalActions EXECUTION", {
+        timestamp: new Date().toISOString(),
+        hookExecuted: true,
+        gameStateExists: !!gameState,
+        nextToAct: gameState?.nextToAct,
+        playerCount: gameState?.players?.length,
+        round: gameState?.round,
+        isLoading,
+        hasError: !!error,
+        userAddress: userAddress?.substring(0, 8) + "...",
+        source: "usePlayerLegalActions hook execution"
+    });
     
     // Add ref to track last logged state to prevent spam
     const lastLoggedStateRef = useRef<string>("");
@@ -156,7 +185,7 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
 
             // Only log if the state actually changed
             if (currentState !== lastLoggedStateRef.current) {
-                console.log("⚖️ [LEGAL ACTIONS CALCULATED]", {
+                debugLog("LEGAL ACTIONS CALCULATED", {
                     timestamp: new Date().toISOString(),
                     playerSeat: currentPlayer.seat,
                     isPlayerTurn,
@@ -175,6 +204,30 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
                 lastLoggedStateRef.current = currentState;
             }
         }
+        
+        // 🔍 DEBUG: Log final result with raw gameState comparison
+        debugLog("FINAL LEGAL ACTIONS RESULT", {
+            timestamp: new Date().toISOString(),
+            result: {
+                playerSeat: result.playerSeat,
+                isPlayerTurn: result.isPlayerTurn,
+                actionTurnIndex: result.actionTurnIndex,
+                legalActionCount: result.legalActions.length
+            },
+            rawGameStateUsed: {
+                nextToAct: gameState?.nextToAct,
+                round: gameState?.round,
+                playerCount: gameState?.players?.length,
+                tableAddress: gameState?.address
+            },
+            currentPlayerData: {
+                seat: currentPlayer?.seat,
+                address: currentPlayer?.address?.substring(0, 8) + "...",
+                status: currentPlayer?.status,
+                legalActionCount: currentPlayer?.legalActions?.length || 0
+            },
+            source: "usePlayerLegalActions final result"
+        });
 
         return result;
     } catch (err) {

@@ -571,7 +571,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return this.findNextPlayerToAct();
     }
 
-    // /**
+      // /**
     //  * Finds the small blind position based on dealer position
     //  */
     // private findSBPosition(): number {
@@ -615,6 +615,29 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Finds the next player to act, starting from a specified position
      */
     private findNextPlayerToAct(start: number = this.lastActedSeat + 1): Player | undefined {
+        // Special logic for ante round - prioritize blind posting order
+        if (this.currentRound === TexasHoldemRound.ANTE) {
+            const actions = this._rounds.get(this.currentRound) || [];
+            const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
+            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
+            
+            // If small blind hasn't been posted yet, small blind player should act
+            if (!hasSmallBlind) {
+                const smallBlindPlayer = this.getPlayerAtSeat(this.smallBlindPosition);
+                if (smallBlindPlayer && (smallBlindPlayer.status === PlayerStatus.ACTIVE || smallBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                    return smallBlindPlayer;
+                }
+            }
+            
+            // If small blind posted but big blind hasn't, big blind player should act
+            if (hasSmallBlind && !hasBigBlind) {
+                const bigBlindPlayer = this.getPlayerAtSeat(this.bigBlindPosition);
+                if (bigBlindPlayer && (bigBlindPlayer.status === PlayerStatus.ACTIVE || bigBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                    return bigBlindPlayer;
+                }
+            }
+        }
+
         if (start > this.maxPlayers) {
             start = 1;
         }
@@ -1364,7 +1387,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             players.set(p.seat, player);
         });
 
-        const dealerPosition = json.dealerPosition;
+        const dealerPosition = json.dealer;
         if (!dealerPosition || dealerPosition < 1 || dealerPosition > gameOptions.maxPlayers) {
             throw new Error("Invalid dealer position in game state.");
         }
