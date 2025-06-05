@@ -34,5 +34,5 @@ jobs:
         with:
           host: "node1.block52.xyz"
           username: "root"
-          key: ${{ secrets.DO-DEPLOY }}
+          key: ${{ secrets.DEPLOY }}
           script: "/root/poker-vm/pvm/install.sh"
