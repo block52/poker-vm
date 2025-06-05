@@ -135,53 +135,53 @@ describe.skip("DealerPositionManager", () => {
     //     });
     // });
 
-    describe("Player Events", () => {
-        test("should handle player join", () => {
-            mockGame.setPlayers([]); // Empty game
+    // describe("Player Events", () => {
+    //     test("should handle player join", () => {
+    //         mockGame.setPlayers([]); // Empty game
 
-            dealerManager.handlePlayerJoin(1);
+    //         dealerManager.handlePlayerJoin(1);
 
-            expect(mockGame.getDealerPosition()).toBe(1); // First player becomes dealer
-        });
+    //         expect(mockGame.getDealerPosition()).toBe(1); // First player becomes dealer
+    //     });
 
-        test("should handle dealer leaving", () => {
-            mockGame.setDealerPosition(2);
+    //     test("should handle dealer leaving", () => {
+    //         mockGame.setDealerPosition(2);
 
-            dealerManager.handlePlayerLeave(2);
+    //         dealerManager.handlePlayerLeave(2);
 
-            expect(mockGame.getDealerPosition()).not.toBe(2); // Dealer should have rotated
-        });
+    //         expect(mockGame.getDealerPosition()).not.toBe(2); // Dealer should have rotated
+    //     });
 
-        test("should not change dealer when non-dealer leaves", () => {
-            mockGame.setDealerPosition(1);
+    //     test("should not change dealer when non-dealer leaves", () => {
+    //         mockGame.setDealerPosition(1);
 
-            dealerManager.handlePlayerLeave(3);
+    //         dealerManager.handlePlayerLeave(3);
 
-            expect(mockGame.getDealerPosition()).toBe(1); // Dealer unchanged
-        });
-    });
+    //         expect(mockGame.getDealerPosition()).toBe(1); // Dealer unchanged
+    //     });
+    // });
 
-    describe("Position Validation", () => {
-        test("should validate correct dealer position", () => {
-            mockGame.setDealerPosition(1);
+    // describe("Position Validation", () => {
+    //     test("should validate correct dealer position", () => {
+    //         mockGame.setDealerPosition(1);
 
-            const isValid = dealerManager.validateDealerPosition();
+    //         const isValid = dealerManager.validateDealerPosition();
 
-            expect(isValid).toBe(true);
-        });
+    //         expect(isValid).toBe(true);
+    //     });
 
-        test("should invalidate position if dealer not active", () => {
-            mockGame.setPlayers([
-                new Player("alice", undefined, 1000n, undefined, PlayerStatus.SITTING_OUT),
-                new Player("bob", undefined, 1000n, undefined, PlayerStatus.ACTIVE)
-            ]);
-            mockGame.setDealerPosition(1); // Alice is sitting out
+    //     test("should invalidate position if dealer not active", () => {
+    //         mockGame.setPlayers([
+    //             new Player("alice", undefined, 1000n, undefined, PlayerStatus.SITTING_OUT),
+    //             new Player("bob", undefined, 1000n, undefined, PlayerStatus.ACTIVE)
+    //         ]);
+    //         mockGame.setDealerPosition(1); // Alice is sitting out
 
-            const isValid = dealerManager.validateDealerPosition();
+    //         const isValid = dealerManager.validateDealerPosition();
 
-            expect(isValid).toBe(false);
-        });
-    });
+    //         expect(isValid).toBe(false);
+    //     });
+    // });
 });
 
 // ==================== INTEGRATION TESTS WITH GAME ====================
@@ -213,12 +213,10 @@ describe("TexasHoldemGame with DealerManager", () => {
             timeout: 30000
         };
 
-        const positions = { dealer: 1, smallBlind: 2, bigBlind: 3 };
-
         game = new TexasHoldemGame(
             "game-address",
             gameOptions,
-            positions,
+            9,
             1, // lastActedSeat
             [], // previousActions
             1, // handNumber
