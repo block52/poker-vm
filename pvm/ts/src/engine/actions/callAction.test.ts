@@ -65,12 +65,20 @@ describe("CallAction", () => {
     });
 
     describe("verify", () => {
-        it("should throw error if no previous action exists", () => {
+        it("should throw error in the ante round", () => {
             // Need to mock rounds
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(undefined);
 
-            // expect(() => action.verify(player)).toThrow("No previous action to call.");
-            expect(() => action.verify(player)).toThrow("Not enough players to continue");
+            expect(() => action.verify(player)).toThrow("Call action is not allowed during ante round.");
+        });
+
+        it("should throw error in the showdown round", () => {
+            // Need to mock rounds
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
+            jest.spyOn(game, "getLastRoundAction").mockReturnValue(undefined);
+
+            expect(() => action.verify(player)).toThrow("Call action is not allowed during showdown round.");
         });
 
         it.skip("should throw error if previous action amount is 0", () => {

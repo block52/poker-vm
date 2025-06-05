@@ -13,12 +13,8 @@ class CallAction extends BaseAction implements IAction {
         super.verify(player);
 
         // 1. Round state check: Cannot call during ANTE round
-        if (this.game.currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Call action is not allowed during ante round.");
-        }
-
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
-            throw new Error("Call action is not allowed during showdown round.");
+        if (this.game.currentRound === TexasHoldemRound.ANTE || this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error(`Call action is not allowed during ${this.game.currentRound} round.`);
         }
 
         // 2. Special case for preflop round
