@@ -438,64 +438,59 @@ export class SocketService implements SocketServiceInterface {
     }
 
     // Method to broadcast game state updates to ALL subscribers of a table
-    public broadcastGameStateToAllSubscribers(tableAddress: string): Promise<void> {
-        return new Promise(async (resolve) => {
-            const playerMap = tableSubscriptions.get(tableAddress);
+    public async broadcastGameStateToAllSubscribers(tableAddress: string): Promise<void> {
+        const playerMap = tableSubscriptions.get(tableAddress);
 
-            if (!playerMap || playerMap.size === 0) {
-                console.log(`No subscribers for table ${tableAddress}, skipping broadcast`);
-                resolve();
-                return;
-            }
+        if (!playerMap || playerMap.size === 0) {
+            console.log(`No subscribers for table ${tableAddress}, skipping broadcast`);
+            return;
+        }
 
-            console.log(`Broadcasting game state update to ALL ${playerMap.size} subscribers for table ${tableAddress}`);
+        console.log(`Broadcasting game state update to ALL ${playerMap.size} subscribers for table ${tableAddress}`);
 
-            const disconnectedClients: string[] = [];
+        const disconnectedClients: string[] = [];
 
-            // Send personalized game state to each subscriber
-            await Promise.all(
-                Array.from(playerMap.entries()).map(async ([subscriberId, ws]) => {
-                    if (ws.readyState === WebSocket.OPEN) {
-                        try {
-                            // Get game state from this subscriber's perspective
-                            const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, subscriberId);
-                            const gameStateResponse = await gameStateCommand.execute();
+        // Send personalized game state to each subscriber
+        await Promise.all(
+            Array.from(playerMap.entries()).map(async ([subscriberId, ws]) => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    try {
+                        // Get game state from this subscriber's perspective
+                        const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, subscriberId);
+                        const gameStateResponse = await gameStateCommand.execute();
 
-                            const updateMessage: GameStateUpdateMessage = {
-                                type: "gameStateUpdate",
-                                tableAddress,
-                                gameState: gameStateResponse.data
-                            };
+                        const updateMessage: GameStateUpdateMessage = {
+                            type: "gameStateUpdate",
+                            tableAddress,
+                            gameState: gameStateResponse.data
+                        };
 
-                            ws.send(JSON.stringify(updateMessage));
-                            console.log(`Sent game state update to subscriber ${subscriberId} for table ${tableAddress}`);
-                        } catch (error) {
-                            console.error(`Error sending game state to subscriber ${subscriberId}:`, error);
-                            disconnectedClients.push(subscriberId);
-                        }
-                    } else {
+                        ws.send(JSON.stringify(updateMessage));
+                        console.log(`Sent game state update to subscriber ${subscriberId} for table ${tableAddress}`);
+                    } catch (error) {
+                        console.error(`Error sending game state to subscriber ${subscriberId}:`, error);
                         disconnectedClients.push(subscriberId);
                     }
-                })
-            );
+                } else {
+                    disconnectedClients.push(subscriberId);
+                }
+            })
+        );
 
-            // Clean up disconnected clients
-            for (const subscriberId of disconnectedClients) {
-                playerMap.delete(subscriberId);
-            }
+        // Clean up disconnected clients
+        for (const subscriberId of disconnectedClients) {
+            playerMap.delete(subscriberId);
+        }
 
-            if (disconnectedClients.length > 0) {
-                console.log(`Cleaned up ${disconnectedClients.length} disconnected clients from table ${tableAddress}`);
-            }
+        if (disconnectedClients.length > 0) {
+            console.log(`Cleaned up ${disconnectedClients.length} disconnected clients from table ${tableAddress}`);
+        }
 
-            // Clean up if no players are left
-            if (playerMap.size === 0) {
-                tableSubscriptions.delete(tableAddress);
-                console.log(`Removed table ${tableAddress} (no subscribers left)`);
-            }
-
-            resolve();
-        });
+        // Clean up if no players are left
+        if (playerMap.size === 0) {
+            tableSubscriptions.delete(tableAddress);
+            console.log(`Removed table ${tableAddress} (no subscribers left)`);
+        }
     }
 
     // Get subscription information (for status endpoints)
