@@ -69,7 +69,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player
             actual = game.getLegalActions(PLAYER_2);
 
-            expect(actual.length).toEqual(1);
+            expect(actual.length).toEqual(2);
+            expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
 
             const nextToAct = game.getNextPlayerToAct();

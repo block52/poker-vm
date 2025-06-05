@@ -60,7 +60,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     constructor(
         address: string,
         gameOptions: GameOptions,
-        // public previousPositions: Positions,
         private _dealerPosition: number,
         lastActedSeat: number,
         previousActions: ActionDTO[] = [],
