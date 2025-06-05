@@ -191,6 +191,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // }
 
         this.dealerManager.handleNewHand();
+        this._dealerPosition = this.dealerManager.getDealerPosition();
 
         // Reset game state
         this._rounds.clear();
@@ -272,12 +273,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return this._dealerPosition;
     }
 
-    setDealerPosition(seat: number): void {
-        if (seat < 1 || seat > this.maxPlayers) {
-            throw new Error("Invalid dealer position.");
-        }
-        this._dealerPosition = seat; // todo?
-    }
+    // setDealerPosition(seat: number): void {
+    //     if (seat < 1 || seat > this.maxPlayers) {
+    //         throw new Error("Invalid dealer position.");
+    //     }
+    //     this._dealerPosition = seat; // todo?
+    // }
 
     get bigBlindPosition(): number {
         return this.dealerManager.getBigBlindPosition();
@@ -379,7 +380,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 return seat;
             }
         }
-        return -1;
+        return -1; // check this?
     }
 
     /**

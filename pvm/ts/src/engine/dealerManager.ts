@@ -18,7 +18,7 @@ export class DealerPositionManager implements IDealerPositionManager {
     public initializeDealerPosition(): number {
         const activePlayers: Player[] = this.game.findActivePlayers();
 
-        if (activePlayers.length < 2) {
+        if (activePlayers.length < this.game.minPlayers) {
             throw new Error("Not enough players to start the game");
         }
 
@@ -27,7 +27,7 @@ export class DealerPositionManager implements IDealerPositionManager {
         const dealerSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
 
         // Update the game's dealer position
-        this.setDealerPosition(dealerSeat);
+        // this.setDealerPosition(dealerSeat);
         return dealerSeat;
     }
 
@@ -42,7 +42,7 @@ export class DealerPositionManager implements IDealerPositionManager {
 
         const activePlayers = this.game.findActivePlayers();
 
-        if (activePlayers.length < 2) {
+        if (activePlayers.length < this.game.minPlayers) {
             throw new Error("Not enough players to continue");
         }
 
@@ -51,14 +51,14 @@ export class DealerPositionManager implements IDealerPositionManager {
 
         if (nextDealer) {
             const nextDealerSeat = this.game.getPlayerSeatNumber(nextDealer.address);
-            this.setDealerPosition(nextDealerSeat);
+            // this.setDealerPosition(nextDealerSeat);
             return nextDealerSeat;
         }
 
         // Fallback: if no next player found, start from first active player
         const firstActivePlayer = activePlayers[0];
         const fallbackSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
-        this.setDealerPosition(fallbackSeat);
+        // this.setDealerPosition(fallbackSeat);
         return fallbackSeat;
     }
 
@@ -116,21 +116,21 @@ export class DealerPositionManager implements IDealerPositionManager {
     /**
      * Handles dealer position when a player leaves
      */
-    public handlePlayerLeave(leavingSeat: number): void {
+    public handlePlayerLeave(seat: number): void {
         const currentDealerSeat = this.getCurrentDealerSeat();
 
         // If the leaving player is the dealer, rotate to next player
-        if (currentDealerSeat === leavingSeat) {
+        if (currentDealerSeat === seat) {
             const remainingPlayers = this.game.findActivePlayers().filter(
-                p => this.game.getPlayerSeatNumber(p.address) !== leavingSeat
+                p => this.game.getPlayerSeatNumber(p.address) !== seat
             );
 
-            if (remainingPlayers.length >= 2) {
+            if (remainingPlayers.length >= this.game.minPlayers) {
                 this.rotateDealer();
             } else if (remainingPlayers.length === 1) {
                 // Only one player left, they become dealer
                 const newDealerSeat = this.game.getPlayerSeatNumber(remainingPlayers[0].address);
-                this.setDealerPosition(newDealerSeat);
+                // this.setDealerPosition(newDealerSeat);
             }
         }
     }
@@ -138,13 +138,13 @@ export class DealerPositionManager implements IDealerPositionManager {
     /**
      * Handles dealer position when a new player joins
      */
-    public handlePlayerJoin(newPlayerSeat: number): void {
+    public handlePlayerJoin(seat: number): void {
         const activePlayers = this.game.findActivePlayers();
 
         if (activePlayers.length === 1) {
             // First player becomes dealer by default
-            this.setDealerPosition(newPlayerSeat);
-        } else if (activePlayers.length === 2 && !this.getCurrentDealerSeat()) {
+            // this.setDealerPosition(newPlayerSeat);
+        } else if (activePlayers.length === this.game.minPlayers && !this.getCurrentDealerSeat()) {
             // If somehow dealer wasn't set, initialize it
             this.initializeDealerPosition();
         }
@@ -157,7 +157,7 @@ export class DealerPositionManager implements IDealerPositionManager {
     public handleHeadsUpDealer(): number {
         const activePlayers = this.game.findActivePlayers();
 
-        if (activePlayers.length !== 2) {
+        if (activePlayers.length !== this.game.minPlayers) {
             return this.rotateDealer();
         }
 
@@ -169,7 +169,6 @@ export class DealerPositionManager implements IDealerPositionManager {
 
         if (otherPlayer) {
             const newDealerSeat = this.game.getPlayerSeatNumber(otherPlayer.address);
-            this.setDealerPosition(newDealerSeat);
             return newDealerSeat;
         }
 
@@ -246,13 +245,6 @@ export class DealerPositionManager implements IDealerPositionManager {
     getCurrentDealerSeat(): number {
         // Access the dealer position from the game's positions object
         return this.game.dealerPosition;
-    }
-
-    /**
-     * Helper method to set dealer position in game
-     */
-    private setDealerPosition(seat: number): void {
-        // this.game.setDealerPosition(seat);
     }
 
     /**
