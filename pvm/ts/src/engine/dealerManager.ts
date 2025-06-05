@@ -34,7 +34,7 @@ export class DealerPositionManager implements IDealerPositionManager {
     /**
      * Rotates dealer position to the next active player after each hand
      */
-    public rotateDealer(): number {
+    private rotateDealer(): number {
         const currentDealer = this.getCurrentDealerSeat();
         if (!currentDealer) {
             return this.initializeDealerPosition();
