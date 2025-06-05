@@ -12,10 +12,10 @@ describe("Texas Holdem Game - Dealer Position", () => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
-        // it("should find the first seat when table is empty", () => {
-        //     // When the table is empty, seat 1 should be available
-        //     expect(game.findNextEmptySeat()).toBe(1);
-        // });
+        it("should find the first seat when table is empty", () => {
+            // When the table is empty, seat 1 should be available
+            expect(game.findNextEmptySeat()).toBe(1);
+        });
 
         it("should find the next available seat in sequential order", () => {
             // Add players to seats 1 and 2

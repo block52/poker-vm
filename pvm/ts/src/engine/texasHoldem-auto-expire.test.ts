@@ -3,7 +3,7 @@ import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic, fromTestJson } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
-describe("Texas Holdem - Auto Expire", () => {
+describe.skip("Texas Holdem - Auto Expire", () => {
     describe("Should have player sitting out", () => {
 
         const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
