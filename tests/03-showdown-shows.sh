@@ -8,7 +8,7 @@ PLAYER2="0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8"
 
 
 # Table ID
-TABLE_ID="0xccd6e31012fd0ade9beb377c2f20661b832abfe7"
+TABLE_ID="0x5f724657a7248077331f1139ee0453324c06b693"
 
 ## Call the other bash script
 bash 02-showdown.sh
@@ -20,7 +20,7 @@ curl --location 'http://localhost:3000' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
-    "params": ["0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8", "0xccd6e31012fd0ade9beb377c2f20661b832abfe7", "show", "", 0, 10],
+    "params": ["0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8", "0x5f724657a7248077331f1139ee0453324c06b693", "show", "", 0, 10],
     "id": 1,
     "jsonrpc": "2.0"
 }'
