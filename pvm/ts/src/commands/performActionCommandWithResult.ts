@@ -44,15 +44,21 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
         if (socketService) {
             console.log(`Broadcasting game state update for table ${this.to} after action ${this.action}`);
 
-            // Get all players in the game
-            const players = gameStateResponse.data.players.map(player => player.address);
-            await Promise.all(
-                players.map(async player => {
-                    const cmd = new GameStateCommand(this.to, this.privateKey, player);
-                    const resp = await cmd.execute();
-                    socketService.broadcastGameStateUpdate(this.to, player, resp.data);
-                })
-            );
+
+            //  // Get all players in the game - old and not needed, as below covers this and solves when one subscriber. todo delete this comment.
+            //  const players = gameStateResponse.data.players.map(player => player.address);
+            //  await Promise.all(
+            //      players.map(async player => {
+            //          const cmd = new GameStateCommand(this.to, this.privateKey, player);
+            //          const resp = await cmd.execute();
+            //          socketService.broadcastGameStateUpdate(this.to, player, resp.data);
+            //      })
+            //  );
+
+            // Use the new method that broadcasts to ALL subscribers, not just players in the game
+            // This ensures that non-player actions (JOIN, LEAVE, DEAL, NEW_HAND) also trigger socket events
+            // for all subscribers watching the table
+            await socketService.broadcastGameStateToAllSubscribers(this.to);
         }
 
         return signResult(result, this.privateKey);
