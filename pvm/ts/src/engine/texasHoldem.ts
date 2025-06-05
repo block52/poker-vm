@@ -1364,7 +1364,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             players.set(p.seat, player);
         });
 
-        const dealerPosition = json.dealerPosition;
+        const dealerPosition = json.dealer;
         if (!dealerPosition || dealerPosition < 1 || dealerPosition > gameOptions.maxPlayers) {
             throw new Error("Invalid dealer position in game state.");
         }
