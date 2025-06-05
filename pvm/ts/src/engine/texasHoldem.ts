@@ -571,6 +571,46 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return this.findNextPlayerToAct();
     }
 
+      // /**
+    //  * Finds the small blind position based on dealer position
+    //  */
+    // private findSBPosition(): number {
+    //     const sb = this.findNextPlayerToAct(this.dealerPosition + 1); // Start scan from the next player after the dealer
+    //     if (sb) {
+    //         const seat = this.getPlayerSeatNumber(sb.address);
+    //         return seat;
+    //     }
+
+    //     if (this.dealerPosition === this.maxPlayers) {
+    //         return 1;
+    //     }
+
+    //     return this.dealerPosition + 1;
+    // }
+
+    // /**
+    //  * Finds the big blind position based on dealer position
+    //  */
+    // private findBBPosition(): number {
+    //     const sb = this.findSBPosition();
+    //     const start = sb === this.maxPlayers ? 1 : sb + 1; // Start scan from the next player after the small blind
+    //     const bb = this.findNextPlayerToAct(start);
+
+    //     if (bb) {
+    //         return this.getPlayerSeatNumber(bb.address);
+    //     }
+
+    //     if (this.dealerPosition + 2 > this.maxPlayers) {
+    //         return 2;
+    //     }
+
+    //     if (this.dealerPosition === this.maxPlayers) {
+    //         return 2;
+    //     }
+
+    //     return 2;
+    // }
+
     /**
      * Finds the next player to act, starting from a specified position
      */
