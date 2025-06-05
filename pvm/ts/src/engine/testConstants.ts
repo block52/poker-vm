@@ -33,7 +33,7 @@ export const gameOptions: GameOptions = {
 
 export const baseGameConfig = {
     address: ethers.ZeroAddress,
-    dealerPosition: 9,
+    dealer: 9,
     nextToAct: 1,
     currentRound: "ante",
     communityCards: [],

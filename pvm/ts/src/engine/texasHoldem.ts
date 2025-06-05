@@ -60,7 +60,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     constructor(
         address: string,
         gameOptions: GameOptions,
-        private _dealerPosition: number,
+        private _dealer: number,
         lastActedSeat: number,
         previousActions: ActionDTO[] = [],
         private _handNumber: number = 1,
@@ -266,11 +266,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Position getters
     get dealerPosition(): number {
         // get form dealer manager
-        return this._dealerPosition;
+        return this._dealer;
     }
 
     private setDealerPosition(seat: number): void {
-        this._dealerPosition = seat; // todo?
+        this._dealer = seat; // todo?
     }
 
     get bigBlindPosition(): number {
@@ -1387,8 +1387,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             players.set(p.seat, player);
         });
 
-        const dealerPosition = json.dealer;
-        if (!dealerPosition || dealerPosition < 1 || dealerPosition > gameOptions.maxPlayers) {
+        const dealer = json.dealer;
+        if (!dealer || dealer < 1 || dealer > gameOptions.maxPlayers) {
             throw new Error("Invalid dealer position in game state.");
         }
 
@@ -1405,7 +1405,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return new TexasHoldemGame(
             json.address,
             gameOptions,
-            dealerPosition,
+            dealer,
             lastActedSeat,
             json.previousActions,
             json.handNumber,
