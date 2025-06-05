@@ -7,28 +7,11 @@ import { IDealerGameInterface, IDealerPositionManager } from "./types";
  */
 export class DealerPositionManager implements IDealerPositionManager {
     private readonly game: IDealerGameInterface;
+    private readonly dealerPosition: number;
 
     constructor(game: IDealerGameInterface) {
         this.game = game;
-    }
-
-    /**
-     * Initializes the dealer position when the game starts
-     */
-    public initializeDealerPosition(): number {
-        const activePlayers: Player[] = this.game.findActivePlayers();
-
-        if (activePlayers.length < this.game.minPlayers) {
-            throw new Error("Not enough players to start the game");
-        }
-
-        // Start with the first active player as dealer
-        const firstActivePlayer = activePlayers[0];
-        const dealerSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
-
-        // Update the game's dealer position
-        // this.setDealerPosition(dealerSeat);
-        return dealerSeat;
+        this.dealerPosition = this.game.dealerPosition;
     }
 
     /**
@@ -36,10 +19,6 @@ export class DealerPositionManager implements IDealerPositionManager {
      */
     private rotateDealer(): number {
         const currentDealer = this.getCurrentDealerSeat();
-        if (!currentDealer) {
-            return this.initializeDealerPosition();
-        }
-
         const activePlayers = this.game.findActivePlayers();
 
         if (activePlayers.length < this.game.minPlayers) {
@@ -67,11 +46,6 @@ export class DealerPositionManager implements IDealerPositionManager {
      */
     public getDealerPosition(): number {
         const currentDealerSeat = this.getCurrentDealerSeat();
-
-        // If dealer position is not set, initialize it
-        if (!currentDealerSeat) {
-            return this.initializeDealerPosition();
-        }
 
         // Check if current dealer is still active
         const dealerPlayer = this.game.getPlayerAtSeat(currentDealerSeat);
@@ -146,7 +120,7 @@ export class DealerPositionManager implements IDealerPositionManager {
             // this.setDealerPosition(newPlayerSeat);
         } else if (activePlayers.length === this.game.minPlayers && !this.getCurrentDealerSeat()) {
             // If somehow dealer wasn't set, initialize it
-            this.initializeDealerPosition();
+
         }
         // For more players, dealer position doesn't change when someone joins
     }

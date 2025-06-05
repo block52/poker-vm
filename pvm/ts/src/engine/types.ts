@@ -36,8 +36,6 @@ export interface IDealerGameInterface {
  */
 export interface IDealerPositionManager {
     // Core dealer position methods
-    initializeDealerPosition(): number;
-    rotateDealer(): number;
     getDealerPosition(): number;
     
     // Event handlers
