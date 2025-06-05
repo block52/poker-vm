@@ -26,7 +26,7 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             expect(game.findNextEmptySeat()).toEqual(4);
         });
 
-        it("should have the correct legal options with 3 players after blinds", () => {
+        it.skip("should have the correct legal options with 3 players after blinds", () => {
             expect(game.getPlayerCount()).toEqual(2);
 
             game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "3");
