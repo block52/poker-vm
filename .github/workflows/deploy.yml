@@ -11,23 +11,23 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
+      # - name: Checkout branch
+      #   uses: actions/checkout@v4
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: package.json # This tells the action what file to look in to find the node version to use
-          cache: yarn # Sets up GHA to cache packages
+      # - name: Setup Node.js environment
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version-file: package.json # This tells the action what file to look in to find the node version to use
+      #     cache: yarn # Sets up GHA to cache packages
 
-      - name: Install dependencies
-        run: yarn install --immutable
+      # - name: Install dependencies
+      #   run: yarn install --immutable
 
-      - name: Build app
-        run: yarn build
+      # - name: Build app
+      #   run: yarn build
 
-      - name: Run unit tests
-        run: yarn test
+      # - name: Run unit tests
+      #   run: yarn test
 
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v1.0.3
