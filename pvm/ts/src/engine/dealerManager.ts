@@ -7,11 +7,9 @@ import { IDealerGameInterface, IDealerPositionManager } from "./types";
  */
 export class DealerPositionManager implements IDealerPositionManager {
     private readonly game: IDealerGameInterface;
-    private readonly dealerPosition: number;
 
     constructor(game: IDealerGameInterface) {
         this.game = game;
-        this.dealerPosition = this.game.dealerPosition;
     }
 
     /**
@@ -30,14 +28,12 @@ export class DealerPositionManager implements IDealerPositionManager {
 
         if (nextDealer) {
             const nextDealerSeat = this.game.getPlayerSeatNumber(nextDealer.address);
-            // this.setDealerPosition(nextDealerSeat);
             return nextDealerSeat;
         }
 
         // Fallback: if no next player found, start from first active player
         const firstActivePlayer = activePlayers[0];
         const fallbackSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
-        // this.setDealerPosition(fallbackSeat);
         return fallbackSeat;
     }
 
@@ -46,13 +42,6 @@ export class DealerPositionManager implements IDealerPositionManager {
      */
     public getDealerPosition(): number {
         const currentDealerSeat = this.getCurrentDealerSeat();
-
-        // // Check if current dealer is still active
-        // const dealerPlayer = this.game.getPlayerAtSeat(currentDealerSeat);
-        // if (!dealerPlayer || !this.isPlayerActive(dealerPlayer)) {
-        //     return this.rotateDealer();
-        // }
-
         return currentDealerSeat;
     }
 
@@ -172,16 +161,8 @@ export class DealerPositionManager implements IDealerPositionManager {
      */
     public getSmallBlindPosition(): number {
         const dealerSeat = this.getDealerPosition();
-        const activePlayers: Player[] = this.game.findActivePlayers();
-
-        if (activePlayers.length === 2) {
-            // In heads-up, dealer is small blind
-            return dealerSeat;
-        }
-
-        // Multi-player: small blind is next active player after dealer
         const sbPlayer = this.findNextActivePlayer(dealerSeat);
-        return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : dealerSeat + 1;
+        return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : this.game.maxPlayers % dealerSeat + 1;
     }
 
     /**
@@ -189,20 +170,9 @@ export class DealerPositionManager implements IDealerPositionManager {
      */
     public getBigBlindPosition(): number {
         const sbSeat = this.getSmallBlindPosition();
-        const activePlayers: Player[] = this.game.findActivePlayers();
-
-        if (activePlayers.length === 2) {
-            // In heads-up, non-dealer is big blind
-            const dealerSeat = this.getDealerPosition();
-            const otherPlayer = activePlayers.find(
-                p => this.game.getPlayerSeatNumber(p.address) !== dealerSeat
-            );
-            return otherPlayer ? this.game.getPlayerSeatNumber(otherPlayer.address) : sbSeat + 1;
-        }
-
         // Multi-player: big blind is next active player after small blind
         const bbPlayer = this.findNextActivePlayer(sbSeat);
-        return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : sbSeat + 1;
+        return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : this.game.maxPlayers % sbSeat + 1;
     }
 
     /**
