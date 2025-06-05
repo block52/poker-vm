@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame from "../texasHoldem";
@@ -9,8 +9,6 @@ describe("FoldAction", () => {
     let updateMock: any;
     let action: FoldAction;
     let player: Player;
-
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state

@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
@@ -10,8 +10,6 @@ describe("CheckAction", () => {
     let updateMock: IUpdate;
     let action: CheckAction;
     let player: Player;
-
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state
@@ -74,7 +72,7 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getBets").mockReturnValue(new Map([["0x980b8D8A16f5891F41871d878a479d81Da52334c", 0n]]));
         });
 
-        it.skip("should throw error if no previous action exists", () => {
+        it("should throw error if no previous action exists", () => {
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(undefined);
 
             expect(() => action.verify(player)).toThrow("No previous action to check.");
@@ -86,7 +84,7 @@ describe("CheckAction", () => {
             expect(range).toBeDefined();
         });
 
-        it.skip("should throw error if it's not player's turn", () => {
+        it("should throw error if it's not player's turn", () => {
             // Mock a different player as next to act
             const differentPlayer = new Player(
                 "0x1234567890abcdef1234567890abcdef12345678", // Different address
@@ -100,7 +98,7 @@ describe("CheckAction", () => {
             expect(() => action.verify(player)).toThrow("Must be currently active player.");
         });
 
-        it.skip("should throw error if player is not active", () => {
+        it("should throw error if player is not active", () => {
             // Mock player status as FOLDED
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 

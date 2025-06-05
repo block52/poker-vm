@@ -4,7 +4,7 @@ import { Player } from "../../models/player";
 import { IUpdate, Turn, TurnWithSeat } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 // Assuming you have a constants file, otherwise define TEN_TOKENS in this file
-import { getDefaultGame, mnemonic, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
 
 describe("CallAction", () => {
     let action: CallAction;
