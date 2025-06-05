@@ -243,16 +243,16 @@ export class DealerPositionManager implements IDealerPositionManager {
     /**
      * Helper method to get current dealer seat from game
      */
-    getCurrentDealerSeat(): number | undefined {
+    getCurrentDealerSeat(): number {
         // Access the dealer position from the game's positions object
-        return this.game.previousPositions.dealer;
+        return this.game.dealerPosition;
     }
 
     /**
      * Helper method to set dealer position in game
      */
     private setDealerPosition(seat: number): void {
-        this.game.setDealerPosition(seat);
+        // this.game.setDealerPosition(seat);
     }
 
     /**

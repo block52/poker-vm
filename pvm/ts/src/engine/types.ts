@@ -20,7 +20,7 @@ export interface IPoker {
  */
 export interface IDealerGameInterface {
     lastActedSeat: number;
-    // dealerPosition: number;
+    dealerPosition: number;
     minPlayers: number;
     maxPlayers: number;
     findActivePlayers(): Player[];
