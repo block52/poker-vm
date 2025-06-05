@@ -42,7 +42,6 @@ export interface IDealerPositionManager {
     handlePlayerLeave(seat: number): void;
     handlePlayerJoin(seat: number): void;
     handleNewHand(): number;
-    handleHeadsUpDealer(): number;
     
     // Position getters
     getSmallBlindPosition(): number;

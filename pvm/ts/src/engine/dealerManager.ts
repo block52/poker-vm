@@ -114,29 +114,29 @@ export class DealerPositionManager implements IDealerPositionManager {
         // For more players, dealer position doesn't change when someone joins
     }
 
-    /**
-     * Special handling for heads-up (2 player) games
-     */
-    public handleHeadsUpDealer(): number {
-        const activePlayers = this.game.findActivePlayers();
+    // /**
+    //  * Special handling for heads-up (2 player) games
+    //  */
+    // public handleHeadsUpDealer(): number {
+    //     const activePlayers = this.game.findActivePlayers();
 
-        if (activePlayers.length !== this.game.minPlayers) {
-            return this.rotateDealer();
-        }
+    //     if (activePlayers.length !== this.game.minPlayers) {
+    //         return this.rotateDealer();
+    //     }
 
-        // In heads-up, dealer alternates each hand
-        const currentDealerSeat = this.getCurrentDealerSeat();
-        const otherPlayer = activePlayers.find(
-            p => this.game.getPlayerSeatNumber(p.address) !== currentDealerSeat
-        );
+    //     // In heads-up, dealer alternates each hand
+    //     const currentDealerSeat = this.getCurrentDealerSeat();
+    //     const otherPlayer = activePlayers.find(
+    //         p => this.game.getPlayerSeatNumber(p.address) !== currentDealerSeat
+    //     );
 
-        if (otherPlayer) {
-            const newDealerSeat = this.game.getPlayerSeatNumber(otherPlayer.address);
-            return newDealerSeat;
-        }
+    //     if (otherPlayer) {
+    //         const newDealerSeat = this.game.getPlayerSeatNumber(otherPlayer.address);
+    //         return newDealerSeat;
+    //     }
 
-        return currentDealerSeat || 1;
-    }
+    //     return currentDealerSeat || 1;
+    // }
 
     /**
      * Validates dealer position consistency
@@ -195,14 +195,15 @@ export class DealerPositionManager implements IDealerPositionManager {
      * Method to handle new hand initialization
      */
     public handleNewHand(): number {
-        const activePlayers = this.game.findActivePlayers();
+        return this.rotateDealer();
+        // const activePlayers = this.game.findActivePlayers();
 
-        if (activePlayers.length === 2) {
-            // Heads-up: dealer alternates each hand
-            return this.handleHeadsUpDealer();
-        } else {
-            // Multi-player: rotate to next active player
-            return this.rotateDealer();
-        }
+        // if (activePlayers.length === 2) {
+        //     // Heads-up: dealer alternates each hand
+        //     return this.handleHeadsUpDealer();
+        // } else {
+        //     // Multi-player: rotate to next active player
+        //     return this.rotateDealer();
+        // }
     }
 }
