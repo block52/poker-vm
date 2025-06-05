@@ -47,11 +47,11 @@ export class DealerPositionManager implements IDealerPositionManager {
     public getDealerPosition(): number {
         const currentDealerSeat = this.getCurrentDealerSeat();
 
-        // Check if current dealer is still active
-        const dealerPlayer = this.game.getPlayerAtSeat(currentDealerSeat);
-        if (!dealerPlayer || !this.isPlayerActive(dealerPlayer)) {
-            return this.rotateDealer();
-        }
+        // // Check if current dealer is still active
+        // const dealerPlayer = this.game.getPlayerAtSeat(currentDealerSeat);
+        // if (!dealerPlayer || !this.isPlayerActive(dealerPlayer)) {
+        //     return this.rotateDealer();
+        // }
 
         return currentDealerSeat;
     }
