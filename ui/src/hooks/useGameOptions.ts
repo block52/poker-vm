@@ -26,9 +26,8 @@ export const useGameOptions = (): GameOptionsReturn => {
             const options = gameState.gameOptions;
             
             // Only return options if we have the required fields
-            if (!options.smallBlind || !options.bigBlind || !options.timeout) {
-                console.warn("Missing required game options from server");
-                return null;
+            if (!options.smallBlind || !options.bigBlind || options.timeout === undefined || options.timeout === null) {
+                return null; // Return null during loading or when data is incomplete
             }
             
             // Return the actual game options from the server

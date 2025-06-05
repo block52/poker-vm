@@ -18,7 +18,7 @@ const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend
             <div style={{ backgroundColor: color }} className={"flex items-center justify-center w-6 h-6 text-white text-sm font-bold rounded-full"}>
                 {count}
             </div>
-            <div className="ml-2 text-lg font-semibold text-black flex justify-between ml-auto mr-auto">${formattedValue}</div>
+            <div className="ml-2 text-xl sm:text-lg font-semibold text-black flex justify-between ml-auto mr-auto">${formattedValue}</div>
             
             {/* Timer Extension Icon - Timer icon inside badge */}
             {canExtend && onExtend && (

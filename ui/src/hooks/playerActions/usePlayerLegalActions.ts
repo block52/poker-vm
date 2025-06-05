@@ -1,6 +1,7 @@
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerLegalActionsResult } from "./types";
 import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { useRef } from "react";
 
 /**
  * Custom hook to fetch the legal actions for the current player
@@ -17,6 +18,9 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
 
     // Get game state directly from Context - table ID managed by subscription
     const { gameState, isLoading, error } = useGameStateContext();
+    
+    // Add ref to track last logged state to prevent spam
+    const lastLoggedStateRef = useRef<string>("");
 
     // Default return value for error/loading states
     const defaultReturn: PlayerLegalActionsResult = {
@@ -136,6 +140,41 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
             actionTurnIndex, // Add the common action turn index
             isPlayerInGame // Add the flag indicating if the player is in the game
         };
+
+        // 🔍 DEBUG: Log legal actions calculation, especially for CHECK
+        const hasCheckAction = result.legalActions.some(action => action.action === PlayerActionType.CHECK);
+        if (hasCheckAction || isPlayerTurn) {
+            const currentState = JSON.stringify({
+                playerSeat: currentPlayer.seat,
+                isPlayerTurn,
+                gameRound: gameState.round,
+                nextToAct: gameState.nextToAct,
+                legalActions: result.legalActions.map(action => action.action), // Just action types for comparison
+                hasCheckAction,
+                playerStatus: currentPlayer.status
+            });
+
+            // Only log if the state actually changed
+            if (currentState !== lastLoggedStateRef.current) {
+                console.log("⚖️ [LEGAL ACTIONS CALCULATED]", {
+                    timestamp: new Date().toISOString(),
+                    playerSeat: currentPlayer.seat,
+                    isPlayerTurn,
+                    gameRound: gameState.round,
+                    nextToAct: gameState.nextToAct,
+                    legalActions: result.legalActions.map(action => ({
+                        action: action.action,
+                        min: action.min,
+                        max: action.max,
+                        index: action.index
+                    })),
+                    hasCheckAction,
+                    playerStatus: currentPlayer.status,
+                    source: "usePlayerLegalActions"
+                });
+                lastLoggedStateRef.current = currentState;
+            }
+        }
 
         return result;
     } catch (err) {
