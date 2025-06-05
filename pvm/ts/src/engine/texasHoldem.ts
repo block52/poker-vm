@@ -32,12 +32,15 @@ import SmallBlindAction from "./actions/smallBlindAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IAction, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
+import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
+import { DealerPositionManager } from "./dealerManager";
 
-class TexasHoldemGame implements IPoker, IUpdate {
+class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
+    public readonly dealerManager: IDealerPositionManager;
+
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
     private readonly _rounds = new Map<TexasHoldemRound, TurnWithSeat[]>();
@@ -57,7 +60,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
     constructor(
         address: string,
         gameOptions: GameOptions,
-        private _positions: Positions,
+        // public previousPositions: Positions,
+        private _dealerPosition: number,
         lastActedSeat: number,
         previousActions: ActionDTO[] = [],
         private _handNumber: number = 1,
@@ -68,7 +72,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
         playerStates: Map<number, Player | null> = new Map(),
         deck: string = "",
         winners: WinnerDTO[] = [],
-        private readonly _now: number = Date.now()
+        private readonly _now: number = Date.now(),
+        dealerManager?: IDealerPositionManager
     ) {
         this._address = address;
         this._playersMap = new Map<number, Player | null>(playerStates);
@@ -128,6 +133,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             new ShowAction(this, this._update),
             new NewHandAction(this, this._update, "")
         ];
+
+        this.dealerManager = dealerManager || new DealerPositionManager(this);
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -175,18 +182,22 @@ class TexasHoldemGame implements IPoker, IUpdate {
             player.reinit();
         }
 
-        // Rotate dealer position
-        const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
-        if (nextToAct) {
-            this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);
-        } else {
-            this._positions.dealer = this.findNextEmptySeat();
-        }
+        // // Rotate dealer position
+        // const nextToAct = this.findNextPlayerToAct(this.dealerPosition);
+        // if (nextToAct) {
+        //     this._positions.dealer = this.getPlayerSeatNumber(nextToAct.address);
+        // } else {
+        //     this._positions.dealer = this.findNextEmptySeat();
+        // }
+
+        this.dealerManager.handleNewHand();
+        const newDealerPosition = this.dealerManager.getDealerPosition();
+        this.setDealerPosition(newDealerPosition);
 
         // Reset game state
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
-        this._lastActedSeat = this.dealerPosition;
+        this._lastActedSeat = this.dealerPosition; // Default to seat 1 if no dealer position set
         this._deck = new Deck(deck);
         this._pots = [0n];
         this._communityCards.length = 0;
@@ -228,10 +239,6 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this._lastActedSeat;
     }
 
-    setLastActedSeat(seat: number): void {
-        this._lastActedSeat = seat;
-    }
-
     // Game configuration getters
     get minBuyIn(): bigint {
         return this._gameOptions.minBuyIn;
@@ -239,6 +246,10 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     get maxBuyIn(): bigint {
         return this._gameOptions.maxBuyIn;
+    }
+
+    get minPlayers(): number {
+        return this._gameOptions.minPlayers;
     }
 
     get maxPlayers(): number {
@@ -255,15 +266,20 @@ class TexasHoldemGame implements IPoker, IUpdate {
 
     // Position getters
     get dealerPosition(): number {
-        return this._positions.dealer ?? this.maxPlayers;
+        // get form dealer manager
+        return this._dealerPosition;
+    }
+
+    private setDealerPosition(seat: number): void {
+        this._dealerPosition = seat; // todo?
     }
 
     get bigBlindPosition(): number {
-        return this.findBBPosition();
+        return this.dealerManager.getBigBlindPosition();
     }
 
     get smallBlindPosition(): number {
-        return this.findSBPosition();
+        return this.dealerManager.getSmallBlindPosition()
     }
 
     // Pot getters
@@ -310,7 +326,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
     /**
      * Finds players with ACTIVE status
      */
-    private findActivePlayers(): Player[] {
+    findActivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter((player): player is Player => player !== null && player.status === PlayerStatus.ACTIVE);
     }
 
@@ -357,7 +373,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
                 return seat;
             }
         }
-        return -1;
+        return -1; // check this?
     }
 
     /**
@@ -556,45 +572,45 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return this.findNextPlayerToAct();
     }
 
-    /**
-     * Finds the small blind position based on dealer position
-     */
-    private findSBPosition(): number {
-        const sb = this.findNextPlayerToAct(this.dealerPosition + 1); // Start scan from the next player after the dealer
-        if (sb) {
-            const seat = this.getPlayerSeatNumber(sb.address);
-            return seat;
-        }
+    // /**
+    //  * Finds the small blind position based on dealer position
+    //  */
+    // private findSBPosition(): number {
+    //     const sb = this.findNextPlayerToAct(this.dealerPosition + 1); // Start scan from the next player after the dealer
+    //     if (sb) {
+    //         const seat = this.getPlayerSeatNumber(sb.address);
+    //         return seat;
+    //     }
 
-        if (this.dealerPosition === this.maxPlayers) {
-            return 1;
-        }
+    //     if (this.dealerPosition === this.maxPlayers) {
+    //         return 1;
+    //     }
 
-        return this.dealerPosition + 1;
-    }
+    //     return this.dealerPosition + 1;
+    // }
 
-    /**
-     * Finds the big blind position based on dealer position
-     */
-    private findBBPosition(): number {
-        const sb = this.findSBPosition();
-        const start = sb === this.maxPlayers ? 1 : sb + 1; // Start scan from the next player after the small blind
-        const bb = this.findNextPlayerToAct(start);
+    // /**
+    //  * Finds the big blind position based on dealer position
+    //  */
+    // private findBBPosition(): number {
+    //     const sb = this.findSBPosition();
+    //     const start = sb === this.maxPlayers ? 1 : sb + 1; // Start scan from the next player after the small blind
+    //     const bb = this.findNextPlayerToAct(start);
 
-        if (bb) {
-            return this.getPlayerSeatNumber(bb.address);
-        }
+    //     if (bb) {
+    //         return this.getPlayerSeatNumber(bb.address);
+    //     }
 
-        if (this.dealerPosition + 2 > this.maxPlayers) {
-            return 2;
-        }
+    //     if (this.dealerPosition + 2 > this.maxPlayers) {
+    //         return 2;
+    //     }
 
-        if (this.dealerPosition === this.maxPlayers) {
-            return 2;
-        }
+    //     if (this.dealerPosition === this.maxPlayers) {
+    //         return 2;
+    //     }
 
-        return 2;
-    }
+    //     return 2;
+    // }
 
     /**
      * Finds the next player to act, starting from a specified position
@@ -1288,7 +1304,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         };
 
         // Return the complete state DTO
-        return {
+        const state: TexasHoldemStateDTO = {
             type: "cash",
             address: this._address,
             gameOptions: gameOptions,
@@ -1308,6 +1324,8 @@ class TexasHoldemGame implements IPoker, IUpdate {
             winners: winners,
             signature: ethers.ZeroHash
         };
+
+        return state;
     }
 
     /**
@@ -1347,12 +1365,14 @@ class TexasHoldemGame implements IPoker, IUpdate {
             players.set(p.seat, player);
         });
 
-        // Create positions object
-        const positions: Positions = {
-            dealer: json.dealer,
-            smallBlind: json.smallBlindPosition,
-            bigBlind: json.bigBlindPosition
-        };
+        // // Create positions object
+        // const positions: Positions = {
+        //     dealer: json.dealer,
+        //     smallBlind: json.smallBlindPosition,
+        //     bigBlind: json.bigBlindPosition
+        // };
+
+        const dealerPosition = json.dealer;
 
         // Create winners array
         const winners: WinnerDTO[] = json.winners || [];
@@ -1367,7 +1387,7 @@ class TexasHoldemGame implements IPoker, IUpdate {
         return new TexasHoldemGame(
             json.address,
             gameOptions,
-            positions,
+            dealerPosition,
             lastActedSeat,
             json.previousActions,
             json.handNumber,

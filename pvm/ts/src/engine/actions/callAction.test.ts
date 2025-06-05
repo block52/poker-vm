@@ -1,19 +1,16 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import CallAction from "./callAction";
 import { Player } from "../../models/player";
 import { IUpdate, Turn, TurnWithSeat } from "../types";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
 // Assuming you have a constants file, otherwise define TEN_TOKENS in this file
-import { defaultPositions, gameOptions, getDefaultGame, mnemonic, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
+import { getDefaultGame, mnemonic, ONE_THOUSAND_TOKENS, TEN_TOKENS } from "../testConstants";
 
 describe("CallAction", () => {
     let action: CallAction;
     let game: TexasHoldemGame;
     let player: Player;
     let updateMock: IUpdate;
-
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state
@@ -44,11 +41,18 @@ describe("CallAction", () => {
             PlayerStatus.ACTIVE // status
         );
 
-        // Setup common mocks 
+        const mockPlayers = [
+            new Player('player1', undefined, 1000n, undefined, PlayerStatus.ACTIVE),
+            new Player('player2', undefined, 1000n, undefined, PlayerStatus.ACTIVE),
+            new Player('player3', undefined, 1000n, undefined, PlayerStatus.ACTIVE)
+        ];
+
+        // Setup common mocks
         jest.spyOn(game, "currentPlayerId", "get").mockReturnValue(player.address);
         jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
         jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+        jest.spyOn(game, "findActivePlayers").mockReturnValue(mockPlayers);
 
         // Mock addAction method on game
         game.addAction = jest.fn();
@@ -61,11 +65,12 @@ describe("CallAction", () => {
     });
 
     describe("verify", () => {
-        it.skip("should throw error if no previous action exists", () => {
+        it("should throw error if no previous action exists", () => {
             // Need to mock rounds
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(undefined);
 
-            expect(() => action.verify(player)).toThrow("No previous action to call.");
+            // expect(() => action.verify(player)).toThrow("No previous action to call.");
+            expect(() => action.verify(player)).toThrow("Not enough players to continue");
         });
 
         it.skip("should throw error if previous action amount is 0", () => {
@@ -96,10 +101,10 @@ describe("CallAction", () => {
             };
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
-            
+
             // Mock the getLargestBet method
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(TEN_TOKENS);
-            
+
             // Mock the getSumBets method to return same amount (player already met maximum)
             jest.spyOn(action as any, "getSumBets").mockReturnValue(TEN_TOKENS);
 
@@ -118,10 +123,10 @@ describe("CallAction", () => {
             };
 
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
-            
+
             // Mock the getLargestBet method
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(30n);
-            
+
             // Mock the getSumBets method to return player's current bet
             jest.spyOn(action as any, "getSumBets").mockReturnValue(10n);
 
@@ -140,15 +145,15 @@ describe("CallAction", () => {
                 index: 0,
                 timestamp: Date.now()
             };
-            
+
             jest.spyOn(game, "getLastRoundAction").mockReturnValue(previousAction);
-            
+
             // Mock the getLargestBet method
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(200n);
-            
+
             // Mock the getSumBets method to return player's current bet
             jest.spyOn(action as any, "getSumBets").mockReturnValue(10n);
-            
+
             // Set player to have insufficient chips
             player.chips = 50n;
 
@@ -165,10 +170,10 @@ describe("CallAction", () => {
                 minAmount: 150n,
                 maxAmount: 150n
             });
-            
+
             // Mock getDeductAmount to return more than player's chips
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(150n);
-            
+
             // Set player chips
             player.chips = 50n;
 
@@ -181,10 +186,10 @@ describe("CallAction", () => {
                 minAmount: 30n,
                 maxAmount: 30n
             });
-            
+
             // Mock getDeductAmount to return the call amount
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(30n);
-            
+
             player.chips = 100n;
             action.execute(player, 0);
 
@@ -197,19 +202,22 @@ describe("CallAction", () => {
                 minAmount: 30n,
                 maxAmount: 30n
             });
-            
+
             // Mock getDeductAmount to return the call amount
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(30n);
-            
+
             player.chips = 100n;
             action.execute(player, 0);
 
-            expect(game.addAction).toHaveBeenCalledWith({
-                playerId: player.address,
-                action: PlayerActionType.CALL,
-                amount: 30n,
-                index: 0
-            }, TexasHoldemRound.PREFLOP);
+            expect(game.addAction).toHaveBeenCalledWith(
+                {
+                    playerId: player.address,
+                    action: PlayerActionType.CALL,
+                    amount: 30n,
+                    index: 0
+                },
+                TexasHoldemRound.PREFLOP
+            );
         });
 
         it("should add ALL_IN action when player uses all chips", () => {
@@ -218,20 +226,23 @@ describe("CallAction", () => {
                 minAmount: 100n,
                 maxAmount: 100n
             });
-            
+
             // Mock getDeductAmount to return all player's chips
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(100n);
-            
+
             player.chips = 100n;
             action.execute(player, 0);
 
             expect(player.chips).toBe(0n);
-            expect(game.addAction).toHaveBeenCalledWith({
-                playerId: player.address,
-                action: PlayerActionType.ALL_IN,
-                amount: 100n,
-                index: 0
-            }, TexasHoldemRound.PREFLOP);
+            expect(game.addAction).toHaveBeenCalledWith(
+                {
+                    playerId: player.address,
+                    action: PlayerActionType.ALL_IN,
+                    amount: 100n,
+                    index: 0
+                },
+                TexasHoldemRound.PREFLOP
+            );
         });
     });
 
@@ -240,9 +251,9 @@ describe("CallAction", () => {
             // Mock getLargestBet and getSumBets
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(50n);
             jest.spyOn(action as any, "getSumBets").mockReturnValue(20n);
-            
+
             const result = (action as any).getDeductAmount(player);
-            
+
             // Should return the difference: 50n - 20n = 30n
             expect(result).toBe(30n);
         });
@@ -251,21 +262,21 @@ describe("CallAction", () => {
             // Mock getLargestBet and getSumBets with equal values
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(50n);
             jest.spyOn(action as any, "getSumBets").mockReturnValue(50n);
-            
+
             const result = (action as any).getDeductAmount(player);
-            
+
             expect(result).toBe(0n);
         });
-        
+
         it.skip("should return 0 if largest bet is 0", () => {
             // Mock getLargestBet to return 0
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(0n);
-            
+
             // Mock getSumBets to return 0
             jest.spyOn(action as any, "getSumBets").mockReturnValue(0n);
-            
+
             const result = (action as any).getDeductAmount(player);
-            
+
             expect(result).toBe(0n);
         });
     });

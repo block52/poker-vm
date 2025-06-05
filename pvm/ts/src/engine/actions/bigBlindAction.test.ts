@@ -1,9 +1,8 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
-import { defaultPositions, gameOptions, getDefaultGame, mnemonic, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
 
 describe("BigBlindAction", () => {
     let game: TexasHoldemGame;

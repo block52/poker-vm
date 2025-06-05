@@ -1,11 +1,9 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
-import { ethers } from "ethers";
-import { defaultPositions, gameOptions, getDefaultGame, mnemonic } from "../testConstants";
-import { get } from "axios";
+import { gameOptions, getDefaultGame, mnemonic } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {

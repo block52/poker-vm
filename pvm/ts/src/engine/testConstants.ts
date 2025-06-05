@@ -30,15 +30,10 @@ export const gameOptions: GameOptions = {
     timeout: 60000
 };
 
-export const defaultPositions: Positions = {
-    dealer: 9,
-    smallBlind: 1,
-    bigBlind: 2
-};
 
 export const baseGameConfig = {
     address: ethers.ZeroAddress,
-    positions: defaultPositions,
+    dealearPostion: 9,
     nextToAct: 1,
     currentRound: "ante",
     communityCards: [],
@@ -54,7 +49,7 @@ export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasH
     const game = new TexasHoldemGame(
         ethers.ZeroAddress,
         gameOptions,
-        defaultPositions, // dealer
+        9, // dealer
         1, // nextToAct
         previousActions,
         1, // handNumber
@@ -73,7 +68,7 @@ export const getDefaultGameWithActions = (previousActions: any[] = [], playerSta
     const game = new TexasHoldemGame(
         ethers.ZeroAddress,
         gameOptions,
-        defaultPositions, // dealer
+        9, // dealer
         1, // nextToAct
         previousActions,
         0,
