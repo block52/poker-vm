@@ -164,6 +164,20 @@ Genesis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
 }
 ```
 
+### Commands
+
+#### Create a new table
+
+```json
+{
+    "method": "new_table",
+    "version": "2.0",
+    "id": "1",
+    "params": ["texas-holdem,cash,2,9,10000000000000000,20000000000000000,10000000000000000,1000000000000000000,30000",
+    "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C"]
+}
+```
+
 
 ## Notes
 
