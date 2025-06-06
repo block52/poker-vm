@@ -28,6 +28,7 @@ export class DealerPositionManager implements IDealerPositionManager {
 
         if (nextDealer) {
             const nextDealerSeat = this.game.getPlayerSeatNumber(nextDealer.address);
+            console.log(`Rotating dealer from seat ${currentDealer} to seat ${nextDealerSeat}`);
             return nextDealerSeat;
         }
 
@@ -84,9 +85,7 @@ export class DealerPositionManager implements IDealerPositionManager {
 
         // If the leaving player is the dealer, rotate to next player
         if (currentDealerSeat === seat) {
-            const remainingPlayers = this.game.findActivePlayers().filter(
-                p => this.game.getPlayerSeatNumber(p.address) !== seat
-            );
+            const remainingPlayers = this.game.findActivePlayers().filter(p => this.game.getPlayerSeatNumber(p.address) !== seat);
 
             if (remainingPlayers.length >= this.game.minPlayers) {
                 this.rotateDealer();
@@ -109,7 +108,6 @@ export class DealerPositionManager implements IDealerPositionManager {
             // this.setDealerPosition(newPlayerSeat);
         } else if (activePlayers.length === this.game.minPlayers && !this.getCurrentDealerSeat()) {
             // If somehow dealer wasn't set, initialize it
-
         }
         // For more players, dealer position doesn't change when someone joins
     }
@@ -162,7 +160,7 @@ export class DealerPositionManager implements IDealerPositionManager {
     public getSmallBlindPosition(): number {
         const dealerSeat = this.getDealerPosition();
         const sbPlayer = this.findNextActivePlayer(dealerSeat);
-        return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : this.game.maxPlayers % dealerSeat + 1;
+        return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : (this.game.maxPlayers % dealerSeat) + 1;
     }
 
     /**
@@ -172,15 +170,14 @@ export class DealerPositionManager implements IDealerPositionManager {
         const sbSeat = this.getSmallBlindPosition();
         // Multi-player: big blind is next active player after small blind
         const bbPlayer = this.findNextActivePlayer(sbSeat);
-        return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : this.game.maxPlayers % sbSeat + 1;
+        return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (this.game.maxPlayers % sbSeat) + 1;
     }
 
     /**
      * Helper method to check if a player is active
      */
     private isPlayerActive(player: Player): boolean {
-        return player.status === PlayerStatus.ACTIVE ||
-            player.status === PlayerStatus.NOT_ACTED;
+        return player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED || player.status === PlayerStatus.SHOWING;
     }
 
     /**

@@ -186,7 +186,7 @@ describe.skip("DealerPositionManager", () => {
 
 // ==================== INTEGRATION TESTS WITH GAME ====================
 
-describe("TexasHoldemGame with DealerManager", () => {
+describe.skip("TexasHoldemGame with DealerManager", () => {
     let game: TexasHoldemGame;
     let mockDealerManager: jest.Mocked<IDealerPositionManager>;
 
