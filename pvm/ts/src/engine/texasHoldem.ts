@@ -8,7 +8,6 @@ import {
     PlayerActionType,
     PlayerDTO,
     PlayerStatus,
-    Positions,
     TexasHoldemRound,
     TexasHoldemStateDTO,
     WinnerDTO

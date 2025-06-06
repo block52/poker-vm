@@ -2,7 +2,7 @@ import { StateManager } from "../stateManager";
 import GameState from "../../schema/gameState";
 import { ethers } from "ethers";
 import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
-import { GameOptions, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../../models";
 import { IGameManagement } from "../interfaces";
 import { createAddress } from "../../utils/crypto";
@@ -99,7 +99,8 @@ export class GameManagement extends StateManager implements IGameManagement {
 
         // Todo: Add deck
         const deck = new Deck();
-        deck.shuffle();
+        const seed = NodeRpcClient.generateRandomNumber();
+        deck.shuffle(seed);
 
         const state: TexasHoldemGameState = {
             type: "cash",
@@ -113,11 +114,6 @@ export class GameManagement extends StateManager implements IGameManagement {
             dealer: gameOptions.maxPlayers, // Dealer is the last player (1 based index)
             players: [],
             deck: deck.toString(),
-            positions: {
-                dealer: gameOptions.maxPlayers,
-                smallBlind: 1,
-                bigBlind: 2
-            },
             communityCards: [],
             pots: ["0"],
             lastActedSeat: -1,

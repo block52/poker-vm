@@ -12,9 +12,6 @@ describe("Texas Holdem - Random Join", () => {
         });
 
         it("should let one player join with random seat", () => {
-            jest.spyOn(game, "getActionIndex").mockReturnValue(1);
-
-            // Create test players with sufficient chips
             const player1 = new Player("0x1111111111111111111111111111111111111111", undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE);
 
             game.performAction(player1.address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS); // Only one player
@@ -23,12 +20,16 @@ describe("Texas Holdem - Random Join", () => {
             expect(game.exists(player1.address)).toBeTruthy();
         });
 
-        // it("should not be able to join more than once", () => {
-        //     expect(game.findNextEmptySeat()).toEqual(1);
-        //     game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        //     expect(() => {
-        //         game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
-        //     }).toThrow("Player already joined.");
-        // });
+        it.skip("should let two players join with random seat", () => {
+            const player1 = new Player("0x1111111111111111111111111111111111111111", undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE);
+            const player2 = new Player("0x2222222222222222222222222222222222222222", undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE);
+
+            game.performAction("0x1111111111111111111111111111111111111111", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction("0x2222222222222222222222222222222222222222", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
+            
+            expect(game.getPlayerCount()).toEqual(2);
+            expect(game.exists(player1.address)).toBeTruthy();
+            expect(game.exists(player2.address)).toBeTruthy();
+        });
     });
 });
