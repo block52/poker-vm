@@ -45,17 +45,7 @@ export class Deck implements IDeck, IJSONModel {
         this.seedHash = ethers.ZeroHash;
     }
 
-    public shuffle(seed?: number[]): void {
-        if (!seed || seed.length === 0) {
-            seed = Array.from({ length: this.cards.length }, () => Math.floor(1000000 * Math.random()));
-        }
-
-        // Validate seed length matches cards length
-        if (seed.length !== this.cards.length) {
-            throw new Error(`Seed length (${seed.length}) must match cards length (${this.cards.length})`);
-        }
-
-        // const seedAsString = seed.join("-");
+    public shuffle(seed: number[]): void {
         this.seedHash = createHash("sha256").update(seed.toString()).digest("hex");
 
         // Fisher-Yates shuffle

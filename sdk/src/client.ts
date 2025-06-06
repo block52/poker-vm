@@ -1,6 +1,5 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
 import {
-    GameOptionsDTO,
     GameOptionsResponse,
     LegalActionDTO,
     NonPlayerActionType,
@@ -29,7 +28,7 @@ export interface IClient {
     getNodes(): Promise<string[]>;
     getTransactions(): Promise<TransactionDTO[]>;
     mint(address: string, amount: string, transactionId: string): Promise<void>;
-    newHand(gameAddress: string, seed?: string, nonce?: number): Promise<TransactionResponse>;
+    newHand(gameAddress: string, nonce?: number): Promise<TransactionResponse>;
     newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
@@ -330,11 +329,10 @@ export class NodeRpcClient implements IClient {
     /**
      * Create a new game on the remote node
      * @param gameAddress The address of the game
-     * @param seed The seed for new deck
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async newHand(gameAddress: string, seed?: string, nonce?: number): Promise<TransactionResponse> {
+    public async newHand(gameAddress: string, nonce?: number): Promise<TransactionResponse> {
         const address = this.getAddress();
 
         if (!nonce) {
@@ -343,10 +341,7 @@ export class NodeRpcClient implements IClient {
 
         const signature = await this.getSignature(nonce);
         const index = await this.getNextActionIndex(gameAddress, address);
-
-        if (!seed || !/^[0-9]{52}$/.test(seed)) {
-            seed = this.generateRandomNumber();
-        }
+        const seed = NodeRpcClient.generateRandomNumber();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -543,10 +538,13 @@ export class NodeRpcClient implements IClient {
         return 0;
     }
 
-    private generateRandomNumber(): string {
-        // Define the length we need
-        const length = 52;
+    public static generateRandomNumberString(): string {
+        const digits = NodeRpcClient.generateRandomNumber();
+        // Join the digits into a string
+        return digits.join("");
+    }
 
+    public static generateRandomNumber(length: number = 52): number[] {
         // Create an array to store our random digits
         const digits = new Array(length);
 
@@ -554,10 +552,8 @@ export class NodeRpcClient implements IClient {
         const randomValues = new Uint8Array(length);
         crypto.getRandomValues(randomValues);
 
-        // Convert to digits 0-9 and ensure first digit isn't 0
         for (let i = 0; i < length; i++) {
-            // Map the random bytes to digits 0-9
-            digits[i] = randomValues[i] % 10;
+            digits[i] = randomValues[i];
         }
 
         // Ensure the first digit isn't 0 to maintain the exact length
@@ -566,6 +562,6 @@ export class NodeRpcClient implements IClient {
         }
 
         // Join the digits into a string
-        return digits.join("");
+        return digits;
     }
 }
