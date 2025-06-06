@@ -252,8 +252,6 @@ const Table = React.memo(() => {
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot, tableSize } = useTableState();
 
-    // Add the useDealerPosition hook
-    const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
@@ -469,15 +467,6 @@ const Table = React.memo(() => {
         console.error("Error loading table data:", tableDataValues.error);
         // Continue rendering instead of returning early
     }
-
-    const dealerButtonStyle = useMemo(
-        () => ({
-            left: `calc(${dealerButtonPosition.left} + 200px)`,
-            top: dealerButtonPosition.top,
-            transform: "none"
-        }),
-        [dealerButtonPosition]
-    );
 
     // This component manages the subscription:
     const { subscribeToTable } = useGameStateContext();
@@ -774,18 +763,7 @@ const Table = React.memo(() => {
                                                     </div>
                                                 );
                                             })}
-                                            {/*//! Dealer */}
-                                            {isDealerButtonVisible && (
-                                                <motion.div
-                                                    className="dealer-button"
-                                                    style={dealerButtonStyle}
-                                                    initial={false}
-                                                    animate={dealerButtonStyle}
-                                                    transition={{ duration: 0.6, ease: "easeInOut" }}
-                                                >
-                                                    <img src={CustomDealer} alt="Dealer Button" />
-                                                </motion.div>
-                                            )}
+                                    
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">

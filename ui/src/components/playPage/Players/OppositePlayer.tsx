@@ -50,6 +50,8 @@ import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
 import { useShowingCardsByAddress } from "../../../hooks/useShowingCardsByAddress";
+import { useDealerPosition } from "../../../hooks/useDealerPosition";
+import CustomDealer from "../../../assets/CustomDealer.svg";
 
 type OppositePlayerProps = {
     left?: string;
@@ -68,6 +70,10 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo(id);
     const { showingPlayers } = useShowingCardsByAddress();
+    const { dealerSeat } = useDealerPosition();
+    
+    // Check if this seat is the dealer
+    const isDealer = dealerSeat === index;
 
     // 1) detect when any winner exists
     const hasWinner = React.useMemo(() => Array.isArray(winnerInfo) && winnerInfo.length > 0, [winnerInfo]);
@@ -171,6 +177,13 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                     <div className="absolute top-[-10px] w-full">
                         <Badge count={index} value={stackValue} color={color} />
                     </div>
+
+                    {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}
+                    {isDealer && (
+                        <div className="absolute top-[-85px] right-[-40px] w-12 h-12 z-20">
+                            <img src={CustomDealer} alt="Dealer Button" className="w-full h-full" />
+                        </div>
+                    )}
                 </div>
             </div>
 
