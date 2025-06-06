@@ -8,6 +8,8 @@ import { usePlayerTimer } from "../../../hooks/usePlayerTimer";
 import { useParams } from "react-router-dom";
 import type { PlayerProps } from "../../../types/index";
 import { useGameStateContext } from "../../../context/GameStateContext";
+import { useDealerPosition } from "../../../hooks/useDealerPosition";
+import CustomDealer from "../../../assets/CustomDealer.svg";
 
 const Player: React.FC<PlayerProps> = memo(
   ({ left, top, index, currentIndex, color, status }) => {
@@ -19,6 +21,11 @@ const Player: React.FC<PlayerProps> = memo(
         canExtend, 
         isCurrentUserTurn 
     } = usePlayerTimer(id, index);
+
+    const { dealerSeat } = useDealerPosition();
+    
+    // Check if this seat is the dealer
+    const isDealer = dealerSeat === index;
     
     // State for extension UI feedback
     const [isExtending, setIsExtending] = useState(false);
@@ -186,6 +193,13 @@ const Player: React.FC<PlayerProps> = memo(
                 // onExtend={shouldShowTimerExtension ? handleExtendTime : undefined}
             />
           </div>
+
+          {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}
+          {isDealer && (
+              <div className="absolute top-[-85px] right-[-40px] w-12 h-12 z-20">
+                  <img src={CustomDealer} alt="Dealer Button" className="w-full h-full" />
+              </div>
+          )}
         </div>
       </div>
     );

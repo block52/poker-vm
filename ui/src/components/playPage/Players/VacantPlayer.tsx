@@ -56,6 +56,8 @@ import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
 import { useNodeRpc } from "../../../context/NodeRpcContext";
 import type { VacantPlayerProps } from "../../../types/index";
 import PlayerPopUpCard from "./PlayerPopUpCard";
+import { useDealerPosition } from "../../../hooks/useDealerPosition";
+import CustomDealer from "../../../assets/CustomDealer.svg";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index, onJoin }) => {
@@ -72,6 +74,11 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [joinSuccess, setJoinSuccess] = useState(false);
         const [joinResponse, setJoinResponse] = useState<any>(null);
         const [isCardVisible, setIsCardVisible] = useState(false);
+
+        const { dealerSeat } = useDealerPosition();
+    
+        // Check if this seat is the dealer
+        const isDealer = dealerSeat === index;
 
         // Memoize seat status checks
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
@@ -171,6 +178,13 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                         <div className="text-lg sm:text-sm mb-1 whitespace-nowrap font-medium">{seatText.title}</div>
                         {seatText.subtitle && <div className="text-base sm:text-xs whitespace-nowrap">{seatText.subtitle}</div>}
                     </div>
+
+                    {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}
+                    {isDealer && (
+                        <div className="absolute top-[-85px] right-[-40px] w-12 h-12 z-20">
+                            <img src={CustomDealer} alt="Dealer Button" className="w-full h-full" />
+                        </div>
+                    )}
                 </div>
 
                 {/* PlayerPopUpCard - Only show for seat changing */}
