@@ -25,7 +25,7 @@ export function useStartNewHand(tableId: string | undefined) {
             setIsStartingNewHand(true);
             console.log(`Starting new hand for table ${tableId} with seed: ${seed}`);
 
-            const response = await client.newHand(tableId, "", 0);
+            const response = await client.newHand(tableId, 0);
             console.log("New hand started successfully:", response);
             return response;
         } catch (error) {
