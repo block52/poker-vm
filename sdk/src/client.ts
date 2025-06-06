@@ -341,7 +341,7 @@ export class NodeRpcClient implements IClient {
 
         const signature = await this.getSignature(nonce);
         const index = await this.getNextActionIndex(gameAddress, address);
-        const seed = NodeRpcClient.generateRandomNumber();
+        const seed: string = NodeRpcClient.generateRandomNumberString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
