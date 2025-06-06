@@ -397,8 +397,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     getAvailableSeats(): number[] {
         const availableSeats: number[] = [];
-        for (const [seat, player] of this._playersMap.entries()) {
-            if (player === null) {
+        for (let seat = 1; seat <= this.maxPlayers; seat++) {
+            if (this.getPlayerAtSeat(seat) === undefined || this.getPlayerAtSeat(seat) === null) {
                 availableSeats.push(seat);
             }
         }
