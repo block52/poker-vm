@@ -152,7 +152,7 @@ class PokerBot:
 
             result = response.json()
 
-            if "error" in result:
+            if response.status_code != 200:
                 raise Exception(f"RPC Error: {result['error']}")
 
             return result.get("result", {})
@@ -225,7 +225,7 @@ class PokerBot:
             #     "caller": self.player_address
             # }
 
-            params = [self.player_address, "0x0000000000000000000000000000000000000000"]
+            params = [self.game_address, "0x0000000000000000000000000000000000000000"]
 
             # if self.game_address:
             #     params["game_address"] = self.game_address
@@ -238,7 +238,8 @@ class PokerBot:
 
             # Parse players
             players = []
-            for player_data in result.get("players", []):
+            result_data = result.get("data")
+            for player_data in result_data.get("players", []):
                 legal_actions = [
                     LegalAction(
                         action=action["action"],
@@ -266,15 +267,15 @@ class PokerBot:
 
             # Create game state
             game_state = GameState(
-                address=result["address"],
+                address=result_data["address"],
                 players=players,
-                community_cards=result.get("communityCards", []),
-                pots=result.get("pots", ["0"]),
-                round=result.get("round", "ante"),
-                next_to_act=result.get("nextToAct", -1),
-                dealer=result.get("dealer", 0),
-                small_blind_position=result.get("smallBlindPosition", 1),
-                big_blind_position=result.get("bigBlindPosition", 2)
+                community_cards=result_data.get("communityCards", []),
+                pots=result_data.get("pots", ["0"]),
+                round=result_data.get("round", "ante"),
+                next_to_act=result_data.get("nextToAct", -1),
+                dealer=result_data.get("dealer", 0),
+                small_blind_position=result_data.get("smallBlindPosition", 1),
+                big_blind_position=result_data.get("bigBlindPosition", 2)
             )
 
             return game_state
