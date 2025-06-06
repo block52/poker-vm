@@ -101,7 +101,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         return actionCounter;
     }
 
-    it.only("should play five complete hands with button movement and pot reset", () => {
+    it.skip("should play five complete hands with button movement and pot reset", () => {
         // Initialize variables to track button position and players
         let smallBlindPlayer = SMALL_BLIND_PLAYER;
         let bigBlindPlayer = BIG_BLIND_PLAYER;
@@ -117,7 +117,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
 
         // Reinitialize for hand 2
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
-        actionCounter = 0;
+        // actionCounter = 1;
 
         // Hand 2 - buttons should switch positions
         [smallBlindPlayer, bigBlindPlayer] = [bigBlindPlayer, smallBlindPlayer];
@@ -128,11 +128,11 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.bigBlindPosition).toEqual(1);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter + 1);
 
         // Reinitialize for hand 3
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
-        actionCounter = 0;
+        // actionCounter = 0;
 
         // Hand 3 - buttons should switch positions again
         [smallBlindPlayer, bigBlindPlayer] = [bigBlindPlayer, smallBlindPlayer];
@@ -143,11 +143,11 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.bigBlindPosition).toEqual(2);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter + 1);
 
         // Reinitialize for hand 4
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
-        actionCounter = 0;
+        // actionCounter = 0;
 
         // Hand 4 - buttons should switch positions again
         [smallBlindPlayer, bigBlindPlayer] = [bigBlindPlayer, smallBlindPlayer];

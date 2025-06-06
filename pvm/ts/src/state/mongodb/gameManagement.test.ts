@@ -4,7 +4,6 @@ import { ethers } from "ethers";
 
 // Mock dependencies
 jest.mock("../../schema/gameState");
-jest.mock("../../schema/contractSchemas");
 jest.mock("../../core/mempool");
 jest.mock("ethers", () => ({
     ZeroAddress: "0x0000000000000000000000000000000000000000",
