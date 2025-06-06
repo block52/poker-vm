@@ -38,12 +38,11 @@ class JoinAction extends BaseAction {
             const availableSeats = this.game.getAvailableSeats();
 
             // If all seats are occupied, throw an error
-            if (availableSeats.length >= this.game.maxPlayers)
+            if (availableSeats.length === 0)
                 throw new Error("No available seats to join.");
 
             // Choose randomly from the available seats
             seat = Math.floor(Math.random() * availableSeats.length);
-            // seat = this.game.findNextEmptySeat();
         } else {
             // Validate the requested seat
             const seatRegex = /^\d+$/;
