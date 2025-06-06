@@ -81,8 +81,16 @@
     "node": "20.18.2",
     "yarn": "1.22"
   },
+  "resolutions": {
+    "rollup": "4.29.2"
+  },
   "overrides": {
     "lit": "3.1.0",
     "rollup": "4.29.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": "4.29.2"
+    }
   }
 }
