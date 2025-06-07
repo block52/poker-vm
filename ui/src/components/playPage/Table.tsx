@@ -56,7 +56,6 @@ import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
 
 import Chip from "./common/Chip";
-import CustomDealer from "../../assets/CustomDealer.svg";
 import TurnAnimation from "./Animations/TurnAnimation";
 import WinAnimation from "./Animations/WinAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
@@ -81,7 +80,6 @@ import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides c
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 
 //2. Visual Position/State Providers
-import { useDealerPosition } from "../../hooks/useDealerPosition";
 import { useChipPositions } from "../../hooks/useChipPositions";
 import { usePlayerChipData } from "../../hooks/usePlayerChipData";
 
@@ -91,7 +89,7 @@ import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGame
 
 //todo wire up to use the sdk instead of the proxy
 // 4. Player Actions
-import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
+import { leaveTable } from "../../hooks/playerActions/leaveTable";
 
 // 5. Winner Info
 import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner information for animations
@@ -99,7 +97,7 @@ import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner in
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameOptions } from "../../hooks/useGameOptions";
-import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
+import { getAccountBalance, getPublicKey } from "../../utils/b52AccountUtils";
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
 import { useGameStateContext } from "../../context/GameStateContext";
@@ -139,11 +137,30 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
-    const { client, isLoading: clientLoading, errorLogs, clearErrorLogs } = useNodeRpc();
+    
+    // 🔍 DEBUG: Track re-renders
+    const renderCount = useRef(0);
+    renderCount.current += 1;
+    
+    // 🔍 DEBUG: Log every 10 renders to avoid spam
+    if (renderCount.current % 10 === 0) {
+        console.log(`🔄 Table re-render #${renderCount.current}`, {
+            timestamp: new Date().toISOString(),
+            tableId: id,
+            renderCount: renderCount.current
+        });
+    }
+    
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
-    const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
+    const [errorLogs, setErrorLogs] = useState<any[]>([]);
+    const publicKey = getPublicKey();
+
+    // Simple function to clear error logs
+    const clearErrorLogs = useCallback(() => {
+        setErrorLogs([]);
+    }, []);
 
     // Update to use the imported hook
     const tableDataValues = useTableData();
@@ -182,52 +199,38 @@ const Table = React.memo(() => {
 
     // Function to fetch account balance
     const fetchAccountBalance = useCallback(async () => {
-        if (!client) {
-            setBalanceError(new Error("RPC client not initialized"));
-            setIsBalanceLoading(false);
-            return;
-        }
-
         try {
             setIsBalanceLoading(true);
-
-            if (!publicKey) {
-                setBalanceError(new Error("No address available"));
-                setIsBalanceLoading(false);
-                return;
-            }
-
-            const account = await client.getAccount(publicKey);
-            setAccountBalance(account.balance.toString());
-
             setBalanceError(null);
+
+            const balance = await getAccountBalance();
+            setAccountBalance(balance);
         } catch (err) {
             console.error("Error fetching account balance:", err);
             setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
         } finally {
             setIsBalanceLoading(false);
         }
-    }, [client, publicKey]);
+    }, []);
 
-    // Update to fetch balance when publicKey or client changes
+    // Fetch balance once on page load
     useEffect(() => {
-        if (publicKey && client && !clientLoading) {
+        if (publicKey) {
             fetchAccountBalance();
         }
-    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+    }, [publicKey, fetchAccountBalance]);
 
-    // Remove the table data effect and replace with a more targeted approach
+    // Manual balance refresh function for after key actions
     const updateBalanceOnPlayerJoin = useCallback(() => {
-        if (publicKey && client && !clientLoading) {
+        if (publicKey) {
             fetchAccountBalance();
         }
-    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+    }, [publicKey, fetchAccountBalance]);
 
     // Now we can use calculateZoom in useState
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
-    const [mousePosition, setMousePosition] = useState({ x: 20, y: 30 }); // Default static position
     const [debugMode, setDebugMode] = useState(false);
 
     // Use the hook directly instead of getting it from context
@@ -245,9 +248,6 @@ const Table = React.memo(() => {
         timeRemaining
     } = useNextToActInfo(id);
 
-
-    // Add the useTableLeave hook
-    const { leaveTable, isLeaving } = useTableLeave(id);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot, tableSize } = useTableState();
@@ -282,13 +282,17 @@ const Table = React.memo(() => {
     // Add the usePlayerChipData hook
     const { getChipAmount } = usePlayerChipData(id);
 
-    // Add a ref for the animation frame ID
-    const animationFrameRef = useRef<number | undefined>(undefined);
-
-    // Memoize user wallet address
+    // Memoize user wallet address using utility function
     const userWalletAddress = useMemo(() => {
-        const storedAddress = localStorage.getItem("user_eth_public_key");
+        const storedAddress = getPublicKey();
         return storedAddress ? storedAddress.toLowerCase() : null;
+    }, []);
+
+    // Memoize formatted address display using utility function
+    const formattedAddress = useMemo(() => {
+        const pubKey = getPublicKey();
+        if (!pubKey) return "";
+        return `${pubKey.slice(0, 6)}...${pubKey.slice(-4)}`;
     }, []);
 
     // Memoize user data
@@ -308,34 +312,12 @@ const Table = React.memo(() => {
     // Optimize window width detection - only check on resize
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 414);
 
-    // Add effect to track mouse movement
-    useEffect(() => {
-        // Only track mouse on desktop for performance
-        if (window.innerWidth > 768) {
-            const handleMouseMove = (e: MouseEvent) => {
-                // Only update if no animation frame is pending
-                if (!animationFrameRef.current) {
-                    animationFrameRef.current = requestAnimationFrame(() => {
-                        // Calculate mouse position as percentage of window
-                        const x = (e.clientX / window.innerWidth) * 100;
-                        const y = (e.clientY / window.innerHeight) * 100;
-                        setMousePosition({ x, y });
-                        animationFrameRef.current = undefined;
-                    });
-                }
-            };
-
-            window.addEventListener("mousemove", handleMouseMove);
-
-            // Cleanup function to remove event listener and cancel any pending animation frames
-            return () => {
-                window.removeEventListener("mousemove", handleMouseMove);
-                if (animationFrameRef.current) {
-                    cancelAnimationFrame(animationFrameRef.current);
-                }
-            };
-        }
-    }, []);
+    // 🔧 PERFORMANCE FIX: Disabled mouse tracking to prevent hundreds of re-renders
+    // Mouse tracking was causing setMousePosition({ x, y }) on every mouse move
+    // which created new objects and triggered excessive re-renders
+    // useEffect(() => {
+    //     // Mouse tracking disabled for performance
+    // }, []);
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -512,19 +494,17 @@ const Table = React.memo(() => {
                                     {/* Address */}
                                     <div className="flex items-center mr-2 sm:mr-4">
                                         <span className="font-mono text-blue-400 text-[10px] sm:text-xs">
-                                            {`${localStorage.getItem("user_eth_public_key")?.slice(0, 6)}...${localStorage
-                                                .getItem("user_eth_public_key")
-                                                ?.slice(-4)}`}
+                                            {formattedAddress}
                                         </span>
                                         <FaCopy
                                             className="ml-1 sm:ml-1.5 cursor-pointer text-blue-400 hover:text-blue-300 transition-colors duration-200"
                                             size={9}
-                                            onClick={() => copyToClipboard(localStorage.getItem("user_eth_public_key") || "")}
+                                            onClick={() => copyToClipboard(publicKey || "")}
                                             title="Copy full address"
                                         />
                                     </div>
 
-                                    {/* Balance - UPDATED to use NodeRpc balance */}
+                                    {/* Balance - UPDATED to use direct utility */}
                                     <div className="flex items-center">
                                         <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-500/20 flex items-center justify-center mr-1 sm:mr-1.5">
                                             <span className="text-blue-400 font-bold text-[8px] sm:text-[10px]">$</span>
@@ -534,8 +514,16 @@ const Table = React.memo(() => {
                                                 ${balanceFormatted}
                                                 <span className="text-[8px] sm:text-[10px] ml-1 text-gray-400">USDC</span>
                                             </p>
-                                            {/* <p className="text-[8px] text-gray-400 -mt-1">nonce: {accountNonce}</p> */}
                                         </div>
+                                        {/* Refresh button */}
+                                        <button
+                                            onClick={fetchAccountBalance}
+                                            disabled={isBalanceLoading}
+                                            className="ml-1 text-blue-400 hover:text-blue-300 transition-colors duration-200 disabled:opacity-50"
+                                            title="Refresh balance"
+                                        >
+                                            <span className="text-[8px]">↻</span>
+                                        </button>
                                     </div>
                                 </>
                             )}
@@ -619,15 +607,12 @@ const Table = React.memo(() => {
                                     // Get player's current stack if they are seated
                                     const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
 
-                                    if (leaveTable && playerData) {
-                                        leaveTable({
-                                            amount: playerData.stack || "0",
-                                            actionIndex: 0 // Adding action index of 0 as default
-                                        })
+                                    if (id && playerData) {
+                                        leaveTable(id, playerData.stack || "0")
                                             .then(() => {
                                                 window.location.href = "/";
                                             })
-                                            .catch(err => {
+                                            .catch((err: any) => {
                                                 console.error("Error leaving table:", err);
                                                 window.location.href = "/";
                                             });
@@ -638,8 +623,8 @@ const Table = React.memo(() => {
                             }}
                             title="Return to Lobby"
                         >
-                            <span className="hidden sm:inline">{isLeaving ? "Leaving..." : "Leave Table"}</span>
-                            <span className="sm:hidden">{isLeaving ? "Leave..." : "Leave"}</span>
+                            <span className="hidden sm:inline">Leave Table</span>
+                            <span className="sm:hidden">Leave</span>
                             <RxExit size={12} />
                         </span>
                     </div>
@@ -667,22 +652,10 @@ const Table = React.memo(() => {
                     </div>
                     {/* Animated background overlay */}
                     <div className="background-shimmer shimmer-animation" />
-                    {/* Dynamic animated overlay with mouse tracking on desktop */}
-                    <div 
-                        className="background-animated-static"
-                        style={window.innerWidth > 768 ? {
-                            background: `repeating-linear-gradient(${45 + mousePosition.x / 10}deg, rgba(42, 72, 143, 0.1) 0%, rgba(61, 89, 161, 0.1) 25%, rgba(30, 52, 107, 0.1) 50%, rgba(50, 79, 151, 0.1) 75%, rgba(42, 72, 143, 0.1) 100%)`,
-                            transition: "background 0.3s ease"
-                        } : {}}
-                    />
-                    {/* Dynamic base gradient with mouse tracking on desktop */}
-                    <div 
-                        className="background-base-static"
-                        style={window.innerWidth > 768 ? {
-                            background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%), radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%), #111827`,
-                            transition: "background 0.3s ease"
-                        } : {}}
-                    />
+                    {/* Static animated overlay - mouse tracking removed for performance */}
+                    <div className="background-animated-static" />
+                    {/* Static base gradient - mouse tracking removed for performance */}
+                    <div className="background-base-static" />
                     {/*//! TABLE */}
                     <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-250px)] sm:min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Hexagon pattern overlay */}

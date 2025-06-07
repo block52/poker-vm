@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNodeRpc } from "../context/NodeRpcContext";
-import { AccountDTO } from "@bitcoinbrisbane/block52";
+import { NodeRpcClient, AccountDTO } from "@bitcoinbrisbane/block52";
+import { getPrivateKey } from "../utils/b52AccountUtils";
 
 export interface UseAccountReturn {
     account: AccountDTO | null;
@@ -18,12 +18,22 @@ export const useAccount = (address?: string): UseAccountReturn => {
     const [account, setAccount] = useState<AccountDTO | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-    const { client } = useNodeRpc();
 
     const fetchAccount = useCallback(async () => {
-        if (!client || !address) {
+        if (!address) {
             return;
         }
+
+        // Get private key from storage
+        const privateKey = getPrivateKey();
+        if (!privateKey) {
+            setError(new Error("No private key found. Please connect your wallet first."));
+            return;
+        }
+
+        // Create the client directly with the private key
+        const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
+        const client = new NodeRpcClient(nodeUrl, privateKey);
 
         setIsLoading(true);
         setError(null);
@@ -43,7 +53,7 @@ export const useAccount = (address?: string): UseAccountReturn => {
         } finally {
             setIsLoading(false);
         }
-    }, [client, address]);
+    }, [address]);
 
     useEffect(() => {
         if (address) {

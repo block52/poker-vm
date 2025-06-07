@@ -6,20 +6,20 @@ import { useParams } from "react-router-dom";
 
 // Import our custom hooks
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
-import { useTableDeal } from "../hooks/playerActions/useTableDeal";
-import { useTableCheck } from "../hooks/playerActions/useTableCheck";
-import { useTableFold } from "../hooks/playerActions/useTableFold";
-import { useTableRaise } from "../hooks/playerActions/useTableRaise";
-import { useTablePostSmallBlind } from "../hooks/playerActions/useTablePostSmallBlind";
-import { useTablePostBigBlind } from "../hooks/playerActions/useTablePostBigBlind";
+import { dealCards } from "../hooks/playerActions/dealCards";
+import { checkHand } from "../hooks/playerActions/checkHand";
+import { foldHand } from "../hooks/playerActions/foldHand";
+import { raiseHand } from "../hooks/playerActions/raiseHand";
+import { postSmallBlind } from "../hooks/playerActions/postSmallBlind";
+import { postBigBlind } from "../hooks/playerActions/postBigBlind";
 import { useNextToActInfo } from "../hooks/useNextToActInfo";
-import { useTableCall } from "../hooks/playerActions/useTableCall";
-import { useTableBet } from "../hooks/playerActions/useTableBet";
-import { useTableMuck } from "../hooks/playerActions/useTableMuck";
-import { useTableShow } from "../hooks/playerActions/useTableShow";
-import { useStartNewHand } from "../hooks/playerActions/useStartNewHand";
-import { useTableSitIn } from "../hooks/playerActions/useTableSitIn";
-import { useTableSitOut } from "../hooks/playerActions/useTableSitOut";
+import { callHand } from "../hooks/playerActions/callHand";
+import { betHand } from "../hooks/playerActions/betHand";
+import { muckCards } from "../hooks/playerActions/muckCards";
+import { showCards } from "../hooks/playerActions/showCards";
+import { startNewHand } from "../hooks/playerActions/startNewHand";
+import { sitIn } from "../hooks/playerActions/sitIn";
+import { sitOut } from "../hooks/playerActions/sitOut";
 import { usePlayerTimer } from "../hooks/usePlayerTimer";
 import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
@@ -32,24 +32,14 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Add ref to track if we're already attempting to auto-deal
     const attemptToAutoDeal = useRef<boolean>(false);
 
-    // Add the useStartNewHand hook
-    const { startNewHand, isStartingNewHand } = useStartNewHand(tableId);
+
 
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions();
     const { gameOptions } = useGameOptions();
-    const { dealCards, isDealing } = useTableDeal(tableId);
-    const { checkHand } = useTableCheck(tableId);
-    const { foldHand } = useTableFold(tableId);
-    const { raiseHand } = useTableRaise(tableId);
-    const { postSmallBlind } = useTablePostSmallBlind(tableId);
-    const { postBigBlind } = useTablePostBigBlind(tableId);
-    const { callHand } = useTableCall(tableId);
-    const { betHand } = useTableBet(tableId);
-    const { muckCards, isMucking } = useTableMuck(tableId);
-    const { showCards, isShowing } = useTableShow(tableId);
+    // Direct function imports - no hook destructuring needed
 
     // Use the useNextToActInfo hook
     const {
@@ -139,9 +129,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
 
-    // Add the useTableSitIn and useTableSitOut hooks
-    const { sitIn, isLoading: isSittingIn } = useTableSitIn(tableId);
-    const { sitOut, isLoading: isSittingOut } = useTableSitOut(tableId);
+    // Direct function imports - no hook destructuring needed for sit in/out
 
     // Add timer extension functionality for the footer button
     const userSeat = userPlayer?.seat;
@@ -195,110 +183,101 @@ const PokerActionPanel: React.FC = React.memo(() => {
         }
     }, [hasRaiseAction, hasBetAction, minRaise, minBet]);
 
-    // Handler functions for different actions - Now use our custom hooks
-    const handlePostSmallBlind = useCallback(() => {
-        if (!postSmallBlind) {
-            console.error("Hook not ready");
-            return;
-        }
-        // Use our hook to post small blind
-        postSmallBlind({});
-    }, [postSmallBlind]);
+    // Handler functions for different actions - simplified
+    const handlePostSmallBlind = async () => {
+        if (!tableId) return;
+        
+        const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
+        if (!smallBlindAmount) return;
 
-    const handlePostBigBlind = useCallback(() => {
-        if (!postBigBlind) {
-            console.error("Hook not ready");
-            return;
-        }
+        // Simple call - let errors bubble up naturally
+        await postSmallBlind(tableId, smallBlindAmount);
+    };
 
-        // Use our hook to post big blind
-        postBigBlind({});
-    }, [postBigBlind]);
+    const handlePostBigBlind = async () => {
+        if (!tableId) return;
+        
+        const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
+        if (!bigBlindAmount) return;
 
-    const handleCheck = useCallback(() => {
-        if (!checkHand) {
-            console.error("Hook not ready");
-            return;
-        }
+        // Simple call - let errors bubble up naturally
+        await postBigBlind(tableId, bigBlindAmount);
+    };
 
-        // 🔍 DEBUG: Log frontend state when CHECK button is clicked
-        console.log("🎯 [CHECK BUTTON CLICKED]", {
-            timestamp: new Date().toISOString(),
-            frontendState: {
-                hasCheckAction,
-                isUsersTurn,
-                legalActions: legalActions?.map(action => ({ action: action.action, min: action.min, max: action.max })),
-                currentRound,
-                playerStatus,
-                isUserInTable,
-                userPlayer: userPlayer ? {
-                    seat: userPlayer.seat,
-                    status: userPlayer.status,
-                    stack: userPlayer.stack
-                } : null
-            },
-            source: "Footer.handleCheck"
-        });
-
-        // Use our hook to check
-        checkHand({
-            amount: "0" // Check doesn't require an amount
-        });
-    }, [checkHand, hasCheckAction, isUsersTurn, legalActions, currentRound, playerStatus, isUserInTable, userPlayer]);
-
-    const handleFold = useCallback(() => {
-        if (!foldHand) {
-            console.error("Hook not ready");
+    const handleCheck = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
             return;
         }
 
-        // Use our hook to fold
-        foldHand();
-    }, [foldHand]);
+        try {
+            await checkHand(tableId);
+        } catch (error: any) {
+            console.error("Failed to check:", error);
+        }
+    };
 
-    const handleCall = useCallback(() => {
-        if (!privateKey || !callHand) {
-            console.error("Private key not available or hook not ready");
+    const handleFold = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
+            return;
+        }
+
+        try {
+            await foldHand(tableId);
+        } catch (error: any) {
+            console.error("Failed to fold:", error);
+        }
+    };
+
+    const handleCall = async () => {
+        if (!privateKey || !tableId) {
+            console.error("Private key or table ID not available");
             return;
         }
 
         if (callAction) {
-            // Use our hook to call with the correct amount
-            callHand({
-                amount: "0" // callAction.min.toString() // Call doesn't require an amount, the PVM should handle it
-            });
+            try {
+                await callHand(tableId);
+            } catch (error: any) {
+                console.error("Failed to call:", error);
+            }
         } else {
             console.error("Call action not available");
         }
-    }, [privateKey, callHand, callAction]);
+    };
 
-    const handleBet = useCallback(() => {
-        if (!betHand) {
-            console.error("Hook not ready");
+    const handleBet = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
             return;
         }
 
-        // Use our hook to bet with the current raiseAmount
+        // Use our function to bet with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
-        betHand({
-            amount: amountWei
-        });
-    }, [betHand, raiseAmount]);
+        try {
+            await betHand(tableId, amountWei);
+        } catch (error: any) {
+            console.error("Failed to bet:", error);
+        }
+    };
 
-    const handleRaise = useCallback(() => {
-        if (!raiseHand) {
-            console.error("Private key not available or hook not ready");
+    const handleRaise = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
             return;
         }
 
-        // Use our hook to raise with the current raiseAmount
+        // Use our function to raise with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
-        raiseHand({
-            amount: amountWei
-        });
-    }, [raiseHand, raiseAmount]);
+        try {
+            await raiseHand(tableId, amountWei);
+        } catch (error: any) {
+            console.error("Failed to raise:", error);
+        }
+    };
 
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = hasSmallBlindAction && isUsersTurn;
@@ -319,122 +298,86 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
 
     // Handler for muck action
-    const handleMuck = () => {
-        if (!muckCards || !privateKey) {
-            console.error("Hook not ready or private key not available");
+    const handleMuck = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
             return;
         }
 
-        // Use our hook to muck cards
-        muckCards({
-            privateKey,
-            actionIndex: getActionByType(PlayerActionType.MUCK)?.index || getActionByType("muck")?.index || 0
-        });
+        try {
+            await muckCards(tableId);
+        } catch (error: any) {
+            console.error("Failed to muck cards:", error);
+        }
     };
 
     // Handler for show action
-    const handleShow = () => {
-        if (!showCards || !privateKey) {
-            console.error("Hook not ready or private key not available");
+    const handleShow = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
             return;
         }
 
-        // Use our hook to show cards
-        showCards({
-            privateKey,
-            actionIndex: getActionByType(PlayerActionType.SHOW)?.index || getActionByType("show")?.index || 0
-        });
+        try {
+            await showCards(tableId);
+        } catch (error: any) {
+            console.error("Failed to show cards:", error);
+        }
     };
 
     // Handler for deal action
-    const handleDeal = useCallback(() => {
-        if (!dealCards) {
-            console.error("Hook not ready");
+    const handleDeal = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
             return;
         }
 
-        // 🃏 DEBUG: Log frontend state when DEAL button is clicked
-        console.log("🎯 [DEAL BUTTON CLICKED]", {
-            timestamp: new Date().toISOString(),
-            frontendState: {
-                hasDealAction,
-                shouldShowDealButton,
-                isUsersTurn,
-                isCurrentUserTurn,
-                legalActions: legalActions?.map(action => ({ action: action.action, min: action.min, max: action.max })),
-                currentRound,
-                playerStatus,
-                isUserInTable,
-                userPlayer: userPlayer ? {
-                    seat: userPlayer.seat,
-                    status: userPlayer.status,
-                    stack: userPlayer.stack
-                } : null,
-                isDealing
-            },
-            source: "Footer.handleDeal"
-        });
-
-        // Use our hook to deal cards
-        dealCards()
-            .then(() => {
-                console.log("Deal completed successfully");
-            })
-            .catch(error => {
-                console.error("Failed to deal:", error);
-            });
-    }, [dealCards, hasDealAction, shouldShowDealButton, isUsersTurn, isCurrentUserTurn, legalActions, currentRound, playerStatus, isUserInTable, userPlayer, isDealing]);
+        try {
+            await dealCards(tableId);
+            console.log("Deal completed successfully");
+        } catch (error: any) {
+            console.error("Failed to deal:", error);
+        }
+    };
 
     // Add the handleStartNewHand function after the other handler functions
-    const handleStartNewHand = () => {
-        if (!privateKey || !startNewHand) {
-            console.error("Private key not available or hook not ready");
-            return;
-        }
+    const handleStartNewHand = async () => {
+        if (!tableId) return;
 
-        // Use our hook to start a new hand
-        startNewHand({
-            seed: Math.random().toString(36).substring(2, 15) // Generate a random seed
-        })
-            .then(result => {
-                console.log("New hand started successfully:", result);
-            })
-            .catch(error => {
-                console.error("Failed to start new hand:", error);
-                alert("Failed to start new hand. Please try again.");
-            });
+        const seed = Math.random().toString(36).substring(2, 15);
+        
+        // Simple call - let errors bubble up naturally
+        await startNewHand(tableId, seed);
     };
 
     // Add handler functions for sit-in and sit-out actions
-    const handleSitIn = useCallback(() => {
-        if (!sitIn) {
-            console.error("Hook not ready");
+    const handleSitIn = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
             return;
         }
 
-        sitIn()
-            .then(() => {
-                console.log("Successfully sat in");
-            })
-            .catch(error => {
-                console.error("Failed to sit in:", error);
-            });
-    }, [sitIn]);
+        try {
+            await sitIn(tableId);
+            console.log("Successfully sat in");
+        } catch (error: any) {
+            console.error("Failed to sit in:", error);
+        }
+    };
 
-    const handleSitOut = useCallback(() => {
-        if (!sitOut) {
-            console.error("Hook not ready");
+    const handleSitOut = async () => {
+        if (!tableId) {
+            console.error("Table ID not available");
             return;
         }
 
-        sitOut()
-            .then(() => {
-                console.log("Successfully sat out");
-            })
-            .catch(error => {
-                console.error("Failed to sit out:", error);
-            });
-    }, [sitOut]);
+        try {
+            await sitOut(tableId);
+            console.log("Successfully sat out");
+        } catch (error: any) {
+            console.error("Failed to sit out:", error);
+        }
+    };
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
@@ -493,7 +436,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base
                             border border-[#3b82f6]/50 backdrop-blur-sm transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-                            disabled={isDealing}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -504,7 +446,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                 />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            {isDealing ? "DEALING..." : "DEAL"}
+                            DEAL
                         </button>
                     </div>
                 )}
@@ -518,7 +460,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 border-[#818cf8] transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
-                            disabled={isStartingNewHand}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -528,7 +469,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                                 />
                             </svg>
-                            {isStartingNewHand ? "STARTING NEW HAND..." : "START NEW HAND"}
+                            START NEW HAND
                         </button>
                     </div>
                 )}
@@ -542,7 +483,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 border-[#6b7280] transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
-                            disabled={isMucking}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -552,7 +492,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                             </svg>
-                            {isMucking ? "MUCKING..." : "MUCK CARDS"}
+                            MUCK CARDS
                         </button>
                     </div>
                 )}
@@ -566,7 +506,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 border-[#3b82f6] transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
-                            disabled={isShowing}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -577,7 +516,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                 />
                             </svg>
-                            {isShowing ? "SHOWING..." : "SHOW CARDS"}
+                            SHOW CARDS
                         </button>
                     </div>
                 )}

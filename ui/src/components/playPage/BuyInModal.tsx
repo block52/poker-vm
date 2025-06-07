@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
-import { useNodeRpc } from "../../context/NodeRpcContext";
 import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
+import { getAccountBalance } from "../../utils/b52AccountUtils";
 
 interface BuyInModalProps {
     tableId: string;
@@ -12,7 +12,6 @@ interface BuyInModalProps {
 }
 
 const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => {
-    const { client, isLoading: clientLoading } = useNodeRpc();
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [, setIsBalanceLoading] = useState<boolean>(true);
     const [, setBalanceError] = useState<Error | null>(null);
@@ -38,12 +37,6 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
     const balanceFormatted = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
 
     const fetchAccountBalance = async () => {
-        if (!client) {
-            setBalanceError(new Error("RPC client not initialized"));
-            setIsBalanceLoading(false);
-            return;
-        }
-
         try {
             setIsBalanceLoading(true);
 
@@ -53,8 +46,8 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                 return;
             }
 
-            const account = await client.getAccount(publicKey);
-            setAccountBalance(account.balance);
+            const balance = await getAccountBalance();
+            setAccountBalance(balance);
             setBalanceError(null);
         } catch (err) {
             console.error("Error fetching account balance:", err);
@@ -65,10 +58,10 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
     };
 
     useEffect(() => {
-        if (publicKey && client && !clientLoading) {
+        if (publicKey) {
             fetchAccountBalance();
         }
-    }, [publicKey, client, clientLoading]);
+    }, [publicKey]);
 
     const handleBuyInChange = (amount: string) => {
         setBuyInAmount(amount);

@@ -2,15 +2,12 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import { NodeRpcProvider } from "./context/NodeRpcContext";
 import { Profiler } from "react";
 
 const projectId = import.meta.env.VITE_PROJECT_ID;
 if (!projectId) {
     throw new Error("Project ID is not defined in .env file");
 }
-
-const url = process.env.NODE_URL;
 
 const root = createRoot(document.getElementById("app") as HTMLElement);
 
@@ -43,9 +40,7 @@ root.render(
     // TODO: Re-enable StrictMode and improve WebSocket resilience for production
     // <React.StrictMode>
         <Profiler id="AppRoot" onRender={onRenderCallback}>
-            <NodeRpcProvider nodeUrl={url}>
-                <App />
-            </NodeRpcProvider>
+            <App />
         </Profiler>
     // </React.StrictMode>
 );
