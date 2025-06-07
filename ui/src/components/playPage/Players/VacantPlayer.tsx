@@ -53,10 +53,11 @@ import { ethers } from "ethers";
 import PokerProfile from "../../../assets/PokerProfile.svg";
 import { toDisplaySeat } from "../../../utils/tableUtils";
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
-import { useNodeRpc } from "../../../context/NodeRpcContext";
 import type { VacantPlayerProps } from "../../../types/index";
 import PlayerPopUpCard from "./PlayerPopUpCard";
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
+import { joinTable } from "../../../hooks/playerActions/joinTable";
+import { getAccountBalance } from "../../../utils/b52AccountUtils";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
@@ -66,8 +67,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const userAddress = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
 
-        // Get NodeRpcClient
-        const { client, isLoading: clientLoading } = useNodeRpc();
         const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
@@ -102,7 +101,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
 
         const handleConfirmSeat = useCallback(async () => {
-            if (!client || !userAddress || !privateKey || !tableId) {
+            if (!userAddress || !privateKey || !tableId) {
                 setJoinError("Missing required information to join table");
                 return;
             }
@@ -118,13 +117,18 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             setJoinSuccess(false);
 
             try {
-                const buyIn = ethers.parseUnits(storedAmount, 18);
-                const account = await client.getAccount(userAddress);
-                const response = await client.playerJoin(tableId, BigInt(buyIn.toString()), index, account.nonce);
+                // Convert amount to Wei for the join function
+                const buyInWei = ethers.parseUnits(storedAmount, 18).toString();
+                
+                const response = await joinTable(tableId, {
+                    buyInAmount: buyInWei,
+                    seatNumber: index
+                }, 9); // Default to 9 max players
                 
                 setJoinResponse(response);
                 setJoinSuccess(true);
                 setShowConfirmModal(false);
+                setIsJoining(false);
                 
                 // Call onJoin after successful join
                 if (onJoin) {
@@ -135,7 +139,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [client, userAddress, privateKey, tableId, index, onJoin]);
+        }, [userAddress, privateKey, tableId, index, onJoin]);
 
         // Memoize container styles
         const containerStyle = useMemo(() => ({
@@ -240,7 +244,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                 </button>
                                 <button
                                     onClick={handleConfirmSeat}
-                                    disabled={isJoining || clientLoading}
+                                    disabled={isJoining}
                                     className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20 flex items-center"
                                 >
                                     {isJoining ? (

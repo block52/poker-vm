@@ -1,25 +1,33 @@
-import { useTableBet } from "./useTableBet";
-import { useTableFold } from "./useTableFold";
-import { useTableCheck } from "./useTableCheck";
-import { useTableCall } from "./useTableCall";
-import { useTableDeal } from "./useTableDeal";
-import { useTableJoin } from "./useTableJoin";
-import { useTableRaise } from "./useTableRaise";
-import { useTableLeave } from "./useTableLeave";
-import { useTablePostBigBlind } from "././useTablePostBigBlind";
-import { useTablePostSmallBlind } from "./useTablePostSmallBlind";
-import { useTableMuck } from "./useTableMuck";
+import { betHand } from "./betHand";
+import { foldHand } from "./foldHand";
+import { checkHand } from "./checkHand";
+import { callHand } from "./callHand";
+import { dealCards } from "./dealCards";
+import { joinTable } from "./joinTable";
+import { raiseHand } from "./raiseHand";
+import { leaveTable } from "./leaveTable";
+import { postBigBlind } from "./postBigBlind";
+import { postSmallBlind } from "./postSmallBlind";
+import { muckCards } from "./muckCards";
+import { showCards } from "./showCards";
+import { sitIn } from "./sitIn";
+import { sitOut } from "./sitOut";
+import { startNewHand } from "./startNewHand";
 
 export {
-    useTableBet,
-    useTableFold,
-    useTableCheck,
-    useTableCall,
-    useTableDeal,
-    useTableJoin,
-    useTableRaise,
-    useTableLeave,
-    useTablePostBigBlind,
-    useTablePostSmallBlind,
-    useTableMuck
+    betHand,
+    foldHand,
+    checkHand,
+    callHand,
+    dealCards,
+    joinTable,
+    raiseHand,
+    leaveTable,
+    postBigBlind,
+    postSmallBlind,
+    muckCards,
+    showCards,
+    sitIn,
+    sitOut,
+    startNewHand
 };

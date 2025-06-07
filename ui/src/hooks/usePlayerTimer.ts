@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useGameStateContext } from "../context/GameStateContext";
 import { PlayerStatus, PlayerDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { PlayerTimerReturn } from "../types/index";
-import { useTableFold } from "./playerActions/useTableFold";
-import { useTableCheck } from "./playerActions/useTableCheck";
+import { foldHand } from "./playerActions/foldHand";
+import { checkHand } from "./playerActions/checkHand";
 import { usePlayerLegalActions } from "./playerActions/usePlayerLegalActions";
 import { useGameOptions } from "./useGameOptions";
 
@@ -19,8 +19,7 @@ const timeExtensions = new Map<string, { extensionTime: number; hasUsedExtension
 export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTimerReturn => {
     const [currentTime, setCurrentTime] = useState(Date.now());
     const [lastAutoFoldTime, setLastAutoFoldTime] = useState<number>(0);
-    const { foldHand, isFolding } = useTableFold(tableId);
-    const { checkHand } = useTableCheck(tableId);
+    // Functions imported directly - no hook destructuring needed
     const { legalActions } = usePlayerLegalActions();
 
     // Get game state directly from Context - no additional WebSocket connections
@@ -54,9 +53,6 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
     // useRef to hold latest values for the callback
     const latestValues = useRef({
         legalActions,
-        foldHand,
-        checkHand,
-        isFolding,
         lastAutoFoldTime,
         timeoutInSeconds,
         isExecutingAutoAction: false
@@ -101,9 +97,6 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
     // Update ref with latest values on each render
     latestValues.current = {
         legalActions,
-        foldHand,
-        checkHand,
-        isFolding,
         lastAutoFoldTime,
         timeoutInSeconds,
         isExecutingAutoAction: false
@@ -160,9 +153,9 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         latestValues.current.isExecutingAutoAction = true;
         
         // Get latest values from ref
-        const { legalActions, foldHand, checkHand, isFolding, lastAutoFoldTime, timeoutInSeconds } = latestValues.current;
+        const { legalActions, lastAutoFoldTime, timeoutInSeconds } = latestValues.current;
         
-        if (!isNextToAct || !isCurrentUser || !tableId || isFolding) {
+        if (!isNextToAct || !isCurrentUser || !tableId) {
             latestValues.current.isExecutingAutoAction = false;
             return;
         }
@@ -197,11 +190,11 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
             
             if (canCheck) {
                 console.log(`✅ Auto-checking player at seat ${playerSeat} due to ${timeoutInSeconds}-second timeout`);
-                await checkHand({ amount: "0" });
+                await checkHand(tableId!);
                 console.log(`✅ Auto-check successful for seat ${playerSeat}`);
             } else if (canFold) {
                 console.log(`⏰ Auto-folding player at seat ${playerSeat} due to ${timeoutInSeconds}-second timeout`);
-                await foldHand();
+                await foldHand(tableId);
                 console.log(`✅ Auto-fold successful for seat ${playerSeat}`);
             }
         } catch (error) {
