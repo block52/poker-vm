@@ -24,6 +24,7 @@ export enum RPCMethods {
     CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
     DEPLOY_CONTRACT = "deploy_contract",
+    FIND_CONTRACT = "find_contract",
     GET_ACCOUNT = "get_account",
     GET_BALANCE = "get_balance",
     GET_BLOCK = "get_block",
@@ -42,14 +43,15 @@ export enum RPCMethods {
     MINE = "mine",
     MINED_BLOCK_HASH = "mined_block_hash",
     MINT = "mint",
-    NEW = "new",
+    NEW_HAND = "new",
+    NEW_TABLE = "new_table",
     PERFORM_ACTION = "perform_action",
     PURGE = "purge",
     RESET_BLOCKCHAIN = "reset_blockchain",
     SHUTDOWN = "shutdown",
     START = "start",
     STOP = "stop",
-    TRANSFER = "transfer",
+    TRANSFER = "transfer"
 }
 
 export type RPCRequestParams = {
@@ -58,6 +60,7 @@ export type RPCRequestParams = {
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
     [RPCMethods.DEPLOY_CONTRACT]: [string, string, string]; // [nonce, owner, data]
+    [RPCMethods.FIND_CONTRACT]: [string]; // [address]
     [RPCMethods.GET_ACCOUNT]: [string]; // [address]
     [RPCMethods.GET_BALANCE]: [string]; // [address]
     [RPCMethods.GET_BLOCK_BY_HASH]: [string]; // [hash]
@@ -76,8 +79,9 @@ export type RPCRequestParams = {
     [RPCMethods.MINE]: []; // No parameters
     [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
     [RPCMethods.MINT]: [string]; // [depositIndex]
-    [RPCMethods.NEW]: [string, string]; // [to, data]
-    [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number]; // [from, to, action, amount, nonce, index]
+    [RPCMethods.NEW_HAND]: [string, string, number, string]; // [to, nonce, index, data] where data is the seed
+    [RPCMethods.NEW_TABLE]: [string, string, number]; // [schemaAddress, owner, nonce]
+    [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string]; // [from, to, action, amount, nonce, index, data]
     [RPCMethods.PURGE]: [string, string]; // [username, password]
     [RPCMethods.RESET_BLOCKCHAIN]: [string, string]; // [username, password]
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]

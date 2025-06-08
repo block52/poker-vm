@@ -1,13 +1,14 @@
 import { ethers, ZeroAddress } from "ethers";
-import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
 import { getBootNodes } from "../state/nodeManagement";
 import { Node } from "../core/types";
 import { createProvider } from "./provider";
 import { CONTRACT_ADDRESSES } from "./constants";
+import { IBlockchainManagement } from "../state/interfaces";
+import { getBlockchainInstance } from "../state";
 
 export class Validator {
     private readonly stakingContract: ethers.Contract;
-    private readonly blockManager: BlockchainManagement;
+    private readonly blockManager: IBlockchainManagement;
     private validatorCount: number = 0;
     private nodes: Node[] = [];
     private synced: boolean = false;
@@ -74,7 +75,7 @@ export class Validator {
         }
 
         // // For now, we will just use the first validator in the list
-        // const validatorIndex = nextBlockIndex % this.validatorCount;
+        const validatorIndex = nextBlockIndex % this.validatorCount;
         // const { publicKey: validatorAddress } = this.nodes[validatorIndex];
 
         // const node1 = "0xb2b4420e386db7f36d6bc1e123a2fDaBc8364846";

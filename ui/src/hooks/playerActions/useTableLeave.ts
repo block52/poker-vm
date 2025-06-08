@@ -1,84 +1,71 @@
-import { ethers } from "ethers";
-import axios from "axios";
-import useSWRMutation from "swr/mutation";
-import { PROXY_URL } from "../../config/constants";
+import { useState } from "react";
+import { useNodeRpc } from "../../context/NodeRpcContext";
+import { PerformActionResponse } from "@bitcoinbrisbane/block52";
+import { LeaveTableOptions } from "../../types/index";
 
-interface LeaveTableOptions {
-  amount?: string;
-  userAddress?: string | null;
-  privateKey?: string | null;
-  publicKey?: string | null;
-  nonce?: string | number;
-  actionIndex?: number | null;
-}
 
-async function leaveTableFetcher(
-  url: string,
-  { arg }: { arg: LeaveTableOptions }
-) {
-  // Get credentials from localStorage if not provided
-  const userAddress = arg.userAddress || localStorage.getItem("user_eth_public_key");
-  const privateKey = arg.privateKey || localStorage.getItem("user_eth_private_key");
-  const publicKey = arg.publicKey || localStorage.getItem("user_eth_public_key");
-  const { amount = "0", nonce = Date.now().toString(), actionIndex } = arg;
-  
-  if (!userAddress || !privateKey) {
-    throw new Error("Missing user address or private key");
-  }
-
-  // Create a wallet to sign the message
-  const wallet = new ethers.Wallet(privateKey);
-  
-  // Create message to sign in format that matches the action pattern
-  // Format: "leave" + amount + tableId + timestamp
-  const timestamp = Math.floor(Date.now() / 1000);
-  const messageToSign = `leave${amount}${url.split("/").pop()}${timestamp}`;
-  
-  // Sign the message
-  const signature = await wallet.signMessage(messageToSign);
-
-  // Prepare request data that matches the proxy's expected format for PERFORM_ACTION
-  const requestData = {
-    userAddress,
-    amount,
-    signature,
-    publicKey: publicKey || userAddress,
-    nonce: nonce || timestamp,
-    timestamp,
-    index: actionIndex !== undefined && actionIndex !== null ? actionIndex : undefined
-  };
-
-  // Send the request to the proxy server
-  const response = await axios.post(url, requestData);
-  return response.data;
-}
-
+/**
+ * Custom hook to handle leaving a poker table
+ * @param tableId The ID of the table where the action will be performed
+ * @returns Object containing functions for performing leave table action
+ */
 export function useTableLeave(tableId: string | undefined) {
-  const { trigger, isMutating, error, data } = useSWRMutation(
-    tableId ? `${PROXY_URL}/table/${tableId}/leave` : null,
-    leaveTableFetcher
-  );
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+    const [data, setData] = useState<PerformActionResponse | null>(null);
+    const { client } = useNodeRpc();
 
-  // Get player's stack from the table data if needed
-  const leaveTableWithStack = async (options: LeaveTableOptions = {}) => {
-    // If no amount was provided, we could fetch the stack here if needed
-    return trigger(options);
-  };
+    /**
+     * Execute a leave table action
+     * @param options Options for leaving the table, including amount
+     * @returns Promise resolving to the result of the leave action
+     */
+    const leaveTable = async (options: LeaveTableOptions): Promise<PerformActionResponse> => {
+        if (!tableId) {
+            const err = new Error("Table ID is required");
+            setError(err);
+            return Promise.reject(err);
+        }
 
-  const result = {
-    leaveTable: tableId ? leaveTableWithStack : null,
-    isLeaving: isMutating,
-    error,
-    data
-  };
+        setIsLoading(true);
+        setError(null);
 
-  console.log("[useTableLeave] Returns:", {
-    hasLeaveFunction: !!result.leaveTable,
-    isLeaving: result.isLeaving,
-    hasError: !!result.error,
-    hasData: !!result.data,
-    tableId
-  });
+        try {
+            // Check if the client is available
+            if (!client) {
+                const err = new Error("Node RPC client not available");
+                setError(err);
+                return Promise.reject(err);
+            }
 
-  return result;
+            // Convert the amount from string to bigint
+            const amountBigInt = BigInt(options.amount);
+            
+            console.log("👋 Leaving table:", {
+                tableId,
+                amount: amountBigInt.toString(),
+                nonce: options.nonce
+            });
+
+            // Call playerLeave method on the client
+            const response = await client.playerLeave(tableId, amountBigInt, options.nonce);
+            console.log("👋 Leave table response:", response);
+            
+            setData(response);
+            return response;
+        } catch (err) {
+            console.error("👋 Leave table error:", err);
+            setError(err instanceof Error ? err : new Error("Failed to leave table"));
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return {
+        leaveTable,
+        isLeaving: isLoading,
+        error,
+        data
+    };
 }

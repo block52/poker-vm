@@ -1,9 +1,39 @@
-import { PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { 
+    LegalActionDTO, 
+    PlayerActionType, 
+    PlayerDTO, 
+    GameOptionsDTO, 
+    TexasHoldemRound, 
+    GameType, 
+    ActionDTO,
+    PlayerStatus,
+    GameOptionsResponse,
+} from "@bitcoinbrisbane/block52";
 
-// types.ts
+// Base type for all hook returns with common loading and error state
+export interface BaseHookReturn {
+    isLoading: boolean;
+    error: Error | null;
+}
+
+// Type for error logs
+export interface ErrorLog {
+    id: string;
+    message: string;
+    timestamp: Date;
+    severity: "error" | "warning" | "info";
+    source: "API" | "UI" | "System";
+    details?: any;
+}
+
 export interface LastActionType {
     action: string;
     amount: number;
+}
+
+export interface StartNewHandParams {
+    nonce?: number | string;
+    seed?: string;
 }
 
 export interface PlayerContextType {
@@ -20,12 +50,6 @@ export interface PlayerContextType {
     nextToAct: number;
     playerSeats: number[];
     communityCards: string[];
-    // updatePlayer: (index: number, updatedPlayer: Player) => void;
-    // setPlayerBalance: (index: number, balance: number) => void;
-    // setPlayerPot: (index: number, balance: number) => void;
-    // handleStatusChange: (index: number, choice: number, updatedPlayers: Player[]) => void;
-    // moveToNextPlayer: (index: number, updatedPlayers: Player[]) => void;
-    // changeToThinkingBeforeTimeout: () => void;
     setPlayerAction: (action: PlayerActionType, amount?: number) => void;
     dealerIndex: number;
     lastPot: number;
@@ -40,36 +64,33 @@ export interface PlayerContextType {
 export type Player = {
     address: string;
     seat: number;
-    legalActions: LegalAction[];
+    legalActions: LegalActionDTO[];
     timeout: number;
-}
-
-export type LegalAction = {
-    action: string;
-}
+};
 
 export type TableData = {
     smallBlindPosition: number;
     bigBlindPosition: number;
     nextToAct: number;
     dealer: number;
-    players: Player[];
+    players: PlayerDTO[];
     round: string;
     pots: string[];
-}
+};
 
 type Limits = {
     min: string;
     max: string;
-}
+};
 
+//todo tidy up this type
 export type TableStatus = {
     isInTable: boolean;
     isPlayerTurn: boolean;
     seat: number;
     stack: string;
-    status: string;
-    availableActions: LegalAction[];
+    status: PlayerStatus;
+    availableActions: LegalActionDTO[];
     canPostSmallBlind: boolean;
     canPostBigBlind: boolean;
     canCheck: boolean;
@@ -83,4 +104,219 @@ export type TableStatus = {
     smallBlindAmount: string;
     bigBlindAmount: string;
     isSmallBlindPosition: boolean;
+};
+
+// Type for PositionArray component props
+export interface PositionArray {
+    left?: string;
+    top?: string;
+    bottom?: string;
+    right?: string;
+    color?: string;
+}
+
+export interface LeaveTableOptions {
+    amount: string;
+    actionIndex?: number;
+    nonce?: number;
+}
+
+// Type for VacantPlayer component props
+export interface VacantPlayerProps {
+    index: number;
+    left: string;
+    top: string;
+    onJoin?: () => void;
+}
+
+// Type for PlayerCard component props
+export type PlayerCardProps = {
+    id: number;
+    label: string;
+    color?: string;
+    isVacant?: boolean; // Whether this is a vacant seat
+    onClose: () => void;
+    setStartIndex: (index: number) => void;
+};
+
+export interface PlayerProps {
+    left?: string;
+    top?: string;
+    index: number;
+    currentIndex: number;
+    color?: string;
+    status?: string;
+}
+
+export interface TurnAnimationProps {
+    index: number;
+}
+
+export interface WinAnimationProps {
+    index: number;
+}
+
+// Type for the return value of useGameProgress hook
+export interface GameProgressReturn extends BaseHookReturn {
+    isGameInProgress: boolean;
+    activePlayers: PlayerDTO[];
+    playerCount: number;
+    handNumber: number;
+    actionCount: number;
+    nextToAct: number;
+    previousActions: ActionDTO[];
+}
+
+// Type for the return value of useCardAnimations hook
+export interface CardAnimationsReturn {
+    flipped1: boolean;
+    flipped2: boolean;
+    flipped3: boolean;
+    showThreeCards: boolean;
+}
+
+// Type for the return value of useTableState hook
+export interface TableStateReturn extends BaseHookReturn {
+    currentRound: TexasHoldemRound;
+    totalPot: string;
+    formattedTotalPot: string;
+    tableSize: number;
+    tableType: GameType;
+    roundType: TexasHoldemRound;
+}
+
+// Type for the return value of useChipPositions hook
+export interface ChipPositionsReturn {
+    chipPositionArray: PositionArray[];
+    tableSize: number;
+}
+
+// Type for the return value of useDealerPosition hook
+export interface DealerPositionReturn extends BaseHookReturn {
+    dealerButtonPosition: { left: string; top: string };
+    isDealerButtonVisible: boolean;
+}
+
+// Type for the return value of useFindGames hook
+export interface FindGamesReturn extends BaseHookReturn {
+    games: GameOptionsResponse[];
+    refetch: () => Promise<void>;
+}
+
+// Type for the return value of useMinAndMaxBuyIns hook
+export interface MinAndMaxBuyInsReturn extends BaseHookReturn {
+    minBuyInWei: string;
+    maxBuyInWei: string;
+}
+
+// Type for the return value of useNextToActInfo hook
+export interface NextToActInfoReturn extends BaseHookReturn {
+    seat: number | null;
+    player: PlayerDTO | null;
+    isCurrentUserTurn: boolean;
+    availableActions: LegalActionDTO[];
+    timeRemaining: number;
+}
+
+// Type for the return value of usePlayerChipData hook
+export interface PlayerChipDataReturn extends BaseHookReturn {
+    getChipAmount: (seatIndex: number) => string;
+}
+
+// Type for the return value of usePlayerData hook
+export interface PlayerDataReturn extends BaseHookReturn {
+    playerData: PlayerDTO | null;
+    stackValue: number;
+    isFolded: boolean;
+    isAllIn: boolean;
+    holeCards: string[];
+    round: TexasHoldemRound | null;
+}
+
+// Type for the return value of usePlayerSeatInfo hook
+export interface PlayerSeatInfoReturn extends BaseHookReturn {
+    currentUserSeat: number;
+    userDataBySeat: Record<number, PlayerDTO>;
+}
+
+// Type for the return value of usePlayerTimer hook
+export interface PlayerTimerReturn extends BaseHookReturn {
+    playerStatus: PlayerStatus;
+    timeoutValue: number;
+    progress: number;
+    timeRemaining: number;
+    isActive: boolean;
+    extendTime?: () => void;
+    hasUsedExtension?: boolean;
+    canExtend?: boolean;
+    isCurrentUser?: boolean;
+    isCurrentUserTurn?: boolean;
+}
+
+// Type for showing cards data
+export interface ShowingCardData {
+    address: string;
+    holeCards: string[];
+    seat: number;
+}
+
+// Type for the return value of useShowingCardsByAddress hook
+export interface ShowingCardsByAddressReturn extends BaseHookReturn {
+    showingPlayers: ShowingCardData[];
+    isShowdown: boolean;
+}
+
+// Type for the return value of useTableAnimations hook
+export interface TableAnimationsReturn extends BaseHookReturn {
+    tableSize: number;
+}
+
+// Type for the return value of useGameOptions hook
+export interface GameOptionsReturn extends BaseHookReturn {
+    gameOptions: Required<GameOptionsDTO> | null;
+}
+
+// Type for the return value of useTableData hook
+export interface TableDataReturn extends BaseHookReturn {
+    tableDataType: string;
+    tableDataAddress: string;
+    tableDataSmallBlind: string;
+    tableDataBigBlind: string;
+    tableDataSmallBlindPosition: number;
+    tableDataBigBlindPosition: number;
+    tableDataDealer: number;
+    tableDataPlayers: PlayerDTO[];
+    tableDataCommunityCards: string[];
+    tableDataDeck: string;
+    tableDataPots: string[];
+    tableDataNextToAct: number;
+    tableDataRound: TexasHoldemRound;
+    tableDataWinners: string[];
+    tableDataSignature: string;
+}
+
+// Type for the return value of useTableTurnIndex hook
+export interface TableTurnIndexReturn extends BaseHookReturn {
+    nextTurnIndex: number;
+}
+
+export interface VacantSeatResponse extends BaseHookReturn {
+    isUserAlreadyPlaying: boolean;
+    isSeatVacant: (seatIndex: number) => boolean;
+    canJoinSeat: (seatIndex: number) => boolean;
+}
+
+
+export interface WinnerInfo {
+    seat: number;
+    address: string;
+    amount: string | number;
+    formattedAmount: string;
+    winType?: string;
+}
+
+
+export interface WinnerInfoReturn {
+    winnerInfo: WinnerInfo[] | null;
+    error: Error | null;
 }

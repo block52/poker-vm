@@ -16,7 +16,8 @@ export enum PlayerActionType {
 export enum NonPlayerActionType {
     DEAL = "deal",
     JOIN = "join",
-    LEAVE = "leave"
+    LEAVE = "leave",
+    NEW_HAND = "new-hand",
 }
 
 export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
@@ -47,12 +48,6 @@ export enum TexasHoldemRound {
     END = "end"
 }
 
-export type Positions = {
-    dealer?: number;
-    smallBlind?: number;
-    bigBlind?: number;
-}
-
 export type GameOptions = {
     minBuyIn: bigint;
     maxBuyIn: bigint;
@@ -64,13 +59,13 @@ export type GameOptions = {
 };
 
 export type GameOptionsDTO = {
-    minBuyIn: string;
-    maxBuyIn: string;
-    minPlayers: number;
-    maxPlayers: number;
-    smallBlind: string;
-    bigBlind: string;
-    timeout: number;
+    minBuyIn?: string;
+    maxBuyIn?: string;
+    minPlayers?: number;
+    maxPlayers?: number;
+    smallBlind?: string;
+    bigBlind?: string;
+    timeout?: number;
 };
 
 // This is the type of the last action of a player
@@ -81,6 +76,7 @@ export type ActionDTO = {
     amount: string;
     round: TexasHoldemRound;
     index: number;
+    timestamp: number;
 };
 
 export type LegalActionDTO = {
@@ -92,7 +88,10 @@ export type LegalActionDTO = {
 
 export type WinnerDTO = {
     address: string;
-    amount: number;
+    amount: string;
+    cards: string[] | undefined;
+    name: string | undefined;
+    description: string | undefined;
 };
 
 export type PlayerDTO = {
@@ -120,12 +119,14 @@ export type TexasHoldemGameState = {
     maxPlayers: number;
     smallBlind: string;
     bigBlind: string;
-    positions: Positions;
+    dealer: number;
     players: string[];
     deck: string;
     communityCards: string[];
     pots: string[];
-    nextToAct: number;
+    lastActedSeat: number;
+    actionCount: number;
+    handNumber: number;
     round: TexasHoldemRound;
     winners: string[];
     signature: string;
@@ -135,16 +136,18 @@ export type TexasHoldemStateDTO = {
     type: "cash";
     address: string;
     gameOptions: GameOptionsDTO;
-    smallBlindPosition: number;
-    bigBlindPosition: number;
-    dealer: number;
+    smallBlindPosition?: number;
+    bigBlindPosition?: number;
+    dealer?: number;
     players: PlayerDTO[];
     communityCards: string[];
     deck: string; // Assume this will be encrypted
     pots: string[];
-    lastToAct: number;
+    lastActedSeat?: number;
     nextToAct: number;
     previousActions: ActionDTO[];
+    actionCount: number;
+    handNumber: number;
     round: TexasHoldemRound;
     winners: WinnerDTO[];
     signature: string;
@@ -163,3 +166,35 @@ export type Card = {
     value: number;
     mnemonic: string;
 };
+
+export type GameOptionsResponse = {
+    address: string;
+    gameOptions: GameOptionsDTO;
+};
+
+export type TransactionResponse = {
+    nonce: string;
+    to: string;
+    from: string;
+    value: string;
+    hash: string;
+    signature: string;
+    timestamp: string;
+    data?: string;
+}
+
+export type GameStateResponse = {
+    state: TexasHoldemStateDTO;
+}
+
+export type PerformActionResponse= {
+    state: TexasHoldemStateDTO;
+    nonce: string;
+    to: string;
+    from: string;
+    value: string;
+    hash: string;
+    signature: string;
+    timestamp: string;
+    data?: string;
+}

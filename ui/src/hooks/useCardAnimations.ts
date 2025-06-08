@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
-import { useGameState } from "./useGameState";
+import { useGameStateContext } from "../context/GameStateContext";
+import { CardAnimationsReturn } from "../types/index";
 
 /**
  * Custom hook to handle card animations
- * @param tableId The ID of the table
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing animation state for cards
  */
-export const useCardAnimations = (tableId?: string) => {
+export const useCardAnimations = (tableId?: string): CardAnimationsReturn => {
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);
 
-    // Get the data to determine if we should show animations
-    const { gameState } = useGameState(tableId);
+    // Get game state directly from Context - no additional WebSocket connections
+    const { gameState } = useGameStateContext();
 
     // Derived state to replace showThreeCards
     const communityCards = gameState?.communityCards || [];

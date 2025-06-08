@@ -1,6 +1,6 @@
 {
     "name": "@bitcoinbrisbane/block52",
-    "version": "1.0.84",
+    "version": "1.0.145",
     "author": "@bitcoinbrisbane",
     "license": "MIT",
     "description": "SDK for interacting with the Block52 Node",
@@ -9,7 +9,8 @@
     "scripts": {
         "build": "tsc",
         "clean": "rm -rf dist",
-        "prepare": "rm -rf dist && npm run build"
+        "prepare": "rm -rf dist && npm run build",
+        "test": "npx ts-node test.ts"
     },
     "files": [
         "dist"
@@ -17,6 +18,7 @@
     "dependencies": {
         "axios": "^1.8.1",
         "bigunit": "^1.2.5",
+        "dotenv": "^16.5.0",
         "ethers": "^6.13.4"
     },
     "devDependencies": {

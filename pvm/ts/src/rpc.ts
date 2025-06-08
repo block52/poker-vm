@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import {
     AccountCommand,
@@ -7,10 +7,9 @@ import {
     BlockCommandParams,
     BurnCommand,
     CreateAccountCommand,
-    CreateContractSchemaCommand,
     DeployContractCommand,
+    FindGameStateCommand,
     GameStateCommand,
-    GetAllContractSchemasCommand,
     GetBlocksCommand,
     GetNodesCommand,
     GetTransactionCommand,
@@ -21,8 +20,9 @@ import {
     MineCommand,
     MintCommand,
     NewCommand,
-    PerformActionCommand,
+    NewTableCommand,
     PurgeMempoolCommand,
+    PerformActionCommandWithResult,
     ReceiveMinedBlockHashCommand,
     ResetCommand,
     SharedSecretCommand,
@@ -36,6 +36,7 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
+import { GameManagement } from "./state/mongodb/gameManagement";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -117,6 +118,17 @@ export class RPC {
 
         try {
             switch (method) {
+
+                case RPCMethods.FIND_CONTRACT: {
+                    if (!request.params) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [query] = request.params as RPCRequestParams[RPCMethods.FIND_CONTRACT];
+                    const command = new FindGameStateCommand(validatorPrivateKey, query);
+                    result = await command.execute();
+                    break;
+                }
+
                 case RPCMethods.GET_ACCOUNT: {
                     if (!request.params) {
                         return makeErrorRPCResponse(id, "Invalid params");
@@ -168,14 +180,6 @@ export class RPC {
                     };
 
                     const command = new BlockCommand(params, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
-
-                case RPCMethods.GET_CONTRACT_SCHEMA: {
-                    // const [hash] = request.params as RPCRequestParams[RPCMethods.GET_CONTRACT_SCHEMA];
-                    // const command = new GetContractSchemaCommand(hash, validatorPrivateKey);
-                    const command = new GetAllContractSchemasCommand(10, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
@@ -312,12 +316,12 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.CREATE_CONTRACT_SCHEMA: {
-                    const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
-                    const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
+                // case RPCMethods.CREATE_CONTRACT_SCHEMA: {
+                //     const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
+                //     const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
+                //     result = await command.execute();
+                //     break;
+                // }
 
                 case RPCMethods.CREATE_ACCOUNT: {
                     const [privateKey] = request.params as RPCRequestParams[RPCMethods.CREATE_ACCOUNT];
@@ -327,17 +331,31 @@ export class RPC {
                 }
 
                 case RPCMethods.PERFORM_ACTION: {
-                    const [from, to, action, amount, nonce, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
-                    const index = Number(data);
+                    const [from, to, action, amount, nonce, index, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
                     const _action = action as PlayerActionType | NonPlayerActionType;
-                    const command = new PerformActionCommand(from, to, index, BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey);
+                    const command = new PerformActionCommandWithResult(from, to, Number(index), BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey, data);
                     result = await command.execute();
                     break;
                 }
 
-                case RPCMethods.NEW: {
-                    const [to, data] = request.params as RPCRequestParams[RPCMethods.NEW];
-                    const command = new NewCommand(to, validatorPrivateKey, data);
+                case RPCMethods.NEW_HAND: {
+                    // This is deprecated, use perform_action instead with action = "new_hand"
+                    const [to, nonce, index, data] = request.params as RPCRequestParams[RPCMethods.NEW_HAND];
+                    const command = new NewCommand(to, index, Number(nonce), validatorPrivateKey, data);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.NEW_TABLE: {
+                    // The SDK sends [schemaAddress, owner, nonce] but we now also accept timestamp for uniqueness
+                    const [gameOptionsString, owner, nonce, timestamp] = request.params as [string, string, number, string];
+                    const gameOptions: GameOptions = GameManagement.parseSchema(gameOptionsString);
+                    console.log("🏗️ NEW_TABLE RPC called:");
+                    console.log(`Game Options: ${gameOptionsString}`);
+                    console.log(`Owner: ${owner}`);
+                    console.log(`Nonce: ${nonce}`);
+                    console.log(`Timestamp: ${timestamp || "not provided"}`);
+                    const command = new NewTableCommand(owner, gameOptions, BigInt(nonce || 0), validatorPrivateKey, timestamp);
                     result = await command.execute();
                     break;
                 }

@@ -1,38 +1,35 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Block, Transaction } from "../models";
-import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
-import { GameManagement } from "../state/gameManagement";
-import { getTransactionInstance, TransactionManagement } from "../state/transactionManagement";
+import { getGameManagementInstance } from "../state/index";
+import { getBlockchainInstance, getTransactionInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import contractSchemas from "../schema/contractSchemas";
 import { GameStateCommand } from "./gameStateCommand";
-import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
 import TexasHoldemGame from "../engine/texasHoldem";
-import { ContractSchemaManagement, getContractSchemaManagement } from "../state/contractSchemaManagement";
 import { IGameStateDocument } from "../models/interfaces";
 import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
+import { IBlockchainManagement, IGameManagement, ITransactionManagement } from "../state/interfaces";
 
 export class MineCommand implements ISignedCommand<Block | null> {
     private readonly mempool: Mempool;
-    private readonly accountManagement: AccountManagement;
-    private readonly blockchainManagement: BlockchainManagement;
-    private readonly transactionManagement: TransactionManagement;
-    private readonly gameStateManagement: GameManagement;
-    private readonly contractSchemaManagement: ContractSchemaManagement;
+    private readonly blockchainManagement: IBlockchainManagement;
+    private readonly transactionManagement: ITransactionManagement;
+    private readonly gameStateManagement: IGameManagement;
 
-    constructor(private readonly privateKey: string) {
+    constructor(private readonly privateKey: string, private readonly expire: boolean = false) {
         this.mempool = getMempoolInstance();
-        this.accountManagement = getAccountManagementInstance();
         this.blockchainManagement = getBlockchainInstance();
         this.transactionManagement = getTransactionInstance();
-        this.gameStateManagement = new GameManagement();
-        this.contractSchemaManagement = getContractSchemaManagement();
+        this.gameStateManagement = getGameManagementInstance();
     }
 
     public async execute(): Promise<ISignedResponse<Block | null>> {
-        await this.expireActions();
+        if (this.expire) {
+            console.log("Expiring actions");
+            await this.expireActions();
+        }
+        
         const txs = this.mempool.get();
 
         const validTxs: Transaction[] = this.validate(txs);
@@ -71,14 +68,15 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
     private async processGameTransactions(txs: Transaction[]) {
         console.log(`Processing ${txs.length} game transactions`);
-        const validGameTxs = await this.filterGameTransactions(txs);
 
+        const validGameTxs = await this.filterGameTransactions(txs);
         console.log(`Valid game transactions: ${validGameTxs.length}`);
 
         // find unique to addresses from the transactions
         const uniqueAddresses = new Set<string>();
         for (let i = 0; i < validGameTxs.length; i++) {
             const tx = validGameTxs[i];
+            console.log(`Adding tx ${tx.to}: ${tx.hash} for processing`);
             uniqueAddresses.add(tx.to);
         }
 
@@ -102,7 +100,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
         }
     }
 
-    async expireActions(): Promise<void> {
+    private async expireActions(): Promise<void> {
         // Look for expired actions
         const gameStates = await this.gameStateManagement.getAll();
         const gameStateAddresses = gameStates.map((gameState: IGameStateDocument) => gameState.address);
@@ -112,32 +110,17 @@ export class MineCommand implements ISignedCommand<Block | null> {
             return;
         }
 
-        const gameOptionsCache = new Map<string, GameOptions>();
-
-        for (let i = 0; i < gameStateAddresses.length; i++) {
-            const address = gameStateAddresses[i];
-            // Todo: do in parallel
-            const gameOptions = await this.contractSchemaManagement.getGameOptions(address);
-            gameOptionsCache.set(address, gameOptions);
-        }
-
         const now = new Date();
         for (let i = 0; i < gameStates.length; i++) {
             const gameState = gameStates[i];
-            const gameOptions = gameOptionsCache.get(gameState.address);
 
-            if (!gameOptions) {
-                console.warn(`Game options not found for address ${gameState.address}`);
-                continue;
-            }
-
-            const game = TexasHoldemGame.fromJson(gameState.state, gameOptions);
+            const game = TexasHoldemGame.fromJson(gameState.state, gameState.gameOptions);
             const turn = game.getLastRoundAction();
             if (turn) {
                 const expirationDate = new Date(turn.timestamp);
-                expirationDate.setSeconds(expirationDate.getSeconds() + gameOptions.timeout);
+                expirationDate.setSeconds(expirationDate.getSeconds() + gameState.gameOptions.timeout);
 
-                const turnIndex = game.getTurnIndex();
+                const turnIndex = game.getActionIndex();
 
                 if (now > expirationDate) {
                     const transaction = new Transaction(
@@ -149,7 +132,8 @@ export class MineCommand implements ISignedCommand<Block | null> {
                         Date.now(),
                         0n,
                         undefined,
-                        `${PlayerActionType.FOLD}-${turnIndex}`);
+                        `${PlayerActionType.FOLD},${turnIndex}`
+                    );
 
                     this.mempool.add(transaction);
                     console.log(`Expired action for game ${gameState.address} and player ${turn.playerId}`);
@@ -163,16 +147,24 @@ export class MineCommand implements ISignedCommand<Block | null> {
 
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
-            const schema = await contractSchemas.findOne({ address: tx.to });
+            const game = await this.gameStateManagement.getByAddress(tx.to);
 
-            if (!schema) {
+            if (!game) {
+                console.log(`Game not found for address ${tx.to}`);
                 continue;
             }
 
-            validTxs.push(tx);
+            // Check if the transaction is valid
+            if (tx.verify()) {
+                console.log(`Valid transaction for address ${tx.to}: ${tx.hash}`);
+                validTxs.push(tx);
+            } else {
+                console.warn(`Invalid transaction for address ${tx.to}: ${tx.hash}`);
+            }
         }
 
-        return validTxs;
+        console.log(`Filtered game transactions: ${validTxs.length}`);
+        return validTxs.sort((a, b) => a.timestamp - b.timestamp);
     }
 
     private validate(txs: Transaction[]): Transaction[] {
@@ -189,16 +181,39 @@ export class MineCommand implements ISignedCommand<Block | null> {
         const validTxs: Transaction[] = [];
         let duplicateCount = 0;
 
+        // // Do in parallel
+        // const promises = txs.map(async (tx) => {
+        //     const exists = await this.transactionManagement.exists(tx.hash);
+        //     if (exists) {
+        //         duplicateCount++;
+        //         return null;
+        //     }
+        //     return tx;
+        // });
+
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
             const exists = await this.transactionManagement.exists(tx.hash);
-
             if (exists) {
+                console.warn(`Duplicate transaction found: ${tx.hash}`);
                 duplicateCount++;
                 continue;
             }
+            console.log(`Adding transaction: ${tx.hash}`);
             validTxs.push(tx);
         }
+
+        // // const results = await Promise.all(promises);
+        // for (const result of results) {
+        //     if (result) {
+        //         validTxs.push(result);
+        //     }
+        // }
+
+        validTxs.sort((a, b) => a.timestamp - b.timestamp);
+
+        console.log(`MineCommand: Duplicate transactions: ${duplicateCount}`);
+        console.log(`MineCommand: Valid transactions: ${validTxs.length}`);
         return validTxs;
     }
 }

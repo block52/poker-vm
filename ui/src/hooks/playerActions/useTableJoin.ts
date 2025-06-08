@@ -1,79 +1,75 @@
 // ui/src/hooks/useTableJoin.ts
-import { ethers } from "ethers";
-import axios from "axios";
 import useSWRMutation from "swr/mutation";
-import { PROXY_URL } from "../../config/constants";
+import { useNodeRpc } from "../../context/NodeRpcContext";
+import { JoinTableOptions } from "./types";
 
-interface JoinTableOptions {
-  buyInAmount: string;
-  userAddress: string | null;
-  privateKey: string | null;
-  publicKey: string | null;
-  nonce?: string | number;
-  index?: number;
-}
+async function joinTableFetcher(_url: string, { arg }: { arg: JoinTableOptions }) {
+    const { buyInAmount, privateKey, nonce = Date.now().toString(), actionIndex = 0, seatNumber } = arg;
 
-async function joinTableFetcher(
-  url: string,
-  { arg }: { arg: JoinTableOptions }
-) {
-  const { buyInAmount, userAddress, privateKey, publicKey, nonce = Date.now().toString(), index = 0 } = arg;
-  
-  if (!userAddress || !privateKey) {
-    throw new Error("Missing user address or private key");
-  }
+    if (!privateKey) {
+        throw new Error("Missing private key");
+    }
 
-  console.log("Joining table with index:", index);
+    // Get the client from the window object (will be set in useTableJoin)
+    const client = (window as any).__nodeRpcClient;
+    if (!client) {
+        throw new Error("Node RPC client not available");
+    }
 
-  // Create a wallet to sign the message
-  const wallet = new ethers.Wallet(privateKey);
-  
-  // Create message to sign in format that matches the action pattern
-  // Format: "join" + amount + tableId + timestamp
-  const timestamp = Math.floor(Date.now() / 1000);
-  const messageToSign = `join${buyInAmount}${url.split("/").pop()}${timestamp}`;
+    const tableId = _url.split("_")[1]; // Extract table ID from the key
 
-  // Sign the message
-  const signature = await wallet.signMessage(messageToSign);
+    console.log("🎮 Join table attempt");
+    console.log("🎮 Using action index:", actionIndex);
+    console.log("🎮 Buy-in amount:", buyInAmount);
+    console.log("🎮 Seat number:", seatNumber !== undefined ? seatNumber : "auto-assign");
+    console.log("🎮 Using nonce:", nonce);
 
-  // Prepare request data that matches the proxy's expected format for PERFORM_ACTION
-  const requestData = {
-    userAddress,
-    buyInAmount,
-    signature,
-    publicKey: publicKey || userAddress,
-    nonce: nonce,
-    timestamp,
-    index
-  };
+    try {
+        // Convert the buyInAmount from string to bigint
+        const buyInAmountBigInt = BigInt(buyInAmount);
+        
+        // Use the client's playerJoin method
+        const response = await client.playerJoin(
+            tableId,
+            buyInAmountBigInt,
+            seatNumber !== undefined ? seatNumber : 0, // Use specified seat or default to 0
+            typeof nonce === "number" ? nonce : parseInt(nonce.toString())
+        );
 
-  console.log("Join table request:", requestData);
-
-  // Send the request to the proxy server
-  const response = await axios.post(url, requestData);
-  return response.data;
+        console.log("🎮 Join table response:", response);
+        return response;
+    } catch (error) {
+        console.error("🎮 Join table error:", error);
+        throw error;
+    }
 }
 
 export function useTableJoin(tableId: string | undefined) {
-  const { trigger, isMutating, error, data } = useSWRMutation(
-    tableId ? `${PROXY_URL}/table/${tableId}/join` : null,
-    joinTableFetcher
-  );
+    // Get the Node RPC client
+    const { client } = useNodeRpc();
+    
+    // Store the client in a global variable so it can be accessed in the fetcher
+    // This is a workaround since we can't pass the client directly to the fetcher
+    if (client) {
+        (window as any).__nodeRpcClient = client;
+    }
 
-  const result = {
-    joinTable: tableId ? trigger : null,
-    isJoining: isMutating,
-    error,
-    data
-  };
+    const { trigger, isMutating, error, data } = useSWRMutation(
+        tableId ? `join_${tableId}` : null, 
+        joinTableFetcher
+    );
 
-  console.log("[useTableJoin] Returns:", {
-    hasJoinFunction: !!result.joinTable,
-    isJoining: result.isJoining,
-    hasError: !!result.error,
-    hasData: !!result.data,
-    tableId
-  });
+    // Add better error handling
+    if (error) {
+        console.error("Join table hook error:", error instanceof Error ? error.message : String(error));
+    }
 
-  return result;
+    return {
+        joinTable: tableId 
+            ? (params: JoinTableOptions) => trigger(params)
+            : null,
+        isJoining: isMutating,
+        error,
+        data
+    };
 }

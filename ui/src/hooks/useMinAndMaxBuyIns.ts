@@ -1,57 +1,38 @@
-import useSWR from "swr";
-import axios from "axios";
-import { ethers } from "ethers";
-import { PROXY_URL } from "../config/constants";
-
-// Define the fetcher function
-const fetcher = (url: string) => {
-  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-  console.log(`[useMinAndMaxBuyIns] Fetching data at: ${new Date().toISOString()}`);
-  return axios.get(`${url}?userAddress=${userAddress}`).then(res => {
-    console.log(`[useMinAndMaxBuyIns] Received response at: ${new Date().toISOString()}`);
-    return res.data;
-  });
-};
+import { useGameStateContext } from "../context/GameStateContext";
+import { MinAndMaxBuyInsReturn } from "../types/index";
 
 /**
  * Custom hook to fetch min and max buy-in values for a table
- * @param tableId The table ID to fetch limits for
- * @returns Object containing min/max buy-in values in both wei and formatted values
+ * 
+ * NOTE: Min and max buy-in values are handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time buy-in data from that context.
+ * 
+ * @returns Object containing min/max buy-in values in wei
  */
-export const useMinAndMaxBuyIns = (tableId?: string) => {
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading, mutate } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      // Refresh every 30 seconds and when window is focused
-      refreshInterval: 30000,
-      revalidateOnFocus: true
-    }
-  );
+export const useMinAndMaxBuyIns = (): MinAndMaxBuyInsReturn => {
+  // Get game state directly from Context - real-time data via WebSocket
+  const { gameState, isLoading, error } = useGameStateContext();
 
   // Default values in case of error or loading
-  const defaultValues = {
+  const defaultValues: MinAndMaxBuyInsReturn = {
     minBuyInWei: "10000000000000000", // 0.01 ETH
     maxBuyInWei: "1000000000000000000", // 1 ETH
-    minBuyInFormatted: "0.01",
-    maxBuyInFormatted: "1.0",
     isLoading,
-    error,
-    refresh: mutate
+    error
   };
 
   // If still loading or error occurred, return default values
-  if (isLoading || error || !data || !data.data) {
+  if (isLoading || error || !gameState) {
     return defaultValues;
   }
 
   try {
-    // Extract game options from the data
-    const gameOptions = data.data.gameOptions;
+    // Extract game options from the game state
+    const gameOptions = gameState.gameOptions;
     
     if (!gameOptions) {
-      console.warn("No game options found in table data");
+      console.warn("No game options found in game state");
       return defaultValues;
     }
 
@@ -59,32 +40,19 @@ export const useMinAndMaxBuyIns = (tableId?: string) => {
     const minBuyInWei = gameOptions.minBuyIn || defaultValues.minBuyInWei;
     const maxBuyInWei = gameOptions.maxBuyIn || defaultValues.maxBuyInWei;
 
-    // Format values to human-readable form
-    const minBuyInFormatted = Number(ethers.formatUnits(minBuyInWei, 18)).toFixed(2);
-    const maxBuyInFormatted = Number(ethers.formatUnits(maxBuyInWei, 18)).toFixed(2);
-
-    const result = {
+    const result: MinAndMaxBuyInsReturn = {
       minBuyInWei,
       maxBuyInWei,
-      minBuyInFormatted,
-      maxBuyInFormatted,
-      isLoading,
-      error,
-      refresh: mutate
+      isLoading: false,
+      error: null
     };
-
-    console.log("[useMinAndMaxBuyIns] Returns:", {
-      minBuyInWei,
-      maxBuyInWei,
-      minBuyInFormatted,
-      maxBuyInFormatted,
-      isLoading,
-      hasError: !!error
-    });
 
     return result;
   } catch (err) {
     console.error("Error parsing buy-in values:", err);
-    return defaultValues;
+    return {
+      ...defaultValues,
+      error: err instanceof Error ? err : new Error("Error parsing buy-in values")
+    };
   }
 };

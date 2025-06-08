@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import "./QRDeposit.css"; // Import the CSS file with animations
 import { QRCodeSVG } from "qrcode.react";
 import { Eip1193Provider, ethers, parseUnits } from "ethers";
@@ -7,37 +7,15 @@ import { PROXY_URL } from "../config/constants";
 import useUserWallet from "../hooks/useUserWallet";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
 import { Link } from "react-router-dom";
+import { formatBalance } from "./common/utils";
+import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types";
 
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
 const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
-console.log("PROXY_URL:", PROXY_URL); // Debug log
+
 const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
-
-// Define transaction status types
-type TransactionStatus = "DETECTED" | "PROCESSING" | "CONFIRMING" | "CONFIRMED" | "COMPLETED" | null;
-
-// Define interface for transaction data
-interface EtherscanTransaction {
-    hash: string;
-    from: string;
-    to: string;
-    value: string;
-    timeStamp: string;
-    [key: string]: unknown; // For other properties we might not be using
-}
-
-interface DepositSession {
-    _id: string;
-    userAddress: string;
-    depositAddress: string;
-    status: "PENDING" | "PROCESSING" | "COMPLETED" | "EXPIRED";
-    expiresAt: string;
-    amount: number | null;
-    txHash?: string;
-    txStatus?: TransactionStatus;
-}
 
 // Add USDC contract ABI (just the transfer method)
 const USDC_ABI = [
@@ -53,8 +31,7 @@ const HexagonPattern = () => {
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
-                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" 
-                              stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
+                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
                     </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#hexagons)" />
@@ -64,12 +41,14 @@ const HexagonPattern = () => {
 };
 
 const QRDeposit: React.FC = () => {
-    const { balance: b52Balance, refreshBalance } = useUserWallet();
+    const { accountData, refreshBalance } = useUserWallet();
+    const b52Balance = accountData?.balance;
+    const b52Nonce = accountData?.nonce;
+    const b52Address = accountData?.address;
     const { isConnected, open, address: web3Address } = useUserWalletConnect();
     const [showQR, setShowQR] = useState<boolean>(false);
     const [latestTransaction, setLatestTransaction] = useState<EtherscanTransaction | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(300); // 5 minutes in seconds
-
     const [isQuerying, setIsQuerying] = useState<boolean>(false);
     const [loggedInAccount, setLoggedInAccount] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
@@ -86,7 +65,7 @@ const QRDeposit: React.FC = () => {
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    
+
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
@@ -106,7 +85,7 @@ const QRDeposit: React.FC = () => {
         };
 
         window.addEventListener("mousemove", handleMouseMove);
-        
+
         // Cleanup function to remove event listener and cancel any pending animation frames
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
@@ -119,12 +98,18 @@ const QRDeposit: React.FC = () => {
     // Get progress percentage based on transaction status
     const getProgressFromStatus = (status: TransactionStatus): number => {
         switch (status) {
-            case "DETECTED": return 20;
-            case "PROCESSING": return 40;
-            case "CONFIRMING": return 60;
-            case "CONFIRMED": return 80;
-            case "COMPLETED": return 100;
-            default: return 0;
+            case "DETECTED":
+                return 20;
+            case "PROCESSING":
+                return 40;
+            case "CONFIRMING":
+                return 60;
+            case "CONFIRMED":
+                return 80;
+            case "COMPLETED":
+                return 100;
+            default:
+                return 0;
         }
     };
 
@@ -151,7 +136,7 @@ const QRDeposit: React.FC = () => {
 
         const timer = setInterval(() => {
             setCompletionCountdown(prev => prev - 1);
-            
+
             // Gradually increase progress from 80 to 100 during countdown
             const newProgress = 80 + ((30 - completionCountdown) / 30) * 20;
             setProgressPercentage(Math.min(newProgress, 100));
@@ -162,10 +147,8 @@ const QRDeposit: React.FC = () => {
 
     // Update displayBalance when b52Balance changes
     useEffect(() => {
-        console.log("🔷 QRDeposit: b52Balance changed:", b52Balance);
         if (b52Balance) {
             setDisplayBalance(b52Balance.toString());
-            console.log("🔷 QRDeposit: Updated displayBalance to:", b52Balance.toString());
         }
     }, [b52Balance]);
 
@@ -174,10 +157,9 @@ const QRDeposit: React.FC = () => {
         // Set up a timer to refresh balance every 5 seconds
         const balanceRefreshInterval = setInterval(() => {
             // Use the refreshBalance function from the hook
-            console.log("🔷 QRDeposit: Refreshing balance via interval...");
             refreshBalance();
         }, 5000);
-        
+
         // Clean up interval on unmount
         return () => clearInterval(balanceRefreshInterval);
     }, [refreshBalance]);
@@ -188,13 +170,10 @@ const QRDeposit: React.FC = () => {
             return;
         }
 
-        console.log("Starting countdown timer from:", timeLeft); // Debug log
 
         const timer = setInterval(() => {
             setTimeLeft(prevTime => {
                 const newTime = prevTime - 1;
-                console.log("Time remaining:", newTime); // Debug log
-
                 if (newTime <= 0) {
                     // Session expired
                     setShowQR(false);
@@ -207,7 +186,6 @@ const QRDeposit: React.FC = () => {
 
         // Cleanup timer on unmount or when conditions change
         return () => {
-            console.log("Clearing timer"); // Debug log
             clearInterval(timer);
         };
     }, [showQR, currentSession, timeLeft]);
@@ -224,12 +202,11 @@ const QRDeposit: React.FC = () => {
         const storedKey = localStorage.getItem("user_eth_public_key");
         if (storedKey) {
             setLoggedInAccount(storedKey);
-            console.log("Loaded logged in account:", storedKey);
         }
     }, []);
 
     // Function to get USDC balance of connected wallet
-    const fetchWeb3Balance = async () => {
+    const fetchWeb3Balance = useCallback(async () => {
         if (!web3Address) return;
 
         try {
@@ -240,18 +217,16 @@ const QRDeposit: React.FC = () => {
         } catch (error) {
             console.error("Error fetching USDC balance:", error);
         }
-    };
+    }, [web3Address]);
 
     // Fetch balance when wallet connects
     useEffect(() => {
         if (web3Address) {
             fetchWeb3Balance();
         }
-    }, [web3Address]);
+    }, [fetchWeb3Balance, web3Address]);
 
     const handleGenerateQR = async () => {
-        console.log("Generate QR button clicked");
-
         if (!loggedInAccount) {
             setError("Please connect your wallet first");
             return;
@@ -262,10 +237,7 @@ const QRDeposit: React.FC = () => {
                 userAddress: loggedInAccount,
                 depositAddress: DEPOSIT_ADDRESS
             };
-            console.log("Creating new deposit session:", payload);
-
             const response = await axios.post(`${PROXY_URL}/deposit-sessions`, payload);
-            console.log("Session created:", response.data);
 
             setCurrentSession(response.data);
             setSessionId(response.data._id);
@@ -287,30 +259,30 @@ const QRDeposit: React.FC = () => {
     };
 
     // Function to check session status periodically
-    const checkSessionStatus = async () => {
+    const checkSessionStatus = useCallback(async () => {
         if (!sessionId || !currentSession || isDepositCompleted) return;
 
         try {
             console.log("🔷 QRDeposit: Checking session status");
             const response = await axios.get(`${PROXY_URL}/deposit-sessions/user/${loggedInAccount}`);
             const session = response.data;
-            
+
             if (session) {
                 console.log("🔷 QRDeposit: Session status update:", session);
                 setCurrentSession(session);
-                
+
                 // Update transaction status if it changed
                 if (session.txStatus && session.txStatus !== transactionStatus) {
                     console.log("🔷 QRDeposit: Transaction status changed to:", session.txStatus);
                     setTransactionStatus(session.txStatus);
-                    
+
                     // Set completed flag when we reach COMPLETED state
                     if (session.txStatus === "COMPLETED") {
                         console.log("🔷 QRDeposit: Deposit completed, stopping further checks");
                         setIsDepositCompleted(true);
                     }
                 }
-                
+
                 // If session is completed, request a balance refresh
                 if (session.status === "COMPLETED" && currentSession.status !== "COMPLETED") {
                     console.log("🔷 QRDeposit: Session completed, refreshing balance");
@@ -332,19 +304,19 @@ const QRDeposit: React.FC = () => {
                 console.error("Failed to check session status:", error);
             }
         }
-    };
+    }, [currentSession, isDepositCompleted, loggedInAccount, refreshBalance, sessionId, transactionStatus]);
 
     // Poll for session status updates - stop when completed
     useEffect(() => {
         if (!currentSession || !sessionId || isDepositCompleted) return;
-        
+
         console.log("🔷 QRDeposit: Starting session polling");
         const interval = setInterval(checkSessionStatus, 5000);
         return () => {
             console.log("🔷 QRDeposit: Stopping session polling");
             clearInterval(interval);
         };
-    }, [currentSession, sessionId, loggedInAccount, isDepositCompleted]);
+    }, [currentSession, sessionId, loggedInAccount, isDepositCompleted, checkSessionStatus]);
 
     // Reset completion state when starting a new QR code session
     useEffect(() => {
@@ -353,30 +325,33 @@ const QRDeposit: React.FC = () => {
         }
     }, [showQR, currentSession]);
 
-    const completeSession = async (amount: number) => {
-        if (!sessionId) return;
+    const completeSession = useCallback(
+        async (amount: number) => {
+            if (!sessionId) return;
 
-        try {
-            setTransactionStatus("DETECTED");
-            
-            const response = await axios.put(`${PROXY_URL}/deposit-sessions/${sessionId}/complete`, {
-                amount
-            });
-            console.log("Session completed request:", response.data);
-            setCurrentSession(response.data);
-            
-            // Update transaction status if available
-            if (response.data.txStatus) {
-                setTransactionStatus(response.data.txStatus);
-            } else {
-                setTransactionStatus("PROCESSING");
+            try {
+                setTransactionStatus("DETECTED");
+
+                const response = await axios.put(`${PROXY_URL}/deposit-sessions/${sessionId}/complete`, {
+                    amount
+                });
+                console.log("Session completed request:", response.data);
+                setCurrentSession(response.data);
+
+                // Update transaction status if available
+                if (response.data.txStatus) {
+                    setTransactionStatus(response.data.txStatus);
+                } else {
+                    setTransactionStatus("PROCESSING");
+                }
+            } catch (error) {
+                console.error("Failed to complete session:", error);
             }
-        } catch (error) {
-            console.error("Failed to complete session:", error);
-        }
-    };
+        },
+        [sessionId]
+    );
 
-    const startPolling = () => {
+    const startPolling = useCallback(() => {
         console.log("Starting transaction polling");
 
         const interval = setInterval(async () => {
@@ -403,64 +378,14 @@ const QRDeposit: React.FC = () => {
         }, 5000);
 
         return () => clearInterval(interval);
-    };
+    }, [completeSession, currentSession?.status]);
 
     // Function to copy text to clipboard
     const copyToClipboard = async (text: string) => {
         try {
             await navigator.clipboard.writeText(text);
-       
-          
         } catch (err) {
             console.error("Failed to copy:", err);
-        }
-    };
-
-    // Add function to check for token transfers
-    const checkForTransfer = async () => {
-        if (!currentSession || currentSession.status !== "PENDING") return;
-
-        try {
-            setIsQuerying(true);
-            const provider = new ethers.JsonRpcProvider(RPC_URL);
-
-            // Get token contract
-            const tokenContract = new ethers.Contract(TOKEN_ADDRESS, ["event Transfer(address indexed from, address indexed to, uint256 value)"], provider);
-
-            // Get latest block number
-            const latestBlock = await provider.getBlockNumber();
-
-            // Look for Transfer events in last few blocks
-            const events = await tokenContract.queryFilter(tokenContract.filters.Transfer(null, DEPOSIT_ADDRESS), latestBlock - 10, latestBlock);
-
-            if (events.length > 0) {
-                const lastTransfer = events[events.length - 1] as ethers.EventLog;
-                if (!lastTransfer.args) return;
-                const [from, to, value] = lastTransfer.args;
-
-                console.log("=== Transfer Detected ===");
-                console.log("From:", from);
-                console.log("To:", to);
-                console.log("Value:", value.toString());
-                console.log("Session ID:", currentSession._id);
-
-                setTransactionStatus("DETECTED");
-                
-                const response = await axios.put(`${PROXY_URL}/deposit-sessions/${currentSession._id}/complete`, { amount: value.toString() });
-
-                if (response.data) {
-                    setCurrentSession(response.data);
-                    if (response.data.txStatus) {
-                        setTransactionStatus(response.data.txStatus);
-                    } else {
-                        setTransactionStatus("PROCESSING");
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Error checking for transfers:", error);
-        } finally {
-            setIsQuerying(false);
         }
     };
 
@@ -468,18 +393,58 @@ const QRDeposit: React.FC = () => {
     useEffect(() => {
         if (!showQR || !currentSession || currentSession.status !== "PENDING") return;
 
+        // Add function to check for token transfers
+        const checkForTransfer = async () => {
+            if (!currentSession || currentSession.status !== "PENDING") return;
+
+            try {
+                setIsQuerying(true);
+                const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+                // Get token contract
+                const tokenContract = new ethers.Contract(TOKEN_ADDRESS, ["event Transfer(address indexed from, address indexed to, uint256 value)"], provider);
+
+                // Get latest block number
+                const latestBlock = await provider.getBlockNumber();
+
+                // Look for Transfer events in last few blocks
+                const events = await tokenContract.queryFilter(tokenContract.filters.Transfer(null, DEPOSIT_ADDRESS), latestBlock - 10, latestBlock);
+
+                if (events.length > 0) {
+                    const lastTransfer = events[events.length - 1] as ethers.EventLog;
+                    if (!lastTransfer.args) return;
+                    const [from, to, value] = lastTransfer.args;
+
+                    console.log("=== Transfer Detected ===");
+                    console.log("From:", from);
+                    console.log("To:", to);
+                    console.log("Value:", value.toString());
+                    console.log("Session ID:", currentSession._id);
+
+                    setTransactionStatus("DETECTED");
+
+                    const response = await axios.put(`${PROXY_URL}/deposit-sessions/${currentSession._id}/complete`, { amount: value.toString() });
+
+                    if (response.data) {
+                        setCurrentSession(response.data);
+                        if (response.data.txStatus) {
+                            setTransactionStatus(response.data.txStatus);
+                        } else {
+                            setTransactionStatus("PROCESSING");
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking for transfers:", error);
+            } finally {
+                setIsQuerying(false);
+            }
+        };
+
         const interval = setInterval(checkForTransfer, 5000); // Check every 5 seconds
 
         return () => clearInterval(interval);
     }, [showQR, currentSession]);
-
-    // Add a format function
-    const formatBalance = (rawBalance: string | number) => {
-        // Convert the raw balance to a human-readable number
-        const numericValue = typeof rawBalance === "string" ? parseFloat(rawBalance) : rawBalance;
-        const value = numericValue / 1e18;
-        return value.toFixed(2);
-    };
 
     // Function to handle direct USDC transfer
     const handleDirectTransfer = async () => {
@@ -523,12 +488,18 @@ const QRDeposit: React.FC = () => {
     // Get status message based on transaction status
     const getStatusMessage = (): string => {
         switch (transactionStatus) {
-            case "DETECTED": return "Deposit detected! Processing...";
-            case "PROCESSING": return "Processing your deposit...";
-            case "CONFIRMING": return "Confirming transaction on Layer 1...";
-            case "CONFIRMED": return `Deposit confirmed on Layer 1! Finalizing (${completionCountdown}s)...`;
-            case "COMPLETED": return "Deposit confirmed on Layer 2!";
-            default: return "Waiting for deposit...";
+            case "DETECTED":
+                return "Deposit detected! Processing...";
+            case "PROCESSING":
+                return "Processing your deposit...";
+            case "CONFIRMING":
+                return "Confirming transaction on Layer 1...";
+            case "CONFIRMED":
+                return `Deposit confirmed on Layer 1! Finalizing (${completionCountdown}s)...`;
+            case "COMPLETED":
+                return "Deposit confirmed on Layer 2!";
+            default:
+                return "Waiting for deposit...";
         }
     };
 
@@ -541,7 +512,7 @@ const QRDeposit: React.FC = () => {
                 const response = await axios.get(`${PROXY_URL}/deposit-sessions/user/${loggedInAccount}`);
                 if (response.data) {
                     const session = response.data;
-                    
+
                     // Only set current session if it's not completed or expired
                     if (session.status === "PENDING" || session.status === "PROCESSING") {
                         console.log("🔷 QRDeposit: Found active session:", session);
@@ -573,12 +544,12 @@ const QRDeposit: React.FC = () => {
         };
 
         checkExistingSession();
-    }, [loggedInAccount]);
+    }, [loggedInAccount, startPolling]);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
             {/* Background animations */}
-            <div 
+            <div
                 className="fixed inset-0 z-0"
                 style={{
                     backgroundImage: `
@@ -598,7 +569,7 @@ const QRDeposit: React.FC = () => {
             <HexagonPattern />
 
             {/* Animated pattern overlay */}
-            <div 
+            <div
                 className="fixed inset-0 z-0 opacity-20"
                 style={{
                     backgroundImage: `
@@ -618,10 +589,11 @@ const QRDeposit: React.FC = () => {
             />
 
             {/* Moving light animation */}
-            <div 
+            <div
                 className="fixed inset-0 z-0 opacity-30"
                 style={{
-                    backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
+                    backgroundImage:
+                        "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
                     backgroundSize: "200% 100%",
                     animation: "shimmer 8s infinite linear"
                 }}
@@ -629,12 +601,13 @@ const QRDeposit: React.FC = () => {
 
             <div className="max-w-md w-full bg-gray-800/80 backdrop-blur-md rounded-xl shadow-2xl p-6 relative z-10 border border-blue-400/20 transition-all duration-300 hover:shadow-blue-500/10">
                 {/* Back Button */}
-                <Link 
-                    to="/" 
-                    className="absolute top-4 left-4 text-gray-400 hover:text-white flex items-center transition duration-300"
-                >
+                <Link to="/" className="absolute top-4 left-4 text-gray-400 hover:text-white flex items-center transition duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                        <path
+                            fillRule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clipRule="evenodd"
+                        />
                     </svg>
                     <span>Back to Dashboard</span>
                 </Link>
@@ -644,6 +617,11 @@ const QRDeposit: React.FC = () => {
                 <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                     <p className="text-lg mb-2 text-white">Block 52 Balance:</p>
                     <p className="text-xl font-bold text-blue-400">${formatBalance(displayBalance || "0")} USDC</p>
+                    {b52Nonce !== null && (
+                        <p className="text-sm text-gray-300 mt-2 border-t border-gray-600 pt-2">
+                            <span className="text-blue-300">Nonce:</span> {b52Nonce}
+                        </p>
+                    )}
                 </div>
 
                 {/* Transaction Progress Bar */}
@@ -654,16 +632,17 @@ const QRDeposit: React.FC = () => {
                             <span className="text-sm text-green-400">{getStatusMessage()}</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-4">
-                            <div 
+                            <div
                                 className="bg-green-500 h-4 rounded-full transition-all duration-500 ease-out"
                                 style={{ width: `${progressPercentage}%` }}
                             ></div>
                         </div>
                         {currentSession?.txHash && (
                             <div className="mt-2 text-xs text-gray-400">
-                                TX: <a 
-                                    href={`https://etherscan.io/tx/${currentSession.txHash}`} 
-                                    target="_blank" 
+                                TX:{" "}
+                                <a
+                                    href={`https://etherscan.io/tx/${currentSession.txHash}`}
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-400 hover:underline"
                                 >
@@ -694,7 +673,11 @@ const QRDeposit: React.FC = () => {
                         <div className="mt-2 p-2 bg-gray-700/90 backdrop-blur-sm rounded-lg border border-yellow-600/50">
                             <div className="flex items-center text-yellow-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                        clipRule="evenodd"
+                                    />
                                 </svg>
                                 <span className="font-semibold">Do not close this page while waiting for deposit</span>
                             </div>
@@ -706,7 +689,7 @@ const QRDeposit: React.FC = () => {
                 {!showQR && (
                     <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                         <h2 className="text-lg font-semibold mb-2 text-white">Block52 Account</h2>
-                        <p className="text-sm text-gray-300 break-all">{loggedInAccount || "Not logged in"}</p>
+                        <p className="text-sm text-gray-300 break-all">{b52Address || loggedInAccount || "Not logged in"}</p>
                     </div>
                 )}
 
@@ -780,13 +763,16 @@ const QRDeposit: React.FC = () => {
                     <div className="text-center mb-4">
                         <span className="text-gray-400 text-sm">OR</span>
                     </div>
-                    
+
                     <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
                         <h2 className="text-lg font-semibold mb-4 text-white">Deposit with Web3 Wallet</h2>
                         <p className="text-sm text-gray-400 mb-4">Alternative method using your connected Web3 wallet</p>
 
                         {!isConnected ? (
-                            <button onClick={open} className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">
+                            <button
+                                onClick={open}
+                                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-md"
+                            >
                                 Connect Wallet
                             </button>
                         ) : (
@@ -825,23 +811,17 @@ const QRDeposit: React.FC = () => {
             </div>
 
             {/* Error message display */}
-            {error && (
-                <div className="mt-4 p-3 bg-red-600/90 backdrop-blur-md text-white rounded-lg border border-red-800 shadow-lg z-10">
-                    Error: {error}
-                </div>
-            )}
+            {error && <div className="mt-4 p-3 bg-red-600/90 backdrop-blur-md text-white rounded-lg border border-red-800 shadow-lg z-10">Error: {error}</div>}
 
             {/* Powered by Block52 */}
             <div className="fixed bottom-4 left-4 flex items-center z-10">
                 <div className="flex flex-col items-start bg-gray-800/80 px-3 py-2 rounded-lg backdrop-blur-sm border border-purple-400/30 shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
                     <div className="text-left mb-1">
-                        <span className="text-xs text-gradient bg-gradient-to-r from-purple-500 via-blue-400 to-purple-500 font-medium tracking-wide">POWERED BY</span>
+                        <span className="text-xs text-gradient bg-gradient-to-r from-purple-500 via-blue-400 to-purple-500 font-medium tracking-wide">
+                            POWERED BY
+                        </span>
                     </div>
-                    <img 
-                        src="/logo1080.png" 
-                        alt="Block52 Logo" 
-                        className="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
-                    />
+                    <img src="/logo1080.png" alt="Block52 Logo" className="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
                 </div>
             </div>
         </div>

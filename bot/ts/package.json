@@ -8,14 +8,15 @@
     "cli": "npx ts-node index.ts"
   },
   "dependencies": {
-    "@bitcoinbrisbane/block52": "^1.0.0",
+    "@bitcoinbrisbane/block52": "^1.0.143",
+    "axios": "^1.9.0",
     "chalk": "^4.1.2",
     "dotenv": "^16.0.3",
     "ethers": "^6.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.2",
+    "@types/node": "^18.0.0",
     "ts-node": "^10.9.1",
-    "@types/node": "^18.0.0"
+    "typescript": "^5.7.2"
   }
 }

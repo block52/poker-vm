@@ -1,5 +1,5 @@
 import { Deck } from "./deck";
-import { Card, SUIT } from "@bitcoinbrisbane/block52";
+import { Card, NodeRpcClient, SUIT } from "@bitcoinbrisbane/block52";
 
 describe("Deck", () => {
     let deck: Deck;
@@ -49,14 +49,27 @@ describe("Deck", () => {
             expect(deck.toJson()).toEqual(deck2.toJson());
         });
 
-        it("should shuffle cards with random seed when none provided", () => {
+        it("should shuffle cards with a random seed", () => {
             const originalCards = [...deck.toJson().cards];
-            deck.shuffle();
-            const shuffledCards = deck.toJson().cards;
+            const seed = NodeRpcClient.generateRandomNumber();
+            deck.shuffle(seed);
 
-            // Check if at least some cards have changed position
+            const shuffledCards = deck.toJson().cards;            
             const hasChanged = shuffledCards.some((card: Card, index: number) => card.mnemonic !== originalCards[index].mnemonic);
             expect(hasChanged).toBeTruthy();
+        });
+
+        it("should shuffle cards with a known seed", () => {
+            const seedString = "204,183,236,54,143,190,47,3,93,174,243,141,181,3,129,168,216,114,100,96,100,35,13,88,114,64,124,160,34,245,84,174,104,68,151,167,4,9,144,151,166,197,41,5,218,195,242,115,221,146,93,85";
+            const seed = seedString.split(",").map(Number);
+            deck.shuffle(seed);
+
+            const shuffledCards = deck.toJson().cards;            
+            expect(shuffledCards).toHaveLength(52);
+            expect(deck.hash).toBeDefined();
+            expect(deck.hash).toEqual("966d008669a45807ecf663de2c8e72503c1e3cd7892a33032b6eb6e2bd1f99d5")
+            expect(deck.seedHash).toBeDefined();
+            expect(deck.seedHash).toEqual("e0c15743a12c6a792080510757ff0103714f36700d44bd0fe0d28405aaff1c35");
         });
     });
 

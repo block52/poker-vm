@@ -1,3 +1,5 @@
+import { GameOptions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+
 export interface IJSONModel {
     toJson(): any;
 }
@@ -32,7 +34,15 @@ export interface IBlockDocument {
 
 export interface IGameStateDocument {
     address: string;
+    gameOptions: GameOptions;
     state: any;
+}
+
+export interface ITransaction {
+    to: string;
+    from: string;
+    value: bigint;
+    data?: string;
 }
 
 export interface ITransactionDocument {

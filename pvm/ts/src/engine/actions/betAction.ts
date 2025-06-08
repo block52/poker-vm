@@ -39,7 +39,7 @@ class BetAction extends BaseAction implements IAction {
 
             if (largestBet === this.game.smallBlind) {
                 // Player can reopen the betting with a minimum of big blind
-                throw new Error("Player must call or raise.");
+                return { minAmount: this.game.bigBlind, maxAmount: player.chips };
             }
         }
 

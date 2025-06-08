@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range } from "../types";
@@ -9,10 +9,10 @@ abstract class BaseAction {
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
-        // 2. Turn order check: Must be player's turn (except for fold which can be done anytime)
-        if (this.type !== PlayerActionType.FOLD) {
-            const nextPlayerAddress = this.game.getNextPlayerToAct()?.address;
-            if (nextPlayerAddress !== player.address) 
+        // To do: Move to deal or fold action class
+        if (this.type !== PlayerActionType.FOLD && this.type !== NonPlayerActionType.DEAL) {
+            const nextPlayerAddress = this.game.getNextPlayerToAct();
+            if (nextPlayerAddress?.address !== player.address) 
                 throw new Error("Must be currently active player.");
         }
 
@@ -24,15 +24,13 @@ abstract class BaseAction {
         return undefined;
     }
 
+    protected verifyPlayerIsActive(player: Player): void {
+        const playerStatus = this.game.getPlayerStatus(player.address);
+        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
+            throw new Error(`Only active player can ${this.type}.`);
+    }
+
     execute(player: Player, index: number, amount: bigint): void {
-        // const range = this.verify(player);
-
-        // if (range) {
-        //     if (!amount) throw new Error(`Amount needs to be specified for ${this.type}`);
-        //     if (amount < range.minAmount) throw new Error("Amount is less than minimum allowed.");
-        //     if (amount > range.maxAmount) throw new Error("Amount is greater than maximum allowed.");
-        // }
-
         // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
         // the amount only specifies that over the existing maximum which the player may not yet have covered
         const deductAmount = this.getDeductAmount(player, amount);

@@ -8,12 +8,47 @@ export interface IAction {
 }
 
 export interface IPoker {
-    // deal(): void;
-    // joinAtSeat(player: Player, seat: number): void;
-    // leave(address: string): void;
+    smallBlind: bigint;
+    bigBlind: bigint;
     getLastRoundAction(): Turn | undefined;
     performAction(address: string, action: PlayerActionType, index: number, amount?: bigint): void;
     getBets(round: TexasHoldemRound): Map<string, bigint>;
+}
+
+/**
+ * Interface defining what the DealerPositionManager needs from the game
+ */
+export interface IDealerGameInterface {
+    lastActedSeat: number;
+    dealerPosition: number;
+    minPlayers: number;
+    maxPlayers: number;
+    findActivePlayers(): Player[];
+    getPlayerAtSeat(seat: number): Player | undefined;
+    getPlayerSeatNumber(playerId: string): number;
+
+    // getDealerPosition(): number | undefined;
+    // setDealerPosition(seat: number): void;
+}
+
+/**
+ * Interface defining the dealer position management contract
+ */
+export interface IDealerPositionManager {
+    // Core dealer position methods
+    getDealerPosition(): number;
+    
+    // Event handlers
+    handlePlayerLeave(seat: number): void;
+    handlePlayerJoin(seat: number): void;
+    handleNewHand(): number;
+    
+    // Position getters
+    getSmallBlindPosition(): number;
+    getBigBlindPosition(): number;
+    
+    // Validation
+    validateDealerPosition(): boolean;
 }
 
 export type PlayerState = {
@@ -26,7 +61,7 @@ export type PlayerState = {
 export type Range = {
     minAmount: bigint;
     maxAmount: bigint;
-}
+};
 
 export type Turn = {
     playerId: string;
@@ -36,7 +71,7 @@ export type Turn = {
 };
 
 // Timestamp in milliseconds is required for auto folding etc
-export type TurnWithSeat = Turn & { seat: number, timestamp: number };
+export type TurnWithSeat = Turn & { seat: number; timestamp: number };
 
 export type LegalAction = ActionDTO;
 
@@ -45,15 +80,25 @@ export interface IUpdate {
 }
 
 export interface IGame extends IUpdate {
+    reinit(deck: any): void;
     getPlayers(): Player[];
     getPlayerStatus(): PlayerStatus;
     join(player: Player, chips: bigint): void;
+    leave(player: Player): void;
 }
 
 export type OrderedTransaction = {
     from: string;
     to: string;
     value: bigint;
-    type: PlayerActionType;
+    type: PlayerActionType | NonPlayerActionType;
     index: number;
+    data?: any;
+};
+
+export type Winner = {
+    amount: bigint;
+    cards: string[] | undefined;
+    name: string | undefined;
+    description: string | undefined;
 };

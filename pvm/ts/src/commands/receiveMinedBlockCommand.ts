@@ -1,11 +1,12 @@
-import { BlockDTO, NodeRpcClient } from "@bitcoinbrisbane/block52";
+import { BlockDTO } from "@bitcoinbrisbane/block52";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { BlockchainManagement, getBlockchainInstance } from "../state/blockchainManagement";
+import { getBlockchainInstance } from "../state/index";
 import { Block } from "../models";
+import { IBlockchainManagement } from "../state/interfaces";
 
 export class ReceiveMinedBlockCommand implements ISignedCommand<string> {
-    private readonly blockchainManagement: BlockchainManagement;
+    private readonly blockchainManagement: IBlockchainManagement;
 
     constructor(
         private readonly blockHash: string,

@@ -1,112 +1,63 @@
-import { useCallback, useState } from "react";
-import axios from "axios";
-import { PROXY_URL } from "../../config/constants";
-import { ethers } from "ethers";
-
-// Types for the raise parameters
-interface RaiseHandArgs {
-    userAddress?: string | null;
-    privateKey?: string | null;
-    publicKey?: string | null;
-    actionIndex: number;
-    amount: string; // Amount to raise in wei
-}
-
-// Interface for the hook return type
-interface UseTableRaiseReturn {
-    raiseHand: (args: RaiseHandArgs) => Promise<any>;
-    isRaising: boolean;
-    error: Error | null;
-}
+import { useState } from "react";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { useNodeRpc } from "../../context/NodeRpcContext";
 
 /**
- * Hook to handle the raise action on a poker table
- * @param tableId The ID of the table
- * @returns Object with raiseHand function and loading state
+ * Custom hook to handle raising in a poker game
+ * @param tableId The ID of the table where the action will be performed
+ * @returns Object containing functions for raising a bet
  */
-export function useTableRaise(tableId?: string): UseTableRaiseReturn {
-    const [isRaising, setIsRaising] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
+export function useTableRaise(tableId?: string) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const { client } = useNodeRpc();
 
-    // Function to raise on hand
-    const raiseHand = useCallback(
-        async ({ userAddress, privateKey, publicKey, actionIndex, amount }: RaiseHandArgs): Promise<any> => {
-            if (!tableId) {
-                const noTableError = new Error("No table ID provided");
-                setError(noTableError);
-                return Promise.reject(noTableError);
+    /**
+     * Raises the bet on the specified table
+     * @param options Object containing action parameters
+     * @returns Promise resolving to the result of the action
+     */
+    const raiseHand = async (options: { amount: string }) => {
+        if (!tableId) {
+            setError("Table ID is required");
+            return;
+        }
+
+        if (!options.amount) {
+            setError("Raise amount is required");
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // Make the API call
+            if (!client) {
+                setError("Client is not initialized");
+                return;
             }
 
-            if (!privateKey) {
-                const noPrivateKeyError = new Error("Private key is required");
-                setError(noPrivateKeyError);
-                return Promise.reject(noPrivateKeyError);
-            }
+            // Call the playerAction method
+            const response = await client.playerAction(
+                tableId,
+                PlayerActionType.RAISE,
+                options.amount,
+                undefined // Let the client handle the nonce
+            );
 
-            if (!amount) {
-                const noAmountError = new Error("Raise amount is required");
-                setError(noAmountError);
-                return Promise.reject(noAmountError);
-            }
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Failed to raise bet");
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-            if (!userAddress) {
-                const noAddressError = new Error("User address is required");
-                setError(noAddressError);
-                return Promise.reject(noAddressError);
-            }
-
-            setIsRaising(true);
-            setError(null);
-
-            try {
-                console.log(`Raising on table ${tableId} with action index ${actionIndex} and amount ${amount}`);
-                
-                // Create a wallet instance to sign the message
-                const wallet = new ethers.Wallet(privateKey);
-                
-                // Create the message to sign - Add delimiters for clarity and reliability
-                const timestamp = Math.floor(Date.now() / 1000).toString();
-                const nonce = Date.now().toString(); // Use timestamp as nonce
-                const message = `raise:${amount}:${tableId}:${timestamp}`;
-                
-                // Sign the message
-                const signature = await wallet.signMessage(message);
-                
-                // Make API call to raise 
-                const response = await axios.post(`${PROXY_URL}/table/${tableId}/raise`, {
-                    tableId,
-                    privateKey,
-                    actionIndex,
-                    amount,
-                    userAddress,
-                    publicKey,
-                    signature,
-                    timestamp,
-                    nonce
-                });
-
-                console.log("Raise response:", response.data);
-                
-                setIsRaising(false);
-                return response.data;
-            } catch (err: any) {
-                console.error("Error raising:", err);
-                setError(err);
-                setIsRaising(false);
-                throw err;
-            }
-        },
-        [tableId]
-    );
-
-    const result = { raiseHand, isRaising, error };
-
-    console.log("[useTableRaise] Returns:", {
-        hasRaiseFunction: !!result.raiseHand,
-        isRaising: result.isRaising,
-        hasError: !!result.error,
-        tableId
-    });
-
-    return result;
+    return {
+        raiseHand,
+        isRaising: isLoading,
+        error
+    };
 }

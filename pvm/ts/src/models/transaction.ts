@@ -1,10 +1,10 @@
 import { TransactionDTO } from "@bitcoinbrisbane/block52";
 import { createHash } from "crypto";
 import { signData } from "../utils/crypto";
-import { ICryptoModel, IJSONModel, ITransactionDocument } from "./interfaces";
+import { ICryptoModel, IJSONModel, ITransaction, ITransactionDocument } from "./interfaces";
 import { ZeroHash } from "ethers";
 
-export class Transaction implements ICryptoModel, IJSONModel {
+export class Transaction implements ITransaction, ICryptoModel, IJSONModel {
     private _blockHash: string | undefined;
 
     constructor(
@@ -50,15 +50,17 @@ export class Transaction implements ICryptoModel, IJSONModel {
     }
 
     public calculateHash(): string {
-        return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.nonce}`).digest("hex");
+        return createHash("sha256").update(`${this.to}${this.from}${this.value}${this.index}${this.nonce}`).digest("hex");
     }
 
     public static async create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Promise<Transaction> {
         const timestamp = Date.now();
-        const _data = `${to}${from}${value}${nonce}${data}`;
-        const signature = await signData(privateKey, _data);
+        // const _data = `${to}${from}${value}${nonce}${data}`;
+        // const signature = await signData(privateKey, _data);
+        // const hash = createHash("sha256").update(_data).digest("hex");
 
-        const hash = createHash("sha256").update(_data).digest("hex");
+        const hash = createHash("sha256").update(`${to}${from}${value}${nonce}${timestamp}${data}`).digest("hex");
+        const signature = await signData(privateKey, hash);
 
         return new Transaction(to, from, value, hash, signature, timestamp, nonce, undefined, data);
     }
@@ -86,7 +88,8 @@ export class Transaction implements ICryptoModel, IJSONModel {
             json.signature,
             Number(json.timestamp),
             json.nonce ? BigInt(json.nonce) : 0n,
-            json.index ? Number(json.index) : undefined
+            json.index ? Number(json.index) : undefined,
+            json.data
         );
     }
 

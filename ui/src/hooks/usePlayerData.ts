@@ -1,72 +1,61 @@
 import React from "react";
-import useSWR from "swr";
-import axios from "axios";
-import { PROXY_URL } from "../config/constants";
 import { ethers } from "ethers";
-import { PlayerStatus } from "@bitcoinbrisbane/block52";
-
-// Define the fetcher function that includes the user address as a query parameter
-const fetcher = (url: string) => {
-  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-  return axios.get(`${url}?userAddress=${userAddress}`).then(res => res.data);
-};
+import { PlayerStatus, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerDataReturn } from "../types/index";
+import { useGameStateContext } from "../context/GameStateContext";
 
 /**
  * Custom hook to fetch player data for a specific seat
- * @param tableId The ID of the table
+ * 
+ * NOTE: Player data is handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time player data from that context.
+ * 
  * @param seatIndex The seat index to get player data for
  * @returns Object with player data and utility functions
  */
-export const usePlayerData = (tableId?: string, seatIndex?: number) => {
-  const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
-  
-  // Skip the request if no tableId is provided
-  const { data, error, isLoading } = useSWR(
-    tableId ? `${PROXY_URL}/get_game_state/${tableId}` : null,
-    fetcher,
-    {
-      refreshInterval: 5000,
-      revalidateOnFocus: true
-    }
-  );
+export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
+  // Get game state directly from Context - real-time data via WebSocket
+  const { gameState, error, isLoading } = useGameStateContext();
   
   // Get player data from the table state
-  const playerData = React.useMemo(() => {
-    if (!data || !seatIndex) return null;
+  const playerData = React.useMemo((): PlayerDTO | null => {
+    if (!gameState || !seatIndex) {
+      return null;
+    }
     
-    // Extract table data from the response (handling different API response structures)
-    const tableData = data.data || data;
+    if (!gameState.players) {
+      return null;
+    }
     
-    if (!tableData?.players) return null;
+    const player = gameState.players.find((p: PlayerDTO) => p.seat === seatIndex);
     
-    return tableData.players.find((p: any) => p.seat === seatIndex);
-  }, [data, seatIndex]);
+    return player || null;
+  }, [gameState, seatIndex]);
   
   // Format stack value with ethers.js (more accurate for large numbers)
-  const stackValue = React.useMemo(() => {
+  const stackValue = React.useMemo((): number => {
     if (!playerData?.stack) return 0;
     return Number(ethers.formatUnits(playerData.stack, 18));
   }, [playerData]);
   
   // Calculate derived properties
-  const isFolded = React.useMemo(() => {
+  const isFolded = React.useMemo((): boolean => {
     return playerData?.status === PlayerStatus.FOLDED;
   }, [playerData]);
   
-  const isAllIn = React.useMemo(() => {
+  const isAllIn = React.useMemo((): boolean => {
     return playerData?.status === PlayerStatus.ALL_IN;
   }, [playerData]);
   
-  const holeCards = React.useMemo(() => {
+  const holeCards = React.useMemo((): string[] => {
     return playerData?.holeCards || [];
   }, [playerData]);
   
   const round = React.useMemo(() => {
-    if (!data) return null;
-    const tableData = data.data || data;
-    return tableData?.round;
-  }, [data]);
-  
+    return gameState?.round || null;
+  }, [gameState]);
+
   return {
     playerData,
     stackValue,

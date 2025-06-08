@@ -1,11 +1,12 @@
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Account } from "../models";
-import { AccountManagement, getAccountManagementInstance } from "../state/accountManagement";
+import { getAccountManagementInstance } from "../state/index";
+import { IAccountManagement } from "../state/interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
 export class AccountCommand implements ISignedCommand<Account> {
-    private readonly accountManagement: AccountManagement;
+    private readonly accountManagement: IAccountManagement;
     private readonly mempool: Mempool;
     private readonly address: string;
 
@@ -25,8 +26,10 @@ export class AccountCommand implements ISignedCommand<Account> {
         const from = fromTxs ? fromTxs.reduce((acc, tx) => acc + tx.value, 0n) : 0n;
         const to = toTxs.reduce((acc, tx) => acc + tx.value, 0n);
 
-        // Increment the nonce by 1
-        const _account = new Account(this.address, account.balance + to - from, account.nonce + 1);
+        // The next nonce to use should account for pending transactions from this address
+        // If account has nonce 3 and 2 pending transactions, next nonce should be 5
+        const nextNonce = account.nonce + (fromTxs ? fromTxs.length : 0);
+        const _account = new Account(this.address, account.balance + to - from, nextNonce);
 
         return signResult(_account, this.privateKey);
     }

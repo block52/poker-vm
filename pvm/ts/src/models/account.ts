@@ -21,12 +21,11 @@ export class Account {
         return {
             address: this.address,
             balance: this.balance.toString(),
-            nonce: 0,
+            nonce: this.nonce
         };
     }
-    
-    public static fromJson(json: AccountDTO
-    ): Account {
+
+    public static fromJson(json: AccountDTO): Account {
         return new Account(json.address, BigInt(json.balance));
     }
 
@@ -38,7 +37,7 @@ export class Account {
         return {
             address: this.address,
             balance: Number(this.balance),
-            nonce: this.nonce,
+            nonce: this.nonce
         };
     }
 

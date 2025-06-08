@@ -1,125 +1,68 @@
-import { ethers } from "ethers";
-import axios from "axios";
-import useSWRMutation from "swr/mutation";
-import { PROXY_URL } from "../../config/constants";
-import { DEFAULT_BIG_BLIND, useGameOptions } from "../useGameOptions";
+import { useState } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { useNodeRpc } from "../../context/NodeRpcContext";
+import { useGameOptions } from "../useGameOptions";
 
+/**
+ * Custom hook to handle posting big blind at a poker table
+ * @param tableId The ID of the table where the action will be performed
+ * @returns Object containing functions for performing big blind action
+ */
+export function useTablePostBigBlind(tableId?: string) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const { client } = useNodeRpc();
+    const { gameOptions } = useGameOptions();
 
-interface PostBigBlindOptions {
-  userAddress: string | null;
-  privateKey: string | null;
-  publicKey: string | null;
-  nonce?: string | number;
-  actionIndex?: number | null;
-  bigBlindAmount?: string; // Optional amount override
-}
+    /**
+     * Posts a big blind on the specified table
+     * @param options Object containing action parameters
+     * @returns Promise resolving to the result of the action
+     */
+    const postBigBlind = async (options: { bigBlindAmount?: string }) => {
+        if (!tableId) {
+            setError("Table ID is required");
+            return;
+        }
 
-async function postBigBlindFetcher(
-  url: string,
-  { arg }: { arg: PostBigBlindOptions }
-) {
-  const { userAddress, privateKey, publicKey, nonce = Date.now().toString(), actionIndex, bigBlindAmount } = arg;
-  
-  console.log("🔵 Post big blind attempt for:", url);
-  console.log("🔵 Using action index:", actionIndex, typeof actionIndex);
-  
-  if (!userAddress || !privateKey) {
-    console.error("🔵 Missing address or private key");
-    throw new Error("Missing user address or private key");
-  }
+        setIsLoading(true);
+        setError(null);
 
-  // Ensure address is lowercase to avoid case-sensitivity issues
-  const normalizedAddress = userAddress.toLowerCase();
-  console.log("🔵 Using normalized address:", normalizedAddress);
-  
-  // Create a wallet to sign the message
-  const wallet = new ethers.Wallet(privateKey);
-  
-  // Extract tableId correctly - grab the last segment of the URL
-  const urlParts = url.split("/");
-  const tableId = urlParts[urlParts.length - 2]; // Get the table ID part, not "post_big_blind"
-  console.log("🔵 Extracted table ID:", tableId);
-  
-  // Create message to sign in format that matches the action pattern
-  // Format: "post-big-blind" + amount + tableId + timestamp
-  const timestamp = Math.floor(Date.now() / 1000);
-  const amount = bigBlindAmount || DEFAULT_BIG_BLIND; // Use the default from useGameOptions
-  const messageToSign = `post-big-blind${amount}${tableId}${timestamp}`;
-  console.log("🔵 Message to sign:", messageToSign);
-  
-  // Sign the message
-  const signature = await wallet.signMessage(messageToSign);
-  console.log("🔵 Signature created");
+        try {
+            // Make the API call
+            if (!client) {
+                setError("Client is not initialized");
+                return;
+            }
 
-  // Prepare request data that matches the proxy's expected format for PERFORM_ACTION
-  const requestData = {
-    userAddress: normalizedAddress, // Use the normalized (lowercase) address
-    signature,
-    publicKey: (publicKey || userAddress).toLowerCase(), // Also normalize publicKey
-    action: PlayerActionType.BIG_BLIND, // Explicitly specify the action
-    amount, // Big blind amount
-    bigBlindAmount: amount, // Include as both for flexibility in the server
-    nonce: nonce,
-    timestamp,
-    index: actionIndex !== undefined && actionIndex !== null ? actionIndex : 0 // Check explicitly for undefined/null
-  };
+            // Use the provided amount or get from game options
+            const amount = options.bigBlindAmount || gameOptions?.bigBlind;
+            
+            if (!amount) {
+                setError("Big blind amount not available from game options");
+                return;
+            }
 
-  console.log("🔵 Sending post big blind request:", requestData);
-  
-  try {
-    // Send the request to the proxy server with appropriate headers
-    const response = await axios.post(url, requestData, {
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-    console.log("🔵 Post big blind response:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("🔵 Post big blind error:", error);
-    if (axios.isAxiosError(error) && error.response) {
-      console.error("🔵 Response data:", error.response.data);
-    }
-    throw error;
-  }
-}
+            // Call the playerAction method
+            const response = await client.playerAction(
+                tableId,
+                PlayerActionType.BIG_BLIND,
+                amount,
+                undefined // Let the client handle the nonce
+            );
 
-export function useTablePostBigBlind(tableId: string | undefined) {
-  // Get the game options to access the configured big blind amount
-  const { gameOptions } = useGameOptions(tableId);
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Failed to post big blind");
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-  const { trigger, isMutating, error, data } = useSWRMutation(
-    tableId ? `${PROXY_URL}/table/${tableId}/post_big_blind` : null,
-    postBigBlindFetcher
-  );
-
-  // Add better error handling
-  if (error) {
-    console.error("Post big blind hook error:", error instanceof Error ? error.message : String(error));
-  }
-
-  // Return post big blind handler that accepts action index
-  const result = {
-    postBigBlind: tableId ? (options: Omit<PostBigBlindOptions, "actionIndex"> & { actionIndex?: number | null }) => 
-      trigger({
-        ...options,
-        // Use the provided amount or the game options amount, falling back to default
-        bigBlindAmount: options.bigBlindAmount || gameOptions.bigBlind.toString() || DEFAULT_BIG_BLIND
-      }) : null,
-    isPostingBigBlind: isMutating,
-    error,
-    data
-  };
-
-  console.log("[useTablePostBigBlind] Returns:", {
-    hasPostBigBlindFunction: !!result.postBigBlind,
-    isPostingBigBlind: result.isPostingBigBlind,
-    hasError: !!result.error,
-    hasData: !!result.data,
-    bigBlindAmount: gameOptions.bigBlind.toString(),
-    tableId
-  });
-
-  return result;
+    return {
+        postBigBlind,
+        isPostingBigBlind: isLoading,
+        error
+    };
 }

@@ -1,51 +1,38 @@
-import { useGameState } from "./useGameState";
+import { useMemo } from "react";
+import { useGameStateContext } from "../context/GameStateContext";
+import { TableAnimationsReturn } from "../types/index";
 
 /**
  * Custom hook to provide table animation-related information
- * @param tableId The ID of the table to fetch state for
+ * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing table animation properties such as tableSize
  */
-export const useTableAnimations = (tableId?: string) => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error } = useGameState(tableId);
+export const useTableAnimations = (tableId?: string): TableAnimationsReturn => {
+  // Get game state directly from Context - no additional WebSocket connections
+  const { gameState, isLoading, error } = useGameStateContext();
 
-  // Default value for tableSize
-  const defaultTableSize = 9;
+  // Memoize the table size calculation
+  const tableSize = useMemo((): number => {
+    const defaultTableSize = 9;
+    
+    if (!gameState?.gameOptions) {
+      return defaultTableSize;
+    }
 
-  // If still loading or error occurred, return default values
-  if (isLoading || error || !gameState) {
-    return {
-      tableSize: defaultTableSize,
-      isLoading,
-      error
-    };
-  }
+    try {
+      // Extract table size (maximum players) from game options
+      return gameState.gameOptions.maxPlayers || 
+             gameState.gameOptions.minPlayers || 
+             defaultTableSize;
+    } catch (err) {
+      console.error("Error parsing table size from game options:", err);
+      return defaultTableSize;
+    }
+  }, [gameState]);
 
-  try {
-    // Extract table size (maximum players) from game options
-    const tableSize = gameState.gameOptions?.maxPlayers || 
-                      gameState.maxPlayers || 
-                      defaultTableSize;
-
-    const result = {
-      tableSize,
-      isLoading: false,
-      error: null
-    };
-
-    console.log("[useTableAnimations] Returns:", {
-      tableSize: result.tableSize,
-      isLoading: result.isLoading,
-      hasError: !!result.error
-    });
-
-    return result;
-  } catch (err) {
-    console.error("Error parsing table animations data:", err);
-    return {
-      tableSize: defaultTableSize,
-      isLoading: false,
-      error: err
-    };
-  }
+  return {
+    tableSize,
+    isLoading,
+    error
+  };
 }; 

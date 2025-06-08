@@ -1,7 +1,7 @@
 import { MineCommand } from "./mineCommand";
 import { getMempoolInstance } from "../core/mempool";
-import { getBlockchainInstance } from "../state/blockchainManagement";
-import { getTransactionInstance } from "../state/transactionManagement";
+import { MongoDBBlockchainManagement } from "../state/mongodb/blockchainManagement";
+import { getTransactionInstance } from "../state/index";
 import { Block, Transaction } from "../models";
 import { ethers } from "ethers";
 
@@ -10,11 +10,11 @@ jest.mock("../core/mempool", () => ({
     getMempoolInstance: jest.fn()
 }));
 
-jest.mock("../state/blockchainManagement", () => ({
-    getBlockchainInstance: jest.fn()
-}));
+// jest.mock("../state/blockchainManagement", () => ({
+//     getBlockchainInstance: jest.fn()
+// }));
 
-jest.mock("../state/transactionManagement", () => ({
+jest.mock("../state/index", () => ({
     getTransactionInstance: jest.fn()
 }));
 
@@ -93,7 +93,7 @@ describe.skip("MineCommand", () => {
 
         // Setup mock implementations
         (getMempoolInstance as jest.Mock).mockReturnValue(mockMempool);
-        (getBlockchainInstance as jest.Mock).mockReturnValue(mockBlockchain);
+        (MongoDBBlockchainManagement as jest.Mock).mockReturnValue(mockBlockchain);
         (getTransactionInstance as jest.Mock).mockReturnValue(mockTransactionManagement);
 
         mockMempool.get.mockReturnValue(mockTransactions);

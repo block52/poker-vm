@@ -5,7 +5,6 @@ import useDepositUSDC from "../hooks/DepositPage/useDepositUSDC";
 import useAllowance from "../hooks/DepositPage/useAllowance";
 import useDecimal from "../hooks/DepositPage/useDecimals";
 import useApprove from "../hooks/DepositPage/useApprove";
-import { BigUnit } from "bigunit";
 import spinner from "../assets/spinning-circles.svg";
 import useWalletBalance from "../hooks/DepositPage/useWalletBalance";
 import { toast } from "react-toastify";
@@ -14,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { CONTRACT_ADDRESSES } from "../constants";
 import useUserWallet from "../hooks/useUserWallet";
+import { formatWeiToSimpleDollars, convertAmountToBigInt } from "../utils/numberUtils";
 
 const Deposit: React.FC = () => {
     const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
@@ -30,10 +30,9 @@ const Deposit: React.FC = () => {
     const [tmpDepositAmount, setTmpDepositAmount] = useState<bigint>(BigInt(0));
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
-    const { balance: b52Balance } = useUserWallet();
-
-    // console.log("allowance: ", allowance);
-    // console.log("balance: ", balance);
+    const { accountData } = useUserWallet();
+    const b52Balance = accountData?.balance;
+    const nonce = accountData?.nonce;
 
     const navigate = useNavigate();
 
@@ -54,9 +53,9 @@ const Deposit: React.FC = () => {
         if (isDepositConfirmed) {
             toast.success(`You have deposited ${amount}USDC to address(${BRIDGE_ADDRESS}) successfully`, { autoClose: 5000 });
             setAmount("0");
-            setWalletAllowance(walletAllowance - tmpDepositAmount);
+            setWalletAllowance(w => w - tmpDepositAmount);
         }
-    }, [isDepositConfirmed]);
+    }, [BRIDGE_ADDRESS, amount, isDepositConfirmed, tmpDepositAmount]);
 
     useEffect(() => {
         if (isApproveConfirmed) {
@@ -64,7 +63,7 @@ const Deposit: React.FC = () => {
             setAmount("0");
             setWalletAllowance(tmpWalletAllowance);
         }
-    }, [isApproveConfirmed]);
+    }, [amount, isApproveConfirmed, tmpWalletAllowance]);
 
     useEffect(() => {
         if (depositError) {
@@ -80,15 +79,9 @@ const Deposit: React.FC = () => {
 
     const allowed = React.useMemo(() => {
         if (!walletAllowance || !decimals || !+amount) return false;
-        const amountInBigInt = BigUnit.from(+amount, decimals).toBigInt();
+        const amountInBigInt = convertAmountToBigInt(amount, decimals);
         return walletAllowance >= amountInBigInt;
-    }, [amount, walletAllowance, decimals, isApproveConfirmed, isDepositConfirmed]);
-
-    // Format balance like in Dashboard component
-    const formatBalance = (rawBalance: string | number) => {
-        const value = Number(rawBalance) / 1e18;
-        return value.toFixed(2);
-    };
+    }, [amount, walletAllowance, decimals]);
 
     const handleApprove = async () => {
         if (!address || !decimals) {
@@ -97,9 +90,9 @@ const Deposit: React.FC = () => {
         }
 
         try {
-            const amountInInteger = BigUnit.from(+amount, decimals);
-            const tx = await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInInteger.toBigInt());
-            setTmpWalletAllowance(amountInInteger.toBigInt()); // Fixed incorrect function call
+            const amountInBigInt = convertAmountToBigInt(amount, decimals);
+            const tx = await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInBigInt);
+            setTmpWalletAllowance(amountInBigInt);
         } catch (err) {
             console.error("Approval failed:", err);
         }
@@ -108,12 +101,10 @@ const Deposit: React.FC = () => {
     const handleDeposit = async () => {
         if (allowed) {
             try {
-                console.log("Initiating deposit...");
                 if (publicKey) {
-                    console.log("isPending:  ", isDepositPending);
-                    await deposit(BigUnit.from(+amount, decimals).toBigInt(), publicKey, USDC_ADDRESS);
-                    setTmpDepositAmount(BigUnit.from(+amount, decimals).toBigInt()); // Fixed incorrect function call
-                    console.log("Deposit successful");
+                    const amountInBigInt = convertAmountToBigInt(amount, decimals);
+                    await deposit(amountInBigInt, publicKey, USDC_ADDRESS);
+                    setTmpDepositAmount(amountInBigInt);
                 }
             } catch (err) {
                 console.error("Deposit failed:", err);
@@ -152,13 +143,20 @@ const Deposit: React.FC = () => {
                 {address && <h4 className="border-b border-gray-600 text-blue-400 mb-2 break-words">Address: {address}</h4>}
                 {balance && (
                     <h4 className="border-b border-gray-600 text-blue-400 mb-4">
-                        Crypto Wallet Balance: ${Number(BigUnit.from(BigInt(balance), decimals).toString()).toFixed(2)} USDC
+                        Crypto Wallet Balance: ${formatWeiToSimpleDollars(balance)} USDC
                     </h4>
                 )}
 
                 <h4 className="border-b border-gray-600 text-blue-400 mb-4">
-                    Layer 2 Block52 Balance (Poker Table): ${formatBalance(b52Balance || "0")} USDC
+                    Layer 2 Block52 Balance (Poker Table): ${formatWeiToSimpleDollars(b52Balance || "0")} USDC
                 </h4>
+
+                {/* Show nonce if available */}
+                {nonce !== null && (
+                    <h4 className="border-b border-gray-600 text-blue-400 mb-4">
+                        Current nonce: {nonce}
+                    </h4>
+                )}
 
                 <div className="mb-4 relative">
                     <label htmlFor="amount" className="block text-sm font-medium text-gray-300">
@@ -175,7 +173,9 @@ const Deposit: React.FC = () => {
 
                     <span
                         onClick={() => {
-                            balance && setAmount(BigUnit.from(BigInt(balance), decimals).toString());
+                            if (balance && decimals) {
+                                setAmount(formatWeiToSimpleDollars(balance));
+                            }
                         }}
                         className="cursor-pointer bg-gray-700 py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"
                     >

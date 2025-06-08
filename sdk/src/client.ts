@@ -1,30 +1,41 @@
 import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
-import { NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "./types/game";
+import {
+    GameOptionsResponse,
+    LegalActionDTO,
+    NonPlayerActionType,
+    PerformActionResponse,
+    PlayerActionType,
+    TexasHoldemStateDTO,
+    TransactionResponse
+} from "./types/game";
 import { RPCMethods, RPCRequest } from "./types/rpc";
 import { RPCResponse } from "./types/rpc";
 import axios from "axios";
 import { Wallet } from "ethers";
 
 export interface IClient {
+    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<PerformActionResponse>;
+    findGames(min?: bigint, max?: bigint): Promise<GameOptionsResponse[]>;
     getAccount(address: string): Promise<AccountDTO>;
-    getMempool(): Promise<TransactionDTO[]>;
-    getNodes(): Promise<string[]>;
-    getLastBlock(): Promise<BlockDTO>;
-    getBlocks(count?: number): Promise<BlockDTO[]>;
     getBlock(index: number): Promise<BlockDTO>;
     getBlockByHash(hash: string): Promise<BlockDTO>;
     getBlockHeight(): Promise<number>;
+    getBlocks(count?: number): Promise<BlockDTO[]>;
+    getGameState(gameAddress: string, caller: string): Promise<TexasHoldemStateDTO>;
+    getLastBlock(): Promise<BlockDTO>;
+    getLegalActions(gameAddress: string, caller: string): Promise<LegalActionDTO[]>;
+    getMempool(): Promise<TransactionDTO[]>;
+    getNodes(): Promise<string[]>;
+    getTransactions(): Promise<TransactionDTO[]>;
+    mint(address: string, amount: string, transactionId: string): Promise<void>;
+    newHand(gameAddress: string, nonce?: number): Promise<TransactionResponse>;
+    newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
+    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
+    playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
+    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
-    getTransactions(): Promise<TransactionDTO[]>;
-    transfer(to: string, amount: string, nonce?: number, data?: string): Promise<any>;
-    mint(address: string, amount: string, transactionId: string): Promise<void>;
-    getGameState(gameAddress: string): Promise<TexasHoldemStateDTO>;
-    playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
-    playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any>;
-    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any>;
-    deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<any>;
-    newHand(gameAddress: string, seed: string, nonce?: number): Promise<any>;
+    transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
 }
 
 /**
@@ -33,6 +44,7 @@ export interface IClient {
 export class NodeRpcClient implements IClient {
     private readonly wallet: Wallet | undefined;
     private requestId: number = 0;
+
     constructor(private url: string, private privateKey: string) {
         if (privateKey.length === 66) {
             this.wallet = new Wallet(privateKey);
@@ -40,7 +52,7 @@ export class NodeRpcClient implements IClient {
     }
 
     /**
-     * Get a random request ID
+     * Get next request ID
      * @returns The request ID
      */
     private getRequestId(): string {
@@ -57,6 +69,28 @@ export class NodeRpcClient implements IClient {
             throw new Error("Cannot get address without a private key");
         }
         return this.wallet.address;
+    }
+
+    /**
+     * Find games on the remote node
+     * @param smallBlind The minimum smallBlind amount
+     * @param bigBlind The maximum bigBlind amount
+     * @returns A Promise resolving to an array of GameOptionsDTO objects
+     */
+    public async findGames(smallBlind?: bigint, bigBlind?: bigint): Promise<GameOptionsResponse[]> {
+        const query = "" + (smallBlind ? `sb=${smallBlind}` : "") + (bigBlind ? `,bb=${bigBlind}` : "");
+
+        // If no query is provided, return an empty array
+        if (!query) {
+            return [];
+        }
+
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<GameOptionsResponse[]> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.FIND_CONTRACT,
+            params: [query]
+        });
+        return body.result.data;
     }
 
     /**
@@ -221,8 +255,11 @@ export class NodeRpcClient implements IClient {
      * @param amount The amount to transfer
      * @returns A Promise that resolves when the request is complete
      */
-    public async transfer(to: string, amount: string, nonce?: number, data?: string): Promise<any> {
+    public async transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse> {
         const from = this.getAddress();
+        if (!nonce) {
+            nonce = await this.getNonce(from);
+        }
         const signature = await this.getSignature(nonce);
 
         const { data: body } = await axios.post(this.url, {
@@ -253,32 +290,63 @@ export class NodeRpcClient implements IClient {
     /**
      * Get the state of a Texas Holdem game
      * @param gameAddress The address of the game
+     * @param caller The address of the caller
      * @returns A Promise that resolves to a TexasHoldemState object
-    */
-    public async getGameState(gameAddress: string): Promise<TexasHoldemStateDTO> {
+     */
+    public async getGameState(gameAddress: string, caller: string): Promise<TexasHoldemStateDTO> {
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TexasHoldemStateDTO> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.GET_GAME_STATE,
-            params: [gameAddress]
+            params: [gameAddress, caller]
         });
 
         return body.result.data;
     }
 
     /**
+     * Get the state of a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param playerId The address of the player
+     * @returns A Promise that resolves to a TexasHoldemState object
+     */
+    public async getLegalActions(gameAddress: string, playerId: string): Promise<LegalActionDTO[]> {
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, playerId);
+
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
+
+        // Find the player
+        const player = gameState.players.find(p => p.address === playerId);
+        if (!player) {
+            throw new Error("Player not found in game state");
+        }
+
+        // Get the legal actions for the player
+        return player.legalActions;
+    }
+
+    /**
      * Create a new game on the remote node
      * @param gameAddress The address of the game
-     * @param data The game data
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async newHand(gameAddress: string, seed: string, nonce?: number): Promise<any> {
+    public async newHand(gameAddress: string, nonce?: number): Promise<TransactionResponse> {
+        const address = this.getAddress();
+
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
+
         const signature = await this.getSignature(nonce);
+        const index = await this.getNextActionIndex(gameAddress, address);
+        const seed: string = NodeRpcClient.generateRandomNumberString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.NEW,
-            params: [gameAddress, seed, nonce], // [to, data, nonce]
+            method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -286,18 +354,55 @@ export class NodeRpcClient implements IClient {
     }
 
     /**
-     * Create a new account on the remote node
-     * @param gameAddress The address of the game
-     * @returns A Promise that resolves to the address of the new account
+     * Create a new game table on the remote node
+     * @param schemaAddress The address of the schema to use for the table
+     * @param owner The address of the table owner
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the table address
      */
-    public async playerJoin(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
-        const address = this.getAddress();
+    public async newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string> {
+        if (!nonce) {
+            const address = this.getAddress();
+            nonce = await this.getNonce(address);
+        }
+
         const signature = await this.getSignature(nonce);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
+            method: RPCMethods.NEW_TABLE,
+            params: [schemaAddress, owner, nonce], // [to, from, nonce]
+            signature: signature
+        });
+
+        return body.result.data;
+    }
+
+    /**
+     * Join a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param amount The amount to join with
+     * @param seat The seat number to join
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
+        const address = this.getAddress();
+
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
+
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
+
+        // Pack the seat into the data field
+        const data = seat.toString();
+
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, signature]
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data], // [from, to, action, amount, nonce, index, data]
+            signature: signature
         });
 
         return body.result.data;
@@ -306,38 +411,61 @@ export class NodeRpcClient implements IClient {
     /**
      * Perform an action in a Texas Holdem game
      * @param gameAddress The address of the game
-     * @param action 
-     * @param amount 
-     * @param nonce 
-     * @returns 
+     * @param action
+     * @param amount
+     * @param nonce
+     * @returns
      */
-    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<any> {
-        const signature = await this.getSignature(nonce);
-        const address = this.getAddress();
-        const index = await this.getNextTurnIndex(gameAddress, address);
+    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<PerformActionResponse> {
+        try {
+            const address = this.getAddress();
 
-        const { data: body } = await axios.post(this.url, {
-            id: this.getRequestId(),
-            method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
-            signature: signature
-        });
+            if (!nonce) {
+                nonce = await this.getNonce(address);
+            }
 
-        return body.result.data;
+            const legalActions = await this.getLegalActions(gameAddress, address);
+            const legalAction = legalActions.find(a => a.action === action);
+            if (!legalAction) {
+                throw new Error(`Illegal action: ${action}`);
+            }
+
+            const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
+
+            const { data: body } = await axios.post(this.url, {
+                id: 1, // this.getRequestId(),
+                method: RPCMethods.PERFORM_ACTION,
+                params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
+                signature: signature
+            });
+
+            return body.result.data;
+        } catch (error) {
+            console.error(`Error in playerAction: ${(error as Error).message}`);
+            throw error; // Rethrow the error to be handled by the caller
+        }
     }
 
-    public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<any> {
+    /**
+     * Leave a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param amount The amount to leave with
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
 
-        const [signature, index] = await Promise.all([
-            this.getSignature(nonce),
-            this.getNextTurnIndex(gameAddress, address)
-        ]);
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
+
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [gameAddress, address, NonPlayerActionType.LEAVE, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
+            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
             signature: signature
         });
 
@@ -350,49 +478,90 @@ export class NodeRpcClient implements IClient {
      * @param seed Optional seed for shuffling
      * @returns A Promise that resolves to the transaction
      */
-    public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<any> {
+    public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        const [signature, index] = await Promise.all([
-            this.getSignature(nonce),
-            this.getNextTurnIndex(gameAddress, address)
-        ]);
+        
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
+
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index], // [from, to, action, amount, nonce, index]
-            data: publicKey,  // todo; work out what we will use data for
+            data: publicKey, // todo; work out what we will use data for
             signature: signature
         });
 
         return body.result.data;
     }
 
-    private async getSignature(nonce?: number): Promise<string> {
+    private async getSignature(nonce: number): Promise<string> {
         if (!this.wallet) {
             throw new Error("Cannot transfer funds without a private key");
         }
 
-        const address = this.wallet.address;
-
-        if (!nonce) {
-            const account = await this.getAccount(address);
-            nonce = account.nonce;
-        }
-
-        const signature = await this.wallet.signMessage(nonce.toString());
+        const timestamp = Math.floor(Date.now());
+        const message = `${timestamp}-${nonce}`;
+        const signature = await this.wallet.signMessage(message);
         return signature;
     }
 
-    private async getNextTurnIndex(gameAddress: string, playerId: string): Promise<number> {
-        const gameState = await this.getGameState(gameAddress);
-        const players = gameState.players;
+    private async getNextActionIndex(gameAddress: string, playerId: string): Promise<number> {
+        try {
+            const gameState = await this.getGameState(gameAddress, playerId);
+            if (!gameState) {
+                throw new Error("Game state not found");
+            }
 
-        if (!players) {
-            return 0;
+            if (!gameState.previousActions || gameState.previousActions.length === 0) {
+                return gameState.actionCount + 1;
+            }
+
+            const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
+            return lastAction.index + 1;
+        } catch (error) {
+            console.error(`Error getting next action index: ${(error as Error).message}`);
+            throw error; // Rethrow the error to be handled by the caller
+        }
+    }
+
+    private async getNonce(address: string): Promise<number> {
+        const response = await this.getAccount(address);
+
+        if (response) {
+            return response.nonce;
         }
 
-        // return players.findIndex((player) => player.id === playerId);
         return 0;
+    }
+
+    public static generateRandomNumberString(): string {
+        const digits = NodeRpcClient.generateRandomNumber();
+        // Join the digits into a string
+        return digits.join("");
+    }
+
+    public static generateRandomNumber(length: number = 52): number[] {
+        // Create an array to store our random digits
+        const digits = new Array(length);
+
+        // Generate random values
+        const randomValues = new Uint8Array(length);
+        crypto.getRandomValues(randomValues);
+
+        for (let i = 0; i < length; i++) {
+            digits[i] = randomValues[i];
+        }
+
+        // Ensure the first digit isn't 0 to maintain the exact length
+        if (digits[0] === 0) {
+            digits[0] = 1 + (randomValues[0] % 9); // Random digit from 1-9
+        }
+
+        // Join the digits into a string
+        return digits;
     }
 }

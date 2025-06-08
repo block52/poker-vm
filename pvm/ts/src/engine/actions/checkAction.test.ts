@@ -1,9 +1,8 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import CheckAction from "./checkAction";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("CheckAction", () => {
@@ -11,8 +10,6 @@ describe("CheckAction", () => {
     let updateMock: IUpdate;
     let action: CheckAction;
     let player: Player;
-
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state
@@ -26,18 +23,7 @@ describe("CheckAction", () => {
         );
         playerStates.set(0, initialPlayer);
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions, // previous
-            TexasHoldemRound.PREFLOP,
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
+        game = getDefaultGame(playerStates);
 
         updateMock = {
             addAction: jest.fn(action => {
@@ -86,12 +72,19 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getBets").mockReturnValue(new Map([["0x980b8D8A16f5891F41871d878a479d81Da52334c", 0n]]));
         });
 
-        it("should return a range for check action", () => {
+        it("should throw error if no previous action exists", () => {
+            jest.spyOn(game, "getLastRoundAction").mockReturnValue(undefined);
+
+            expect(() => action.verify(player)).toThrow("No previous action to check.");
+        });
+
+        it.skip("should return a range for check action", () => {
+            // this should throw an error if the player has not matched the current bet
             const range = action.verify(player);
             expect(range).toBeDefined();
         });
 
-        it.skip("should throw error if it's not player's turn", () => {
+        it("should throw error if it's not player's turn", () => {
             // Mock a different player as next to act
             const differentPlayer = new Player(
                 "0x1234567890abcdef1234567890abcdef12345678", // Different address
@@ -105,7 +98,7 @@ describe("CheckAction", () => {
             expect(() => action.verify(player)).toThrow("Must be currently active player.");
         });
 
-        it.skip("should throw error if player is not active", () => {
+        it("should throw error if player is not active", () => {
             // Mock player status as FOLDED
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
@@ -142,7 +135,7 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
             // Mock verify to return undefined (no range)
-            jest.spyOn(action, "verify").mockReturnValue( { minAmount: 0n, maxAmount: 0n } as any);
+            jest.spyOn(action, "verify").mockReturnValue({ minAmount: 0n, maxAmount: 0n } as any);
 
             // Mock game's addAction method
             game.addAction = jest.fn();
@@ -157,12 +150,15 @@ describe("CheckAction", () => {
         it("should add CHECK action with 0 amount", () => {
             action.execute(player, 0, 0n);
 
-            expect(game.addAction).toHaveBeenCalledWith({
-                playerId: player.address,
-                action: PlayerActionType.CHECK,
-                amount: 0n,
-                index: 0
-            }, TexasHoldemRound.PREFLOP);
+            expect(game.addAction).toHaveBeenCalledWith(
+                {
+                    playerId: player.address,
+                    action: PlayerActionType.CHECK,
+                    amount: 0n,
+                    index: 0
+                },
+                TexasHoldemRound.PREFLOP
+            );
         });
 
         it.skip("should throw error if an amount is specified", () => {

@@ -1,11 +1,11 @@
 import { ethers } from "ethers";
 import { Transaction } from "../models";
 import { getMempoolInstance, Mempool } from "./mempool";
-import { getTransactionInstance } from "../state/transactionManagement";
+import { getTransactionInstance } from "../state/index";
 import Blocks from "../schema/blocks";
 
 // Mock external dependencies
-jest.mock("../state/transactionManagement");
+jest.mock("../state/index");
 jest.mock("../schema/blocks");
 
 describe("Should get new mempool", () => {

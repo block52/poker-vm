@@ -1,17 +1,14 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
+import { getDefaultGame, mnemonic } from "../testConstants";
 
 describe("SmallBlindAction", () => {
     let game: TexasHoldemGame;
     let updateMock: any;
     let action: SmallBlindAction;
     let player: Player;
-
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state
@@ -25,18 +22,7 @@ describe("SmallBlindAction", () => {
         );
         playerStates.set(1, initialPlayer);
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions, // previousActions
-            TexasHoldemRound.ANTE, // Changed from ANTE to PREFLOP to match new implementation
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
+        game = getDefaultGame(playerStates);
 
         updateMock = {
             addAction: jest.fn(action => {
@@ -80,7 +66,12 @@ describe("SmallBlindAction", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(1);
         });
 
+        it("should throw if only one player", () => {
+            expect(() => action.verify(player)).toThrow("Cannot post small blind with less than 2 players.");
+        });
+
         it("should return correct range for small blind", () => {
+            jest.spyOn(game, "getActivePlayerCount").mockReturnValue(2); // Mocking that there are 2 players
             const range = action.verify(player);
             expect(range).toEqual({
                 minAmount: game.smallBlind,

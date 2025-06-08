@@ -3,6 +3,7 @@ import { RPCMethods } from "@bitcoinbrisbane/block52";
 // RESET_BLOCKCHAIN is now included in the SDK's RPCMethods enum, so we don't need a custom constant
 
 export const READ_METHODS = [
+    RPCMethods.FIND_CONTRACT,
     RPCMethods.GET_ACCOUNT,
     RPCMethods.GET_BLOCK_BY_HASH,
     RPCMethods.GET_BLOCK,
@@ -27,7 +28,8 @@ export const WRITE_METHODS = [
     RPCMethods.MINE,
     RPCMethods.MINED_BLOCK_HASH,
     RPCMethods.MINT,
-    RPCMethods.NEW,
+    RPCMethods.NEW_HAND,
+    RPCMethods.NEW_TABLE,
     RPCMethods.PERFORM_ACTION,
     RPCMethods.TRANSFER
 ];

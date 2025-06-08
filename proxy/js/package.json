@@ -11,7 +11,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.84",
+    "@bitcoinbrisbane/block52": "1.0.99",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",
     "axios": "^1.8.3",
@@ -22,7 +22,7 @@
     "ethers": "^6.13.4",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.12.1",
+    "mongoose": "^8.14.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "ws": "^8.18.1"

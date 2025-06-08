@@ -1,9 +1,8 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
 
 describe("BigBlindAction", () => {
     let game: TexasHoldemGame;
@@ -24,19 +23,7 @@ describe("BigBlindAction", () => {
         );
         playerStates.set(0, initialPlayer);
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions, // previousActions
-            TexasHoldemRound.ANTE,
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
-
+        game = getDefaultGame(playerStates);
         updateMock = {
             addAction: jest.fn(action => {})
         };
@@ -133,11 +120,11 @@ describe("BigBlindAction", () => {
             jest.spyOn(game, "getActionsForRound").mockReturnValue([
                 {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                    amount: "50000000000000000000",
+                    amount: 50000000000000000000n,
                     action: PlayerActionType.SMALL_BLIND,
                     index: 0,
                     seat: 2,
-                    round: TexasHoldemRound.ANTE
+                    timestamp: Date.now()
                 }
             ]);
 

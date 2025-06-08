@@ -1,20 +1,19 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
-import { ethers } from "ethers";
 import RaiseAction from "./raiseAction";
-import { IUpdate, Turn } from "../types";
+import { IUpdate, TurnWithSeat } from "../types";
 import {
-    defaultPositions,
     FIFTY_TOKENS,
-    gameOptions,
-    mnemonic,
+    getDefaultGame,
     ONE_HUNDRED_TOKENS,
     ONE_THOUSAND_TOKENS,
     ONE_TOKEN,
+    TWO_TOKENS,
     TEN_TOKENS,
     TWENTY_TOKENS,
-    TWO_THOUSAND_TOKENS
+    TWO_THOUSAND_TOKENS,
+    FIVE_TOKENS
 } from "../testConstants";
 
 describe("Raise Action", () => {
@@ -22,8 +21,6 @@ describe("Raise Action", () => {
     let updateMock: IUpdate;
     let action: RaiseAction;
     let player: Player;
-
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state
@@ -38,18 +35,7 @@ describe("Raise Action", () => {
         );
         playerStates.set(0, initialPlayer);
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions, // previousActions
-            TexasHoldemRound.PREFLOP,
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
+        game = getDefaultGame(playerStates);
 
         updateMock = {
             addAction: jest.fn()
@@ -72,28 +58,28 @@ describe("Raise Action", () => {
         jest.spyOn(game, "getActionsForRound").mockReturnValue([
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: "50000000000000000000",
+                amount: ONE_TOKEN,
                 action: PlayerActionType.SMALL_BLIND,
                 index: 0,
                 seat: 2,
-                round: TexasHoldemRound.PREFLOP
+                timestamp: Date.now()
             },
             {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: "100000000000000000000",
+                amount: TWO_TOKENS,
                 action: PlayerActionType.BIG_BLIND,
                 index: 0,
                 seat: 3,
-                round: TexasHoldemRound.PREFLOP
+                timestamp: Date.now()
             },
             {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                amount: "50000000000000000000",
+                amount: FIVE_TOKENS,
                 action: PlayerActionType.BET,
                 index: 0,
                 seat: 4,
-                round: TexasHoldemRound.PREFLOP
-            },
+                timestamp: Date.now()
+            }
         ]);
 
         const bets = new Map<string, bigint>();
@@ -123,11 +109,13 @@ describe("Raise Action", () => {
 
     describe("verify", () => {
         // Mock a previous bet action to raise against
-        const lastBet: Turn = {
+        const lastBet: TurnWithSeat = {
             playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
             action: PlayerActionType.BET,
-            amount: FIFTY_TOKENS, // 50 tokens
-            index: 0
+            amount: TWO_TOKENS, //  2
+            index: 0,
+            seat: 2,
+            timestamp: Date.now()
         };
 
         beforeEach(() => {
@@ -139,7 +127,7 @@ describe("Raise Action", () => {
             const range = action.verify(player);
 
             // Min amount should be previous bet + big blind
-            const expectedMinAmount = 40000000000000000000n; // 40 tokens
+            const expectedMinAmount = FIVE_TOKENS; // 5 tokens
 
             expect(range).toEqual({
                 minAmount: expectedMinAmount,
@@ -152,19 +140,19 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getActionsForRound").mockReturnValue([
                 {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                    amount: "50000000000000000000",
+                    amount: 50000000000000000000n,
                     action: PlayerActionType.SMALL_BLIND,
-                    index: 0,
+                    index: 1,
                     seat: 2,
-                    round: TexasHoldemRound.PREFLOP
+                    timestamp: Date.now()
                 },
                 {
                     playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                    amount: "100000000000000000000",
+                    amount: 100000000000000000000n,
                     action: PlayerActionType.BIG_BLIND,
-                    index: 0,
+                    index: 2,
                     seat: 3,
-                    round: TexasHoldemRound.PREFLOP
+                    timestamp: Date.now()
                 }
             ]);
 
@@ -173,13 +161,13 @@ describe("Raise Action", () => {
 
         it("should bet all the players chips if less than the raised amount", () => {
             // Set player chips lower than the raise amount
-            player.chips = TEN_TOKENS;
+            player.chips = ONE_TOKEN;
 
             const range = action.verify(player);
 
             expect(range).toEqual({
-                minAmount: TEN_TOKENS,
-                maxAmount: TEN_TOKENS
+                minAmount: ONE_TOKEN,
+                maxAmount: ONE_TOKEN
             });
         });
 
@@ -207,11 +195,13 @@ describe("Raise Action", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
             // Need to mock a bet action to avoid throwing error in verify
-            const lastBet: Turn = {
+            const lastBet: TurnWithSeat = {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 action: PlayerActionType.BET,
                 amount: FIFTY_TOKENS,
-                index: 0
+                index: 0,
+                seat: 2,
+                timestamp: Date.now()
             };
 
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
@@ -239,11 +229,13 @@ describe("Raise Action", () => {
     describe("execute", () => {
         beforeEach(() => {
             // Mock a previous bet
-            const lastBet: Turn = {
+            const lastBet: TurnWithSeat = {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 action: PlayerActionType.BET,
                 amount: FIFTY_TOKENS, // 50 tokens
-                index: 0
+                index: 0,
+                seat: 2,
+                timestamp: Date.now()
             };
             jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
 
@@ -275,7 +267,7 @@ describe("Raise Action", () => {
         // The following tests are commented out because:
         // 1. The actual validation logic is already properly tested in the verify() tests above
         // 2. In the real flow, verify() would be called before execute() to validate raise amounts
-        
+
         /* 
         it("should not throw error if amount is less than minimum allowed", () => {
             const tooSmallAmount = 1n;

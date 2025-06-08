@@ -11,7 +11,7 @@ if (!projectId) {
 
 export const metadata = {
     name: "AppKit",
-    description: "AppKit Example",
+    description: "Block52 AppKit",
     url: "https://app.block52.xyz/",
     icons: ["https://avatars.githubusercontent.com/u/179229932"]
 };

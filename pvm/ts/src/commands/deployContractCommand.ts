@@ -1,14 +1,19 @@
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { GameOptions } from "@bitcoinbrisbane/block52";
-import { GameManagement } from "../state/gameManagement";
+import { getGameManagementInstance } from "../state/index";
+import { IGameManagement } from "../state/interfaces";
 
 export class DeployContractCommand implements ISignedCommand<string> {
-    private readonly gameManagement: GameManagement;
+    private readonly gameManagement: IGameManagement;
     private readonly gameOptions: GameOptions;
     
     constructor(private readonly nonce: bigint, private readonly owner: string, private readonly data: string, private readonly privateKey: string) {
         const params = data.split(",");
+
+        if (params.length !== 7) {
+            throw new Error("Invalid number of parameters. Expected 7 parameters.");
+        }
 
         const gameOptions: GameOptions = {
             minBuyIn: BigInt(params[0]),
@@ -21,7 +26,7 @@ export class DeployContractCommand implements ISignedCommand<string> {
         };
 
         this.gameOptions = gameOptions;
-        this.gameManagement = new GameManagement();
+        this.gameManagement = getGameManagementInstance();
     }
 
     public async execute(): Promise<ISignedResponse<string>> {

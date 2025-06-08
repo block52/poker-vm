@@ -1,10 +1,9 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range, Turn } from "../types";
-import { ethers } from "ethers";
-import { defaultPositions, gameOptions, mnemonic } from "../testConstants";
+import { gameOptions, getDefaultGame, mnemonic } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -44,21 +43,7 @@ describe.skip("BaseAction", () => {
             PlayerStatus.ACTIVE // status
         );
         playerStates.set(0, initialPlayer);
-
-        const previousActions: ActionDTO[] = [];
-
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            defaultPositions, // dealer
-            1, // nextToAct
-            previousActions,
-            TexasHoldemRound.PREFLOP,
-            [], // communityCards
-            [0n], // pot
-            playerStates,
-            mnemonic
-        );
+        game = getDefaultGame(playerStates);
 
         addedActions = [];
         updateMock = {

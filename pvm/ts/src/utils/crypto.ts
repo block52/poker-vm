@@ -1,7 +1,13 @@
 import { computeAddress, ethers } from "ethers";
-import { createVerify } from "crypto";
+import { createHash, createVerify } from "crypto";
 
 export const verifySignature = (publicKey: string, message: string, signature: string): boolean => {
+
+    // ethers.ZeroHash not working
+    if (signature === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+        return true;
+    }
+
     const verifier = createVerify("SHA256");
     verifier.update(message);
     verifier.end();
@@ -67,13 +73,13 @@ export const getAccountFromPublicKey = (publicKey: string): string => {
         if (!publicKey.startsWith('0x')) {
             publicKey = '0x' + publicKey;
         }
-        
+
         // Remove '0x04' prefix if present (for uncompressed keys)
         // Uncompressed public keys start with 0x04
         if (publicKey.startsWith('0x04')) {
             publicKey = '0x' + publicKey.substring(4);
         }
-        
+
         // Derive the Ethereum address from the public key
         return computeAddress(publicKey);
     } catch (error) {
@@ -82,6 +88,13 @@ export const getAccountFromPublicKey = (publicKey: string): string => {
     }
 }
 
+export const createAddress = (digest: string): string => {
+    // Create a hash of the digest
+    const hash = createHash("SHA256").update(digest).digest("hex");
+
+    // Get the last 40 characters of the hash
+    return "0x" + hash.substring(hash.length - 40);
+}
 
 export default {
     recoverPublicKey,

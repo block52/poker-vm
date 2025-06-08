@@ -1,112 +1,291 @@
+/**
+ * VacantPlayer Component
+ * 
+ * This component represents an empty seat at the poker table.
+ * It displays:
+ * - Empty seat indicator
+ * - Join button for available seats
+ * - Confirmation modal for joining
+ * 
+ * Behavior:
+ * 1. For New Users (not in table):
+ *    - Clicking shows join confirmation modal directly
+ *    - No popup is shown
+ *    - Direct path to joining the table
+ * 
+ * 2. For Existing Users (already in table):
+ *    - Clicking shows "CHANGE SEAT" popup
+ *    - Popup triggers join confirmation modal
+ *    - Allows seat changing functionality
+ * 
+ * PlayerPopUpCard Integration:
+ * The PlayerPopUpCard is a popup menu that appears when clicking on a vacant seat.
+ * It serves several purposes:
+ * 1. Seat Management:
+ *    - Shows seat number and availability
+ *    - Provides "CHANGE SEAT" button for future implementation
+ *    - Will handle seat change confirmation
+ * 
+ * 2. Seat Information:
+ *    - Displays seat number
+ *    - Shows seat status (available/taken)
+ *    - Future: Will show seat preferences and history
+ * 
+ * 3. Interactive Features:
+ *    - Note-taking for seat preferences (placeholder)
+ *    - Seat rating system (placeholder)
+ *    - Quick actions menu (placeholder)
+ * 
+ * The popup appears when:
+ * - isCardVisible is true
+ * - It slides in with an animation
+ * - It can be closed using the X button
+ * 
+ * Props:
+ * - left/top: Position on the table
+ * - index: Seat number
+ */
+
 import * as React from "react";
-import { memo, useEffect, useState, useMemo, useCallback } from "react";
+import { memo, useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import PokerProfile from "../../../assets/PokerProfile.svg";
 import { toDisplaySeat } from "../../../utils/tableUtils";
-import { useTableJoin } from "../../../hooks/playerActions/useTableJoin";
-import { useTableTurnIndex } from "../../../hooks/useTableTurnIndex";
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
-
-// Enable this to see verbose logging
-const DEBUG_MODE = false;
-const debugLog = (...args: any[]) => {
-    if (DEBUG_MODE) console.log(...args);
-};
-
-type VacantPlayerProps = {
-    left?: string;
-    top?: string;
-    index: number;
-};
+import { useNodeRpc } from "../../../context/NodeRpcContext";
+import type { VacantPlayerProps } from "../../../types/index";
+import PlayerPopUpCard from "./PlayerPopUpCard";
+import { useDealerPosition } from "../../../hooks/useDealerPosition";
+import CustomDealer from "../../../assets/CustomDealer.svg";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
-    ({ left, top, index }) => {
+    ({ left, top, index, onJoin }) => {
         const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData(useParams<{ id: string }>().id);
         const { id: tableId } = useParams<{ id: string }>();
         const userAddress = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
-        const actionIndex = useTableTurnIndex(tableId);
 
+        // Get NodeRpcClient
+        const { client, isLoading: clientLoading } = useNodeRpc();
         const [showConfirmModal, setShowConfirmModal] = useState(false);
+        const [isJoining, setIsJoining] = useState(false);
+        const [joinError, setJoinError] = useState<string | null>(null);
+        const [joinSuccess, setJoinSuccess] = useState(false);
+        const [joinResponse, setJoinResponse] = useState<any>(null);
+        const [isCardVisible, setIsCardVisible] = useState(false);
+
+        const { dealerSeat } = useDealerPosition();
+    
+        // Check if this seat is the dealer
+        const isDealer = dealerSeat === index;
+
+        // Memoize seat status checks
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
 
-        const { joinTable } = tableId ? useTableJoin(tableId) : { joinTable: null };
-
+        // Memoize handlers
         const handleJoinClick = useCallback(() => {
-            debugLog("Join click:", { index, tableId });
             if (!canJoinThisSeat) return;
             setShowConfirmModal(true);
-        }, [canJoinThisSeat, index, tableId]);
+            setJoinError(null);
+            setJoinSuccess(false);
+            setJoinResponse(null);
+        }, [canJoinThisSeat]);
 
-        const handleConfirmSeat = async () => {
-            setShowConfirmModal(false);
+        const handleSeatClick = useCallback(() => {
+            if (isUserAlreadyPlaying) {
+                setIsCardVisible(true);
+            } else if (canJoinThisSeat) {
+                handleJoinClick();
+            }
+        }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
 
-            const storedAmount = localStorage.getItem("buy_in_amount");
-
-            if (!storedAmount || !joinTable || !userAddress || !privateKey) {
-                console.error("Missing join parameters");
+        const handleConfirmSeat = useCallback(async () => {
+            if (!client || !userAddress || !privateKey || !tableId) {
+                setJoinError("Missing required information to join table");
                 return;
             }
 
-            try {
-                const buyInWei = ethers.parseUnits(storedAmount, 18).toString();
-                await joinTable({
-                    buyInAmount: buyInWei,
-                    userAddress,
-                    privateKey,
-                    publicKey: userAddress,
-                    index: actionIndex
-                });
-                window.location.reload();
-            } catch (err) {
-                console.error("Failed to join:", err);
+            const storedAmount = localStorage.getItem("buy_in_amount");
+            if (!storedAmount) {
+                setJoinError("Missing buy-in amount");
+                return;
             }
-        };
 
-        useEffect(() => {
-            debugLog("VacantPlayer mounted:", { left, top, index });
-        }, [left, top, index]);
+            setIsJoining(true);
+            setJoinError(null);
+            setJoinSuccess(false);
+
+            try {
+                const buyIn = ethers.parseUnits(storedAmount, 18);
+                const account = await client.getAccount(userAddress);
+                const response = await client.playerJoin(tableId, BigInt(buyIn.toString()), index, account.nonce);
+                
+                setJoinResponse(response);
+                setJoinSuccess(true);
+                setShowConfirmModal(false);
+                
+                // Call onJoin after successful join
+                if (onJoin) {
+                    onJoin();
+                }
+            } catch (err) {
+                console.error("Failed to join table:", err);
+                setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
+                setIsJoining(false);
+            }
+        }, [client, userAddress, privateKey, tableId, index, onJoin]);
+
+        // Memoize container styles
+        const containerStyle = useMemo(() => ({
+            left,
+            top
+        }), [left, top]);
+
+        // Memoize popup styles
+        const popupStyle = useMemo(() => ({
+            left,
+            top,
+            transform: "translate(-50%, -50%)"
+        }), [left, top]);
+
+        // Memoize popup class names
+        const popupClassName = useMemo(() => 
+            `absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
+                isCardVisible ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
+            }`,
+            [isCardVisible]
+        );
+
+        // Memoize seat text
+        const seatText = useMemo(() => ({
+            title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`,
+            subtitle: !isUserAlreadyPlaying ? (canJoinThisSeat ? "Click to Join" : "Seat Taken") : null
+        }), [isUserAlreadyPlaying, canJoinThisSeat, index]);
 
         return (
-            <div className={`absolute ${isSeatVacant ? "cursor-pointer" : ""}`} style={{ left, top }} onClick={canJoinThisSeat ? handleJoinClick : undefined}>
-                <div className={`flex justify-center mb-2 ${canJoinThisSeat ? "hover:cursor-pointer" : "cursor-default"}`}>
-                    <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
-                </div>
-                <div className="text-white text-center">
-                    <div className="text-sm mb-1 whitespace-nowrap">{isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`}</div>
-                    {!isUserAlreadyPlaying && <div className="whitespace-nowrap">{canJoinThisSeat ? "Click to Join" : "Seat Taken"}</div>}
+            <>
+                <div 
+                    className="absolute cursor-pointer" 
+                    style={containerStyle}
+                    onClick={handleSeatClick}
+                >
+                    <div className="flex justify-center mb-2">
+                        <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
+                    </div>
+                    <div className="text-white text-center">
+                        <div className="text-lg sm:text-sm mb-1 whitespace-nowrap font-medium">{seatText.title}</div>
+                        {seatText.subtitle && <div className="text-base sm:text-xs whitespace-nowrap">{seatText.subtitle}</div>}
+                    </div>
+
+                    {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}
+                    {isDealer && (
+                        <div className="absolute top-[-85px] right-[-40px] w-12 h-12 z-20">
+                            <img src={CustomDealer} alt="Dealer Button" className="w-full h-full" />
+                        </div>
+                    )}
                 </div>
 
+                {/* PlayerPopUpCard - Only show for seat changing */}
+                {isUserAlreadyPlaying && (
+                    <div
+                        className={popupClassName}
+                        style={popupStyle}
+                    >
+                        {isCardVisible && (
+                            <PlayerPopUpCard
+                                id={index + 1}
+                                label="CHANGE SEAT"
+                                color="#4a5568"
+                                isVacant={true}
+                                setStartIndex={() => {
+                                    handleJoinClick();
+                                    setIsCardVisible(false);
+                                }}
+                                onClose={() => setIsCardVisible(false)}
+                            />
+                        )}
+                    </div>
+                )}
+
                 {showConfirmModal && (
-                    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-                        <div className="bg-gradient-to-b from-gray-800 to-gray-900 p-8 rounded-xl shadow-2xl w-96 border border-gray-700 relative">
-                            <div className="absolute -right-8 -top-8 text-6xl opacity-10 rotate-12">♠</div>
-                            <div className="absolute -left-8 -bottom-8 text-6xl opacity-10 -rotate-12">♥</div>
-                            <h2 className="text-2xl font-bold mb-4 text-white text-center flex items-center justify-center">
-                                <span className="text-green-400 mr-2">♣</span>
-                                Sit Here?
-                                <span className="text-red-400 ml-2">♦</span>
-                            </h2>
-                            <div className="flex justify-between space-x-4 mt-6">
-                                <button onClick={() => setShowConfirmModal(false)} className="px-5 py-3 bg-gray-600 text-white rounded-lg flex-1">
-                                    No
+                    <div
+                        className="fixed inset-0 flex items-center justify-center z-50"
+                        onClick={() => !isJoining && setShowConfirmModal(false)}
+                    >
+                        <div
+                            className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <h3 className="text-xl font-bold text-white mb-4">Join Seat {toDisplaySeat(index)}</h3>
+                            
+                            {joinError && (
+                                <div className="mb-4 p-3 bg-red-900/30 text-red-200 rounded-lg text-sm border border-red-500/20">
+                                    {joinError}
+                                </div>
+                            )}
+                            
+                            <p className="text-gray-300 mb-6 text-center">
+                                Ready to join at seat {toDisplaySeat(index)}?
+                            </p>
+
+                            <div className="flex justify-center space-x-3">
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
+                                    disabled={isJoining}
+                                >
+                                    Cancel
                                 </button>
                                 <button
                                     onClick={handleConfirmSeat}
-                                    className="px-5 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg flex-1 shadow-lg hover:from-green-500 hover:to-green-400 transform hover:scale-105"
+                                    disabled={isJoining || clientLoading}
+                                    className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20 flex items-center"
                                 >
-                                    Yes
+                                    {isJoining ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                ></path>
+                                            </svg>
+                                            Joining...
+                                        </>
+                                    ) : (
+                                        "Join Seat"
+                                    )}
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
-            </div>
+
+                {/* Placeholder div for potential future loading animation */}
+                {joinSuccess && !showConfirmModal && (
+                    <div id="loading-animation-placeholder" style={{ display: "none" }}>
+                        {/* Future loading animation will go here */}
+                    </div>
+                )}
+            </>
         );
     },
-    (prev, next) => prev.left === next.left && prev.top === next.top && prev.index === next.index
+    (prevProps, nextProps) => {
+        // Custom comparison function for memo
+        return (
+            prevProps.left === nextProps.left &&
+            prevProps.top === nextProps.top &&
+            prevProps.index === nextProps.index
+        );
+    }
 );
 
 VacantPlayer.displayName = "VacantPlayer";

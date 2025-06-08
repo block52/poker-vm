@@ -1,68 +1,53 @@
-import { useGameState } from "./useGameState";
-
-/**
- * Interface for showing cards data
- */
-interface ShowingCardData {
-  address: string;
-  holeCards: string[];
-  seat: number;
-}
+import { useMemo} from "react";
+import { useGameStateContext } from "../context/GameStateContext";
+import { PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ShowingCardsByAddressReturn, ShowingCardData } from "../types/index";
 
 /**
  * Custom hook to get hole cards of players who have shown their cards
- * @param tableId The ID of the table to check
+ * 
+ * NOTE: Player showing status and hole cards are handled through GameStateContext subscription.
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * and playerId parameters. This hook reads the real-time showing cards data from that context.
+ * 
  * @returns Object containing all players with "showing" status and their cards
  */
-export const useShowingCardsByAddress = (tableId?: string) => {
-  // Get game state from centralized hook
-  const { gameState, isLoading, error, refresh } = useGameState(tableId);
+export const useShowingCardsByAddress = (): ShowingCardsByAddressReturn => {
+  // Get game state directly from Context - real-time data via WebSocket
+  const { gameState, isLoading, error } = useGameStateContext();
   
-  // Default return value
-  const defaultValue = {
-    showingPlayers: [] as ShowingCardData[],
-    isShowdown: false,
+  // Check if round is showdown or end
+  const isShowdown = useMemo((): boolean => {
+    if (!gameState?.round) return false;
+    return gameState.round === TexasHoldemRound.SHOWDOWN || gameState.round === TexasHoldemRound.END;
+  }, [gameState]);
+  
+  // Find all players with status "showing"
+  const showingPlayers = useMemo((): ShowingCardData[] => {
+    if (!gameState?.players) return [];
+    
+    try {
+      return gameState.players
+        .filter((player: PlayerDTO) => 
+          player.status === PlayerStatus.SHOWING && 
+          player.holeCards && 
+          player.holeCards.length === 2
+        )
+        .map((player: PlayerDTO) => ({
+          address: player.address,
+          holeCards: player.holeCards || [],
+          seat: player.seat
+        }));
+    } catch (err) {
+      console.error("Error filtering showing players:", err);
+      return [];
+    }
+  }, [gameState]);
+  
+  return {
+    showingPlayers,
+    isShowdown,
     isLoading,
-    error,
-    refresh
+    error
   };
-  
-  // If still loading or error occurred, return default values
-  if (isLoading || error || !gameState) {
-    return defaultValue;
-  }
-  
-  try {
-    // Check if round is showdown or end
-    const isShowdown = gameState.round === "showdown" || gameState.round === "end";
-    
-    // Find all players with status "showing"
-    const showingPlayers = gameState.players
-      ?.filter((player: any) => 
-        player.status === "showing" && 
-        player.holeCards && 
-        player.holeCards.length === 2
-      )
-      .map((player: any) => ({
-        address: player.address,
-        holeCards: player.holeCards,
-        seat: player.seat
-      })) || [];
-    
-    console.log("Players showing cards:", showingPlayers);
-    
-    return {
-      showingPlayers,
-      isShowdown,
-      isLoading: false,
-      error: null,
-      refresh
-    };
-  } catch (err) {
-    console.error("Error getting showing cards:", err);
-    return {
-      ...defaultValue,
-      error: err
-    };
-  }
 }; 

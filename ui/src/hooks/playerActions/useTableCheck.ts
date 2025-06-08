@@ -1,83 +1,78 @@
-import { useCallback, useState } from "react";
-import axios from "axios";
-import { PROXY_URL } from "../../config/constants";
-
-// Types for the check parameters
-interface CheckHandArgs {
-    userAddress?: string | null;
-    privateKey?: string | null;
-    publicKey?: string | null;
-    actionIndex: number;
-}
-
-// Interface for the hook return type
-interface UseTableCheckReturn {
-    checkHand: (args: CheckHandArgs) => Promise<any>;
-    isChecking: boolean;
-    error: Error | null;
-}
+import { useState } from "react";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { useNodeRpc } from "../../context/NodeRpcContext";
 
 /**
- * Hook to handle the check action on a poker table
- * @param tableId The ID of the table
- * @returns Object with checkHand function and loading state
+ * Custom hook to handle checking in a poker game
+ * @param tableId The ID of the table where the action will be performed
+ * @returns Object containing functions for checking a hand
  */
-export function useTableCheck(tableId?: string): UseTableCheckReturn {
-    const [isChecking, setIsChecking] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
+export function useTableCheck(tableId?: string) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const { client } = useNodeRpc();
 
-    // Function to check on hand
-    const checkHand = useCallback(
-        async ({ userAddress, privateKey, publicKey, actionIndex }: CheckHandArgs): Promise<any> => {
-            if (!tableId) {
-                const noTableError = new Error("No table ID provided");
-                setError(noTableError);
-                return Promise.reject(noTableError);
+    /**
+     * Checks the player's hand on the specified table
+     * @param options Object containing action parameters
+     * @returns Promise resolving to the result of the action
+     */
+    const checkHand = async (options: { amount?: string }) => {
+        if (!tableId) {
+            setError("Table ID is required");
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // Make the API call
+            if (!client) {
+                setError("Client is not initialized");
+                return;
             }
 
-            if (!privateKey) {
-                const noPrivateKeyError = new Error("Private key is required");
-                setError(noPrivateKeyError);
-                return Promise.reject(noPrivateKeyError);
-            }
+            // 🔍 DEBUG: Log game state before check action
+            console.log("🃏 [CHECK ACTION DEBUG]", {
+                timestamp: new Date().toISOString(),
+                tableId,
+                action: "CHECK",
+                amount: options.amount || "0",
+                source: "useTableCheck.checkHand"
+            });
 
-            setIsChecking(true);
-            setError(null);
+            // Call the playerAction method
+            const response = await client.playerAction(
+                tableId,
+                PlayerActionType.CHECK,
+                options.amount || "0", // Check doesn't require an amount, but API expects it
+                undefined // Let the client handle the nonce
+            );
 
-            try {
-                console.log(`Checking on table ${tableId} with action index ${actionIndex}`);
-                
-                // Make API call to check
-                const response = await axios.post(`${PROXY_URL}/table/${tableId}/check`, {
-                    tableId,
-                    privateKey,
-                    userAddress,
-                    publicKey,
-                    actionIndex
-                });
+            console.log("✅ [CHECK ACTION SUCCESS]", { tableId, response });
+            return response;
+        } catch (err: any) {
+            // 🚨 Enhanced error logging for illegal action
+            console.error("❌ [CHECK ACTION FAILED]", {
+                timestamp: new Date().toISOString(),
+                tableId,
+                error: err.message,
+                action: "CHECK",
+                amount: options.amount || "0",
+                source: "useTableCheck.checkHand"
+            });
+            
+            setError(err.message || "Failed to check hand");
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-                console.log("Check response:", response.data);
-                
-                setIsChecking(false);
-                return response.data;
-            } catch (err: any) {
-                console.error("Error checking:", err);
-                setError(err);
-                setIsChecking(false);
-                throw err;
-            }
-        },
-        [tableId]
-    );
-
-    const result = { checkHand, isChecking, error };
-
-    console.log("[useTableCheck] Returns:", {
-        hasCheckFunction: !!result.checkHand,
-        isChecking: result.isChecking,
-        hasError: !!result.error,
-        tableId
-    });
-
-    return result;
+    return {
+        checkHand,
+        isChecking: isLoading,
+        error
+    };
 }
