@@ -24,6 +24,16 @@ export function getPublicKey(): string | null {
 }
 
 /**
+ * Get formatted address for display (shortened with ellipsis)
+ * @returns Formatted address string like "0x1234...abcd" or empty string if no address
+ */
+export function getFormattedAddress(): string {
+    const pubKey = getPublicKey();
+    if (!pubKey) return "";
+    return `${pubKey.slice(0, 6)}...${pubKey.slice(-4)}`;
+}
+
+/**
  * Set the user's private key in browser storage
  * @param privateKey The private key to store
  */

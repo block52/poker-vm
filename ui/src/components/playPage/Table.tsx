@@ -67,7 +67,7 @@ import { RxExit } from "react-icons/rx";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
-import { toDisplaySeat } from "../../utils/tableUtils";
+
 import { ethers } from "ethers";
 
 import "./Table.css"; // Import the Table CSS file
@@ -97,7 +97,7 @@ import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner in
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameOptions } from "../../hooks/useGameOptions";
-import { getAccountBalance, getPublicKey } from "../../utils/b52AccountUtils";
+import { getAccountBalance, getPublicKey, getFormattedAddress } from "../../utils/b52AccountUtils";
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
 import { useGameStateContext } from "../../context/GameStateContext";
@@ -288,12 +288,8 @@ const Table = React.memo(() => {
         return storedAddress ? storedAddress.toLowerCase() : null;
     }, []);
 
-    // Memoize formatted address display using utility function
-    const formattedAddress = useMemo(() => {
-        const pubKey = getPublicKey();
-        if (!pubKey) return "";
-        return `${pubKey.slice(0, 6)}...${pubKey.slice(-4)}`;
-    }, []);
+    // Use utility function for formatted address
+    const formattedAddress = getFormattedAddress();
 
     // Memoize user data
     const userData = useMemo(() => {
@@ -787,7 +783,7 @@ const Table = React.memo(() => {
                 {/* Add a message for the current user's seat */}
                 {currentUserSeat >= 0 && (
                     <div className="text-white bg-black bg-opacity-50 px-2 py-1 rounded text-xs sm:text-sm text-center">
-                        You are seated at position {toDisplaySeat(currentUserSeat)}
+                        You are seated at position {currentUserSeat}
                     </div>
                 )}
                 

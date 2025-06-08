@@ -51,7 +51,7 @@ import { memo, useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import PokerProfile from "../../../assets/PokerProfile.svg";
-import { toDisplaySeat } from "../../../utils/tableUtils";
+
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
 import type { VacantPlayerProps } from "../../../types/index";
 import PlayerPopUpCard from "./PlayerPopUpCard";
@@ -168,7 +168,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
         // Memoize seat text
         const seatText = useMemo(() => ({
-            title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`,
+            title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${index}`,
             subtitle: !isUserAlreadyPlaying ? (canJoinThisSeat ? "Click to Join" : "Seat Taken") : null
         }), [isUserAlreadyPlaying, canJoinThisSeat, index]);
 
@@ -226,7 +226,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                             className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20"
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-bold text-white mb-4">Join Seat {toDisplaySeat(index)}</h3>
+                            <h3 className="text-xl font-bold text-white mb-4">Join Seat {index}</h3>
                             
                             {joinError && (
                                 <div className="mb-4 p-3 bg-red-900/30 text-red-200 rounded-lg text-sm border border-red-500/20">
@@ -235,7 +235,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                             )}
                             
                             <p className="text-gray-300 mb-6 text-center">
-                                Ready to join at seat {toDisplaySeat(index)}?
+                                Ready to join at seat {index}?
                             </p>
 
                             <div className="flex justify-center space-x-3">
