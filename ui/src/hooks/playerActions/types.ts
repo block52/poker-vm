@@ -56,7 +56,7 @@ export interface FoldOptions {
 
 export interface JoinTableOptions {
     buyInAmount: string;
-    privateKey: string | null;
+    privateKey?: string | null;
     nonce?: string | number;
     actionIndex?: number;
     seatNumber?: number;

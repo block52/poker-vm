@@ -56,7 +56,7 @@ describe.skip("BaseAction", () => {
         player = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 1000n, undefined, PlayerStatus.ACTIVE);
     });
 
-    describe.skip("verify", () => {
+    describe("verify", () => {
         describe("game state validation", () => {
             it("should throw error if game is in showdown", () => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);

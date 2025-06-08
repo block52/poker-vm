@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNodeRpc } from "../context/NodeRpcContext";
 import { AccountDTO } from "@bitcoinbrisbane/block52";
+import { getClient } from "../utils/b52AccountUtils";
 
 export interface UseAccountReturn {
     account: AccountDTO | null;
@@ -18,10 +18,9 @@ export const useAccount = (address?: string): UseAccountReturn => {
     const [account, setAccount] = useState<AccountDTO | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-    const { client } = useNodeRpc();
 
     const fetchAccount = useCallback(async () => {
-        if (!client || !address) {
+        if (!address) {
             return;
         }
 
@@ -29,6 +28,9 @@ export const useAccount = (address?: string): UseAccountReturn => {
         setError(null);
 
         try {
+            // Use the singleton client instance
+            const client = getClient();
+            
             const accountData = await client.getAccount(address);
             console.log("🔍 Account Data Retrieved:");
             console.log(`Address: ${address}`);
@@ -43,7 +45,7 @@ export const useAccount = (address?: string): UseAccountReturn => {
         } finally {
             setIsLoading(false);
         }
-    }, [client, address]);
+    }, [address]);
 
     useEffect(() => {
         if (address) {

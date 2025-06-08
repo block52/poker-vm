@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNodeRpc } from "../context/NodeRpcContext";
+import { NodeRpcClient, GameOptionsResponse } from "@bitcoinbrisbane/block52";
 import { FindGamesReturn } from "../types/index";
-import { GameOptionsResponse } from "@bitcoinbrisbane/block52";
+import { getPrivateKey } from "../utils/b52AccountUtils";
 
 /**
  * Custom hook to find available games
@@ -11,12 +11,18 @@ export const useFindGames = (): FindGamesReturn => {
     const [games, setGames] = useState<GameOptionsResponse[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-    const { client } = useNodeRpc();
 
     const fetchGames = useCallback(async () => {
-        if (!client) {
+        // Get private key from storage
+        const privateKey = getPrivateKey();
+        if (!privateKey) {
+            setError(new Error("No private key found. Please connect your wallet first."));
             return;
         }
+
+        // Create the client directly with the private key
+        const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
+        const client = new NodeRpcClient(nodeUrl, privateKey);
 
         setIsLoading(true);
         setError(null);
@@ -55,7 +61,7 @@ export const useFindGames = (): FindGamesReturn => {
         } finally {
             setIsLoading(false);
         }
-    }, [client]);
+    }, []);
 
     useEffect(() => {
         fetchGames();

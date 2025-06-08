@@ -7,7 +7,7 @@ import { TableTurnIndexReturn } from "../types/index";
  * @param tableId The table ID (not used - Context manages subscription)
  * @returns Object containing the next turn index and loading/error states
  */
-export function useTableTurnIndex(tableId?: string): TableTurnIndexReturn {
+export function useTableTurnIndex(): TableTurnIndexReturn {
   // Get game state directly from Context - no additional WebSocket connections
   const { gameState, isLoading, error } = useGameStateContext();
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 /**
@@ -276,13 +276,14 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
     };
   }, []);
 
-  const contextValue: GameStateContextType = {
+  // 🎯 PERFORMANCE FIX: Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo((): GameStateContextType => ({
     gameState,
     isLoading,
     error,
     subscribeToTable,
     unsubscribeFromTable
-  };
+  }), [gameState, isLoading, error, subscribeToTable, unsubscribeFromTable]);
 
   return (
     <GameStateContext.Provider value={contextValue}>
