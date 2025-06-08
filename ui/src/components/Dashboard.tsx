@@ -96,10 +96,6 @@ const Dashboard: React.FC = () => {
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
 
-    // // Add this ref at the top of your component
-    // const initialLoadComplete = useRef(false);
-    // const lastFetchedPublicKey = useRef<string | undefined>(undefined);
-
     // Password validation function
     const handlePasswordSubmit = () => {
         utilHandlePasswordSubmit(passwordInput, setIsAuthenticated, setPasswordError, setPasswordInput);
@@ -175,38 +171,6 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // // Function to fetch account balance - simplified pattern like Table.tsx
-    // const fetchAccountBalance = useCallback(async (force = false) => {
-    //     // Skip if no public key
-    //     if (!publicKey) {
-    //         setBalanceError(new Error("No address available"));
-    //         setIsBalanceLoading(false);
-    //         return;
-    //     }
-        
-    //     // Skip if we've already loaded for this key and it's not forced
-    //     if (!force && initialLoadComplete.current && lastFetchedPublicKey.current === publicKey) {
-    //         return;
-    //     }
-        
-    //     try {
-    //         setIsBalanceLoading(true);
-    //         setBalanceError(null);
-            
-    //         const balance = await getAccountBalance();
-    //         setAccountBalance(balance);
-            
-    //         // Mark that we've completed a load for this key
-    //         initialLoadComplete.current = true;
-    //         lastFetchedPublicKey.current = publicKey;
-    //     } catch (err) {
-    //         console.error("Error fetching account balance:", err);
-    //         setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
-    //     } finally {
-    //         setIsBalanceLoading(false);
-    //     }
-    // }, [publicKey]);
-
     const generateNewWallet = () => {
         try {
             // Create a new random wallet
@@ -235,17 +199,6 @@ const Dashboard: React.FC = () => {
             setPublicKey(localStorage.getItem("user_eth_public_key") || undefined);
         }
     }, []);
-
-    // // Update to fetch balance when publicKey changes
-    // useEffect(() => {
-    //     if (publicKey) {
-    //         // Only fetch if public key changed or it's the initial load
-    //         if (publicKey !== lastFetchedPublicKey.current || !initialLoadComplete.current) {
-    //             fetchAccountBalance();
-    //         }
-    //     }
-    // }, [publicKey, fetchAccountBalance]);
-
 
     const handleGameVariant = (variant: Variant) => {
         if (variant === Variant.TEXAS_HOLDEM) {
