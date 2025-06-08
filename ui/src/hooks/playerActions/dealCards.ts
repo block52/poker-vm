@@ -20,15 +20,12 @@ export async function dealCards(tableId: string) {
     console.log("🃏 Seed:", seed);
 
     // Call the deal method (let SDK handle nonce internally)
-    return client.deal(
+    const response = await client.deal(
         tableId,
         seed,
         "" // The publicKey is not actually used in the interface
-    ).then(response => {
-        console.log("🃏 Deal cards response:", response);
-        return response;
-    }).catch(error => {
-        console.error("🃏 Deal cards failed:", error);
-        throw error; // Re-throw to let calling code handle it
-    });
+    );
+
+    console.log("🃏 Deal cards response:", response);
+    return response;
 }

@@ -18,8 +18,6 @@ import { betHand } from "../hooks/playerActions/betHand";
 import { muckCards } from "../hooks/playerActions/muckCards";
 import { showCards } from "../hooks/playerActions/showCards";
 import { startNewHand } from "../hooks/playerActions/startNewHand";
-import { sitIn } from "../hooks/playerActions/sitIn";
-import { sitOut } from "../hooks/playerActions/sitOut";
 import { usePlayerTimer } from "../hooks/usePlayerTimer";
 import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";

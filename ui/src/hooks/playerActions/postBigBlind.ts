@@ -18,15 +18,12 @@ export async function postBigBlind(tableId: string, bigBlindAmount: string) {
     console.log("🎰 Big blind amount:", bigBlindAmount);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    return client.playerAction(
+    const response = await client.playerAction(
         tableId,
         PlayerActionType.BIG_BLIND,
         bigBlindAmount
-    ).then(response => {
-        console.log("🎰 Post big blind response:", response);
-        return response;
-    }).catch(error => {
-        console.error("🎰 Post big blind failed:", error);
-        throw error; // Re-throw to let calling code handle it
-    });
+    );
+
+    console.log("🎰 Post big blind response:", response);
+    return response;
 }

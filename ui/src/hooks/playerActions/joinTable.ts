@@ -44,15 +44,12 @@ export async function joinTable(tableId: string, options: JoinTableOptions, maxP
     const buyInAmountBigInt = BigInt(buyInAmount);
     
     // Use the client's playerJoin method (let SDK handle nonce internally)
-    return client.playerJoin(
+    const response = await client.playerJoin(
         tableId,
         buyInAmountBigInt,
         finalSeatNumber
-    ).then(response => {
-        console.log("🎮 Join table response:", response);
-        return response;
-    }).catch(error => {
-        console.error("🎮 Join table failed:", error);
-        throw error; // Re-throw to let calling code handle it
-    });
+    );
+
+    console.log("🎮 Join table response:", response);
+    return response;
 }

@@ -16,15 +16,12 @@ export async function muckCards(tableId: string) {
     console.log("🗑️ Table ID:", tableId);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    return client.playerAction(
+    const response = await client.playerAction(
         tableId,
         PlayerActionType.MUCK,
         "0" // No amount needed for mucking
-    ).then(response => {
-        console.log("🗑️ Muck response:", response);
-        return response;
-    }).catch(error => {
-        console.error("🗑️ Muck failed:", error);
-        throw error; // Re-throw to let calling code handle it
-    });
+    );
+
+    console.log("🗑️ Muck response:", response);
+    return response;
 }

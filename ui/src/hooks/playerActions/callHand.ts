@@ -16,15 +16,12 @@ export async function callHand(tableId: string) {
     console.log("📞 Table ID:", tableId);
 
     // Call the playerAction method (backend determines correct call amount)
-    return client.playerAction(
+    const response = await client.playerAction(
         tableId,
         PlayerActionType.CALL,
         "0" // Backend will use the correct call amount from game state
-    ).then(response => {
-        console.log("📞 Call response:", response);
-        return response;
-    }).catch(error => {
-        console.error("📞 Call failed:", error);
-        throw error; // Re-throw to let calling code handle it
-    });
+    );
+
+    console.log("📞 Call response:", response);
+    return response;
 }

@@ -16,15 +16,12 @@ export async function checkHand(tableId: string) {
     console.log("✅ Table ID:", tableId);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    return client.playerAction(
+    const response = await client.playerAction(
         tableId,
         PlayerActionType.CHECK,
         "0" // Check doesn't require an amount
-    ).then(response => {
-        console.log("✅ Check response:", response);
-        return response;
-    }).catch(error => {
-        console.error("✅ Check failed:", error);
-        throw error; // Re-throw to let calling code handle it
-    });
+    );
+
+    console.log("✅ Check response:", response);
+    return response;
 }
