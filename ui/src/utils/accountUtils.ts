@@ -49,22 +49,16 @@ export const getPublicKey = (privateKey: string): string => {
  * @returns Object with user's seat, available actions, and other relevant data
  */
 export const getUserTableStatus = (tableData: any): TableStatus | undefined => {
-    // console.log("getUserTableStatus called with tableData:", tableData);
 
     if (!tableData) {
-        // console.log("tableData is null or undefined, returning null");
         return undefined;
     }
 
     // Extract the actual table data from the nested structure
     const actualTableData = tableData.data || tableData;
-    // console.log("Extracted actual table data:", actualTableData);
 
     const userAddress = localStorage.getItem("user_eth_public_key");
-    // console.log("User address from localStorage:", userAddress);
-
     if (!userAddress) {
-        // console.log("No user address found in localStorage, returning null");
         return undefined;
     }
 
@@ -73,10 +67,8 @@ export const getUserTableStatus = (tableData: any): TableStatus | undefined => {
 
     // Find the player in the table
     const player = playersArray.find((p: PlayerDTO) => p.address?.toLowerCase() === userAddress.toLowerCase());
-    // console.log("Found player:", player);
 
     if (!player) {
-        // console.log("Player not found in table data, returning null");
         return undefined;
     }
 
