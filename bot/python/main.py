@@ -99,7 +99,7 @@ class PokerBot:
                  rpc_url: str,
                  player_address: str,
                  buy_in_amount: int = 1000000,  # Default 1M chips
-                 game_address: str = None):
+                 table_address: str = None):
         """
         Initialize the poker bot.
 
@@ -107,12 +107,12 @@ class PokerBot:
             rpc_url: The RPC endpoint URL for the poker PVM
             player_address: The player's address/ID
             buy_in_amount: Amount of chips to buy in with
-            game_address: Specific game address to join (optional)
+            table_address: Specific game address to join (optional)
         """
         self.rpc_url = rpc_url.rstrip('/')
         self.player_address = player_address
         self.buy_in_amount = buy_in_amount
-        self.game_address = game_address
+        self.table_address = table_address
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json',
@@ -122,6 +122,7 @@ class PokerBot:
         logger.info(f"Initialized PokerBot for player {player_address}")
         logger.info(f"RPC URL: {rpc_url}")
         logger.info(f"Buy-in amount: {buy_in_amount}")
+
 
     def _make_rpc_call(self, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """
@@ -167,6 +168,7 @@ class PokerBot:
             logger.error(f"Error during RPC call {method}: {e}")
             raise
 
+
     def join_game(self, seat_number: Optional[int] = None) -> bool:
         """
         Join a poker game.
@@ -190,10 +192,10 @@ class PokerBot:
 
             index = 2  # Initial join action
             nonce = 0
-            params = [self.player_address, self.game_address, "join", "1000000000000000000", nonce, index, seat_number]
+            params = [self.player_address, self.table_address, "join", self.buy_in_amount, nonce, index, seat_number]
 
-            # if self.game_address:
-            #     params["game_address"] = self.game_address
+            # if self.table_address:
+            #     params["table_address"] = self.table_address
 
             # if seat_number is not None:
             #     params["seat"] = seat_number
@@ -213,6 +215,7 @@ class PokerBot:
             logger.error(f"Exception while joining game: {e}")
             return False
 
+
     def get_game_state(self) -> Optional[GameState]:
         """
         Get the current game state.
@@ -225,10 +228,10 @@ class PokerBot:
             #     "caller": self.player_address
             # }
 
-            params = [self.game_address, "0x0000000000000000000000000000000000000000"]
+            params = [self.table_address, "0x0000000000000000000000000000000000000000"]
 
-            # if self.game_address:
-            #     params["game_address"] = self.game_address
+            # if self.table_address:
+            #     params["table_address"] = self.table_address
 
             result = self._make_rpc_call("get_game_state", params)
 
@@ -284,6 +287,7 @@ class PokerBot:
             logger.error(f"Exception while getting game state: {e}")
             return None
 
+
     def get_my_player_state(self, game_state: GameState) -> Optional[PlayerState]:
         """
         Get this bot's player state from the game state.
@@ -298,6 +302,29 @@ class PokerBot:
             if player.address.lower() == self.player_address.lower():
                 return player
         return None
+
+
+    def get_nonce(self) -> int:
+        """
+        Get the current nonce for this bot's player address.
+
+        Returns:
+            The current nonce as an integer
+        """
+        try:
+            # params = {
+            #     "address": self.player_address
+            # }
+            params = [self.player_address]
+
+            result = self._make_rpc_call("get_account", params)
+            result_data = result.get("data")
+            return int(result_data.get("nonce", 0))
+
+        except Exception as e:
+            logger.error(f"Exception while getting nonce: {e}")
+            return 0
+        
 
     def log_game_state(self, game_state: GameState) -> None:
         """
@@ -335,6 +362,7 @@ class PokerBot:
                     logger.info(f"{prefix}Legal Actions: {actions_str}")
 
         logger.info("=" * 50)
+
 
     def poll_for_legal_actions(self, interval: float = 2.0, max_polls: int = 10) -> List[LegalAction]:
         """
@@ -378,6 +406,7 @@ class PokerBot:
         logger.warning(f"No legal actions found after {max_polls} polls")
         return []
 
+
     def run(self) -> None:
         """
         Main bot execution: join game, wait, then poll for legal actions.
@@ -385,10 +414,10 @@ class PokerBot:
         logger.info("Starting Poker Bot...")
 
         # # Step 1: Join the game
-        # seat_number = 2
-        # if not self.join_game(seat_number=seat_number):
-        #     logger.error("Failed to join game, exiting")
-        #     return
+        seat_number = 1
+        if not self.join_game(seat_number=seat_number):
+            logger.error("Failed to join game, exiting")
+            return
 
         # Step 2: Wait for 5 seconds
         logger.info("Waiting 5 seconds before polling...")
@@ -415,15 +444,15 @@ def main():
     # Configuration - adjust these values for your setup
     RPC_URL = "https://node1.block52.xyz"  # Your poker PVM RPC endpoint
     PLAYER_ADDRESS = "0xC84737526E425D7549eF20998Fa992f88EAC2484"  # Your player address
-    BUY_IN_AMOUNT = 1000000  # Chips to buy in with
-    GAME_ADDRESS = "0x16374746dc805b9d7e6e7df89a9a601e50fea85d"  # Specific game address, or None for default
+    BUY_IN_AMOUNT = 1000000000000000000  # Chips to buy in with
+    TABLE_ADDRESS = "0xdbd48d8f8fb0612f4e5bebe43e8f351cd8dcc2a5"  # Specific game address, or None for default
 
     # Create and run the bot
     bot = PokerBot(
         rpc_url=RPC_URL,
         player_address=PLAYER_ADDRESS,
         buy_in_amount=BUY_IN_AMOUNT,
-        game_address=GAME_ADDRESS
+        table_address=TABLE_ADDRESS
     )
 
     try:
