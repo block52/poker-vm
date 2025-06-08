@@ -57,13 +57,14 @@ import type { VacantPlayerProps } from "../../../types/index";
 import PlayerPopUpCard from "./PlayerPopUpCard";
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import { joinTable } from "../../../hooks/playerActions/joinTable";
-import { getAccountBalance } from "../../../utils/b52AccountUtils";
+import { useGameOptions } from "../../../hooks/useGameOptions";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index, onJoin }) => {
         const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData(useParams<{ id: string }>().id);
         const { id: tableId } = useParams<{ id: string }>();
+        const { gameOptions } = useGameOptions();
         const userAddress = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
 
@@ -120,10 +121,13 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 // Convert amount to Wei for the join function
                 const buyInWei = ethers.parseUnits(storedAmount, 18).toString();
                 
+                // Use actual maxPlayers from game options, fallback to 9 if not available
+                const maxPlayers = gameOptions?.maxPlayers || 9;
+                
                 const response = await joinTable(tableId, {
                     buyInAmount: buyInWei,
                     seatNumber: index
-                }, 9); // Default to 9 max players
+                }, maxPlayers);
                 
                 setJoinResponse(response);
                 setJoinSuccess(true);
@@ -139,7 +143,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [userAddress, privateKey, tableId, index, onJoin]);
+        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxPlayers]);
 
         // Memoize container styles
         const containerStyle = useMemo(() => ({
