@@ -231,7 +231,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     };
 
     const handleCall = async () => {
-        if (!privateKey || !tableId) {
+        if (!tableId) {
             console.error("Private key or table ID not available");
             return;
         }
