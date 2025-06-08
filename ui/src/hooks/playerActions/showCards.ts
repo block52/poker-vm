@@ -16,12 +16,15 @@ export async function showCards(tableId: string) {
     console.log("👁️ Table ID:", tableId);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    const response = await client.playerAction(
+    return client.playerAction(
         tableId,
         PlayerActionType.SHOW,
         "0" // No amount needed for showing
-    );
-
-    console.log("👁️ Show response:", response);
-    return response;
+    ).then(response => {
+        console.log("👁️ Show response:", response);
+        return response;
+    }).catch(error => {
+        console.error("👁️ Show failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }

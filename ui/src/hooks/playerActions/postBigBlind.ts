@@ -1,4 +1,4 @@
-import { NodeRpcClient, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getClient } from "../../utils/b52AccountUtils";
 
 /**
@@ -18,12 +18,15 @@ export async function postBigBlind(tableId: string, bigBlindAmount: string) {
     console.log("🎰 Big blind amount:", bigBlindAmount);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    const response = await client.playerAction(
+    return client.playerAction(
         tableId,
         PlayerActionType.BIG_BLIND,
         bigBlindAmount
-    );
-
-    console.log("🎰 Post big blind response:", response);
-    return response;
+    ).then(response => {
+        console.log("🎰 Post big blind response:", response);
+        return response;
+    }).catch(error => {
+        console.error("🎰 Post big blind failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }

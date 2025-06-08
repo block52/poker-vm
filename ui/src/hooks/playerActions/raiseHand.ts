@@ -18,12 +18,15 @@ export async function raiseHand(tableId: string, amount: string) {
     console.log("📈 Amount:", amount);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    const response = await client.playerAction(
+    return client.playerAction(
         tableId,
         PlayerActionType.RAISE,
         amount
-    );
-
-    console.log("📈 Raise response:", response);
-    return response;
+    ).then(response => {
+        console.log("📈 Raise response:", response);
+        return response;
+    }).catch(error => {
+        console.error("📈 Raise failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }

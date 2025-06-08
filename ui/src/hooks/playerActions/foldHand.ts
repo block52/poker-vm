@@ -16,12 +16,15 @@ export async function foldHand(tableId: string) {
     console.log("🗂️ Table ID:", tableId);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    const response = await client.playerAction(
+    return client.playerAction(
         tableId,
         PlayerActionType.FOLD,
         "0" // Fold doesn't require an amount
-    );
-
-    console.log("🗂️ Fold response:", response);
-    return response;
+    ).then(response => {
+        console.log("🗂️ Fold response:", response);
+        return response;
+    }).catch(error => {
+        console.error("🗂️ Fold failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }

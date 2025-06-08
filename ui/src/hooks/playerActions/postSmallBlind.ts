@@ -18,12 +18,15 @@ export async function postSmallBlind(tableId: string, smallBlindAmount: string) 
     console.log("🎰 Small blind amount:", smallBlindAmount);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    const response = await client.playerAction(
+    return client.playerAction(
         tableId,
         PlayerActionType.SMALL_BLIND,
         smallBlindAmount
-    );
-
-    console.log("🎰 Post small blind response:", response);
-    return response;
+    ).then(response => {
+        console.log("🎰 Post small blind response:", response);
+        return response;
+    }).catch(error => {
+        console.error("🎰 Post small blind failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }

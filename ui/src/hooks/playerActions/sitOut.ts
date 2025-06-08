@@ -16,12 +16,15 @@ export async function sitOut(tableId: string) {
     console.log("🚶 Table ID:", tableId);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    const response = await client.playerAction(
+    return client.playerAction(
         tableId,
         PlayerActionType.SIT_OUT,
         "0" // Sit out doesn't require an amount
-    );
-
-    console.log("🚶 Sit out response:", response);
-    return response;
+    ).then(response => {
+        console.log("🚶 Sit out response:", response);
+        return response;
+    }).catch(error => {
+        console.error("🚶 Sit out failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }

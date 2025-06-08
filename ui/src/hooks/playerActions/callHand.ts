@@ -16,12 +16,15 @@ export async function callHand(tableId: string) {
     console.log("📞 Table ID:", tableId);
 
     // Call the playerAction method (let SDK handle nonce internally)
-    const response = await client.playerAction(
+    return client.playerAction(
         tableId,
         PlayerActionType.CALL,
         "0" // Call amount is determined by the game state
-    );
-
-    console.log("📞 Call response:", response);
-    return response;
+    ).then(response => {
+        console.log("📞 Call response:", response);
+        return response;
+    }).catch(error => {
+        console.error("📞 Call failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }

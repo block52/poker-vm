@@ -23,8 +23,11 @@ export async function leaveTable(tableId: string, amount: string, nonce?: number
     console.log("👋 Nonce:", nonce);
 
     // Call the playerLeave method (let SDK handle nonce if not provided)
-    const response = await client.playerLeave(tableId, amountBigInt, nonce);
-    
-    console.log("👋 Leave table response:", response);
-    return response;
+    return client.playerLeave(tableId, amountBigInt, nonce).then(response => {
+        console.log("👋 Leave table response:", response);
+        return response;
+    }).catch(error => {
+        console.error("👋 Leave table failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }

@@ -20,8 +20,11 @@ export async function startNewHand(tableId: string, seed?: string) {
     console.log("🃏 Seed:", finalSeed);
 
     // Call the newHand method (let SDK handle nonce internally)
-    const response = await client.newHand(tableId, 0);
-
-    console.log("🃏 Start new hand response:", response);
-    return response;
+    return client.newHand(tableId, 0).then(response => {
+        console.log("🃏 Start new hand response:", response);
+        return response;
+    }).catch(error => {
+        console.error("🃏 Start new hand failed:", error);
+        throw error; // Re-throw to let calling code handle it
+    });
 }
