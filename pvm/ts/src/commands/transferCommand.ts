@@ -13,9 +13,9 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
     private readonly mempool: Mempool;
 
     constructor(
-        private from: string,
-        private to: string,
-        private amount: bigint,
+        private readonly from: string,
+        private readonly to: string,
+        private readonly amount: bigint,
         private readonly nonce: number | 0,
         private data: string | null,
         private readonly privateKey: string
