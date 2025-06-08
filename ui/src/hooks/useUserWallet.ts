@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Wallet } from "ethers";
-import { NodeRpcClient, AccountDTO } from "@bitcoinbrisbane/block52";
-import { getPrivateKey } from "../utils/b52AccountUtils";
+import { AccountDTO } from "@bitcoinbrisbane/block52";
+import { getClient } from "../utils/b52AccountUtils";
 
 // Key for storing last API call time in localStorage
 const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
@@ -34,13 +34,6 @@ const useUserWallet = (): UserWalletResult => {
     const fetchBalance = useCallback(async () => {
         if (!accountData?.address) return;
 
-        // Get private key from storage
-        const walletPrivateKey = getPrivateKey();
-        if (!walletPrivateKey) {
-            setError(new Error("No private key found. Please connect your wallet first."));
-            return;
-        }
-
         // Rate limiting: Only allow API calls once every 10 seconds across all hooks
         const now = Date.now();
         const lastApiCallStr = localStorage.getItem(LAST_ACCOUNT_API_CALL_KEY);
@@ -60,9 +53,8 @@ const useUserWallet = (): UserWalletResult => {
         localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
 
         try {
-            // Create the client directly with the private key
-            const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
-            const client = new NodeRpcClient(nodeUrl, walletPrivateKey);
+            // Use the singleton client instance
+            const client = getClient();
             
             // Use the SDK's getAccount method
             const data = await client.getAccount(accountData.address);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { NodeRpcClient, AccountDTO } from "@bitcoinbrisbane/block52";
-import { getPrivateKey } from "../utils/b52AccountUtils";
+import { AccountDTO } from "@bitcoinbrisbane/block52";
+import { getClient } from "../utils/b52AccountUtils";
 
 export interface UseAccountReturn {
     account: AccountDTO | null;
@@ -24,21 +24,13 @@ export const useAccount = (address?: string): UseAccountReturn => {
             return;
         }
 
-        // Get private key from storage
-        const privateKey = getPrivateKey();
-        if (!privateKey) {
-            setError(new Error("No private key found. Please connect your wallet first."));
-            return;
-        }
-
-        // Create the client directly with the private key
-        const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
-        const client = new NodeRpcClient(nodeUrl, privateKey);
-
         setIsLoading(true);
         setError(null);
 
         try {
+            // Use the singleton client instance
+            const client = getClient();
+            
             const accountData = await client.getAccount(address);
             console.log("🔍 Account Data Retrieved:");
             console.log(`Address: ${address}`);
