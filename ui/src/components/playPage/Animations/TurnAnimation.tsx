@@ -1,15 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useTableAnimations } from "../../../hooks/useTableAnimations";
 import { useNextToActInfo } from "../../../hooks/useNextToActInfo";
-import { useParams } from "react-router-dom";
 import { turnAnimationPosition } from "../../../utils/PositionArray";
 import { TurnAnimationProps } from "../../../types/index";
 import "./TurnAnimation.css";
 
 const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
-    const { id } = useParams<{ id: string }>();
-    const { tableSize } = useTableAnimations(id);
-    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo(id);
+    const { tableSize } = useTableAnimations();
+    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo();
     const [isCurrentPlayersTurn, setIsCurrentPlayersTurn] = useState(false);
     
     // Memoize position to avoid unnecessary calculations

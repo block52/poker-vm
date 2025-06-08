@@ -277,10 +277,10 @@ const Table = React.memo(() => {
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
 
     // Add the useChipPositions hook AFTER startIndex is defined
-    const { chipPositionArray } = useChipPositions(id, startIndex);
+    const { chipPositionArray } = useChipPositions(startIndex);
 
     // Add the usePlayerChipData hook
-    const { getChipAmount } = usePlayerChipData(id);
+    const { getChipAmount } = usePlayerChipData();
 
     // Memoize user wallet address using utility function
     const userWalletAddress = useMemo(() => {
@@ -291,13 +291,7 @@ const Table = React.memo(() => {
     // Use utility function for formatted address
     const formattedAddress = getFormattedAddress();
 
-    // Memoize user data
-    const userData = useMemo(() => {
-        if (currentUserSeat >= 0) {
-            return userDataBySeat[currentUserSeat] || null;
-        }
-        return null;
-    }, [currentUserSeat, userDataBySeat]);
+
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {

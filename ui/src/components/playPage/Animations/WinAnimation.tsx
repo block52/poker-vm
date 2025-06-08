@@ -10,7 +10,7 @@ import DollarChip from "./../../../assets/DollarChip.svg";
 
 const WinAnimation: React.FC<WinAnimationProps> = React.memo(({ index }) => {
   const { id } = useParams<{ id: string }>();
-  const { tableSize } = useTableAnimations(id);
+  const { tableSize } = useTableAnimations();
   const { winnerInfo } = useWinnerInfo();
 
   // Determine position based on table size

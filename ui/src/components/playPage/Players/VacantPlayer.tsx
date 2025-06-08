@@ -62,7 +62,7 @@ import CustomDealer from "../../../assets/CustomDealer.svg";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index, onJoin }) => {
-        const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData(useParams<{ id: string }>().id);
+        const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
         const userAddress = localStorage.getItem("user_eth_public_key");
