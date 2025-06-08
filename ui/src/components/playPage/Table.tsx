@@ -103,8 +103,7 @@ import { motion } from "framer-motion";
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 
-// Enable this to see verbose logging
-const DEBUG_MODE = false;
+
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -138,18 +137,6 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
     
-    // 🔍 DEBUG: Track re-renders
-    const renderCount = useRef(0);
-    renderCount.current += 1;
-    
-    // 🔍 DEBUG: Log every 10 renders to avoid spam
-    if (renderCount.current % 10 === 0) {
-        console.log(`🔄 Table re-render #${renderCount.current}`, {
-            timestamp: new Date().toISOString(),
-            tableId: id,
-            renderCount: renderCount.current
-        });
-    }
     
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
