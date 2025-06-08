@@ -21,18 +21,13 @@ const config: HardhatUserConfig = {
             accounts: PK ? [PK] : [],
             chainId: 11155111
         },
-        base: {
-			accounts: PK ? [PK] : [],
-			chainId: 8453,
-			url: "https://mainnet.base.org",
-		},
         mainnet: {
             chainId: 1,
             url: `${process.env.RPC_URL}`,
             accounts: PK ? [PK] : []
         },
     },
-    solidity: "0.8.24",
+    solidity: "0.8.30",
     paths: {
         sources: "./contracts",
         tests: "./test",
@@ -45,19 +40,8 @@ const config: HardhatUserConfig = {
     etherscan: {
         apiKey: {
             sepolia: process.env.ETHERSCAN_API_KEY || "",
-            base: process.env.ETHERSCAN_API_KEY || "",
             mainnet: process.env.ETHERSCAN_API_KEY || ""
         },
-        customChains: [
-            {
-                network: "base",
-                chainId: 8453,
-                urls: {
-                    apiURL: "https://api.basescan.org/api",
-                    browserURL: "https://basescan.org"
-                }
-            }
-        ]
     }
 };
 

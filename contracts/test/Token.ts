@@ -1,4 +1,4 @@
-import { time, loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import hre from "hardhat";
 
@@ -11,9 +11,8 @@ describe.skip("Token", () => {
     };
 
     describe("Deployment", () => {
-        it("Should set the name and symbol", async function () {
+        it("Should set the name and symbol", async () => {
             const { token } = await loadFixture(fixture);
-
             expect(await token.name()).to.equal("Block52");
         });
     });
