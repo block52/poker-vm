@@ -1,6 +1,5 @@
 import { ethers } from "ethers";
 
-
 /**
  * Get public key from private key
  * @param privateKey The private key
@@ -15,7 +14,6 @@ export const getPublicKey = (privateKey: string): string => {
         throw new Error("Failed to get public key");
     }
 };
-
 
 /**
  * Format player ID for display
@@ -32,5 +30,5 @@ export const formatPlayerId = (playerId: string) => {
  * @returns Formatted string with dollar sign and 2 decimal places
  */
 export const formatAmount = (amount: string) => {
-    return `$${(Number(amount) / 10**18).toFixed(2)}`;
+    return `$${(Number(amount) / 10 ** 18).toFixed(2)}`;
 };
