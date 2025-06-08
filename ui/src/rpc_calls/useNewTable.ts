@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { useNodeRpc } from "../context/NodeRpcContext";
 
 export interface UseNewTableReturn {
     createTable: (owner: string, nonce: number) => Promise<string | null>;
@@ -16,13 +15,10 @@ export const useNewTable = (): UseNewTableReturn => {
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<Error | null>(null);
     const [newTableAddress, setNewTableAddress] = useState<string | null>(null);
-    const { client } = useNodeRpc();
+
 
     const createTable = useCallback(async (owner: string, nonce: number): Promise<string | null> => {
-        if (!client) {
-            setError(new Error("Client not initialized"));
-            return null;
-        }
+ 
 
         setIsCreating(true);
         setError(null);
@@ -97,7 +93,7 @@ export const useNewTable = (): UseNewTableReturn => {
         } finally {
             setIsCreating(false);
         }
-    }, [client]);
+    }, []);
 
     return {
         createTable,

@@ -10,7 +10,6 @@ import { Wallet } from "ethers";
 import BuyInModal from "./playPage/BuyInModal";
 
 // game wallet and SDK imports
-import { useNodeRpc } from "../context/NodeRpcContext"; // Use NodeRpcContext
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { GameType, Variant } from "./types";
 import { formatAddress, formatBalance } from "./common/utils";
@@ -18,6 +17,7 @@ import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hoo
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
 import { useNewTable } from "../rpc_calls/useNewTable"; // Import useNewTable hook
+import { getAccountBalance } from "../utils/b52AccountUtils";
 
 // Password protection utils
 import { 
@@ -68,12 +68,10 @@ const Dashboard: React.FC = () => {
 
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
 
-    // Replace useAccountBalance with direct NodeRpcClient interaction
-    const { client, isLoading: clientLoading, error: clientError } = useNodeRpc();
+    // Account balance state - simplified pattern like Table.tsx
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
-    const [accountNonce, setAccountNonce] = useState<number>(0); // Track nonce for transactions
     
     // Use the findGames hook
     const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
@@ -82,7 +80,7 @@ const Dashboard: React.FC = () => {
     const { account, isLoading: accountLoading, error: accountError, refetch: refetchAccount } = useAccount(publicKey);
     
     // Add useNewTable hook for creating tables
-    const { createTable, isCreating: isCreatingTable, error: createTableError, newTableAddress } = useNewTable();
+    const { createTable, isCreating: isCreatingTable, error: createTableError } = useNewTable();
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
@@ -184,11 +182,11 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // Function to fetch account balance directly using NodeRpcClient
+    // Function to fetch account balance - simplified pattern like Table.tsx
     const fetchAccountBalance = useCallback(async (force = false) => {
-        // Skip if no client or no public key
-        if (!client || !publicKey) {
-            !publicKey && setBalanceError(new Error("No address available"));
+        // Skip if no public key
+        if (!publicKey) {
+            setBalanceError(new Error("No address available"));
             setIsBalanceLoading(false);
             return;
         }
@@ -200,11 +198,10 @@ const Dashboard: React.FC = () => {
         
         try {
             setIsBalanceLoading(true);
-            
-            const account = await client.getAccount(publicKey);
-            setAccountBalance(account.balance);
-            setAccountNonce(account.nonce);
             setBalanceError(null);
+            
+            const balance = await getAccountBalance();
+            setAccountBalance(balance);
             
             // Mark that we've completed a load for this key
             initialLoadComplete.current = true;
@@ -215,7 +212,7 @@ const Dashboard: React.FC = () => {
         } finally {
             setIsBalanceLoading(false);
         }
-    }, [client, publicKey]);
+    }, [publicKey]);
 
     const generateNewWallet = () => {
         try {
@@ -246,15 +243,15 @@ const Dashboard: React.FC = () => {
         }
     }, []);
 
-    // Update to fetch balance when publicKey or client changes
+    // Update to fetch balance when publicKey changes
     useEffect(() => {
-        if (publicKey && client && !clientLoading) {
+        if (publicKey) {
             // Only fetch if public key changed or it's the initial load
             if (publicKey !== lastFetchedPublicKey.current || !initialLoadComplete.current) {
                 fetchAccountBalance();
             }
         }
-    }, [publicKey, clientLoading, fetchAccountBalance, client]);
+    }, [publicKey, fetchAccountBalance]);
 
 
     const handleGameVariant = (variant: Variant) => {
