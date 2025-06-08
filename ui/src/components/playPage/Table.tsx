@@ -166,7 +166,7 @@ const Table = React.memo(() => {
     const tableDataValues = useTableData();
 
     // invoke hook for seat loop
-    const { winnerInfo } = useWinnerInfo(id);
+    const { winnerInfo } = useWinnerInfo();
 
     // Define calculateZoom first, before any usage
     const calculateZoom = useCallback(() => {

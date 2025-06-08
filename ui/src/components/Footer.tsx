@@ -350,34 +350,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
         await startNewHand(tableId, seed);
     };
 
-    // Add handler functions for sit-in and sit-out actions
-    const handleSitIn = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await sitIn(tableId);
-            console.log("Successfully sat in");
-        } catch (error: any) {
-            console.error("Failed to sit in:", error);
-        }
-    };
-
-    const handleSitOut = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await sitOut(tableId);
-            console.log("Successfully sat out");
-        } catch (error: any) {
-            console.error("Failed to sit out:", error);
-        }
-    };
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);

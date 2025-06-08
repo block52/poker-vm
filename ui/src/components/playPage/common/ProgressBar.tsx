@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { usePlayerTimer } from "../../../hooks/usePlayerTimer";
-import { useGameOptions } from "../../../hooks/useGameOptions";
-
 
 type ProgressBarProps = {
     index: number;

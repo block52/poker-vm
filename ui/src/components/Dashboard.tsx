@@ -17,7 +17,7 @@ import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hoo
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
 import { useNewTable } from "../rpc_calls/useNewTable"; // Import useNewTable hook
-import { getAccountBalance, getPublicKey } from "../utils/b52AccountUtils";
+import { getAccountBalance } from "../utils/b52AccountUtils";
 
 // Password protection utils
 import { 
@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
     const { account, isLoading: accountLoading, error: accountError, refetch: refetchAccount } = useAccount(publicKey);
     
     // Add useNewTable hook for creating tables
-    const { createTable, isCreating: isCreatingTable, error: createTableError, newTableAddress } = useNewTable();
+    const { createTable, isCreating: isCreatingTable, error: createTableError } = useNewTable();
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
