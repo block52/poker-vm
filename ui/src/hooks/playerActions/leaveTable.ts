@@ -1,5 +1,5 @@
-import { NodeRpcClient, PerformActionResponse } from "@bitcoinbrisbane/block52";
-import { getPrivateKey } from "../../utils/b52AccountUtils";
+import { PerformActionResponse } from "@bitcoinbrisbane/block52";
+import { getClient } from "../../utils/b52AccountUtils";
 
 /**
  * Leave a poker table.
@@ -11,15 +11,8 @@ import { getPrivateKey } from "../../utils/b52AccountUtils";
  * @throws Error if private key is missing or if the action fails
  */
 export async function leaveTable(tableId: string, amount: string, nonce?: number): Promise<PerformActionResponse> {
-    // Get private key from storage
-    const privateKey = getPrivateKey();
-    if (!privateKey) {
-        throw new Error("No private key found. Please connect your wallet first.");
-    }
-
-    // Create the client directly with the private key
-    const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
-    const client = new NodeRpcClient(nodeUrl, privateKey);
+    // Get the singleton client instance
+    const client = getClient();
 
     // Convert the amount from string to bigint
     const amountBigInt = BigInt(amount);

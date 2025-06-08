@@ -1,6 +1,4 @@
-// ui/src/hooks/useTableJoin.ts
-import { NodeRpcClient } from "@bitcoinbrisbane/block52";
-import { getPrivateKey } from "../../utils/b52AccountUtils";
+import { getClient } from "../../utils/b52AccountUtils";
 import { JoinTableOptions } from "./types";
 
 /**
@@ -20,15 +18,8 @@ import { JoinTableOptions } from "./types";
 export async function joinTable(tableId: string, options: JoinTableOptions, maxPlayers: number = 9) {
     const { buyInAmount, actionIndex = 0, seatNumber } = options;
 
-    // Get private key from storage
-    const privateKey = getPrivateKey();
-    if (!privateKey) {
-        throw new Error("No private key found. Please connect your wallet first.");
-    }
-
-    // Create the client directly with the private key
-    const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
-    const client = new NodeRpcClient(nodeUrl, privateKey);
+    // Get the singleton client instance
+    const client = getClient();
 
     // Determine seat selection based on environment variable
     const shouldRandomiseSeat = import.meta.env.VITE_RANDOMISE_SEAT_SELECTION === "true";

@@ -1,5 +1,4 @@
-import { NodeRpcClient } from "@bitcoinbrisbane/block52";
-import { getPrivateKey } from "../../utils/b52AccountUtils";
+import { getClient } from "../../utils/b52AccountUtils";
 
 /**
  * Deal cards in a poker game.
@@ -9,15 +8,8 @@ import { getPrivateKey } from "../../utils/b52AccountUtils";
  * @throws Error if private key is missing or if the action fails
  */
 export async function dealCards(tableId: string) {
-    // Get private key from storage
-    const privateKey = getPrivateKey();
-    if (!privateKey) {
-        throw new Error("No private key found. Please connect your wallet first.");
-    }
-
-    // Create the client directly with the private key
-    const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
-    const client = new NodeRpcClient(nodeUrl, privateKey);
+    // Get the singleton client instance
+    const client = getClient();
 
     // Create a seed from timestamp for randomness
     const timestamp = Math.floor(Date.now() / 1000);

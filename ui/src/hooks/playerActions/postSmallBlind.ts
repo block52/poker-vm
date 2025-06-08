@@ -1,5 +1,5 @@
-import { NodeRpcClient, PlayerActionType } from "@bitcoinbrisbane/block52";
-import { getPrivateKey } from "../../utils/b52AccountUtils";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { getClient } from "../../utils/b52AccountUtils";
 
 /**
  * Post small blind at a poker table.
@@ -10,15 +10,8 @@ import { getPrivateKey } from "../../utils/b52AccountUtils";
  * @throws Error if private key is missing or if the action fails
  */
 export async function postSmallBlind(tableId: string, smallBlindAmount: string) {
-    // Get private key from storage
-    const privateKey = getPrivateKey();
-    if (!privateKey) {
-        throw new Error("No private key found. Please connect your wallet first.");
-    }
-
-    // Create the client directly with the private key
-    const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
-    const client = new NodeRpcClient(nodeUrl, privateKey);
+    // Get the singleton client instance
+    const client = getClient();
 
     console.log("🎰 Post small blind attempt");
     console.log("🎰 Table ID:", tableId);
