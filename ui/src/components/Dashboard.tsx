@@ -17,7 +17,6 @@ import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hoo
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
 import { useNewTable } from "../rpc_calls/useNewTable"; // Import useNewTable hook
-import { getAccountBalance } from "../utils/b52AccountUtils";
 
 // Password protection utils
 import { 
@@ -67,11 +66,6 @@ const Dashboard: React.FC = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
 
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
-
-    // Account balance state - simplified pattern like Table.tsx
-    const [accountBalance, setAccountBalance] = useState<string>("0");
-    const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
-    const [balanceError, setBalanceError] = useState<Error | null>(null);
     
     // Use the findGames hook
     const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
@@ -101,10 +95,6 @@ const Dashboard: React.FC = () => {
 
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
-
-    // Add this ref at the top of your component
-    const initialLoadComplete = useRef(false);
-    const lastFetchedPublicKey = useRef<string | undefined>(undefined);
 
     // Password validation function
     const handlePasswordSubmit = () => {
@@ -145,8 +135,7 @@ const Dashboard: React.FC = () => {
         };
     }, [handleMouseMove]);
 
-    // Game contract addresses - in a real app, these would come from the API
-    // const DEFAULT_GAME_CONTRACT = "0x22dfa2150160484310c5163f280f49e23b8fd34326"; // Example address
+
     const DEFAULT_GAME_CONTRACT = "0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7"; // Example address
 
     // Function to handle creating a new game using NodeRpcClient directly
@@ -182,38 +171,6 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // Function to fetch account balance - simplified pattern like Table.tsx
-    const fetchAccountBalance = useCallback(async (force = false) => {
-        // Skip if no public key
-        if (!publicKey) {
-            setBalanceError(new Error("No address available"));
-            setIsBalanceLoading(false);
-            return;
-        }
-        
-        // Skip if we've already loaded for this key and it's not forced
-        if (!force && initialLoadComplete.current && lastFetchedPublicKey.current === publicKey) {
-            return;
-        }
-        
-        try {
-            setIsBalanceLoading(true);
-            setBalanceError(null);
-            
-            const balance = await getAccountBalance();
-            setAccountBalance(balance);
-            
-            // Mark that we've completed a load for this key
-            initialLoadComplete.current = true;
-            lastFetchedPublicKey.current = publicKey;
-        } catch (err) {
-            console.error("Error fetching account balance:", err);
-            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
-        } finally {
-            setIsBalanceLoading(false);
-        }
-    }, [publicKey]);
-
     const generateNewWallet = () => {
         try {
             // Create a new random wallet
@@ -227,7 +184,7 @@ const Dashboard: React.FC = () => {
             setPublicKey(newWallet.address);
             
             // Force refresh data
-            fetchAccountBalance(true);
+            // fetchAccountBalance(true);
         } catch (err) {
             console.error("Failed to generate new wallet:", err);
         }
@@ -242,17 +199,6 @@ const Dashboard: React.FC = () => {
             setPublicKey(localStorage.getItem("user_eth_public_key") || undefined);
         }
     }, []);
-
-    // Update to fetch balance when publicKey changes
-    useEffect(() => {
-        if (publicKey) {
-            // Only fetch if public key changed or it's the initial load
-            if (publicKey !== lastFetchedPublicKey.current || !initialLoadComplete.current) {
-                fetchAccountBalance();
-            }
-        }
-    }, [publicKey, fetchAccountBalance]);
-
 
     const handleGameVariant = (variant: Variant) => {
         if (variant === Variant.TEXAS_HOLDEM) {
