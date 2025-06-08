@@ -76,33 +76,12 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
             let isPlayerInGame = false;
 
             if (gameState.players?.length > 0) {
-                // Try to find player with exact address match
+                // Find player with exact address match (case-insensitive)
                 currentPlayer = gameState.players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress) ?? null;
-
-                // If not found, try with case-insensitive comparison
-                if (!currentPlayer) {
-                    currentPlayer = gameState.players?.find((player: PlayerDTO) => player.address?.toLowerCase().includes(userAddress.substring(0, 10).toLowerCase())) ?? null;
-                }
-
                 isPlayerInGame = !!currentPlayer;
             }
 
-            // If no player found with the user's address, use the first player with legal actions
-            // This is useful for debugging and showing actions when the address doesn't match
-            if (!currentPlayer && gameState.players?.length > 0) {
-                // Find the first player that has legal actions
-                for (const player of gameState.players) {
-                    if (player.legalActions && player.legalActions.length > 0) {
-                        currentPlayer = player;
-                        break;
-                    }
-                }
 
-                // If still no player with actions, just use the first player
-                if (!currentPlayer) {
-                    currentPlayer = gameState.players[0];
-                }
-            }
 
             // If there's still no player found, return default
             if (!currentPlayer) {
