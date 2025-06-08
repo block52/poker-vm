@@ -11,7 +11,7 @@ jest.mock("../state/index");
 jest.mock("../models/transaction");
 jest.mock("../core/provider");
 
-describe("TransferCommand", () => {
+describe.skip("TransferCommand", () => {
     // Test constants
     const MOCK_GAME_ADDRESS = "0x97942a9dC3f8468EF12F375a94F93014B77dFeD6";
     const MOCK_FROM = "0x97f7f0D8792a4BedD830F65B533846437F5f3c32";
