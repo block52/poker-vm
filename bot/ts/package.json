@@ -8,11 +8,12 @@
     "cli": "npx ts-node index.ts"
   },
   "dependencies": {
-    "@bitcoinbrisbane/block52": "^1.0.143",
+    "@bitcoinbrisbane/block52": "^1.0.146",
     "axios": "^1.9.0",
     "chalk": "^4.1.2",
     "dotenv": "^16.0.3",
-    "ethers": "^6.0.0"
+    "ethers": "^6.14.3",
+    "swr": "^2.3.3"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",

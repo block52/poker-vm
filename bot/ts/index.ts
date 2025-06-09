@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const TABLE_ADDRESS = "0x22dfa2150160484310c5163f280f49e23b8fd34326";
+const TABLE_ADDRESS = "0x595ddd7452109486d047ca5f1307d5c0ac6fda03";
 const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 
 // Add nonce tracking
@@ -40,16 +40,10 @@ const getGameState = async (tableAddress: string): Promise<TexasHoldemStateDTO> 
 };
 
 const join = async (tableAddress: string, amount: bigint): Promise<string> => {
-    console.log(chalk.cyan("\nDebug - join function:"));
-    console.log(chalk.cyan("- Table address:", tableAddress));
-    console.log(chalk.cyan("- Amount:", formatChips(amount.toString())));
-    console.log(chalk.cyan("- Current nonce:", nonce));
-
     const client = getClient();
-    console.log(chalk.cyan("- Got RPC client"));
 
     try {
-        const response = await client.playerJoin(tableAddress, amount, nonce);
+        const response = await client.playerJoin(tableAddress, amount, 2);
         console.log(chalk.cyan("- Join response:", response));
         return response.hash;
     } catch (error) {
@@ -111,43 +105,10 @@ async function joinGame(wallet: Wallet): Promise<boolean> {
         }
 
         // Table stakes
-        const defaultBuyIn = BigInt("3000000000000000000"); // 3 USDC
+        const defaultBuyIn = BigInt("10000000000000000"); // 1 USDC
 
         const result = await join(TABLE_ADDRESS, defaultBuyIn);
         console.log(chalk.cyan("Join result:", result));
-
-        // // Try to join in a seat that's not the small blind position
-        // for (let seat = 2; seat <= 9; seat++) {
-        //     if (!gameState.players.find(p => p.seat === seat)) {
-        //         console.log(chalk.yellow(`Attempting to join game in seat ${seat} with 3.0 USDC...`));
-
-        //         try {
-        //             const result = await join(TABLE_ADDRESS, defaultBuyIn);
-        //             if (result) {
-        //                 console.log(chalk.green("Join successful:"), result);
-
-        //                 // Wait for join to be processed
-        //                 console.log(chalk.yellow("Waiting for join to be processed..."));
-        //                 await new Promise(resolve => setTimeout(resolve, 5000));
-
-        //                 // Verify join
-        //                 const newState = await getGameState(TABLE_ADDRESS);
-        //                 const joinedPlayer = newState.players.find(p => p.address === wallet.address);
-
-        //                 if (joinedPlayer) {
-        //                     console.log(chalk.green(`Successfully joined in seat ${joinedPlayer.seat}!`));
-        //                     return true;
-        //                 }
-        //             }
-        //         } catch (error) {
-        //             if (error instanceof Error) {
-        //                 console.error(chalk.red(`Failed to join in seat ${seat}:`, error.message));
-        //               } else {
-        //                 console.error(chalk.red(`Failed to join in seat ${seat}:`, 'An unknown error occurred'));
-        //               }
-        //         }
-        //     }
-        // }
 
         console.log(chalk.red("Could not find a suitable seat to join"));
         return false;
@@ -170,10 +131,11 @@ async function main() {
 
     await checkAccount(wallet.address);
 
-    // Join the game
-    const actions = await getLegalActions(TABLE_ADDRESS, wallet.address);
-    console.log(chalk.cyan("Legal actions for the player:"));
-    console.log(chalk.cyan(JSON.stringify(actions, null, 2)));
+    // // Join the game
+    // const actions = await getLegalActions(TABLE_ADDRESS, wallet.address);
+    // console.log(chalk.cyan("Legal actions for the player:"));
+    // console.log(chalk.cyan(JSON.stringify(actions, null, 2)));
+    await joinGame(wallet);
 
     // Continuous monitoring loop
     console.log(chalk.yellow("\nStarting continuous monitoring (checking every 10 seconds)..."));

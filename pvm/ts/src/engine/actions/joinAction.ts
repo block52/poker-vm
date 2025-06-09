@@ -32,7 +32,7 @@ class JoinAction extends BaseAction {
 
         // Find an available seat or use the requested one
         let seat: number;
-        if (requestedSeat === undefined || requestedSeat === "") {
+        if (requestedSeat === undefined || requestedSeat === "" || requestedSeat === "0") {
 
             // get all available seats
             const availableSeats = this.game.getAvailableSeats();
@@ -42,7 +42,8 @@ class JoinAction extends BaseAction {
                 throw new Error("No available seats to join.");
 
             // Choose randomly from the available seats
-            seat = Math.floor(Math.random() * availableSeats.length);
+            const randomIndex = Math.floor(Math.random() * availableSeats.length);
+            seat = availableSeats[randomIndex];
         } else {
             // Validate the requested seat
             const seatRegex = /^\d+$/;
@@ -54,11 +55,7 @@ class JoinAction extends BaseAction {
         }
 
         this.game.joinAtSeat(player, seat);
-
         this.game.dealerManager.handlePlayerJoin(seat);
-
-        // Set this seat as the last acted seat to help determine next player
-        // this.game.setLastActedSeat(seat);
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction(
