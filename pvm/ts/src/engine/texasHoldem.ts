@@ -220,7 +220,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     get lastActedSeat(): number {
-        const previousActions = this.getPreviousActions();
+        let previousActions = this.getPreviousActions();
+
+        // Filter out deal actions
+        previousActions = previousActions.filter(action => action.action !== NonPlayerActionType.DEAL);
+
         if (previousActions.length === 0) {
             return this.dealerPosition; // If no actions, return dealer position
         }
@@ -916,11 +920,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Record the action in the player's history
         const timestamp = Date.now();
         player.addAction({ playerId: address, action, amount, index }, timestamp);
-
-        // // Update the last player to act
-        // if (action.toString() !== NonPlayerActionType.DEAL) {
-        //     this._lastActedSeat = seat;            
-        // }
 
         // Check if the round has ended and advance if needed
         if (this.hasRoundEnded(this.currentRound)) {
