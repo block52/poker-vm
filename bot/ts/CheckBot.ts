@@ -1,11 +1,16 @@
-import { IClient, LegalActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { IClient, LegalActionDTO, NodeRpcClient, PlayerActionType } from "@bitcoinbrisbane/block52";
 import chalk from "chalk";
 import { IBot } from "./interfaces";
+import { Wallet } from "ethers";
 
 export class CheckBot implements IBot {
-    constructor(readonly client: IClient, readonly me: string, readonly tableAddress: string, readonly actions: LegalActionDTO[]) {
-        this.client = client;
-        this.me = me;
+    private readonly client: IClient;
+    private readonly me: string;
+
+    constructor(private readonly privateKey: string, readonly nodeUrl: string, readonly tableAddress: string, readonly actions: LegalActionDTO[]) {
+        this.client = new NodeRpcClient(nodeUrl, privateKey);
+        const wallet = new Wallet(privateKey);
+        this.me = wallet.address;
         this.tableAddress = tableAddress;
         this.actions = actions;
     }

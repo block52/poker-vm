@@ -1,11 +1,11 @@
-import { IClient, LegalActionDTO, NodeRpcClient, PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { IClient, LegalActionDTO, NodeRpcClient, NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { ethers, Wallet } from "ethers";
 import chalk from "chalk";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const TABLE_ADDRESS = "0x528e8c7e6540f091a5c85bbe17af8455e2b60c10";
+const TABLE_ADDRESS = "0xd8f7d91143321a1830c9996f1e4e0654ba455714";
 const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 
 // Add nonce tracking
@@ -160,6 +160,15 @@ async function main() {
                 console.log(chalk.yellow("No legal actions available at this time."));
             }
 
+            // If we can deal, then deal
+            const canDeal = actions.some(action => action.action === NonPlayerActionType.DEAL);
+            if (canDeal) {
+                console.log(chalk.cyan("Dealing cards..."));
+                const response = await _node.deal(TABLE_ADDRESS, "", wallet.address);
+                console.log(chalk.cyan("Deal action posted successfully:", response?.hash));
+                continue; // Skip to next iteration after dealing
+            }
+
             // If legal actions contain post-small-blind, we can post small blind
             const hasPostSmallBlind = actions.some(action => action.action === PlayerActionType.SMALL_BLIND);
             if (hasPostSmallBlind) {
@@ -199,15 +208,24 @@ async function main() {
                     continue; // Skip to next iteration after call
                 }
 
-                // Can fold?
-                const canFold = actions.some(action => action.action === PlayerActionType.FOLD);
-                if (canFold) {
-                    console.log(chalk.cyan("Folding like a nit..."));
-                    const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.FOLD, "0");
-                    console.log(chalk.cyan("Fold posted successfully:", response?.hash));
-
-                    continue; // Skip to next iteration after fold
+                // Can show?
+                const canShow = actions.some(action => action.action === PlayerActionType.SHOW);
+                if (canShow) {
+                    console.log(chalk.cyan("Showing cards..."));
+                    const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.SHOW, "0");
+                    console.log(chalk.cyan("Show posted successfully:", response?.hash));
+                    continue; // Skip to next iteration after show
                 }
+
+                // // Can fold?
+                // const canFold = actions.some(action => action.action === PlayerActionType.FOLD);
+                // if (canFold) {
+                //     console.log(chalk.cyan("Folding like a nit..."));
+                //     const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.FOLD, "0");
+                //     console.log(chalk.cyan("Fold posted successfully:", response?.hash));
+
+                //     continue; // Skip to next iteration after fold
+                // }
             }
         } catch (error) {
             console.error(chalk.red("Error in main loop:"), error);
