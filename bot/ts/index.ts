@@ -1,11 +1,11 @@
-import { LegalActionDTO, NodeRpcClient, PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { IClient, LegalActionDTO, NodeRpcClient, PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { ethers, Wallet } from "ethers";
 import chalk from "chalk";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const TABLE_ADDRESS = "0x485d3acabab7f00713d27bde1ea826a2963afe63";
+const TABLE_ADDRESS = "0x528e8c7e6540f091a5c85bbe17af8455e2b60c10";
 const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 
 // Add nonce tracking
@@ -13,7 +13,7 @@ let nonce: number = 0;
 let play = true;
 
 // Remove the global pk variable since we'll use the selected key
-let _node: NodeRpcClient;
+let _node: IClient;
 let selectedPrivateKey: string = process.env.PRIVATE_KEY || "";
 
 const getClient = () => {
@@ -177,40 +177,38 @@ async function main() {
 
             if (actionCount > 0) {
                 // select random action
-                const randomIndex = Math.floor(Math.random() * actionCount);
-                const action = actions[randomIndex];
-                console.log(chalk.cyan(`Selected action: ${action.action}`));
-                // console.log(chalk.cyan(`Selected action: ${action.action} with amount ${formatChips(action.?min.toString())}`));
-            }
+                // const randomIndex = Math.floor(Math.random() * actionCount);
+                
+                // Can check?
+                const canCheck = actions.some(action => action.action === PlayerActionType.CHECK);
+                if (canCheck) {
+                    console.log(chalk.cyan("Check..."));
+                    const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.CHECK, "0");
+                    console.log(chalk.cyan("Check posted successfully:", response?.hash));
 
-            // const state = await checkGameState(client);
-            // if (!hasJoined) {
-            //     const myPlayer = state.players.find(p => p.address === wallet.address);
-            //     if (myPlayer) {
-            //         console.log(chalk.green(`\nYou are seated at seat ${myPlayer.seat}`));
-            //         console.log(chalk.green(`Your stack: ${formatChips(myPlayer.stack)} USDC`));
-            //         hasJoined = true;
-            //         // Wait 5 seconds after joining before posting small blind
-            //         console.log(chalk.yellow("Waiting 5 seconds before posting small blind..."));
-            //         await new Promise(resolve => setTimeout(resolve, 5000));
-            //     } else if (state.players.length === 0) {
-            //         console.log(chalk.yellow("\nTable is empty!"));
-            //         hasJoined = await joinGame(client, wallet);
-            //     } else {
-            //         console.log(chalk.yellow("\nTable has players but you're not seated."));
-            //         hasJoined = await joinGame(client, wallet);
-            //     }
-            // } else if (!hasPostedSmallBlind) {
-            //     // Try to post small blind if we haven't yet
-            //     await postSmallBlind(client, state, wallet);
-            //     // Check if we successfully posted the small blind
-            //     const updatedState = await checkGameState(client);
-            //     const myPlayer = updatedState.players.find(p => p.address === wallet.address);
-            //     if (myPlayer?.lastAction?.action === PlayerActionType.SMALL_BLIND) {
-            //         hasPostedSmallBlind = true;
-            //         console.log(chalk.green("Small blind posted successfully!"));
-            //     }
-            // }
+                    continue; // Skip to next iteration after check
+                }
+
+                // Can call?
+                const canCall = actions.some(action => action.action === PlayerActionType.CALL);
+                if (canCall) {
+                    console.log(chalk.cyan("Calling..."));
+                    const amount = actions.find(action => action.action === PlayerActionType.CALL)?.min || "0";
+                    const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.CALL, amount);
+                    console.log(chalk.cyan("Call posted successfully:", response?.hash));
+                    continue; // Skip to next iteration after call
+                }
+
+                // Can fold?
+                const canFold = actions.some(action => action.action === PlayerActionType.FOLD);
+                if (canFold) {
+                    console.log(chalk.cyan("Folding like a nit..."));
+                    const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.FOLD, "0");
+                    console.log(chalk.cyan("Fold posted successfully:", response?.hash));
+
+                    continue; // Skip to next iteration after fold
+                }
+            }
         } catch (error) {
             console.error(chalk.red("Error in main loop:"), error);
         }
