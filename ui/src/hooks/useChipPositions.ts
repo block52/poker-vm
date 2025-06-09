@@ -9,7 +9,7 @@ import { ChipPositionsReturn, TableStateReturn, PositionArray } from "../types/i
  * @param startIndex Optional starting index for reordering positions
  * @returns Object containing chip positions and utility functions
  */
-export const useChipPositions = (tableId?: string, startIndex: number = 0): ChipPositionsReturn => {
+export const useChipPositions = (startIndex: number = 0): ChipPositionsReturn => {
   const [chipPositionArray, setChipPositionArray] = useState<PositionArray[]>([]);
   const lastStartIndexRef = useRef<number>(startIndex);
   

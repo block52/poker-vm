@@ -11,9 +11,9 @@ export class MempoolCommand implements ISignedCommand<TransactionList> {
     }
 
     public async execute(): Promise<ISignedResponse<TransactionList>> {
-        return signResult(
-            new TransactionList(this.mempool.get()),
-            this.privateKey
-        );
+        // Fetch transactions from the mempool
+        const transactions = await this.mempool.get();
+
+        return signResult(new TransactionList(transactions), this.privateKey);
     }
 }

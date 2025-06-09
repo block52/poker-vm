@@ -12,7 +12,7 @@ import { ActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
  * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing player chip data mapped by seat
  */
-export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
+export const usePlayerChipData = (): PlayerChipDataReturn => {
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState, isLoading, error } = useGameStateContext();
 

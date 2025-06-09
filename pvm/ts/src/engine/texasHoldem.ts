@@ -47,8 +47,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private readonly _actions: IAction[];
     private readonly _gameOptions: GameOptions;
     private readonly _address: string;
-
-    private _lastActedSeat: number;
     private _deck: Deck;
     private _pots: [bigint] = [0n];
     private _sidePots = new Map<string, bigint>();
@@ -60,7 +58,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         address: string,
         gameOptions: GameOptions,
         private _dealer: number,
-        lastActedSeat: number,
         previousActions: ActionDTO[] = [],
         private _handNumber: number = 1,
         private _actionCount: number = 0,
@@ -78,7 +75,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         this._deck = new Deck(deck);
         this._currentRound = currentRound;
         this._gameOptions = gameOptions;
-        this._lastActedSeat = lastActedSeat;
 
         // Hack for old test data
         if (this.handNumber === 0) this._handNumber = 1;
@@ -186,7 +182,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Reset game state
         this._rounds.clear();
         this._rounds.set(TexasHoldemRound.ANTE, []);
-        this._lastActedSeat = this.dealerPosition; // Default to seat 1 if no dealer position set
         this._deck = new Deck(deck);
         this._pots = [0n];
         this._communityCards.length = 0;
@@ -225,7 +220,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     get lastActedSeat(): number {
-        return this._lastActedSeat;
+        let previousActions = this.getPreviousActions();
+
+        // Filter out deal actions
+        previousActions = previousActions.filter(action => action.action !== NonPlayerActionType.DEAL);
+
+        if (previousActions.length === 0) {
+            return this.dealerPosition; // If no actions, return dealer position
+        }
+
+        // Get the last action's seat
+        const lastAction = previousActions[previousActions.length - 1];
+        if (lastAction && lastAction.seat) {
+            return lastAction.seat;
+        }
+
+        // If no seat found, return dealer position
+        return this.dealerPosition;
     }
 
     // Game configuration getters
@@ -910,11 +921,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const timestamp = Date.now();
         player.addAction({ playerId: address, action, amount, index }, timestamp);
 
-        // Update the last player to act
-        if (action.toString() !== NonPlayerActionType.DEAL) {
-            this._lastActedSeat = seat;            
-        }
-
         // Check if the round has ended and advance if needed
         if (this.hasRoundEnded(this.currentRound)) {
             this.nextRound();
@@ -1356,7 +1362,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             json.address,
             gameOptions,
             dealer,
-            lastActedSeat,
             json.previousActions,
             json.handNumber,
             json.actionCount,

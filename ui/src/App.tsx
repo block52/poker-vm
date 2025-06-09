@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Deposit from "./components/Deposit";
 import Table from "./components/playPage/Table";
 import { createAppKit } from "@reown/appkit/react";
