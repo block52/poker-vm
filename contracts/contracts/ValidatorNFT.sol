@@ -7,11 +7,7 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IValidator } from "./IValidator.sol";
 
-contract ValidatorNFT is IValidator, Ownable, ERC721 {
-
-    uint256 public constant MAX_VALIDATORS = 52;
-    uint8 private counter;
-
+contract ValidatorNFT is IValidator, ERC721, Ownable {
     enum Suit {
         Spades,
         Hearts,
@@ -35,8 +31,15 @@ contract ValidatorNFT is IValidator, Ownable, ERC721 {
         Ace
     }
 
-    constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {
-        _mint(msg.sender, 0);
+    uint256 public constant MAX_VALIDATORS = 52;
+    uint8 private counter;
+
+    constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) Ownable(msg.sender) {
+        address self = address(this);
+        for (uint256 i = 0; i < MAX_VALIDATORS; i++) {
+            _mint(self, i);
+        }
+        counter = uint8(MAX_VALIDATORS);
     }
 
     function mint(address to, uint256 tokenId) external onlyOwner {

@@ -11,34 +11,36 @@ import { IValidator } from "./IValidator.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
 
+// import { QuoteExactOutputSingleParams } from "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
+
 contract ValidatorSale is Ownable {
 
-    address public immutable nft;
+    IERC721 public immutable nft;
     address public immutable underlying;
     ISwapRouter public immutable swapRouter;
     IQuoterV2 public immutable quoter;
 
-    uint256 public constant PRICE = 52_000;
+    uint256 private constant PRICE = 52_000;
 
-    constructor(address nft_,) Ownable(msg.sender) {
+    constructor(address nft_) Ownable(msg.sender) {
         require(nft_ != address(0), "NFT address cannot be zero");
-        nft = nft_;
+        nft = IERC721(nft_);
 
         underlying = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48); // USDC address
         swapRouter = ISwapRouter(0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45); // Uniswap V3 Router
         quoter = IQuoterV2(0x61fFE014bA17989E743c5F6cB21bF9697530B21e); // Uniswap V3 Quoter
-        IERC20(nft).approve(address(this), type(uint256).max);
+        IERC20(nft_).approve(address(this), type(uint256).max);
     }
 
     function buy(uint256 tokenId) external {
-        require(IERC721(nft).ownerOf(tokenId) == address(this), "buy: NFT not for sale");
+        require(nft.ownerOf(tokenId) == address(this), "buy: NFT not for sale");
         IERC20(underlying).transferFrom(msg.sender, address(this), 1 ether);
 
         // Transfer 50% to treasury
-        IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
+        nft.safeTransferFrom(address(this), msg.sender, tokenId);
     }
 
-    function quote(address token, uint8 fee) external view returns (uint256) {
+    function quote(address token, uint8 fee) external returns (uint256) {
         require(token != address(0), "quote: Token address cannot be zero");
         require(fee == 3000 || fee == 500 || fee == 10000, "quote: Invalid fee");
 
