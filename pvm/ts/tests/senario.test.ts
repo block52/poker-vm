@@ -1,7 +1,7 @@
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson } from "../src/engine/testConstants";
-import { test_json, test_735, test_753, test_792 } from "./senarios/data";
+import { test_json, test_735, test_753, test_792, test_870 } from "./senarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Data driven", () => {
@@ -57,6 +57,14 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual).toBeDefined();
             expect(actual.length).toEqual(1);
             expect(actual[0].action).toEqual("fold");
+        });
+
+        it.only("should test bug 870", () => {
+            const SEAT_1 = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
+
+            game = fromTestJson(test_870);
+            const actual = game.getLegalActions(SEAT_1);
+            expect(actual).toBeDefined();
         });
     });
 });

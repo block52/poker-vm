@@ -91,7 +91,7 @@ export class DealerPositionManager implements IDealerPositionManager {
                 this.rotateDealer();
             } else if (remainingPlayers.length === 1) {
                 // Only one player left, they become dealer
-                const newDealerSeat = this.game.getPlayerSeatNumber(remainingPlayers[0].address);
+                // const newDealerSeat = this.game.getPlayerSeatNumber(remainingPlayers[0].address);
                 // this.setDealerPosition(newDealerSeat);
             }
         }
@@ -111,30 +111,6 @@ export class DealerPositionManager implements IDealerPositionManager {
         }
         // For more players, dealer position doesn't change when someone joins
     }
-
-    // /**
-    //  * Special handling for heads-up (2 player) games
-    //  */
-    // public handleHeadsUpDealer(): number {
-    //     const activePlayers = this.game.findActivePlayers();
-
-    //     if (activePlayers.length !== this.game.minPlayers) {
-    //         return this.rotateDealer();
-    //     }
-
-    //     // In heads-up, dealer alternates each hand
-    //     const currentDealerSeat = this.getCurrentDealerSeat();
-    //     const otherPlayer = activePlayers.find(
-    //         p => this.game.getPlayerSeatNumber(p.address) !== currentDealerSeat
-    //     );
-
-    //     if (otherPlayer) {
-    //         const newDealerSeat = this.game.getPlayerSeatNumber(otherPlayer.address);
-    //         return newDealerSeat;
-    //     }
-
-    //     return currentDealerSeat || 1;
-    // }
 
     /**
      * Validates dealer position consistency

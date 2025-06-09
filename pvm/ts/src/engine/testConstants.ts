@@ -5,7 +5,7 @@ import { Player } from "../models/player";
 
 // Constants for testing
 export const ONE_TOKEN = 100000000000000000n;
-export const TWO_TOKENS =  200000000000000000n;
+export const TWO_TOKENS = 200000000000000000n;
 export const FIVE_TOKENS = 500000000000000000n;
 export const TEN_TOKENS = 1000000000000000000n;
 export const TWENTY_TOKENS = 20000000000000000000n;
@@ -30,7 +30,6 @@ export const gameOptions: GameOptions = {
     timeout: 60000
 };
 
-
 export const baseGameConfig = {
     address: ethers.ZeroAddress,
     dealer: 9,
@@ -50,7 +49,6 @@ export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasH
         ethers.ZeroAddress,
         gameOptions,
         9, // dealer
-        1, // nextToAct
         previousActions,
         1, // handNumber
         0, // actionCount
@@ -69,7 +67,6 @@ export const getDefaultGameWithActions = (previousActions: any[] = [], playerSta
         ethers.ZeroAddress,
         gameOptions,
         9, // dealer
-        1, // nextToAct
         previousActions,
         0,
         0,
