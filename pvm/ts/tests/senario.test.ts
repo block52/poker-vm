@@ -91,7 +91,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual[2].action).toEqual("raise");
         });
 
-        it.only("should test bug 873 second test", () => {
+        it("should test bug 873 second test", () => {
             const SEAT_1 = "0xC84737526E425D7549eF20998Fa992f88EAC2484";
             const SEAT_2 = "0x38829ceF964019C1E12e6CF36CAad5845B0F012d";
 
