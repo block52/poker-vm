@@ -6,6 +6,8 @@ export abstract class BaseBot {
     readonly client: IClient;
     readonly me: string;
 
+    public isPlaying: boolean = false;
+
     constructor(readonly tableAddress: string, private nodeUrl: string, private privateKey: string) {
         this.client = new NodeRpcClient(nodeUrl, privateKey);
         const wallet = new Wallet(privateKey);
@@ -57,6 +59,12 @@ export abstract class BaseBot {
 
             const result = await this.client.playerJoin(this.tableAddress, defaultBuyIn, seats[0]);
             console.log(chalk.cyan("Join result:", result));
+            if (!result || !result.hash) {
+                console.error(chalk.red("Failed to join game: No transaction hash returned."));
+                return false;
+            }
+            this.isPlaying = true;
+            console.log(chalk.green("Successfully joined game!"), chalk.cyan("Transaction hash:"), result.hash);
             return true;
         } catch (error: any) {
             console.error(chalk.red("Failed to join game:"), error.message);
