@@ -12,6 +12,10 @@ export abstract class BaseBot {
         this.client = new NodeRpcClient(nodeUrl, privateKey);
         const wallet = new Wallet(privateKey);
         this.me = wallet.address;
+
+        console.log(chalk.cyan(`\nBot initialized for table: ${this.tableAddress}`));
+        console.log(chalk.cyan(`Bot address: ${this.me}`));
+        console.log(chalk.cyan(`Node URL: ${this.nodeUrl}`));
     }
 
     protected async getGameState(): Promise<TexasHoldemStateDTO> {
@@ -33,6 +37,7 @@ export abstract class BaseBot {
     async joinGame(): Promise<boolean> {
         try {
             console.log(chalk.cyan("\nDebug - joinGame:"));
+            console.log(chalk.cyan("Table address:"), this.tableAddress);
 
             const gameState = await this.getGameState();
             const myPlayer = gameState.players.find(p => p.address === this.me);

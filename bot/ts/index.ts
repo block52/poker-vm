@@ -1,5 +1,3 @@
-import { IClient, LegalActionDTO, NodeRpcClient, NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
-import { ethers, Wallet } from "ethers";
 import chalk from "chalk";
 import dotenv from "dotenv";
 import { IBot } from "./interfaces";
@@ -7,7 +5,7 @@ import { CheckBot } from "./CheckBot";
 
 dotenv.config();
 
-const TABLE_ADDRESS = "0x8d488a55da78ce7646c1a1b69f6bf7924c50ad5b";
+let TABLE_ADDRESS = "0x328cdfcb61c7eb67e712fcf1b9fb93999a0d26a8";
 const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 
 // Add nonce tracking
@@ -25,6 +23,12 @@ if (!selectedPrivateKey) {
 
 // Modify the main loop to include small blind posting
 async function main() {
+
+    // Check args for table address
+    if (process.argv.length > 2) {
+        TABLE_ADDRESS = process.argv[1];
+    }
+
     const bot = new CheckBot(TABLE_ADDRESS, NODE_URL, selectedPrivateKey);
     await bot.joinGame();
 
@@ -43,7 +47,7 @@ async function main() {
         }
 
         // Wait before next check
-        await new Promise(resolve => setTimeout(resolve, 4000));
+        await new Promise(resolve => setTimeout(resolve, 8000));
     }
 }
 

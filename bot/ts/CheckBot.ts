@@ -68,16 +68,6 @@ export class CheckBot extends BaseBot implements IBot {
             return; // Skip to next iteration after check
         }
 
-        // Can fold?
-        const canFold = actions.some(action => action.action === PlayerActionType.FOLD);
-        if (canFold) {
-            console.log(chalk.cyan("Folding like a nit..."));
-            const response = await this.client.playerAction(this.tableAddress, PlayerActionType.FOLD, "0");
-            console.log(chalk.cyan("Fold posted successfully:", response?.hash));
-
-            return; // Skip to next iteration after fold
-        }
-
         // Can call?
         const canCall = actions.some(action => action.action === PlayerActionType.CALL);
         if (canCall) {
@@ -96,5 +86,17 @@ export class CheckBot extends BaseBot implements IBot {
             console.log(chalk.cyan("Show posted successfully:", response?.hash));
             return; // Skip to next iteration after show
         }
+
+        // // Can fold?
+        // const canFold = actions.some(action => action.action === PlayerActionType.FOLD);
+        // if (canFold) {
+        //     console.log(chalk.cyan("Folding like a nit..."));
+        //     const response = await this.client.playerAction(this.tableAddress, PlayerActionType.FOLD, "0");
+        //     console.log(chalk.cyan("Fold posted successfully:", response?.hash));
+
+        //     return; // Skip to next iteration after fold
+        // }
+
+        console.log(chalk.yellow("No valid actions available to perform at this time."));
     }
 }
