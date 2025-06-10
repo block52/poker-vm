@@ -12,7 +12,7 @@ yarn install
 yarn build
 cp .env dist/src
 docker compose up -d
-cd /root/poker-vm/pvm/ts/dist/src/
+cd /root/poker-vm/pvm/ts/dist/src/ || { echo "Failed to change to dist/src directory"; exit 1; }
 pm2 start index.js --name node
 
 # sudo ufw allow 22
