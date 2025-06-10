@@ -13,8 +13,12 @@ import { Bridge } from "./bridge";
 let serverInstance: Server | null = null;
 
 export function getServerInstance(): Server {
+    const privateKey = process.env.VALIDATOR_KEY;
+    if (!privateKey) {
+        throw new Error("Validator key (VALIDATOR_KEY) is not set in the environment variables.");
+    }
+
     if (!serverInstance) {
-        const privateKey = process.env.VALIDATOR_KEY || ZeroHash;
         serverInstance = new Server(privateKey);
     }
     return serverInstance;
@@ -42,6 +46,10 @@ export class Server {
             this.isValidator = true;
         }
 
+        console.log(`Validator status: ${this.isValidator}`);
+        console.log(`Validator public key: ${this.publicKey}`);
+        console.log(`Validator port: ${this._port}`);
+
         this.contractAddress = ethers.ZeroAddress;
         this._lastDepositSync = new Date("2025-01-01");
     }
@@ -50,7 +58,7 @@ export class Server {
         const blockchain = getBlockchainInstance();
         const lastBlock = await blockchain.getLastBlock();
         const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
-        return new Node("pvm-typescript", this.publicKey, url, "1.0.2", this.isValidator, lastBlock.index);
+        return new Node("pvm-typescript", this.publicKey, url, "1.0.3", this.isValidator, lastBlock.index);
     }
 
     get started(): boolean {
@@ -138,9 +146,6 @@ export class Server {
                 throw new Error("No block mined");
             }
 
-            // console.log(`Block mined: ${block.hash}`);
-
-            // Broadcast the block hash to the network
             const me = await this.me();
             const nodes = await getBootNodes(me.url, process.env.DEV_MODE === "true");
 
@@ -172,7 +177,6 @@ export class Server {
                 count++;
             }
         }
-        // console.log(`Found ${count} nodes`);
     }
 
     private async syncMempool() {
@@ -183,7 +187,7 @@ export class Server {
             try {
                 const client = new NodeRpcClient(
                     url,
-                    this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
+                    this.privateKey
                 );
 
                 const otherMempool: TransactionDTO[] = await client.getMempool();
@@ -235,7 +239,6 @@ export class Server {
     }
 
     private async purgeMempool() {
-        // console.log("Purging mempool...");
         const mempool = getMempoolInstance();
         await mempool.purge();
     }
@@ -307,7 +310,7 @@ export class Server {
             try {
                 const client = new NodeRpcClient(
                     url,
-                    this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
+                    this.privateKey
                 );
 
                 console.log("Trying to connect to node:", node.url);
@@ -367,7 +370,7 @@ export class Server {
             try {
                 const client = new NodeRpcClient(
                     url,
-                    this.isValidator ? this.privateKey : "0x1111111111111111111111111111111111111111111111111111111111111111"
+                    this.privateKey
                 );
                 const block = await client.getLastBlock();
                 if (block.index > highestTip) {
