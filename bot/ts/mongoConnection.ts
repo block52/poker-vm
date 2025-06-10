@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
-import { IDB } from "./interfaces";
 
-class MongoDatabaseConnection implements IDB {
+class MongoDatabaseConnection {
     private static instance: MongoDatabaseConnection;
     private isConnected: boolean = false;
 
