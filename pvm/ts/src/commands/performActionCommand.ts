@@ -56,7 +56,27 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             try {
                 {
                     console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                    
+                    // CRITICAL FIX: For poker actions, extract amount from transaction data
+                    // 
+                    // WHY THIS IS NEEDED:
+                    // - Poker actions have tx.value = 0 to prevent double deduction from account balance
+                    // - The actual bet amount is stored in tx.data (e.g., "bet,11,50000000000000000")
+                    // - Without this fix, all poker actions would have amount = 0 and stacks wouldn't decrement
+                    // - JOIN/TOPUP actions still use tx.value because they transfer funds from account to table
+                    let actionAmount = tx.value;
+                    let actionData = tx.data;
+                    
+                    if ((tx.type === PlayerActionType.BET || 
+                         tx.type === PlayerActionType.RAISE || 
+                         tx.type === PlayerActionType.CALL) && 
+                        tx.data && !isNaN(Number(tx.data))) {
+                        // Amount is encoded in data for poker actions
+                        actionAmount = BigInt(tx.data);
+                        actionData = null;
+                    }
+                    
+                    game.performAction(tx.from, tx.type, tx.index, actionAmount, actionData);
                 }
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
@@ -74,13 +94,34 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         // Create transaction with correct direction of funds flow
         // For all other actions: regular format
-        const data = this.data ? `${this.action},${this.index},${this.data}` : `${this.action},${this.index}`;
+        
+        // Include amount in transaction data for poker actions that need it
+        let data: string;
+        if (this.data) {
+            // Custom data provided (like seat number for join)
+            data = `${this.action},${this.index},${this.data}`;
+        } else if (this.action === PlayerActionType.BET || 
+                   this.action === PlayerActionType.RAISE || 
+                   this.action === PlayerActionType.CALL) {
+            // Poker actions that need amount preserved in transaction data
+            data = `${this.action},${this.index},${this.amount.toString()}`;
+        } else {
+            // Actions that don't need amount in data
+            data = `${this.action},${this.index}`;
+        }
 
         if (this.action !== NonPlayerActionType.LEAVE) {
+            // Determine transaction value:
+            // - JOIN and TOPUP: transfer money from account to table (use full amount)
+            // - All poker actions (blinds, bets, calls, etc.): move chips within game (use 0)
+            const transactionValue = (this.action === NonPlayerActionType.JOIN || this.action === NonPlayerActionType.TOPUP) 
+                ? this.amount 
+                : 0n;
+
             const tx: Transaction = await Transaction.create(
                 _to, // game receives funds (to)
                 _from, // player sends funds (from)
-                this.amount,
+                transactionValue, // 0 for poker actions, amount for JOIN/TOPUP
                 nonce,
                 this.privateKey,
                 data
@@ -107,22 +148,13 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 _to, // game receives funds (to)
                 _from, // player sends funds (from)
                 this.amount,
-                nonce,
-                this.privateKey,
-                "" // No data for regular transactions
-            );
-
-            const actionTx = await Transaction.create(
-                this.to,
-                this.from,
-                this.amount,
                 nonce + 1n, // Increment nonce for action transaction
                 this.privateKey,
                 data
             );
 
             // Add both transactions to the mempool
-            const txs = await Promise.all([tx, actionTx]);
+            const txs = await Promise.all([tx]);
 
             const txResponse: TransactionResponse = {
                 nonce: tx.nonce.toString(),
@@ -135,7 +167,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 data: tx.data
             };
 
-            const mempoolTxs = [this.mempool.add(txs[0]), this.mempool.add(txs[1])];
+            const mempoolTxs = [this.mempool.add(txs[0])];
             await Promise.all(mempoolTxs);
 
             return signResult(txResponse, this.privateKey);

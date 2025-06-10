@@ -1,12 +1,13 @@
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import TexasHoldemGame from "../engine/texasHoldem";
-import { getGameManagementInstance } from "../state/index";
+import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { Transaction } from "../models";
+import { getGameManagementInstance } from "../state/index";
+import TexasHoldemGame from "../engine/texasHoldem";
 import { IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: IGameManagement;
@@ -34,7 +35,26 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             orderedTransactions.forEach(tx => {
                 try {
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                    // CRITICAL FIX: For poker actions, extract amount from transaction data
+                    // 
+                    // WHY THIS IS NEEDED:
+                    // - Poker actions have tx.value = 0 to prevent double deduction from account balance
+                    // - The actual bet amount is stored in tx.data (e.g., "bet,11,50000000000000000")
+                    // - Without this fix, all poker actions would have amount = 0 and stacks wouldn't decrement
+                    // - JOIN/TOPUP actions still use tx.value because they transfer funds from account to table
+                    let actionAmount = tx.value;
+                    let actionData = tx.data;
+                    
+                    if ((tx.type === PlayerActionType.BET || 
+                         tx.type === PlayerActionType.RAISE || 
+                         tx.type === PlayerActionType.CALL) && 
+                        tx.data && !isNaN(Number(tx.data))) {
+                        // Amount is encoded in data for poker actions
+                        actionAmount = BigInt(tx.data);
+                        actionData = null;
+                    }
+                    
+                    game.performAction(tx.from, tx.type, tx.index, actionAmount, actionData);
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 }

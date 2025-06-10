@@ -28,6 +28,7 @@ import MuckAction from "./actions/muckAction";
 import RaiseAction from "./actions/raiseAction";
 import ShowAction from "./actions/showAction";
 import SmallBlindAction from "./actions/smallBlindAction";
+import TopUpAction from "./actions/topUpAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
@@ -125,7 +126,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new RaiseAction(this, this._update),
             new MuckAction(this, this._update),
             new ShowAction(this, this._update),
-            new NewHandAction(this, this._update, "")
+            new NewHandAction(this, this._update, ""),
+            new TopUpAction(this, this._update)
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
@@ -868,6 +870,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 return;
             case NonPlayerActionType.NEW_HAND:
                 new NewHandAction(this, this._update, data).execute(this.getPlayer(address), index);
+                return;
+            case NonPlayerActionType.TOPUP:
+                new TopUpAction(this, this._update).execute(this.getPlayer(address), index, _amount);
                 return;
         }
 

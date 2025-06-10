@@ -33,6 +33,7 @@ export interface IClient {
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
     playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
+    playerTopUp(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
@@ -466,6 +467,32 @@ export class NodeRpcClient implements IClient {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
+            signature: signature
+        });
+
+        return body.result.data;
+    }
+
+    /**
+     * Top up chips in a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param amount The amount to top up with
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async playerTopUp(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+        const address = this.getAddress();
+
+        if (!nonce) {
+            nonce = await this.getNonce(address);
+        }
+
+        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
+
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.PERFORM_ACTION,
+            params: [address, gameAddress, NonPlayerActionType.TOPUP, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
             signature: signature
         });
 

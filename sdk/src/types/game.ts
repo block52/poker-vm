@@ -10,7 +10,7 @@ export enum PlayerActionType {
     MUCK = "muck",
     SIT_IN = "sit-in",
     SIT_OUT = "sit-out",
-    SHOW = "show"
+    SHOW = "show",
 }
 
 export enum NonPlayerActionType {
@@ -18,9 +18,30 @@ export enum NonPlayerActionType {
     JOIN = "join",
     LEAVE = "leave",
     NEW_HAND = "new-hand",
+    TOPUP = "topup", // New action type for in-game top-up
 }
 
-export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
+export const AllPlayerActions = {
+    // Non-player actions
+    DEAL: NonPlayerActionType.DEAL,
+    JOIN: NonPlayerActionType.JOIN,
+    LEAVE: NonPlayerActionType.LEAVE,
+    NEW_HAND: NonPlayerActionType.NEW_HAND,
+    TOPUP: NonPlayerActionType.TOPUP,
+    // Player actions
+    SMALL_BLIND: PlayerActionType.SMALL_BLIND,
+    BIG_BLIND: PlayerActionType.BIG_BLIND,
+    FOLD: PlayerActionType.FOLD,
+    CHECK: PlayerActionType.CHECK,
+    BET: PlayerActionType.BET,
+    CALL: PlayerActionType.CALL,
+    RAISE: PlayerActionType.RAISE,
+    ALL_IN: PlayerActionType.ALL_IN,
+    MUCK: PlayerActionType.MUCK,
+    SIT_IN: PlayerActionType.SIT_IN,
+    SIT_OUT: PlayerActionType.SIT_OUT,
+    SHOW: PlayerActionType.SHOW,
+};
 
 export enum GameType {
     CASH = "cash",
@@ -48,6 +69,12 @@ export enum TexasHoldemRound {
     END = "end"
 }
 
+export type Positions = {
+    dealer?: number;
+    smallBlind?: number;
+    bigBlind?: number;
+};
+
 export type GameOptions = {
     minBuyIn: bigint;
     maxBuyIn: bigint;
@@ -68,10 +95,9 @@ export type GameOptionsDTO = {
     timeout?: number;
 };
 
-// This is the type of the last action of a player
 export type ActionDTO = {
-    playerId: string,
-    seat: number,
+    playerId: string;
+    seat: number;
     action: PlayerActionType | NonPlayerActionType;
     amount: string;
     round: TexasHoldemRound;
@@ -96,11 +122,11 @@ export type WinnerDTO = {
 
 export type PlayerDTO = {
     address: string;
-    seat: number; // change to position
-    stack: string; // BigNumber
-    isSmallBlind: boolean,
-    isBigBlind: boolean,
-    isDealer: boolean,
+    seat: number;
+    stack: string;
+    isSmallBlind: boolean;
+    isBigBlind: boolean;
+    isDealer: boolean;
     holeCards: string[] | undefined;
     status: PlayerStatus;
     lastAction: ActionDTO | undefined;
@@ -136,14 +162,14 @@ export type TexasHoldemStateDTO = {
     type: "cash";
     address: string;
     gameOptions: GameOptionsDTO;
-    smallBlindPosition?: number;
-    bigBlindPosition?: number;
-    dealer?: number;
+    smallBlindPosition: number;
+    bigBlindPosition: number;
+    dealer: number;
     players: PlayerDTO[];
     communityCards: string[];
-    deck: string; // Assume this will be encrypted
+    deck: string;
     pots: string[];
-    lastActedSeat?: number;
+    lastActedSeat: number;
     nextToAct: number;
     previousActions: ActionDTO[];
     actionCount: number;
@@ -157,7 +183,7 @@ export enum SUIT {
     CLUBS = 1,
     DIAMONDS = 2,
     HEARTS = 3,
-    SPADES = 4
+    SPADES = 4,
 }
 
 export type Card = {
@@ -181,13 +207,13 @@ export type TransactionResponse = {
     signature: string;
     timestamp: string;
     data?: string;
-}
+};
 
 export type GameStateResponse = {
     state: TexasHoldemStateDTO;
-}
+};
 
-export type PerformActionResponse= {
+export type PerformActionResponse = {
     state: TexasHoldemStateDTO;
     nonce: string;
     to: string;
@@ -197,4 +223,4 @@ export type PerformActionResponse= {
     signature: string;
     timestamp: string;
     data?: string;
-}
+}; 
