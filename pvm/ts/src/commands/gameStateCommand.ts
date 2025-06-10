@@ -1,10 +1,10 @@
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
-import { Transaction } from "../models";
+import TexasHoldemGame from "../engine/texasHoldem";
+import { getGameManagementInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
-import TexasHoldemGame from "../engine/texasHoldem";
+import { Transaction } from "../models";
 import { IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
