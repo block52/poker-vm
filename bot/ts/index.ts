@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const TABLE_ADDRESS = "0xd8f7d91143321a1830c9996f1e4e0654ba455714";
+const TABLE_ADDRESS = "0x8d488a55da78ce7646c1a1b69f6bf7924c50ad5b";
 const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 
 // Add nonce tracking
@@ -134,6 +134,8 @@ async function main() {
     const wallet = new Wallet(selectedPrivateKey);
     console.log(chalk.cyan(`Active address: ${wallet.address}`));
 
+    const client = getClient();
+
     // Create client and check account balance
     console.log(chalk.cyan("Creating RPC client..."));
     console.log(chalk.cyan("Using private key:", selectedPrivateKey.slice(0, 6) + "..." + selectedPrivateKey.slice(-4)));
@@ -148,7 +150,6 @@ async function main() {
         console.log(chalk.cyan("Time: " + new Date().toLocaleTimeString()));
 
         try {
-
             const gameState = await getGameState(TABLE_ADDRESS);
             console.log(chalk.cyan("Game state fetched successfully."));
 
@@ -164,7 +165,7 @@ async function main() {
             const canDeal = actions.some(action => action.action === NonPlayerActionType.DEAL);
             if (canDeal) {
                 console.log(chalk.cyan("Dealing cards..."));
-                const response = await _node.deal(TABLE_ADDRESS, "", wallet.address);
+                const response = await client.deal(TABLE_ADDRESS, "", wallet.address);
                 console.log(chalk.cyan("Deal action posted successfully:", response?.hash));
                 continue; // Skip to next iteration after dealing
             }
@@ -173,14 +174,14 @@ async function main() {
             const hasPostSmallBlind = actions.some(action => action.action === PlayerActionType.SMALL_BLIND);
             if (hasPostSmallBlind) {
                 console.log(chalk.cyan("Posting small blind..."));
-                const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.SMALL_BLIND, gameState.gameOptions.smallBlind || "1");
+                const response = await client.playerAction(TABLE_ADDRESS, PlayerActionType.SMALL_BLIND, gameState.gameOptions.smallBlind || "1");
                 console.log(chalk.cyan("Small blind posted successfully:", response?.hash));
             }
 
             const hasPostBigBlind = actions.some(action => action.action === PlayerActionType.BIG_BLIND);
             if (hasPostBigBlind) {
                 console.log(chalk.cyan("Posting big blind..."));
-                const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.BIG_BLIND, gameState.gameOptions.bigBlind || "0");
+                const response = await client.playerAction(TABLE_ADDRESS, PlayerActionType.BIG_BLIND, gameState.gameOptions.bigBlind || "0");
                 console.log(chalk.cyan("Big blind posted successfully:", response?.hash));
             }
 
@@ -192,7 +193,7 @@ async function main() {
                 const canCheck = actions.some(action => action.action === PlayerActionType.CHECK);
                 if (canCheck) {
                     console.log(chalk.cyan("Check..."));
-                    const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.CHECK, "0");
+                    const response = await client.playerAction(TABLE_ADDRESS, PlayerActionType.CHECK, "0");
                     console.log(chalk.cyan("Check posted successfully:", response?.hash));
 
                     continue; // Skip to next iteration after check
@@ -203,7 +204,7 @@ async function main() {
                 if (canCall) {
                     console.log(chalk.cyan("Calling..."));
                     const amount = actions.find(action => action.action === PlayerActionType.CALL)?.min || "0";
-                    const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.CALL, amount);
+                    const response = await client.playerAction(TABLE_ADDRESS, PlayerActionType.CALL, amount);
                     console.log(chalk.cyan("Call posted successfully:", response?.hash));
                     continue; // Skip to next iteration after call
                 }
@@ -212,7 +213,7 @@ async function main() {
                 const canShow = actions.some(action => action.action === PlayerActionType.SHOW);
                 if (canShow) {
                     console.log(chalk.cyan("Showing cards..."));
-                    const response = await _node.playerAction(TABLE_ADDRESS, PlayerActionType.SHOW, "0");
+                    const response = await client.playerAction(TABLE_ADDRESS, PlayerActionType.SHOW, "0");
                     console.log(chalk.cyan("Show posted successfully:", response?.hash));
                     continue; // Skip to next iteration after show
                 }
