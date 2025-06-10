@@ -15,7 +15,9 @@ let serverInstance: Server | null = null;
 export function getServerInstance(): Server {
     const privateKey = process.env.VALIDATOR_KEY;
     if (!privateKey) {
-        throw new Error("Validator key (VALIDATOR_KEY) is not set in the environment variables.");
+        console.error("CRITICAL: Validator key (VALIDATOR_KEY) is not set in the environment variables.");
+        console.error("Please set VALIDATOR_KEY in your .env file before starting the application.");
+        process.exit(1);
     }
 
     if (!serverInstance) {
