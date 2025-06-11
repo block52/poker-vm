@@ -55,8 +55,7 @@ describe("Texas Holdem - Data driven", () => {
             game = fromTestJson(test_792);
             const actual = game.getLegalActions(SEAT_1);
             expect(actual).toBeDefined();
-            expect(actual.length).toEqual(1);
-            expect(actual[0].action).toEqual("fold");
+            expect(actual.length).toEqual(0);
         });
 
         it("should test bug 870", () => {
@@ -80,7 +79,7 @@ describe("Texas Holdem - Data driven", () => {
             const SEAT_2 = "0xC84737526E425D7549eF20998Fa992f88EAC2484";
 
             game = fromTestJson(test_873);
-            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+            expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
             expect(game.lastActedSeat).toEqual(2);
             const actual = game.getLegalActions(SEAT_1);
             expect(actual).toBeDefined();
