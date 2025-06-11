@@ -14,7 +14,7 @@ const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://no
 // Add nonce tracking
 let play = true;
 const _bots: IBot[] = [];
-const botAddresses: string[] = [];
+const tableAddress: string[] = [];
 
 // Remove the global pk variable since we'll use the selected key
 let selectedPrivateKey: string = process.env.PRIVATE_KEY || "";
@@ -68,11 +68,11 @@ async function main() {
             console.log(chalk.green(`Found bot with address: ${bot.address}`));
             if (bot.type === "check") {
                 const checkBot: IBot = new CheckBot(bot.tableAddress, NODE_URL, bot.privateKey);
-                await checkBot.joinGame();
 
-                console.log(chalk.green(`Bot with address ${bot.address} is ready to play.`));
+                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
+                await checkBot.joinGame();
                 _bots.push(checkBot);
-                botAddresses.push(bot.address);
+                tableAddress.push(bot.tableAddress);
             }
         }
     }
@@ -80,18 +80,19 @@ async function main() {
     // Continuous monitoring loop
     console.log(chalk.yellow("\nStarting continuous monitoring (checking every 10 seconds)..."));
     while (play) {
-        for (const address of botAddresses) {
+        for (const address of tableAddress) {
             console.log(chalk.cyan("Time: " + new Date().toLocaleTimeString()));
 
             console.log(chalk.cyan("Checking bot with address:", address));
-            const botDocument = await Bots.findOne({ address: address });
+            // Get the bot for this table
+            const botDocument = await Bots.findOne({ tableAddress: address });
             if (!botDocument) {
-                console.error(chalk.red(`Bot with address ${address} not found in the database.`));
+                console.error(chalk.red(`Bot for table address ${address} not found in the database.`));
                 continue; // Skip to next bot if not found
             }
 
             if (!botDocument.enabled) {
-                console.log(chalk.yellow(`Bot with address ${address} is disabled. Skipping...`));
+                console.log(chalk.yellow(`Bot with address ${botDocument.address} is disabled. Skipping...`));
                 continue; // Skip to next bot if disabled
             }
             
