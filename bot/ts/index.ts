@@ -8,20 +8,10 @@ import { ethers } from "ethers";
 
 dotenv.config();
 
-let TABLE_ADDRESS = "";
-const NODE_URL = process.env.NODE_URL;
-
 // Add nonce tracking
 let play = true;
 const _bots: IBot[] = [];
 const tableAddress: string[] = [];
-
-// Remove the global pk variable since we'll use the selected key
-let selectedPrivateKey: string = process.env.PRIVATE_KEY || "";
-if (!selectedPrivateKey) {
-    console.error(chalk.red("No private key provided. Please set the PRIVATE_KEY environment variable."));
-    process.exit(1);
-}
 
 // Modify the main loop to include small blind posting
 async function main() {
@@ -35,23 +25,32 @@ async function main() {
     console.log(chalk.green("Connected to MongoDB database."));
     console.log(chalk.green("Using DB: " + connectionString));
 
-    // Check args for table address
-    if (process.argv.length > 2) {
-        TABLE_ADDRESS = process.argv[1];
+    const NODE_URL = process.env.NODE_URL || "https://nodd1.block52.xzy"; // Replace with your Ethereum node URL
+    if (!NODE_URL) {
+        console.error(chalk.red("No Ethereum node URL provided. Please set the NODE_URL environment variable."));
+        process.exit(1);
     }
 
     const bots = await Bots.find({ enabled: true });
 
     if (bots.length === 0) {
+        const TABLE_ADDRESS = process.env.TABLE_ADDRESS || ethers.ZeroAddress; // Replace with your default table address
         console.error(chalk.red("No enabled bots found in the database."));
         console.error(chalk.red("Adding a default bot with table address: " + TABLE_ADDRESS));
 
-        const wallet = new ethers.Wallet(selectedPrivateKey);
+        // Remove the global pk variable since we'll use the selected key
+        let privateKe: string = process.env.PRIVATE_KEY || "";
+        if (!privateKe) {
+            console.error(chalk.red("No private key provided. Please set the PRIVATE_KEY environment variable."));
+            process.exit(1);
+        }
+
+        const wallet = new ethers.Wallet(privateKe);
 
         const defaultBot = new Bots({
             address: wallet.address,
             tableAddress: TABLE_ADDRESS,
-            privateKey: selectedPrivateKey,
+            privateKey: privateKe,
             type: "check",
             enabled: true
         });
@@ -60,7 +59,7 @@ async function main() {
         console.log(chalk.green("Default bot added successfully."));
 
         // Push the default bot to the _bots array
-        _bots.push(new CheckBot(TABLE_ADDRESS, NODE_URL, selectedPrivateKey));
+        _bots.push(new CheckBot(TABLE_ADDRESS, NODE_URL, privateKe));
     }
 
     for (const bot of bots) {
