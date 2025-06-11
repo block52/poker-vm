@@ -10,7 +10,7 @@ abstract class BaseAction {
 
     verify(player: Player): Range | undefined {
         // To do: Move to deal or fold action class
-        if (this.type !== PlayerActionType.FOLD && this.type !== NonPlayerActionType.DEAL) {
+        if (this.type !== NonPlayerActionType.DEAL) {
             const nextPlayerAddress = this.game.getNextPlayerToAct();
             if (nextPlayerAddress?.address !== player.address) 
                 throw new Error("Must be currently active player.");

@@ -19,6 +19,8 @@ class FoldAction extends BaseAction implements IAction {
      */
     verify(player: Player): Range {
 
+        super.verify(player);
+
         if (player.status === PlayerStatus.FOLDED) {
             // Player has already folded, no need to fold again
             throw new Error("Player has already folded.");
