@@ -54,30 +54,10 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         orderedTransactions.forEach(tx => {
             try {
-                {
-                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                    
-                    // CRITICAL FIX: For poker actions, extract amount from transaction data
-                    // 
-                    // WHY THIS IS NEEDED:
-                    // - Poker actions have tx.value = 0 to prevent double deduction from account balance
-                    // - The actual bet amount is stored in tx.data (e.g., "bet,11,50000000000000000")
-                    // - Without this fix, all poker actions would have amount = 0 and stacks wouldn't decrement
-                    // - JOIN/TOPUP actions still use tx.value because they transfer funds from account to table
-                    let actionAmount = tx.value;
-                    let actionData = tx.data;
-                    
-                    if ((tx.type === PlayerActionType.BET || 
-                         tx.type === PlayerActionType.RAISE || 
-                         tx.type === PlayerActionType.CALL) && 
-                        tx.data && !isNaN(Number(tx.data))) {
-                        // Amount is encoded in data for poker actions
-                        actionAmount = BigInt(tx.data);
-                        actionData = null;
-                    }
-                    
-                    game.performAction(tx.from, tx.type, tx.index, actionAmount, actionData);
-                }
+                console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
+                
+                // The parser now handles extracting the correct amount and data from key-value pairs
+                game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 // Continue with other transactions, don't let this error propagate up
@@ -95,20 +75,29 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         // Create transaction with correct direction of funds flow
         // For all other actions: regular format
         
-        // Include amount in transaction data for poker actions that need it
-        let data: string;
-        if (this.data) {
-            // Custom data provided (like seat number for join)
-            data = `${this.action},${this.index},${this.data}`;
-        } else if (this.action === PlayerActionType.BET || 
-                   this.action === PlayerActionType.RAISE || 
-                   this.action === PlayerActionType.CALL) {
-            // Poker actions that need amount preserved in transaction data
-            data = `${this.action},${this.index},${this.amount.toString()}`;
-        } else {
-            // Actions that don't need amount in data
-            data = `${this.action},${this.index}`;
+        // Generate key-value pair data format (e.g., "actionType=bet&index=11&inGameAmount=50000000000000000")
+        const params = new URLSearchParams();
+        params.set('actionType', this.action);
+        params.set('index', this.index.toString());
+        
+        // Add seat for JOIN action
+        if (this.data && this.action === NonPlayerActionType.JOIN) {
+            params.set('seat', this.data);
         }
+        
+        // Add seed for NEW_HAND action
+        if (this.data && this.action === NonPlayerActionType.NEW_HAND) {
+            params.set('seed', this.data);
+        }
+        
+        // Add inGameAmount for poker actions that need it
+        if (this.action === PlayerActionType.BET || 
+            this.action === PlayerActionType.RAISE || 
+            this.action === PlayerActionType.CALL) {
+            params.set('inGameAmount', this.amount.toString());
+        }
+        
+        const data = params.toString();
 
         if (this.action !== NonPlayerActionType.LEAVE) {
             // Determine transaction value:
@@ -144,13 +133,19 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         }
 
         if (this.action === NonPlayerActionType.LEAVE) {
+            // Generate key-value pair data for LEAVE action
+            const leaveParams = new URLSearchParams();
+            leaveParams.set('actionType', this.action);
+            leaveParams.set('index', this.index.toString());
+            const leaveData = leaveParams.toString();
+            
             const tx: Transaction = await Transaction.create(
                 _to, // game receives funds (to)
                 _from, // player sends funds (from)
                 this.amount,
                 nonce + 1n, // Increment nonce for action transaction
                 this.privateKey,
-                data
+                leaveData
             );
 
             // Add both transactions to the mempool

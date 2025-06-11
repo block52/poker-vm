@@ -35,26 +35,8 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             orderedTransactions.forEach(tx => {
                 try {
-                    // CRITICAL FIX: For poker actions, extract amount from transaction data
-                    // 
-                    // WHY THIS IS NEEDED:
-                    // - Poker actions have tx.value = 0 to prevent double deduction from account balance
-                    // - The actual bet amount is stored in tx.data (e.g., "bet,11,50000000000000000")
-                    // - Without this fix, all poker actions would have amount = 0 and stacks wouldn't decrement
-                    // - JOIN/TOPUP actions still use tx.value because they transfer funds from account to table
-                    let actionAmount = tx.value;
-                    let actionData = tx.data;
-                    
-                    if ((tx.type === PlayerActionType.BET || 
-                         tx.type === PlayerActionType.RAISE || 
-                         tx.type === PlayerActionType.CALL) && 
-                        tx.data && !isNaN(Number(tx.data))) {
-                        // Amount is encoded in data for poker actions
-                        actionAmount = BigInt(tx.data);
-                        actionData = null;
-                    }
-                    
-                    game.performAction(tx.from, tx.type, tx.index, actionAmount, actionData);
+                    // The parser now handles extracting the correct amount and data from key-value pairs
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 }

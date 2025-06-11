@@ -344,10 +344,17 @@ export class NodeRpcClient implements IClient {
         const index = await this.getNextActionIndex(gameAddress, address);
         const seed: string = NodeRpcClient.generateRandomNumberString();
 
+        // Generate key-value pair data format
+        const params = new URLSearchParams();
+        params.set('actionType', NonPlayerActionType.NEW_HAND);
+        params.set('index', index.toString());
+        params.set('seed', seed);
+        const data = params.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, data], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -396,8 +403,12 @@ export class NodeRpcClient implements IClient {
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
-        // Pack the seat into the data field
-        const data = seat.toString();
+        // Generate key-value pair data format
+        const params = new URLSearchParams();
+        params.set('actionType', NonPlayerActionType.JOIN);
+        params.set('index', index.toString());
+        params.set('seat', seat.toString());
+        const data = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -433,10 +444,24 @@ export class NodeRpcClient implements IClient {
 
             const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
+            // Generate key-value pair data format
+            const params = new URLSearchParams();
+            params.set('actionType', action);
+            params.set('index', index.toString());
+            
+            // Add inGameAmount for poker actions that need it
+            if (action === PlayerActionType.BET || 
+                action === PlayerActionType.RAISE || 
+                action === PlayerActionType.CALL) {
+                params.set('inGameAmount', amount);
+            }
+            
+            const data = params.toString();
+
             const { data: body } = await axios.post(this.url, {
                 id: 1, // this.getRequestId(),
                 method: RPCMethods.PERFORM_ACTION,
-                params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
+                params: [address, gameAddress, action, amount, nonce, index, data], // [from, to, action, amount, nonce, index, data]
                 signature: signature
             });
 
@@ -489,10 +514,16 @@ export class NodeRpcClient implements IClient {
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
+        // Generate key-value pair data format
+        const params = new URLSearchParams();
+        params.set('actionType', NonPlayerActionType.TOPUP);
+        params.set('index', index.toString());
+        const data = params.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.TOPUP, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
+            params: [address, gameAddress, NonPlayerActionType.TOPUP, amount.toString(), nonce, index, data], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
