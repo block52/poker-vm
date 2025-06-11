@@ -26,7 +26,14 @@ if (!selectedPrivateKey) {
 // Modify the main loop to include small blind posting
 async function main() {
     const connectionString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
+    if (!connectionString) {
+        console.error(chalk.red("No database connection string provided. Please set the DB_URL environment variable."));
+        process.exit(1);
+    }
     await connectDB.connect(connectionString);
+
+    console.log(chalk.green("Connected to MongoDB database."));
+    console.log(chalk.green("Using DB: " + connectionString));
 
     // Check args for table address
     if (process.argv.length > 2) {

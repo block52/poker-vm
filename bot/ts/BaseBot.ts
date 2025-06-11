@@ -19,8 +19,13 @@ export abstract class BaseBot {
     }
 
     protected async getGameState(): Promise<TexasHoldemStateDTO> {
-        const dto = await this.client.getGameState(this.tableAddress, ethers.ZeroAddress);
-        return dto;
+        try {
+            const dto = await this.client.getGameState(this.tableAddress, ethers.ZeroAddress);
+            return dto;
+        }
+        catch (error) {
+            throw new Error(`Failed to fetch game state: ${error}`);
+        }
     };
 
     protected async getLegalActions(): Promise<LegalActionDTO[]> {
