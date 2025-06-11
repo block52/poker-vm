@@ -55,7 +55,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         orderedTransactions.forEach(tx => {
             try {
                 console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                
+
                 // The parser now handles extracting the correct amount and data from key-value pairs
                 game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
             } catch (error) {
@@ -74,38 +74,34 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         // Create transaction with correct direction of funds flow
         // For all other actions: regular format
-        
+
         // Generate key-value pair data format (e.g., "actionType=bet&index=11&inGameAmount=50000000000000000")
         const params = new URLSearchParams();
-        params.set('actionType', this.action);
-        params.set('index', this.index.toString());
-        
+        params.set("actionType", this.action);
+        params.set("index", this.index.toString());
+
         // Add seat for JOIN action
         if (this.data && this.action === NonPlayerActionType.JOIN) {
-            params.set('seat', this.data);
+            params.set("seat", this.data);
         }
-        
+
         // Add seed for NEW_HAND action
         if (this.data && this.action === NonPlayerActionType.NEW_HAND) {
-            params.set('seed', this.data);
+            params.set("seed", this.data);
         }
-        
+
         // Add inGameAmount for poker actions that need it
-        if (this.action === PlayerActionType.BET || 
-            this.action === PlayerActionType.RAISE || 
-            this.action === PlayerActionType.CALL) {
-            params.set('inGameAmount', this.amount.toString());
+        if (this.action === PlayerActionType.BET || this.action === PlayerActionType.RAISE || this.action === PlayerActionType.CALL) {
+            params.set("inGameAmount", this.amount.toString());
         }
-        
+
         const data = params.toString();
 
         if (this.action !== NonPlayerActionType.LEAVE) {
             // Determine transaction value:
             // - JOIN and TOPUP: transfer money from account to table (use full amount)
             // - All poker actions (blinds, bets, calls, etc.): move chips within game (use 0)
-            const transactionValue = (this.action === NonPlayerActionType.JOIN || this.action === NonPlayerActionType.TOPUP) 
-                ? this.amount 
-                : 0n;
+            const transactionValue = this.action === NonPlayerActionType.JOIN || this.action === NonPlayerActionType.TOPUP ? this.amount : 0n;
 
             const tx: Transaction = await Transaction.create(
                 _to, // game receives funds (to)
@@ -135,10 +131,10 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         if (this.action === NonPlayerActionType.LEAVE) {
             // Generate key-value pair data for LEAVE action
             const leaveParams = new URLSearchParams();
-            leaveParams.set('actionType', this.action);
-            leaveParams.set('index', this.index.toString());
+            leaveParams.set("actionType", this.action);
+            leaveParams.set("index", this.index.toString());
             const leaveData = leaveParams.toString();
-            
+
             const tx: Transaction = await Transaction.create(
                 _to, // game receives funds (to)
                 _from, // player sends funds (from)
