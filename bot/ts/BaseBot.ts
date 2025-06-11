@@ -38,6 +38,28 @@ export abstract class BaseBot {
         }
     }
 
+    async hasJoined(): Promise<boolean> {
+        try {
+            console.log(chalk.cyan("\nDebug - hasJoined:"));
+            console.log(chalk.cyan("Table address:"), this.tableAddress);
+            const gameState = await this.getGameState();
+            console.log(chalk.cyan("Game state fetched successfully."));
+            const myPlayer = gameState.players.find(p => p.address === this.me);
+            if (myPlayer) {
+                console.log(chalk.green("You are already seated at this table!"));
+                // console.log(chalk.cyan("Your stack:"), formatChips(myPlayer.stack));
+                return true;
+            }
+                console.log(chalk.yellow("You have not joined the game yet."));
+                return false;
+        }
+        catch (error: any) {
+            console.error(chalk.red("Failed to check if joined game:"), error.message);
+            console.error(chalk.red("Error stack:"), error.stack);
+            return false;
+        }
+    }
+
     // Modify the joinGame function to use these helpers
     async joinGame(): Promise<boolean> {
         try {
