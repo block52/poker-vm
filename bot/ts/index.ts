@@ -8,8 +8,8 @@ import { ethers } from "ethers";
 
 dotenv.config();
 
-let TABLE_ADDRESS = "0x6d44ea6a1ec96b0ed83049e1f6dcbf3b5620b6e2";
-const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
+let TABLE_ADDRESS = "";
+const NODE_URL = process.env.NODE_URL;
 
 // Add nonce tracking
 let play = true;
@@ -25,7 +25,7 @@ if (!selectedPrivateKey) {
 
 // Modify the main loop to include small blind posting
 async function main() {
-    const connectionString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
+    const connectionString = process.env.DB_URL;
     if (!connectionString) {
         console.error(chalk.red("No database connection string provided. Please set the DB_URL environment variable."));
         process.exit(1);
