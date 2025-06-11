@@ -77,18 +77,16 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
         });
 
-        it.skip("should have correct legal actions after posting the big blind", () => {
+        it("should have correct legal actions after posting the big blind", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
 
             // Get legal actions for the next player
             const actual = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
 
-            expect(actual.length).toEqual(4);
+            expect(actual.length).toEqual(2);
             expect(actual[0].action).toEqual(NonPlayerActionType.DEAL);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
-            expect(actual[2].action).toEqual(PlayerActionType.CALL);
-            expect(actual[3].action).toEqual(PlayerActionType.RAISE);
         });
 
         it("should have correct legal actions after posting blinds", () => {

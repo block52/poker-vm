@@ -8,12 +8,13 @@ import { ethers } from "ethers";
 
 dotenv.config();
 
-let TABLE_ADDRESS = "0x328cdfcb61c7eb67e712fcf1b9fb93999a0d26a8";
+let TABLE_ADDRESS = "0x6d44ea6a1ec96b0ed83049e1f6dcbf3b5620b6e2";
 const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 
 // Add nonce tracking
 let play = true;
 const _bots: IBot[] = [];
+const botAddresses: string[] = [];
 
 // Remove the global pk variable since we'll use the selected key
 let selectedPrivateKey: string = process.env.PRIVATE_KEY || "";
@@ -64,6 +65,7 @@ async function main() {
 
                 console.log(chalk.green(`Bot with address ${bot.address} is ready to play.`));
                 _bots.push(checkBot);
+                botAddresses.push(bot.address);
             }
         }
     }
@@ -71,8 +73,23 @@ async function main() {
     // Continuous monitoring loop
     console.log(chalk.yellow("\nStarting continuous monitoring (checking every 10 seconds)..."));
     while (play) {
-        for (const bot of _bots) {
+        for (const address of botAddresses) {
             console.log(chalk.cyan("Time: " + new Date().toLocaleTimeString()));
+
+            console.log(chalk.cyan("Checking bot with address:", address));
+            const botDocument = await Bots.findOne({ address: address });
+            if (!botDocument) {
+                console.error(chalk.red(`Bot with address ${address} not found in the database.`));
+                continue; // Skip to next bot if not found
+            }
+
+            if (!botDocument.enabled) {
+                console.log(chalk.yellow(`Bot with address ${address} is disabled. Skipping...`));
+                continue; // Skip to next bot if disabled
+            }
+            
+            // Reload the bot from the database to ensure we have the latest state
+            const bot: IBot = new CheckBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
 
             try {
                 await bot.performAction();
