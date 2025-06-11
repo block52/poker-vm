@@ -29,7 +29,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
             console.log("Expiring actions");
             await this.expireActions();
         }
-        
+
         const txs = this.mempool.get();
 
         const validTxs: Transaction[] = this.validate(txs);
@@ -125,10 +125,10 @@ export class MineCommand implements ISignedCommand<Block | null> {
                 if (now > expirationDate) {
                     // Generate key-value pair data for expired FOLD action
                     const expireParams = new URLSearchParams();
-                    expireParams.set('actionType', PlayerActionType.FOLD);
-                    expireParams.set('index', turnIndex.toString());
+                    expireParams.set("actionType", PlayerActionType.FOLD);
+                    expireParams.set("index", turnIndex.toString());
                     const expireData = expireParams.toString();
-                    
+
                     const transaction = new Transaction(
                         gameState.address,
                         turn.playerId,
