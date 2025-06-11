@@ -33,6 +33,9 @@ async function main() {
 
     const bots = await Bots.find({ enabled: true });
 
+    console.table(bots, ["address", "tableAddress", "type", "enabled"]);
+    console.log(chalk.green("Found " + bots.length + " enabled bots in the database."));
+
     if (bots.length === 0) {
         const TABLE_ADDRESS = process.env.TABLE_ADDRESS || ethers.ZeroAddress; // Replace with your default table address
         console.error(chalk.red("No enabled bots found in the database."));
@@ -69,9 +72,11 @@ async function main() {
                 const checkBot: IBot = new CheckBot(bot.tableAddress, NODE_URL, bot.privateKey);
 
                 console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
-                await checkBot.joinGame();
-                _bots.push(checkBot);
-                tableAddress.push(bot.tableAddress);
+                const joined = await checkBot.joinGame();
+                if (joined) {
+                    _bots.push(checkBot);
+                    tableAddress.push(bot.tableAddress);
+                }
             }
         }
     }
