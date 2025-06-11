@@ -2,10 +2,10 @@ import { NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bit
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
+import { getAccountManagementInstance, getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
-import { IGameManagement } from "../state/interfaces";
+import { IAccountManagement, IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {

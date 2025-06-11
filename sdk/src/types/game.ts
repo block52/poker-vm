@@ -69,12 +69,6 @@ export enum TexasHoldemRound {
     END = "end"
 }
 
-export type Positions = {
-    dealer?: number;
-    smallBlind?: number;
-    bigBlind?: number;
-};
-
 export type GameOptions = {
     minBuyIn: bigint;
     maxBuyIn: bigint;
