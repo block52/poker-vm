@@ -144,9 +144,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 leaveData
             );
 
-            // Add both transactions to the mempool
-            const txs = await Promise.all([tx]);
-
             const txResponse: TransactionResponse = {
                 nonce: tx.nonce.toString(),
                 to: tx.to,
@@ -158,9 +155,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 data: tx.data
             };
 
-            const mempoolTxs = [this.mempool.add(txs[0])];
-            await Promise.all(mempoolTxs);
-
+            await this.mempool.add(tx);
             return signResult(txResponse, this.privateKey);
         }
 
