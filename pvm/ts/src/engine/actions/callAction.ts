@@ -92,13 +92,12 @@ class CallAction extends BaseAction implements IAction {
 
     getDeductAmount(player: Player): bigint {
         const playerSeat = this.game.getPlayerSeatNumber(player.address);
-        const playerBet = this.getSumBets(player.address);
-        const largestBet = this.getLargestBet();
+        let playerBet = this.getSumBets(player.address, true); // Include ante bets in preflop
+        const largestBet = this.getLargestBet(true);
 
         // Special case for small blind in preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.smallBlindPosition && playerBet === this.game.smallBlind) {
             // Small blind calling the big blind (difference between BB and SB)
-            const largestBet = this.getLargestBet();
             const amount = (largestBet + this.game.bigBlind) - this.game.smallBlind;
             return amount;
         }
@@ -108,6 +107,14 @@ class CallAction extends BaseAction implements IAction {
             // Small blind calling the big blind (difference between BB and SB)
             return this.game.bigBlind - this.game.smallBlind;
         }
+
+        // if (this.game.currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.smallBlindPosition) {
+        //     playerBet += this.game.smallBlind; // Assume small blind has already put in their small blind amount
+        // }
+
+        // if (this.game.currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.bigBlindPosition) {
+        //     playerBet += this.game.bigBlind; // Assume big blind has already put in their big blind amount
+        // }
 
         // General case: difference between largest bet and player's current bet
         if (playerBet >= largestBet) {
