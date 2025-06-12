@@ -23,7 +23,8 @@ class CallAction extends BaseAction implements IAction {
             const seat = this.game.getPlayerSeatNumber(player.address);
             if (seat === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
-                const amount = this.game.bigBlind - this.game.smallBlind;
+                const largestBet = this.getLargestBet();
+                const amount = (largestBet + this.game.bigBlind) - this.game.smallBlind;
                 return { minAmount: amount, maxAmount: amount };
             }
 
