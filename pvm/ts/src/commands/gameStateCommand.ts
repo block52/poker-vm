@@ -7,6 +7,7 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { Transaction } from "../models";
 import { IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: IGameManagement;
@@ -34,6 +35,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             orderedTransactions.forEach(tx => {
                 try {
+                    // The parser now handles extracting the correct amount and data from key-value pairs
                     game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);

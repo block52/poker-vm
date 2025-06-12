@@ -30,8 +30,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Add ref to track if we're already attempting to auto-deal
     const attemptToAutoDeal = useRef<boolean>(false);
 
-
-
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
@@ -348,7 +346,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
         await startNewHand(tableId, seed);
     };
 
-
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
 
@@ -545,7 +542,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                         {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
                         {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
                             <>
-                                <div className="flex justify-between gap-1 lg:gap-2">
+                                <div className="flex justify-center gap-1 lg:gap-2">
                                     {canFoldAnytime && (
                                         <button
                                             className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155]

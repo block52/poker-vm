@@ -2,10 +2,10 @@ import { NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bit
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
+import { getAccountManagementInstance, getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
-import { IGameManagement } from "../state/interfaces";
+import { IAccountManagement, IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
@@ -54,10 +54,10 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         orderedTransactions.forEach(tx => {
             try {
-                {
-                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
-                }
+                console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
+
+                // The parser now handles extracting the correct amount and data from key-value pairs
+                game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
             } catch (error) {
                 console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                 // Continue with other transactions, don't let this error propagate up
@@ -74,13 +74,39 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         // Create transaction with correct direction of funds flow
         // For all other actions: regular format
-        const data = this.data ? `${this.action},${this.index},${this.data}` : `${this.action},${this.index}`;
+
+        // Generate key-value pair data format (e.g., "actionType=bet&index=11&inGameAmount=50000000000000000")
+        const params = new URLSearchParams();
+        params.set("actionType", this.action);
+        params.set("index", this.index.toString());
+
+        // Add seat for JOIN action
+        if (this.data && this.action === NonPlayerActionType.JOIN) {
+            params.set("seat", this.data);
+        }
+
+        // Add seed for NEW_HAND action
+        if (this.data && this.action === NonPlayerActionType.NEW_HAND) {
+            params.set("seed", this.data);
+        }
+
+        // Add inGameAmount for poker actions that need it
+        if (this.action === PlayerActionType.BET || this.action === PlayerActionType.RAISE || this.action === PlayerActionType.CALL) {
+            params.set("inGameAmount", this.amount.toString());
+        }
+
+        const data = params.toString();
 
         if (this.action !== NonPlayerActionType.LEAVE) {
+            // Determine transaction value:
+            // - JOIN and TOPUP: transfer money from account to table (use full amount)
+            // - All poker actions (blinds, bets, calls, etc.): move chips within game (use 0)
+            const transactionValue = this.action === NonPlayerActionType.JOIN || this.action === NonPlayerActionType.TOPUP ? this.amount : 0n;
+
             const tx: Transaction = await Transaction.create(
                 _to, // game receives funds (to)
                 _from, // player sends funds (from)
-                this.amount,
+                transactionValue, // 0 for poker actions, amount for JOIN/TOPUP
                 nonce,
                 this.privateKey,
                 data
@@ -103,26 +129,20 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         }
 
         if (this.action === NonPlayerActionType.LEAVE) {
+            // Generate key-value pair data for LEAVE action
+            const leaveParams = new URLSearchParams();
+            leaveParams.set("actionType", this.action);
+            leaveParams.set("index", this.index.toString());
+            const leaveData = leaveParams.toString();
+
             const tx: Transaction = await Transaction.create(
                 _to, // game receives funds (to)
                 _from, // player sends funds (from)
                 this.amount,
-                nonce,
-                this.privateKey,
-                "" // No data for regular transactions
-            );
-
-            const actionTx = await Transaction.create(
-                this.to,
-                this.from,
-                this.amount,
                 nonce + 1n, // Increment nonce for action transaction
                 this.privateKey,
-                data
+                leaveData
             );
-
-            // Add both transactions to the mempool
-            const txs = await Promise.all([tx, actionTx]);
 
             const txResponse: TransactionResponse = {
                 nonce: tx.nonce.toString(),
@@ -135,9 +155,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 data: tx.data
             };
 
-            const mempoolTxs = [this.mempool.add(txs[0]), this.mempool.add(txs[1])];
-            await Promise.all(mempoolTxs);
-
+            await this.mempool.add(tx);
             return signResult(txResponse, this.privateKey);
         }
 

@@ -29,7 +29,7 @@ export type TransactionDTO = {
     timestamp: string;
     index?: string;
     nonce?: string;
-    data? : string;
+    data?: string;
 };
 
 export type BurnResponseDTO = {
@@ -40,4 +40,4 @@ export type BurnResponseDTO = {
         signature: string;
     };
     burnTransaction: TransactionDTO;
-};
+}; 

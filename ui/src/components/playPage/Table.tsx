@@ -67,6 +67,7 @@ import { RxExit } from "react-icons/rx";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
+import { BuyChipsModal } from "../BuyChipsModal";
 
 import { ethers } from "ethers";
 
@@ -219,6 +220,9 @@ const Table = React.memo(() => {
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
     const [debugMode, setDebugMode] = useState(false);
+
+    // BUY CHIPS modal state
+    const [showBuyChipsModal, setShowBuyChipsModal] = useState(false);
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
@@ -804,6 +808,49 @@ const Table = React.memo(() => {
                     <img src="/block52.png" alt="Block52 Logo" className="powered-by-logo" />
                 </div>
             </div>
+
+            {/* BUY CHIPS Button - Bottom Left of Table */}
+            {tableActivePlayers.some((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress?.toLowerCase()) && (
+                <div className="absolute bottom-[120px] left-4 z-50">
+                    <button
+                        onClick={() => setShowBuyChipsModal(true)}
+                        className="bg-gradient-to-r from-[#2c3e50] to-[#1e293b] hover:from-[#1e293b] hover:to-[#0f172a]
+                        text-white font-bold py-2.5 px-5 rounded-lg shadow-lg text-sm
+                        border border-[#3a546d] hover:border-[#4a6b8d] transition-all duration-300 
+                        flex items-center justify-center gap-2 transform hover:scale-105
+                        backdrop-blur-sm bg-opacity-90"
+                        title="Top up your chips during gameplay"
+                    >
+                        <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-5 w-5 text-blue-400" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                        >
+                            <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={2} 
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                            />
+                        </svg>
+                        BUY CHIPS
+                    </button>
+                </div>
+            )}
+
+            {/* BUY CHIPS Modal */}
+            <BuyChipsModal 
+                isOpen={showBuyChipsModal}
+                onClose={() => setShowBuyChipsModal(false)}
+                onSuccess={() => {
+                    // Modal will close itself, optionally refresh balance here
+                    console.log("✅ Chips purchased successfully");
+                    // Optionally refresh account balance
+                    fetchAccountBalance();
+                }}
+            />
 
             {/* Debug Error Panel */}
             <div className={`debug-panel ${debugMode ? "block" : "hidden"}`}>

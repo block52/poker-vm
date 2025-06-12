@@ -3,7 +3,6 @@ export interface ISignedResponse<T> {
     signature: string;
 }
 
-// RPC Class
 export type RPCRequest = {
     id: string;
     method: RPCMethods;
@@ -51,41 +50,41 @@ export enum RPCMethods {
     SHUTDOWN = "shutdown",
     START = "start",
     STOP = "stop",
-    TRANSFER = "transfer"
+    TRANSFER = "transfer",
 }
 
 export type RPCRequestParams = {
-    [RPCMethods.BLOCK]: [string, string]; // [hash, block]
-    [RPCMethods.BURN]: [string, string, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
-    [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
-    [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
-    [RPCMethods.DEPLOY_CONTRACT]: [string, string, string]; // [nonce, owner, data]
-    [RPCMethods.FIND_CONTRACT]: [string]; // [address]
-    [RPCMethods.GET_ACCOUNT]: [string]; // [address]
-    [RPCMethods.GET_BALANCE]: [string]; // [address]
-    [RPCMethods.GET_BLOCK_BY_HASH]: [string]; // [hash]
-    [RPCMethods.GET_BLOCK_HEIGHT]: []; // No parameters
-    [RPCMethods.GET_BLOCK]: [string]; // [index]
-    [RPCMethods.GET_BLOCKS]: [string]; // [count]
-    [RPCMethods.GET_CLIENT]: []; // No parameters
-    [RPCMethods.GET_CONTRACT_SCHEMA]: [string]; // [hash]
-    [RPCMethods.GET_GAME_STATE]: [string, string]; // [address, sharedSecret]
-    [RPCMethods.GET_LAST_BLOCK]: []; // No parameters
-    [RPCMethods.GET_MEMPOOL]: []; // No parameters
-    [RPCMethods.GET_NODES]: []; // No parameters
-    [RPCMethods.GET_SHARED_SECRET]: [string]; // [publicKey]
-    [RPCMethods.GET_TRANSACTION]: [string]; // [hash]
-    [RPCMethods.GET_TRANSACTIONS]: [string]; // [count]
-    [RPCMethods.MINE]: []; // No parameters
-    [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
-    [RPCMethods.MINT]: [string]; // [depositIndex]
-    [RPCMethods.NEW_HAND]: [string, string, number, string]; // [to, nonce, index, data] where data is the seed
-    [RPCMethods.NEW_TABLE]: [string, string, number]; // [schemaAddress, owner, nonce]
-    [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string]; // [from, to, action, amount, nonce, index, data]
-    [RPCMethods.PURGE]: [string, string]; // [username, password]
-    [RPCMethods.RESET_BLOCKCHAIN]: [string, string]; // [username, password]
-    [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
-    [RPCMethods.START]: []; // No parameters
-    [RPCMethods.STOP]: []; // No parameters
-    [RPCMethods.TRANSFER]: [string, string, string, number, string | null]; // [from, to, amount, nonce, data]
-};
+    [RPCMethods.BLOCK]: [string, string];
+    [RPCMethods.BURN]: [string, string, string];
+    [RPCMethods.CREATE_ACCOUNT]: [string];
+    [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any];
+    [RPCMethods.DEPLOY_CONTRACT]: [string, string, string];
+    [RPCMethods.FIND_CONTRACT]: [string];
+    [RPCMethods.GET_ACCOUNT]: [string];
+    [RPCMethods.GET_BALANCE]: [string];
+    [RPCMethods.GET_BLOCK_BY_HASH]: [string];
+    [RPCMethods.GET_BLOCK_HEIGHT]: [];
+    [RPCMethods.GET_BLOCK]: [string];
+    [RPCMethods.GET_BLOCKS]: [string];
+    [RPCMethods.GET_CLIENT]: [];
+    [RPCMethods.GET_CONTRACT_SCHEMA]: [string];
+    [RPCMethods.GET_GAME_STATE]: [string, string];
+    [RPCMethods.GET_LAST_BLOCK]: [];
+    [RPCMethods.GET_MEMPOOL]: [];
+    [RPCMethods.GET_NODES]: [];
+    [RPCMethods.GET_SHARED_SECRET]: [string];
+    [RPCMethods.GET_TRANSACTION]: [string];
+    [RPCMethods.GET_TRANSACTIONS]: [string];
+    [RPCMethods.MINE]: [];
+    [RPCMethods.MINED_BLOCK_HASH]: [string, string];
+    [RPCMethods.MINT]: [string];
+    [RPCMethods.NEW_HAND]: [string, string, number, string];
+    [RPCMethods.NEW_TABLE]: [string, string];
+    [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string];
+    [RPCMethods.PURGE]: [string, string];
+    [RPCMethods.RESET_BLOCKCHAIN]: [string, string];
+    [RPCMethods.SHUTDOWN]: [string, string];
+    [RPCMethods.START]: [];
+    [RPCMethods.STOP]: [];
+    [RPCMethods.TRANSFER]: [string, string, string, number, string | null];
+}; 
