@@ -13,7 +13,7 @@ class MongoDatabaseConnection {
         return MongoDatabaseConnection.instance;
     }
 
-    public async connect(uri: string = "mongodb://localhost:27017/pvm"): Promise<void> {
+    public async connect(uri: string): Promise<void> {
         if (this.isConnected) {
             return;
         }
