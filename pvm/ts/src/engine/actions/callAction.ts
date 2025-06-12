@@ -23,13 +23,13 @@ class CallAction extends BaseAction implements IAction {
             const seat = this.game.getPlayerSeatNumber(player.address);
             if (seat === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
-                const largestBet = this.getLargestBet();
-                const amount = (largestBet + this.game.bigBlind) - this.game.smallBlind;
-                return { minAmount: amount, maxAmount: amount };
+                const largestBet = this.getLargestBet(true);
+                // const amount = (largestBet + this.game.bigBlind) - this.game.smallBlind;
+                return { minAmount: largestBet, maxAmount: largestBet };
             }
 
-            const largestBet = this.getLargestBet();
-            const playerBet = this.getSumBets(player.address);
+            const largestBet = this.getLargestBet(true);
+            const playerBet = this.getSumBets(player.address, true);
             
             if (seat === this.game.bigBlindPosition && largestBet === playerBet) {
                 // Error message not quite right
@@ -107,14 +107,6 @@ class CallAction extends BaseAction implements IAction {
             // Small blind calling the big blind (difference between BB and SB)
             return this.game.bigBlind - this.game.smallBlind;
         }
-
-        // if (this.game.currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.smallBlindPosition) {
-        //     playerBet += this.game.smallBlind; // Assume small blind has already put in their small blind amount
-        // }
-
-        // if (this.game.currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.bigBlindPosition) {
-        //     playerBet += this.game.bigBlind; // Assume big blind has already put in their big blind amount
-        // }
 
         // General case: difference between largest bet and player's current bet
         if (playerBet >= largestBet) {
