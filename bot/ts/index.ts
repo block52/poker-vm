@@ -4,7 +4,7 @@ import { IBot } from "./interfaces";
 import { CheckBot } from "./CheckBot";
 import { connectDB } from "./mongoConnection";
 import Bots from "./schema/bots";
-import { ethers } from "ethers";
+import { RaiseOrCallBot } from "./RaiseOrCallBot";
 
 dotenv.config();
 
@@ -104,7 +104,7 @@ async function main() {
             }
             
             // Reload the bot from the database to ensure we have the latest state
-            const bot: IBot = new CheckBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
+            const bot: IBot = new RaiseOrCallBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
 
             try {
                 await bot.performAction();
