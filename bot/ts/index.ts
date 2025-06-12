@@ -37,32 +37,35 @@ async function main() {
     console.log(chalk.green("Found " + bots.length + " enabled bots in the database."));
 
     if (bots.length === 0) {
-        const TABLE_ADDRESS = process.env.TABLE_ADDRESS || ethers.ZeroAddress; // Replace with your default table address
-        console.error(chalk.red("No enabled bots found in the database."));
-        console.error(chalk.red("Adding a default bot with table address: " + TABLE_ADDRESS));
+        // const TABLE_ADDRESS = process.env.TABLE_ADDRESS || ethers.ZeroAddress; // Replace with your default table address
+        // console.error(chalk.red("No enabled bots found in the database."));
+        // console.error(chalk.red("Adding a default bot with table address: " + TABLE_ADDRESS));
 
-        // Remove the global pk variable since we'll use the selected key
-        let privateKe: string = process.env.PRIVATE_KEY || "";
-        if (!privateKe) {
-            console.error(chalk.red("No private key provided. Please set the PRIVATE_KEY environment variable."));
-            process.exit(1);
-        }
+        // // Remove the global pk variable since we'll use the selected key
+        // let privateKey: string = process.env.PRIVATE_KEY || "";
+        // if (!privateKe) {
+        //     console.error(chalk.red("No private key provided. Please set the PRIVATE_KEY environment variable."));
+        //     process.exit(1);
+        // }
 
-        const wallet = new ethers.Wallet(privateKe);
+        // const wallet = new ethers.Wallet(privateKey);
 
-        const defaultBot = new Bots({
-            address: wallet.address,
-            tableAddress: TABLE_ADDRESS,
-            privateKey: privateKe,
-            type: "check",
-            enabled: true
-        });
+        // const defaultBot = new Bots({
+        //     address: wallet.address,
+        //     tableAddress: TABLE_ADDRESS,
+        //     privateKey: privateKey,
+        //     type: "check",
+        //     enabled: true
+        // });
 
-        await defaultBot.save();
-        console.log(chalk.green("Default bot added successfully."));
+        // await defaultBot.save();
+        // console.log(chalk.green("Default bot added successfully."));
 
-        // Push the default bot to the _bots array
-        _bots.push(new CheckBot(TABLE_ADDRESS, NODE_URL, privateKe));
+        // // Push the default bot to the _bots array
+        // _bots.push(new CheckBot(TABLE_ADDRESS, NODE_URL, privateKey));
+
+        console.error(chalk.red("No enabled bots found in the database. Please add a bot to the database before running this script."));
+        process.exit(1);
     }
 
     for (const bot of bots) {
