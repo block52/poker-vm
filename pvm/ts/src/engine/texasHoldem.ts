@@ -109,8 +109,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Initialize update handler
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) {}
-            addAction(action: Turn): void {}
+            constructor(public game: TexasHoldemGame) { }
+            addAction(action: Turn): void { }
         })(this);
 
         // Initialize action handlers
@@ -169,7 +169,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     public reInit(deck: string): void {
         // Cache action count
         // This is the action count before reinit, so we can use it to determine the next action index
-        const actionCount = this.getPreviousActions().length + 1;  // This is the next count, so need to add 1
+        const actionCount = this.getPreviousActions().length + 1; // This is the next count, so need to add 1
 
         // Reset all players
         for (const player of this.getSeatedPlayers()) {
@@ -279,7 +279,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     get smallBlindPosition(): number {
-        return this.dealerManager.getSmallBlindPosition()
+        return this.dealerManager.getSmallBlindPosition();
     }
 
     // Pot getters
@@ -581,7 +581,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             const actions = this._rounds.get(this.currentRound) || [];
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
-            
+
             // If small blind hasn't been posted yet, small blind player should act
             if (!hasSmallBlind) {
                 const smallBlindPlayer = this.getPlayerAtSeat(this.smallBlindPosition);
@@ -589,7 +589,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     return smallBlindPlayer;
                 }
             }
-            
+
             // If small blind posted but big blind hasn't, big blind player should act
             if (hasSmallBlind && !hasBigBlind) {
                 const bigBlindPlayer = this.getPlayerAtSeat(this.bigBlindPosition);
@@ -623,169 +623,317 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
-     * Determines if the current betting round has ended
-     */
+ * Determines if the current betting round has ended
+ */
     hasRoundEnded(round: TexasHoldemRound): boolean {
-        const players = this.getSeatedPlayers();
+        // Step 1: Filter out folded and sitting out players
+        const activePlayers = this.findLivePlayers();
 
-        // Only consider players who are active and not all-in
-        const notFoldedPlayers = players.filter(p => {
-            const status = this.getPlayerStatus(p.address);
-            return status !== PlayerStatus.FOLDED && status !== PlayerStatus.SITTING_OUT;
-        });
-
-        // If no active players left (all folded or all-in), the round ends
-        if (notFoldedPlayers.length === 0) {
+        // Step 2: If no players or only one player left, round has ended
+        if (activePlayers.length <= 1) {
+            if (this.currentRound !== TexasHoldemRound.ANTE && activePlayers.length === 1) {
+                this._currentRound = TexasHoldemRound.SHOWDOWN;
+            }
             return true;
         }
 
-        // Get the live players for this round.  Active, all-in, or showing players
-        const livePlayers = this.findLivePlayers();
-
-        // If all players are folded or all-in except one, advance to showdown
-        if (livePlayers.length === 1 && this.currentRound !== TexasHoldemRound.ANTE) {
-            // If only one player left, they win by default
-            this._currentRound = TexasHoldemRound.SHOWDOWN;
-        }
-
         // Get actions for this round
-        const actions = this._rounds.get(round);
-        if (!actions) {
-            return false;
-        }
+        const actions = this._rounds.get(round) || [];
 
-        // Special case for ANTE round
+        // Step 3: Special case for ANTE round
         if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
             const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
 
-            // Round is over when blinds are posted AND cards are dealt
+            // Round ends when both blinds are posted AND cards are dealt
             return hasSmallBlind && hasBigBlind && hasDealt;
         }
 
-        // if (round === TexasHoldemRound.PREFLOP) {
-        //     const bets: bigint[] = [];
-        //     livePlayers.forEach(player => {
-        //         const playerBets = this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP, true);
-        //         bets.push(playerBets);
-        //     });
-
-        //     // Check all elements in bets array are equal
-        //     const allEqual = bets.every(bet => bet === bets[0]);
-        //     // If all bets are equal, round is over
-        //     if (allEqual) {
-        //         return true;
-        //     }
-        // }
-
         // Special case for SHOWDOWN round
         if (round === TexasHoldemRound.SHOWDOWN) {
-            // If everyone else has folded, the round is over
-            if (livePlayers.length === 1) {
-                this.calculateWinner();
-                return true;
-            }
+            // Check if all active players have either shown or mucked
+            const showdownActions = actions.filter(a =>
+                a.action === PlayerActionType.SHOW || a.action === PlayerActionType.MUCK
+            );
+            const playersWhoActedInShowdown = new Set(showdownActions.map(a => a.playerId));
 
-            // If all players have shown their cards, the round is over
-            const players = this.getSeatedPlayers();
-            const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
-            if (showingPlayers.length === players.length) {
+            // If all active players have either shown or mucked, the round ends
+            const allPlayersActed = activePlayers.every(player =>
+                playersWhoActedInShowdown.has(player.address)
+            );
+
+            if (allPlayersActed) {
                 this.calculateWinner();
                 return true;
             }
+            return false;
         }
-
+        
         // Check if cards have been dealt
         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
 
-        // If cards dealt but no betting actions yet, round is not over
+        // Get betting actions (excluding blinds and deal)
         const bettingActions = actions.filter(
-            a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
+            a => a.action !== PlayerActionType.SMALL_BLIND &&
+                a.action !== PlayerActionType.BIG_BLIND &&
+                a.action !== NonPlayerActionType.DEAL
         );
 
+        // If cards dealt but no betting actions yet, round is not over
         if ((hasDealt || anyPlayerHasCards) && bettingActions.length === 0) {
             return false;
         }
 
-        const largestBet = this.getLargestBet(round);
+        // Step 4: Check that all active players have acted
+        const playersWhoActed = new Set(bettingActions.map(a => a.playerId));
 
-        // Find the last bet or raise action
+        for (const player of activePlayers) {
+            if (!playersWhoActed.has(player.address)) {
+                return false; // Player hasn't acted yet
+            }
+        }
+
+        // Step 4b: Check if all players have acted AFTER the last bet/raise
         let lastBetOrRaiseIndex = -1;
+        let lastBetOrRaisePlayerId = "";
         for (let i = actions.length - 1; i >= 0; i--) {
             if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
                 lastBetOrRaiseIndex = i;
+                lastBetOrRaisePlayerId = actions[i].playerId;
                 break;
             }
         }
 
-        // Check that all remaining active players have acted and matched the highest bet
-        for (const player of livePlayers) {
-            // Get this player's actions in this round
-            const playerActions = actions.filter(a => a.playerId === player.address);
-
-            // If a player hasn't acted yet, round is not over
-            if (playerActions.length === 0) {
-                return false;
-            }
-
-            // Get the player's last action in this round
-            const lastAction = playerActions[playerActions.length - 1];
-
-            // Skip players who have checked, called, or folded as their final action
-            if (lastAction.action === PlayerActionType.CALL || lastAction.action === PlayerActionType.CHECK || lastAction.action === PlayerActionType.FOLD) {
-                // Check if they acted after the last bet/raise
-                if (lastBetOrRaiseIndex >= 0) {
-                    const playerLastActionIndex = actions.findIndex(
-                        a => a.playerId === player.address && a.action === lastAction.action && a.index === lastAction.index
-                    );
-
-                    // If player acted before the last bet/raise, they still need to act
-                    if (playerLastActionIndex < lastBetOrRaiseIndex) {
-                        return false;
-                    }
+        if (lastBetOrRaiseIndex >= 0) {
+            // If there was a bet/raise, ensure all OTHER active players have acted after it
+            for (const player of activePlayers) {
+                // Skip the player who made the bet/raise - they don't need to act again
+                if (player.address === lastBetOrRaisePlayerId) {
+                    continue;
                 }
-                continue;
-            }
 
-            // If the player has posted blinds but hasn't acted in the betting round yet
-            if (lastAction.action === PlayerActionType.SMALL_BLIND || lastAction.action === PlayerActionType.BIG_BLIND) {
-                return false;
-            }
+                const playerActionsAfterBet = actions.filter(a =>
+                    a.playerId === player.address &&
+                    actions.indexOf(a) > lastBetOrRaiseIndex
+                );
 
-            // Get the player's current bet amount
-            const totalWagered = this.getPlayerTotalBets(player.address);
-
-            // If the player has not matched the highest bet, round is not over
-            if (totalWagered < largestBet) {
-                return false;
-            }
-
-            // If the last action was a bet or raise, other players need to respond
-            if (lastAction.action === PlayerActionType.BET || lastAction.action === PlayerActionType.RAISE) {
-                const actionIndex = actions.findIndex(a => a.playerId === player.address && a.action === lastAction.action && a.index === lastAction.index);
-
-                if (actionIndex >= 0) {
-                    // Check if all other active players have acted after this bet/raise
-                    for (const otherPlayer of livePlayers) {
-                        if (otherPlayer.address === player.address) continue;
-
-                        // Get this player's actions after the bet/raise
-                        const otherPlayerActionsAfterBet = actions.filter(a => a.playerId === otherPlayer.address && actions.indexOf(a) > actionIndex);
-
-                        // If no actions after the bet/raise, round is not over
-                        if (otherPlayerActionsAfterBet.length === 0) {
-                            return false;
-                        }
-                    }
+                if (playerActionsAfterBet.length === 0) {
+                    return false; // Player hasn't responded to the bet/raise yet
                 }
             }
         }
 
-        // If we've made it here, all players have acted appropriately
-        return true;
+        // Step 5: Calculate each player's total bets and check if they're equal
+        const playerBets: bigint[] = [];
+
+        for (const player of activePlayers) {
+            // For PREFLOP, include blind bets from ANTE round
+            const totalBet = round === TexasHoldemRound.PREFLOP
+                ? this.getPlayerTotalBets(player.address, round, true)  // includeBlinds = true
+                : this.getPlayerTotalBets(player.address, round);
+
+            playerBets.push(totalBet);
+        }
+
+        // Step 6: If all player bets are equal, round has concluded
+        const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
+        return allBetsEqual;
     }
+
+    // /**
+    //  * Determines if the current betting round has ended
+    //  */
+    // hasRoundEnded(round: TexasHoldemRound): boolean {
+    //     const players = this.getSeatedPlayers();
+
+    //     // Only consider players who are active and not all-in
+    //     const notFoldedPlayers = players.filter(p => {
+    //         const status = this.getPlayerStatus(p.address);
+    //         return status !== PlayerStatus.FOLDED && status !== PlayerStatus.SITTING_OUT;
+    //     });
+
+    //     // If no active players left (all folded or all-in), the round ends
+    //     if (notFoldedPlayers.length === 0) {
+    //         return true;
+    //     }
+
+    //     // Get the live players for this round.  Active, all-in, or showing players
+    //     const livePlayers = this.findLivePlayers();
+
+    //     // If all players are folded or all-in except one, advance to showdown
+    //     if (livePlayers.length === 1 && this.currentRound !== TexasHoldemRound.ANTE) {
+    //         // If only one player left, they win by default
+    //         this._currentRound = TexasHoldemRound.SHOWDOWN;
+    //     }
+
+    //     // Get actions for this round
+    //     const actions = this._rounds.get(round);
+    //     if (!actions) {
+    //         return false;
+    //     }
+
+    //     // Special case for ANTE round
+    //     if (round === TexasHoldemRound.ANTE) {
+    //         const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
+    //         const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
+    //         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
+
+    //         // Round is over when blinds are posted AND cards are dealt
+    //         return hasSmallBlind && hasBigBlind && hasDealt;
+    //     }
+
+    //     // Check all live players have acted
+    //     const actionsByPlayer = new Map<string, TurnWithSeat[]>();
+    //     livePlayers.forEach(player => {
+    //         actionsByPlayer.set(
+    //             player.address,
+    //             actions.filter(a => a.playerId === player.address)
+    //         );
+    //     });
+
+    //     // If any live player has no actions, round is not over
+    //     for (const player of livePlayers) {
+    //         const playerActions = actionsByPlayer.get(player.address);
+    //         if (!playerActions || playerActions.length === 0) {
+    //             return false; // Player has not acted yet
+    //         }
+    //     }
+
+    //     if (round === TexasHoldemRound.PREFLOP) {
+    //         const bets: bigint[] = [];
+    //         // Check the sum of all actionsByPlayer
+    //         // Iterate through the map
+    //         actionsByPlayer.forEach((playerActions, playerId) => {
+    //             const sum = playerActions.reduce((acc: bigint, action) => {
+    //                 return acc + (action.amount || 0n);
+    //             }, 0n);
+
+    //             bets.push(sum);
+    //         });
+
+    //         // const bets: bigint[] = [];
+    //         // livePlayers.forEach(player => {
+    //         //     const playerBets = this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP, true);
+    //         //     bets.push(playerBets);
+    //         // });
+
+    //         // // Check all elements in bets array are equal
+    //         const allEqual = bets.every(bet => bet === bets[0]);
+    //         // If all bets are equal, round is over
+    //         if (allEqual) {
+    //             return true;
+    //         }
+    //     }
+
+    //     // Special case for SHOWDOWN round
+    //     if (round === TexasHoldemRound.SHOWDOWN) {
+    //         // If everyone else has folded, the round is over
+    //         if (livePlayers.length === 1) {
+    //             this.calculateWinner();
+    //             return true;
+    //         }
+
+    //         // If all players have shown their cards, the round is over
+    //         const players = this.getSeatedPlayers();
+    //         const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
+    //         if (showingPlayers.length === players.length) {
+    //             this.calculateWinner();
+    //             return true;
+    //         }
+    //     }
+
+    //     // Check if cards have been dealt
+    //     const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
+    //     const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
+
+    //     // If cards dealt but no betting actions yet, round is not over
+    //     const bettingActions = actions.filter(
+    //         a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
+    //     );
+
+    //     if ((hasDealt || anyPlayerHasCards) && bettingActions.length === 0) {
+    //         return false;
+    //     }
+
+    //     const largestBet = this.getLargestBet(round);
+
+    //     // Find the last bet or raise action
+    //     let lastBetOrRaiseIndex = -1;
+    //     for (let i = actions.length - 1; i >= 0; i--) {
+    //         if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
+    //             lastBetOrRaiseIndex = i;
+    //             break;
+    //         }
+    //     }
+
+    //     // Check that all remaining active players have acted and matched the highest bet
+    //     for (const player of livePlayers) {
+    //         // Get this player's actions in this round
+    //         const playerActions = actions.filter(a => a.playerId === player.address);
+
+    //         // If a player hasn't acted yet, round is not over
+    //         if (playerActions.length === 0) {
+    //             return false;
+    //         }
+
+    //         // Get the player's last action in this round
+    //         const lastAction = playerActions[playerActions.length - 1];
+
+    //         // Skip players who have checked, called, or folded as their final action
+    //         if (lastAction.action === PlayerActionType.CALL || lastAction.action === PlayerActionType.CHECK || lastAction.action === PlayerActionType.FOLD) {
+    //             // Check if they acted after the last bet/raise
+    //             if (lastBetOrRaiseIndex >= 0) {
+    //                 const playerLastActionIndex = actions.findIndex(
+    //                     a => a.playerId === player.address && a.action === lastAction.action && a.index === lastAction.index
+    //                 );
+
+    //                 // If player acted before the last bet/raise, they still need to act
+    //                 if (playerLastActionIndex < lastBetOrRaiseIndex) {
+    //                     return false;
+    //                 }
+    //             }
+    //             continue;
+    //         }
+
+    //         // If the player has posted blinds but hasn't acted in the betting round yet
+    //         if (lastAction.action === PlayerActionType.SMALL_BLIND || lastAction.action === PlayerActionType.BIG_BLIND) {
+    //             return false;
+    //         }
+
+    //         // Get the player's current bet amount
+    //         const totalWagered = this.getPlayerTotalBets(player.address);
+
+    //         // If the player has not matched the highest bet, round is not over
+    //         if (totalWagered < largestBet) {
+    //             return false;
+    //         }
+
+    //         // If the last action was a bet or raise, other players need to respond
+    //         if (lastAction.action === PlayerActionType.BET || lastAction.action === PlayerActionType.RAISE) {
+    //             const actionIndex = actions.findIndex(a => a.playerId === player.address && a.action === lastAction.action && a.index === lastAction.index);
+
+    //             if (actionIndex >= 0) {
+    //                 // Check if all other active players have acted after this bet/raise
+    //                 for (const otherPlayer of livePlayers) {
+    //                     if (otherPlayer.address === player.address) continue;
+
+    //                     // Get this player's actions after the bet/raise
+    //                     const otherPlayerActionsAfterBet = actions.filter(a => a.playerId === otherPlayer.address && actions.indexOf(a) > actionIndex);
+
+    //                     // If no actions after the bet/raise, round is not over
+    //                     if (otherPlayerActionsAfterBet.length === 0) {
+    //                         return false;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     // If we've made it here, all players have acted appropriately
+    //     return true;
+    // }
 
     // ==================== ACTION HANDLING METHODS ====================
 

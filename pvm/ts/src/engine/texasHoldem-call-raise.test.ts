@@ -88,7 +88,7 @@ describe("Texas Holdem Game", () => {
             expect(legalActions).toBeDefined();
         });
 
-        it.only("should have correct call values for sb after bb raises", () => {
+        it("should have correct call values for sb after bb raises", () => {
             const SMALL_BLIND_ADDRESS = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
             const BIG_BLIND_ADDRESS = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
 
