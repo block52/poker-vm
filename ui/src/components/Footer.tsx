@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import * as React from "react";
-import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 
@@ -29,8 +29,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Add ref to track if we're already attempting to auto-deal
     const attemptToAutoDeal = useRef<boolean>(false);
-
-
 
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState } = useGameStateContext();
@@ -103,6 +101,42 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const minRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0), [raiseAction]);
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
+
+    const getCallAmount = () => {
+
+        const previousActions = gameState?.previousActions.filter(
+            action => action.playerId?.toLowerCase() === userAddress?.toLowerCase()
+        );
+
+        if (callAction && !previousActions) {
+            return Number(ethers.formatUnits(callAction.min || "0", 18));
+        }
+
+        // Find all previous bets and raises for this round
+        let previousBetsAndRaises = previousActions?.filter(
+            action => action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE || action.action === PlayerActionType.CALL || action.action === PlayerActionType.SMALL_BLIND || action.action === PlayerActionType.BIG_BLIND
+        );
+
+        if (gameState?.round === TexasHoldemRound.PREFLOP) {
+            // For pre-flop, we only consider the last bet or raise
+            previousBetsAndRaises = previousBetsAndRaises?.filter(
+                action => action.round === TexasHoldemRound.PREFLOP || action.round === TexasHoldemRound.ANTE
+            );
+        } else {
+            // For post-flop rounds, consider all bets and raises
+            previousBetsAndRaises = previousBetsAndRaises?.filter(
+                action => action.round === gameState?.round
+            );
+        }
+
+        const sum = previousBetsAndRaises?.reduce((sum, action) => {
+            const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
+            return sum + amount;
+        }, 0) || 0;
+
+        return sum + callAmount;
+    }
+
 
     // Big Blind Value - handle null gameOptions during loading
     const bigBlindStep = useMemo(() => {
@@ -581,7 +615,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCall}
                                         >
-                                            CALL <span className="text-[#ffffff]">${callAmount.toFixed(2)}</span>
+                                            CALL <span className="text-[#ffffff]">${getCallAmount().toFixed(2)}</span>
                                         </button>
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (
