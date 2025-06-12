@@ -28,6 +28,17 @@ class CallAction extends BaseAction implements IAction {
                 return { minAmount: amount, maxAmount: amount };
             }
 
+            if (seat === this.game.bigBlindPosition) {
+                // Big blind can only call if there is a raise
+                const largestBet = this.getLargestBet();
+                const playerBet = this.getSumBets(player.address, true);
+                if (largestBet > playerBet) {
+                    // Big blind needs to call the difference to match the largest bet
+                    const amount = largestBet - playerBet;
+                    return { minAmount: amount, maxAmount: amount };
+                }
+            }
+
             const largestBet = this.getLargestBet(true);
             const playerBet = this.getSumBets(player.address, true);
             

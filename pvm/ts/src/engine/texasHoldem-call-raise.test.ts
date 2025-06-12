@@ -64,23 +64,27 @@ describe("Texas Holdem Game", () => {
             expect(legalActions[2].action).toEqual(PlayerActionType.BET);
         });
 
-        it("should have correct call values", () => {
+        it("should have correct call values for bb after sb raises", () => {
+            const SMALL_BLIND_ADDRESS = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
+            const BIG_BLIND_ADDRESS = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
             // Post blinds
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 4);
+            game.performAction(SMALL_BLIND_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
+            game.performAction(BIG_BLIND_ADDRESS, PlayerActionType.BIG_BLIND, 4);
 
             // After blinds are posted, small blind acts first in preflop
             const nextToAct = game.getNextPlayerToAct();
-            expect(nextToAct?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
+            expect(nextToAct?.address).toEqual(SMALL_BLIND_ADDRESS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            // Deal cards
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.DEAL, 5);
+            // SB to Deal cards
+            game.performAction(SMALL_BLIND_ADDRESS, NonPlayerActionType.DEAL, 5);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.RAISE, 6, TWO_TOKENS);
+            // SB raises
+            const FOUR_TOKENS = 400000000000000000n;
+            game.performAction(SMALL_BLIND_ADDRESS, PlayerActionType.RAISE, 6, FOUR_TOKENS);
 
-            const legalActions = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
+            const legalActions = game.getLegalActions(BIG_BLIND_ADDRESS);
             expect(legalActions).toBeDefined();
         });
     });
