@@ -38,10 +38,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Direct function imports - no hook destructuring needed
 
     // Use the useNextToActInfo hook
-    const {
-        isCurrentUserTurn,
-        timeRemaining
-    } = useNextToActInfo(tableId);
+    const { isCurrentUserTurn, timeRemaining } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState();
@@ -102,11 +99,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    const getCallAmount = () => {
-
-        const previousActions = gameState?.previousActions.filter(
-            action => action.playerId?.toLowerCase() === userAddress?.toLowerCase()
-        );
+    const getCallAmount = (): number => {
+        const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
 
         if (callAction && !previousActions) {
             return Number(ethers.formatUnits(callAction.min || "0", 18));
@@ -114,7 +108,12 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         // Find all previous bets and raises for this round
         let previousBetsAndRaises = previousActions?.filter(
-            action => action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE || action.action === PlayerActionType.CALL || action.action === PlayerActionType.SMALL_BLIND || action.action === PlayerActionType.BIG_BLIND
+            action =>
+                action.action === PlayerActionType.BET ||
+                action.action === PlayerActionType.RAISE ||
+                action.action === PlayerActionType.CALL ||
+                action.action === PlayerActionType.SMALL_BLIND ||
+                action.action === PlayerActionType.BIG_BLIND
         );
 
         if (gameState?.round === TexasHoldemRound.PREFLOP) {
@@ -124,19 +123,17 @@ const PokerActionPanel: React.FC = React.memo(() => {
             );
         } else {
             // For post-flop rounds, consider all bets and raises
-            previousBetsAndRaises = previousBetsAndRaises?.filter(
-                action => action.round === gameState?.round
-            );
+            previousBetsAndRaises = previousBetsAndRaises?.filter(action => action.round === gameState?.round);
         }
 
-        const sum = previousBetsAndRaises?.reduce((sum, action) => {
-            const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
-            return sum + amount;
-        }, 0) || 0;
+        const sum =
+            previousBetsAndRaises?.reduce((sum, action) => {
+                const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
+                return sum + amount;
+            }, 0) || 0;
 
         return sum + callAmount;
-    }
-
+    };
 
     // Big Blind Value - handle null gameOptions during loading
     const bigBlindStep = useMemo(() => {
@@ -166,7 +163,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Add timer extension functionality for the footer button
     const userSeat = userPlayer?.seat;
     const { extendTime, canExtend } = usePlayerTimer(tableId, userSeat);
-    
+
     // Get the timeout duration from game options for display
     const timeoutDuration = useMemo(() => {
         if (!gameOptions?.timeout) return 30;
@@ -180,7 +177,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
             console.log("Cannot extend time - not available or already used");
             return;
         }
-        
+
         extendTime();
         console.log(`⏰ Time extended by ${timeoutDuration} seconds from footer button`);
     }, [extendTime, canExtend, timeoutDuration]);
@@ -218,7 +215,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Handler functions for different actions - simplified
     const handlePostSmallBlind = async () => {
         if (!tableId) return;
-        
+
         const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
         if (!smallBlindAmount) return;
 
@@ -228,7 +225,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     const handlePostBigBlind = async () => {
         if (!tableId) return;
-        
+
         const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
         if (!bigBlindAmount) return;
 
@@ -377,11 +374,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
         if (!tableId) return;
 
         const seed = Math.random().toString(36).substring(2, 15);
-        
+
         // Simple call - let errors bubble up naturally
         await startNewHand(tableId, seed);
     };
-
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
@@ -572,7 +568,9 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                             )}
                             {/* Show a message if the player has folded */}
                             {userPlayer?.status === "folded" && (
-                                <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">You have folded this hand</div>
+                                <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">
+                                    You have folded this hand
+                                </div>
                             )}
                         </div>
 
@@ -595,7 +593,9 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                     )}
                                     {/* Show a message if the player has folded */}
                                     {userPlayer?.status === "folded" && (
-                                        <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">You have folded this hand</div>
+                                        <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">
+                                            You have folded this hand
+                                        </div>
                                     )}
 
                                     {hasCheckAction && (
@@ -824,7 +824,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                         ) : null}
                     </>
                 )}
-
             </div>
         </div>
     );
