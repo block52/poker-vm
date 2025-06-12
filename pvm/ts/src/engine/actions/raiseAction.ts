@@ -65,7 +65,7 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         // Calculate minimum raise amount
-        const playerCurrentBet = this.getSumBets(player.address);
+        const playerCurrentBet = this.game.getPlayerTotalBets(player.address);
         const increment = this.findPreviousBetOrRaise(lastBetOrRaise.index);
         const delta = BigInt(lastBetOrRaise.amount || 0n) - BigInt(increment?.amount || 0n);
         
@@ -128,7 +128,7 @@ class RaiseAction extends BaseAction implements IAction {
         if (!amount) return 0n;
 
         // Calculate how much more the player needs to add to the pot
-        const bets = this.getSumBets(player.address);
+        const bets = this.game.getPlayerTotalBets(player.address);
         const delta = amount - bets;
 
         // Return the amount to add (or player's entire stack if they don't have enough)

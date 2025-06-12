@@ -24,7 +24,7 @@ class CallAction extends BaseAction implements IAction {
             if (seat === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
                 const largestBet = this.getLargestBet(); // Include ante bets in preflop
-                const playerBet = this.getSumBets(player.address, true); // Include ante bets in preflop
+                const playerBet = this.game.getPlayerTotalBets(player.address, this.game.currentRound, true); // Include ante bets in preflop
                 const amount = (largestBet + this.game.bigBlind) - playerBet;
                 return { minAmount: amount, maxAmount: amount };
             }
@@ -32,7 +32,7 @@ class CallAction extends BaseAction implements IAction {
             if (seat === this.game.bigBlindPosition) {
                 // Big blind can only call if there is a raise
                 const largestBet = this.getLargestBet();
-                const playerBet = this.getSumBets(player.address, true);
+                const playerBet = this.game.getPlayerTotalBets(player.address, this.game.currentRound, true);
                 if (largestBet > playerBet) {
                     // Big blind needs to call the difference to match the largest bet
                     const amount = largestBet - playerBet;
@@ -41,7 +41,7 @@ class CallAction extends BaseAction implements IAction {
             }
 
             const largestBet = this.getLargestBet(true);
-            const playerBet = this.getSumBets(player.address, true);
+            const playerBet = this.game.getPlayerTotalBets(player.address, this.game.currentRound, true);
             
             if (seat === this.game.bigBlindPosition && largestBet === playerBet) {
                 // Error message not quite right
@@ -104,7 +104,7 @@ class CallAction extends BaseAction implements IAction {
 
     getDeductAmount(player: Player): bigint {
         const playerSeat = this.game.getPlayerSeatNumber(player.address);
-        let playerBet = this.getSumBets(player.address, true); // Include ante bets in preflop
+        let playerBet = this.game.getPlayerTotalBets(player.address, this.game.currentRound, true); // Include ante bets in preflop
         const largestBet = this.getLargestBet(true);
 
         // Special case for small blind in preflop

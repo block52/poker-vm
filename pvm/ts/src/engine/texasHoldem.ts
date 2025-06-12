@@ -639,11 +639,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return true;
         }
 
-        // Get the live players for this round
+        // Get the live players for this round.  Active, all-in, or showing players
         const livePlayers = this.findLivePlayers();
 
         // If all players are folded or all-in except one, advance to showdown
         if (livePlayers.length === 1 && this.currentRound !== TexasHoldemRound.ANTE) {
+            // If only one player left, they win by default
             this._currentRound = TexasHoldemRound.SHOWDOWN;
         }
 
@@ -662,6 +663,21 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             // Round is over when blinds are posted AND cards are dealt
             return hasSmallBlind && hasBigBlind && hasDealt;
         }
+
+        // if (round === TexasHoldemRound.PREFLOP) {
+        //     const bets: bigint[] = [];
+        //     livePlayers.forEach(player => {
+        //         const playerBets = this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP, true);
+        //         bets.push(playerBets);
+        //     });
+
+        //     // Check all elements in bets array are equal
+        //     const allEqual = bets.every(bet => bet === bets[0]);
+        //     // If all bets are equal, round is over
+        //     if (allEqual) {
+        //         return true;
+        //     }
+        // }
 
         // Special case for SHOWDOWN round
         if (round === TexasHoldemRound.SHOWDOWN) {
@@ -878,7 +894,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Get player and seat information
         const player = this.getPlayer(address);
-        const seat = this.getPlayerSeatNumber(address);
 
         // Execute the specific player action
         switch (action) {
@@ -1079,12 +1094,36 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return bets;
     }
 
-    /**
-     * Gets a player's total bets for a specific round
-     */
-    getPlayerTotalBets(playerId: string, round: TexasHoldemRound = this.currentRound): bigint {
-        const bets = this.getBets(round);
-        return bets.get(playerId) ?? 0n;
+    // /**
+    //  * Gets a player's total bets for a specific round
+    //  */
+    // getPlayerTotalBets(playerId: string, round: TexasHoldemRound = this.currentRound): bigint {
+    //     const bets = this.getBets(round);
+    //     return bets.get(playerId) ?? 0n;
+    // }
+
+    // /**
+    //  * Gets a player's total bets for a specific round
+    //  */
+    getPlayerTotalBets(playerId: string, round: TexasHoldemRound = this.currentRound, includeBlinds: boolean = false): bigint {
+        let amount = 0n;
+        const roundBets = this.getBets(round);
+
+        // If the player made a bet in this round, add it to the total
+        if (roundBets.has(playerId)) {
+            amount += roundBets.get(playerId) || 0n;
+        }
+
+        if (includeBlinds && round === TexasHoldemRound.PREFLOP) {
+            const anteBets = this.getBets(TexasHoldemRound.ANTE);
+
+            // If the player made an ante bet, add it to the total
+            if (anteBets.has(playerId)) {
+                amount += anteBets.get(playerId) || 0n;
+            }
+        }
+
+        return amount;
     }
 
     /**

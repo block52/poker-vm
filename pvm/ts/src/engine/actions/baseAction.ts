@@ -96,26 +96,26 @@ abstract class BaseAction {
         return _amount;
     }
 
-    protected getSumBets(playerId: string, includeBlinds: boolean = false): bigint {
-        let amount = 0n;
-        const roundBets = this.game.getBets(this.game.currentRound);
+    // protected getSumBets(playerId: string, includeBlinds: boolean = false): bigint {
+    //     let amount = 0n;
+    //     const roundBets = this.game.getBets(this.game.currentRound);
 
-        // If the player made a bet in this round, add it to the total
-        if (roundBets.has(playerId)) {
-            amount += roundBets.get(playerId) || 0n;
-        }
+    //     // If the player made a bet in this round, add it to the total
+    //     if (roundBets.has(playerId)) {
+    //         amount += roundBets.get(playerId) || 0n;
+    //     }
 
-        if (includeBlinds && this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            const anteBets = this.game.getBets(TexasHoldemRound.ANTE);
+    //     if (includeBlinds && this.game.currentRound === TexasHoldemRound.PREFLOP) {
+    //         const anteBets = this.game.getBets(TexasHoldemRound.ANTE);
 
-            // If the player made an ante bet, add it to the total
-            if (anteBets.has(playerId)) {
-                amount += anteBets.get(playerId) || 0n;
-            }
-        }
+    //         // If the player made an ante bet, add it to the total
+    //         if (anteBets.has(playerId)) {
+    //             amount += anteBets.get(playerId) || 0n;
+    //         }
+    //     }
 
-        return amount;
-    }
+    //     return amount;
+    // }
 }
 
 export default BaseAction;

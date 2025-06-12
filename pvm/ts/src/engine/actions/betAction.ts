@@ -23,7 +23,7 @@ class BetAction extends BaseAction implements IAction {
 
         // 2. Bet matching check: Player must match existing bets before betting
         const largestBet = this.getLargestBet();
-        const sumBets = this.getSumBets(player.address);
+        const sumBets = this.game.getPlayerTotalBets(player.address);
 
         // 3. Round-specific checks for preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
