@@ -109,8 +109,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Initialize update handler
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) { }
-            addAction(action: Turn): void { }
+            constructor(public game: TexasHoldemGame) {}
+            addAction(action: Turn): void {}
         })(this);
 
         // Initialize action handlers
@@ -623,8 +623,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
- * Determines if the current betting round has ended
- */
+     * Determines if the current betting round has ended
+     */
+    /**
+     * Determines if the current betting round has ended
+     */
     hasRoundEnded(round: TexasHoldemRound): boolean {
         // Step 1: Filter out folded and sitting out players
         const activePlayers = this.findLivePlayers();
@@ -653,15 +656,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Special case for SHOWDOWN round
         if (round === TexasHoldemRound.SHOWDOWN) {
             // Check if all active players have either shown or mucked
-            const showdownActions = actions.filter(a =>
-                a.action === PlayerActionType.SHOW || a.action === PlayerActionType.MUCK
-            );
+            const showdownActions = actions.filter(a => a.action === PlayerActionType.SHOW || a.action === PlayerActionType.MUCK);
             const playersWhoActedInShowdown = new Set(showdownActions.map(a => a.playerId));
 
             // If all active players have either shown or mucked, the round ends
-            const allPlayersActed = activePlayers.every(player =>
-                playersWhoActedInShowdown.has(player.address)
-            );
+            const allPlayersActed = activePlayers.every(player => playersWhoActedInShowdown.has(player.address));
 
             if (allPlayersActed) {
                 this.calculateWinner();
@@ -669,16 +668,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
             return false;
         }
-        
+
         // Check if cards have been dealt
         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
         const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
 
         // Get betting actions (excluding blinds and deal)
         const bettingActions = actions.filter(
-            a => a.action !== PlayerActionType.SMALL_BLIND &&
-                a.action !== PlayerActionType.BIG_BLIND &&
-                a.action !== NonPlayerActionType.DEAL
+            a => a.action !== PlayerActionType.SMALL_BLIND && a.action !== PlayerActionType.BIG_BLIND && a.action !== NonPlayerActionType.DEAL
         );
 
         // If cards dealt but no betting actions yet, round is not over
@@ -714,10 +711,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     continue;
                 }
 
-                const playerActionsAfterBet = actions.filter(a =>
-                    a.playerId === player.address &&
-                    actions.indexOf(a) > lastBetOrRaiseIndex
-                );
+                const playerActionsAfterBet = actions.filter(a => a.playerId === player.address && actions.indexOf(a) > lastBetOrRaiseIndex);
 
                 if (playerActionsAfterBet.length === 0) {
                     return false; // Player hasn't responded to the bet/raise yet
@@ -725,19 +719,36 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 5: Calculate each player's total bets and check if they're equal
+        // Step 5: For PREFLOP, use special logic due to blind structure
+        if (round === TexasHoldemRound.PREFLOP) {
+            // In PREFLOP, round ends when all players have acted and no outstanding bets to call
+            // Check if there are any bets/raises in PREFLOP (excluding checks/calls)
+            const preflopBetsOrRaises = bettingActions.filter(a => a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE);
+
+            if (preflopBetsOrRaises.length === 0) {
+                // No bets/raises in PREFLOP, just checks/calls - round can end
+                return true;
+            }
+
+            // If there were bets/raises, use normal equality check
+            const playerBets: bigint[] = [];
+            for (const player of activePlayers) {
+                const totalBet = this.getPlayerTotalBets(player.address, round, true);
+                playerBets.push(totalBet);
+            }
+            const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
+            return allBetsEqual;
+        }
+
+        // Step 6: Calculate each player's total bets and check if they're equal (non-PREFLOP rounds)
         const playerBets: bigint[] = [];
 
         for (const player of activePlayers) {
-            // For PREFLOP, include blind bets from ANTE round
-            const totalBet = round === TexasHoldemRound.PREFLOP
-                ? this.getPlayerTotalBets(player.address, round, true)  // includeBlinds = true
-                : this.getPlayerTotalBets(player.address, round);
-
+            const totalBet = this.getPlayerTotalBets(player.address, round);
             playerBets.push(totalBet);
         }
 
-        // Step 6: If all player bets are equal, round has concluded
+        // Step 7: If all player bets are equal, round has concluded
         const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
         return allBetsEqual;
     }
