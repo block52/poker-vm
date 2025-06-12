@@ -1,7 +1,7 @@
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson } from "../src/engine/testConstants";
-import { test_json, test_735, test_753, test_792, test_870, test_873, test_873_2, test_877, test_899 } from "./senarios/data";
+import { test_json, test_735, test_753, test_792, test_870, test_873, test_873_2, test_877, test_899, test_899_2 } from "./senarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Data driven", () => {
@@ -106,7 +106,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.END);
         });
 
-        it.only("should test bug 899", () => {
+        it("should test bug 899", () => {
             const SEAT_1 = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
 
             game = fromTestJson(test_899);
@@ -117,6 +117,20 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual[1].action).toEqual("call");
             expect(actual[1].min).toEqual("30000000000000000");
             expect(actual[1].max).toEqual("30000000000000000");
+            expect(actual[2].action).toEqual("raise");
+        });
+
+        it.only("should test bug 899 second test", () => {
+            const SEAT_8 = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
+
+            game = fromTestJson(test_899_2);
+            // Game state should be end
+            const actual = game.getLegalActions(SEAT_8);
+            expect(actual).toBeDefined();
+            expect(actual.length).toEqual(3);
+            expect(actual[1].action).toEqual("call");
+            expect(actual[1].min).toEqual("20000000000000000");
+            expect(actual[1].max).toEqual("20000000000000000");
             expect(actual[2].action).toEqual("raise");
         });
     });
