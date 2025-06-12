@@ -24,7 +24,8 @@ class CallAction extends BaseAction implements IAction {
             if (seat === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
                 const largestBet = this.getLargestBet(); // Include ante bets in preflop
-                const amount = (largestBet + this.game.bigBlind) - this.game.smallBlind;
+                const playerBet = this.getSumBets(player.address, true); // Include ante bets in preflop
+                const amount = (largestBet + this.game.bigBlind) - playerBet;
                 return { minAmount: amount, maxAmount: amount };
             }
 

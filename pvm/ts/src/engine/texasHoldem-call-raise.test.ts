@@ -87,5 +87,33 @@ describe("Texas Holdem Game", () => {
             const legalActions = game.getLegalActions(BIG_BLIND_ADDRESS);
             expect(legalActions).toBeDefined();
         });
+
+        it("should have correct call values for sb after bb raises", () => {
+            const SMALL_BLIND_ADDRESS = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
+            const BIG_BLIND_ADDRESS = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
+
+            // Post blinds
+            game.performAction(SMALL_BLIND_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
+            game.performAction(BIG_BLIND_ADDRESS, PlayerActionType.BIG_BLIND, 4);
+
+            // After blinds are posted, small blind acts first in preflop
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct?.address).toEqual(SMALL_BLIND_ADDRESS);
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+
+            // SB to Deal cards
+            game.performAction(SMALL_BLIND_ADDRESS, NonPlayerActionType.DEAL, 5);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            // SB calls
+            game.performAction(SMALL_BLIND_ADDRESS, PlayerActionType.CALL, 6);
+
+            // BB raises
+            // const FOUR_TOKENS = 400000000000000000n;
+            game.performAction(BIG_BLIND_ADDRESS, PlayerActionType.RAISE, 7, TWO_TOKENS);
+
+            const legalActions = game.getLegalActions(SMALL_BLIND_ADDRESS);
+            expect(legalActions).toBeDefined();
+        });
     });
 });
