@@ -98,7 +98,9 @@ class CallAction extends BaseAction implements IAction {
         // Special case for small blind in preflop
         if (this.game.currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.smallBlindPosition && playerBet === this.game.smallBlind) {
             // Small blind calling the big blind (difference between BB and SB)
-            return this.game.bigBlind - this.game.smallBlind;
+            const largestBet = this.getLargestBet();
+            const amount = (largestBet + this.game.bigBlind) - this.game.smallBlind;
+            return amount;
         }
 
         // Special case for small blind in preflop UTG
