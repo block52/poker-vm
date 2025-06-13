@@ -99,7 +99,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    const getCallAmount = (): number => {
+    // Display function: shows comprehensive call amount for user UI
+    // NOTE: This is for DISPLAY ONLY - actual transaction uses callAction.min (via callHand)
+    const getSumAndMinCallAmountForDisplay = (): number => {
         const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
 
         if (callAction && !previousActions) {
@@ -267,6 +269,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         if (callAction) {
             try {
+                // NOTE: This uses callAction.min directly via the backend (not the display calculation)
                 await callHand(tableId);
             } catch (error: any) {
                 console.error("Failed to call:", error);
@@ -615,7 +618,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCall}
                                         >
-                                            CALL <span className="text-[#ffffff]">${getCallAmount().toFixed(2)}</span>
+                                            CALL <span className="text-[#ffffff]">${getSumAndMinCallAmountForDisplay().toFixed(2)}</span>
                                         </button>
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (
