@@ -23,7 +23,7 @@ class CheckAction extends BaseAction implements IAction {
 
         // 2. Bet matching check: Get the largest bet and player's current bet
         const largestBet = this.getLargestBet();
-        const playerBet = this.getSumBets(player.address);
+        const playerBet = this.game.getPlayerTotalBets(player.address);
 
         // 3. Special case for preflop round
         if (this.game.currentRound === TexasHoldemRound.PREFLOP) {

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import * as React from "react";
-import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 
@@ -30,8 +30,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Add ref to track if we're already attempting to auto-deal
     const attemptToAutoDeal = useRef<boolean>(false);
 
-
-
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
@@ -40,10 +38,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Direct function imports - no hook destructuring needed
 
     // Use the useNextToActInfo hook
-    const {
-        isCurrentUserTurn,
-        timeRemaining
-    } = useNextToActInfo(tableId);
+    const { isCurrentUserTurn, timeRemaining } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState();
@@ -104,6 +99,44 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
+    // Display function: shows comprehensive call amount for user UI
+    // NOTE: This is for DISPLAY ONLY - actual transaction uses callAction.min (via callHand)
+    const getSumAndMinCallAmountForDisplay = (): number => {
+        const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
+
+        if (callAction && !previousActions) {
+            return Number(ethers.formatUnits(callAction.min || "0", 18));
+        }
+
+        // Find all previous bets and raises for this round
+        let previousBetsAndRaises = previousActions?.filter(
+            action =>
+                action.action === PlayerActionType.BET ||
+                action.action === PlayerActionType.RAISE ||
+                action.action === PlayerActionType.CALL ||
+                action.action === PlayerActionType.SMALL_BLIND ||
+                action.action === PlayerActionType.BIG_BLIND
+        );
+
+        if (gameState?.round === TexasHoldemRound.PREFLOP) {
+            // For pre-flop, we only consider the last bet or raise
+            previousBetsAndRaises = previousBetsAndRaises?.filter(
+                action => action.round === TexasHoldemRound.PREFLOP || action.round === TexasHoldemRound.ANTE
+            );
+        } else {
+            // For post-flop rounds, consider all bets and raises
+            previousBetsAndRaises = previousBetsAndRaises?.filter(action => action.round === gameState?.round);
+        }
+
+        const sum =
+            previousBetsAndRaises?.reduce((sum, action) => {
+                const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
+                return sum + amount;
+            }, 0) || 0;
+
+        return sum + callAmount;
+    };
+
     // Big Blind Value - handle null gameOptions during loading
     const bigBlindStep = useMemo(() => {
         if (!gameOptions?.bigBlind) {
@@ -132,7 +165,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Add timer extension functionality for the footer button
     const userSeat = userPlayer?.seat;
     const { extendTime, canExtend } = usePlayerTimer(tableId, userSeat);
-    
+
     // Get the timeout duration from game options for display
     const timeoutDuration = useMemo(() => {
         if (!gameOptions?.timeout) return 30;
@@ -146,7 +179,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
             console.log("Cannot extend time - not available or already used");
             return;
         }
-        
+
         extendTime();
         console.log(`⏰ Time extended by ${timeoutDuration} seconds from footer button`);
     }, [extendTime, canExtend, timeoutDuration]);
@@ -184,7 +217,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Handler functions for different actions - simplified
     const handlePostSmallBlind = async () => {
         if (!tableId) return;
-        
+
         const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
         if (!smallBlindAmount) return;
 
@@ -194,7 +227,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     const handlePostBigBlind = async () => {
         if (!tableId) return;
-        
+
         const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
         if (!bigBlindAmount) return;
 
@@ -236,6 +269,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         if (callAction) {
             try {
+                // NOTE: This uses callAction.min directly via the backend (not the display calculation)
                 await callHand(tableId);
             } catch (error: any) {
                 console.error("Failed to call:", error);
@@ -343,11 +377,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
         if (!tableId) return;
 
         const seed = Math.random().toString(36).substring(2, 15);
-        
+
         // Simple call - let errors bubble up naturally
         await startNewHand(tableId, seed);
     };
-
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
@@ -538,7 +571,9 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                             )}
                             {/* Show a message if the player has folded */}
                             {userPlayer?.status === "folded" && (
-                                <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">You have folded this hand</div>
+                                <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">
+                                    You have folded this hand
+                                </div>
                             )}
                         </div>
 
@@ -561,7 +596,9 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                     )}
                                     {/* Show a message if the player has folded */}
                                     {userPlayer?.status === "folded" && (
-                                        <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">You have folded this hand</div>
+                                        <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">
+                                            You have folded this hand
+                                        </div>
                                     )}
 
                                     {hasCheckAction && (
@@ -581,7 +618,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCall}
                                         >
-                                            CALL <span className="text-[#ffffff]">${callAmount.toFixed(2)}</span>
+                                            CALL <span className="text-[#ffffff]">${getSumAndMinCallAmountForDisplay().toFixed(2)}</span>
                                         </button>
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (
@@ -594,7 +631,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
     px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
     transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
                                         >
-                                            {hasRaiseAction ? "RAISE" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
+                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
@@ -790,7 +827,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                         ) : null}
                     </>
                 )}
-
             </div>
         </div>
     );

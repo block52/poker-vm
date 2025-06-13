@@ -4,28 +4,18 @@ import { IBot } from "./interfaces";
 import { CheckBot } from "./CheckBot";
 import { connectDB } from "./mongoConnection";
 import Bots from "./schema/bots";
-import { ethers } from "ethers";
+import { RaiseOrCallBot } from "./RaiseOrCallBot";
 
 dotenv.config();
-
-let TABLE_ADDRESS = "0x6d44ea6a1ec96b0ed83049e1f6dcbf3b5620b6e2";
-const NODE_URL = process.env.NODE_URL || "http://localhost:3000"; // "https://node1.block52.xyz";
 
 // Add nonce tracking
 let play = true;
 const _bots: IBot[] = [];
 const tableAddress: string[] = [];
 
-// Remove the global pk variable since we'll use the selected key
-let selectedPrivateKey: string = process.env.PRIVATE_KEY || "";
-if (!selectedPrivateKey) {
-    console.error(chalk.red("No private key provided. Please set the PRIVATE_KEY environment variable."));
-    process.exit(1);
-}
-
 // Modify the main loop to include small blind posting
 async function main() {
-    const connectionString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
+    const connectionString = process.env.DB_URL;
     if (!connectionString) {
         console.error(chalk.red("No database connection string provided. Please set the DB_URL environment variable."));
         process.exit(1);
@@ -35,32 +25,47 @@ async function main() {
     console.log(chalk.green("Connected to MongoDB database."));
     console.log(chalk.green("Using DB: " + connectionString));
 
-    // Check args for table address
-    if (process.argv.length > 2) {
-        TABLE_ADDRESS = process.argv[1];
+    const NODE_URL = process.env.NODE_URL || "https://nodd1.block52.xzy"; // Replace with your Ethereum node URL
+    if (!NODE_URL) {
+        console.error(chalk.red("No Ethereum node URL provided. Please set the NODE_URL environment variable."));
+        process.exit(1);
     }
 
     const bots = await Bots.find({ enabled: true });
 
+    console.table(bots, ["address", "tableAddress", "type", "enabled"]);
+    console.log(chalk.green("Found " + bots.length + " enabled bots in the database."));
+
     if (bots.length === 0) {
-        console.error(chalk.red("No enabled bots found in the database."));
-        console.error(chalk.red("Adding a default bot with table address: " + TABLE_ADDRESS));
+        // const TABLE_ADDRESS = process.env.TABLE_ADDRESS || ethers.ZeroAddress; // Replace with your default table address
+        // console.error(chalk.red("No enabled bots found in the database."));
+        // console.error(chalk.red("Adding a default bot with table address: " + TABLE_ADDRESS));
 
-        const wallet = new ethers.Wallet(selectedPrivateKey);
+        // // Remove the global pk variable since we'll use the selected key
+        // let privateKey: string = process.env.PRIVATE_KEY || "";
+        // if (!privateKe) {
+        //     console.error(chalk.red("No private key provided. Please set the PRIVATE_KEY environment variable."));
+        //     process.exit(1);
+        // }
 
-        const defaultBot = new Bots({
-            address: wallet.address,
-            tableAddress: TABLE_ADDRESS,
-            privateKey: selectedPrivateKey,
-            type: "check",
-            enabled: true
-        });
+        // const wallet = new ethers.Wallet(privateKey);
 
-        await defaultBot.save();
-        console.log(chalk.green("Default bot added successfully."));
+        // const defaultBot = new Bots({
+        //     address: wallet.address,
+        //     tableAddress: TABLE_ADDRESS,
+        //     privateKey: privateKey,
+        //     type: "check",
+        //     enabled: true
+        // });
 
-        // Push the default bot to the _bots array
-        _bots.push(new CheckBot(TABLE_ADDRESS, NODE_URL, selectedPrivateKey));
+        // await defaultBot.save();
+        // console.log(chalk.green("Default bot added successfully."));
+
+        // // Push the default bot to the _bots array
+        // _bots.push(new CheckBot(TABLE_ADDRESS, NODE_URL, privateKey));
+
+        console.error(chalk.red("No enabled bots found in the database. Please add a bot to the database before running this script."));
+        process.exit(1);
     }
 
     for (const bot of bots) {
@@ -70,9 +75,22 @@ async function main() {
                 const checkBot: IBot = new CheckBot(bot.tableAddress, NODE_URL, bot.privateKey);
 
                 console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
-                await checkBot.joinGame();
-                _bots.push(checkBot);
-                tableAddress.push(bot.tableAddress);
+                const joined = await checkBot.joinGame();
+                if (joined) {
+                    _bots.push(checkBot);
+                    tableAddress.push(bot.tableAddress);
+                }
+            }
+
+            if (bot.type === "raiseOrCall") {
+                const raiseOrCallBot: IBot = new RaiseOrCallBot(bot.tableAddress, NODE_URL, bot.privateKey);
+
+                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
+                const joined = await raiseOrCallBot.joinGame();
+                if (joined) {
+                    _bots.push(raiseOrCallBot);
+                    tableAddress.push(bot.tableAddress);
+                }
             }
         }
     }
@@ -95,10 +113,24 @@ async function main() {
                 console.log(chalk.yellow(`Bot with address ${botDocument.address} is disabled. Skipping...`));
                 continue; // Skip to next bot if disabled
             }
-            
-            // Reload the bot from the database to ensure we have the latest state
-            const bot: IBot = new CheckBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
 
+            let bot: IBot;
+
+            switch (botDocument.type) {
+                case "check":
+                    console.log(chalk.green(`Performing check action for bot with address: ${botDocument.address}`));
+                    bot = new CheckBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
+                    break;
+                case "raiseOrCall":
+                    console.log(chalk.green(`Performing raise or call action for bot with address: ${botDocument.address}`));
+                    // Create a new RaiseOrCallBot instance for this bot
+                    bot = new RaiseOrCallBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
+                    break;
+                default:
+                    console.error(chalk.red(`Unknown bot type: ${botDocument.type} for address: ${botDocument.address}`));
+                    continue; // Skip to next bot if type is unknown
+            }
+            
             try {
                 await bot.performAction();
             } catch (error) {

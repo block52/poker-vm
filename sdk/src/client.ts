@@ -32,6 +32,8 @@ export interface IClient {
     newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
     playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
@@ -409,6 +411,69 @@ export class NodeRpcClient implements IClient {
     }
 
     /**
+     * Join a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param amount The amount to join with
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
+
+        // Create an array of available seats from 1 to to gameState.gameOptions.maxSeats
+        const maxSeats = gameState.gameOptions.maxPlayers || 9; // Default to 9 if not specified
+        let seats = Array.from({ length: maxSeats }, (_, i) => i + 1);
+
+        const occupiedSeats = await this.getOccupiedSeats(gameAddress);
+
+        // Filter out occupied seats
+        seats = seats.filter(seat => !occupiedSeats.includes(seat));
+
+        // Get a random index from the available seats
+        if (seats.length === 0) {
+            throw new Error("No available seats to join");
+        }
+
+        return this.playerJoin(gameAddress, amount, seats[0], nonce);
+    }
+
+    /**
+     * Join a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param amount The amount to join with
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
+
+        // Create an array of available seats from 1 to to gameState.gameOptions.maxSeats
+        const maxSeats = gameState.gameOptions.maxPlayers || 9; // Default to 9 if not specified
+        let seats = Array.from({ length: maxSeats }, (_, i) => i + 1);
+
+        const occupiedSeats = await this.getOccupiedSeats(gameAddress);
+
+        // Filter out occupied seats
+        seats = seats.filter(seat => !occupiedSeats.includes(seat));
+
+        // Get a random index from the available seats
+        if (seats.length === 0) {
+            throw new Error("No available seats to join");
+        }
+
+        const randomIndex = Math.floor(Math.random() * seats.length);
+        return this.playerJoin(gameAddress, amount, seats[randomIndex], nonce);
+    }
+
+    /**
      * Perform an action in a Texas Holdem game
      * @param gameAddress The address of the game
      * @param action
@@ -480,7 +545,7 @@ export class NodeRpcClient implements IClient {
      */
     public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        
+
         if (!nonce) {
             nonce = await this.getNonce(address);
         }
@@ -536,6 +601,25 @@ export class NodeRpcClient implements IClient {
         }
 
         return 0;
+    }
+
+    private async getOccupiedSeats(gameAddress: string): Promise<number[]> {
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
+
+        // Create an array of available seats from 1 to to gameState.gameOptions.maxSeats
+        const maxSeats = gameState.gameOptions.maxPlayers || 9; // Default to 9 if not specified
+        let seats = Array.from({ length: maxSeats }, (_, i) => i + 1);
+
+        // Reduce players.seats to an array of available seats
+        const occupiedSeats = gameState.players
+            .filter(p => p.seat !== undefined)
+            .map(p => p.seat)
+            .filter(seat => seat !== undefined);
+
+        return occupiedSeats;
     }
 
     public static generateRandomNumberString(): string {
