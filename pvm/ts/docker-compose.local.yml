@@ -1,14 +1,17 @@
 services:
-  local_pvm_mongo:
+  pvm_mongo:
     container_name: local_pvm_mongodb
-    image: mongo
+    image: mongo:8.0.9-noble
     restart: always
     environment:
-      MONGO_INITDB_DATABASE: local_pvm
+      MONGO_INITDB_DATABASE: pvm
+      # No auth for now
+      MONGO_INITDB_ROOT_USERNAME: node1
+      MONGO_INITDB_ROOT_PASSWORD: P@ssw0rd123
     ports:
-      - 27019:27017  # Different port from main node
+      - 27017:27017  # Different port from main node
     volumes:
-      - local_pvm_data:/data/db
+      - pvm_data:/data/db
 
 volumes:
-  local_pvm_data: 
+  pvm_data: 
