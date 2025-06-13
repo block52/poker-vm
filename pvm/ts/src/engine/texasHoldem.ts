@@ -1042,7 +1042,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 this.setNextRound();
                 return;
             case NonPlayerActionType.NEW_HAND:
-                new NewHandAction(this, this._update, data).execute(this.getPlayer(address), index);
+                new NewHandAction(this, this._update, data || "").execute(this.getPlayer(address), index);
                 return;
         }
 

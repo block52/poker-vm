@@ -345,10 +345,17 @@ export class NodeRpcClient implements IClient {
         const index = await this.getNextActionIndex(gameAddress, address);
         const seed: string = NodeRpcClient.generateRandomNumberString();
 
+        // Generate URLSearchParams formatted data with seed information
+        const params = new URLSearchParams();
+        params.set('actionType', NonPlayerActionType.NEW_HAND);
+        params.set('index', index.toString());
+        params.set('data', seed);
+        const formattedData = params.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -397,13 +404,17 @@ export class NodeRpcClient implements IClient {
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
-        // Pack the seat into the data field
-        const data = seat.toString();
+        // Generate URLSearchParams formatted data with seat information
+        const params = new URLSearchParams();
+        params.set('actionType', NonPlayerActionType.JOIN);
+        params.set('index', index.toString());
+        params.set('data', seat.toString());
+        const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -479,9 +490,10 @@ export class NodeRpcClient implements IClient {
      * @param action
      * @param amount
      * @param nonce
+     * @param data Additional data for the action
      * @returns
      */
-    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<PerformActionResponse> {
+    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse> {
         try {
             const address = this.getAddress();
 
@@ -497,10 +509,19 @@ export class NodeRpcClient implements IClient {
 
             const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
+            // Generate URLSearchParams formatted data
+            const params = new URLSearchParams();
+            params.set('actionType', action);
+            params.set('index', index.toString());
+            if (data) {
+                params.set('data', data);
+            }
+            const formattedData = params.toString();
+
             const { data: body } = await axios.post(this.url, {
                 id: 1, // this.getRequestId(),
                 method: RPCMethods.PERFORM_ACTION,
-                params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
+                params: [address, gameAddress, action, amount, nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
                 signature: signature
             });
 
@@ -527,10 +548,16 @@ export class NodeRpcClient implements IClient {
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
+        // Generate URLSearchParams formatted data
+        const params = new URLSearchParams();
+        params.set('actionType', NonPlayerActionType.LEAVE);
+        params.set('index', index.toString());
+        const formattedData = params.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
+            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -552,11 +579,19 @@ export class NodeRpcClient implements IClient {
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
+        // Generate URLSearchParams formatted data with publicKey information
+        const params = new URLSearchParams();
+        params.set('actionType', NonPlayerActionType.DEAL);
+        params.set('index', index.toString());
+        if (publicKey) {
+            params.set('data', publicKey);
+        }
+        const formattedData = params.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index], // [from, to, action, amount, nonce, index]
-            data: publicKey, // todo; work out what we will use data for
+            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 

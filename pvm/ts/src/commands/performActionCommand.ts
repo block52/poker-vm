@@ -6,7 +6,7 @@ import { getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { IGameManagement } from "../state/interfaces";
-import { toOrderedTransaction } from "../utils/parsers";
+import { toOrderedTransaction, extractDataFromParams } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     protected readonly gameManagement: IGameManagement;
@@ -22,7 +22,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         protected readonly privateKey: string,
         protected readonly data?: string
     ) {
-        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
+        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, action=${action}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
         this.mempool = getMempoolInstance();
     }
@@ -64,8 +64,11 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
-        console.log(`Performing action ${this.action} with index ${this.index} data ${this.data}`);
-        game.performAction(this.from, this.action, this.index, this.amount, this.data);
+        // Extract clean data using the parser (single responsibility)
+        const cleanData = extractDataFromParams(this.data || "");
+        
+        console.log(`Performing action ${this.action} with index ${this.index} data ${cleanData}`);
+        game.performAction(this.from, this.action, this.index, this.amount, cleanData);
 
         const nonce = BigInt(this.nonce);
 
@@ -73,8 +76,14 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
 
         // Create transaction with correct direction of funds flow
-        // For all other actions: regular format
-        const data = this.data ? `${this.action},${this.index},${this.data}` : `${this.action},${this.index}`;
+        // For all other actions: URLSearchParams format
+        const params = new URLSearchParams();
+        params.set('actionType', this.action);
+        params.set('index', this.index.toString());
+        if (cleanData) {
+            params.set('data', cleanData);  // Use the clean extracted data, not the raw URLSearchParams string
+        }
+        const data = params.toString();
 
         if (this.action !== NonPlayerActionType.LEAVE) {
             const tx: Transaction = await Transaction.create(
