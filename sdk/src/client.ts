@@ -347,15 +347,15 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with seed information
         const params = new URLSearchParams();
-        params.set('actionType', NonPlayerActionType.NEW_HAND);
-        params.set('index', index.toString());
-        params.set('data', seed);
+        params.set("actionType", NonPlayerActionType.NEW_HAND);
+        params.set("index", index.toString());
+        params.set("data", seed);
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, "0", nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -406,9 +406,9 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with seat information
         const params = new URLSearchParams();
-        params.set('actionType', NonPlayerActionType.JOIN);
-        params.set('index', index.toString());
-        params.set('data', seat.toString());
+        params.set("actionType", NonPlayerActionType.JOIN);
+        params.set("index", index.toString());
+        params.set("data", seat.toString());
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
@@ -511,10 +511,10 @@ export class NodeRpcClient implements IClient {
 
             // Generate URLSearchParams formatted data
             const params = new URLSearchParams();
-            params.set('actionType', action);
-            params.set('index', index.toString());
+            params.set("actionType", action);
+            params.set("index", index.toString());
             if (data) {
-                params.set('data', data);
+                params.set("data", data);
             }
             const formattedData = params.toString();
 
@@ -550,8 +550,8 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data
         const params = new URLSearchParams();
-        params.set('actionType', NonPlayerActionType.LEAVE);
-        params.set('index', index.toString());
+        params.set("actionType", NonPlayerActionType.LEAVE);
+        params.set("index", index.toString());
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
@@ -581,10 +581,10 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with publicKey information
         const params = new URLSearchParams();
-        params.set('actionType', NonPlayerActionType.DEAL);
-        params.set('index', index.toString());
+        params.set("actionType", NonPlayerActionType.DEAL);
+        params.set("index", index.toString());
         if (publicKey) {
-            params.set('data', publicKey);
+            params.set("data", publicKey);
         }
         const formattedData = params.toString();
 

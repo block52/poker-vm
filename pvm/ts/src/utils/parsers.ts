@@ -18,7 +18,7 @@ export const extractDataFromParams = (paramsString: string): string | undefined 
     try {
         // Parse URLSearchParams format
         const params = new URLSearchParams(paramsString);
-        let data = params.get('data');
+        let data = params.get("data");
         
         if (data === "undefined" || data === null) {
             return undefined;
@@ -40,8 +40,8 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         // Parse URLSearchParams format
         const params = new URLSearchParams(tx.data);
         
-        const actionType = params.get('actionType');
-        const indexStr = params.get('index');
+        const actionType = params.get("actionType");
+        const indexStr = params.get("index");
         
         if (!actionType || !indexStr) {
             throw new Error(`Invalid transaction data format: missing actionType or index in ${tx.data}`);
@@ -55,7 +55,7 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         }
 
         // Get additional data if present
-        let data = params.get('data');
+        let data = params.get("data");
         if (data === "undefined" || data === null) {
             data = null;
         }
@@ -74,7 +74,6 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         
         const params = tx.data.split(",");
         const action = params[0].trim() as PlayerActionType;
-        const index = parseInt(params[1].trim());
 
         if (params.length < 2) {
             return {
@@ -82,9 +81,11 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
                 to: tx.to,
                 value: tx.value,
                 type: action,
-                index: index
+                index: 0
             };
         }
+
+        const index = parseInt(params[1].trim());
 
         let data = params[2] ? params[2].trim() : null;
         if (data == "undefined") {

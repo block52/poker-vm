@@ -78,10 +78,10 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         // Create transaction with correct direction of funds flow
         // For all other actions: URLSearchParams format
         const params = new URLSearchParams();
-        params.set('actionType', this.action);
-        params.set('index', this.index.toString());
+        params.set("actionType", this.action);
+        params.set("index", this.index.toString());
         if (cleanData) {
-            params.set('data', cleanData);  // Use the clean extracted data, not the raw URLSearchParams string
+            params.set("data", cleanData);  // Use the clean extracted data, not the raw URLSearchParams string
         }
         const data = params.toString();
 
