@@ -8,8 +8,8 @@ import {
     TexasHoldemStateDTO,
     TransactionResponse
 } from "./types/game";
-import { RPCMethods, RPCRequest } from "./types/rpc";
-import { RPCResponse } from "./types/rpc";
+import { RPCMethods, RPCRequest, RPCResponse } from "./types/rpc";
+import { KEYS } from "./index";
 import axios from "axios";
 import { Wallet } from "ethers";
 
@@ -347,9 +347,9 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with seed information
         const params = new URLSearchParams();
-        params.set("actionType", NonPlayerActionType.NEW_HAND);
-        params.set("index", index.toString());
-        params.set("data", seed);
+        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.NEW_HAND);
+        params.set(KEYS.INDEX, index.toString());
+        params.set(KEYS.DATA, seed);
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
@@ -550,8 +550,8 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data
         const params = new URLSearchParams();
-        params.set("actionType", NonPlayerActionType.LEAVE);
-        params.set("index", index.toString());
+        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.LEAVE);
+        params.set(KEYS.INDEX, index.toString());
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
