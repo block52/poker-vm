@@ -85,7 +85,7 @@ export const usePlayerChipData = (): PlayerChipDataReturn => {
 
     // Default values in case of error or loading
     const defaultState: PlayerChipDataReturn = {
-        getChipAmount: (seatIndex: number): string => "0",
+        getChipAmount: (): string => "0",
         isLoading,
         error
     };
