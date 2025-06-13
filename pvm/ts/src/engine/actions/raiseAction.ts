@@ -4,7 +4,6 @@ import BaseAction from "./baseAction";
 import { IAction, Range, TurnWithSeat } from "../types";
 
 class RaiseAction extends BaseAction implements IAction {
-
     private readonly roundActions: TurnWithSeat[] = [];
 
     get type(): PlayerActionType {
@@ -13,17 +12,17 @@ class RaiseAction extends BaseAction implements IAction {
 
     /**
      * Verify if a player can raise and determine the valid raise range
-     * 
+     *
      * For a raise to be valid:
      * 1. Player must be active and it must be their turn (checked in base verify)
      * 2. Game must not be in the ANTE round (only small/big blinds allowed)
      * 3. Blinds must be posted before raising is allowed in preflop
      * 4. There must be a previous bet or raise to raise against
-     * 
+     *
      * The minimum raise amount follows poker rules:
      * - At least double the previous bet OR
      * - At least the previous bet plus the big blind (whichever is larger)
-     * 
+     *
      * @param player The player attempting to raise
      * @returns Range object with minimum and maximum raise amounts
      * @throws Error if raising conditions are not met
@@ -31,10 +30,10 @@ class RaiseAction extends BaseAction implements IAction {
     verify(player: Player): Range {
         // 1. Perform basic validation (player active, player's turn, etc.)
         super.verify(player);
-        
+
         // 2. Cannot raise in the ANTE round
         if (this.game.currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Cannot raise in the ante round. Small blind must post.");
+            throw new Error("Cannot raise in the ante round. Only small and big blinds are allowed.");
         }
 
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
@@ -48,6 +47,7 @@ class RaiseAction extends BaseAction implements IAction {
 
             if (isSmallBlind) {
                 // Can reopen the betting with a minimum of big blind
+                // TODO: Need to check if sb has raised too
                 return { minAmount: this.game.smallBlind + this.game.bigBlind, maxAmount: player.chips };
             }
         }
@@ -65,34 +65,40 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         // Calculate minimum raise amount
-        const playerCurrentBet = this.game.getPlayerTotalBets(player.address);
+        // For PREFLOP, include blind bets from ANTE round
+        // const round = this.game.currentRound;
+        // const totalBet =
+        //     round === TexasHoldemRound.PREFLOP
+        //         ? this.game.getPlayerTotalBets(player.address, round, true) // includeBlinds = true
+        //         : this.game.getPlayerTotalBets(player.address, round);
+
         const increment = this.findPreviousBetOrRaise(lastBetOrRaise.index);
         const delta = BigInt(lastBetOrRaise.amount || 0n) - BigInt(increment?.amount || 0n);
-        
+
         if (delta <= 0n) {
             throw new Error("Invalid raise amount. Must be greater than the last bet.");
         }
 
-        let minAmountToAdd = delta - playerCurrentBet;
-        
+        const minAmountToAdd = delta + BigInt(this.game.bigBlind);
+
         // If player doesn't have enough for the minimum raise, they can go all-in
         if (player.chips < minAmountToAdd) {
-            minAmountToAdd = player.chips;
+            return {
+                minAmount: player.chips,
+                maxAmount: player.chips
+            };
         }
 
-        return { 
-            minAmount: minAmountToAdd, 
-            maxAmount: player.chips 
+        return {
+            minAmount: minAmountToAdd,
+            maxAmount: player.chips
         };
     }
 
     // Find the last bet or raise in the current round
     private findLastBetOrRaise(): TurnWithSeat | undefined {
         // Filter for bets and raises
-        const betOrRaiseActions = this.roundActions.filter(action =>
-            action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE
-        );
-
+        const betOrRaiseActions = this.roundActions.filter(action => action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE);
         return betOrRaiseActions.length > 0 ? betOrRaiseActions[betOrRaiseActions.length - 1] : undefined;
     }
 
@@ -100,11 +106,6 @@ class RaiseAction extends BaseAction implements IAction {
     private findPreviousBetOrRaise(startIndex: number): TurnWithSeat | undefined {
         // Sort actions by index to ensure we process them in the correct order
         const actions = this.roundActions.sort((a, b) => a.index - b.index);
-
-        // // Find the element in the array at the start index
-        // if (startIndex < 0 || startIndex >= actions.length) {
-        //     return undefined;
-        // }
 
         let start = 0;
         for (let j = 0; j < actions.length; j++) {
@@ -121,7 +122,7 @@ class RaiseAction extends BaseAction implements IAction {
             }
         }
 
-        return undefined
+        return undefined;
     }
 
     protected getDeductAmount(player: Player, amount?: bigint): bigint {
