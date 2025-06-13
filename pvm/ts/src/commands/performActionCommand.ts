@@ -64,12 +64,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
-        // Extract clean data using the parser (single responsibility)
-        const cleanData = extractDataFromParams(this.data || "");
-        
-        console.log(`Performing action ${this.action} with index ${this.index} data ${cleanData}`);
-        game.performAction(this.from, this.action, this.index, this.amount, cleanData);
-
         const nonce = BigInt(this.nonce);
 
         const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
@@ -78,11 +72,18 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         // Create transaction with correct direction of funds flow
         // For all other actions: URLSearchParams format
         const params = new URLSearchParams();
-        params.set("actionType", this.action);
+        params.set("actiontype", this.action);
         params.set("index", this.index.toString());
-        if (cleanData) {
-            params.set("data", cleanData);  // Use the clean extracted data, not the raw URLSearchParams string
+        
+        // Extract clean data using the parser (single responsibility)
+        const paramsString = extractDataFromParams(this.data || "");
+        
+        console.log(`Performing action ${this.action} with index ${this.index} data ${paramsString}`);
+        game.performAction(this.from, this.action, this.index, this.amount, paramsString);
+        if (paramsString) {
+            params.set("data", paramsString);  // Use the clean extracted data, not the raw URLSearchParams string
         }
+        
         const data = params.toString();
 
         if (this.action !== NonPlayerActionType.LEAVE) {
