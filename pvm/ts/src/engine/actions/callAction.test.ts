@@ -114,7 +114,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(TEN_TOKENS);
 
             // Mock the getSumBets method to return same amount (player already met maximum)
-            jest.spyOn(action as any, "getSumBets").mockReturnValue(TEN_TOKENS);
+            jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(TEN_TOKENS);
 
             expect(() => action.verify(player)).toThrow("Player has already met maximum so can check instead.");
         });
@@ -136,7 +136,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(30n);
 
             // Mock the getSumBets method to return player's current bet
-            jest.spyOn(action as any, "getSumBets").mockReturnValue(10n);
+            jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(10n);
 
             const result = action.verify(player);
 
@@ -160,7 +160,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(200n);
 
             // Mock the getSumBets method to return player's current bet
-            jest.spyOn(action as any, "getSumBets").mockReturnValue(10n);
+            jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(10n);
 
             // Set player to have insufficient chips
             player.chips = 50n;
@@ -258,7 +258,7 @@ describe("CallAction", () => {
         it("should calculate correct amount based on largest bet and player bets", () => {
             // Mock getLargestBet and getSumBets
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(50n);
-            jest.spyOn(action as any, "getSumBets").mockReturnValue(20n);
+            jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(20n);
 
             const result = (action as any).getDeductAmount(player);
 
@@ -269,7 +269,7 @@ describe("CallAction", () => {
         it("should return 0 if player has already bet enough", () => {
             // Mock getLargestBet and getSumBets with equal values
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(50n);
-            jest.spyOn(action as any, "getSumBets").mockReturnValue(50n);
+            jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(50n);
 
             const result = (action as any).getDeductAmount(player);
 
@@ -281,29 +281,9 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(0n);
 
             // Mock getSumBets to return 0
-            jest.spyOn(action as any, "getSumBets").mockReturnValue(0n);
+            jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(0n);
 
             const result = (action as any).getDeductAmount(player);
-
-            expect(result).toBe(0n);
-        });
-    });
-
-    describe("getSumBets", () => {
-        it("should return correct sum of bets for the player in current round", () => {
-            // Mock getBets to return a map with player's bet
-            jest.spyOn(game, "getBets").mockReturnValue(new Map([[player.address, 25n]]));
-
-            const result = (action as any).getSumBets(player.address);
-
-            expect(result).toBe(25n);
-        });
-
-        it("should return 0 if player has no bets in current round", () => {
-            // Mock getBets to return a map without player's bet
-            jest.spyOn(game, "getBets").mockReturnValue(new Map([["otherPlayer", 25n]]));
-
-            const result = (action as any).getSumBets(player.address);
 
             expect(result).toBe(0n);
         });

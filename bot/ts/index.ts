@@ -81,6 +81,17 @@ async function main() {
                     tableAddress.push(bot.tableAddress);
                 }
             }
+
+            if (bot.type === "raiseOrCall") {
+                const raiseOrCallBot: IBot = new RaiseOrCallBot(bot.tableAddress, NODE_URL, bot.privateKey);
+
+                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
+                const joined = await raiseOrCallBot.joinGame();
+                if (joined) {
+                    _bots.push(raiseOrCallBot);
+                    tableAddress.push(bot.tableAddress);
+                }
+            }
         }
     }
 
@@ -102,10 +113,24 @@ async function main() {
                 console.log(chalk.yellow(`Bot with address ${botDocument.address} is disabled. Skipping...`));
                 continue; // Skip to next bot if disabled
             }
-            
-            // Reload the bot from the database to ensure we have the latest state
-            const bot: IBot = new RaiseOrCallBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
 
+            let bot: IBot;
+
+            switch (botDocument.type) {
+                case "check":
+                    console.log(chalk.green(`Performing check action for bot with address: ${botDocument.address}`));
+                    bot = new CheckBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
+                    break;
+                case "raiseOrCall":
+                    console.log(chalk.green(`Performing raise or call action for bot with address: ${botDocument.address}`));
+                    // Create a new RaiseOrCallBot instance for this bot
+                    bot = new RaiseOrCallBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
+                    break;
+                default:
+                    console.error(chalk.red(`Unknown bot type: ${botDocument.type} for address: ${botDocument.address}`));
+                    continue; // Skip to next bot if type is unknown
+            }
+            
             try {
                 await bot.performAction();
             } catch (error) {
