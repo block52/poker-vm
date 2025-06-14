@@ -24,12 +24,6 @@ abstract class BaseAction {
         return undefined;
     }
 
-    protected verifyPlayerIsActive(player: Player): void {
-        const playerStatus = this.game.getPlayerStatus(player.address);
-        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
-            throw new Error(`Only active player can ${this.type}.`);
-    }
-
     execute(player: Player, index: number, amount: bigint): void {
         // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
         // the amount only specifies that over the existing maximum which the player may not yet have covered
@@ -49,6 +43,12 @@ abstract class BaseAction {
         );
     }
 
+    protected verifyPlayerIsActive(player: Player): void {
+        const playerStatus = this.game.getPlayerStatus(player.address);
+        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
+            throw new Error(`Only active player can ${this.type}.`);
+    }
+
     protected getDeductAmount(_player: Player, amount?: bigint): bigint {
         return amount ? amount : 0n;
     }
@@ -59,14 +59,7 @@ abstract class BaseAction {
         let _amount = 0n;
         const roundBets = this.game.getBets(this.game.currentRound);
 
-        // roundBets.forEach(bet => {
-        //     if (bet > amount) {
-        //         amount = bet;
-        //     }
-        // });
-
         for (const [playerId, amount] of roundBets.entries()) {
-            console.log(`Player: ${playerId}, Bet: ${amount}`);
             // playerId is the key, amount is the value
             if (amount > _amount) {
                 _amount = amount;
@@ -74,8 +67,11 @@ abstract class BaseAction {
             }
         }
 
-        if (includeBlinds && this.game.currentRound === TexasHoldemRound.PREFLOP) {
-
+        if (includeBlinds) {
+            if (_amount === 0n) {
+                return this.game.bigBlind; // If no bets, return big blind as the minimum bet
+            }
+            
             const smallBlindPosition = this.game.smallBlindPosition;
             const smallBlindPlayer = this.game.getPlayerAtSeat(smallBlindPosition);
 
@@ -95,27 +91,6 @@ abstract class BaseAction {
 
         return _amount;
     }
-
-    // protected getSumBets(playerId: string, includeBlinds: boolean = false): bigint {
-    //     let amount = 0n;
-    //     const roundBets = this.game.getBets(this.game.currentRound);
-
-    //     // If the player made a bet in this round, add it to the total
-    //     if (roundBets.has(playerId)) {
-    //         amount += roundBets.get(playerId) || 0n;
-    //     }
-
-    //     if (includeBlinds && this.game.currentRound === TexasHoldemRound.PREFLOP) {
-    //         const anteBets = this.game.getBets(TexasHoldemRound.ANTE);
-
-    //         // If the player made an ante bet, add it to the total
-    //         if (anteBets.has(playerId)) {
-    //             amount += anteBets.get(playerId) || 0n;
-    //         }
-    //     }
-
-    //     return amount;
-    // }
 }
 
 export default BaseAction;

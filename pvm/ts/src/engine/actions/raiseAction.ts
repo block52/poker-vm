@@ -26,60 +26,67 @@ class RaiseAction extends BaseAction implements IAction {
         super.verify(player);
 
         // 2. Cannot raise in the ANTE round
-        if (this.game.currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Cannot raise in the ante round. Only small and big blinds are allowed.");
+        const currentRound = this.game.currentRound;
+        if (currentRound === TexasHoldemRound.ANTE) {
+            throw new Error("Cannot raise in the ante round.");
         }
 
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+        if (currentRound === TexasHoldemRound.SHOWDOWN) {
             throw new Error("Cannot raise in the showdown round.");
         }
 
         // 3. Find who has the largest bet for this round
-        const currentRound = this.game.currentRound;
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
-        
-        let largestBet = 0n;
-        let largestBetPlayer = "";
-        
-        const activePlayers = this.game.findActivePlayers();
-        for (const activePlayer of activePlayers) {
-            const playerBet = this.game.getPlayerTotalBets(activePlayer.address, currentRound, includeBlinds);
-            if (playerBet > largestBet) {
-                largestBet = playerBet;
-                largestBetPlayer = activePlayer.address;
-            }
+        const largestBet = this.getLargestBet(includeBlinds);
+
+        if (largestBet === 0n) {
+            throw new Error("No bets to raise against.");
         }
-        
-        // 4. Cannot raise if I have the largest bet (can't raise myself)
-        if (largestBetPlayer === player.address) {
+
+        const playerBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
+        if (largestBet <= playerBets) {
             throw new Error("Cannot raise - you already have the largest bet.");
         }
         
+        // let largestBet = 0n;
+        // let largestBetPlayer = undefined;
+        
+        // const activePlayers = this.game.findActivePlayers();
+        // for (const activePlayer of activePlayers) {
+        //     const playerBet = this.game.getPlayerTotalBets(activePlayer.address, currentRound, includeBlinds);
+        //     if (playerBet > largestBet) {
+        //         largestBet = playerBet;
+        //         largestBetPlayer = activePlayer.address;
+        //     }
+        // }
+        
+        // // 4. Cannot raise if I have the largest bet (can't raise myself)
+        // if (largestBetPlayer === player.address) {
+        //     throw new Error("Cannot raise - you already have the largest bet.");
+        // }
+        
         // 5. Calculate minimum raise amount
-        const myCurrentBet = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
-        const deltaToCall = largestBet - myCurrentBet;
+        // const deltaToCall = largestBet - playerBets;
         const minTotalBet = largestBet + this.game.bigBlind;
         
         // Check if player has enough chips for minimum raise
-        const additionalNeeded = minTotalBet - myCurrentBet;
+        const deltaToCall = minTotalBet - playerBets;
         
-        if (player.chips < additionalNeeded) {
+        if (player.chips < deltaToCall) {
             // Player can only go all-in
             return {
-                minAmount: myCurrentBet + player.chips, // Total amount if going all-in
-                maxAmount: myCurrentBet + player.chips
+                minAmount: playerBets + player.chips, // Total amount if going all-in
+                maxAmount: playerBets + player.chips
             };
         }
 
         return {
-            minAmount: minTotalBet,
-            maxAmount: myCurrentBet + player.chips // Total possible if going all-in
+            minAmount: deltaToCall,
+            maxAmount: playerBets + player.chips // Total possible if going all-in
         };
     }
 
-    protected getDeductAmount(player: Player, amount?: bigint): bigint {
-        if (!amount) return 0n;
-
+    protected getDeductAmount(player: Player, amount: bigint): bigint {
         // Calculate how much more the player needs to add to the pot
         const currentRound = this.game.currentRound;
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;

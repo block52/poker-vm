@@ -1115,22 +1115,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
-     * Gets the largest bet in a round
-     */
-    private getLargestBet(round: TexasHoldemRound = this.currentRound): bigint {
-        const bets = this.getBets(round);
-        let highestBet: bigint = 0n;
-
-        for (const [_, amount] of bets) {
-            if (amount > highestBet) {
-                highestBet = amount;
-            }
-        }
-
-        return highestBet;
-    }
-
-    /**
      * Calculates side pots for all-in situations
      */
     private calculateSidePots(): void {
