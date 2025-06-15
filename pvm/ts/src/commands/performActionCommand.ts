@@ -76,7 +76,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         params.set("index", this.index.toString());
         
         // Extract clean data using the parser (single responsibility)
-        const paramsString = extractDataFromParams(this.data || "");
+        const paramsString = extractDataFromParams(this.data);
         
         console.log(`Performing action ${this.action} with index ${this.index} data ${paramsString}`);
         game.performAction(this.from, this.action, this.index, this.amount, paramsString);
