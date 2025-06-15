@@ -28,7 +28,7 @@ class RaiseAction extends BaseAction implements IAction {
         // 2. Cannot raise in the ANTE round
         const currentRound = this.game.currentRound;
         if (currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Cannot raise in the ante round.");
+            throw new Error("Cannot raise in the ante round. Only small and big blinds are allowed.");
         }
 
         if (currentRound === TexasHoldemRound.SHOWDOWN) {
@@ -37,40 +37,34 @@ class RaiseAction extends BaseAction implements IAction {
 
         // 3. Find who has the largest bet for this round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
-        const largestBet = this.getLargestBet(includeBlinds);
-
-        if (largestBet === 0n) {
-            throw new Error("No bets to raise against.");
+        
+        let largestBet = 0n;
+        let largestBetPlayer = "";
+        
+        const activePlayers = this.game.findActivePlayers();
+        for (const activePlayer of activePlayers) {
+            const playerBet = this.game.getPlayerTotalBets(activePlayer.address, currentRound, includeBlinds);
+            if (playerBet > largestBet) {
+                largestBet = playerBet;
+                largestBetPlayer = activePlayer.address;
+            }
         }
-
-        const playerBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
-        if (largestBet <= playerBets) {
+        
+        // 4. Cannot raise if I have the largest bet (can't raise myself)
+        if (largestBetPlayer === player.address) {
             throw new Error("Cannot raise - you already have the largest bet.");
         }
         
-        // let largestBet = 0n;
-        // let largestBetPlayer = undefined;
-        
-        // const activePlayers = this.game.findActivePlayers();
-        // for (const activePlayer of activePlayers) {
-        //     const playerBet = this.game.getPlayerTotalBets(activePlayer.address, currentRound, includeBlinds);
-        //     if (playerBet > largestBet) {
-        //         largestBet = playerBet;
-        //         largestBetPlayer = activePlayer.address;
-        //     }
-        // }
-        
-        // // 4. Cannot raise if I have the largest bet (can't raise myself)
-        // if (largestBetPlayer === player.address) {
-        //     throw new Error("Cannot raise - you already have the largest bet.");
-        // }
-        
         // 5. Calculate minimum raise amount
+        const playerBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
         // const deltaToCall = largestBet - playerBets;
-        const minTotalBet = largestBet + this.game.bigBlind;
+        // let minTotalBet = largestBet + this.game.bigBlind;
+        // if (currentRound === TexasHoldemRound.PREFLOP) {
+        //     minTotalBet
+        // }
         
         // Check if player has enough chips for minimum raise
-        const deltaToCall = minTotalBet - playerBets;
+        const deltaToCall = (largestBet + this.game.bigBlind) - playerBets;
         
         if (player.chips < deltaToCall) {
             // Player can only go all-in
@@ -82,11 +76,13 @@ class RaiseAction extends BaseAction implements IAction {
 
         return {
             minAmount: deltaToCall,
-            maxAmount: playerBets + player.chips // Total possible if going all-in
+            maxAmount: player.chips // Total possible if going all-in
         };
     }
 
     protected getDeductAmount(player: Player, amount: bigint): bigint {
+        // if (!amount) return 0n;
+
         // Calculate how much more the player needs to add to the pot
         const currentRound = this.game.currentRound;
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;

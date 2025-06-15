@@ -17,7 +17,7 @@ describe("Texas Holdem Game", () => {
             game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
         });
 
-        it("should have correct call values for sb", () => {
+        it.only("should have correct call values for sb", () => {
             // Post blinds
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
             game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
@@ -93,7 +93,7 @@ describe("Texas Holdem Game", () => {
             expect(legalActions).toBeDefined();
         });
 
-        it.only("should have correct call values for sb after bb raises", () => {
+        it("should have correct call values for sb after bb raises", () => {
             // Post blinds
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
             game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
@@ -111,6 +111,7 @@ describe("Texas Holdem Game", () => {
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6);
 
             // BB raises
+            const FOUR_TOKENS = 4n * ONE_TOKEN
             game.performAction(PLAYER_2_ADDRESS, PlayerActionType.RAISE, 7, TWO_TOKENS);
 
             const legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
