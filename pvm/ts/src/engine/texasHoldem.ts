@@ -623,8 +623,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
- * Determines if the current betting round has ended
- */
+     * Determines if the current betting round has ended
+     */
     hasRoundEnded(round: TexasHoldemRound): boolean {
         // Step 1: Filter out folded and sitting out players
         const activePlayers = this.findLivePlayers();
@@ -750,159 +750,24 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 : this.getPlayerTotalBets(player.address, round);
 
             playerBets.push(totalBet);
+
+            // Debug logging for PREFLOP
+            if (round === TexasHoldemRound.PREFLOP) {
+                console.log(`Player ${player.address} PREFLOP total bet: ${totalBet}`);
+                console.log(`  - ANTE bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.ANTE)}`);
+                console.log(`  - PREFLOP bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP)}`);
+            }
         }
 
         // Step 7: If all player bets are equal, round has concluded
         const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
+
+        if (round === TexasHoldemRound.PREFLOP) {
+            console.log(`PREFLOP bet equality check: ${allBetsEqual}, bets: [${playerBets.join(', ')}]`);
+        }
+
         return allBetsEqual;
     }
-
-    // /**
-    //  * Determines if the current betting round has ended
-    //  */
-    // hasRoundEnded(round: TexasHoldemRound): boolean {
-    //     // Step 1: Filter out folded and sitting out players
-    //     const activePlayers = this.findLivePlayers();
-
-    //     // Step 2: If no players or only one player left, round has ended
-    //     if (activePlayers.length <= 1) {
-    //         if (this.currentRound !== TexasHoldemRound.ANTE && activePlayers.length === 1) {
-    //             this._currentRound = TexasHoldemRound.SHOWDOWN;
-    //         }
-    //         return true;
-    //     }
-
-    //     // Get actions for this round
-    //     const actions = this._rounds.get(round) || [];
-
-    //     // Step 3: Special case for ANTE round
-    //     if (round === TexasHoldemRound.ANTE) {
-    //         const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
-    //         const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
-    //         const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
-
-    //         // Round ends when both blinds are posted AND cards are dealt
-    //         return hasSmallBlind && hasBigBlind && hasDealt;
-    //     }
-
-    //     // Special case for SHOWDOWN round
-    //     if (round === TexasHoldemRound.SHOWDOWN) {
-    //         // Check if all active players have either shown or mucked
-    //         const showdownActions = actions.filter(a =>
-    //             a.action === PlayerActionType.SHOW || a.action === PlayerActionType.MUCK
-    //         );
-    //         const playersWhoActedInShowdown = new Set(showdownActions.map(a => a.playerId));
-
-    //         // If all active players have either shown or mucked, the round ends
-    //         const allPlayersActed = activePlayers.every(player =>
-    //             playersWhoActedInShowdown.has(player.address)
-    //         );
-
-    //         if (allPlayersActed) {
-    //             this.calculateWinner();
-    //             return true;
-    //         }
-    //         return false;
-    //     }
-
-    //     // Check if cards have been dealt
-    //     const hasDealt = actions.some(a => a.action === NonPlayerActionType.DEAL);
-    //     const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
-
-    //     // Get betting actions (excluding blinds and deal)
-    //     const bettingActions = actions.filter(
-    //         a => a.action !== PlayerActionType.SMALL_BLIND &&
-    //             a.action !== PlayerActionType.BIG_BLIND &&
-    //             a.action !== NonPlayerActionType.DEAL
-    //     );
-
-    //     // If cards dealt but no betting actions yet, round is not over
-    //     if ((hasDealt || anyPlayerHasCards) && bettingActions.length === 0) {
-    //         return false;
-    //     }
-
-    //     // Step 4: Check that all active players have acted
-    //     const playersWhoActed = new Set(bettingActions.map(a => a.playerId));
-
-    //     for (const player of activePlayers) {
-    //         if (!playersWhoActed.has(player.address)) {
-    //             return false; // Player hasn't acted yet
-    //         }
-    //     }
-
-    //     // Step 4b: Check if all players have acted AFTER the last bet/raise
-    //     let lastBetOrRaiseIndex = -1;
-    //     let lastBetOrRaisePlayerId = "";
-    //     for (let i = actions.length - 1; i >= 0; i--) {
-    //         if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
-    //             lastBetOrRaiseIndex = i;
-    //             lastBetOrRaisePlayerId = actions[i].playerId;
-    //             break;
-    //         }
-    //     }
-
-    //     if (lastBetOrRaiseIndex >= 0) {
-    //         // If there was a bet/raise, ensure all OTHER active players have acted after it
-    //         for (const player of activePlayers) {
-    //             // Skip the player who made the bet/raise - they don't need to act again
-    //             if (player.address === lastBetOrRaisePlayerId) {
-    //                 continue;
-    //             }
-
-    //             const playerActionsAfterBet = actions.filter(a =>
-    //                 a.playerId === player.address &&
-    //                 actions.indexOf(a) > lastBetOrRaiseIndex
-    //             );
-
-    //             if (playerActionsAfterBet.length === 0) {
-    //                 return false; // Player hasn't responded to the bet/raise yet
-    //             }
-    //         }
-    //     }
-
-    //     // Step 5: For PREFLOP, check if it's just checks/calls (no bets/raises)
-    //     if (round === TexasHoldemRound.PREFLOP) {
-    //         const preflopBetsOrRaises = bettingActions.filter(a =>
-    //             a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE
-    //         );
-
-    //         if (preflopBetsOrRaises.length === 0) {
-    //             // No bets/raises in PREFLOP, just checks/calls - round can end
-    //             return true;
-    //         }
-
-    //         // If there were bets/raises, fall through to normal logic below
-    //         // (don't return here - let it continue to Steps 4b and 6)
-    //     }
-
-    //     // Step 6: Calculate each player's total bets and check if they're equal
-    //     const playerBets: bigint[] = [];
-
-    //     for (const player of activePlayers) {
-    //         // For PREFLOP, include blind bets from ANTE round
-    //         const totalBet = round === TexasHoldemRound.PREFLOP
-    //             ? this.getPlayerTotalBets(player.address, round, true)  // includeBlinds = true
-    //             : this.getPlayerTotalBets(player.address, round);
-
-    //         playerBets.push(totalBet);
-
-    //         // Debug logging for PREFLOP
-    //         if (round === TexasHoldemRound.PREFLOP) {
-    //             console.log(`Player ${player.address} PREFLOP total bet: ${totalBet}`);
-    //             console.log(`  - ANTE bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.ANTE)}`);
-    //             console.log(`  - PREFLOP bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP)}`);
-    //         }
-    //     }
-
-    //     // Step 7: If all player bets are equal, round has concluded
-    //     const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
-
-    //     if (round === TexasHoldemRound.PREFLOP) {
-    //         console.log(`PREFLOP bet equality check: ${allBetsEqual}, bets: [${playerBets.join(', ')}]`);
-    //     }
-
-    //     return allBetsEqual;
-    // }
 
     // ==================== ACTION HANDLING METHODS ====================
 

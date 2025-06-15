@@ -86,3 +86,8 @@ export const fromTestJson = (json: any): TexasHoldemGame => {
 
     return TexasHoldemGame.fromJson(data, gameConfig);
 };
+
+// Player address constants
+export const PLAYER_1_ADDRESS = "0x1111111111111111111111111111111111111111"; // Small Blind
+export const PLAYER_2_ADDRESS = "0x2222222222222222222222222222222222222222"; // Big Blind  
+export const PLAYER_3_ADDRESS = "0x3333333333333333333333333333333333333333"; // 
