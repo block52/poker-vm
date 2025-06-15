@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
-import { IDB } from "./interfaces";
 
-class MongoDatabaseConnection implements IDB {
+class MongoDatabaseConnection {
     private static instance: MongoDatabaseConnection;
     private isConnected: boolean = false;
 
@@ -14,9 +13,14 @@ class MongoDatabaseConnection implements IDB {
         return MongoDatabaseConnection.instance;
     }
 
-    public async connect(uri: string = "mongodb://localhost:27017/pvm"): Promise<void> {
-        if (this.isConnected) {
-            return;
+    public async connect(uri: string): Promise<void> {
+        // if (this.isConnected) {
+        //     return;
+        // }
+
+        if (!uri) {
+            console.error("No database connection string provided. Please set the DB_URL environment variable.");
+            process.exit(1);
         }
 
         try {

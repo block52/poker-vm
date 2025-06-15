@@ -8,8 +8,8 @@ import {
     TexasHoldemStateDTO,
     TransactionResponse
 } from "./types/game";
-import { RPCMethods, RPCRequest } from "./types/rpc";
-import { RPCResponse } from "./types/rpc";
+import { RPCMethods, RPCRequest, RPCResponse } from "./types/rpc";
+import { KEYS } from "./index";
 import axios from "axios";
 import { Wallet } from "ethers";
 
@@ -32,6 +32,8 @@ export interface IClient {
     newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
     playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
@@ -343,10 +345,17 @@ export class NodeRpcClient implements IClient {
         const index = await this.getNextActionIndex(gameAddress, address);
         const seed: string = NodeRpcClient.generateRandomNumberString();
 
+        // Generate URLSearchParams formatted data with seed information
+        const params = new URLSearchParams();
+        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.NEW_HAND);
+        params.set(KEYS.INDEX, index.toString());
+        params.set(KEYS.DATA, seed);
+        const formattedData = params.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, undefined, nonce, index, seed], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, "0", nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -395,17 +404,84 @@ export class NodeRpcClient implements IClient {
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
-        // Pack the seat into the data field
-        const data = seat.toString();
+        // Generate URLSearchParams formatted data with seat information
+        const params = new URLSearchParams();
+        params.set("actionType", NonPlayerActionType.JOIN);
+        params.set("index", index.toString());
+        params.set("data", seat.toString());
+        const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, data], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
         return body.result.data;
+    }
+
+    /**
+     * Join a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param amount The amount to join with
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
+
+        // Create an array of available seats from 1 to to gameState.gameOptions.maxSeats
+        const maxSeats = gameState.gameOptions.maxPlayers || 9; // Default to 9 if not specified
+        let seats = Array.from({ length: maxSeats }, (_, i) => i + 1);
+
+        const occupiedSeats = await this.getOccupiedSeats(gameAddress);
+
+        // Filter out occupied seats
+        seats = seats.filter(seat => !occupiedSeats.includes(seat));
+
+        // Get a random index from the available seats
+        if (seats.length === 0) {
+            throw new Error("No available seats to join");
+        }
+
+        return this.playerJoin(gameAddress, amount, seats[0], nonce);
+    }
+
+    /**
+     * Join a Texas Holdem game
+     * @param gameAddress The address of the game
+     * @param amount The amount to join with
+     * @param nonce The nonce of the transaction
+     * @returns A Promise that resolves to the transaction
+     */
+    public async playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
+
+        // Create an array of available seats from 1 to to gameState.gameOptions.maxSeats
+        const maxSeats = gameState.gameOptions.maxPlayers || 9; // Default to 9 if not specified
+        let seats = Array.from({ length: maxSeats }, (_, i) => i + 1);
+
+        const occupiedSeats = await this.getOccupiedSeats(gameAddress);
+
+        // Filter out occupied seats
+        seats = seats.filter(seat => !occupiedSeats.includes(seat));
+
+        // Get a random index from the available seats
+        if (seats.length === 0) {
+            throw new Error("No available seats to join");
+        }
+
+        const randomIndex = Math.floor(Math.random() * seats.length);
+        return this.playerJoin(gameAddress, amount, seats[randomIndex], nonce);
     }
 
     /**
@@ -414,9 +490,10 @@ export class NodeRpcClient implements IClient {
      * @param action
      * @param amount
      * @param nonce
+     * @param data Additional data for the action
      * @returns
      */
-    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number): Promise<PerformActionResponse> {
+    public async playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse> {
         try {
             const address = this.getAddress();
 
@@ -432,10 +509,19 @@ export class NodeRpcClient implements IClient {
 
             const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
+            // Generate URLSearchParams formatted data
+            const params = new URLSearchParams();
+            params.set("actionType", action);
+            params.set("index", index.toString());
+            if (data) {
+                params.set("data", data);
+            }
+            const formattedData = params.toString();
+
             const { data: body } = await axios.post(this.url, {
                 id: 1, // this.getRequestId(),
                 method: RPCMethods.PERFORM_ACTION,
-                params: [address, gameAddress, action, amount, nonce, index], // [from, to, action, amount, nonce, index]
+                params: [address, gameAddress, action, amount, nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
                 signature: signature
             });
 
@@ -462,10 +548,16 @@ export class NodeRpcClient implements IClient {
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
+        // Generate URLSearchParams formatted data
+        const params = new URLSearchParams();
+        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.LEAVE);
+        params.set(KEYS.INDEX, index.toString());
+        const formattedData = params.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index], // [from, to, action, amount, nonce, index]
+            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -480,18 +572,26 @@ export class NodeRpcClient implements IClient {
      */
     public async deal(gameAddress: string, seed: string = "", publicKey: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        
+
         if (!nonce) {
             nonce = await this.getNonce(address);
         }
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
 
+        // Generate URLSearchParams formatted data with publicKey information
+        const params = new URLSearchParams();
+        params.set("actionType", NonPlayerActionType.DEAL);
+        params.set("index", index.toString());
+        if (publicKey) {
+            params.set("data", publicKey);
+        }
+        const formattedData = params.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index], // [from, to, action, amount, nonce, index]
-            data: publicKey, // todo; work out what we will use data for
+            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -536,6 +636,25 @@ export class NodeRpcClient implements IClient {
         }
 
         return 0;
+    }
+
+    private async getOccupiedSeats(gameAddress: string): Promise<number[]> {
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
+        if (!gameState) {
+            throw new Error("Game state not found");
+        }
+
+        // Create an array of available seats from 1 to to gameState.gameOptions.maxSeats
+        const maxSeats = gameState.gameOptions.maxPlayers || 9; // Default to 9 if not specified
+        let seats = Array.from({ length: maxSeats }, (_, i) => i + 1);
+
+        // Reduce players.seats to an array of available seats
+        const occupiedSeats = gameState.players
+            .filter(p => p.seat !== undefined)
+            .map(p => p.seat)
+            .filter(seat => seat !== undefined);
+
+        return occupiedSeats;
     }
 
     public static generateRandomNumberString(): string {

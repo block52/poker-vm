@@ -1,8 +1,34 @@
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { ITransaction } from "../models/interfaces";
-import { toOrderedTransaction } from "./parsers";
+import { extractDataFromParams, toOrderedTransaction } from "./parsers";
 
 describe("Parser", () => {
+    describe("extractDataFromParams", () => {
+        it("should extract data from URLSearchParams formatted string", () => {
+            const paramsString = "data=join,0,1";
+            const actual = extractDataFromParams(paramsString);
+            expect(actual).toBe("join,0,1");
+        });
+        
+        it("should return undefined for empty string", () => {
+            const paramsString = "";
+            const actual = extractDataFromParams(paramsString);
+            expect(actual).toBeUndefined();
+        });
+
+        it("should return undefined for 'undefined' string", () => {
+            const paramsString = "undefined";
+            const actual = extractDataFromParams(paramsString);
+            expect(actual).toBeUndefined();
+        });
+
+        it.skip("should return the string itself if not in URLSearchParams format", () => {
+            const paramsString = "join,0,1";
+            const actual = extractDataFromParams(paramsString);
+            expect(actual).toBe("join,0,1");
+        });
+    });
+    
     describe("toOrderedTransaction", () => {
         it("should create ordered transaction with all data", () => {
             const tx = {

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 pm2 stop node
 pm2 delete node
 nvm use 20.18
@@ -11,8 +10,10 @@ git stash
 git pull
 yarn install
 yarn build
+cp .env dist/src
 docker compose up -d
-pm2 start dist/src/index.js --name node
+cd /root/poker-vm/pvm/ts/dist/src/ || { echo "Failed to change to dist/src directory"; exit 1; }
+pm2 start index.js --name node
 
 # sudo ufw allow 22
 # sudo ufw allow 8000

@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range } from "../types";
@@ -10,7 +10,7 @@ abstract class BaseAction {
 
     verify(player: Player): Range | undefined {
         // To do: Move to deal or fold action class
-        if (this.type !== PlayerActionType.FOLD && this.type !== NonPlayerActionType.DEAL) {
+        if (this.type !== NonPlayerActionType.DEAL) {
             const nextPlayerAddress = this.game.getNextPlayerToAct();
             if (nextPlayerAddress?.address !== player.address) 
                 throw new Error("Must be currently active player.");
@@ -54,30 +54,68 @@ abstract class BaseAction {
     }
 
     // Get the largest bet in the current round
-    protected getLargestBet(): bigint {
-        let amount = 0n;
+    protected getLargestBet(includeBlinds: boolean = false): bigint {
+        let largestBettor: string = "";
+        let _amount = 0n;
         const roundBets = this.game.getBets(this.game.currentRound);
 
-        roundBets.forEach(bet => {
-            if (bet > amount) {
-                amount = bet;
+        // roundBets.forEach(bet => {
+        //     if (bet > amount) {
+        //         amount = bet;
+        //     }
+        // });
+
+        for (const [playerId, amount] of roundBets.entries()) {
+            console.log(`Player: ${playerId}, Bet: ${amount}`);
+            // playerId is the key, amount is the value
+            if (amount > _amount) {
+                _amount = amount;
+                largestBettor = playerId;
             }
-        });
-
-        return amount;
-    }
-
-    protected getSumBets(playerId: string): bigint {
-        let amount = 0n;
-        const roundBets = this.game.getBets(this.game.currentRound);
-
-        // If the player made a bet in this round, add it to the total
-        if (roundBets.has(playerId)) {
-            amount += roundBets.get(playerId) || 0n;
         }
 
-        return amount;
+        if (includeBlinds && this.game.currentRound === TexasHoldemRound.PREFLOP) {
+
+            const smallBlindPosition = this.game.smallBlindPosition;
+            const smallBlindPlayer = this.game.getPlayerAtSeat(smallBlindPosition);
+
+            // if the bet map is the small blind, we need to add the small blind amount
+            if (largestBettor === smallBlindPlayer?.address) {
+                _amount += this.game.smallBlind;
+            }
+
+            const bigBlindPosition = this.game.bigBlindPosition;
+            const bigBlindPlayer = this.game.getPlayerAtSeat(bigBlindPosition);
+
+            // if the bet map is the big blind, we need to add the big blind amount
+            if (largestBettor === bigBlindPlayer?.address) {
+                _amount += this.game.bigBlind;
+            }
+        }
+
+        return _amount;
     }
+
+    // protected getSumBets(playerId: string, includeBlinds: boolean = false): bigint {
+    //     let amount = 0n;
+    //     const roundBets = this.game.getBets(this.game.currentRound);
+
+    //     // If the player made a bet in this round, add it to the total
+    //     if (roundBets.has(playerId)) {
+    //         amount += roundBets.get(playerId) || 0n;
+    //     }
+
+    //     if (includeBlinds && this.game.currentRound === TexasHoldemRound.PREFLOP) {
+    //         const anteBets = this.game.getBets(TexasHoldemRound.ANTE);
+
+    //         // If the player made an ante bet, add it to the total
+    //         if (anteBets.has(playerId)) {
+    //             amount += anteBets.get(playerId) || 0n;
+    //         }
+    //     }
+
+    //     return amount;
+    // }
 }
 
 export default BaseAction;

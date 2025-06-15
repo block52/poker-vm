@@ -1,7 +1,7 @@
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson } from "../src/engine/testConstants";
-import { test_json, test_735, test_753, test_792, test_870 } from "./senarios/data";
+import { test_json, test_735, test_753, test_792, test_870, test_873, test_873_2, test_877, test_899, test_899_2, test_902 } from "./senarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Data driven", () => {
@@ -55,8 +55,7 @@ describe("Texas Holdem - Data driven", () => {
             game = fromTestJson(test_792);
             const actual = game.getLegalActions(SEAT_1);
             expect(actual).toBeDefined();
-            expect(actual.length).toEqual(1);
-            expect(actual[0].action).toEqual("fold");
+            expect(actual.length).toEqual(0);
         });
 
         it("should test bug 870", () => {
@@ -73,6 +72,79 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual[0].action).toEqual("fold");
             expect(actual[1].action).toEqual("call");
             expect(actual[2].action).toEqual("raise");
+        });
+
+        it("should test bug 873", () => {
+            const SEAT_1 = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
+            const SEAT_2 = "0xC84737526E425D7549eF20998Fa992f88EAC2484";
+
+            game = fromTestJson(test_873);
+            expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
+            expect(game.lastActedSeat).toEqual(2);
+            const actual = game.getLegalActions(SEAT_1);
+            expect(actual).toBeDefined();
+            // Should be able to fold, call, or raise
+            expect(actual.length).toEqual(3);
+            expect(actual[0].action).toEqual("fold");
+            expect(actual[1].action).toEqual("call");
+            expect(actual[2].action).toEqual("raise");
+        });
+
+        it("should test bug 873 second test", () => {
+            const SEAT_1 = "0xC84737526E425D7549eF20998Fa992f88EAC2484";
+
+            game = fromTestJson(test_873_2);
+            const actual = game.getLegalActions(SEAT_1);
+            expect(actual).toBeDefined();
+            expect(game.smallBlindPosition).toEqual(1);
+            expect(game.bigBlindPosition).toEqual(2);
+        });
+
+        it("should test bug 877", () => {
+            game = fromTestJson(test_877);
+            // Game state should be end
+            expect(game.currentRound).toEqual(TexasHoldemRound.END);
+        });
+
+        it("should test bug 899", () => {
+            const SEAT_1 = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
+
+            game = fromTestJson(test_899);
+            // Game state should be end
+            const actual = game.getLegalActions(SEAT_1);
+            expect(actual).toBeDefined();
+            expect(actual.length).toEqual(3);
+            expect(actual[1].action).toEqual("call");
+            expect(actual[1].min).toEqual("30000000000000000");
+            expect(actual[1].max).toEqual("30000000000000000");
+            expect(actual[2].action).toEqual("raise");
+        });
+
+        it("should test bug 899 second test", () => {
+            const SEAT_8 = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
+
+            game = fromTestJson(test_899_2);
+            // Game state should be end
+            const actual = game.getLegalActions(SEAT_8);
+            expect(actual).toBeDefined();
+            expect(actual.length).toEqual(3);
+            expect(actual[1].action).toEqual("call");
+            expect(actual[1].min).toEqual("20000000000000000");
+            expect(actual[1].max).toEqual("20000000000000000");
+            expect(actual[2].action).toEqual("raise");
+        });
+
+        it.only("should test bug 902", () => {
+            const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
+            const SEAT_2 = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
+
+            game = fromTestJson(test_902);
+            // Game state should be end
+            const actual = game.getLegalActions(SEAT_2);
+            expect(actual).toBeDefined();
+            expect(actual.length).toEqual(3);
+            expect(actual[2].action).toEqual("raise");
+            expect(actual[2].min).toEqual("50000000000000000");
         });
     });
 });

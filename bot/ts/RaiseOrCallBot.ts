@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { IBot } from "./interfaces";
 import { BaseBot } from "./BaseBot";
 
-export class CheckBot extends BaseBot implements IBot {
+export class RaiseOrCallBot extends BaseBot implements IBot {
 
     get isTurn(): boolean {
         return true;
@@ -59,13 +59,17 @@ export class CheckBot extends BaseBot implements IBot {
         }
 
         // Can check?
-        const canCheck = actions.some(action => action.action === PlayerActionType.CHECK);
+        const canRaise = actions.some(action => action.action === PlayerActionType.RAISE);
 
-        if (canCheck) {
-            const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CHECK, "0");
-            console.log(chalk.cyan("Check posted successfully:", response?.hash));
+        if (canRaise) {
+            console.log(chalk.cyan("Raising..."));
+            const action = actions.find(action => action.action === PlayerActionType.RAISE);
+            if (action) {
+                const response = await this.client.playerAction(this.tableAddress, PlayerActionType.RAISE, action.min || "0");
+                console.log(chalk.cyan("Check posted successfully:", response?.hash));
 
-            return; // Skip to next iteration after check
+                return; // Skip to next iteration after check
+            }
         }
 
         // Can call?
@@ -78,6 +82,16 @@ export class CheckBot extends BaseBot implements IBot {
             return; // Skip to next iteration after call
         }
 
+        // Can check?
+        const canCheck = actions.some(action => action.action === PlayerActionType.CHECK);
+
+        if (canCheck) {
+            const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CHECK, "0");
+            console.log(chalk.cyan("Check posted successfully:", response?.hash));
+
+            return; // Skip to next iteration after check
+        }
+
         // Can show?
         const canShow = actions.some(action => action.action === PlayerActionType.SHOW);
         if (canShow) {
@@ -86,16 +100,6 @@ export class CheckBot extends BaseBot implements IBot {
             console.log(chalk.cyan("Show posted successfully:", response?.hash));
             return; // Skip to next iteration after show
         }
-
-        // // Can fold?
-        // const canFold = actions.some(action => action.action === PlayerActionType.FOLD);
-        // if (canFold) {
-        //     console.log(chalk.cyan("Folding like a nit..."));
-        //     const response = await this.client.playerAction(this.tableAddress, PlayerActionType.FOLD, "0");
-        //     console.log(chalk.cyan("Fold posted successfully:", response?.hash));
-
-        //     return; // Skip to next iteration after fold
-        // }
 
         console.log(chalk.yellow("No valid actions available to perform at this time."));
     }
