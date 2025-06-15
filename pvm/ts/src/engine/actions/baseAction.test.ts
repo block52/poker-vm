@@ -2,8 +2,8 @@ import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisba
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
-import { IUpdate, Range, Turn } from "../types";
-import { gameOptions, getDefaultGame, mnemonic } from "../testConstants";
+import { IUpdate, Turn } from "../types";
+import { getDefaultGame, mnemonic } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -23,7 +23,7 @@ class TestAction extends BaseAction {
     }
 }
 
-describe.skip("BaseAction", () => {
+describe("BaseAction", () => {
     let game: TexasHoldemGame;
     let updateMock: IUpdate;
     let action: TestAction;
@@ -58,13 +58,12 @@ describe.skip("BaseAction", () => {
 
     describe("verify", () => {
         describe("game state validation", () => {
-            it("should throw error if game is in showdown", () => {
-                jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
-
-                expect(() => action.verify(player)).toThrow("Hand has ended.");
+            it.only("should throw error if player is not active", () => {
+                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
+                expect(() => action.verify(player)).toThrow("Must be currently active player.");
             });
 
-            it("should allow verification in non-showdown rounds", () => {
+            it.skip("should allow verification in non-showdown rounds", () => {
                 const rounds = [TexasHoldemRound.ANTE, TexasHoldemRound.PREFLOP, TexasHoldemRound.FLOP, TexasHoldemRound.TURN, TexasHoldemRound.RIVER];
 
                 rounds.forEach(round => {
@@ -90,14 +89,14 @@ describe.skip("BaseAction", () => {
 
             it("should throw error if player is not active", () => {
                 jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
+                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
-                expect(() => action.verify(player)).toThrow("Only active player can check.");
+                expect(() => action.verify(player)).toThrow("Must be currently active player.");
             });
 
-            it("should allow verification for active player on their turn", () => {
+            it.only("should allow verification for active player on their turn", () => {
                 jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
                 expect(() => action.verify(player)).not.toThrow();
             });

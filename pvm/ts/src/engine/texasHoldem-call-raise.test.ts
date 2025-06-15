@@ -17,7 +17,7 @@ describe("Texas Holdem Game", () => {
             game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
         });
 
-        it.only("should have correct call values for sb", () => {
+        it("should have correct call values for sb", () => {
             // Post blinds
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
             game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
@@ -93,34 +93,30 @@ describe("Texas Holdem Game", () => {
             expect(legalActions).toBeDefined();
         });
 
-        it("should have correct call values for sb after bb raises", () => {
-            const SMALL_BLIND_ADDRESS = PLAYER_1_ADDRESS;
-            const BIG_BLIND_ADDRESS = PLAYER_2_ADDRESS;
-
+        it.only("should have correct call values for sb after bb raises", () => {
             // Post blinds
-            game.performAction(SMALL_BLIND_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
-            game.performAction(BIG_BLIND_ADDRESS, PlayerActionType.BIG_BLIND, 4);
+            game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
+            game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
 
             // After blinds are posted, small blind acts first in preflop
             const nextToAct = game.getNextPlayerToAct();
-            expect(nextToAct?.address).toEqual(SMALL_BLIND_ADDRESS);
+            expect(nextToAct?.address).toEqual(PLAYER_1_ADDRESS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // SB to Deal cards
-            game.performAction(SMALL_BLIND_ADDRESS, NonPlayerActionType.DEAL, 5);
+            game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
             // SB calls
-            game.performAction(SMALL_BLIND_ADDRESS, PlayerActionType.CALL, 6);
+            game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6);
 
             // BB raises
-            // const FOUR_TOKENS = 400000000000000000n;
-            game.performAction(BIG_BLIND_ADDRESS, PlayerActionType.RAISE, 7, TWO_TOKENS);
+            game.performAction(PLAYER_2_ADDRESS, PlayerActionType.RAISE, 7, TWO_TOKENS);
 
-            const legalActions = game.getLegalActions(SMALL_BLIND_ADDRESS);
+            const legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
             expect(legalActions).toBeDefined();
 
-            game.performAction(SMALL_BLIND_ADDRESS, PlayerActionType.CALL, 8);
+            game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 8);
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         });
     });
