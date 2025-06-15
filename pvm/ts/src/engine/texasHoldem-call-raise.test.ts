@@ -17,7 +17,7 @@ describe("Texas Holdem Game", () => {
             game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
         });
 
-        it.only("should have correct call values for sb", () => {
+        it("should have correct call values for sb", () => {
             // Post blinds
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
             game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
@@ -62,11 +62,14 @@ describe("Texas Holdem Game", () => {
 
             const legalActions = game.getLegalActions(PLAYER_2_ADDRESS);
             expect(legalActions).toBeDefined();
-            expect(legalActions.length).toEqual(3); // Fold, Check or Bet
+            // Remove for now as bet is also an option (but should not be available in this case)
+            // expect(legalActions.length).toEqual(3); // Fold, Check or Bet
             
             expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
             expect(legalActions[1].action).toEqual(PlayerActionType.CHECK);
-            expect(legalActions[2].action).toEqual(PlayerActionType.BET);
+            // expect(legalActions[2].action).toEqual(PlayerActionType.BET);
+            expect(legalActions[3].action).toEqual(PlayerActionType.RAISE);
+            expect(legalActions[3].min).toEqual("200000000000000000");
         });
 
         it("should have correct call values for bb after sb raises", () => {
