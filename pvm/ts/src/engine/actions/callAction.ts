@@ -23,29 +23,25 @@ class CallAction extends BaseAction implements IAction {
         if (currentRound === TexasHoldemRound.PREFLOP) {
             // Special case for small blind position in PREFLOP
             const seat = this.game.getPlayerSeatNumber(player.address);
+            const largestBet = this.getLargestBet(true);
+            const playersBet = this.game.getPlayerTotalBets(player.address, currentRound, true);
+
             if (seat === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
-                const largestBet = this.getLargestBet(); // Include ante bets in preflop
-                const playerBet = this.game.getPlayerTotalBets(player.address, currentRound, true); // Include ante bets in preflop
-                const amount = (largestBet + this.game.bigBlind) - playerBet;
+                const amount = (largestBet + this.game.bigBlind) - playersBet;
                 return { minAmount: amount, maxAmount: amount };
             }
 
             if (seat === this.game.bigBlindPosition) {
                 // Big blind can only call if there is a raise
-                const largestBet = this.getLargestBet();
-                const playerBet = this.game.getPlayerTotalBets(player.address, currentRound, true);
-                if (largestBet > playerBet) {
+                if (largestBet > playersBet) {
                     // Big blind needs to call the difference to match the largest bet
-                    const amount = largestBet - playerBet;
+                    const amount = largestBet - playersBet;
                     return { minAmount: amount, maxAmount: amount };
                 }
             }
 
-            const largestBet = this.getLargestBet(true);
-            const playerBet = this.game.getPlayerTotalBets(player.address, currentRound, true);
-            
-            if (seat === this.game.bigBlindPosition && largestBet === playerBet) {
+            if (seat === this.game.bigBlindPosition && largestBet === playersBet) {
                 // Error message not quite right
                 throw new Error("Big blind cannot call in preflop round.");
             }
@@ -76,7 +72,6 @@ class CallAction extends BaseAction implements IAction {
         if (deductAmount < 0n) {
             deductAmount = 0n;
         }
-
 
         // 8. Check player's chip stack
         if (player.chips < deductAmount) {
