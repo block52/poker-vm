@@ -174,7 +174,7 @@ To publish the SDK.
 
 ```bash
 cd sdk
-nvm use 20.12
+nvm use 20.18
 yarn prepare && yarn publish
 ```
 
