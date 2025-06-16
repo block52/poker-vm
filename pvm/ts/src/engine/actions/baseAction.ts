@@ -12,29 +12,19 @@ abstract class BaseAction {
         // To do: Move to deal or fold action class
         if (this.type !== NonPlayerActionType.DEAL) {
             const nextPlayerAddress = this.game.getNextPlayerToAct();
-            if (nextPlayerAddress?.address !== player.address) 
-                throw new Error("Must be currently active player.");
+            if (nextPlayerAddress?.address !== player.address) throw new Error("Must be currently active player.");
         }
 
         // 3. Player status check: Player must be active (not folded/all-in)
         const playerStatus = this.game.getPlayerStatus(player.address);
-        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
-            throw new Error(`Only active player can ${this.type}.`);
+        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
 
         return undefined;
     }
 
     execute(player: Player, index: number, amount: bigint): void {
-        // in some cases, the amount field is not used so need to calculate to match maximum bet; in the case of a raise,
-        // the amount only specifies that over the existing maximum which the player may not yet have covered
-        const deductAmount = this.getDeductAmount(player, amount);
-        if (deductAmount) {
-            if (player.chips < deductAmount) throw new Error(`Player has insufficient chips to ${this.type}.`);
-
-            player.chips -= deductAmount;
-        }
-
-        amount = deductAmount;
+        if (player.chips < amount) throw new Error(`Player has insufficient chips to ${this.type}.`);
+        player.chips -= amount;
 
         const round = this.game.currentRound;
         this.game.addAction(
@@ -45,13 +35,12 @@ abstract class BaseAction {
 
     protected verifyPlayerIsActive(player: Player): void {
         const playerStatus = this.game.getPlayerStatus(player.address);
-        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED)
-            throw new Error(`Only active player can ${this.type}.`);
+        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
     }
 
-    protected getDeductAmount(_player: Player, amount?: bigint): bigint {
-        return amount ? amount : 0n;
-    }
+    // protected getDeductAmount(_player: Player, amount?: bigint): bigint {
+    //     return amount ? amount : 0n;
+    // }
 
     // Get the largest bet in the current round
     protected getLargestBet(includeBlinds: boolean = false): bigint {
@@ -71,7 +60,7 @@ abstract class BaseAction {
             if (_amount === 0n) {
                 return this.game.bigBlind; // If no bets, return big blind as the minimum bet
             }
-            
+
             const smallBlindPosition = this.game.smallBlindPosition;
             const smallBlindPlayer = this.game.getPlayerAtSeat(smallBlindPosition);
 

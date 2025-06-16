@@ -2,6 +2,7 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
+import { availableMemory } from "process";
 
 class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -63,7 +64,7 @@ class CallAction extends BaseAction implements IAction {
             throw new Error("No previous action to call.");
         }
 
-        // 6. Player bet check: Calculate the amount needed to call
+        // // 6. Player bet check: Calculate the amount needed to call
         let deductAmount: bigint = this.getDeductAmount(player);
 
         // 7. Check if player already matched the bet
@@ -76,6 +77,7 @@ class CallAction extends BaseAction implements IAction {
             deductAmount = 0n;
         }
 
+
         // 8. Check player's chip stack
         if (player.chips < deductAmount) {
             deductAmount = player.chips;
@@ -85,25 +87,23 @@ class CallAction extends BaseAction implements IAction {
         return { minAmount: deductAmount, maxAmount: deductAmount };
     }
 
-    execute(player: Player, index: number): void {
-        // Get the valid call amount from verify
-        const range = this.verify(player);
-        const deductAmount = range.minAmount;
+    // execute(player: Player, index: number, amount: bigint): void {
+    //     // Get the valid call amount from verify
+    //     // const range = this.verify(player);
+    //     // const deductAmount = range.minAmount;
 
-        if (deductAmount) {
-            if (player.chips < deductAmount) throw new Error(`Player has insufficient chips to ${this.type}.`);
+    //     if (player.chips < amount) throw new Error(`Player has insufficient chips to ${this.type}.`);
+    //     player.chips -= amount;
 
-            player.chips -= deductAmount;
-        }
 
-        const round = this.game.currentRound;
-        this.game.addAction(
-            { playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount, index: index },
-            round
-        );
-    }
+    //     const round = this.game.currentRound;
+    //     this.game.addAction(
+    //         { playerId: player.address, action: !player.chips && amount ? PlayerActionType.ALL_IN : this.type, amount: amount, index: index },
+    //         round
+    //     );
+    // }
 
-    getDeductAmount(player: Player): bigint {
+    private getDeductAmount(player: Player): bigint {
         const playerSeat = this.game.getPlayerSeatNumber(player.address);
         const currentRound = this.game.currentRound;
         let playerBet = this.game.getPlayerTotalBets(player.address, currentRound, true); // Include ante bets in preflop

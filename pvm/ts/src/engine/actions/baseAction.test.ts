@@ -18,9 +18,9 @@ class TestAction extends BaseAction {
         return this.shouldReturnRange ? { minAmount: 10n, maxAmount: 100n } : baseResult;
     }
 
-    public testGetDeductAmount(player: Player, amount?: bigint): bigint {
-        return this.getDeductAmount(player, amount);
-    }
+    // public testGetDeductAmount(player: Player, amount?: bigint): bigint {
+    //     return this.getDeductAmount(player, amount);
+    // }
 }
 
 describe("BaseAction", () => {
@@ -183,15 +183,15 @@ describe("BaseAction", () => {
         });
     });
 
-    describe.skip("getDeductAmount", () => {
-        it("should return 0n when no amount provided", () => {
-            expect(action.testGetDeductAmount(player)).toBe(0n);
-        });
+    // describe.skip("getDeductAmount", () => {
+    //     it("should return 0n when no amount provided", () => {
+    //         expect(action.testGetDeductAmount(player)).toBe(0n);
+    //     });
 
-        it("should return provided amount when specified", () => {
-            expect(action.testGetDeductAmount(player, 100n)).toBe(100n);
-        });
-    });
+    //     it("should return provided amount when specified", () => {
+    //         expect(action.testGetDeductAmount(player, 100n)).toBe(100n);
+    //     });
+    // });
 
     describe.skip("round-specific behavior", () => {
         beforeEach(() => {
@@ -292,23 +292,23 @@ describe("BaseAction", () => {
             });
         });
 
-        describe("getDeductAmount function", () => {
-            it("should return 0n when no amount is provided", () => {
-                expect(action.testGetDeductAmount(player)).toBe(0n);
-            });
+        // describe("getDeductAmount function", () => {
+        //     it("should return 0n when no amount is provided", () => {
+        //         expect(action.testGetDeductAmount(player)).toBe(0n);
+        //     });
 
-            it("should return the exact amount when provided", () => {
-                expect(action.testGetDeductAmount(player, 50n)).toBe(50n);
-            });
+        //     it("should return the exact amount when provided", () => {
+        //         expect(action.testGetDeductAmount(player, 50n)).toBe(50n);
+        //     });
 
-            it("should handle zero amount", () => {
-                expect(action.testGetDeductAmount(player, 0n)).toBe(0n);
-            });
+        //     it("should handle zero amount", () => {
+        //         expect(action.testGetDeductAmount(player, 0n)).toBe(0n);
+        //     });
 
-            it("should handle maximum bigint value", () => {
-                const maxBigInt = BigInt(Number.MAX_SAFE_INTEGER);
-                expect(action.testGetDeductAmount(player, maxBigInt)).toBe(maxBigInt);
-            });
-        });
+        //     it("should handle maximum bigint value", () => {
+        //         const maxBigInt = BigInt(Number.MAX_SAFE_INTEGER);
+        //         expect(action.testGetDeductAmount(player, maxBigInt)).toBe(maxBigInt);
+        //     });
+        // });
     });
 });

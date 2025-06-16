@@ -895,7 +895,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 new BetAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.CALL:
-                new CallAction(this, this._update).execute(player, index);
+                new CallAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.RAISE:
                 new RaiseAction(this, this._update).execute(player, index, _amount);

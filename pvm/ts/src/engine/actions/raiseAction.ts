@@ -84,13 +84,13 @@ class RaiseAction extends BaseAction implements IAction {
         // if (!amount) return 0n;
 
         // Calculate how much more the player needs to add to the pot
-        const currentRound = this.game.currentRound;
-        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
-        const currentBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
-        const delta = amount - currentBets;
+        // const currentRound = this.game.currentRound;
+        // const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        // const currentBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
+        // const delta = amount - currentBets;
 
         // Return the amount to add (or player's entire stack if they don't have enough)
-        return delta > player.chips ? player.chips : delta;
+        return amount; // > player.chips ? player.chips : player.chips - amount;
     }
 }
 
