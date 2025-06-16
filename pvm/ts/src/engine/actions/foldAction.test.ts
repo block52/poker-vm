@@ -2,7 +2,7 @@ import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisba
 import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame from "../texasHoldem";
-import { getDefaultGame } from "../testConstants";
+import { getDefaultGame, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS } from "../testConstants";
 
 describe("FoldAction", () => {
     let game: TexasHoldemGame;
@@ -42,7 +42,7 @@ describe("FoldAction", () => {
         );
 
         mockNextPlayer = new Player(
-            "0x1111111111111111111111111111111111111111", // address
+            PLAYER_1_ADDRESS, // address
             undefined, // lastAction
             1000000000000000000n, // chips
             undefined, // holeCards
@@ -62,7 +62,7 @@ describe("FoldAction", () => {
             const players: Player[] = [player, mockNextPlayer];
 
             // Mock the methods that verify() calls
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
             // Mock findLivePlayers to return multiple players
@@ -101,7 +101,7 @@ describe("FoldAction", () => {
         it("should allow fold when multiple live players exist", () => {
             // Mock findLivePlayers to return multiple players
             const otherPlayer = new Player(
-                "0x2222222222222222222222222222222222222222",
+                PLAYER_2_ADDRESS,
                 undefined,
                 1000000000000000000n,
                 undefined,
