@@ -80,5 +80,22 @@ describe("Parser", () => {
             expect(actual.type).toBe(NonPlayerActionType.JOIN);
             expect(actual.data).toBeNull();
         });
+
+        it("should create ordered transaction with URLSearchParams format", () => {
+            const tx = {
+                from: "0x1234",
+                to: "0x5678",
+                value: 1000n,
+                data: "actiontype=join&index=0&data=1"
+            };
+
+            const actual = toOrderedTransaction(tx);
+            expect(actual.index).toBe(0);
+            expect(actual.from).toBe("0x1234");
+            expect(actual.to).toBe("0x5678");
+            expect(actual.value).toBe(1000n);
+            expect(actual.type).toBe(NonPlayerActionType.JOIN);
+            expect(actual.data).toBe("1");
+        });
     });
 });
