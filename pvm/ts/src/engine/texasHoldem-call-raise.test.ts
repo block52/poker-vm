@@ -140,7 +140,7 @@ describe("Texas Holdem Game", () => {
 
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 8, TWO_TOKENS);
 
-            // expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
+            expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         });
     });
 });

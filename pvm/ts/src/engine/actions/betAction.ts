@@ -59,6 +59,15 @@ class BetAction extends BaseAction implements IAction {
         // Return valid betting range from minimum bet to player's entire stack
         return { minAmount: this.game.bigBlind, maxAmount: player.chips };
     }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        // Verify the player can perform the call action
+        if (amount <= 0n) {
+            throw new Error("Bet amount must be greater than zero.");
+        }
+
+        super.execute(player, index, amount);
+    }
 }
 
 export default BetAction;

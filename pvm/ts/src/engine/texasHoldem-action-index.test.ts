@@ -1,6 +1,6 @@
 import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, mnemonic, ONE_HUNDRED_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, mnemonic, ONE_HUNDRED_TOKENS, ONE_TOKEN } from "./testConstants";
 
 /**
  * This test suite was implemented to address and verify the fix for a double increment issue
@@ -66,7 +66,7 @@ describe("Texas Holdem - Action Index", () => {
             expect(game.getActionIndex()).toBe(5);
             
             // Perform third action and check index
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 5);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 5, ONE_TOKEN);
             expect(game.getActionIndex()).toBe(6);
         });
 
@@ -76,7 +76,7 @@ describe("Texas Holdem - Action Index", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 2);
             
             // Perform actions to complete preflop round
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 3);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.CALL, 3, ONE_TOKEN);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.CHECK, 4);
             
             // Turn index should be 4 now
