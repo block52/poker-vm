@@ -1364,12 +1364,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Create winners array
         const winners: WinnerDTO[] = json.winners || [];
 
-        // Reconstruct lastActedSeat from nextToAct
-        let lastActedSeat: number = json.smallBlindPosition;
-        if (json.previousActions && json.previousActions.length > 0) {
-            lastActedSeat = json.previousActions[json.previousActions.length - 1]?.seat;
-        }
-
         // Create and return new game instance
         return new TexasHoldemGame(
             json.address,
