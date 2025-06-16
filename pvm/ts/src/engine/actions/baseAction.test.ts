@@ -291,24 +291,5 @@ describe("BaseAction", () => {
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
             });
         });
-
-        // describe("getDeductAmount function", () => {
-        //     it("should return 0n when no amount is provided", () => {
-        //         expect(action.testGetDeductAmount(player)).toBe(0n);
-        //     });
-
-        //     it("should return the exact amount when provided", () => {
-        //         expect(action.testGetDeductAmount(player, 50n)).toBe(50n);
-        //     });
-
-        //     it("should handle zero amount", () => {
-        //         expect(action.testGetDeductAmount(player, 0n)).toBe(0n);
-        //     });
-
-        //     it("should handle maximum bigint value", () => {
-        //         const maxBigInt = BigInt(Number.MAX_SAFE_INTEGER);
-        //         expect(action.testGetDeductAmount(player, maxBigInt)).toBe(maxBigInt);
-        //     });
-        // });
     });
 });
