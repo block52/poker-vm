@@ -156,7 +156,7 @@ describe("Texas Holdem - Action Index", () => {
         });
     });
 
-    describe.only("Turn Index Validation", () => {
+    describe("Turn Index Validation", () => {
         beforeEach(() => {
             // Add two players for the tests
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "1");
