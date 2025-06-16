@@ -71,6 +71,10 @@ class RaiseAction extends BaseAction implements IAction {
         // if (currentRound === TexasHoldemRound.PREFLOP) {
         //     minTotalBet
         // }
+
+        if (largestBet === 0n) {
+            throw new Error("Cannot raise - no bets have been placed yet.");
+        }
         
         // Check if player has enough chips for minimum raise
         const deltaToCall = (largestBet + this.game.bigBlind) - playerBets;

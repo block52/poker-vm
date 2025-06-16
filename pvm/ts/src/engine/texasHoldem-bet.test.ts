@@ -35,12 +35,13 @@ describe("Texas Holdem Game - Bet after flop", () => {
     it("should have correct bet values for sb", () => {
         expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         expect(game.getNextPlayerToAct()?.address).toEqual(PLAYER_1_ADDRESS);
-        
+
         // After small blind calls, big blind acts next
         const legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(4); // Check, Bet, Raise or Fold
+        expect(legalActions.length).toEqual(3); // Check, Bet, Raise or Fold
         expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions[1].action).toEqual(PlayerActionType.CHECK);
+        expect(legalActions[2].action).toEqual(PlayerActionType.BET);
     });
 });
