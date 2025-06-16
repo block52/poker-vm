@@ -46,10 +46,10 @@ class CallAction extends BaseAction implements IAction {
             }
 
             if (seat === this.game.bigBlindPosition) {
-                const largestBet = this.getLargestBet();
+                // const largestBet = this.getLargestBet();
                 const largestBet2 = this.getLargestBet(true);
 
-                if (largestBet === this.game.bigBlind) {
+                if (largestBet2 === this.game.bigBlind) {
                     // No bets yet, big blind can call the big blind
                     // return { minAmount: this.game.bigBlind - playersBet, maxAmount: this.game.bigBlind - playersBet };
                     throw new Error("Big blind cannot call in preflop round.");
