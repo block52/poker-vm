@@ -95,6 +95,7 @@ describe("Texas Holdem Game", () => {
 
             // SB raises
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.RAISE, 6, THREE_TOKENS); // Raises to 3 tokens, so 4 tokens in pot
+            expect(game.pot).toEqual(SIX_TOKENS); // 4 tokens in pot
             expect(game.getPlayerTotalBets(PLAYER_1_ADDRESS, TexasHoldemRound.PREFLOP, true)).toEqual(FOUR_TOKENS); // 4 tokens in pot
 
             // After SB raises, BB acts next
@@ -109,7 +110,7 @@ describe("Texas Holdem Game", () => {
             expect(legalActions[2].min).toEqual("400000000000000000");
         });
 
-        it.only("should have correct call values for sb after bb raises", () => {
+        it("should have correct call values for sb after bb raises", () => {
             // Post blinds
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
             game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
@@ -126,8 +127,11 @@ describe("Texas Holdem Game", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
             // SB calls
-            const legalActionsSB = game.getLegalActions(PLAYER_1_ADDRESS);
+            let legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
+            expect(legalActions).toBeDefined();
+            expect(legalActions.length).toEqual(3); // Fold, Call or Raise
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6, ONE_TOKEN);
+            expect(game.getPlayerTotalBets(PLAYER_1_ADDRESS, TexasHoldemRound.PREFLOP, true)).toEqual(TWO_TOKENS); // 2 tokens
             expect(game.pot).toEqual(FOUR_TOKENS); // 4 tokens in pot
 
             // BB raises
@@ -135,8 +139,9 @@ describe("Texas Holdem Game", () => {
             expect(game.getPlayerTotalBets(PLAYER_2_ADDRESS, TexasHoldemRound.PREFLOP, true)).toEqual(FOUR_TOKENS); // 4 tokens in pot
             expect(game.pot).toEqual(SIX_TOKENS); // 6 tokens in pot
 
-            const legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
+            legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
             expect(legalActions).toBeDefined();
+            expect(legalActions.length).toEqual(3); // Fold, Call or Raise
 
             game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 8, TWO_TOKENS);
 
