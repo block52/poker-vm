@@ -66,11 +66,6 @@ class RaiseAction extends BaseAction implements IAction {
         
         // 5. Calculate minimum raise amount
         const playerBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
-        // const deltaToCall = largestBet - playerBets;
-        // let minTotalBet = largestBet + this.game.bigBlind;
-        // if (currentRound === TexasHoldemRound.PREFLOP) {
-        //     minTotalBet
-        // }
 
         if (largestBet === 0n) {
             throw new Error("Cannot raise - no bets have been placed yet.");
@@ -91,19 +86,6 @@ class RaiseAction extends BaseAction implements IAction {
             minAmount: deltaToCall,
             maxAmount: player.chips // Total possible if going all-in
         };
-    }
-
-    protected getDeductAmount(player: Player, amount: bigint): bigint {
-        // if (!amount) return 0n;
-
-        // Calculate how much more the player needs to add to the pot
-        // const currentRound = this.game.currentRound;
-        // const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
-        // const currentBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
-        // const delta = amount - currentBets;
-
-        // Return the amount to add (or player's entire stack if they don't have enough)
-        return amount; // > player.chips ? player.chips : player.chips - amount;
     }
 }
 
