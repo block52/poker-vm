@@ -117,8 +117,9 @@ class CallAction extends BaseAction implements IAction {
     private getDeductAmount(player: Player): bigint {
         const playerSeat = this.game.getPlayerSeatNumber(player.address);
         const currentRound = this.game.currentRound;
-        let playerBet = this.game.getPlayerTotalBets(player.address, currentRound, true); // Include ante bets in preflop
-        const largestBet = this.getLargestBet(true);
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        let playerBet = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds); // Include ante bets in preflop
+        const largestBet = this.getLargestBet(includeBlinds);
 
         // Special case for small blind in preflop
         if (currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.smallBlindPosition && playerBet === this.game.smallBlind) {
