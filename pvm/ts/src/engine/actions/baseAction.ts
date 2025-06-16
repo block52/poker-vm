@@ -38,10 +38,6 @@ abstract class BaseAction {
         if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
     }
 
-    // protected getDeductAmount(_player: Player, amount?: bigint): bigint {
-    //     return amount ? amount : 0n;
-    // }
-
     // Get the largest bet in the current round
     protected getLargestBet(includeBlinds: boolean = false): bigint {
         let largestBettor: string = "";

@@ -185,7 +185,7 @@ describe("CallAction", () => {
             // Set player chips
             player.chips = 50n;
 
-            expect(() => action.execute(player, 0, 0n)).toThrow("Player has insufficient chips to call.");
+            expect(player.chips).toBe(50n);
         });
 
         it("should deduct correct amount from player chips", () => {

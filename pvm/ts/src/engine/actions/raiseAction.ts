@@ -52,6 +52,15 @@ class RaiseAction extends BaseAction implements IAction {
         
         // 4. Cannot raise if I have the largest bet (can't raise myself)
         if (largestBetPlayer === player.address) {
+
+            // Special case for PREFLOP round, and the player is the big blind
+            if (currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
+                return {
+                    minAmount: this.game.bigBlind, // Must raise by at least big blind
+                    maxAmount: player.chips // Can go all-in
+                };
+            }
+
             throw new Error("Cannot raise - you already have the largest bet.");
         }
         

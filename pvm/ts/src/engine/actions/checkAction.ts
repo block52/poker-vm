@@ -67,6 +67,15 @@ class CheckAction extends BaseAction implements IAction {
 
         return { minAmount: 0n, maxAmount: 0n };
     }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        // Verify the player can perform the check action
+        if (amount === 0n) {
+            throw new Error("Check amount must not be greater than zero.");
+        }
+
+        super.execute(player, index, amount);
+    }
 }
 
 export default CheckAction;

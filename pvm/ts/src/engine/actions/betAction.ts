@@ -23,7 +23,8 @@ class BetAction extends BaseAction implements IAction {
         }
 
         // 2. Bet matching check: Player must match existing bets before betting
-        const largestBet = this.getLargestBet();
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        const largestBet = this.getLargestBet(includeBlinds);
         const playerBets = this.game.getPlayerTotalBets(player.address);
 
         // 3. Round-specific checks for preflop
@@ -45,7 +46,7 @@ class BetAction extends BaseAction implements IAction {
         }
 
         if (largestBet > playerBets && largestBet > 0n) {
-            console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${playerBets}`);
+            // console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${playerBets}`);
             throw new Error("Player must call or raise.");
         }
 

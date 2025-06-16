@@ -869,6 +869,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 return;
         }
 
+        if (amount !== undefined && amount < 0n) {
+            throw new Error("Amount cannot be negative or undefined for these action types.");
+        }
+
         // Verify player exists in the game
         if (!this.exists(address)) {
             throw new Error("Player not found.");
