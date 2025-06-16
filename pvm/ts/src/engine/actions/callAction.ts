@@ -136,7 +136,7 @@ class CallAction extends BaseAction implements IAction {
 
         // General case: difference between largest bet and player's current bet
         if (playerBet >= largestBet) {
-            throw new Error("Player has already met maximum bet, cannot call.");
+            throw new Error("Player has already met maximum so can check instead.");
         }
 
         return largestBet - playerBet;
