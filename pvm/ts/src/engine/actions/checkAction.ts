@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
@@ -70,8 +70,8 @@ class CheckAction extends BaseAction implements IAction {
 
     execute(player: Player, index: number, amount: bigint): void {
         // Verify the player can perform the check action
-        if (amount === 0n) {
-            throw new Error("Check amount must not be greater than zero.");
+        if (amount !== 0n) {
+            throw new Error("Check amount must be zero.");
         }
 
         super.execute(player, index, amount);

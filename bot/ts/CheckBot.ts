@@ -72,8 +72,18 @@ export class CheckBot extends BaseBot implements IBot {
         const canCall = actions.some(action => action.action === PlayerActionType.CALL);
         if (canCall) {
             console.log(chalk.cyan("Calling..."));
-            const amount = actions.find(action => action.action === PlayerActionType.CALL)?.min || "0";
-            const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CALL, amount);
+            const callAction = actions.find(action => action.action === PlayerActionType.CALL);
+            if (!callAction) {
+                console.error(chalk.red("No call action found!"));
+                return; // Exit if no call action is found
+            }
+
+            if (!callAction.max) {
+                console.error(chalk.red("Call action does not have a max value!"));
+                return; // Exit if call action does not have a max value
+            }
+
+            const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CALL, callAction.max.toString());
             console.log(chalk.cyan("Call posted successfully:", response?.hash));
             return; // Skip to next iteration after call
         }
