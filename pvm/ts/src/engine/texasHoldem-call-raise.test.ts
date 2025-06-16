@@ -3,8 +3,7 @@ import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TEN_TOKENS, TWO_TOKENS } from "./testConstants";
 
 describe("Texas Holdem - Call raise preflop", () => {
-
-
+    // Initialize game with base configuration and options
     let game: TexasHoldemGame;
 
     const PLAYER_1_ADDRESS = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
