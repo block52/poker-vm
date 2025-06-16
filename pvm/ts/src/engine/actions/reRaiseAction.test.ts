@@ -97,7 +97,7 @@ describe("Re Raise Action", () => {
     });
 
     describe("verify", () => {
-        it.only("should return correct range for a re raise", () => {
+        it("should return correct range for a re raise", () => {
             const range = action.verify(player);
 
             // Min amount should be previous bet + big blind

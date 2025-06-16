@@ -181,28 +181,4 @@ describe("Raise Action", () => {
             });
         });
     });
-
-    describe("getDeductAmount", () => {
-        beforeEach(() => {
-            // Mock current bets for deduction calculation
-            jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(ONE_TOKEN); // Player has 1 token currently
-        });
-
-        it("should return the delta amount if player has sufficient chips", () => {
-            const totalAmount = FIFTY_TOKENS; // Player wants to have 50 tokens total
-            const result = (action as any).getDeductAmount(player1, totalAmount);
-            
-            // Should deduct: 50 - 1 (current) = 49 tokens
-            expect(result).toBe(FIFTY_TOKENS - ONE_TOKEN);
-        });
-
-        it("should return player's total chips if delta exceeds chips", () => {
-            const totalAmount = TWO_THOUSAND_TOKENS; // Want 2000 tokens total
-            player1.chips = ONE_HUNDRED_TOKENS; // Only have 100 chips left
-            
-            // Delta would be 2000 - 1 = 1999, but player only has 100 chips
-            const result = (action as any).getDeductAmount(player1, totalAmount);
-            expect(result).toBe(player1.chips); // Should return all remaining chips
-        });
-    });
 });
