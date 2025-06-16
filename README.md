@@ -15,10 +15,6 @@ The CVM is a virtual card game machine that runs on the Block52 network. It is r
 
 The PVM is a virtual poker game machine that runs inside the CVM. It is responsible for executing the poker game logic.
 
-## Block52 Proxy Server
-
-This repository contains the Block52 proxy server that handles API requests and communicates with the Block52 node.
-
 ## Getting Started
 
 ### Prerequisites
