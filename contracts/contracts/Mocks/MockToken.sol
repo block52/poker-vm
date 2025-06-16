@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.30;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC1363} from "./ERC1363/IERC1363.sol";
-import {IERC1363Receiver} from "./ERC1363/IERC1363Receiver.sol";
+import {IERC1363} from "../ERC1363/IERC1363.sol";
+import {IERC1363Receiver} from "../ERC1363/IERC1363Receiver.sol";
 
 contract MockToken is ERC20, IERC1363 {
     constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {
