@@ -4,6 +4,9 @@
 
 The Layer 2 poker game virtual machine.
 
+![image](https://github.com/user-attachments/assets/29412b57-3419-4177-b265-1e74e7c7c2e9)
+
+
 ## CVM
 
 The CVM is a virtual card game machine that runs on the Block52 network. It is responsible for executing the card game logic.
