@@ -120,7 +120,7 @@ describe("FoldAction", () => {
     describe("execute", () => {
         beforeEach(() => {
             // Mock all the dependencies for verify()
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
             
