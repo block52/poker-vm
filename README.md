@@ -86,6 +86,83 @@ To run the PVM locally for development and testing:
 
 *[Production deployment instructions and connection to Block52 network will be added in the future]*
 
+## Game Start Countdown
+
+The poker table includes a countdown timer feature for coordinating synchronized game starts. This is particularly useful for testing and tournament scenarios where multiple players need to begin at the exact same time.
+
+### Usage
+
+Add the `gameStart` URL parameter to any table link to automatically display a countdown modal:
+
+```
+http://localhost:3000/table/0x123abc?gameStart=2025-06-16T15:30:00
+```
+
+### URL Parameter Format
+
+**Parameter:** `gameStart`  
+**Value:** Any valid date/time string that JavaScript's `new Date()` can parse
+
+**⚠️ Important:** When using timezone offsets with `+`, you must URL encode the `+` as `%2B` in the browser address bar.
+
+#### Valid Examples:
+
+```bash
+# Simple format (no timezone issues)
+?gameStart=2025-06-16T15:30:00
+
+# With UTC timezone 
+?gameStart=2025-06-16T15:30:00Z
+
+# Brisbane timezone (URL encoded + sign)
+?gameStart=2025-06-16T15:30:00%2B10:00
+
+# Simple date/time
+?gameStart=2025-06-16 15:30:00
+
+# Unix timestamp (milliseconds)
+?gameStart=1718524200000
+```
+
+### Testing Examples
+
+#### Quick Test (30 seconds from now):
+```javascript
+// Run in browser console to generate test URL:
+const futureTime = new Date(Date.now() + 30000).toISOString();
+console.log(`/table/YOUR_TABLE_ID?gameStart=${futureTime}`);
+```
+
+#### Simple Test Examples:
+```bash
+# 5 minutes from now (no timezone issues)
+?gameStart=2025-06-16T15:35:00
+
+# Tomorrow at 2:00 PM UTC
+?gameStart=2025-06-17T14:00:00Z
+
+# Brisbane time (URL encoded)
+?gameStart=2025-06-17T14:00:00%2B10:00
+```
+
+### Coordination Workflow
+
+1. **Create a table** through the normal process
+2. **Get the table ID** from the URL: `/table/0x123abc`
+3. **Add countdown parameter:** `/table/0x123abc?gameStart=2025-06-16T20:00:00Z`
+4. **Share this URL** with all testers
+5. **All players** see synchronized countdown
+6. **Modal disappears** when countdown reaches zero
+
+### Features
+
+- ✅ **Screen lock** until countdown completes
+- ✅ **Brisbane timezone** calculation and display  
+- ✅ **Live countdown** with days, hours, minutes, seconds
+- ✅ **Auto-cleanup** - removes URL parameter when done
+- ✅ **Dev skip button** - only shows in development mode
+- ✅ **Graceful fallback** - invalid dates are ignored
+
 
 # SDK
 
