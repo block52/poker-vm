@@ -29,19 +29,19 @@ This repository contains the Block52 proxy server that handles API requests and 
 ### Setup and Running
 
 1. Clone the repository:
-   ```
-   git clone https://github.com/your-org/block52-proxy.git
+   ```bash
+   git clone https://github.com/block52/poker-vm.git
    cd block52-proxy
    ```
 
-2. Start the services:
-   ```
-   docker-compose up
+3. Start the services:
+   ```bash
+   docker compose up
    ```
 
-3. The services will be available at:
-   - API: http://localhost:8080
-   - API Documentation: http://localhost:8080/docs
+4. The services will be available at:
+   - PVM RPC: http://localhost:3000
+   - API Documentation: http://localhost:3000/docs
    - MongoDB: localhost:27017
 
 ### Development
@@ -55,17 +55,17 @@ To run only specific services:
 To run the PVM locally for development and testing:
 
 1. Navigate to the PVM directory:
-   ```
+   ```bash
    cd pvm/ts
    ```
 
 2. Start the local MongoDB instance using the local Docker Compose file:
-   ```
-   docker-compose -f docker-compose.local.yml up -d
+   ```bash
+   docker compose up
    ```
 
 3. Connect to the local MongoDB database:
-   - **Connection string**: `mongodb://localhost:27019/local_pvm`
+   - **Connection string**: `mongodb://localhost:27017/pvm`
    - **For GUI tools** (like DataGrip, MongoDB Compass):
      - Host: `localhost`
      - Port: `27019`
@@ -73,7 +73,7 @@ To run the PVM locally for development and testing:
      - Authentication: None (or as configured)
 
 4. Start the PVM application:
-   ```
+   ```bash
    yarn run dev
    ```
    
@@ -82,7 +82,7 @@ To run the PVM locally for development and testing:
 
 6. To stop the local MongoDB instance:
    ```
-   docker-compose -f docker-compose.local.yml down
+   docker compose down
    ```
 
 ## Running in Production
@@ -130,6 +130,7 @@ http://localhost:3000/table/0x123abc?gameStart=2025-06-16T15:30:00
 ### Testing Examples
 
 #### Quick Test (30 seconds from now):
+
 ```javascript
 // Run in browser console to generate test URL:
 const futureTime = new Date(Date.now() + 30000).toISOString();
