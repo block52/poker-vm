@@ -8,7 +8,7 @@ import { getClient } from "../../utils/b52AccountUtils";
  * @returns Promise with the call response
  * @throws Error if private key is missing or if the action fails
  */
-export async function callHand(tableId: string) {
+export async function callHand(tableId: string, amount: string) {
     // Get the singleton client instance
     const client = getClient();
 
@@ -19,7 +19,7 @@ export async function callHand(tableId: string) {
     const response = await client.playerAction(
         tableId,
         PlayerActionType.CALL,
-        "0" // Backend will use the correct call amount from game state
+        amount
     );
 
     console.log("📞 Call response:", response);

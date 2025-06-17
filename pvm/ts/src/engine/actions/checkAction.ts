@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
@@ -12,12 +12,13 @@ class CheckAction extends BaseAction implements IAction {
         // Basic validation
         super.verify(player);
 
+        const currentRound = this.game.currentRound;
         // 1. Round state check: Cannot check in the ante round
-        if (this.game.currentRound === TexasHoldemRound.ANTE) {
+        if (currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot check in the ante round.");
         }
 
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+        if (currentRound === TexasHoldemRound.SHOWDOWN) {
             throw new Error("Cannot check in the showdown round.");
         }
 
@@ -26,7 +27,7 @@ class CheckAction extends BaseAction implements IAction {
         const playerBet = this.game.getPlayerTotalBets(player.address);
 
         // 3. Special case for preflop round
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+        if (currentRound === TexasHoldemRound.PREFLOP) {
             const playerSeat = this.game.getPlayerSeatNumber(player.address);
             const isSmallBlind = playerSeat === this.game.smallBlindPosition;
             const isBigBlind = playerSeat === this.game.bigBlindPosition;
@@ -65,6 +66,15 @@ class CheckAction extends BaseAction implements IAction {
         }
 
         return { minAmount: 0n, maxAmount: 0n };
+    }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        // Verify the player can perform the check action
+        if (amount !== 0n) {
+            throw new Error("Check amount must be zero.");
+        }
+
+        super.execute(player, index, amount);
     }
 }
 

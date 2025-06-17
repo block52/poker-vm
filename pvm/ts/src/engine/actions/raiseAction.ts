@@ -26,16 +26,16 @@ class RaiseAction extends BaseAction implements IAction {
         super.verify(player);
 
         // 2. Cannot raise in the ANTE round
-        if (this.game.currentRound === TexasHoldemRound.ANTE) {
+        const currentRound = this.game.currentRound;
+        if (currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot raise in the ante round. Only small and big blinds are allowed.");
         }
 
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+        if (currentRound === TexasHoldemRound.SHOWDOWN) {
             throw new Error("Cannot raise in the showdown round.");
         }
 
         // 3. Find who has the largest bet for this round
-        const currentRound = this.game.currentRound;
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
         
         let largestBet = 0n;
@@ -52,42 +52,40 @@ class RaiseAction extends BaseAction implements IAction {
         
         // 4. Cannot raise if I have the largest bet (can't raise myself)
         if (largestBetPlayer === player.address) {
+
+            // Special case for PREFLOP round, and the player is the big blind
+            if (currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
+                return {
+                    minAmount: this.game.bigBlind, // Must raise by at least big blind
+                    maxAmount: player.chips // Can go all-in
+                };
+            }
+
             throw new Error("Cannot raise - you already have the largest bet.");
         }
         
         // 5. Calculate minimum raise amount
-        const myCurrentBet = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
-        const deltaToCall = largestBet - myCurrentBet;
-        const minTotalBet = largestBet + this.game.bigBlind;
+        const playerBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
+
+        if (largestBet === 0n) {
+            throw new Error("Cannot raise - no bets have been placed yet.");
+        }
         
         // Check if player has enough chips for minimum raise
-        const additionalNeeded = minTotalBet - myCurrentBet;
+        const deltaToCall = (largestBet + this.game.bigBlind) - playerBets;
         
-        if (player.chips < additionalNeeded) {
+        if (player.chips < deltaToCall) {
             // Player can only go all-in
             return {
-                minAmount: myCurrentBet + player.chips, // Total amount if going all-in
-                maxAmount: myCurrentBet + player.chips
+                minAmount: playerBets + player.chips, // Total amount if going all-in
+                maxAmount: playerBets + player.chips
             };
         }
 
         return {
-            minAmount: minTotalBet,
-            maxAmount: myCurrentBet + player.chips // Total possible if going all-in
+            minAmount: deltaToCall,
+            maxAmount: player.chips // Total possible if going all-in
         };
-    }
-
-    protected getDeductAmount(player: Player, amount?: bigint): bigint {
-        if (!amount) return 0n;
-
-        // Calculate how much more the player needs to add to the pot
-        const currentRound = this.game.currentRound;
-        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
-        const currentBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
-        const delta = amount - currentBets;
-
-        // Return the amount to add (or player's entire stack if they don't have enough)
-        return delta > player.chips ? player.chips : delta;
     }
 }
 

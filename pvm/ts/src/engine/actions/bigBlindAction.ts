@@ -8,9 +8,9 @@ class BigBlindAction extends BaseAction implements IAction {
         return PlayerActionType.BIG_BLIND;
     }
 
-    verify(_player: Player): Range {
+    verify(player: Player): Range {
         // Player must be active (not sitting out)
-        super.verifyPlayerIsActive(_player);
+        super.verifyPlayerIsActive(player);
 
         // 1. Round state check: Big blind can only be posted during ANTE round
         if (this.game.currentRound !== TexasHoldemRound.ANTE) {
@@ -18,7 +18,7 @@ class BigBlindAction extends BaseAction implements IAction {
         }
 
         // 2. Player position check: Only the big blind position can post big blind
-        const seat = this.game.getPlayerSeatNumber(_player.address);
+        const seat = this.game.getPlayerSeatNumber(player.address);
         if (seat !== this.game.bigBlindPosition) {
             throw new Error("Only the big blind player can post the big blind.");
         }

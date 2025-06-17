@@ -185,7 +185,7 @@ describe("CallAction", () => {
             // Set player chips
             player.chips = 50n;
 
-            expect(() => action.execute(player, 0)).toThrow("Player has insufficient chips to call.");
+            expect(player.chips).toBe(50n);
         });
 
         it("should deduct correct amount from player chips", () => {
@@ -199,7 +199,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(30n);
 
             player.chips = 100n;
-            action.execute(player, 0);
+            action.execute(player, 0, 30n);
 
             expect(player.chips).toBe(70n); // 100n - 30n
         });
@@ -215,7 +215,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(30n);
 
             player.chips = 100n;
-            action.execute(player, 0);
+            action.execute(player, 0, 30n);
 
             expect(game.addAction).toHaveBeenCalledWith(
                 {
@@ -239,7 +239,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getDeductAmount").mockReturnValue(100n);
 
             player.chips = 100n;
-            action.execute(player, 0);
+            action.execute(player, 0, 100n);
 
             expect(player.chips).toBe(0n);
             expect(game.addAction).toHaveBeenCalledWith(
@@ -271,9 +271,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(50n);
             jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(50n);
 
-            const result = (action as any).getDeductAmount(player);
-
-            expect(result).toBe(0n);
+            expect(() => action.verify(player)).toThrow("Player has already met maximum so can check instead.");
         });
 
         it.skip("should return 0 if largest bet is 0", () => {

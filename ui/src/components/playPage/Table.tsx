@@ -47,9 +47,7 @@ import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import ActionsLog from "../ActionsLog";
-import ErrorsPanel from "../ErrorsPanel";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
-import { FaCode } from "react-icons/fa";
 
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
@@ -103,7 +101,9 @@ import { motion } from "framer-motion";
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 
-
+// Game Start Countdown
+import GameStartCountdown from "./common/GameStartCountdown";
+import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -137,17 +137,13 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
     
+    // Game Start Countdown
+    const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
     
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
-    const [errorLogs, setErrorLogs] = useState<any[]>([]);
     const publicKey = getPublicKey();
-
-    // Simple function to clear error logs
-    const clearErrorLogs = useCallback(() => {
-        setErrorLogs([]);
-    }, []);
 
     // Update to use the imported hook
     const tableDataValues = useTableData();
@@ -218,7 +214,6 @@ const Table = React.memo(() => {
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
-    const [debugMode, setDebugMode] = useState(false);
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
@@ -559,17 +554,6 @@ const Table = React.memo(() => {
                             {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                         </span>
 
-                        {/* Dev Mode Toggle Button */}
-                        <span
-                            className={`cursor-pointer transition-colors duration-200 px-1 sm:px-2 py-0.5 sm:py-1 rounded ml-1 sm:ml-2 ${
-                                debugMode ? "bg-red-500/30 text-red-400" : "text-gray-400 hover:text-blue-400"
-                            }`}
-                            onClick={() => setDebugMode(prev => !prev)}
-                            title="Developer Mode"
-                        >
-                            <FaCode size={12} />
-                        </span>
-
                         <span
                             className="text-gray-400 text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-2 sm:ml-3"
                             onClick={() => {
@@ -805,10 +789,14 @@ const Table = React.memo(() => {
                 </div>
             </div>
 
-            {/* Debug Error Panel */}
-            <div className={`debug-panel ${debugMode ? "block" : "hidden"}`}>
-                <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
-            </div>
+            {/* Game Start Countdown Modal */}
+            {showCountdown && gameStartTime && (
+                <GameStartCountdown 
+                    gameStartTime={gameStartTime}
+                    onCountdownComplete={handleCountdownComplete}
+                    onSkip={handleSkipCountdown}
+                />
+            )}
         </div>
     );
 });

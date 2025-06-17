@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
+import { KEYS, NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
@@ -72,16 +72,16 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         // Create transaction with correct direction of funds flow
         // For all other actions: URLSearchParams format
         const params = new URLSearchParams();
-        params.set("actiontype", this.action);
-        params.set("index", this.index.toString());
+        params.set(KEYS.ACTION_TYPE, this.action);
+        params.set(KEYS.INDEX, this.index.toString());
         
         // Extract clean data using the parser (single responsibility)
-        const paramsString = extractDataFromParams(this.data || "");
+        const paramsString = extractDataFromParams(this.data);
         
         console.log(`Performing action ${this.action} with index ${this.index} data ${paramsString}`);
         game.performAction(this.from, this.action, this.index, this.amount, paramsString);
         if (paramsString) {
-            params.set("data", paramsString);  // Use the clean extracted data, not the raw URLSearchParams string
+            params.set(KEYS.DATA, paramsString);  // Use KEYS.DATA instead of hardcoded "data"
         }
         
         const data = params.toString();

@@ -869,6 +869,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 return;
         }
 
+        if (amount !== undefined && amount < 0n) {
+            throw new Error("Amount cannot be negative or undefined for these action types.");
+        }
+
         // Verify player exists in the game
         if (!this.exists(address)) {
             throw new Error("Player not found.");
@@ -895,7 +899,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 new BetAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.CALL:
-                new CallAction(this, this._update).execute(player, index);
+                new CallAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.RAISE:
                 new RaiseAction(this, this._update).execute(player, index, _amount);
@@ -1112,22 +1116,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         return pot;
-    }
-
-    /**
-     * Gets the largest bet in a round
-     */
-    private getLargestBet(round: TexasHoldemRound = this.currentRound): bigint {
-        const bets = this.getBets(round);
-        let highestBet: bigint = 0n;
-
-        for (const [_, amount] of bets) {
-            if (amount > highestBet) {
-                highestBet = amount;
-            }
-        }
-
-        return highestBet;
     }
 
     /**

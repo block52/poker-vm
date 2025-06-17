@@ -1,4 +1,4 @@
-import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions, PlayerActionType, KEYS } from "@bitcoinbrisbane/block52";
 import { OrderedTransaction } from "../engine/types";
 import { ITransaction } from "../models/interfaces";
 
@@ -10,7 +10,7 @@ export const toGameOptions = (data: string): GameOptions => {
  * Extracts the data field from URLSearchParams formatted string
  * This ensures we have a single place that knows about URLSearchParams format
  */
-export const extractDataFromParams = (paramsString: string): string | undefined => {
+export const extractDataFromParams = (paramsString?: string): string | undefined => {
     if (!paramsString) {
         return undefined;
     }
@@ -18,7 +18,7 @@ export const extractDataFromParams = (paramsString: string): string | undefined 
     try {
         // Parse URLSearchParams format
         const params = new URLSearchParams(paramsString);
-        let data = params.get("data");
+        let data = params.get(KEYS.DATA);
         
         if (data === "undefined" || data === null) {
             return undefined;
@@ -40,11 +40,11 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         // Parse URLSearchParams format
         const params = new URLSearchParams(tx.data);
         
-        const actionType = params.get("actionType");
-        const indexStr = params.get("index");
+        const actionType = params.get(KEYS.ACTION_TYPE);
+        const indexStr = params.get(KEYS.INDEX);
         
         if (!actionType || !indexStr) {
-            throw new Error(`Invalid transaction data format: missing actionType or index in ${tx.data}`);
+            throw new Error(`Invalid transaction data format: missing ${KEYS.ACTION_TYPE} or ${KEYS.INDEX} in ${tx.data}`);
         }
 
         const action = actionType.trim() as PlayerActionType;
@@ -55,7 +55,7 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         }
 
         // Get additional data if present
-        let data = params.get("data");
+        let data = params.get(KEYS.DATA);
         if (data === "undefined" || data === null) {
             data = null;
         }

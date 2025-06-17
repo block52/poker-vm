@@ -4,7 +4,7 @@ import { Player } from "../models/player";
 export interface IAction {
     readonly type: PlayerActionType | NonPlayerActionType;
     verify(player: Player): Range;
-    execute(player: Player, index: number, amount?: bigint): void;
+    execute(player: Player, index: number, amount: bigint): void;
 }
 
 export interface IPoker {

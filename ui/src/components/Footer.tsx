@@ -269,8 +269,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         if (callAction) {
             try {
-                // NOTE: This uses callAction.min directly via the backend (not the display calculation)
-                await callHand(tableId);
+                // Use our function to bet with the current raiseAmount
+                const amountWei = ethers.parseUnits(callAmount.toString(), 18).toString();
+                await callHand(tableId, amountWei);
             } catch (error: any) {
                 console.error("Failed to call:", error);
             }
@@ -618,7 +619,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                             onClick={handleCall}
                                         >
-                                            CALL <span className="text-[#ffffff]">${getSumAndMinCallAmountForDisplay().toFixed(2)}</span>
+                                            CALL <span className="text-[#ffffff]">${callAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (

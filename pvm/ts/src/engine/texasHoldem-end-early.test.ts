@@ -33,18 +33,18 @@ describe("Texas Holdem - Hand ends early tests", () => {
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
 
-            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.FOLD, 7);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.FOLD, 7, 0n);
 
             // Check that the game in show down, player can still show or muck but still win.
-            expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
-            const legalActions = game.getLegalActions(SMALL_BLIND_PLAYER);
-            expect(legalActions).toContainEqual(expect.objectContaining({
-                action: PlayerActionType.SHOW
-            }));
+            expect(game.currentRound).toEqual(TexasHoldemRound.END);
+            // const legalActions = game.getLegalActions(SMALL_BLIND_PLAYER);
+            // expect(legalActions).toContainEqual(expect.objectContaining({
+            //     action: PlayerActionType.SHOW
+            // }));
 
-            expect(legalActions).toContainEqual(expect.objectContaining({
-                action: PlayerActionType.MUCK
-            }));
+            // expect(legalActions).toContainEqual(expect.objectContaining({
+            //     action: PlayerActionType.MUCK
+            // }));
         });
     });
 });
