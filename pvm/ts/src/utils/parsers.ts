@@ -10,7 +10,7 @@ export const toGameOptions = (data: string): GameOptions => {
  * Extracts the data field from URLSearchParams formatted string
  * This ensures we have a single place that knows about URLSearchParams format
  */
-export const extractDataFromParams = (paramsString: string): string | undefined => {
+export const extractDataFromParams = (paramsString?: string): string | undefined => {
     if (!paramsString) {
         return undefined;
     }

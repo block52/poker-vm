@@ -347,7 +347,6 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with seed information
         const params = new URLSearchParams();
-        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.NEW_HAND);
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.DATA, seed);
         const formattedData = params.toString();
@@ -511,7 +510,6 @@ export class NodeRpcClient implements IClient {
 
             // Generate URLSearchParams formatted data
             const params = new URLSearchParams();
-            params.set(KEYS.ACTION_TYPE, action);
             params.set(KEYS.INDEX, index.toString());
             if (data) {
                 params.set(KEYS.DATA, data);
@@ -550,7 +548,6 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data
         const params = new URLSearchParams();
-        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.LEAVE);
         params.set(KEYS.INDEX, index.toString());
         const formattedData = params.toString();
 
@@ -581,7 +578,6 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with publicKey information
         const params = new URLSearchParams();
-        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.DEAL);
         params.set(KEYS.INDEX, index.toString());
         if (publicKey) {
             params.set(KEYS.DATA, publicKey);
