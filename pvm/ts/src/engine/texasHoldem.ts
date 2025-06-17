@@ -138,7 +138,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     private loadPreviousActions(previousActions: ActionDTO[]): void {
         for (const action of previousActions) {
-            const timestamp = Date.now();
             // Create TurnWithSeat directly, preserving the original seat number
             const turnWithSeat: TurnWithSeat = {
                 playerId: action.playerId,
@@ -146,7 +145,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 amount: action.amount ? BigInt(action.amount) : undefined,
                 index: action.index,
                 seat: action.seat,
-                timestamp
+                timestamp: action.timestamp,
             };
 
             // Check if the round already exists in the map
@@ -1351,12 +1350,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Create winners array
         const winners: WinnerDTO[] = json.winners || [];
-
-        // Reconstruct lastActedSeat from nextToAct
-        let lastActedSeat: number = json.smallBlindPosition;
-        if (json.previousActions && json.previousActions.length > 0) {
-            lastActedSeat = json.previousActions[json.previousActions.length - 1]?.seat;
-        }
 
         // Create and return new game instance
         return new TexasHoldemGame(
