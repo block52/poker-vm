@@ -14,6 +14,10 @@ class MuckAction extends BaseAction implements IAction {
             throw new Error("Game is not in showdown round.");
         }
 
+        if (this.game.getActionsForRound(TexasHoldemRound.SHOWDOWN).length === 0) {
+            throw new Error("A player must show first.");
+        }
+
         return { minAmount: 0n, maxAmount: 0n };
     }
 
