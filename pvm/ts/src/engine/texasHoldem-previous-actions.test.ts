@@ -2,7 +2,7 @@
 import TexasHoldemGame from "./texasHoldem";
 import { fromTestJson } from "./testConstants";
 
-export const json = {
+const json = {
     "id": "1",
     "result": {
         "data": {
