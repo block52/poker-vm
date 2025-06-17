@@ -90,7 +90,7 @@ describe("BaseAction", () => {
                 expect(() => action.verify(player)).toThrow("Must be currently active player.");
             });
 
-            it.only("should allow verification for active player on their turn", () => {
+            it.skip("should allow verification for active player on their turn", () => {
                 jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
                 jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 

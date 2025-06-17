@@ -271,9 +271,7 @@ describe("CallAction", () => {
             jest.spyOn(action as any, "getLargestBet").mockReturnValue(50n);
             jest.spyOn(game, "getPlayerTotalBets").mockReturnValue(50n);
 
-            const result = (action as any).getDeductAmount(player);
-
-            expect(result).toBe(0n);
+            expect(() => action.verify(player)).toThrow("Player has already met maximum so can check instead.");
         });
 
         it.skip("should return 0 if largest bet is 0", () => {
