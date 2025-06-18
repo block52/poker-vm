@@ -18,8 +18,11 @@ class MuckAction extends BaseAction implements IAction {
             throw new Error("A player must show first.");
         }
 
-        if (this.game.winners?.has(player.address)) {
-            throw new Error("Cannot muck winning hand.");
+        if (player.holeCards) {
+            const cards: string[] = player.holeCards.map(card => card.toString());
+            if (this.game.findWinners(cards)) {
+                throw new Error("Cannot muck winning hand.");
+            }
         }
 
         return { minAmount: 0n, maxAmount: 0n };
