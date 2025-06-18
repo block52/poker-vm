@@ -1271,7 +1271,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     status: _player.status,
                     lastAction: lastAction,
                     legalActions: legalActions,
-                    sumOfBets: this.getPlayerTotalBets(_player.address).toString(),
+                    sumOfBets: this.getPlayerTotalBets(_player.address, this.currentRound, this.currentRound === TexasHoldemRound.PREFLOP).toString(),
                     timeout: 0,
                     signature: ethers.ZeroHash
                 };

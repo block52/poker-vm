@@ -99,14 +99,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    // Display function: shows comprehensive call amount for user UI
-    // NOTE: This is for DISPLAY ONLY - actual transaction uses callAction.min (via callHand)
-    const getSumAndMinCallAmountForDisplay = (): number => {
+    // Display function: shows total amount player will have contributed after bet/raise action
+    // NOTE: This is for DISPLAY ONLY - shows cumulative amount for Texas Hold'em betting
+    const getDisplayAmountForBetRaiseAction = (): number => {
         const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
-
-        if (callAction && !previousActions) {
-            return Number(ethers.formatUnits(callAction.min || "0", 18));
-        }
 
         // Find all previous bets and raises for this round
         let previousBetsAndRaises = previousActions?.filter(
@@ -128,13 +124,19 @@ const PokerActionPanel: React.FC = React.memo(() => {
             previousBetsAndRaises = previousBetsAndRaises?.filter(action => action.round === gameState?.round);
         }
 
-        const sum =
+        const previousAmountThisRound =
             previousBetsAndRaises?.reduce((sum, action) => {
                 const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
                 return sum + amount;
             }, 0) || 0;
 
-        return sum + callAmount;
+        // For bet/raise, show what the total contribution will be after this action
+        // In preflop, we need to add the raise amount to previous contributions from ante round
+        if (gameState?.round === TexasHoldemRound.PREFLOP) {
+            return previousAmountThisRound + raiseAmount;
+        }
+        
+        return Math.max(raiseAmount, previousAmountThisRound);
     };
 
     // Big Blind Value - handle null gameOptions during loading
@@ -632,7 +634,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
     px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
     transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
                                         >
-                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
+                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${getDisplayAmountForBetRaiseAction().toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
