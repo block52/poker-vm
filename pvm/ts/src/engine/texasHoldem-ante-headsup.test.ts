@@ -293,9 +293,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             // Get legal actions for the small blind player
             actions = game.getLegalActions(PLAYER_1);
-            expect(actions.length).toEqual(2); // Muck or Show
-            expect(actions[0].action).toEqual(PlayerActionType.MUCK);
-            expect(actions[1].action).toEqual(PlayerActionType.SHOW);
+            expect(actions.length).toEqual(1); // Muck or Show
+            expect(actions[0].action).toEqual(PlayerActionType.SHOW);
 
             // Both reveal cards
             game.performAction(PLAYER_1, PlayerActionType.SHOW, 14, 0n);

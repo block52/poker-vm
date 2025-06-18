@@ -25,7 +25,7 @@ async function main() {
     console.log(chalk.green("Connected to MongoDB database."));
     console.log(chalk.green("Using DB: " + connectionString));
 
-    const NODE_URL = process.env.NODE_URL || "https://nodd1.block52.xzy"; // Replace with your Ethereum node URL
+    const NODE_URL = process.env.NODE_URL || "https://node1.block52.xzy"; // Replace with your Ethereum node URL
     if (!NODE_URL) {
         console.error(chalk.red("No Ethereum node URL provided. Please set the NODE_URL environment variable."));
         process.exit(1);
