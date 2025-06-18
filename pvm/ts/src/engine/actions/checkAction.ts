@@ -61,7 +61,7 @@ class CheckAction extends BaseAction implements IAction {
         }
 
         // 4. General case: Can only check if player has matched the largest bet
-        if (playerBet < largestBet) {
+        if (playerBet <= largestBet) {
             throw new Error("Player must match the largest bet to check.");
         }
 
