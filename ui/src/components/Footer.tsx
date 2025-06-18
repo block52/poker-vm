@@ -99,44 +99,17 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    // Display function: shows total amount player will have contributed after bet/raise action
-    // NOTE: This is for DISPLAY ONLY - shows cumulative amount for Texas Hold'em betting
+    // Display function: shows the bet size for the current betting round
+    // NOTE: This is for DISPLAY ONLY - shows the raise amount for current round in Texas Hold'em
     const getDisplayAmountForBetRaiseAction = (): number => {
-        const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
-
-        // Find all previous bets and raises for this round
-        let previousBetsAndRaises = previousActions?.filter(
-            action =>
-                action.action === PlayerActionType.BET ||
-                action.action === PlayerActionType.RAISE ||
-                action.action === PlayerActionType.CALL ||
-                action.action === PlayerActionType.SMALL_BLIND ||
-                action.action === PlayerActionType.BIG_BLIND
-        );
-
-        if (gameState?.round === TexasHoldemRound.PREFLOP) {
-            // For pre-flop, we only consider the last bet or raise
-            previousBetsAndRaises = previousBetsAndRaises?.filter(
-                action => action.round === TexasHoldemRound.PREFLOP || action.round === TexasHoldemRound.ANTE
-            );
-        } else {
-            // For post-flop rounds, consider all bets and raises
-            previousBetsAndRaises = previousBetsAndRaises?.filter(action => action.round === gameState?.round);
-        }
-
-        const previousAmountThisRound =
-            previousBetsAndRaises?.reduce((sum, action) => {
-                const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
-                return sum + amount;
-            }, 0) || 0;
-
-        // For bet/raise, show what the total contribution will be after this action
-        // In preflop, we need to add the raise amount to previous contributions from ante round
-        if (gameState?.round === TexasHoldemRound.PREFLOP) {
-            return previousAmountThisRound + raiseAmount;
+        // If user hasn't interacted with slider (raiseAmount equals minRaise), show total contribution
+        if (gameState?.round === TexasHoldemRound.PREFLOP && raiseAmount === minRaise) {
+            const currentSumOfBets = userPlayer?.sumOfBets ? Number(ethers.formatUnits(userPlayer.sumOfBets, 18)) : 0;
+            return currentSumOfBets + raiseAmount;
         }
         
-        return Math.max(raiseAmount, previousAmountThisRound);
+        // If user has moved slider, show their chosen amount
+        return raiseAmount;
     };
 
     // Big Blind Value - handle null gameOptions during loading
