@@ -11,7 +11,7 @@ describe("NewCommand", () => {
     });
 
     describe("constructor", () => {
-        it("should throw error when deposit index is not provided", () => {
+        it("should generate seed with exactly 52 numbers", () => {
             const newCommand = new NewCommand(ethers.ZeroAddress, 1, 1, VALID_PRIVATE_KEY, "29-34-15-41-5-21-9-23-37-5-17-13-11-1-40-44-16-21-42-46-41-23-34-30-48-36-32-33-40-7-9-3-30-42-2-19-24-34-24-46-2-31-10-43-49-11-29-49-49-23-14-2");
             const seed = newCommand.seed;
 
