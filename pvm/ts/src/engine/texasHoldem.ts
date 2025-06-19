@@ -632,6 +632,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         if (activePlayers.length <= 1) {
             if (this.currentRound !== TexasHoldemRound.ANTE && activePlayers.length === 1) {
                 this._currentRound = TexasHoldemRound.SHOWDOWN;
+                this.calculateWinner();
             }
             return true;
         }

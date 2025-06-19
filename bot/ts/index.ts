@@ -5,6 +5,7 @@ import { CheckBot } from "./CheckBot";
 import { connectDB } from "./mongoConnection";
 import Bots from "./schema/bots";
 import { RaiseOrCallBot } from "./RaiseOrCallBot";
+import { RandomBot } from "./RandomBot";
 
 dotenv.config();
 
@@ -92,6 +93,17 @@ async function main() {
                     tableAddress.push(bot.tableAddress);
                 }
             }
+
+            if (bot.type === "random") {
+                const randomBot: IBot = new RandomBot(bot.tableAddress, NODE_URL, bot.privateKey);
+
+                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
+                const joined = await randomBot.joinGame();
+                if (joined) {
+                    _bots.push(randomBot);
+                    tableAddress.push(bot.tableAddress);
+                }
+            }
         }
     }
 
@@ -125,6 +137,11 @@ async function main() {
                     console.log(chalk.green(`Performing raise or call action for bot with address: ${botDocument.address}`));
                     // Create a new RaiseOrCallBot instance for this bot
                     bot = new RaiseOrCallBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
+                    break;
+                case "random":
+                    console.log(chalk.green(`Performing random action for bot with address: ${botDocument.address}`));
+                    // Create a new RandomBot instance for this bot
+                    bot = new RandomBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
                     break;
                 default:
                     console.error(chalk.red(`Unknown bot type: ${botDocument.type} for address: ${botDocument.address}`));
