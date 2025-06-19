@@ -2,7 +2,6 @@ import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { IJSONModel } from "./interfaces";
 import { Card, SUIT } from "@bitcoinbrisbane/block52";
-import e from "express";
 
 export interface IDeck {
     shuffle(seed?: number[]): void;

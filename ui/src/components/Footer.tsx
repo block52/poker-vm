@@ -378,7 +378,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         if (!tableId) return;
 
         // Simple call - let errors bubble up naturally
-        await startNewHand(tableId, seed);
+        await startNewHand(tableId);
     };
 
     // Check if player is sitting out

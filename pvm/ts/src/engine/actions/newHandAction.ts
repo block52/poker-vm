@@ -26,7 +26,6 @@ class NewHandAction extends BaseAction implements IAction {
         // First verify the action
         this.verify(player);
         const deck = new Deck();
-        // const seed: Number[] = Array.from(this.data, digit => parseInt(digit, 10));
         const seed: number[] = this.data.split("-").map(Number);
         if (seed.length !== 52) {
             throw new Error("Seed must contain exactly 52 numbers separated by dashes");
