@@ -343,7 +343,7 @@ export class NodeRpcClient implements IClient {
 
         const signature = await this.getSignature(nonce);
         const index = await this.getNextActionIndex(gameAddress, address);
-        const seed: string = NodeRpcClient.generateRandomNumberString(true);
+        const seed: string = NodeRpcClient.generateRandomSequence(52);
 
         // Generate URLSearchParams formatted data with seed information
         const params = new URLSearchParams();
@@ -640,9 +640,9 @@ export class NodeRpcClient implements IClient {
             throw new Error("Game state not found");
         }
 
-        // Create an array of available seats from 1 to to gameState.gameOptions.maxSeats
-        const maxSeats = gameState.gameOptions.maxPlayers || 9; // Default to 9 if not specified
-        let seats = Array.from({ length: maxSeats }, (_, i) => i + 1);
+        if (!gameState.players || gameState.players.length === 0) {
+            return [];
+        }
 
         // Reduce players.seats to an array of available seats
         const occupiedSeats = gameState.players
@@ -673,5 +673,26 @@ export class NodeRpcClient implements IClient {
 
         // Join the digits into a string
         return digits;
+    }
+
+    public static generateRandomSequence(length: number = 52): string {
+        // Create an array to store our random digits
+        const digits = Array.from({length: length}, (_, i) => i + 1);
+
+        // Step 2: Use Fisher-Yates shuffle with crypto.getRandomValues()
+        for (let i = digits.length - 1; i > 0; i--) {
+            // Generate a cryptographically secure random number
+            const randomArray = new Uint32Array(1);
+            crypto.getRandomValues(randomArray);
+            
+            // Convert to index in range [0, i]
+            const j = Math.floor((randomArray[0] / (2**32)) * (i + 1));
+            
+            // Swap elements
+            [digits[i], digits[j]] = [digits[j], digits[i]];
+        }
+
+        // Join the digits into a string
+        return digits.join("-");
     }
 }
