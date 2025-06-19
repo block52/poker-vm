@@ -377,8 +377,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const handleStartNewHand = async () => {
         if (!tableId) return;
 
-        const seed = Math.random().toString(36).substring(2, 15);
-
         // Simple call - let errors bubble up naturally
         await startNewHand(tableId, seed);
     };

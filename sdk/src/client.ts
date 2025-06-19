@@ -343,7 +343,7 @@ export class NodeRpcClient implements IClient {
 
         const signature = await this.getSignature(nonce);
         const index = await this.getNextActionIndex(gameAddress, address);
-        const seed: string = NodeRpcClient.generateRandomNumberString();
+        const seed: string = NodeRpcClient.generateRandomNumberString(true);
 
         // Generate URLSearchParams formatted data with seed information
         const params = new URLSearchParams();
@@ -653,8 +653,8 @@ export class NodeRpcClient implements IClient {
         return occupiedSeats;
     }
 
-    public static generateRandomNumberString(dash: boolean = false): string {
-        const digits = NodeRpcClient.generateRandomNumber();
+    public static generateRandomNumberString(dash: boolean = false, length: number = 52, range: number = 52): string {
+        const digits = NodeRpcClient.generateRandomNumber(length, range);
         // Join the digits into a string
         return dash ? digits.join("-") : digits.join("");
     }
