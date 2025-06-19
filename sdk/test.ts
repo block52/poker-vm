@@ -12,6 +12,9 @@ const PLAYER_2_PRIVATE_KEY = process.env.PLAYER_2_PRIVATE_KEY;
 const client1 = new NodeRpcClient("http://localhost:3000", PLAYER_1_PRIVATE_KEY || "");
 const client2 = new NodeRpcClient("http://localhost:3000", PLAYER_2_PRIVATE_KEY || "");
 
+const random = NodeRpcClient.generateRandomNumberString(true);
+console.log("Random number string:", random);
+
 // const P1 = TABLE_ID;
 // const P2 = "0xC84737526E425D7549eF20998Fa992f88EAC2484";
 
