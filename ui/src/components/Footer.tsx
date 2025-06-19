@@ -21,8 +21,87 @@ import { startNewHand } from "../hooks/playerActions/startNewHand";
 import { usePlayerTimer } from "../hooks/usePlayerTimer";
 import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
+import { useTableData } from "../hooks/useTableData";
 
 import { ethers } from "ethers";
+
+// Separate Bet Action Component
+const BetActionComponent: React.FC<{
+    minBet: number;
+    maxBet: number;
+    raiseAmount: number;
+    isRaiseAmountInvalid: boolean;
+    isPlayerTurn: boolean;
+    handleBet: () => void;
+    getDisplayAmountForBetRaiseAction: () => number;
+    potValues: string;
+}> = ({ minBet, maxBet, raiseAmount, isRaiseAmountInvalid, isPlayerTurn, handleBet, getDisplayAmountForBetRaiseAction, potValues }) => {
+    // Backend values (from legal actions)
+    const backendMinBet = minBet;
+    const backendMaxBet = maxBet;
+    
+    // Display values (what user sees)
+    const displayBetAmount = getDisplayAmountForBetRaiseAction();
+    
+    // Final sent value (what gets sent to backend)
+    const finalSentBetAmount = raiseAmount;
+    
+    // Console logging for bet values with pot information
+    console.log(`🎯 BET VALUES - Backend Sent: min=${backendMinBet.toFixed(2)} max=${backendMaxBet.toFixed(2)} | Display: ${displayBetAmount.toFixed(2)} | Sending: ${finalSentBetAmount.toFixed(2)} | Current Pots: ${potValues}`);
+    
+    return (
+        <button
+            onClick={handleBet}
+            disabled={isRaiseAmountInvalid || !isPlayerTurn}
+            className={`${
+                isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
+            } bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce]/90 hover:to-[#9333ea]/90 active:from-[#9333ea] active:to-[#a855f7]
+px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
+transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
+        >
+            BET <span className="text-[#ffffff]">${displayBetAmount.toFixed(2)}</span>
+        </button>
+    );
+};
+
+// Separate Raise Action Component
+const RaiseActionComponent: React.FC<{
+    minRaise: number;
+    maxRaise: number;
+    raiseAmount: number;
+    isRaiseAmountInvalid: boolean;
+    isPlayerTurn: boolean;
+    handleRaise: () => void;
+    getDisplayAmountForBetRaiseAction: () => number;
+    potValues: string;
+}> = ({ minRaise, maxRaise, raiseAmount, isRaiseAmountInvalid, isPlayerTurn, handleRaise, getDisplayAmountForBetRaiseAction, potValues }) => {
+    // Backend values (from legal actions)
+    const backendMinRaise = minRaise;
+    const backendMaxRaise = maxRaise;
+    
+    // Display values (what user sees)
+    const displayRaiseAmount = getDisplayAmountForBetRaiseAction();
+    
+    // Final sent value (what gets sent to backend)
+    const finalSentRaiseAmount = raiseAmount;
+    
+    // Console logging for raise values with pot information
+    console.log(`🚀 RAISE VALUES - Backend Sent: min=${backendMinRaise.toFixed(2)} max=${backendMaxRaise.toFixed(2)} | Display: ${displayRaiseAmount.toFixed(2)} | Sending: ${finalSentRaiseAmount.toFixed(2)} | Current Pots: ${potValues}`);
+    
+    return (
+        <button
+            onClick={handleRaise}
+            disabled={isRaiseAmountInvalid || !isPlayerTurn}
+            className={`${
+                isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
+            } bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce]/90 hover:to-[#9333ea]/90 active:from-[#9333ea] active:to-[#a855f7]
+px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
+transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
+        >
+            RAISE TO <span className="text-[#ffffff]">${displayRaiseAmount.toFixed(2)}</span>
+        </button>
+    );
+};
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -42,6 +121,21 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState();
+    
+    // Get table data for pot values
+    const { tableDataPots } = useTableData();
+    
+    // Format pot values for console logging
+    const potValues = useMemo(() => {
+        if (!tableDataPots || tableDataPots.length === 0) {
+            return "Pot1: 0.00";
+        }
+        
+        return tableDataPots.slice(0, 4).map((pot, index) => {
+            const potAmount = Number(ethers.formatUnits(pot || "0", 18));
+            return `Pot${index + 1}: ${potAmount.toFixed(2)}`;
+        }).join(" ");
+    }, [tableDataPots]);
 
     const [publicKey, setPublicKey] = useState<string>();
     const [privateKey, setPrivateKey] = useState<string>();
@@ -99,13 +193,31 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
+    // Calculate proper poker minimum raise based on last two bets
+    const calculateMinimumRaise = (): number => {
+        if (!gameState?.players) return 0;
+        
+        // Get all players' current sumOfBets and sort by amount
+        const playerBets = gameState.players
+            .map(player => Number(ethers.formatUnits(player.sumOfBets || "0", 18)))
+            .sort((a, b) => b - a); // Sort descending
+        
+        if (playerBets.length < 2) return 0;
+        
+        const lastBet = playerBets[0];      // Highest bet
+        const secondLastBet = playerBets[1]; // Second highest bet
+        const difference = lastBet - secondLastBet;
+        
+        // Minimum raise = last bet + difference
+        return lastBet + difference;
+    };
+
     // Display function: shows the bet size for the current betting round
     // NOTE: This is for DISPLAY ONLY - shows the raise amount for current round in Texas Hold'em
     const getDisplayAmountForBetRaiseAction = (): number => {
-        // If user hasn't interacted with slider (raiseAmount equals minRaise), show total contribution
-        if (gameState?.round === TexasHoldemRound.PREFLOP && raiseAmount === minRaise) {
-            const currentSumOfBets = userPlayer?.sumOfBets ? Number(ethers.formatUnits(userPlayer.sumOfBets, 18)) : 0;
-            return currentSumOfBets + raiseAmount;
+        // If user hasn't interacted with slider, show proper poker minimum raise
+        if (raiseAmount === minRaise) {
+            return calculateMinimumRaise();
         }
         
         // If user has moved slider, show their chosen amount
@@ -263,6 +375,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         // Use our function to bet with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+        
+        // Console log final sent bet values
+        console.log(`📤 FINAL SENT BET VALUES - Amount: ${raiseAmount.toFixed(2)} | Wei: ${amountWei}`);
 
         try {
             await betHand(tableId, amountWei);
@@ -279,6 +394,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         // Use our function to raise with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+        
+        // Console log final sent raise values
+        console.log(`📤 FINAL SENT RAISE VALUES - Amount: ${raiseAmount.toFixed(2)} | Wei: ${amountWei}`);
 
         try {
             await raiseHand(tableId, amountWei);
@@ -597,18 +715,29 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             CALL <span className="text-[#ffffff]">${callAmount.toFixed(2)}</span>
                                         </button>
                                     )}
-                                    {(hasRaiseAction || hasBetAction) && (
-                                        <button
-                                            onClick={hasRaiseAction ? handleRaise : handleBet}
-                                            disabled={isRaiseAmountInvalid || !isPlayerTurn}
-                                            className={`${
-                                                isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
-                                            } bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce]/90 hover:to-[#9333ea]/90 active:from-[#9333ea] active:to-[#a855f7]
-    px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
-    transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
-                                        >
-                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${getDisplayAmountForBetRaiseAction().toFixed(2)}</span>
-                                        </button>
+                                    {hasRaiseAction && (
+                                        <RaiseActionComponent
+                                            minRaise={minRaise}
+                                            maxRaise={maxRaise}
+                                            raiseAmount={raiseAmount}
+                                            isRaiseAmountInvalid={isRaiseAmountInvalid}
+                                            isPlayerTurn={isPlayerTurn}
+                                            handleRaise={handleRaise}
+                                            getDisplayAmountForBetRaiseAction={getDisplayAmountForBetRaiseAction}
+                                            potValues={potValues}
+                                        />
+                                    )}
+                                    {hasBetAction && (
+                                        <BetActionComponent
+                                            minBet={minBet}
+                                            maxBet={maxBet}
+                                            raiseAmount={raiseAmount}
+                                            isRaiseAmountInvalid={isRaiseAmountInvalid}
+                                            isPlayerTurn={isPlayerTurn}
+                                            handleBet={handleBet}
+                                            getDisplayAmountForBetRaiseAction={getDisplayAmountForBetRaiseAction}
+                                            potValues={potValues}
+                                        />
                                     )}
                                 </div>
 
