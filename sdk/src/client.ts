@@ -653,13 +653,13 @@ export class NodeRpcClient implements IClient {
         return occupiedSeats;
     }
 
-    public static generateRandomNumberString(): string {
+    public static generateRandomNumberString(dash: boolean = false): string {
         const digits = NodeRpcClient.generateRandomNumber();
         // Join the digits into a string
-        return digits.join("");
+        return dash ? digits.join("-") : digits.join("");
     }
 
-    public static generateRandomNumber(length: number = 52): number[] {
+    public static generateRandomNumber(length: number = 52, range: number = 52): number[] {
         // Create an array to store our random digits
         const digits = new Array(length);
 
@@ -668,12 +668,7 @@ export class NodeRpcClient implements IClient {
         crypto.getRandomValues(randomValues);
 
         for (let i = 0; i < length; i++) {
-            digits[i] = randomValues[i];
-        }
-
-        // Ensure the first digit isn't 0 to maintain the exact length
-        if (digits[0] === 0) {
-            digits[0] = 1 + (randomValues[0] % 9); // Random digit from 1-9
+            digits[i] = (randomValues[i] % range) + 1; // Convert 0-255 to 1-52
         }
 
         // Join the digits into a string
