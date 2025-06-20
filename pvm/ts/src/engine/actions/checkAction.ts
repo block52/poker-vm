@@ -32,10 +32,10 @@ class CheckAction extends BaseAction implements IAction {
             return { minAmount: 0n, maxAmount: 0n };
         }
 
-        // 2.2 If player has already matched the largest bet, they can check
-        if (playerBet >= largestBet) {
-            return { minAmount: 0n, maxAmount: 0n };
-        }
+        // // 2.2 If player has already matched the largest bet, they can check
+        // if (playerBet === largestBet) {
+        //     return { minAmount: 0n, maxAmount: 0n };
+        // }
         
         // I think all of this is  unnecessary, but leaving it here for now
         // 3. Special case for preflop round
