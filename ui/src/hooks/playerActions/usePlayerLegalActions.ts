@@ -2,6 +2,7 @@ import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerLegalActionsResult } from "./types";
 import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
 import { useRef, useMemo, useState, useEffect } from "react";
+import { ethers } from "ethers";
 
 // 🔍 DEBUG: Enhanced logging utility for easy data export (same as GameStateContext)
 const debugLog = (eventType: string, data: any) => {
@@ -117,6 +118,24 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
                 }
 
                 actionTurnIndex = firstActionIndex;
+            }
+
+            // Console log backend values for bet/raise actions
+            if (Array.isArray(currentPlayer.legalActions)) {
+                const betAction = currentPlayer.legalActions.find(action => action.action === PlayerActionType.BET);
+                const raiseAction = currentPlayer.legalActions.find(action => action.action === PlayerActionType.RAISE);
+                
+                if (betAction) {
+                    const backendMinBet = betAction.min ? Number(ethers.formatUnits(betAction.min, 18)) : 0;
+                    const backendMaxBet = betAction.max ? Number(ethers.formatUnits(betAction.max, 18)) : 0;
+                    console.log(`📥 BACKEND BET VALUES - min=${backendMinBet.toFixed(2)} max=${backendMaxBet.toFixed(2)} | Raw: min=${betAction.min} max=${betAction.max}`);
+                }
+                
+                if (raiseAction) {
+                    const backendMinRaise = raiseAction.min ? Number(ethers.formatUnits(raiseAction.min, 18)) : 0;
+                    const backendMaxRaise = raiseAction.max ? Number(ethers.formatUnits(raiseAction.max, 18)) : 0;
+                    console.log(`📥 BACKEND RAISE VALUES - min=${backendMinRaise.toFixed(2)} max=${backendMaxRaise.toFixed(2)} | Raw: min=${raiseAction.min} max=${raiseAction.max}`);
+                }
             }
 
             // Extract and return all the relevant information

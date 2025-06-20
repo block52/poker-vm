@@ -22,14 +22,15 @@ class BetAction extends BaseAction implements IAction {
             throw new Error("Cannot bet in the showdown round.");
         }
 
-        // 2. Bet matching check: Player must match existing bets before betting
+        // 2. Use new betting tracking logic
+        const currentBet = this.game.currentBet;
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
         const largestBet = this.getLargestBet(includeBlinds);
         const playerBets = this.game.getPlayerTotalBets(player.address);
 
         // 3. Round-specific checks for preflop
         if (currentRound === TexasHoldemRound.PREFLOP) {
-            if (largestBet === 0n) {
+            if (largestBet === 0n && currentBet === 0n) {
                 // Special case for small blind position in PREFLOP
                 if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
                     throw new Error("Can only post small blind.");
@@ -39,18 +40,18 @@ class BetAction extends BaseAction implements IAction {
                 return { minAmount: this.game.bigBlind, maxAmount: player.chips };
             }
 
-            if (largestBet === this.game.smallBlind) {
+            if (largestBet === this.game.smallBlind || currentBet > 0n) {
                 // Player can reopen the betting with a minimum of big blind
                 return { minAmount: this.game.bigBlind, maxAmount: player.chips };
             }
         }
 
+        // 4. Check if there are existing bets that need to be matched first
         if (largestBet > playerBets && largestBet > 0n) {
-            // console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${playerBets}`);
             throw new Error("Player must call or raise.");
         }
 
-        // 4. Chip stack check: Determine betting range based on player's chips
+        // 5. Chip stack check: Determine betting range based on player's chips
         if (player.chips < this.game.bigBlind) {
             // All-in is the only option if player has less than minimum bet
             return { minAmount: player.chips, maxAmount: player.chips };

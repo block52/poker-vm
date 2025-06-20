@@ -129,6 +129,11 @@ export type TexasHoldemGameState = {
     handNumber: number;
     round: TexasHoldemRound;
     winners: string[];
+    previousBet?: string;
+    currentBet?: string;
+    lastRaiseAmount?: string;
+    minRaiseTo?: string;
+    sliderIncrement?: string;
     signature: string;
 };
 
@@ -150,6 +155,11 @@ export type TexasHoldemStateDTO = {
     handNumber: number;
     round: TexasHoldemRound;
     winners: WinnerDTO[];
+    previousBet?: string;
+    currentBet?: string;
+    lastRaiseAmount?: string;
+    minRaiseTo?: string;
+    sliderIncrement?: string;
     signature: string;
 };
 

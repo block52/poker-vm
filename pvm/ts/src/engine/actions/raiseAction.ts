@@ -35,7 +35,12 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise in the showdown round.");
         }
 
-        // 3. Find who has the largest bet for this round
+        // 3. Use new betting tracking logic for minimum raise calculation
+        const currentBet = this.game.currentBet;
+        const lastRaiseAmount = this.game.lastRaiseAmount;
+        const minRaiseTo = this.game.getMinRaiseTo();
+        
+        // 4. Find who has the largest bet for this round to prevent self-raising
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
         
         let largestBet = 0n;
@@ -50,13 +55,14 @@ class RaiseAction extends BaseAction implements IAction {
             }
         }
         
-        // 4. Cannot raise if I have the largest bet (can't raise myself)
+        // 5. Cannot raise if I have the largest bet (can't raise myself)
         if (largestBetPlayer === player.address) {
-
             // Special case for PREFLOP round, and the player is the big blind
             if (currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
+                // Use minimum raise calculation or big blind, whichever is larger
+                const minRaise = Math.max(Number(minRaiseTo), Number(this.game.bigBlind));
                 return {
-                    minAmount: this.game.bigBlind, // Must raise by at least big blind
+                    minAmount: BigInt(minRaise), 
                     maxAmount: player.chips // Can go all-in
                 };
             }
@@ -64,15 +70,19 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise - you already have the largest bet.");
         }
         
-        // 5. Calculate minimum raise amount
+        // 6. Calculate minimum raise amount using new betting tracking
         const playerBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
 
-        if (largestBet === 0n) {
-            throw new Error("Cannot raise - no bets have been placed yet.");
+        if (currentBet === 0n) {
+            // If no bets yet, minimum raise is the big blind
+            return {
+                minAmount: this.game.bigBlind,
+                maxAmount: player.chips
+            };
         }
         
-        // Check if player has enough chips for minimum raise
-        const deltaToCall = (largestBet + this.game.bigBlind) - playerBets;
+        // Use the new minimum raise calculation
+        const deltaToCall = minRaiseTo - playerBets;
         
         if (player.chips < deltaToCall) {
             // Player can only go all-in

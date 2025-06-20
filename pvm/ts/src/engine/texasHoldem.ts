@@ -11,7 +11,7 @@ import {
     TexasHoldemRound,
     TexasHoldemStateDTO,
     WinnerDTO
-} from "@bitcoinbrisbane/block52";
+} from "../../../../sdk/src/types/game";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 
@@ -52,6 +52,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private _sidePots = new Map<string, bigint>();
     private _winners = new Map<string, Winner>();
     private _currentRound: TexasHoldemRound;
+    
+    // Betting tracking fields for proper Texas Hold'em betting logic
+    private _previousBet: bigint = 0n;
+    private _currentBet: bigint = 0n;
+    private _lastRaiseAmount: bigint = 0n;
+    private _minRaiseTo: bigint = 0n;
 
     // Constructor
     constructor(
@@ -68,13 +74,24 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         deck: string = "",
         winners: WinnerDTO[] = [],
         private readonly _now: number = Date.now(),
-        dealerManager?: IDealerPositionManager
+        dealerManager?: IDealerPositionManager,
+        // Betting tracking fields
+        previousBet: bigint = 0n,
+        currentBet: bigint = 0n,
+        lastRaiseAmount: bigint = 0n,
+        minRaiseTo: bigint = 0n
     ) {
         this._address = address;
         this._playersMap = new Map<number, Player | null>(playerStates);
         this._deck = new Deck(deck);
         this._currentRound = currentRound;
         this._gameOptions = gameOptions;
+
+        // Initialize betting tracking fields
+        this._previousBet = previousBet;
+        this._currentBet = currentBet;
+        this._lastRaiseAmount = lastRaiseAmount;
+        this._minRaiseTo = minRaiseTo;
 
         // Hack for old test data
         if (this.handNumber === 0) this._handNumber = 1;
@@ -188,6 +205,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         this._winners.clear();
         this._handNumber += 1;
         this._actionCount += actionCount;
+        
+        // Reset betting tracking state for new hand
+        this.resetBettingState();
     }
 
     // ==================== GAME STATE PROPERTIES ====================
@@ -281,9 +301,74 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return this.dealerManager.getSmallBlindPosition();
     }
 
+    // Betting tracking getters
+    get previousBet(): bigint {
+        return this._previousBet;
+    }
+
+    get currentBet(): bigint {
+        return this._currentBet;
+    }
+
+    get lastRaiseAmount(): bigint {
+        return this._lastRaiseAmount;
+    }
+
+    get minRaiseTo(): bigint {
+        return this._minRaiseTo;
+    }
+
+    get sliderIncrement(): bigint {
+        return this._gameOptions.bigBlind;
+    }
+
     // Pot getters
     get pot(): bigint {
         return this.getPot();
+    }
+
+    // ==================== BETTING TRACKING METHODS ====================
+
+    /**
+     * Calculates the minimum raise amount based on Texas Hold'em rules
+     * Formula: minRaiseTo = currentBet + lastRaiseAmount
+     */
+    private calculateMinRaiseTo(currentBet: bigint, lastRaiseAmount: bigint): bigint {
+        return currentBet + lastRaiseAmount;
+    }
+
+    /**
+     * Updates betting tracking state when a bet or raise occurs
+     */
+    private updateBettingState(newBetAmount: bigint): void {
+        const previousBet = this._currentBet;
+        const newRaiseAmount = newBetAmount - previousBet;
+        
+        this._previousBet = previousBet;
+        this._currentBet = newBetAmount;
+        this._lastRaiseAmount = newRaiseAmount;
+        this._minRaiseTo = this.calculateMinRaiseTo(newBetAmount, newRaiseAmount);
+    }
+
+    /**
+     * Resets betting tracking state for a new round
+     */
+    private resetBettingState(): void {
+        this._previousBet = 0n;
+        this._currentBet = 0n;
+        this._lastRaiseAmount = 0n;
+        this._minRaiseTo = 0n;
+    }
+
+    /**
+     * Gets the minimum raise amount according to Texas Hold'em rules
+     * Public method that follows the getMinRaiseTo(lastBet, previousBet) pattern
+     */
+    public getMinRaiseTo(lastBet?: bigint, previousBet?: bigint): bigint {
+        const currentBet = lastBet ?? this._currentBet;
+        const prevBet = previousBet ?? this._previousBet;
+        const raiseAmount = currentBet - prevBet;
+        return currentBet + raiseAmount;
     }
 
     // ==================== PLAYER MANAGEMENT METHODS ====================
@@ -510,6 +595,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Advance to next round
         this.setNextRound();
+
+        // Reset betting tracking state for new round
+        this.resetBettingState();
 
         // Initialize the new round's action list if needed
         if (!this._rounds.has(this.currentRound)) {
@@ -884,9 +972,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         switch (action) {
             case PlayerActionType.SMALL_BLIND:
                 new SmallBlindAction(this, this._update).execute(player, index, this.smallBlind);
+                // Update betting state for small blind
+                this.updateBettingState(this.smallBlind);
                 break;
             case PlayerActionType.BIG_BLIND:
                 new BigBlindAction(this, this._update).execute(player, index, this.bigBlind);
+                // Update betting state for big blind
+                this.updateBettingState(this.bigBlind);
                 break;
             case PlayerActionType.FOLD:
                 new FoldAction(this, this._update).execute(player, index);
@@ -896,12 +988,16 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 break;
             case PlayerActionType.BET:
                 new BetAction(this, this._update).execute(player, index, _amount);
+                // Update betting state for bet
+                this.updateBettingState(_amount);
                 break;
             case PlayerActionType.CALL:
                 new CallAction(this, this._update).execute(player, index, _amount);
                 break;
             case PlayerActionType.RAISE:
                 new RaiseAction(this, this._update).execute(player, index, _amount);
+                // Update betting state for raise
+                this.updateBettingState(_amount);
                 break;
             case PlayerActionType.MUCK:
                 new MuckAction(this, this._update).execute(player, index, _amount);
@@ -1321,6 +1417,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             previousActions: this.getActionDTOs(),
             round: this.currentRound,
             winners: winners,
+            // Include betting tracking fields
+            previousBet: this._previousBet.toString(),
+            currentBet: this._currentBet.toString(),
+            lastRaiseAmount: this._lastRaiseAmount.toString(),
+            minRaiseTo: this._minRaiseTo.toString(),
+            sliderIncrement: this.sliderIncrement.toString(),
             signature: ethers.ZeroHash
         };
 
@@ -1372,6 +1474,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Create winners array
         const winners: WinnerDTO[] = json.winners || [];
 
+        // Parse betting tracking fields
+        const previousBet = json.previousBet ? BigInt(json.previousBet) : 0n;
+        const currentBet = json.currentBet ? BigInt(json.currentBet) : 0n;
+        const lastRaiseAmount = json.lastRaiseAmount ? BigInt(json.lastRaiseAmount) : 0n;
+        const minRaiseTo = json.minRaiseTo ? BigInt(json.minRaiseTo) : 0n;
+
         // Create and return new game instance
         return new TexasHoldemGame(
             json.address,
@@ -1386,7 +1494,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             players,
             json.deck,
             winners,
-            json.now ? json.now : Date.now()
+            json.now ? json.now : Date.now(),
+            undefined, // dealerManager will be created in constructor
+            // Betting tracking fields
+            previousBet,
+            currentBet,
+            lastRaiseAmount,
+            minRaiseTo
         );
     }
 }

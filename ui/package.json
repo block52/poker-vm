@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.147",
+    "@bitcoinbrisbane/block52": "file:../sdk",
     "@reown/appkit": "1.6.7",
     "@reown/appkit-adapter-ethers": "1.6.7",
     "@reown/appkit-adapter-wagmi": "1.6.7",

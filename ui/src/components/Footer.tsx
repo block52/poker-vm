@@ -22,6 +22,7 @@ import { usePlayerTimer } from "../hooks/usePlayerTimer";
 import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 import { useTableData } from "../hooks/useTableData";
+import { useLastBet } from "../hooks/useLastBets";
 
 import { ethers } from "ethers";
 
@@ -35,7 +36,9 @@ const BetActionComponent: React.FC<{
     handleBet: () => void;
     getDisplayAmountForBetRaiseAction: () => number;
     potValues: string;
-}> = ({ minBet, maxBet, raiseAmount, isRaiseAmountInvalid, isPlayerTurn, handleBet, getDisplayAmountForBetRaiseAction, potValues }) => {
+    lastBetAmount: number;
+    secondLastBetAmount: number;
+}> = ({ minBet, maxBet, raiseAmount, isRaiseAmountInvalid, isPlayerTurn, handleBet, getDisplayAmountForBetRaiseAction, potValues, lastBetAmount, secondLastBetAmount }) => {
     // Backend values (from legal actions)
     const backendMinBet = minBet;
     const backendMaxBet = maxBet;
@@ -47,7 +50,7 @@ const BetActionComponent: React.FC<{
     const finalSentBetAmount = raiseAmount;
     
     // Console logging for bet values with pot information
-    console.log(`🎯 BET VALUES - Backend Sent: min=${backendMinBet.toFixed(2)} max=${backendMaxBet.toFixed(2)} | Display: ${displayBetAmount.toFixed(2)} | Sending: ${finalSentBetAmount.toFixed(2)} | Current Pots: ${potValues}`);
+    console.log(`🎯 BET VALUES - Backend Sent: min=${backendMinBet.toFixed(2)} max=${backendMaxBet.toFixed(2)} | Display: ${displayBetAmount.toFixed(2)} | Sending: ${finalSentBetAmount.toFixed(2)} | Current Pots: ${potValues} | Last bet/raise value: ${lastBetAmount.toFixed(2)} | Second last bet/raise: ${secondLastBetAmount.toFixed(2)} | Difference: ${(lastBetAmount - secondLastBetAmount).toFixed(2)} | Actual minimum raise amount: ${(lastBetAmount + (lastBetAmount - secondLastBetAmount)).toFixed(2)}`);
     
     return (
         <button
@@ -74,19 +77,21 @@ const RaiseActionComponent: React.FC<{
     handleRaise: () => void;
     getDisplayAmountForBetRaiseAction: () => number;
     potValues: string;
-}> = ({ minRaise, maxRaise, raiseAmount, isRaiseAmountInvalid, isPlayerTurn, handleRaise, getDisplayAmountForBetRaiseAction, potValues }) => {
+    lastBetAmount: number;
+    secondLastBetAmount: number;
+}> = ({ minRaise, maxRaise, raiseAmount, isRaiseAmountInvalid, isPlayerTurn, handleRaise, getDisplayAmountForBetRaiseAction, potValues, lastBetAmount, secondLastBetAmount }) => {
     // Backend values (from legal actions)
     const backendMinRaise = minRaise;
     const backendMaxRaise = maxRaise;
     
-    // Display values (what user sees)
-    const displayRaiseAmount = getDisplayAmountForBetRaiseAction();
-    
     // Final sent value (what gets sent to backend)
     const finalSentRaiseAmount = raiseAmount;
     
+    // Display values (what user sees) - show 1 cent more than what we're sending
+    const displayRaiseAmount = finalSentRaiseAmount + 0.01;
+    
     // Console logging for raise values with pot information
-    console.log(`🚀 RAISE VALUES - Backend Sent: min=${backendMinRaise.toFixed(2)} max=${backendMaxRaise.toFixed(2)} | Display: ${displayRaiseAmount.toFixed(2)} | Sending: ${finalSentRaiseAmount.toFixed(2)} | Current Pots: ${potValues}`);
+    console.log(`🚀 RAISE VALUES - Backend Sent: min=${backendMinRaise.toFixed(2)} max=${backendMaxRaise.toFixed(2)} | Display: ${displayRaiseAmount.toFixed(2)} | Sending: ${finalSentRaiseAmount.toFixed(2)} | Current Pots: ${potValues} | Last bet/raise value: ${lastBetAmount.toFixed(2)} | Second last bet/raise: ${secondLastBetAmount.toFixed(2)} | Difference: ${(lastBetAmount - secondLastBetAmount).toFixed(2)} | Actual minimum raise amount: ${(lastBetAmount + (lastBetAmount - secondLastBetAmount)).toFixed(2)}`);
     
     return (
         <button
@@ -124,6 +129,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
     
     // Get table data for pot values
     const { tableDataPots } = useTableData();
+    
+    // Get last bet values
+    const { lastBetAmount, secondLastBetAmount } = useLastBet();
     
     // Format pot values for console logging
     const potValues = useMemo(() => {
@@ -246,6 +254,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
+    
+    // Calculate display amount for raise (same as in RaiseActionComponent)
+    const displayRaiseAmountForSlider = hasRaiseAction ? raiseAmount + 0.01 : raiseAmount;
 
     // Direct function imports - no hook destructuring needed for sit in/out
 
@@ -725,6 +736,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             handleRaise={handleRaise}
                                             getDisplayAmountForBetRaiseAction={getDisplayAmountForBetRaiseAction}
                                             potValues={potValues}
+                                            lastBetAmount={lastBetAmount}
+                                            secondLastBetAmount={secondLastBetAmount}
                                         />
                                     )}
                                     {hasBetAction && (
@@ -737,6 +750,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             handleBet={handleBet}
                                             getDisplayAmountForBetRaiseAction={getDisplayAmountForBetRaiseAction}
                                             potValues={potValues}
+                                            lastBetAmount={lastBetAmount}
+                                            secondLastBetAmount={secondLastBetAmount}
                                         />
                                     )}
                                 </div>
@@ -762,7 +777,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 min={hasBetAction ? minBet : minRaise}
                                                 max={hasBetAction ? maxBet : maxRaise}
                                                 step={0.01}
-                                                value={raiseAmount}
+                                                value={displayRaiseAmountForSlider}
                                                 onChange={e => {
                                                     handleRaiseChange(Number(e.target.value));
                                                     setLastAmountSource("slider");

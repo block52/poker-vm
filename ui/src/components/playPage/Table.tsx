@@ -681,6 +681,10 @@ const Table = React.memo(() => {
                                             </div>
 
                                             {/*//! CHIP */}
+                                            {/* Render chips for all player bets on the table.
+                                               When a player makes a bet, their chip amount is updated in the game state,
+                                               and this section renders those chips at the correct positions on the table.
+                                               Each position corresponds to a player's seat, and the amount shows their current bet. */}
                                             {chipPositionArray.map((position, index) => {
                                                 const chipAmount = getChipAmount(index + 1);
 
