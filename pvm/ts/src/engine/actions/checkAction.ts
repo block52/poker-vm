@@ -23,9 +23,21 @@ class CheckAction extends BaseAction implements IAction {
         }
 
         // 2. Bet matching check: Get the largest bet and player's current bet
-        const largestBet = this.getLargestBet();
-        const playerBet = this.game.getPlayerTotalBets(player.address);
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        const largestBet = this.getLargestBet(includeBlinds);
+        const playerBet = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
 
+        // 2.1 If no bets have been made, player can check
+        if (largestBet === 0n) {
+            return { minAmount: 0n, maxAmount: 0n };
+        }
+
+        // // 2.2 If player has already matched the largest bet, they can check
+        // if (playerBet === largestBet) {
+        //     return { minAmount: 0n, maxAmount: 0n };
+        // }
+        
+        // I think all of this is  unnecessary, but leaving it here for now
         // 3. Special case for preflop round
         if (currentRound === TexasHoldemRound.PREFLOP) {
             const playerSeat = this.game.getPlayerSeatNumber(player.address);

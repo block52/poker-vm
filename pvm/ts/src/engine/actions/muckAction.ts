@@ -19,7 +19,7 @@ class MuckAction extends BaseAction implements IAction {
         }
 
         if (player.holeCards) {
-            const cards: string[] = player.holeCards.map(card => card.toString());
+            const cards: string[] = player.holeCards.map(card => card.mnemonic);
             if (this.game.findWinners(cards)) {
                 throw new Error("Cannot muck winning hand.");
             }

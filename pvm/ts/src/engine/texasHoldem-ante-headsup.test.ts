@@ -303,9 +303,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
 
             actions = game.getLegalActions(PLAYER_2);
-            expect(actions.length).toEqual(2); // Muck or Show
-            expect(actions[0].action).toEqual(PlayerActionType.MUCK);
-            expect(actions[1].action).toEqual(PlayerActionType.SHOW);
+            expect(actions.length).toEqual(1); // Winner must show
+            expect(actions[0].action).toEqual(PlayerActionType.SHOW);
             
             // Both reveal cards
             game.performAction(PLAYER_2, PlayerActionType.SHOW, 15, 0n);
