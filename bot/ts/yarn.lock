@@ -7,6 +7,23 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.10.1.tgz#63430d04bd8c5e74f8d7d049338f1cd9d4f02069"
   integrity sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==
 
+"@anthropic-ai/claude-code@^1.0.30":
+  version "1.0.30"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/claude-code/-/claude-code-1.0.30.tgz#5bfe20896c6875161443b5b15f7e88c939a8a855"
+  integrity sha512-qIs92Cq3hFwn9/lZBta+wWJfGoQsrbFuiVm0bkurwGKxaJV69Ibr6hYfSU/lIKLcbvSygkZ/tWRxFQt44gnFhQ==
+  optionalDependencies:
+    "@img/sharp-darwin-arm64" "^0.33.5"
+    "@img/sharp-darwin-x64" "^0.33.5"
+    "@img/sharp-linux-arm" "^0.33.5"
+    "@img/sharp-linux-arm64" "^0.33.5"
+    "@img/sharp-linux-x64" "^0.33.5"
+    "@img/sharp-win32-x64" "^0.33.5"
+
+"@anthropic-ai/sdk@^0.54.0":
+  version "0.54.0"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/sdk/-/sdk-0.54.0.tgz#5d4fec666f2ae75f213cc5600ec9f92c9f026e11"
+  integrity sha512-xyoCtHJnt/qg5GG6IgK+UJEndz8h8ljzt/caKXmq3LfBF81nC/BW6E4x2rOWCZcvsLyVW+e8U5mtIr6UCE/kJw==
+
 "@bitcoinbrisbane/block52@^1.0.150":
   version "1.0.150"
   resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.150.tgz#d7b94e6cea08c7799d1497b6755037a9a1cd7c52"
