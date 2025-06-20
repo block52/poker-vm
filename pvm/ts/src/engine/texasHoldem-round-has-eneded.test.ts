@@ -23,7 +23,7 @@ describe("hasRoundEnded", () => {
         };
 
         game = new TexasHoldemGame(
-            "0x123",
+            ethers.ZeroAddress,
             gameOptions,
             1, // dealer position
             [], // previous actions
@@ -198,7 +198,7 @@ describe("hasRoundEnded", () => {
         it("should end when one shows and one mucks", () => {
             game.performAction(PLAYER_1, PlayerActionType.SHOW, 12);
             game.performAction(PLAYER_2, PlayerActionType.MUCK, 13);
-            expect(game.hasRoundEnded(TexasHoldemRound.SHOWDOWN)).toBe(true);
+            expect(game.hasRoundEnded(TexasHoldemRound.END)).toBe(true);
         });
     });
 

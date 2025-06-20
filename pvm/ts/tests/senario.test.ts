@@ -153,6 +153,8 @@ describe("Texas Holdem - Data driven", () => {
             game = fromTestJson(test_913);
             
             const previousActions = game.getPreviousActions();
+            // Sanity check to ensure we have the expected number of previous actions
+            expect(previousActions.length).toEqual(7);
             const actual = game.getLegalActions(SEAT_1);
             expect(actual).toBeDefined();
             expect(actual.length).toEqual(3);

@@ -41,7 +41,7 @@ export const baseGameConfig = {
     now: Date.now()
 };
 
-export const seed = "7392648510739462850173946285017394628501739462850199";
+export const seed: string = "29-34-15-41-5-21-9-23-37-5-17-13-11-1-40-44-16-21-42-46-41-23-34-30-48-36-32-33-40-7-9-3-30-42-2-19-24-34-24-46-2-31-10-43-49-11-29-49-49-23-14-2";
 
 export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasHoldemGame => {
     const previousActions: ActionDTO[] = [];
