@@ -46,7 +46,7 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(legalActions[2].min).toEqual("300000000000000000");
     });
 
-    it.only("should have correct call values for bb after sb calls", () => {
+    it("should have correct call values for bb after sb calls", () => {
         // Post blinds
         game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
         game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
