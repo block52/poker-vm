@@ -6,6 +6,7 @@ import { connectDB } from "./mongoConnection";
 import Bots from "./schema/bots";
 import { RaiseOrCallBot } from "./RaiseOrCallBot";
 import { RandomBot } from "./RandomBot";
+import { ClaudeBot } from "./ClaudBot";
 
 dotenv.config();
 
@@ -104,6 +105,17 @@ async function main() {
                     tableAddress.push(bot.tableAddress);
                 }
             }
+
+            if (bot.type === "claude") {
+                const claudeBot: IBot = new ClaudeBot(bot.tableAddress, NODE_URL, bot.privateKey, process.env.API_KEY || "");
+
+                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
+                const joined = await claudeBot.joinGame();
+                if (joined) {
+                    _bots.push(claudeBot);
+                    tableAddress.push(bot.tableAddress);
+                }
+            }
         }
     }
 
@@ -142,6 +154,10 @@ async function main() {
                     console.log(chalk.green(`Performing random action for bot with address: ${botDocument.address}`));
                     // Create a new RandomBot instance for this bot
                     bot = new RandomBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
+                    break;
+                case "claude":
+                    console.log(chalk.green(`Performing claude actions for bot with address: ${botDocument.address}`));
+                    bot = new ClaudeBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey, process.env.API_KEY || "");
                     break;
                 default:
                     console.error(chalk.red(`Unknown bot type: ${botDocument.type} for address: ${botDocument.address}`));

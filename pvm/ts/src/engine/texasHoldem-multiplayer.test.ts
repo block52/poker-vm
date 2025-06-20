@@ -118,7 +118,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(PLAYER_2);
             actual = game.getLegalActions(PLAYER_2);
-            expect(actual.length).toEqual(2); // Fold, call, raise (TODO REVIEW THIS)
+            expect(actual.length).toEqual(3); // Fold, check, raise (TODO REVIEW THIS)
 
             const json = game.toJson();
             expect(json).toBeDefined();

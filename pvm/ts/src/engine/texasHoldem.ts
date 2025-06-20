@@ -1134,15 +1134,22 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return card.mnemonic.replace("10", "T");
         }
 
+        if (players.length === 0) {
+            return false;
+        }
+
         const hands = players.map(p => PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic)));
         const communityCards: string[] = this._communityCards.map(toPokerSolverMnemonic);
 
         const heroCards = cards.map(card => card.replace("10", "T"));
         heroCards.concat(communityCards);
-
         const heroSolution = PokerSolver.Hand.solve(heroCards);
-        hands.push(heroSolution);
-        
+
+        // Check to see if hero's hand is already in the hands
+        if (!hands.some(hand => hand.cards.join(",") === heroCards.join(","))) {
+            hands.push(heroSolution);
+        }
+
         const winningHand = PokerSolver.Hand.winners(hands);
         return winningHand.includes(heroSolution);
     }
