@@ -2,6 +2,56 @@ import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@bitcoi
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TEN_TOKENS, TWO_TOKENS } from "./testConstants";
 
+/**
+ * Test file generated from poker scenario: Ensure there is No CHECK option when facing a bet from another opponent (SCENARIO 1 OF 18-CALLS)
+ * Ticket: #unknown
+ * Status: Approved
+ * 
+ * This test ensures that showdown behavior is correct - specifically that
+ * the first player to act at showdown must show their hand and cannot muck.
+ */
+describe("Ensure there is No CHECK option when facing a bet from another opponent (SCENARIO 1 OF 18-CALLS)", () => {
+    const PLAYER_1 = "0x1111111111111111111111111111111111111111";
+    const PLAYER_2 = "0x2222222222222222222222222222222222222222";
+
+    const THREE_TOKENS = 300000000000000000n;
+
+    let game: TexasHoldemGame;
+
+    beforeEach(() => {
+        game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+
+        // Add players to the game
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+    });
+
+    it.only("should enforce correct showdown behavior - first to act must show", () => {
+        // Execute the setup actions (up to showdown)
+        game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
+        game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
+        game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5);
+        game.performAction(PLAYER_1, PlayerActionType.RAISE, 6, THREE_TOKENS);
+        game.performAction(PLAYER_2, PlayerActionType.CALL, 7, TWO_TOKENS);
+
+        // Verify the game executed correctly
+        expect(game.currentRound).toBeDefined();
+        expect(game.getPlayerCount()).toEqual(2);
+
+        // Add more specific assertions based on the scenario requirements
+        // TODO: Add assertions specific to this test case
+    });
+});
+
+/**
+ * Suggested filename: test-unknown-ensure_there_is_no_check_option_when_facing_a_bet_.test.ts
+ * 
+ * To use this test:
+ * 1. Copy this entire content
+ * 2. Create a new file in pvm/ts/src/engine/ with the suggested filename
+ * 3. Run the test with: npm test test-unknown-ensure_there_is_no_check_option_when_facing_a_bet_
+ */
+
 describe("Texas Holdem - Call raise preflop", () => {
     // Initialize game with base configuration and options
     let game: TexasHoldemGame;

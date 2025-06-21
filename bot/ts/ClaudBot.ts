@@ -4,14 +4,19 @@ import { IBot } from "./interfaces";
 import { BaseBot } from "./BaseBot";
 import Anthropic from "@anthropic-ai/sdk";
 
-type ActionResponse = {
-    action: string;
-    max: string;
-};
+// type ActionResponse = {
+//     action: string;
+//     max: string;
+// };
+
+interface ApiResponse {
+    action: PlayerActionType;
+    max: string; // or number if you want to convert it
+}
 
 interface TextMessage {
-  type: 'text';
-  text: string;
+    type: string;
+    text: string;
 }
 
 export class ClaudeBot extends BaseBot implements IBot {
@@ -91,118 +96,39 @@ export class ClaudeBot extends BaseBot implements IBot {
             max_tokens: 1024,
             messages: [{ role: "user", content: prompt }]
         });
+
         console.log(chalk.green("Claude response received:"));
-        console.log(msg?.content[0]);
-        // const actionResponse: ActionResponse = JSON.parse(msg?.content[0].type);
 
+        // Parse the response from Claude AI
+        const txtResponse: TextMessage = msg?.content[0] as TextMessage;
+        if (!txtResponse || !txtResponse.type || !txtResponse.text) {
+            console.error(chalk.red("Invalid response from Claude AI."));
+            return; // Exit if response is invalid
+        }
 
+        console.log(chalk.cyan("Claude AI response:", txtResponse.text));
 
-        // if (msg.content[0].te) {
-        //     console.error(chalk.red("No response from Claude AI."));
-        //     return; // Exit if no response is received
-        // }
+        function fixMalformedJson(str: string): string {
+            return str
+                // Replace single quotes with double quotes
+                .replace(/'/g, '"')
+                // Add quotes around unquoted property names
+                .replace(/(\w+):/g, '"$1":');
+        }
 
+        const jsonParsed: ApiResponse = JSON.parse(fixMalformedJson(txtResponse.text));
+        let actionType: PlayerActionType = jsonParsed.action as PlayerActionType;
+        const maxValue = jsonParsed.max;
 
-        // console.log(actionResponse);
-
-        // const response = await this.client.playerAction(
-        //     this.tableAddress,
-        //     actionResponse.action as PlayerActionType,
-        //     actionResponse.max || "0"
-        // );
-
-        // try {
-        //     actionResponse = JSON.parse(msg.content);
-        // } catch (error) {
-        //     console.error(chalk.red("Failed to parse action response:", error));
-        //     return; // Exit if parsing fails
-        // }
-
-        // // If we can deal, then deal
-        // const canDeal = actions.some(action => action.action === NonPlayerActionType.DEAL);
-        // if (canDeal) {
-        //     console.log(chalk.cyan("Dealing cards..."));
-        //     const response = await this.client.deal(this.tableAddress, "", this.me);
-        //     console.log(chalk.cyan("Deal action posted successfully:", response?.hash));
-        //     return; // Skip to next iteration after dealing
-        // }
-
-        // // If legal actions contain post-small-blind, we can post small blind
-        // const hasPostSmallBlind = actions.some(action => action.action === PlayerActionType.SMALL_BLIND);
-        // if (hasPostSmallBlind) {
-        //     console.log(chalk.cyan("Posting small blind..."));
-        //     const action = actions.find(action => action.action === PlayerActionType.SMALL_BLIND);
-        //     if (!action) {
-        //         console.error(chalk.red("No small blind action found!"));
-        //         return; // Exit if no small blind action is found
-        //     }
-        //     const response = await this.client.playerAction(this.tableAddress, PlayerActionType.SMALL_BLIND, action.max || "1");
-        //     console.log(chalk.cyan("Small blind posted successfully:", response?.hash));
-        //     return; // Skip to next iteration after posting small blind
-        // }
-
-        // const hasPostBigBlind = actions.some(action => action.action === PlayerActionType.BIG_BLIND);
-        // if (hasPostBigBlind) {
-        //     console.log(chalk.cyan("Posting big blind..."));
-        //     const action = actions.find(action => action.action === PlayerActionType.BIG_BLIND);
-        //     if (!action) {
-        //         console.error(chalk.red("No big blind action found!"));
-        //         return; // Exit if no big blind action is found
-        //     }
-        //     const response = await this.client.playerAction(this.tableAddress, PlayerActionType.BIG_BLIND, action.max || "0");
-        //     console.log(chalk.cyan("Big blind posted successfully:", response?.hash));
-        //     return; // Skip to next iteration after posting big blind
-        // }
-
-        // // Can check?
-        // const canCheck = actions.some(action => action.action === PlayerActionType.CHECK);
-
-        // if (canCheck) {
-        //     const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CHECK, "0");
-        //     console.log(chalk.cyan("Check posted successfully:", response?.hash));
-
-        //     return; // Skip to next iteration after check
-        // }
-
-        // // Can call?
-        // const canCall = actions.some(action => action.action === PlayerActionType.CALL);
-        // if (canCall) {
-        //     console.log(chalk.cyan("Calling..."));
-        //     const callAction = actions.find(action => action.action === PlayerActionType.CALL);
-        //     if (!callAction) {
-        //         console.error(chalk.red("No call action found!"));
-        //         return; // Exit if no call action is found
-        //     }
-
-        //     if (!callAction.max) {
-        //         console.error(chalk.red("Call action does not have a max value!"));
-        //         return; // Exit if call action does not have a max value
-        //     }
-
-        //     const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CALL, callAction.max.toString());
-        //     console.log(chalk.cyan("Call posted successfully:", response?.hash));
-        //     return; // Skip to next iteration after call
-        // }
-
-        // // Can show?
-        // const canShow = actions.some(action => action.action === PlayerActionType.SHOW);
-        // if (canShow) {
-        //     console.log(chalk.cyan("Showing cards..."));
-        //     const response = await this.client.playerAction(this.tableAddress, PlayerActionType.SHOW, "0");
-        //     console.log(chalk.cyan("Show posted successfully:", response?.hash));
-        //     return; // Skip to next iteration after show
-        // }
-
-        // // // Can fold?
-        // // const canFold = actions.some(action => action.action === PlayerActionType.FOLD);
-        // // if (canFold) {
-        // //     console.log(chalk.cyan("Folding like a nit..."));
-        // //     const response = await this.client.playerAction(this.tableAddress, PlayerActionType.FOLD, "0");
-        // //     console.log(chalk.cyan("Fold posted successfully:", response?.hash));
-
-        // //     return; // Skip to next iteration after fold
-        // // }
-
-        console.log(chalk.yellow("No valid actions available to perform at this time."));
+        // Perform the action based on the response from Claude AI
+        let response;
+        try {
+            response = await this.client.playerAction(this.tableAddress, actionType, maxValue);
+            console.log(chalk.cyan("Action posted successfully:", response?.hash));
+            return; // Exit after posting action
+        } catch (error) {
+            console.error(chalk.red("Failed to post action:", error));
+            return; // Exit if action posting fails
+        }
     }
 }
