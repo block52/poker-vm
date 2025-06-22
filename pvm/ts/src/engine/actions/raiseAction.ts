@@ -80,10 +80,6 @@ class RaiseAction extends BaseAction implements IAction {
 
         const deltaToCall = minimumRaiseAmount - playerBets;
 
-        // const deltaToCall = (largestBet + this.game.bigBlind) - playerBets;
-        //const _deltaToCall = largestBet - lastRaiseSize + minimumRaiseAmount;
-        //const min = lastRaiseSize + playerBets === 0n ? this.game.bigBlind : playerBets;
-
         if (player.chips < minimumRaiseAmount) {
             // Player can only go all-in
             return {
@@ -97,18 +93,6 @@ class RaiseAction extends BaseAction implements IAction {
             maxAmount: player.chips // Total possible if going all-in
         };
     }
-
-    // private getMinimumRaise(playerId: string): bigint {
-    //     const currentBet = this.getLargestBet(this.currentRound);
-    //     const playerBet = this.getPlayerTotalBets(playerId, this.currentRound);
-    //     const amountToCall = currentBet - playerBet;
-
-    //     // Find the last raise size in this round
-    //     const lastRaiseSize = this.getLastRaiseSize(this.currentRound);
-    //     const minimumRaiseAmount = lastRaiseSize > 0n ? lastRaiseSize : this.bigBlind;
-
-    //     return amountToCall + minimumRaiseAmount;
-    // }
 
     private getLastRaiseSize(round: TexasHoldemRound): bigint {
         const actions = this.game.getActionsForRound(round);
