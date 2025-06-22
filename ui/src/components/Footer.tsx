@@ -108,8 +108,15 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return minRaise;
         }
 
-        // Filter by current round
+        // Filter by current round or rounds
         const currentRoundActions: ActionDTO[] = previousActions.filter(action => action.round === gameState?.round);
+
+        // If the current round is PREFLOP, include ante actions
+        if (gameState?.round === TexasHoldemRound.PREFLOP) {
+            currentRoundActions.push(
+                previousActions.find(action => action.round === TexasHoldemRound.ANTE) || {} as ActionDTO
+            );
+        }
 
         // Filter by bet and raise actions only
         const previousBetsAndRaises: ActionDTO[] = currentRoundActions.filter(
