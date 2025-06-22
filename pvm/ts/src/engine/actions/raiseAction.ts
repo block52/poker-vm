@@ -73,13 +73,18 @@ class RaiseAction extends BaseAction implements IAction {
 
         // Check if player has enough chips for minimum raise
         // Find the last raise size in this round
-        const currentBet = this.getLargestBet(includeBlinds);
+        // const currentBet = largestBet; //this.getLargestBet(includeBlinds);
         const lastRaiseSize = this.getLastRaiseSize(currentRound);
-        const minimumRaiseAmount = lastRaiseSize > 0n ? lastRaiseSize : this.game.bigBlind;
-        // const deltaToCall = (largestBet + this.game.bigBlind) - playerBets;
-        const deltaToCall = currentBet - largestBet + minimumRaiseAmount;
+        let minimumRaiseAmount = lastRaiseSize > 0n ? lastRaiseSize : this.game.bigBlind;
+        minimumRaiseAmount += this.game.bigBlind; // Must raise by at least the big blind amount
 
-        if (player.chips < deltaToCall) {
+        const deltaToCall = minimumRaiseAmount - playerBets;
+
+        // const deltaToCall = (largestBet + this.game.bigBlind) - playerBets;
+        //const _deltaToCall = largestBet - lastRaiseSize + minimumRaiseAmount;
+        //const min = lastRaiseSize + playerBets === 0n ? this.game.bigBlind : playerBets;
+
+        if (player.chips < minimumRaiseAmount) {
             // Player can only go all-in
             return {
                 minAmount: playerBets + player.chips, // Total amount if going all-in
@@ -88,7 +93,7 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         return {
-            minAmount: deltaToCall,
+            minAmount: deltaToCall > this.game.bigBlind ? deltaToCall : this.game.bigBlind, // Minimum raise amount
             maxAmount: player.chips // Total possible if going all-in
         };
     }
