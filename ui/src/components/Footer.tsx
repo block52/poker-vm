@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import * as React from "react";
-import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 
@@ -99,7 +99,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-
     const getRaiseToAmount = (): number => {
         // Get players previous actions
         const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
@@ -110,10 +109,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
         }
 
         // Filter by current round
-        const currentRoundActions = previousActions.filter(action => action.round === gameState?.round);
+        const currentRoundActions: ActionDTO[] = previousActions.filter(action => action.round === gameState?.round);
 
         // Filter by bet and raise actions only
-        const previousBetsAndRaises = previousActions.filter(
+        const previousBetsAndRaises: ActionDTO[] = currentRoundActions.filter(
             action =>
                 action.action === PlayerActionType.BET ||
                 action.action === PlayerActionType.RAISE ||
@@ -122,8 +121,12 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 action.action === PlayerActionType.BIG_BLIND
         );
 
+        const totalPreviousBetsAndRaises: number = previousBetsAndRaises.reduce((sum, action) => {
+            const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
+            return sum + amount;
+        }, 0);
 
-        return raiseAmount > 0 ? raiseAmount : minRaise;
+        return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
     };
 
 
@@ -658,7 +661,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
     px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
     transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
                                         >
-                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
+                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${getRaiseToAmount().toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
