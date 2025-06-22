@@ -146,13 +146,10 @@ describe("Raise Action", () => {
 
                 jest.spyOn(game, "getActionsForRound").mockReturnValue([
                     mockBet
-                    // { playerId: PLAYER_1_ADDRESS, action: PlayerActionType.CHECK, amount: 0n },
-                    // { playerId: PLAYER_2_ADDRESS, action: PlayerActionType.CHECK, amount: 0n },
-                    // { index: 1, playerId: PLAYER_3_ADDRESS, action: PlayerActionType.BET, amount: FIVE_TOKENS }
                 ]);
             });
 
-            it.only("should return correct range for a raise in FLOP", () => {
+            it("should return correct range for a raise in FLOP", () => {
                 const range = action.verify(player1);
 
                 // Player 3 has largest bet (5 tokens)
