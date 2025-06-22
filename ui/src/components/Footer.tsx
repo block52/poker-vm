@@ -23,6 +23,7 @@ import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
+import { step } from "viem/chains";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -98,6 +99,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const minRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0), [raiseAction]);
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
+
+    let step = minBet;
 
     const getRaiseToAmount = (): number => {
         // Get players previous actions
@@ -529,7 +532,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                     <>
                         {/* Player Action Buttons Container */}
                         <div className="flex justify-center items-center gap-1 lg:gap-2">
-                            {showSmallBlindButton && playerStatus !== "folded" && (
+                            {showSmallBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostSmallBlind}
                                     className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
@@ -543,7 +546,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                 </button>
                             )}
 
-                            {showBigBlindButton && playerStatus !== "folded" && (
+                            {showBigBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostBigBlind}
                                     className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
@@ -656,7 +659,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 type="range"
                                                 min={hasBetAction ? minBet : minRaise}
                                                 max={hasBetAction ? maxBet : maxRaise}
-                                                step={0.01}
+                                                step={step}
                                                 value={raiseAmount}
                                                 onChange={e => {
                                                     handleRaiseChange(Number(e.target.value));

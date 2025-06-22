@@ -339,7 +339,7 @@ export class RPC {
                 }
 
                 case RPCMethods.NEW_HAND: {
-                    // This is deprecated, use perform_action instead with action = "new_hand"
+                    // This is deprecated, use perform_action instead with action = "new-hand"
                     const [to, nonce, index, data] = request.params as RPCRequestParams[RPCMethods.NEW_HAND];
                     const command = new NewCommand(to, index, Number(nonce), validatorPrivateKey, data);
                     result = await command.execute();
