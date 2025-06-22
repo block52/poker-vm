@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import * as React from "react";
-import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 
@@ -99,17 +99,27 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    // Display function: shows comprehensive call amount for user UI
-    // NOTE: This is for DISPLAY ONLY - actual transaction uses callAction.min (via callHand)
-    const getSumAndMinCallAmountForDisplay = (): number => {
+    const getRaiseToAmount = (): number => {
+        // Get players previous actions
         const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
 
-        if (callAction && !previousActions) {
-            return Number(ethers.formatUnits(callAction.min || "0", 18));
+        if (!previousActions || previousActions.length === 0) {
+            // If no previous actions, return the minimum raise amount
+            return minRaise;
         }
 
-        // Find all previous bets and raises for this round
-        let previousBetsAndRaises = previousActions?.filter(
+        // Filter by current round or rounds
+        const currentRoundActions: ActionDTO[] = previousActions.filter(action => action.round === gameState?.round);
+
+        // If the current round is PREFLOP, include ante actions
+        if (gameState?.round === TexasHoldemRound.PREFLOP) {
+            currentRoundActions.push(
+                previousActions.find(action => action.round === TexasHoldemRound.ANTE) || {} as ActionDTO
+            );
+        }
+
+        // Filter by bet and raise actions only
+        const previousBetsAndRaises: ActionDTO[] = currentRoundActions.filter(
             action =>
                 action.action === PlayerActionType.BET ||
                 action.action === PlayerActionType.RAISE ||
@@ -118,23 +128,14 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 action.action === PlayerActionType.BIG_BLIND
         );
 
-        if (gameState?.round === TexasHoldemRound.PREFLOP) {
-            // For pre-flop, we only consider the last bet or raise
-            previousBetsAndRaises = previousBetsAndRaises?.filter(
-                action => action.round === TexasHoldemRound.PREFLOP || action.round === TexasHoldemRound.ANTE
-            );
-        } else {
-            // For post-flop rounds, consider all bets and raises
-            previousBetsAndRaises = previousBetsAndRaises?.filter(action => action.round === gameState?.round);
-        }
+        // Sum the raise amount and previous bets/raises
+        const totalPreviousBetsAndRaises: number = previousBetsAndRaises.reduce((sum, action) => {
+            const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
+            return sum + amount;
+        }, 0);
 
-        const sum =
-            previousBetsAndRaises?.reduce((sum, action) => {
-                const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
-                return sum + amount;
-            }, 0) || 0;
-
-        return sum + callAmount;
+        // Calculate the raise amount based on previous bets/raises
+        return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
     };
 
     // Big Blind Value - handle null gameOptions during loading
@@ -630,7 +631,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
     px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
     transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
                                         >
-                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${raiseAmount.toFixed(2)}</span>
+                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${getRaiseToAmount().toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>

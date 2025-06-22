@@ -37,10 +37,10 @@ class RaiseAction extends BaseAction implements IAction {
 
         // 3. Find who has the largest bet for this round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
-        
+
         let largestBet = 0n;
         let largestBetPlayer = "";
-        
+
         const activePlayers = this.game.findActivePlayers();
         for (const activePlayer of activePlayers) {
             const playerBet = this.game.getPlayerTotalBets(activePlayer.address, currentRound, includeBlinds);
@@ -49,7 +49,7 @@ class RaiseAction extends BaseAction implements IAction {
                 largestBetPlayer = activePlayer.address;
             }
         }
-        
+
         // 4. Cannot raise if I have the largest bet (can't raise myself)
         if (largestBetPlayer === player.address) {
 
@@ -63,18 +63,24 @@ class RaiseAction extends BaseAction implements IAction {
 
             throw new Error("Cannot raise - you already have the largest bet.");
         }
-        
+
         // 5. Calculate minimum raise amount
         const playerBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
 
         if (largestBet === 0n) {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
-        
+
         // Check if player has enough chips for minimum raise
-        const deltaToCall = (largestBet + this.game.bigBlind) - playerBets;
-        
-        if (player.chips < deltaToCall) {
+        // Find the last raise size in this round
+        // const currentBet = largestBet; //this.getLargestBet(includeBlinds);
+        const lastRaiseSize = this.getLastRaiseSize(currentRound);
+        let minimumRaiseAmount = lastRaiseSize > 0n ? lastRaiseSize : this.game.bigBlind;
+        minimumRaiseAmount += this.game.bigBlind; // Must raise by at least the big blind amount
+
+        const deltaToCall = minimumRaiseAmount - playerBets;
+
+        if (player.chips < minimumRaiseAmount) {
             // Player can only go all-in
             return {
                 minAmount: playerBets + player.chips, // Total amount if going all-in
@@ -83,9 +89,26 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         return {
-            minAmount: deltaToCall,
+            minAmount: deltaToCall > this.game.bigBlind ? deltaToCall : this.game.bigBlind, // Minimum raise amount
             maxAmount: player.chips // Total possible if going all-in
         };
+    }
+
+    private getLastRaiseSize(round: TexasHoldemRound): bigint {
+        const actions = this.game.getActionsForRound(round);
+        const betActions = actions.filter(a =>
+            a.action === PlayerActionType.BET ||
+            a.action === PlayerActionType.RAISE
+        );
+
+        if (betActions.length === 0) return 0n;
+        if (betActions.length === 1) return betActions[0].amount || 0n;
+
+        // Return the difference between last two betting actions
+        const lastAction = betActions[betActions.length - 1];
+        const prevAction = betActions[betActions.length - 2];
+
+        return (lastAction.amount || 0n) - (prevAction.amount || 0n);
     }
 }
 

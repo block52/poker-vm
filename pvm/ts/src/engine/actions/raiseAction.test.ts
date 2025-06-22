@@ -3,22 +3,11 @@ import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import RaiseAction from "./raiseAction";
 import { IUpdate, TurnWithSeat } from "../types";
-import {
-    FIFTY_TOKENS,
-    getDefaultGame,
-    ONE_HUNDRED_TOKENS,
-    ONE_THOUSAND_TOKENS,
-    ONE_TOKEN,
-    TWO_TOKENS,
-    TWENTY_TOKENS,
-    TWO_THOUSAND_TOKENS,
-    FIVE_TOKENS,
-    TEN_TOKENS
-} from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, ONE_TOKEN, TWO_TOKENS, FIVE_TOKENS, TEN_TOKENS } from "../testConstants";
 
 // Player address constants
 const PLAYER_1_ADDRESS = "0x1111111111111111111111111111111111111111"; // Small Blind
-const PLAYER_2_ADDRESS = "0x2222222222222222222222222222222222222222"; // Big Blind  
+const PLAYER_2_ADDRESS = "0x2222222222222222222222222222222222222222"; // Big Blind
 const PLAYER_3_ADDRESS = "0x3333333333333333333333333333333333333333"; // Bettor
 
 describe("Raise Action", () => {
@@ -28,6 +17,8 @@ describe("Raise Action", () => {
     let player1: Player; // Small blind player who wants to raise
     let player2: Player; // Big blind player
     let player3: Player; // Player who made the bet
+
+    const SEVEN_TOKENS = 700000000000000000n; // Minimum raise amount
 
     beforeEach(() => {
         // Setup initial game state with 3 players
@@ -75,15 +66,15 @@ describe("Raise Action", () => {
         describe("PREFLOP scenarios", () => {
             beforeEach(() => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-                
+
                 // Mock player total bets for PREFLOP scenario:
                 // Player 1: 1 token (small blind)
-                // Player 2: 2 tokens (big blind) 
+                // Player 2: 2 tokens (big blind)
                 // Player 3: 5 tokens (bet 3 more after big blind)
                 jest.spyOn(game, "getPlayerTotalBets").mockImplementation((address, round, includeBlinds) => {
-                    if (address === PLAYER_1_ADDRESS) return ONE_TOKEN;      // Small blind only
-                    if (address === PLAYER_2_ADDRESS) return TWO_TOKENS;     // Big blind only
-                    if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS;    // Big blind + 3 token bet
+                    if (address === PLAYER_1_ADDRESS) return ONE_TOKEN; // Small blind only
+                    if (address === PLAYER_2_ADDRESS) return TWO_TOKENS; // Big blind only
+                    if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Big blind + 3 token bet
                     return 0n;
                 });
             });
@@ -105,10 +96,10 @@ describe("Raise Action", () => {
 
             it("should throw error if player has largest bet (can't raise yourself)", () => {
                 // Mock so player1 has the largest bet
-                jest.spyOn(game, "getPlayerTotalBets").mockImplementation((address) => {
-                    if (address === PLAYER_1_ADDRESS) return TEN_TOKENS;     // Largest bet
-                    if (address === PLAYER_2_ADDRESS) return TWO_TOKENS;     // Big blind
-                    if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS;    // Smaller bet
+                jest.spyOn(game, "getPlayerTotalBets").mockImplementation(address => {
+                    if (address === PLAYER_1_ADDRESS) return TEN_TOKENS; // Largest bet
+                    if (address === PLAYER_2_ADDRESS) return TWO_TOKENS; // Big blind
+                    if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Smaller bet
                     return 0n;
                 });
 
@@ -124,7 +115,7 @@ describe("Raise Action", () => {
                 // Player can only go all-in: current bet (1) + remaining chips (2) = 3 total
                 expect(range).toEqual({
                     minAmount: ONE_TOKEN + TWO_TOKENS, // 3 tokens total
-                    maxAmount: ONE_TOKEN + TWO_TOKENS  // Same for all-in
+                    maxAmount: ONE_TOKEN + TWO_TOKENS // Same for all-in
                 });
             });
         });
@@ -132,17 +123,30 @@ describe("Raise Action", () => {
         describe("POST-FLOP scenarios", () => {
             beforeEach(() => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
-                
+
                 // Mock player total bets for FLOP scenario (no blinds included):
                 // Player 1: 0 tokens (checked)
                 // Player 2: 0 tokens (checked)
                 // Player 3: 5 tokens (bet 5)
                 jest.spyOn(game, "getPlayerTotalBets").mockImplementation((address, round, includeBlinds) => {
-                    if (address === PLAYER_1_ADDRESS) return 0n;           // Checked
-                    if (address === PLAYER_2_ADDRESS) return 0n;           // Checked  
-                    if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS;  // Bet 5
+                    if (address === PLAYER_1_ADDRESS) return 0n; // Checked
+                    if (address === PLAYER_2_ADDRESS) return 0n; // Checked
+                    if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Bet 5
                     return 0n;
                 });
+
+                const mockBet: TurnWithSeat = {
+                    index: 2, // Assuming player 3 is next to act
+                    playerId: PLAYER_3_ADDRESS,
+                    seat: 1,
+                    action: PlayerActionType.BET,
+                    amount: FIVE_TOKENS, // Bet 5 tokens
+                    timestamp: 0
+                };
+
+                jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                    mockBet
+                ]);
             });
 
             it("should return correct range for a raise in FLOP", () => {
@@ -151,7 +155,7 @@ describe("Raise Action", () => {
                 // Player 3 has largest bet (5 tokens)
                 // Minimum raise = 5 + 2 (big blind) = 7 tokens total
                 // Player 1 currently has 0, so needs 7 total
-                const expectedMinAmount = FIVE_TOKENS + TWO_TOKENS; // 7 tokens total
+                const expectedMinAmount = SEVEN_TOKENS; // 7 tokens total
                 const expectedMaxAmount = 0n + player1.chips; // Current bet (0) + all chips
 
                 expect(range).toEqual({

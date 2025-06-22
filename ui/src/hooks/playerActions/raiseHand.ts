@@ -1,4 +1,4 @@
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PerformActionResponse, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { getClient } from "../../utils/b52AccountUtils";
 
 /**
@@ -9,7 +9,7 @@ import { getClient } from "../../utils/b52AccountUtils";
  * @returns Promise with the raise response
  * @throws Error if private key is missing or if the action fails
  */
-export async function raiseHand(tableId: string, amount: string) {
+export async function raiseHand(tableId: string, amount: string): Promise<PerformActionResponse> {
     // Get the singleton client instance
     const client = getClient();
 

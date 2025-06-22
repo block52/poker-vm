@@ -9,7 +9,7 @@ services:
       MONGO_INITDB_DATABASE: pvm
       # No auth for now
       MONGO_INITDB_ROOT_USERNAME: node1
-      MONGO_INITDB_ROOT_PASSWORD: P@ssw0rd123
+      MONGO_INITDB_ROOT_PASSWORD: Passw0rd123
     ports:
       - 27017:27017
 
