@@ -121,52 +121,15 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 action.action === PlayerActionType.BIG_BLIND
         );
 
+        // Sum the raise amount and previous bets/raises
         const totalPreviousBetsAndRaises: number = previousBetsAndRaises.reduce((sum, action) => {
             const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
             return sum + amount;
         }, 0);
 
+        // Calculate the raise amount based on previous bets/raises
         return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
     };
-
-
-    // // Display function: shows comprehensive call amount for user UI
-    // // NOTE: This is for DISPLAY ONLY - actual transaction uses callAction.min (via callHand)
-    // const getSumAndMinCallAmountForDisplay = (): number => {
-    //     const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
-
-    //     if (callAction && !previousActions) {
-    //         return Number(ethers.formatUnits(callAction.min || "0", 18));
-    //     }
-
-    //     // Find all previous bets and raises for this round
-    //     let previousBetsAndRaises = previousActions?.filter(
-    //         action =>
-    //             action.action === PlayerActionType.BET ||
-    //             action.action === PlayerActionType.RAISE ||
-    //             action.action === PlayerActionType.CALL ||
-    //             action.action === PlayerActionType.SMALL_BLIND ||
-    //             action.action === PlayerActionType.BIG_BLIND
-    //     );
-
-    //     if (gameState?.round === TexasHoldemRound.PREFLOP) {
-    //         // For pre-flop, we only consider the last bet or raise
-    //         previousBetsAndRaises = previousBetsAndRaises?.filter(
-    //             action => action.round === TexasHoldemRound.PREFLOP || action.round === TexasHoldemRound.ANTE
-    //         );
-    //     } else {
-    //         // For post-flop rounds, consider all bets and raises
-    //         previousBetsAndRaises = previousBetsAndRaises?.filter(action => action.round === gameState?.round);
-    //     }
-
-    //     const sum =
-    //         previousBetsAndRaises?.reduce((sum, action) => {
-    //             const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
-    //             return sum + amount;
-    //         }, 0) || 0;
-
-    //     return sum + callAmount;
-    // };
 
     // Big Blind Value - handle null gameOptions during loading
     const bigBlindStep = useMemo(() => {
