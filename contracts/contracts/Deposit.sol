@@ -4,12 +4,6 @@ pragma solidity ^0.8.24;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-interface IBridge {
-    function deposit(uint256 amount, address receiver, address token) external returns(uint256);
-    function depositUnderlying(uint256 amount, address receiver) external returns(uint256);
-    function underlying() external view returns (address);
-}
-
 contract Deposit is Ownable {
     IERC20 public immutable token;
     IBridge public bridge;  // Remove immutable to allow bridge updates
