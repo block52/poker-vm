@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
-import { usePlayerData } from './usePlayerData';
-import { useTableData } from './useTableData';
-import { Hand } from 'pokersolver';
+import { useMemo } from "react";
+import { usePlayerData } from "./usePlayerData";
+import { useTableData } from "./useTableData";
+import { Hand } from "pokersolver";
 
 export interface HandStrength {
   name: string;
