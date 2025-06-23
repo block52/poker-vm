@@ -146,9 +146,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
         return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
     };
 
-    // Slider Input State
-    const [raiseToAmount, ] = useState<number>(minRaise);
-
     // These are the delta amounts
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
     const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
@@ -201,11 +198,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         setPrivateKey(localKey);
     }, [privateKey]);
-
-    // const handleRaiseChange = (newAmount: number) => {
-    //     setRaiseToAmount(newAmount);
-    //     setRaiseInputRaw(newAmount.toFixed(2));
-    // };
 
     const handleRaiseChange = (delta: number) => {
         const currentRaiseAmount = raiseAmount || minRaise;
@@ -681,7 +673,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 className="flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
-                                                        ((raiseToAmount - (hasBetAction ? minBet : minRaise)) /
+                                                        ((getRaiseToAmount() - (hasBetAction ? minBet : minRaise)) /
                                                             ((getRaiseToAmount() ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b ${
