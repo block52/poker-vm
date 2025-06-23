@@ -71,14 +71,14 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
-        // Check if player has enough chips for minimum raise
-        // Find the last raise size in this round
-        // const currentBet = largestBet; //this.getLargestBet(includeBlinds);
-        const lastRaiseSize = this.getLastRaiseSize(currentRound);
-        let minimumRaiseAmount = lastRaiseSize > 0n ? lastRaiseSize : this.game.bigBlind;
-        minimumRaiseAmount += this.game.bigBlind; // Must raise by at least the big blind amount
-
+        let minimumRaiseAmount = largestBet > 0n ? largestBet + this.game.bigBlind : this.game.bigBlind;
         const deltaToCall = minimumRaiseAmount - playerBets;
+
+        // Find the last raise size in this round
+        const lastRaiseSize = this.getLastRaiseSize(currentRound, includeBlinds); // two tokens
+        // let minimumRaiseAmount = lastRaiseSize > 0n ? lastRaiseSize + this.game.bigBlind : this.game.bigBlind;  // four tokens
+
+        // const deltaToCall = minimumRaiseAmount - playerBets;
 
         if (player.chips < minimumRaiseAmount) {
             // Player can only go all-in
@@ -94,12 +94,19 @@ class RaiseAction extends BaseAction implements IAction {
         };
     }
 
-    private getLastRaiseSize(round: TexasHoldemRound): bigint {
+    private getLastRaiseSize(round: TexasHoldemRound, includeBlinds: boolean): bigint {
         const actions = this.game.getActionsForRound(round);
         const betActions = actions.filter(a =>
             a.action === PlayerActionType.BET ||
             a.action === PlayerActionType.RAISE
         );
+
+        if (includeBlinds) {
+            const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);
+            const bigBlindAction = actions.find(a => a.action === PlayerActionType.BIG_BLIND);
+            if (smallBlindAction) betActions.push(smallBlindAction);
+            if (bigBlindAction) betActions.push(bigBlindAction);
+        }
 
         if (betActions.length === 0) return 0n;
         if (betActions.length === 1) return betActions[0].amount || 0n;
