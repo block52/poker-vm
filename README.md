@@ -61,11 +61,11 @@ To run the PVM locally for development and testing:
    ```
 
 3. Connect to the local MongoDB database:
-   - **Connection string**: `mongodb://localhost:27017/pvm`
+   - **Connection string**: `DB_URL=mongodb://node1:Passw0rd123@localhost:27017`
    - **For GUI tools** (like DataGrip, MongoDB Compass):
      - Host: `localhost`
      - Port: `27019`
-     - Database: `local_pvm`
+     - Database: `pvm`
      - Authentication: None (or as configured)
 
 4. Start the PVM application:
@@ -77,7 +77,7 @@ To run the PVM locally for development and testing:
    - API: http://localhost:3000
 
 6. To stop the local MongoDB instance:
-   ```
+   ```bash
    docker compose down
    ```
 

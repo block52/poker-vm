@@ -23,7 +23,7 @@ import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
-import { step } from "viem/chains";
+;
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -100,7 +100,12 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    let step = minBet;
+    // Slider step values
+    const step = minBet;
+
+    const getStep = () => {
+        return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
+    }
 
     const getRaiseToAmount = (): number => {
         // Get players previous actions
@@ -141,24 +146,16 @@ const PokerActionPanel: React.FC = React.memo(() => {
         return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
     };
 
-    // Big Blind Value - handle null gameOptions during loading
-    const bigBlindStep = useMemo(() => {
-        if (!gameOptions?.bigBlind) {
-            return 0.02; // Fallback value during loading or when not available
-        }
-        const step = Number(ethers.formatUnits(gameOptions.bigBlind, 18));
-        return step;
-    }, [gameOptions?.bigBlind]);
-
-    // Slider Input State
+    // These are the delta amounts
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
-    const [raiseInputRaw, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
+    const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
+    // Handle raise amount changes from slider or input
     const isRaiseAmountInvalid = hasRaiseAction
-        ? raiseAmount < minRaise || raiseAmount > maxRaise
+        ? getRaiseToAmount() < minRaise || getRaiseToAmount() > maxRaise
         : hasBetAction
-        ? raiseAmount < minBet || raiseAmount > maxBet
+        ? getRaiseToAmount() < minBet || getRaiseToAmount() > maxBet
         : false;
 
     // Get total pot for percentage calculations
@@ -202,17 +199,24 @@ const PokerActionPanel: React.FC = React.memo(() => {
         setPrivateKey(localKey);
     }, [privateKey]);
 
-    const handleRaiseChange = (newAmount: number) => {
-        setRaiseAmount(newAmount);
-        setRaiseInputRaw(newAmount.toFixed(2));
-    };
+    const handleRaiseChange = (delta: number) => {
+        const currentRaiseAmount = raiseAmount || minRaise;
+
+        if (delta === 0) {
+            delta = getStep(); // Reset to minimum raise amount
+        }
+
+        const newRaiseAmount = currentRaiseAmount + delta;
+        setRaiseAmount(newRaiseAmount);
+    }
 
     // Min Raise Text Prefill
     useEffect(() => {
         if (hasRaiseAction && minRaise > 0) {
             setRaiseAmount(minRaise);
             setRaiseInputRaw(minRaise.toFixed(2));
-        } else if (hasBetAction && minBet > 0) {
+        } 
+        if (hasBetAction && minBet > 0) {
             setRaiseAmount(minBet);
             setRaiseInputRaw(minBet.toFixed(2));
         }
@@ -648,7 +652,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-2 lg:px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda] text-xs lg:text-sm
     transition-all duration-200"
-                                                onClick={() => handleRaiseChange(Math.max(raiseAmount - bigBlindStep, hasBetAction ? minBet : minRaise))}
+                                                // onClick={() => handleRaiseChange(Math.max(getRaiseToAmount() - step, hasBetAction ? minBet : minRaise))}
+                                                onClick={() => handleRaiseChange(-getStep())}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 -
@@ -657,10 +662,10 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
-                                                min={hasBetAction ? minBet : minRaise}
+                                                min={hasBetAction ? getRaiseToAmount() : minRaise}
                                                 max={hasBetAction ? maxBet : maxRaise}
                                                 step={step}
-                                                value={raiseAmount}
+                                                value={getRaiseToAmount()}
                                                 onChange={e => {
                                                     handleRaiseChange(Number(e.target.value));
                                                     setLastAmountSource("slider");
@@ -668,11 +673,11 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 className="flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
-                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
-                                                            ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
+                                                        ((getRaiseToAmount() - (hasBetAction ? minBet : minRaise)) /
+                                                            ((getRaiseToAmount() ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b ${
-                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
+                                                        ((getRaiseToAmount() - (hasBetAction ? minBet : minRaise)) /
                                                             ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b 100%)`
@@ -683,7 +688,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
     py-1 px-2 lg:px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda] text-xs lg:text-sm
     transition-all duration-200"
-                                                onClick={() => handleRaiseChange(Math.min(raiseAmount + bigBlindStep, hasBetAction ? maxBet : maxRaise))}
+                                                // onClick={() => handleRaiseChange(Math.min(getRaiseToAmount() + step, hasBetAction ? maxBet : maxRaise))}
+                                                onClick={() => handleRaiseChange(getStep())}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 +
@@ -694,13 +700,14 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 <input
                                                     type="text"
                                                     inputMode="decimal"
-                                                    value={raiseInputRaw}
+                                                    value={getRaiseToAmount().toFixed(2)}
                                                     onChange={e => {
                                                         const raw = e.target.value;
 
                                                         // Always allow clearing the field
                                                         if (raw === "") {
                                                             setRaiseInputRaw("");
+                                                            // setRaiseToAmount(0);
                                                             setRaiseAmount(0);
                                                             return;
                                                         }
@@ -711,6 +718,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
 
                                                             // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
                                                             if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
+                                                                // setRaiseToAmount(parseFloat(raw));
                                                                 setRaiseAmount(parseFloat(raw));
                                                                 setLastAmountSource("input");
                                                             }
@@ -727,7 +735,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                         isRaiseAmountInvalid ? "text-red-400" : "text-gray-400"
                                                     }`}
                                                 >
-                                                    <div>Min: ${hasBetAction ? minBet.toFixed(2) : minRaise.toFixed(2)}</div>
+                                                    <div>Min: ${getRaiseToAmount().toFixed(2)}</div>
                                                     <div>Max: ${hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)}</div>
                                                 </div>
                                             </div>
