@@ -22,7 +22,7 @@ import { usePlayerTimer } from "../hooks/usePlayerTimer";
 import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
-import { ethers } from "ethers";import { get } from "http";
+import { ethers } from "ethers";
 ;
 
 const PokerActionPanel: React.FC = React.memo(() => {
