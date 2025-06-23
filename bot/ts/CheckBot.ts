@@ -31,7 +31,7 @@ export class CheckBot extends BaseBot implements IBot {
 
         if (canCheck) {
             const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CHECK, "0");
-            console.log(chalk.cyan("Check posted successfully:", response?.hash));
+            console.log(chalk.cyan("Checked successfully:", response?.hash));
 
             return; // Skip to next iteration after check
         }
@@ -52,7 +52,7 @@ export class CheckBot extends BaseBot implements IBot {
             }
 
             const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CALL, callAction.max.toString());
-            console.log(chalk.cyan("Call posted successfully:", response?.hash));
+            console.log(chalk.cyan("Called successfully:", response?.hash));
             return; // Skip to next iteration after call
         }
 
@@ -61,7 +61,7 @@ export class CheckBot extends BaseBot implements IBot {
         if (canShow) {
             console.log(chalk.cyan("Showing cards..."));
             const response = await this.client.playerAction(this.tableAddress, PlayerActionType.SHOW, "0");
-            console.log(chalk.cyan("Show posted successfully:", response?.hash));
+            console.log(chalk.cyan("Showing cards successfully:", response?.hash));
             return; // Skip to next iteration after show
         }
 

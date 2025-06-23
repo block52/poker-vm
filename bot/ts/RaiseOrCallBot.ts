@@ -36,7 +36,7 @@ export class RaiseOrCallBot extends BaseBot implements IBot {
             const action = actions.find(action => action.action === PlayerActionType.RAISE);
             if (action) {
                 const response = await this.client.playerAction(this.tableAddress, PlayerActionType.RAISE, action.min || "0");
-                console.log(chalk.cyan("Check posted successfully:", response?.hash));
+                console.log(chalk.cyan("Raising successfully:", response?.hash));
 
                 return; // Skip to next iteration after check
             }
@@ -48,7 +48,7 @@ export class RaiseOrCallBot extends BaseBot implements IBot {
             console.log(chalk.cyan("Calling..."));
             const amount = actions.find(action => action.action === PlayerActionType.CALL)?.min || "0";
             const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CALL, amount);
-            console.log(chalk.cyan("Call posted successfully:", response?.hash));
+            console.log(chalk.cyan("Calling successfully:", response?.hash));
             return; // Skip to next iteration after call
         }
 
@@ -57,7 +57,7 @@ export class RaiseOrCallBot extends BaseBot implements IBot {
 
         if (canCheck) {
             const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CHECK, "0");
-            console.log(chalk.cyan("Check posted successfully:", response?.hash));
+            console.log(chalk.cyan("Checking successfully:", response?.hash));
 
             return; // Skip to next iteration after check
         }
