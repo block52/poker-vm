@@ -13,8 +13,7 @@ dotenv.config();
 
 // Add nonce tracking
 let play = true;
-const _bots: IBot[] = [];
-const tableAddress: string[] = [];
+const allBots: Record<string, IBot> = {};
 
 // Modify the main loop to include small blind posting
 async function main() {
@@ -65,7 +64,7 @@ async function main() {
         console.log(chalk.green("Default bot added successfully."));
 
         // // Push the default bot to the _bots array
-        _bots.push(new RaiseOrCallBot("0x7fac1de2961cd3c4fe7b529d39a80c329a23bd51", NODE_URL, process.env.PRIVATE_KEY || ""));
+        // _bots.push(new RaiseOrCallBot("0x7fac1de2961cd3c4fe7b529d39a80c329a23bd51", NODE_URL, process.env.PRIVATE_KEY || ""));
 
         // console.error(chalk.red("No enabled bots found in the database. Please add a bot to the database before running this script."));
         // process.exit(1);
@@ -80,8 +79,7 @@ async function main() {
                 console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
                 const joined = await checkBot.joinGame();
                 if (joined) {
-                    _bots.push(checkBot);
-                    tableAddress.push(bot.tableAddress);
+                    allBots[bot.address] = checkBot;
                 }
             }
 
@@ -91,8 +89,7 @@ async function main() {
                 console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
                 const joined = await raiseOrCallBot.joinGame();
                 if (joined) {
-                    _bots.push(raiseOrCallBot);
-                    tableAddress.push(bot.tableAddress);
+                    allBots[bot.address] = raiseOrCallBot;
                 }
             }
 
@@ -102,8 +99,7 @@ async function main() {
                 console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
                 const joined = await randomBot.joinGame();
                 if (joined) {
-                    _bots.push(randomBot);
-                    tableAddress.push(bot.tableAddress);
+                    allBots[bot.address] = randomBot;
                 }
             }
 
@@ -113,8 +109,7 @@ async function main() {
                 console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
                 const joined = await claudeBot.joinGame();
                 if (joined) {
-                    _bots.push(claudeBot);
-                    tableAddress.push(bot.tableAddress);
+                    allBots[bot.address] = claudeBot;
                 }
             }
         }
@@ -123,57 +118,18 @@ async function main() {
     // Continuous monitoring loop
     console.log(chalk.yellow("\nStarting continuous monitoring (checking every 10 seconds)..."));
     while (play) {
-        for (const address of tableAddress) {
+        for (const bot of Object.values(allBots)) {
             console.log(chalk.cyan("Time: " + new Date().toLocaleTimeString()));
 
-            console.log(chalk.cyan("Checking bot with address:", address));
-            // Get the bot for this table
-            const botDocument = await Bots.findOne({ tableAddress: address });
-            if (!botDocument) {
-                console.error(chalk.red(`Bot for table address ${address} not found in the database.`));
-                continue; // Skip to next bot if not found
-            }
-
-            if (!botDocument.enabled) {
-                console.log(chalk.yellow(`Bot with address ${botDocument.address} is disabled. Skipping...`));
-                continue; // Skip to next bot if disabled
-            }
-
-            let bot: IBot;
-
-            switch (botDocument.type) {
-                case "check":
-                    console.log(chalk.green(`Performing check action for bot with address: ${botDocument.address}`));
-                    bot = new CheckBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
-                    break;
-                case "raiseOrCall":
-                    console.log(chalk.green(`Performing raise or call action for bot with address: ${botDocument.address}`));
-                    // Create a new RaiseOrCallBot instance for this bot
-                    bot = new RaiseOrCallBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
-                    break;
-                case "random":
-                    console.log(chalk.green(`Performing random action for bot with address: ${botDocument.address}`));
-                    // Create a new RandomBot instance for this bot
-                    bot = new RandomBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey);
-                    break;
-                case "claude":
-                    console.log(chalk.green(`Performing claude actions for bot with address: ${botDocument.address}`));
-                    bot = new ClaudeBot(botDocument.tableAddress, NODE_URL, botDocument.privateKey, process.env.API_KEY || "");
-                    break;
-                default:
-                    console.error(chalk.red(`Unknown bot type: ${botDocument.type} for address: ${botDocument.address}`));
-                    continue; // Skip to next bot if type is unknown
-            }
-            
             try {
                 await bot.performAction();
+
+                // Wait before next check
+                await new Promise(resolve => setTimeout(resolve, 5000));
             } catch (error) {
                 console.error(chalk.red("Error in main loop:"), error);
             }
         }
-
-        // Wait before next check
-        await new Promise(resolve => setTimeout(resolve, 8000));
     }
 }
 
