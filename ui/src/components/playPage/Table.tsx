@@ -100,6 +100,7 @@ import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
 // Game Start Countdown
 import GameStartCountdown from "./common/GameStartCountdown";
@@ -727,6 +728,9 @@ const Table = React.memo(() => {
                             {/* {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>} */}
                         </div>
                     </div>
+                    {/* Live Hand Strength Display */}
+                    <LiveHandStrengthDisplay />
+
                     {/*//! FOOTER */}
                     <div className="w-full flex justify-center items-center h-[200px] sm:h-[250px] bg-transparent z-[10]">
                         <div className="max-w-[700px] w-full flex justify-center items-center h-full">
