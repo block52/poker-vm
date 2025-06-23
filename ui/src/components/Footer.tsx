@@ -274,6 +274,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         if (delta === 0) {
             delta = getStep(); // Reset to minimum raise amount
         }
+
         const newRaiseAmount = currentRaiseAmount + delta;
         setRaiseAmount(newRaiseAmount);
     }
@@ -364,7 +365,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         }
 
         // Use our function to bet with the current raiseAmount
-        const amountWei = ethers.parseUnits(raiseToAmount.toString(), 18).toString();
+        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         try {
             await betHand(tableId, amountWei);
@@ -380,7 +381,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         }
 
         // Use our function to raise with the current raiseAmount
-        const amountWei = ethers.parseUnits(raiseToAmount.toString(), 18).toString();
+        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         try {
             await raiseHand(tableId, amountWei);
