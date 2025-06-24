@@ -7,7 +7,6 @@ import Bots from "./schema/bots";
 import { RaiseOrCallBot } from "./RaiseOrCallBot";
 import { RandomBot } from "./RandomBot";
 import { ClaudeBot } from "./ClaudBot";
-import { ethers } from "ethers";
 
 dotenv.config();
 
@@ -50,18 +49,18 @@ async function main() {
         //     process.exit(1);
         // }
 
-        const wallet = new ethers.Wallet(process.env.PRIVATE_KEY || "");
+        // const wallet = new ethers.Wallet(process.env.PRIVATE_KEY || "");
 
-        const defaultBot = new Bots({
-            address: wallet.address,
-            tableAddress: "0x7fac1de2961cd3c4fe7b529d39a80c329a23bd51",
-            privateKey: process.env.PRIVATE_KEY || "",
-            type: "raiseOrCall", // Default type
-            enabled: true
-        });
+        // const defaultBot = new Bots({
+        //     address: wallet.address,
+        //     tableAddress: "0x7fac1de2961cd3c4fe7b529d39a80c329a23bd51",
+        //     privateKey: process.env.PRIVATE_KEY || "",
+        //     type: "raiseOrCall", // Default type
+        //     enabled: true
+        // });
 
-        await defaultBot.save();
-        console.log(chalk.green("Default bot added successfully."));
+        // await defaultBot.save();
+        // console.log(chalk.green("Default bot added successfully."));
 
         // // Push the default bot to the _bots array
         // _bots.push(new RaiseOrCallBot("0x7fac1de2961cd3c4fe7b529d39a80c329a23bd51", NODE_URL, process.env.PRIVATE_KEY || ""));

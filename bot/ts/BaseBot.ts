@@ -114,7 +114,6 @@ export abstract class BaseBot {
             const myPlayer = gameState.players.find(p => p.address === this.me);
             if (myPlayer) {
                 console.log(chalk.green("You are already seated at this table!"));
-                // console.log(chalk.cyan("Your stack:"), formatChips(myPlayer.stack));
                 return true;
             }
             console.log(chalk.yellow("You have not joined the game yet."));
@@ -130,18 +129,16 @@ export abstract class BaseBot {
     // Modify the joinGame function to use these helpers
     async joinGame(): Promise<boolean> {
         try {
+            // Check if already joined
+            const alreadyJoined = await this.hasJoined();
+            if (alreadyJoined) {
+                return true;
+            }
+
             console.log(chalk.cyan("\nDebug - joinGame:"));
             console.log(chalk.cyan("Table address:"), this.tableAddress);
 
             const gameState = await this.getGameState();
-            const myPlayer = gameState.players.find(p => p.address === this.me);
-
-            if (myPlayer) {
-                console.log(chalk.green("You are already seated at this table!"));
-                // console.log(chalk.cyan("Your stack:"), formatChips(myPlayer.stack));
-                return true;
-            }
-
             let seats = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
             // Reduce players.seats to an array of available seats
