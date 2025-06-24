@@ -4,11 +4,6 @@ import { IBot } from "./interfaces";
 import { BaseBot } from "./BaseBot";
 import Anthropic from "@anthropic-ai/sdk";
 
-// type ActionResponse = {
-//     action: string;
-//     max: string;
-// };
-
 interface ApiResponse {
     action: PlayerActionType;
     max: string; // or number if you want to convert it
