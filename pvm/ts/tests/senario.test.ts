@@ -1,7 +1,7 @@
-import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
-import { fromTestJson } from "../src/engine/testConstants";
-import { test_json, test_735, test_753, test_792, test_870, test_873, test_873_2, test_877, test_899, test_899_2, test_902, test_913 } from "./senarios/data";
+import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS } from "../src/engine/testConstants";
+import { test_json, test_735, test_753, test_792, test_870, test_873, test_873_2, test_877, test_899, test_899_2, test_902, test_913, test_954 } from "./senarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Data driven", () => {
@@ -147,7 +147,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual[2].min).toEqual("50000000000000000");
         });
 
-        it.only("should test bug 913", () => {
+        it("should test bug 913", () => {
             const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
 
             game = fromTestJson(test_913);
@@ -158,6 +158,22 @@ describe("Texas Holdem - Data driven", () => {
             const actual = game.getLegalActions(SEAT_1);
             expect(actual).toBeDefined();
             expect(actual.length).toEqual(3);
+        });
+
+        it.only("should test bug 954", () => {
+            game = fromTestJson(test_954);
+
+            let previousActions = game.getPreviousActions();
+            expect(previousActions.length).toEqual(5);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            // Player 1 to call
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct?.address).toEqual("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
+
+            game.performAction("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8", PlayerActionType.CALL, 6, ONE_TOKEN);
+            previousActions = game.getPreviousActions();
+            expect(previousActions.length).toEqual(6);
         });
     });
 });
