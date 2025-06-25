@@ -22,8 +22,8 @@ export class BetManager implements IBetManager {
 
     add(action: Turn): void {
         // Implementation for adding an action to the bet manager
-        if (action.playerId && action.amount) {
-            if (action.amount === undefined || action.action === NonPlayerActionType.JOIN) {
+        if (action.playerId && action.amount !== undefined) {
+            if (action.action === NonPlayerActionType.JOIN) {
                 return;
             }
 
