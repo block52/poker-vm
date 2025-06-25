@@ -8,6 +8,7 @@ export interface ICardDeck {
 export interface IBetManager {
     add(action: Turn): void;
     addTurns(turns: Turn[]): void;
+    count(): number;
     current(): bigint;
     delta(): bigint;
     getTotalBetsForPlayer(playerId: string): bigint;

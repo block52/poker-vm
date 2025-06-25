@@ -20,6 +20,15 @@ export class BetManager implements IBetManager {
         this.turns.push(...turns);
     }
 
+    count(): number {
+        // Return the number of unique players who have placed bets
+        return this.aggregatedBets.length;
+    }
+
+    /**
+     * Add a single action to the bet manager
+     * @param action The action to add
+     */
     add(action: Turn): void {
         // Implementation for adding an action to the bet manager
         if (action.playerId && action.amount) {
