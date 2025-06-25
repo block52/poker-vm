@@ -50,20 +50,21 @@ class RaiseAction extends BaseAction implements IAction {
         //     }
         // }
         
-        const actions = [...this.game.getActionsForRound(currentRound)];
+        const actions = this.game.getActionsForRound(currentRound);
+        const newActions = [...actions];
         if (includeBlinds) {
             const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
-            actions.push(...anteActions);
+            newActions.push(...anteActions);
         }
 
-        if (actions.length < 2) {
+        if (newActions.length < 2) {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
         let currentBet = 0n;
-        let lastAggressorActionIndex = actions.length - 1;
-        for (let i = actions.length - 1; i >= 0; i--) {
-            const action = actions[i];
+        let lastAggressorActionIndex = newActions.length - 1;
+        for (let i = newActions.length - 1; i >= 0; i--) {
+            const action = newActions[i];
             if (action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE || action.action === PlayerActionType.SMALL_BLIND || action.action === PlayerActionType.BIG_BLIND) {
                 currentBet = action.amount || 0n;
                 lastAggressorActionIndex = i;
@@ -77,7 +78,7 @@ class RaiseAction extends BaseAction implements IAction {
 
         let previousBet = 0n;
         for (let i = lastAggressorActionIndex - 1; i >= 0; i--) {
-            const action = actions[i];
+            const action = newActions[i];
             if (action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE || action.action === PlayerActionType.SMALL_BLIND || action.action === PlayerActionType.BIG_BLIND) {
                 previousBet = action.amount || 0n;
                 break;

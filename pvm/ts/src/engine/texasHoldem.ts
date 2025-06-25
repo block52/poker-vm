@@ -1034,7 +1034,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Gets all actions for a specific round
      */
     getActionsForRound(round: TexasHoldemRound): TurnWithSeat[] {
-        return this._rounds.get(round) || [];
+        return [...(this._rounds.get(round) || [])];
     }
 
     // ==================== POT AND BETTING METHODS ====================
