@@ -49,8 +49,8 @@ class RaiseAction extends BaseAction implements IAction {
         //         largestBetPlayer = activePlayer.address;
         //     }
         // }
-
-        const actions = this.game.getActionsForRound(currentRound);
+        
+        const actions = [...this.game.getActionsForRound(currentRound)];
         if (includeBlinds) {
             const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
             actions.push(...anteActions);
