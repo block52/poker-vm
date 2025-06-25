@@ -154,7 +154,10 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.post("/bitcoin", async (req, res) => {
+// NOTE: Bitcoin webhook handling moved to /bitcoin/webhooks/btcpayWebhook.js
+// This incomplete route is commented out to avoid conflicts
+/*
+// router.post("/bitcoin", async (req, res) => {
     const secret = req.header["x-api-key"];
 
     if (secret !== process.env.BTC_PAY_SERVER_SECRET) {
@@ -163,6 +166,7 @@ router.post("/bitcoin", async (req, res) => {
 
     const wallet = new ethers.Wallet(process.env.DEPOSIT_PRIVATE_KEY, provider);
 })
+*/
 
 // Get active session for user with detailed status
 router.get("/user/:userAddress", async (req, res) => {

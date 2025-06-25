@@ -13,6 +13,7 @@ const connectDB = require("./db");
 const axios = require("axios");
 const depositSessionsRouter = require("./routes/depositSessions");
 const swaggerSetup = require("./swagger/setup");
+const bitcoinWebhooksRouter = require("./bitcoin/webhooks/btcpayWebhook");
 
 const { RPCMethods, PlayerActionType, NonPlayerActionType } = require("@bitcoinbrisbane/block52");
 
@@ -90,7 +91,7 @@ app.get("/", (req, res) => {
 
 // Mount feature-specific routes
 app.use("/deposit-sessions", depositSessionsRouter);
-
+app.use("/bitcoin", bitcoinWebhooksRouter);
 
 // ===================================
 // 11. Table-related endpoints
