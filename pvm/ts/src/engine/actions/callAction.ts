@@ -2,7 +2,6 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
-import { availableMemory } from "process";
 
 class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
