@@ -1059,11 +1059,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
-     * Gets all bets for a specific round
+     * Gets all bets for a specific round:  Note, deprecated, use betManager instead
      */
     getBets(round: TexasHoldemRound = this.currentRound): Map<string, bigint> {
         const bets = new Map<string, bigint>();
-        const actions = this._rounds.get(round);
+        const actions = this.getActionsForRound(round);
 
         if (!actions || actions.length === 0) {
             return bets;

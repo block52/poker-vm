@@ -2,6 +2,7 @@ import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound }
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range } from "../types";
+import { BetManager } from "../managers/betManager";
 
 abstract class BaseAction {
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) {}
@@ -38,8 +39,19 @@ abstract class BaseAction {
         if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
     }
 
-    // Get the largest bet in the current round
     protected getLargestBet(includeBlinds: boolean = false): bigint {
+        const actions = this.game.getActionsForRound(this.game.currentRound);
+        let newActions = [...actions];
+        if (includeBlinds) {
+            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
+            newActions.push(...anteActions);
+        }
+        const betManager = new BetManager(newActions);
+        return betManager.getLargestBet();
+    }
+
+    // Get the largest bet in the current round
+    protected getLargestBet_old(includeBlinds: boolean = false): bigint {
         let largestBettor: string = "";
         let _amount = 0n;
         const roundBets = this.game.getBets(this.game.currentRound);
