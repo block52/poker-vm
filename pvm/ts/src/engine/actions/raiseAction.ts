@@ -36,7 +36,7 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise in the showdown round.");
         }
 
-        // 3. Find who has the largest bet for this round
+        // 3. Get the bets for the current round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
 
         const actions = this.game.getActionsForRound(currentRound);
