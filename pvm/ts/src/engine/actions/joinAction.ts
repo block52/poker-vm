@@ -10,16 +10,8 @@ class JoinAction extends BaseAction {
 
     // Override verify method for join action
     verify(player: Player): Range {
-        // For joining, we don't need to verify against an existing player
-        try {
-            const existingPlayer = this.game.getPlayer(player.address);
-            if (existingPlayer) {
-                throw new Error("Player already exists in the game.");
-            }
-        } catch (error) {
-            // If the player doesn't exist, we can proceed with the join
-            // This is expected behavior, so we can ignore the error
-            console.warn("Player not found, proceeding with join action.");
+        if (this.game.exists(player.address)) {
+            throw new Error("Player already exists in the game.");
         }
 
         // Now we can use the actual min/max buy-in values
