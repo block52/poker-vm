@@ -17,7 +17,6 @@ export class BetManager implements IBetManager {
     constructor(turns: Turn[] = []) {
         // Initialize the bet manager
         this.addTurns(turns);
-        this.turns.push(...turns);
     }
 
     add(action: Turn): void {
