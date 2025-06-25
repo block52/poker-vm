@@ -35,6 +35,7 @@ import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate,
 import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./dealerManager";
+import { BetManager } from "./managers/betManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
@@ -1058,11 +1059,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
-     * Gets all bets for a specific round
+     * Gets all bets for a specific round:  Note, deprecated, use betManager instead
      */
     getBets(round: TexasHoldemRound = this.currentRound): Map<string, bigint> {
         const bets = new Map<string, bigint>();
-        const actions = this._rounds.get(round);
+        const actions = this.getActionsForRound(round);
 
         if (!actions || actions.length === 0) {
             return bets;
@@ -1082,27 +1083,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
-     * Gets a player's total bets for a specific round
+     * Gets a player's total bets for a specific round.
      */
     getPlayerTotalBets(playerId: string, round: TexasHoldemRound = this.currentRound, includeBlinds: boolean = false): bigint {
-        let amount = 0n;
-        const roundBets = this.getBets(round);
-
-        // If the player made a bet in this round, add it to the total
-        if (roundBets.has(playerId)) {
-            amount += roundBets.get(playerId) || 0n;
+        const actions = this.getActionsForRound(round);
+        let newActions = [...actions];
+        if (includeBlinds) {
+            const anteActions = this.getActionsForRound(TexasHoldemRound.ANTE);
+            newActions.push(...anteActions);
         }
-
-        if (includeBlinds && round === TexasHoldemRound.PREFLOP) {
-            const anteBets = this.getBets(TexasHoldemRound.ANTE);
-
-            // If the player made an ante bet, add it to the total
-            if (anteBets.has(playerId)) {
-                amount += anteBets.get(playerId) || 0n;
-            }
-        }
-
-        return amount;
+        const betManager = new BetManager(newActions);
+        return betManager.getTotalBetsForPlayer(playerId);
     }
 
     /**
