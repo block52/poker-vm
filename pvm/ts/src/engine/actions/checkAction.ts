@@ -1,7 +1,8 @@
-import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
+import { BetManager } from "../managers/betManager";
 
 class CheckAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -12,21 +13,76 @@ class CheckAction extends BaseAction implements IAction {
         // Basic validation
         super.verify(player);
 
+        const currentRound = this.game.currentRound;
         // 1. Round state check: Cannot check in the ante round
-        if (this.game.currentRound === TexasHoldemRound.ANTE) {
+        if (currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot check in the ante round.");
         }
 
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+        if (currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error("Cannot check in the showdown round.");
+        }
+
+        // 2. Get the bets for the current round
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        const actions = this.game.getActionsForRound(currentRound);
+        let newActions = [...actions];
+        if (includeBlinds) {
+            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
+            newActions.push(...anteActions);
+        }
+
+        const betManager = new BetManager(newActions);
+-        const currentBetAmount: bigint = betManager.current();
++        const largestBet: bigint = betManager.getLargestBet();
+
+-        if (currentBetAmount === 0n) {
++        if (largestBet === 0n) {
+             return { minAmount: 0n, maxAmount: 0n };
+         }
+
+         const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
+-        if (playersBet === currentBetAmount) {
++        if (playersBet === largestBet) {
+             // Player has already matched the current bet, can check
+             return { minAmount: 0n, maxAmount: 0n };
+         }
+
+         throw new Error("Player must match the largest bet to check.");
+     }
+
+    verify_old(player: Player): Range {
+        // Basic validation
+        super.verify(player);
+
+        const currentRound = this.game.currentRound;
+        // 1. Round state check: Cannot check in the ante round
+        if (currentRound === TexasHoldemRound.ANTE) {
+            throw new Error("Cannot check in the ante round.");
+        }
+
+        if (currentRound === TexasHoldemRound.SHOWDOWN) {
             throw new Error("Cannot check in the showdown round.");
         }
 
         // 2. Bet matching check: Get the largest bet and player's current bet
-        const largestBet = this.getLargestBet();
-        const playerBet = this.getSumBets(player.address);
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        const largestBet = this.getLargestBet(includeBlinds);
+        const playerBet = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
 
+        // 2.1 If no bets have been made, player can check
+        if (largestBet === 0n) {
+            return { minAmount: 0n, maxAmount: 0n };
+        }
+
+        // // 2.2 If player has already matched the largest bet, they can check
+        // if (playerBet === largestBet) {
+        //     return { minAmount: 0n, maxAmount: 0n };
+        // }
+        
+        // I think all of this is  unnecessary, but leaving it here for now
         // 3. Special case for preflop round
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+        if (currentRound === TexasHoldemRound.PREFLOP) {
             const playerSeat = this.game.getPlayerSeatNumber(player.address);
             const isSmallBlind = playerSeat === this.game.smallBlindPosition;
             const isBigBlind = playerSeat === this.game.bigBlindPosition;
@@ -65,6 +121,15 @@ class CheckAction extends BaseAction implements IAction {
         }
 
         return { minAmount: 0n, maxAmount: 0n };
+    }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        // Verify the player can perform the check action
+        if (amount !== 0n) {
+            throw new Error("Check amount must be zero.");
+        }
+
+        super.execute(player, index, amount);
     }
 }
 

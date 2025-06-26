@@ -1,11 +1,9 @@
 import { GameManagement, getGameManagementInstance } from "./gameManagement";
 import GameState from "../../schema/gameState";
-import contractSchemas from "../../schema/contractSchemas";
 import { ethers } from "ethers";
 
 // Mock dependencies
 jest.mock("../../schema/gameState");
-jest.mock("../../schema/contractSchemas");
 jest.mock("../../core/mempool");
 jest.mock("ethers", () => ({
     ZeroAddress: "0x0000000000000000000000000000000000000000",
@@ -65,13 +63,10 @@ describe.skip("GameManagement", () => {
         });
 
         it("should create new game state from schema", async () => {
-            const mockSchema = {
-                address: "0x2234567890123456789012345678901234567890",
-                schema: "arg0,cash,2,6,1000000,2000000"
-            };
-
-            (GameState.findOne as jest.Mock).mockResolvedValue(null);
-            (contractSchemas.findOne as jest.Mock).mockResolvedValue(mockSchema);
+            // const mockSchema = {
+            //     address: "0x2234567890123456789012345678901234567890",
+            //     schema: "arg0,cash,2,6,1000000,2000000"
+            // };
 
             const result = await gameManagement.getState("0x1234567890123456789012345678901234567890");
 
@@ -96,9 +91,6 @@ describe.skip("GameManagement", () => {
         });
 
         it("should throw error if game not found", async () => {
-            (GameState.findOne as jest.Mock).mockResolvedValue(null);
-            (contractSchemas.findOne as jest.Mock).mockResolvedValue(null);
-
             await expect(gameManagement.getState(ethers.ZeroAddress)).rejects.toThrow("Game not found");
         });
     });

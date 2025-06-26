@@ -1,16 +1,15 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame from "../texasHoldem";
-import { getDefaultGame } from "../testConstants";
+import { getDefaultGame, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS } from "../testConstants";
 
 describe("FoldAction", () => {
     let game: TexasHoldemGame;
     let updateMock: any;
     let action: FoldAction;
     let player: Player;
-
-    const previousActions: ActionDTO[] = [];
+    let mockNextPlayer: Player;
 
     beforeEach(() => {
         // Setup initial game state
@@ -41,6 +40,14 @@ describe("FoldAction", () => {
             undefined, // holeCards
             PlayerStatus.ACTIVE // status
         );
+
+        mockNextPlayer = new Player(
+            PLAYER_1_ADDRESS, // address
+            undefined, // lastAction
+            1000000000000000000n, // chips
+            undefined, // holeCards
+            PlayerStatus.ACTIVE // status
+        );
     });
 
     describe("type", () => {
@@ -52,66 +59,73 @@ describe("FoldAction", () => {
 
     describe("verify", () => {
         beforeEach(() => {
-            // Mock player as the next player to act
-            const mockNextPlayer = {
-                address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
-            };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            const players: Player[] = [player, mockNextPlayer];
 
-            // Mock current round
+            // Mock the methods that verify() calls
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-
-            // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+            // Mock findLivePlayers to return multiple players
+            jest.spyOn(game, "findLivePlayers").mockReturnValue(players);
         });
 
         it("should return a range for fold action", () => {
             const range = action.verify(player);
             expect(range).toBeDefined();
             expect(range).toEqual({
-                minAmount: 0n, // No chips are lost when folding
+                minAmount: 0n,
                 maxAmount: 0n
             });
         });
 
-        it.skip("should throw error if not player's turn", () => {
-            // Mock a different player as next to act
-            const differentPlayer = {
-                address: "0x980b8D8A16f5891F41871d878a479d81Da52334d"
-            };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(differentPlayer as any);
+        it("should throw error if player has already folded", () => {
+            player.status = PlayerStatus.FOLDED;
 
-            expect(() => action.verify(player)).toThrow("Must be currently active player.");
+            expect(() => action.verify(player)).toThrow("Player has already folded.");
         });
 
-        it.skip("should throw error if player is not active", () => {
-            // Mock player status as FOLDED
-            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
-
-            expect(() => action.verify(player)).toThrow("Only active player can fold.");
-        });
-
-        it.skip("should throw error if game is in showdown", () => {
+        it("should throw error if game is in showdown", () => {
             // Mock game in showdown state
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
 
-            expect(() => action.verify(player)).toThrow("Hand has ended.");
+            expect(() => action.verify(player)).toThrow("Fold action is not allowed during showdown round.");
+        });
+
+        it("should throw error if player is the last live player", () => {
+            // Mock findLivePlayers to return only this player (making them the last live player)
+            jest.spyOn(game, "findLivePlayers").mockReturnValue([player]);
+
+            expect(() => action.verify(player)).toThrow("Cannot fold when you are the last live player.");
+        });
+
+        it("should allow fold when multiple live players exist", () => {
+            // Mock findLivePlayers to return multiple players
+            const otherPlayer = new Player(
+                PLAYER_2_ADDRESS,
+                undefined,
+                1000000000000000000n,
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            jest.spyOn(game, "findLivePlayers").mockReturnValue([player, otherPlayer]);
+
+            const range = action.verify(player);
+            expect(range).toEqual({
+                minAmount: 0n,
+                maxAmount: 0n
+            });
         });
     });
 
     describe("execute", () => {
         beforeEach(() => {
-            // Mock player as the next player to act
-            const mockNextPlayer = {
-                address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
-            };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
-
-            // Mock current round
+            // Mock all the dependencies for verify()
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-
-            // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+            
+            // Mock findLivePlayers to have multiple players so fold is allowed
+            jest.spyOn(game, "findLivePlayers").mockReturnValue([player, mockNextPlayer]);
 
             // Mock game's addAction method
             game.addAction = jest.fn();
@@ -123,13 +137,30 @@ describe("FoldAction", () => {
             expect(player.chips).toBe(initialChips);
         });
 
-        it.skip("should add FOLD action with 0 amount", () => {
+        it("should set player status to FOLDED", () => {
+            const updateStatusSpy = jest.spyOn(player, "updateStatus");
+            
+            action.execute(player, 0);
+            
+            expect(updateStatusSpy).toHaveBeenCalledWith(PlayerStatus.FOLDED);
+        });
+
+        it("should add FOLD action to game", () => {
             action.execute(player, 0);
 
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: player.address,
-                action: PlayerActionType.FOLD
-            });
+                action: PlayerActionType.FOLD,
+                index: 0
+            }, TexasHoldemRound.PREFLOP);
+        });
+
+        it("should call verify before executing", () => {
+            const verifySpy = jest.spyOn(action, "verify");
+            
+            action.execute(player, 0);
+            
+            expect(verifySpy).toHaveBeenCalledWith(player);
         });
     });
 });

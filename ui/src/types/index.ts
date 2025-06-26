@@ -246,6 +246,11 @@ export interface PlayerTimerReturn extends BaseHookReturn {
     progress: number;
     timeRemaining: number;
     isActive: boolean;
+    extendTime?: () => void;
+    hasUsedExtension?: boolean;
+    canExtend?: boolean;
+    isCurrentUser?: boolean;
+    isCurrentUserTurn?: boolean;
 }
 
 // Type for showing cards data
@@ -268,7 +273,7 @@ export interface TableAnimationsReturn extends BaseHookReturn {
 
 // Type for the return value of useGameOptions hook
 export interface GameOptionsReturn extends BaseHookReturn {
-    gameOptions: Required<GameOptionsDTO>;
+    gameOptions: Required<GameOptionsDTO> | null;
 }
 
 // Type for the return value of useTableData hook

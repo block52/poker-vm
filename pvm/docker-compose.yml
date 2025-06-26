@@ -6,10 +6,10 @@ services:
     container_name: pvm-mongo
     restart: always
     environment:
-      MONGO_INITDB_DATABASE: poker
+      MONGO_INITDB_DATABASE: pvm
       # No auth for now
-      # MONGO_INITDB_ROOT_USERNAME: root
-      # MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: node1
+      MONGO_INITDB_ROOT_PASSWORD: Passw0rd123
     ports:
       - 27017:27017
 

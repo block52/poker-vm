@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Wallet } from "ethers";
 import { AccountDTO } from "@bitcoinbrisbane/block52";
-import { useNodeRpc } from "../context/NodeRpcContext";
+import { getClient } from "../utils/b52AccountUtils";
 
 // Key for storing last API call time in localStorage
 const LAST_ACCOUNT_API_CALL_KEY = "last_account_api_call_time";
@@ -25,9 +25,6 @@ export const STORAGE_PRIVATE_KEY = "user_eth_private_key";
 export const STORAGE_PUBLIC_KEY = "user_eth_public_key";
 
 const useUserWallet = (): UserWalletResult => {
-    // Use the shared NodeRpc client from context
-    const { client, isLoading: clientLoading } = useNodeRpc();
-    
     const [privateKey, setPrivateKey] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -35,7 +32,7 @@ const useUserWallet = (): UserWalletResult => {
     const [accountData, setAccountData] = useState<AccountDTO | null>(null);
 
     const fetchBalance = useCallback(async () => {
-        if (!client || !accountData?.address) return;
+        if (!accountData?.address) return;
 
         // Rate limiting: Only allow API calls once every 10 seconds across all hooks
         const now = Date.now();
@@ -56,6 +53,9 @@ const useUserWallet = (): UserWalletResult => {
         localStorage.setItem(LAST_ACCOUNT_API_CALL_KEY, now.toString());
 
         try {
+            // Use the singleton client instance
+            const client = getClient();
+            
             // Use the SDK's getAccount method
             const data = await client.getAccount(accountData.address);
             console.log("[useUserWallet] Account data received:", {
@@ -73,7 +73,7 @@ const useUserWallet = (): UserWalletResult => {
         } finally {
             setIsLoading(false);
         }
-    }, [client, accountData]);
+    }, [accountData]);
 
     // Manual refresh function
     const refreshBalance = useCallback(async () => {
@@ -135,7 +135,7 @@ const useUserWallet = (): UserWalletResult => {
     return {
         accountData,
         privateKey,
-        isLoading: isLoading || clientLoading,
+        isLoading,
         error,
         refreshBalance
     };

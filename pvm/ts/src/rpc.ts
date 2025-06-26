@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers";
-import { NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import {
     AccountCommand,
@@ -7,11 +7,9 @@ import {
     BlockCommandParams,
     BurnCommand,
     CreateAccountCommand,
-    CreateContractSchemaCommand,
     DeployContractCommand,
     FindGameStateCommand,
     GameStateCommand,
-    GetAllContractSchemasCommand,
     GetBlocksCommand,
     GetNodesCommand,
     GetTransactionCommand,
@@ -38,6 +36,7 @@ import { makeErrorRPCResponse } from "./types/response";
 import { CONTROL_METHODS, READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
 import { Node } from "./core/types";
+import { GameManagement } from "./state/mongodb/gameManagement";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -185,12 +184,6 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.GET_CONTRACT_SCHEMA: {
-                    const command = new GetAllContractSchemasCommand(10, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
-
                 case RPCMethods.GET_LAST_BLOCK: {
                     const params: BlockCommandParams = {
                         index: undefined,
@@ -323,12 +316,12 @@ export class RPC {
                     break;
                 }
 
-                case RPCMethods.CREATE_CONTRACT_SCHEMA: {
-                    const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
-                    const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
-                }
+                // case RPCMethods.CREATE_CONTRACT_SCHEMA: {
+                //     const [category, name, schema] = request.params as RPCRequestParams[RPCMethods.CREATE_CONTRACT_SCHEMA];
+                //     const command = new CreateContractSchemaCommand(category, name, schema, validatorPrivateKey);
+                //     result = await command.execute();
+                //     break;
+                // }
 
                 case RPCMethods.CREATE_ACCOUNT: {
                     const [privateKey] = request.params as RPCRequestParams[RPCMethods.CREATE_ACCOUNT];
@@ -346,7 +339,7 @@ export class RPC {
                 }
 
                 case RPCMethods.NEW_HAND: {
-                    // This is deprecated, use perform_action instead with action = "new_hand"
+                    // This is deprecated, use perform_action instead with action = "new-hand"
                     const [to, nonce, index, data] = request.params as RPCRequestParams[RPCMethods.NEW_HAND];
                     const command = new NewCommand(to, index, Number(nonce), validatorPrivateKey, data);
                     result = await command.execute();
@@ -354,8 +347,15 @@ export class RPC {
                 }
 
                 case RPCMethods.NEW_TABLE: {
-                    const [to, owner] = request.params as RPCRequestParams[RPCMethods.NEW_TABLE];
-                    const command = new NewTableCommand(to, owner, validatorPrivateKey);
+                    // The SDK sends [schemaAddress, owner, nonce] but we now also accept timestamp for uniqueness
+                    const [gameOptionsString, owner, nonce, timestamp] = request.params as [string, string, number, string];
+                    const gameOptions: GameOptions = GameManagement.parseSchema(gameOptionsString);
+                    console.log("🏗️ NEW_TABLE RPC called:");
+                    console.log(`Game Options: ${gameOptionsString}`);
+                    console.log(`Owner: ${owner}`);
+                    console.log(`Nonce: ${nonce}`);
+                    console.log(`Timestamp: ${timestamp || "not provided"}`);
+                    const command = new NewTableCommand(owner, gameOptions, BigInt(nonce || 0), validatorPrivateKey, timestamp);
                     result = await command.execute();
                     break;
                 }

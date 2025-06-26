@@ -13,28 +13,57 @@ class CallAction extends BaseAction implements IAction {
         super.verify(player);
 
         // 1. Round state check: Cannot call during ANTE round
-        if (this.game.currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Call action is not allowed during ante round.");
-        }
-
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
-            throw new Error("Call action is not allowed during showdown round.");
+        const currentRound = this.game.currentRound;
+        if (currentRound === TexasHoldemRound.ANTE || currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error(`Call action is not allowed during ${currentRound} round.`);
         }
 
         // 2. Special case for preflop round
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+        if (currentRound === TexasHoldemRound.PREFLOP) {
             // Special case for small blind position in PREFLOP
             const seat = this.game.getPlayerSeatNumber(player.address);
+            const playersBet = this.game.getPlayerTotalBets(player.address, currentRound, true);
+
             if (seat === this.game.smallBlindPosition) {
                 // Small blind needs to call the difference to match big blind
-                const amount = this.game.bigBlind - this.game.smallBlind;
+                const largestBet = this.getLargestBet();
+                const largestBet2 = this.getLargestBet(true);
+
+                if (largestBet2 === this.game.bigBlind) {
+                    // No bets yet, small blind can call the big blind
+                    return { minAmount: this.game.bigBlind - playersBet, maxAmount: this.game.bigBlind - playersBet };
+                }
+
+                if (largestBet > playersBet) {
+                    // Small blind needs to call the difference to match the largest bet
+                    const amount = largestBet - playersBet;
+                    return { minAmount: amount, maxAmount: amount };
+                }
+
+                const amount = (largestBet + this.game.bigBlind) - playersBet;
                 return { minAmount: amount, maxAmount: amount };
             }
 
-            const largestBet = this.getLargestBet();
-            const playerBet = this.getSumBets(player.address);
-            
-            if (seat === this.game.bigBlindPosition && largestBet === playerBet) {
+            if (seat === this.game.bigBlindPosition) {
+                // const largestBet = this.getLargestBet();
+                const largestBet2 = this.getLargestBet(true);
+
+                if (largestBet2 === this.game.bigBlind) {
+                    // No bets yet, big blind can call the big blind
+                    // return { minAmount: this.game.bigBlind - playersBet, maxAmount: this.game.bigBlind - playersBet };
+                    throw new Error("Big blind cannot call in preflop round.");
+                }
+
+                // Big blind can only call if there is a raise
+                if (largestBet2 > playersBet) {
+                    // Big blind needs to call the difference to match the largest bet
+                    const amount = largestBet2 - playersBet;
+                    return { minAmount: amount, maxAmount: amount };
+                }
+            }
+
+            const largestBet = this.getLargestBet(true);
+            if (seat === this.game.bigBlindPosition && largestBet === playersBet) {
                 // Error message not quite right
                 throw new Error("Big blind cannot call in preflop round.");
             }
@@ -53,7 +82,7 @@ class CallAction extends BaseAction implements IAction {
             throw new Error("No previous action to call.");
         }
 
-        // 6. Player bet check: Calculate the amount needed to call
+        // // 6. Player bet check: Calculate the amount needed to call
         let deductAmount: bigint = this.getDeductAmount(player);
 
         // 7. Check if player already matched the bet
@@ -75,44 +104,38 @@ class CallAction extends BaseAction implements IAction {
         return { minAmount: deductAmount, maxAmount: deductAmount };
     }
 
-    execute(player: Player, index: number): void {
-        // Get the valid call amount from verify
-        const range = this.verify(player);
-        const deductAmount = range.minAmount;
-
-        if (deductAmount) {
-            if (player.chips < deductAmount) throw new Error(`Player has insufficient chips to ${this.type}.`);
-
-            player.chips -= deductAmount;
+    execute(player: Player, index: number, amount: bigint): void {
+        // Verify the player can perform the call action
+        if (amount <= 0n) {
+            throw new Error("Call amount must be greater than zero.");
         }
 
-        const round = this.game.currentRound;
-        this.game.addAction(
-            { playerId: player.address, action: !player.chips && deductAmount ? PlayerActionType.ALL_IN : this.type, amount: deductAmount, index: index },
-            round
-        );
+        super.execute(player, index, amount);
     }
 
-    getDeductAmount(player: Player): bigint {
+    private getDeductAmount(player: Player): bigint {
         const playerSeat = this.game.getPlayerSeatNumber(player.address);
-        const playerBet = this.getSumBets(player.address);
-        const largestBet = this.getLargestBet();
+        const currentRound = this.game.currentRound;
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        let playerBet = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds); // Include ante bets in preflop
+        const largestBet = this.getLargestBet(includeBlinds);
 
         // Special case for small blind in preflop
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.smallBlindPosition && playerBet === this.game.smallBlind) {
+        if (currentRound === TexasHoldemRound.PREFLOP && playerSeat === this.game.smallBlindPosition && playerBet === this.game.smallBlind) {
             // Small blind calling the big blind (difference between BB and SB)
-            return this.game.bigBlind - this.game.smallBlind;
+            const amount = (largestBet + this.game.bigBlind) - this.game.smallBlind;
+            return amount;
         }
 
         // Special case for small blind in preflop UTG
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP && playerBet === 0n && largestBet === 0n) {
+        if (currentRound === TexasHoldemRound.PREFLOP && playerBet === 0n && largestBet === 0n) {
             // Small blind calling the big blind (difference between BB and SB)
             return this.game.bigBlind - this.game.smallBlind;
         }
 
         // General case: difference between largest bet and player's current bet
         if (playerBet >= largestBet) {
-            return 0n; // Already matched or exceeded the largest bet
+            throw new Error("Player has already met maximum so can check instead.");
         }
 
         return largestBet - playerBet;

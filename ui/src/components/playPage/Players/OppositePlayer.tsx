@@ -50,6 +50,8 @@ import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useParams } from "react-router-dom";
 import { useShowingCardsByAddress } from "../../../hooks/useShowingCardsByAddress";
+import { useDealerPosition } from "../../../hooks/useDealerPosition";
+import CustomDealer from "../../../assets/CustomDealer.svg";
 
 type OppositePlayerProps = {
     left?: string;
@@ -63,11 +65,14 @@ type OppositePlayerProps = {
     setStartIndex: (index: number) => void;
 };
 
-const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
-    const { id } = useParams<{ id: string }>();
+const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
     const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
-    const { winnerInfo } = useWinnerInfo(id);
+    const { winnerInfo } = useWinnerInfo();
     const { showingPlayers } = useShowingCardsByAddress();
+    const { dealerSeat } = useDealerPosition();
+    
+    // Check if this seat is the dealer
+    const isDealer = dealerSeat === index;
 
     // 1) detect when any winner exists
     const hasWinner = React.useMemo(() => Array.isArray(winnerInfo) && winnerInfo.length > 0, [winnerInfo]);
@@ -171,6 +176,13 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
                     <div className="absolute top-[-10px] w-full">
                         <Badge count={index} value={stackValue} color={color} />
                     </div>
+
+                    {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}
+                    {isDealer && (
+                        <div className="absolute top-[-85px] right-[-40px] w-12 h-12 z-20">
+                            <img src={CustomDealer} alt="Dealer Button" className="w-full h-full" />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -207,6 +219,16 @@ const OppositePlayer: React.FC<OppositePlayerProps> = ({ left, top, index, color
             </div>
         </>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison function - only re-render if meaningful props change
+    return (
+        prevProps.left === nextProps.left &&
+        prevProps.top === nextProps.top &&
+        prevProps.index === nextProps.index &&
+        prevProps.color === nextProps.color &&
+        prevProps.isCardVisible === nextProps.isCardVisible
+        // Note: setCardVisible and setStartIndex are function props that shouldn't cause re-renders
+    );
+});
 
 export default OppositePlayer;

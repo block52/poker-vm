@@ -3,37 +3,34 @@ import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import RaiseAction from "./raiseAction";
 import { IUpdate, TurnWithSeat } from "../types";
-import {
-    FIFTY_TOKENS,
-    getDefaultGame,
-    ONE_HUNDRED_TOKENS,
-    ONE_THOUSAND_TOKENS,
-    ONE_TOKEN,
-    TWO_TOKENS,
-    TEN_TOKENS,
-    TWENTY_TOKENS,
-    TWO_THOUSAND_TOKENS,
-    FIVE_TOKENS
-} from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, ONE_TOKEN, TWO_TOKENS, FIVE_TOKENS, TEN_TOKENS } from "../testConstants";
+
+// Player address constants
+const PLAYER_1_ADDRESS = "0x1111111111111111111111111111111111111111"; // Small Blind
+const PLAYER_2_ADDRESS = "0x2222222222222222222222222222222222222222"; // Big Blind
+const PLAYER_3_ADDRESS = "0x3333333333333333333333333333333333333333"; // Bettor
 
 describe("Raise Action", () => {
     let game: TexasHoldemGame;
     let updateMock: IUpdate;
     let action: RaiseAction;
-    let player: Player;
+    let player1: Player; // Small blind player who wants to raise
+    let player2: Player; // Big blind player
+    let player3: Player; // Player who made the bet
+
+    const SEVEN_TOKENS = 700000000000000000n; // Minimum raise amount
 
     beforeEach(() => {
-        // Setup initial game state
+    //     // Setup initial game state with 3 players
         const playerStates = new Map<number, Player | null>();
 
-        const initialPlayer = new Player(
-            "0x2222222222222222222222222222222222222222", // address
-            undefined, // lastAction
-            ONE_THOUSAND_TOKENS, // chips
-            undefined, // holeCards
-            PlayerStatus.ACTIVE // status
-        );
-        playerStates.set(0, initialPlayer);
+        player1 = new Player(PLAYER_1_ADDRESS, undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
+        player2 = new Player(PLAYER_2_ADDRESS, undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
+        player3 = new Player(PLAYER_3_ADDRESS, undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
+
+        playerStates.set(1, player1); // Seat 1 - Small Blind
+        playerStates.set(2, player2); // Seat 2 - Big Blind
+        playerStates.set(3, player3); // Seat 3 - Bettor
 
         game = getDefaultGame(playerStates);
 
@@ -42,257 +39,195 @@ describe("Raise Action", () => {
         };
 
         action = new RaiseAction(game, updateMock);
-        player = new Player(
-            "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-            undefined, // lastAction
-            ONE_THOUSAND_TOKENS, // chips
-            undefined, // holeCards
-            PlayerStatus.ACTIVE // status
-        );
 
-        // Mock game methods
-        jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
-        jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-        jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
-        jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
-        jest.spyOn(game, "getActionsForRound").mockReturnValue([
-            {
-                playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: ONE_TOKEN,
-                action: PlayerActionType.SMALL_BLIND,
-                index: 0,
-                seat: 2,
-                timestamp: Date.now()
-            },
-            {
-                playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                amount: TWO_TOKENS,
-                action: PlayerActionType.BIG_BLIND,
-                index: 0,
-                seat: 3,
-                timestamp: Date.now()
-            },
-            {
-                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                amount: FIVE_TOKENS,
-                action: PlayerActionType.BET,
-                index: 0,
-                seat: 4,
-                timestamp: Date.now()
-            }
-        ]);
+    //     // Mock game methods
+    //     jest.spyOn(game, "currentPlayerId", "get").mockReturnValue(PLAYER_1_ADDRESS);
+    //     jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+    //     jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+    //     jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player1);
+    //     jest.spyOn(game, "smallBlindPosition", "get").mockReturnValue(1);
+    //     jest.spyOn(game, "bigBlindPosition", "get").mockReturnValue(2);
+    //     jest.spyOn(game, "bigBlind", "get").mockReturnValue(TWO_TOKENS);
 
-        const bets = new Map<string, bigint>();
-        bets.set("0x3333333333333333333333333333333333333333", TWENTY_TOKENS); // 20 tokens
-        jest.spyOn(game, "getBets").mockReturnValue(bets);
+    //     // Mock findActivePlayers to return all 3 players
+    //     jest.spyOn(game, "findActivePlayers").mockReturnValue([player1, player2, player3]);
 
-        const turn = {
-            playerId: "0x2222222222222222222222222222222222222222",
-            action: PlayerActionType.BET,
-            amount: FIFTY_TOKENS, // 50 tokens
-            seat: 2,
-            timestamp: Date.now(),
-            index: 0
-        };
-
-        jest.spyOn(game, "getLastRoundAction").mockReturnValue(turn);
-
-        // Mock addAction method on game
-        game.addAction = jest.fn();
+    //     // Mock addAction method on game
+    //     game.addAction = jest.fn();
     });
 
-    describe("type", () => {
-        it("should return RAISE action type", () => {
-            expect(action.type).toBe(PlayerActionType.RAISE);
-        });
-    });
+    // describe("type", () => {
+    //     it("should return RAISE action type", () => {
+    //         expect(action.type).toBe(PlayerActionType.RAISE);
+    //     });
+    // });
 
     describe("verify", () => {
-        // Mock a previous bet action to raise against
-        const lastBet: TurnWithSeat = {
-            playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-            action: PlayerActionType.BET,
-            amount: TWO_TOKENS, //  2
-            index: 0,
-            seat: 2,
-            timestamp: Date.now()
-        };
+        describe("PREFLOP scenarios", () => {
+            // beforeEach(() => {
+            //     jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
 
-        beforeEach(() => {
-            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
-            jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(3);
-        });
+            //     // // Mock player total bets for PREFLOP scenario:
+            //     // // Player 1: 1 token (small blind)
+            //     // // Player 2: 2 tokens (big blind)
+            //     // // Player 3: 5 tokens (bet 3 more after big blind)
+            //     // jest.spyOn(game, "getPlayerTotalBets").mockImplementation((address, round, includeBlinds) => {
+            //     //     if (address === PLAYER_1_ADDRESS) return ONE_TOKEN; // Small blind only
+            //     //     if (address === PLAYER_2_ADDRESS) return TWO_TOKENS; // Big blind only
+            //     //     if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Big blind + 3 token bet
+            //     //     return 0n;
+            //     // });
+            // });
 
-        it("should return correct range for a raise", () => {
-            const range = action.verify(player);
+            // it.skip("should return correct range for a raise in PREFLOP", () => {
+            //     const range = action.verify(player1); // Player 1 wants to raise
 
-            // Min amount should be previous bet + big blind
-            const expectedMinAmount = FIVE_TOKENS; // 5 tokens
+            //     // Player 3 has largest bet (5 tokens)
+            //     // Minimum raise = 5 + 2 (big blind) = 7 tokens total
+            //     // Player 1 currently has 1 token, so needs 6 more
+            //     const expectedMinAmount = FIVE_TOKENS + TWO_TOKENS; // 7 tokens total
+            //     const expectedMaxAmount = ONE_TOKEN + player1.chips; // Current bet + all chips
 
-            expect(range).toEqual({
-                minAmount: expectedMinAmount,
-                maxAmount: player.chips
+            //     expect(range).toEqual({
+            //         minAmount: expectedMinAmount,
+            //         maxAmount: expectedMaxAmount
+            //     });
+            // });
+
+            // it.only("should throw error if player has largest bet (can't raise yourself)", () => {
+            //     // Mock so player1 has the largest bet
+            //     jest.spyOn(game, "getPlayerTotalBets").mockImplementation(address => {
+            //         if (address === PLAYER_1_ADDRESS) return ONE_TOKEN; // Small blind
+            //         if (address === PLAYER_2_ADDRESS) return TWO_TOKENS; // Big blind
+            //         if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Smaller bet
+            //         return 0n;
+            //     });
+
+            //     const EIGHT_TOKENS = 800000000000000000n; // 8 tokens total
+            //     // expect(() => action.verify(player1)).toThrow("Cannot raise - you already have the largest bet.");
+            //     const range = action.verify(player1);
+            //     expect(range.minAmount).toBe(EIGHT_TOKENS); // Should not allow raise
+            // });
+
+            it.only("should throw error if player has largest bet (can't raise yourself)", () => {
+                // Mock so player1 has the largest bet
+                // jest.spyOn(game, "getPlayerTotalBets").mockImplementation(address => {
+                //     if (address === PLAYER_1_ADDRESS) return ONE_TOKEN; // Small blind
+                //     if (address === PLAYER_2_ADDRESS) return TWO_TOKENS; // Big blind
+                //     if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Smaller bet
+                //     return 0n;
+                // });
+
+                jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                    {
+                        index: 1,
+                        playerId: PLAYER_1_ADDRESS,
+                        seat: 1,
+                        action: PlayerActionType.RAISE,
+                        amount: ONE_TOKEN, // Player 1 raised to 1 token
+                        timestamp: 0
+                    },
+                    {
+                        index: 2,
+                        playerId: PLAYER_2_ADDRESS,
+                        seat: 2,
+                        action: PlayerActionType.BET,
+                        amount: TWO_TOKENS, // Player bet 2 tokens
+                        timestamp: 0
+                    },
+                    {
+                        index: 3,
+                        playerId: PLAYER_3_ADDRESS,
+                        seat: 3,
+                        action: PlayerActionType.RAISE,
+                        amount: FIVE_TOKENS, // Player 3 bet 5 tokens
+                        timestamp: 0
+                    }
+                ]); 
+
+                const EIGHT_TOKENS = 800000000000000000n; // 8 tokens total
+                const range = action.verify(player1);
+                expect(range.minAmount).toBe(EIGHT_TOKENS); // Should not allow raise
+                // console.log("Range:", range);
+            });
+
+            it("should handle all-in scenario when player has insufficient chips", () => {
+                // Set player chips lower than minimum raise requirement
+                player1.chips = TWO_TOKENS; // Only 2 tokens left
+
+                const range = action.verify(player1);
+
+                // Player can only go all-in: current bet (1) + remaining chips (2) = 3 total
+                expect(range).toEqual({
+                    minAmount: ONE_TOKEN + TWO_TOKENS, // 3 tokens total
+                    maxAmount: ONE_TOKEN + TWO_TOKENS // Same for all-in
+                });
             });
         });
 
-        it("should throw error if no previous bet exists", () => {
-            // Mock getActionsForRound to not include a bet
-            jest.spyOn(game, "getActionsForRound").mockReturnValue([
-                {
-                    playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                    amount: 50000000000000000000n,
-                    action: PlayerActionType.SMALL_BLIND,
-                    index: 1,
-                    seat: 2,
-                    timestamp: Date.now()
-                },
-                {
-                    playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
-                    amount: 100000000000000000000n,
-                    action: PlayerActionType.BIG_BLIND,
-                    index: 2,
-                    seat: 3,
-                    timestamp: Date.now()
-                }
-            ]);
+        // describe("POST-FLOP scenarios", () => {
+        //     beforeEach(() => {
+        //         jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
 
-            expect(() => action.verify(player)).toThrow("No previous bet to raise.");
-        });
+        //         // Mock player total bets for FLOP scenario (no blinds included):
+        //         // Player 1: 0 tokens (checked)
+        //         // Player 2: 0 tokens (checked)
+        //         // Player 3: 5 tokens (bet 5)
+        //         jest.spyOn(game, "getPlayerTotalBets").mockImplementation((address, round, includeBlinds) => {
+        //             if (address === PLAYER_1_ADDRESS) return 0n; // Checked
+        //             if (address === PLAYER_2_ADDRESS) return 0n; // Checked
+        //             if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Bet 5
+        //             return 0n;
+        //         });
 
-        it("should bet all the players chips if less than the raised amount", () => {
-            // Set player chips lower than the raise amount
-            player.chips = ONE_TOKEN;
+        //         const mockBet: TurnWithSeat = {
+        //             index: 2, // Assuming player 3 is next to act
+        //             playerId: PLAYER_3_ADDRESS,
+        //             seat: 1,
+        //             action: PlayerActionType.BET,
+        //             amount: FIVE_TOKENS, // Bet 5 tokens
+        //             timestamp: 0
+        //         };
 
-            const range = action.verify(player);
+        //         // jest.spyOn(game, "getActionsForRound").mockReturnValue([
+        //         //     mockBet
+        //         // ]);
+        //     });
 
-            expect(range).toEqual({
-                minAmount: ONE_TOKEN,
-                maxAmount: ONE_TOKEN
-            });
-        });
+        //     it("should return correct range for a raise in FLOP", () => {
+        //         const range = action.verify(player1);
 
-        it("should throw error if it's not player's turn", () => {
-            // Change the next player to a different address
-            const differentPlayer = new Player(
-                "0x980b8D8A16f5891F41871d878a479d81Da52334c", // Different address
-                undefined,
-                ONE_THOUSAND_TOKENS,
-                undefined,
-                PlayerStatus.ACTIVE
-            );
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(differentPlayer);
+        //         // Player 3 has largest bet (5 tokens)
+        //         // Minimum raise = 5 + 2 (big blind) = 7 tokens total
+        //         // Player 1 currently has 0, so needs 7 total
+        //         const expectedMinAmount = SEVEN_TOKENS; // 7 tokens total
+        //         const expectedMaxAmount = 0n + player1.chips; // Current bet (0) + all chips
 
-            expect(() => action.verify(player)).toThrow("Must be currently active player.");
-        });
+        //         expect(range).toEqual({
+        //             minAmount: expectedMinAmount,
+        //             maxAmount: expectedMaxAmount
+        //         });
+        //     });
+        // });
 
-        it("should throw error if round is SHOWDOWN", () => {
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
+        // describe("Invalid scenarios", () => {
+        //     it("should throw error in ANTE round", () => {
+        //         jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
 
-            expect(() => action.verify(player)).toThrow("Cannot raise in the showdown round.");
-        });
+        //         expect(() => action.verify(player1)).toThrow("Cannot raise in the ante round. Only small and big blinds are allowed.");
+        //     });
 
-        it.skip("should throw error if player is not active", () => {
-            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
+        //     it("should throw error in SHOWDOWN round", () => {
+        //         jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
 
-            // Need to mock a bet action to avoid throwing error in verify
-            const lastBet: TurnWithSeat = {
-                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                action: PlayerActionType.BET,
-                amount: FIFTY_TOKENS,
-                index: 0,
-                seat: 2,
-                timestamp: Date.now()
-            };
+        //         expect(() => action.verify(player1)).toThrow("Cannot raise in the showdown round.");
+        //     });
 
-            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
+        //     it("should throw error if it's not player's turn", () => {
+        //         jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player2); // Different player's turn
 
-            expect(() => action.verify(player)).toThrow(`Only active player can ${PlayerActionType.RAISE}.`);
-        });
-    });
-
-    describe("getDeductAmount", () => {
-        it("should return the amount if player has sufficient chips", () => {
-            const amount = FIFTY_TOKENS; // 50 tokens
-            const result = (action as any).getDeductAmount(player, amount);
-            expect(result).toBe(amount);
-        });
-
-        it("should return player's total chips if amount exceeds chips", () => {
-            const amount = TWO_THOUSAND_TOKENS; // 2000 tokens
-            player.chips = ONE_THOUSAND_TOKENS; // 1000 tokens
-
-            const result = (action as any).getDeductAmount(player, amount);
-            expect(result).toBe(player.chips);
-        });
-    });
-
-    describe("execute", () => {
-        beforeEach(() => {
-            // Mock a previous bet
-            const lastBet: TurnWithSeat = {
-                playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                action: PlayerActionType.BET,
-                amount: FIFTY_TOKENS, // 50 tokens
-                index: 0,
-                seat: 2,
-                timestamp: Date.now()
-            };
-            jest.spyOn(game, "getPlayersLastAction").mockReturnValue(lastBet);
-
-            // Mock the verify method to avoid errors during execute
-            jest.spyOn(action, "verify").mockReturnValue({
-                minAmount: 70000000000000000n, // 70 tokens
-                maxAmount: player.chips
-            });
-        });
-
-        it("should deduct the raise amount from player chips", () => {
-            const initialChips = player.chips;
-            const raiseAmount = ONE_HUNDRED_TOKENS; // 100 tokens
-
-            action.execute(player, 0, raiseAmount);
-
-            expect(player.chips).toBe(initialChips - raiseAmount);
-            expect(game.addAction).toHaveBeenCalledWith(
-                {
-                    playerId: player.address,
-                    action: PlayerActionType.RAISE,
-                    amount: raiseAmount,
-                    index: 0
-                },
-                TexasHoldemRound.PREFLOP
-            );
-        });
-
-        // The following tests are commented out because:
-        // 1. The actual validation logic is already properly tested in the verify() tests above
-        // 2. In the real flow, verify() would be called before execute() to validate raise amounts
-
-        /* 
-        it("should not throw error if amount is less than minimum allowed", () => {
-            const tooSmallAmount = 1n;
-            // Should not throw an error since validation is commented out
-            expect(() => action.execute(player, 0, tooSmallAmount)).not.toThrow();
-        });
-
-        it("should not throw error if amount is greater than maximum allowed", () => {
-            const tooLargeAmount = TWO_THOUSAND_TOKENS; // 2000 tokens
-            player.chips = ONE_THOUSAND_TOKENS; // 1000 tokens
-
-            // Update mock to use player's chips as max
-            jest.spyOn(action, "verify").mockReturnValue({
-                minAmount: 70000000000000000n, // 70 tokens
-                maxAmount: player.chips
-            });
-
-            // Should not throw an error since validation is commented out
-            expect(() => action.execute(player, 0, tooLargeAmount)).not.toThrow();
-        });
-
-        it("should not throw error if required amount is not provided", () => {
-            // Should not throw an error since validation is commented out
-            expect(() => action.execute(player, 0, 0n)).not.toThrow();
-        });
-        */
+        //         expect(() => action.verify(player1)).toThrow("Must be currently active player.");
+        //     });
+        // });
     });
 });

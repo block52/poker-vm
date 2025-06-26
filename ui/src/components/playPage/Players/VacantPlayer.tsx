@@ -51,27 +51,34 @@ import { memo, useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { ethers } from "ethers";
 import PokerProfile from "../../../assets/PokerProfile.svg";
-import { toDisplaySeat } from "../../../utils/tableUtils";
+
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
-import { useNodeRpc } from "../../../context/NodeRpcContext";
 import type { VacantPlayerProps } from "../../../types/index";
 import PlayerPopUpCard from "./PlayerPopUpCard";
+import { useDealerPosition } from "../../../hooks/useDealerPosition";
+import { joinTable } from "../../../hooks/playerActions/joinTable";
+import { useGameOptions } from "../../../hooks/useGameOptions";
+import CustomDealer from "../../../assets/CustomDealer.svg";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index, onJoin }) => {
-        const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData(useParams<{ id: string }>().id);
+        const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
+        const { gameOptions } = useGameOptions();
         const userAddress = localStorage.getItem("user_eth_public_key");
         const privateKey = localStorage.getItem("user_eth_private_key");
 
-        // Get NodeRpcClient
-        const { client, isLoading: clientLoading } = useNodeRpc();
         const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
         const [joinSuccess, setJoinSuccess] = useState(false);
         const [joinResponse, setJoinResponse] = useState<any>(null);
         const [isCardVisible, setIsCardVisible] = useState(false);
+
+        const { dealerSeat } = useDealerPosition();
+    
+        // Check if this seat is the dealer
+        const isDealer = dealerSeat === index;
 
         // Memoize seat status checks
         const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
@@ -95,7 +102,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
 
         const handleConfirmSeat = useCallback(async () => {
-            if (!client || !userAddress || !privateKey || !tableId) {
+            if (!userAddress || !privateKey || !tableId) {
                 setJoinError("Missing required information to join table");
                 return;
             }
@@ -111,13 +118,21 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
             setJoinSuccess(false);
 
             try {
-                const buyIn = ethers.parseUnits(storedAmount, 18);
-                const account = await client.getAccount(userAddress);
-                const response = await client.playerJoin(tableId, BigInt(buyIn.toString()), index, account.nonce);
+                // Convert amount to Wei for the join function
+                const buyInWei = ethers.parseUnits(storedAmount, 18).toString();
+                
+                // Use actual maxPlayers from game options, fallback to 9 if not available
+                const maxPlayers = gameOptions?.maxPlayers || 9;
+                
+                const response = await joinTable(tableId, {
+                    buyInAmount: buyInWei,
+                    seatNumber: index
+                }, maxPlayers);
                 
                 setJoinResponse(response);
                 setJoinSuccess(true);
                 setShowConfirmModal(false);
+                setIsJoining(false);
                 
                 // Call onJoin after successful join
                 if (onJoin) {
@@ -128,7 +143,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [client, userAddress, privateKey, tableId, index, onJoin]);
+        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxPlayers]);
 
         // Memoize container styles
         const containerStyle = useMemo(() => ({
@@ -153,7 +168,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
         // Memoize seat text
         const seatText = useMemo(() => ({
-            title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${toDisplaySeat(index)}`,
+            title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${index}`,
             subtitle: !isUserAlreadyPlaying ? (canJoinThisSeat ? "Click to Join" : "Seat Taken") : null
         }), [isUserAlreadyPlaying, canJoinThisSeat, index]);
 
@@ -168,9 +183,16 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                         <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
                     </div>
                     <div className="text-white text-center">
-                        <div className="text-sm mb-1 whitespace-nowrap">{seatText.title}</div>
-                        {seatText.subtitle && <div className="whitespace-nowrap">{seatText.subtitle}</div>}
+                        <div className="text-lg sm:text-sm mb-1 whitespace-nowrap font-medium">{seatText.title}</div>
+                        {seatText.subtitle && <div className="text-base sm:text-xs whitespace-nowrap">{seatText.subtitle}</div>}
                     </div>
+
+                    {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}
+                    {isDealer && (
+                        <div className="absolute top-[-85px] right-[-40px] w-12 h-12 z-20">
+                            <img src={CustomDealer} alt="Dealer Button" className="w-full h-full" />
+                        </div>
+                    )}
                 </div>
 
                 {/* PlayerPopUpCard - Only show for seat changing */}
@@ -204,7 +226,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                             className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20"
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-bold text-white mb-4">Join Seat {toDisplaySeat(index)}</h3>
+                            <h3 className="text-xl font-bold text-white mb-4">Join Seat {index}</h3>
                             
                             {joinError && (
                                 <div className="mb-4 p-3 bg-red-900/30 text-red-200 rounded-lg text-sm border border-red-500/20">
@@ -213,7 +235,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                             )}
                             
                             <p className="text-gray-300 mb-6 text-center">
-                                Ready to join at seat {toDisplaySeat(index)}?
+                                Ready to join at seat {index}?
                             </p>
 
                             <div className="flex justify-center space-x-3">
@@ -226,7 +248,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                 </button>
                                 <button
                                     onClick={handleConfirmSeat}
-                                    disabled={isJoining || clientLoading}
+                                    disabled={isJoining}
                                     className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20 flex items-center"
                                 >
                                     {isJoining ? (

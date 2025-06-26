@@ -1,6 +1,6 @@
-import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TEN_TOKENS, TWO_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in with 3 players.
 describe("Texas Holdem - Ante - 3 Players", () => {
@@ -45,12 +45,11 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             // Get round
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            // Get legal actions for player 0
+            // Get legal actions for player 1, can only fold
             const actions = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             expect(actions).toBeDefined();
-            expect(actions.length).toEqual(2);
+            expect(actions.length).toEqual(1);
             expect(actions[0].action).toEqual(NonPlayerActionType.DEAL);
-            expect(actions[1].action).toEqual(PlayerActionType.FOLD);
         });
     });
 

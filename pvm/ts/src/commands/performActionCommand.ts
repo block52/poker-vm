@@ -1,16 +1,15 @@
-import { NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
+import { KEYS, NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
+import { getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
-import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
-import { toOrderedTransaction } from "../utils/parsers";
+import { IGameManagement } from "../state/interfaces";
+import { toOrderedTransaction, extractDataFromParams } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     protected readonly gameManagement: IGameManagement;
-    private readonly contractSchemaManagement: IContractSchemaManagement;
     protected readonly mempool: Mempool;
 
     constructor(
@@ -23,9 +22,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         protected readonly privateKey: string,
         protected readonly data?: string
     ) {
-        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, data=${action}`);
+        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, action=${action}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
     }
 
@@ -44,7 +42,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error(`Game state not found for address: ${this.to}`);
         }
 
-        const gameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
+        const gameOptions = await this.gameManagement.getGameOptions(gameState.address);
         const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
 
         // Get mempool transactions for the game
@@ -66,17 +64,27 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
         });
 
-        console.log(`Performing action ${this.action} with index ${this.index} data ${this.data}`);
-        game.performAction(this.from, this.action, this.index, this.amount, this.data);
-
         const nonce = BigInt(this.nonce);
 
         const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
         const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
 
         // Create transaction with correct direction of funds flow
-        // For all other actions: regular format
-        const data = this.data ? `${this.action},${this.index},${this.data}` : `${this.action},${this.index}`;
+        // For all other actions: URLSearchParams format
+        const params = new URLSearchParams();
+        params.set(KEYS.ACTION_TYPE, this.action);
+        params.set(KEYS.INDEX, this.index.toString());
+        
+        // Extract clean data using the parser (single responsibility)
+        const paramsString = extractDataFromParams(this.data);
+        
+        console.log(`Performing action ${this.action} with index ${this.index} data ${paramsString}`);
+        game.performAction(this.from, this.action, this.index, this.amount, paramsString);
+        if (paramsString) {
+            params.set(KEYS.DATA, paramsString);  // Use KEYS.DATA instead of hardcoded "data"
+        }
+        
+        const data = params.toString();
 
         if (this.action !== NonPlayerActionType.LEAVE) {
             const tx: Transaction = await Transaction.create(

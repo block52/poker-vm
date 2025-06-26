@@ -1,29 +1,23 @@
-import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
-import { IAction, Range, TurnWithSeat } from "../types";
+import { IAction, Range, Turn } from "../types";
+import { BetManager } from "../managers/betManager";
 
 class RaiseAction extends BaseAction implements IAction {
-
-    private readonly roundActions: TurnWithSeat[] = [];
-
     get type(): PlayerActionType {
         return PlayerActionType.RAISE;
     }
 
     /**
      * Verify if a player can raise and determine the valid raise range
-     * 
+     *
      * For a raise to be valid:
      * 1. Player must be active and it must be their turn (checked in base verify)
-     * 2. Game must not be in the ANTE round (only small/big blinds allowed)
-     * 3. Blinds must be posted before raising is allowed in preflop
-     * 4. There must be a previous bet or raise to raise against
-     * 
-     * The minimum raise amount follows poker rules:
-     * - At least double the previous bet OR
-     * - At least the previous bet plus the big blind (whichever is larger)
-     * 
+     * 2. Game must not be in the ANTE or SHOWDOWN round
+     * 3. Player cannot have the largest bet (can't raise yourself)
+     * 4. Must raise by at least the big blind amount above the largest bet
+     *
      * @param player The player attempting to raise
      * @returns Range object with minimum and maximum raise amounts
      * @throws Error if raising conditions are not met
@@ -31,108 +25,53 @@ class RaiseAction extends BaseAction implements IAction {
     verify(player: Player): Range {
         // 1. Perform basic validation (player active, player's turn, etc.)
         super.verify(player);
-        
+
         // 2. Cannot raise in the ANTE round
-        if (this.game.currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Cannot raise in the ante round. Small blind must post.");
+        const currentRound = this.game.currentRound;
+        if (currentRound === TexasHoldemRound.ANTE) {
+            throw new Error("Cannot raise in the ante round. Only small and big blinds are allowed.");
         }
 
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+        if (currentRound === TexasHoldemRound.SHOWDOWN) {
             throw new Error("Cannot raise in the showdown round.");
         }
 
-        // 3. For preflop, ensure blinds have been posted
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
-            const playerSeat = this.game.getPlayerSeatNumber(player.address);
-            const isSmallBlind = playerSeat === this.game.smallBlindPosition;
+        // 3. Find who has the largest bet for this round
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
 
-            if (isSmallBlind) {
-                // Can reopen the betting with a minimum of big blind
-                return { minAmount: this.game.smallBlind + this.game.bigBlind, maxAmount: player.chips };
-            }
+        const actions = this.game.getActionsForRound(currentRound);
+        let newActions = [...actions];
+        if (includeBlinds) {
+            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
+            newActions.push(...anteActions);
         }
 
-        // Cache the actions for the current round
-        this.roundActions.length = 0;
-        this.game.getActionsForRound(this.game.currentRound).forEach(action => {
-            this.roundActions.push(action);
-        });
-
-        // 4. Need a previous bet or raise to raise
-        const lastBetOrRaise = this.findLastBetOrRaise();
-        if (!lastBetOrRaise) {
-            throw new Error("No previous bet to raise.");
+        if (newActions.length < 2 && includeBlinds === true || newActions.length === 0 && includeBlinds === false) {
+            throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
-        // Calculate minimum raise amount
-        const playerCurrentBet = this.getSumBets(player.address);
-        const increment = this.findPreviousBetOrRaise(lastBetOrRaise.index);
-        const delta = BigInt(lastBetOrRaise.amount || 0n) - BigInt(increment?.amount || 0n);
-        
-        if (delta <= 0n) {
-            throw new Error("Invalid raise amount. Must be greater than the last bet.");
+        const betManager = new BetManager(newActions);
+        const currentBetAmount: bigint = betManager.current();
+
+        if (currentBetAmount === 0n) {
+            throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
-        let minAmountToAdd = delta - playerCurrentBet;
-        
-        // If player doesn't have enough for the minimum raise, they can go all-in
-        if (player.chips < minAmountToAdd) {
-            minAmountToAdd = player.chips;
+        const lastAggressor: bigint = betManager.getLastAggressor();
+        const minRaiseToAmount: bigint = currentBetAmount + lastAggressor;
+
+        if (player.chips < minRaiseToAmount) {
+            // Player can only go all-in
+            return {
+                minAmount: player.chips, // Total amount if going all-in
+                maxAmount: player.chips
+            };
         }
 
-        return { 
-            minAmount: minAmountToAdd, 
-            maxAmount: player.chips 
+        return {
+            minAmount: minRaiseToAmount, // deltaToCall > this.game.bigBlind ? deltaToCall : this.game.bigBlind, // Minimum raise amount
+            maxAmount: player.chips // Total possible if going all-in
         };
-    }
-
-    // Find the last bet or raise in the current round
-    private findLastBetOrRaise(): TurnWithSeat | undefined {
-        // Filter for bets and raises
-        const betOrRaiseActions = this.roundActions.filter(action =>
-            action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE
-        );
-
-        return betOrRaiseActions.length > 0 ? betOrRaiseActions[betOrRaiseActions.length - 1] : undefined;
-    }
-
-    // Find the last bet or raise in the current round
-    private findPreviousBetOrRaise(startIndex: number): TurnWithSeat | undefined {
-        // Sort actions by index to ensure we process them in the correct order
-        const actions = this.roundActions.sort((a, b) => a.index - b.index);
-
-        // // Find the element in the array at the start index
-        // if (startIndex < 0 || startIndex >= actions.length) {
-        //     return undefined;
-        // }
-
-        let start = 0;
-        for (let j = 0; j < actions.length; j++) {
-            if (actions[j].index === startIndex) {
-                start = j;
-                break;
-            }
-        }
-
-        for (let i = start - 1; i >= 0; i--) {
-            const action = this.roundActions[i];
-            if (action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE) {
-                return action;
-            }
-        }
-
-        return undefined
-    }
-
-    protected getDeductAmount(player: Player, amount?: bigint): bigint {
-        if (!amount) return 0n;
-
-        // Calculate how much more the player needs to add to the pot
-        const bets = this.getSumBets(player.address);
-        const delta = amount - bets;
-
-        // Return the amount to add (or player's entire stack if they don't have enough)
-        return delta > player.chips ? player.chips : delta;
     }
 }
 

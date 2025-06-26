@@ -1,6 +1,6 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic, seed } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, seed } from "./testConstants";
 
 describe("Texas Holdem - Play 5 Hands", () => {
     const THREE_TOKENS = 300000000000000000n;
@@ -11,9 +11,9 @@ describe("Texas Holdem - Play 5 Hands", () => {
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        expect(game.handNumber).toEqual(0);
-        game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 0, ONE_HUNDRED_TOKENS, 1);
-        game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, 2);
+        expect(game.handNumber).toEqual(1);
+        game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, 1);
+        game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, 2);
     });
 
     /**
@@ -85,14 +85,19 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter += 1;
 
         game.performAction(bigBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n);
+
+        // Verify the game state after showdown
         expect(game.currentRound).toEqual(TexasHoldemRound.END);
-        actionCounter += 1;
+        expect(game.pot).toBeGreaterThan(0n);
+        expect(game.handNumber).toEqual(handNumber);
+        expect(game.winners).toBeDefined();
 
         // Verify winners exist
         const gameState = game.toJson();
         expect(gameState.winners).toBeDefined();
         expect(gameState.winners.length).toBeGreaterThan(0);
 
+        actionCounter += 1;
         return actionCounter;
     }
 
@@ -100,33 +105,34 @@ describe("Texas Holdem - Play 5 Hands", () => {
         // Initialize variables to track button position and players
         let smallBlindPlayer = SMALL_BLIND_PLAYER;
         let bigBlindPlayer = BIG_BLIND_PLAYER;
-        let actionCounter = 2; // Start at 2 since JOIN actions were 0 and 1
+        let actionCounter = 3; // Start at 3 since JOIN actions were 1 and 2
 
         // Hand 1
         // Verify initial button positions for hand 1
         expect(game.smallBlindPosition).toEqual(1);
         expect(game.bigBlindPosition).toEqual(2);
+        expect(game.dealerPosition).toEqual(9);
 
-        actionCounter = playCompleteHand(0, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(1, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 2
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
-        actionCounter = 0;
+        // actionCounter = 1;
 
         // Hand 2 - buttons should switch positions
         [smallBlindPlayer, bigBlindPlayer] = [bigBlindPlayer, smallBlindPlayer];
 
         // Verify button positions for hand 2
-        expect(game.handNumber).toEqual(1);
+        expect(game.handNumber).toEqual(2);
         expect(game.smallBlindPosition).toEqual(2);
         expect(game.bigBlindPosition).toEqual(1);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(1, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter + 1);
 
         // Reinitialize for hand 3
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
-        actionCounter = 0;
+        // actionCounter = 0;
 
         // Hand 3 - buttons should switch positions again
         [smallBlindPlayer, bigBlindPlayer] = [bigBlindPlayer, smallBlindPlayer];
@@ -137,11 +143,11 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.bigBlindPosition).toEqual(2);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter + 1);
 
         // Reinitialize for hand 4
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
-        actionCounter = 0;
+        // actionCounter = 0;
 
         // Hand 4 - buttons should switch positions again
         [smallBlindPlayer, bigBlindPlayer] = [bigBlindPlayer, smallBlindPlayer];
@@ -152,7 +158,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.bigBlindPosition).toEqual(1);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(4, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 5
         game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
@@ -167,7 +173,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.bigBlindPosition).toEqual(2);
         expect(game.pot).toEqual(0n); // Pot should be reset
 
-        actionCounter = playCompleteHand(4, smallBlindPlayer, bigBlindPlayer, actionCounter);
+        actionCounter = playCompleteHand(5, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Final verification - check chip counts after 5 hands
         // Winner determination is deterministic with the set mnemonic, so we can check exact values

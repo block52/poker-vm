@@ -2,37 +2,34 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Deck, Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance, getContractSchemaManagementInstance } from "../state/index";
+import { getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
-import contractSchemas from "../schema/contractSchemas";
 import { NonPlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
-import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
+import { IGameManagement } from "../state/interfaces";
 
 export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly gameManagement: IGameManagement;
-    private readonly contractSchemaManagement: IContractSchemaManagement;
     private readonly mempool: Mempool;
-    private readonly seed: number[];
+    public readonly seed: number[];
 
     constructor(private readonly address: string, private readonly index: number, private readonly nonce: number, private readonly privateKey: string, _seed: string | undefined = undefined) {
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
 
         // Convert the seed string to a number array for shuffling
         // If seed is provided, use it to create a deterministic shuffle
         if (!_seed) {
             // Create a random seed if not provided
-            this.seed = Array.from({ length: 52 }, () => Math.floor(Math.random() * 100));
+            this.seed = this.createSeed();
         } else {
-            // Create a deterministic seed from the provided string
-            const seedBuffer = Buffer.from(_seed);
-            this.seed = Array.from({ length: 52 }, (_, i) => {
-                // Use the seed string to generate 52 numbers
-                return (seedBuffer[i % seedBuffer.length] || i) * 19937; // Prime multiplier for better distribution
-            });
+            this.seed = _seed.split("-").map(Number);
+            if (this.seed.length !== 52) {
+                throw new Error("Seed must contain exactly 52 numbers separated by dashes");
+            }
         }
+
+        console.log(`NewCommand initialized with address: ${this.address}, index: ${this.index}, nonce: ${this.nonce}, seed: ${this.seed}`);
     }
 
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
@@ -47,9 +44,8 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
             if (!_game?.state) {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
-
-            const gameOptions = await this.contractSchemaManagement.getGameOptions(_game.schemaAddress);
-
+            
+            const gameOptions = await this.gameManagement.getGameOptions(this.address);
             // For existing games, handle reinitialization
             const game: TexasHoldemGame = TexasHoldemGame.fromJson(_game?.state, gameOptions);
             const deck = new Deck();
@@ -89,7 +85,22 @@ export class NewCommand implements ICommand<ISignedResponse<TransactionResponse>
     }
 
     private async isGameContract(address: string): Promise<boolean> {
-        const existingContractSchema = await contractSchemas.find({ address: address });
+        const existingContractSchema = await this.gameManagement.getByAddress(address);
         return existingContractSchema !== undefined;
+    }
+
+    private createSeed(): number[] {
+        // Create an array to store our random digits
+        const digits = new Array(length);
+
+        // Generate random values
+        const randomValues = new Uint8Array(length);
+        crypto.getRandomValues(randomValues);
+
+        for (let i = 0; i < length; i++) {
+            digits[i] = (randomValues[i] % 52) + 1; // Convert 0-255 to 1-52
+        }
+
+        return digits;
     }
 }

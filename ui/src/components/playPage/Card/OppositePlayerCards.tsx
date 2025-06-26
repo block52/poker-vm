@@ -7,7 +7,7 @@ type OppositePlayerCardsProps = {
     flipped: boolean;
 };
 
-const OppositePlayerCards: React.FC<OppositePlayerCardsProps> = ({ frontSrc, backSrc, flipped }) => {
+const OppositePlayerCards: React.FC<OppositePlayerCardsProps> = React.memo(({ frontSrc, backSrc, flipped }) => {
     return (
         // !Clickable
         <div className={`card ${flipped ? "" : "flipped"}`}>
@@ -22,6 +22,6 @@ const OppositePlayerCards: React.FC<OppositePlayerCardsProps> = ({ frontSrc, bac
             </div>
         </div>
     );
-};
+});
 
 export default OppositePlayerCards;

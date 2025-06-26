@@ -11,22 +11,24 @@ class BetAction extends BaseAction implements IAction {
     verify(player: Player): Range {
         // Check base conditions (hand active, player's turn, player active)
         super.verify(player);
-
+        
         // 1. Round state check: Cannot bet during ANTE round
-        if (this.game.currentRound === TexasHoldemRound.ANTE) {
+        const currentRound = this.game.currentRound;
+        if (currentRound === TexasHoldemRound.ANTE) {
             throw new Error("Cannot bet in the ante round.");
         }
 
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+        if (currentRound === TexasHoldemRound.SHOWDOWN) {
             throw new Error("Cannot bet in the showdown round.");
         }
 
         // 2. Bet matching check: Player must match existing bets before betting
-        const largestBet = this.getLargestBet();
-        const sumBets = this.getSumBets(player.address);
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        const largestBet = this.getLargestBet(includeBlinds);
+        const playerBets = this.game.getPlayerTotalBets(player.address);
 
         // 3. Round-specific checks for preflop
-        if (this.game.currentRound === TexasHoldemRound.PREFLOP) {
+        if (currentRound === TexasHoldemRound.PREFLOP) {
             if (largestBet === 0n) {
                 // Special case for small blind position in PREFLOP
                 if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
@@ -43,8 +45,8 @@ class BetAction extends BaseAction implements IAction {
             }
         }
 
-        if (largestBet > sumBets && largestBet > 0n) {
-            console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${sumBets}`);
+        if (largestBet > playerBets && largestBet > 0n) {
+            // console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${playerBets}`);
             throw new Error("Player must call or raise.");
         }
 
@@ -56,6 +58,15 @@ class BetAction extends BaseAction implements IAction {
 
         // Return valid betting range from minimum bet to player's entire stack
         return { minAmount: this.game.bigBlind, maxAmount: player.chips };
+    }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        // Verify the player can perform the call action
+        if (amount <= 0n) {
+            throw new Error("Bet amount must be greater than zero.");
+        }
+
+        super.execute(player, index, amount);
     }
 }
 

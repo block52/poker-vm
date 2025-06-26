@@ -19,21 +19,21 @@ class SmallBlindAction extends BaseAction implements IAction {
      * @returns Range object with min and max amount both set to the small blind amount
      * @throws Error if the player cannot post the small blind
      */
-    verify(_player: Player): Range {
+    verify(player: Player): Range {
         // Player must be active (not sitting out)
-        super.verifyPlayerIsActive(_player);
+        super.verifyPlayerIsActive(player);
 
         // Game must be in the ANTE round
         if (this.game.currentRound !== TexasHoldemRound.ANTE) {
             throw new Error("Can only bet small blind amount when in ante.");
         }
 
-        if (this.game.getActivePlayerCount() < 2) {
-            throw new Error("Cannot post small blind with less than 2 players.");
+        if (this.game.getActivePlayerCount() < this.game.minPlayers) {
+            throw new Error(`Cannot post small blind with less than ${this.game.minPlayers} players.`);
         }
 
         // Player must be in the small blind position
-        const seat = this.game.getPlayerSeatNumber(_player.address);
+        const seat = this.game.getPlayerSeatNumber(player.address);
         if (seat !== this.game.smallBlindPosition) {
             throw new Error("Only the small blind player can bet the small blind amount.");
         }

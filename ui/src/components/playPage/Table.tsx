@@ -47,16 +47,13 @@ import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import ActionsLog from "../ActionsLog";
-import ErrorsPanel from "../ErrorsPanel";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
-import { FaCode } from "react-icons/fa";
 
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
 
 import Chip from "./common/Chip";
-import CustomDealer from "../../assets/CustomDealer.svg";
 import TurnAnimation from "./Animations/TurnAnimation";
 import WinAnimation from "./Animations/WinAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
@@ -68,7 +65,7 @@ import { RxExit } from "react-icons/rx";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
-import { toDisplaySeat } from "../../utils/tableUtils";
+
 import { ethers } from "ethers";
 
 import "./Table.css"; // Import the Table CSS file
@@ -81,7 +78,6 @@ import { usePlayerSeatInfo } from "../../hooks/usePlayerSeatInfo"; // Provides c
 import { useNextToActInfo } from "../../hooks/useNextToActInfo";
 
 //2. Visual Position/State Providers
-import { useDealerPosition } from "../../hooks/useDealerPosition";
 import { useChipPositions } from "../../hooks/useChipPositions";
 import { usePlayerChipData } from "../../hooks/usePlayerChipData";
 
@@ -91,7 +87,7 @@ import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGame
 
 //todo wire up to use the sdk instead of the proxy
 // 4. Player Actions
-import { useTableLeave } from "../../hooks/playerActions/useTableLeave";
+import { leaveTable } from "../../hooks/playerActions/leaveTable";
 
 // 5. Winner Info
 import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner information for animations
@@ -99,14 +95,16 @@ import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner in
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameOptions } from "../../hooks/useGameOptions";
-import { useNodeRpc } from "../../context/NodeRpcContext"; // Import NodeRpcContext
+import { getAccountBalance, getPublicKey, getFormattedAddress } from "../../utils/b52AccountUtils";
 import { PositionArray } from "../../types/index";
 import { motion } from "framer-motion";
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
-// Enable this to see verbose logging
-const DEBUG_MODE = false;
+// Game Start Countdown
+import GameStartCountdown from "./common/GameStartCountdown";
+import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -125,9 +123,9 @@ interface NetworkDisplayProps {
 // Memoize the NetworkDisplay component
 const NetworkDisplay = memo(({ isMainnet = false }: NetworkDisplayProps) => {
     return (
-        <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-800/60 rounded-full text-xs border border-blue-500/20">
-            <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : "bg-blue-400"}`}></div>
-            <span className="text-gray-300">Block52 Chain</span>
+        <div className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-1 bg-gray-800/60 rounded-lg text-[10px] sm:text-xs border border-blue-500/20">
+            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isMainnet ? "bg-green-500" : "bg-blue-400"}`}></div>
+            <span className="text-gray-300 whitespace-nowrap">Block52 Chain</span>
         </div>
     );
 });
@@ -137,19 +135,22 @@ NetworkDisplay.displayName = "NetworkDisplay";
 // Memoize TurnAnimation
 const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
-const Table = () => {
+const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
-    const { client, isLoading: clientLoading, errorLogs, clearErrorLogs } = useNodeRpc();
+    
+    // Game Start Countdown
+    const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
+    
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
-    const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
+    const publicKey = getPublicKey();
 
     // Update to use the imported hook
     const tableDataValues = useTableData();
 
     // invoke hook for seat loop
-    const { winnerInfo } = useWinnerInfo(id);
+    const { winnerInfo } = useWinnerInfo();
 
     // Define calculateZoom first, before any usage
     const calculateZoom = useCallback(() => {
@@ -161,59 +162,59 @@ const Table = () => {
         const scaleWidth = window.innerWidth / baseWidth;
         const scaleHeight = availableHeight / baseHeight;
 
-        const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
+        // More conservative scaling to prevent cutoff
+        let calculatedScale;
+        if (window.innerWidth <= 414) {
+            // For small mobile: very conservative scaling to prevent cutoff
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.6;
+        } else if (window.innerWidth <= 768) {
+            // For tablets/large mobile: moderate scaling
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.8;
+        } else if (window.innerWidth <= 1024) {
+            // For iPad/small desktop: slightly increased
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.75;
+        } else {
+            // For desktop: original scaling
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
+        }
+        
         return Math.min(calculatedScale, 2);
     }, []);
 
     // Function to fetch account balance
     const fetchAccountBalance = useCallback(async () => {
-        if (!client) {
-            setBalanceError(new Error("RPC client not initialized"));
-            setIsBalanceLoading(false);
-            return;
-        }
-
         try {
             setIsBalanceLoading(true);
-
-            if (!publicKey) {
-                setBalanceError(new Error("No address available"));
-                setIsBalanceLoading(false);
-                return;
-            }
-
-            const account = await client.getAccount(publicKey);
-            setAccountBalance(account.balance.toString());
-
             setBalanceError(null);
+
+            const balance = await getAccountBalance();
+            setAccountBalance(balance);
         } catch (err) {
             console.error("Error fetching account balance:", err);
             setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
         } finally {
             setIsBalanceLoading(false);
         }
-    }, [client, publicKey]);
+    }, []);
 
-    // Update to fetch balance when publicKey or client changes
+    // Fetch balance once on page load
     useEffect(() => {
-        if (publicKey && client && !clientLoading) {
+        if (publicKey) {
             fetchAccountBalance();
         }
-    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+    }, [publicKey, fetchAccountBalance]);
 
-    // Remove the table data effect and replace with a more targeted approach
+    // Manual balance refresh function for after key actions
     const updateBalanceOnPlayerJoin = useCallback(() => {
-        if (publicKey && client && !clientLoading) {
+        if (publicKey) {
             fetchAccountBalance();
         }
-    }, [publicKey, client, clientLoading, fetchAccountBalance]);
+    }, [publicKey, fetchAccountBalance]);
 
     // Now we can use calculateZoom in useState
     const [zoom, setZoom] = useState(calculateZoom());
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [debugMode, setDebugMode] = useState(false);
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
@@ -231,14 +232,9 @@ const Table = () => {
     } = useNextToActInfo(id);
 
 
-    // Add the useTableLeave hook
-    const { leaveTable, isLeaving } = useTableLeave(id);
-
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot, tableSize } = useTableState();
 
-    // Add the useDealerPosition hook
-    const { dealerButtonPosition, isDealerButtonVisible } = useDealerPosition(id);
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
@@ -264,27 +260,21 @@ const Table = () => {
     const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
 
     // Add the useChipPositions hook AFTER startIndex is defined
-    const { chipPositionArray } = useChipPositions(id, startIndex);
+    const { chipPositionArray } = useChipPositions(startIndex);
 
     // Add the usePlayerChipData hook
-    const { getChipAmount } = usePlayerChipData(id);
+    const { getChipAmount } = usePlayerChipData();
 
-    // Add a ref for the animation frame ID
-    const animationFrameRef = useRef<number | undefined>(undefined);
-
-    // Memoize user wallet address
+    // Memoize user wallet address using utility function
     const userWalletAddress = useMemo(() => {
-        const storedAddress = localStorage.getItem("user_eth_public_key");
+        const storedAddress = getPublicKey();
         return storedAddress ? storedAddress.toLowerCase() : null;
     }, []);
 
-    // Memoize user data
-    const userData = useMemo(() => {
-        if (currentUserSeat >= 0) {
-            return userDataBySeat[currentUserSeat] || null;
-        }
-        return null;
-    }, [currentUserSeat, userDataBySeat]);
+    // Use utility function for formatted address
+    const formattedAddress = getFormattedAddress();
+
+
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
@@ -292,31 +282,15 @@ const Table = () => {
         return activePlayers;
     }, [tableDataValues.tableDataPlayers]);
 
-    // Add effect to track mouse movement
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            // Only update if no animation frame is pending
-            if (!animationFrameRef.current) {
-                animationFrameRef.current = requestAnimationFrame(() => {
-                    // Calculate mouse position as percentage of window
-                    const x = (e.clientX / window.innerWidth) * 100;
-                    const y = (e.clientY / window.innerHeight) * 100;
-                    setMousePosition({ x, y });
-                    animationFrameRef.current = undefined;
-                });
-            }
-        };
+    // Optimize window width detection - only check on resize
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 414);
 
-        window.addEventListener("mousemove", handleMouseMove);
-
-        // Cleanup function to remove event listener and cancel any pending animation frames
-        return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
-            }
-        };
-    }, []);
+    // 🔧 PERFORMANCE FIX: Disabled mouse tracking to prevent hundreds of re-renders
+    // Mouse tracking was causing setMousePosition({ x, y }) on every mouse move
+    // which created new objects and triggered excessive re-renders
+    // useEffect(() => {
+    //     // Mouse tracking disabled for performance
+    // }, []);
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
@@ -361,7 +335,10 @@ const Table = () => {
     }, [currentIndex]);
 
     // Memoize handlers
-    const handleResize = useCallback(() => setZoom(calculateZoom()), [calculateZoom]);
+    const handleResize = useCallback(() => {
+        setZoom(calculateZoom());
+        setIsMobile(window.innerWidth <= 414);
+    }, [calculateZoom]);
 
     useEffect(() => {
         window.addEventListener("resize", handleResize);
@@ -446,15 +423,6 @@ const Table = () => {
         // Continue rendering instead of returning early
     }
 
-    const dealerButtonStyle = useMemo(
-        () => ({
-            left: `calc(${dealerButtonPosition.left} + 200px)`,
-            top: dealerButtonPosition.top,
-            transform: "none"
-        }),
-        [dealerButtonPosition]
-    );
-
     // This component manages the subscription:
     const { subscribeToTable } = useGameStateContext();
     useEffect(() => {
@@ -469,7 +437,7 @@ const Table = () => {
         <div className="table-container">
             {/*//! HEADER - CASINO STYLE */}
             <div className="flex-shrink-0">
-                <div className="w-[100vw] h-[65px] bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-center flex items-center justify-between px-4 z-10 relative overflow-hidden border-b-2 border-[#3a546d]">
+                <div className="w-[100vw] h-[50px] sm:h-[65px] bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2 border-[#3a546d]">
                     {/* Subtle animated background */}
                     <div className="absolute inset-0 z-0">
                         {/* Bottom edge glow */}
@@ -477,9 +445,9 @@ const Table = () => {
                     </div>
 
                     {/* Left Section - Lobby button and Network display */}
-                    <div className="flex items-center space-x-4 z-10">
+                    <div className="flex items-center space-x-2 sm:space-x-4 z-10">
                         <span
-                            className="text-white text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
+                            className="text-white text-sm sm:text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
                             onClick={() => {
                                 window.location.href = "/";
                             }}
@@ -491,56 +459,62 @@ const Table = () => {
 
                     {/* Right Section - Wallet info - UPDATED to use NodeRpc balance */}
                     <div className="flex items-center z-10">
-                        <div className="flex items-center bg-gray-800/60 rounded-lg border border-blue-500/10 py-1 px-2 mr-3">
+                        <div className="flex items-center bg-gray-800/60 rounded-lg border border-blue-500/10 py-1 px-1 sm:px-2 mr-2 sm:mr-3">
                             {isBalanceLoading ? (
-                                <span>Loading...</span>
+                                <span className="text-xs sm:text-sm">Loading...</span>
                             ) : (
                                 <>
                                     {/* Address */}
-                                    <div className="flex items-center mr-4">
-                                        <span className="font-mono text-blue-400 text-xs">
-                                            {`${localStorage.getItem("user_eth_public_key")?.slice(0, 6)}...${localStorage
-                                                .getItem("user_eth_public_key")
-                                                ?.slice(-4)}`}
+                                    <div className="flex items-center mr-2 sm:mr-4">
+                                        <span className="font-mono text-blue-400 text-[10px] sm:text-xs">
+                                            {formattedAddress}
                                         </span>
                                         <FaCopy
-                                            className="ml-1.5 cursor-pointer text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                                            size={11}
-                                            onClick={() => copyToClipboard(localStorage.getItem("user_eth_public_key") || "")}
+                                            className="ml-1 sm:ml-1.5 cursor-pointer text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                                            size={9}
+                                            onClick={() => copyToClipboard(publicKey || "")}
                                             title="Copy full address"
                                         />
                                     </div>
 
-                                    {/* Balance - UPDATED to use NodeRpc balance */}
+                                    {/* Balance - UPDATED to use direct utility */}
                                     <div className="flex items-center">
-                                        <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center mr-1.5">
-                                            <span className="text-blue-400 font-bold text-[10px]">$</span>
+                                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-500/20 flex items-center justify-center mr-1 sm:mr-1.5">
+                                            <span className="text-blue-400 font-bold text-[8px] sm:text-[10px]">$</span>
                                         </div>
                                         <div>
-                                            <p className="text-white font-medium text-xs">
+                                            <p className="text-white font-medium text-[10px] sm:text-xs">
                                                 ${balanceFormatted}
-                                                <span className="text-[10px] ml-1 text-gray-400">USDC</span>
+                                                <span className="text-[8px] sm:text-[10px] ml-1 text-gray-400">USDC</span>
                                             </p>
-                                            {/* <p className="text-[8px] text-gray-400 -mt-1">nonce: {accountNonce}</p> */}
                                         </div>
+                                        {/* Refresh button */}
+                                        <button
+                                            onClick={fetchAccountBalance}
+                                            disabled={isBalanceLoading}
+                                            className="ml-1 text-blue-400 hover:text-blue-300 transition-colors duration-200 disabled:opacity-50"
+                                            title="Refresh balance"
+                                        >
+                                            <span className="text-[8px]">↻</span>
+                                        </button>
                                     </div>
                                 </>
                             )}
                         </div>
 
                         <div
-                            className="flex items-center justify-center w-8 h-8 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300"
+                            className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300"
                             onClick={() => {
                                 window.location.href = "/qr-deposit";
                             }}
                         >
-                            <RiMoneyDollarCircleLine className="text-[#ffffff] hover:scale-110 transition-transform duration-200" size={20} />
+                            <RiMoneyDollarCircleLine className="text-[#ffffff] hover:scale-110 transition-transform duration-200" size={16} />
                         </div>
                     </div>
                 </div>
 
                 {/* SUB HEADER */}
-                <div className="bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white flex justify-between items-center p-2 h-[35px] relative overflow-hidden shadow-lg sub-header">
+                <div className="bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header">
                     {/* Animated background overlay */}
                     <div className="sub-header-overlay shimmer-animation" />
 
@@ -550,50 +524,39 @@ const Table = () => {
                     {/* Left Section */}
                     <div className="flex items-center z-20">
                         <div className="flex flex-col">
-                            <div className="flex items-center space-x-2">
-                                <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                            <div className="flex items-center space-x-1 sm:space-x-2">
+                                <span className="px-1 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                                     ${formattedValues.smallBlindFormatted} / ${formattedValues.bigBlindFormatted}
                                 </span>
 
-                                <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                <span className="px-1 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                                     Hand #{handNumber}
                                 </span>
-                                <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                <span className="hidden sm:inline-block px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
                                     <span className="ml-2">Actions # {actionCount}</span>
                                 </span>
-                                <span className="px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
-                                    <span>Next To Act: Seat {nextToAct}</span>
+                                <span className="px-1 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                    <span className="sm:ml-2">Seat {nextToAct}</span>
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     {/* Right Section */}
-                    <div className="flex items-center z-10 mr-3">
+                    <div className="flex items-center z-10 mr-1 sm:mr-3">
                         <span
-                            className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ${
+                            className={`cursor-pointer transition-colors duration-200 px-1 sm:px-2 py-0.5 sm:py-1 rounded ${
                                 openSidebar ? "bg-blue-500/30 text-white" : "text-gray-400 hover:text-blue-400"
                             }`}
                             onClick={onCloseSideBar}
                             title="Toggle Action Log"
                         >
-                            {openSidebar ? <LuPanelLeftOpen size={17} /> : <LuPanelLeftClose size={17} />}
+                            {openSidebar ? <LuPanelLeftOpen size={14} /> : <LuPanelLeftClose size={14} />}
                             {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                         </span>
 
-                        {/* Dev Mode Toggle Button */}
                         <span
-                            className={`cursor-pointer transition-colors duration-200 px-2 py-1 rounded ml-2 ${
-                                debugMode ? "bg-red-500/30 text-red-400" : "text-gray-400 hover:text-blue-400"
-                            }`}
-                            onClick={() => setDebugMode(prev => !prev)}
-                            title="Developer Mode"
-                        >
-                            <FaCode size={16} />
-                        </span>
-
-                        <span
-                            className="text-gray-400 text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-3"
+                            className="text-gray-400 text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-2 sm:ml-3"
                             onClick={() => {
                                 // Check player status
                                 if (
@@ -606,15 +569,12 @@ const Table = () => {
                                     // Get player's current stack if they are seated
                                     const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
 
-                                    if (leaveTable && playerData) {
-                                        leaveTable({
-                                            amount: playerData.stack || "0",
-                                            actionIndex: 0 // Adding action index of 0 as default
-                                        })
+                                    if (id && playerData) {
+                                        leaveTable(id, playerData.stack || "0")
                                             .then(() => {
                                                 window.location.href = "/";
                                             })
-                                            .catch(err => {
+                                            .catch((err: any) => {
                                                 console.error("Error leaving table:", err);
                                                 window.location.href = "/";
                                             });
@@ -625,8 +585,9 @@ const Table = () => {
                             }}
                             title="Return to Lobby"
                         >
-                            {isLeaving ? "Leaving..." : "Leave Table"}
-                            <RxExit size={15} />
+                            <span className="hidden sm:inline">Leave Table</span>
+                            <span className="sm:hidden">Leave</span>
+                            <RxExit size={12} />
                         </span>
                     </div>
                 </div>
@@ -653,41 +614,16 @@ const Table = () => {
                     </div>
                     {/* Animated background overlay */}
                     <div className="background-shimmer shimmer-animation" />
-                    {/* Animated overlay */}
-                    <div
-                        className="background-animated"
-                        style={{
-                            backgroundImage: `
-                                    repeating-linear-gradient(
-                                        ${45 + mousePosition.x / 10}deg,
-                                        rgba(42, 72, 143, 0.1) 0%,
-                                        rgba(61, 89, 161, 0.1) 25%,
-                                        rgba(30, 52, 107, 0.1) 50%,
-                                        rgba(50, 79, 151, 0.1) 75%,
-                                        rgba(42, 72, 143, 0.1) 100%
-                                    )
-                                `
-                        }}
-                    />
-                    {/* Base gradient background */}
-                    <div
-                        className="background-base"
-                        style={{
-                            backgroundImage: `
-                                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
-                                    radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
-                                    radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%)
-                                `
-                        }}
-                    />
+                    {/* Static animated overlay - mouse tracking removed for performance */}
+                    <div className="background-animated-static" />
+                    {/* Static base gradient - mouse tracking removed for performance */}
+                    <div className="background-base-static" />
                     {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-350px)] z-[0] relative">
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-250px)] sm:min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Hexagon pattern overlay */}
 
                         <div
-                            className="zoom-wrapper"
+                            className={`${isMobile ? "zoom-wrapper-mobile" : "zoom-wrapper-desktop"}`}
                             style={{
                                 transform: `translate(-50%, -50%) scale(${zoom})`
                             }}
@@ -762,18 +698,7 @@ const Table = () => {
                                                     </div>
                                                 );
                                             })}
-                                            {/*//! Dealer */}
-                                            {isDealerButtonVisible && (
-                                                <motion.div
-                                                    className="dealer-button"
-                                                    style={dealerButtonStyle}
-                                                    initial={false}
-                                                    animate={dealerButtonStyle}
-                                                    transition={{ duration: 0.6, ease: "easeInOut" }}
-                                                >
-                                                    <img src={CustomDealer} alt="Dealer Button" />
-                                                </motion.div>
-                                            )}
+                                    
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
@@ -803,8 +728,11 @@ const Table = () => {
                             {/* {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>} */}
                         </div>
                     </div>
+                    {/* Live Hand Strength Display */}
+                    <LiveHandStrengthDisplay />
+
                     {/*//! FOOTER */}
-                    <div className="w-full flex justify-center items-center h-[250px] bg-transparent z-[10]">
+                    <div className="w-full flex justify-center items-center h-[200px] sm:h-[250px] bg-transparent z-[10]">
                         <div className="max-w-[700px] w-full flex justify-center items-center h-full">
                             <PokerActionPanel />
                         </div>
@@ -819,34 +747,40 @@ const Table = () => {
                 </div>
             </div>
 
+            {/* Status Messages Container - Stacked properly to avoid overlap */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-2 z-50" style={{ top: "6.25rem" }}>
+                {/* Add a message for the current user's seat */}
+                {currentUserSeat >= 0 && (
+                    <div className="text-white bg-black bg-opacity-50 px-2 py-1 rounded text-xs sm:text-sm text-center">
+                        You are seated at position {currentUserSeat}
+                    </div>
+                )}
+                
+                {/* Add an indicator for whose turn it is */}
+                {nextToActSeat && isGameInProgress && (
+                    <div className="text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm text-center">
+                        {isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
+                            <span className="text-white">Your turn to act!</span>
+                        ) : (
+                            <span>
+                                Waiting for {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to
+                                act
+                            </span>
+                        )}
+                    </div>
+                )}
+                
+                {/* Show a message when the hand is over */}
+                {!isGameInProgress && tableActivePlayers.length > 0 && (
+                    <div className="text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm text-center">
+                        <span>Hand complete - waiting for next hand</span>
+                    </div>
+                )}
+            </div>
+
             {/* Add a message for empty table if needed */}
             {tableActivePlayers.length === 0 && (
-                <div className="absolute top-24 right-4 text-white bg-black bg-opacity-50 p-4 rounded">Waiting for players to join...</div>
-            )}
-            {/* Add a message for the current user's seat */}
-            {currentUserSeat >= 0 && (
-                <div className="absolute top-24 left-4 text-white bg-black bg-opacity-50 p-2 rounded">
-                    You are seated at position {toDisplaySeat(currentUserSeat)}
-                </div>
-            )}
-            {/* Add an indicator for whose turn it is */}
-            {nextToActSeat && isGameInProgress && (
-                <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
-                    {isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
-                        <span className="text-white">Your turn to act!</span>
-                    ) : (
-                        <span>
-                            Waiting for {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to
-                            act
-                        </span>
-                    )}
-                </div>
-            )}
-            {/* Show a message when the hand is over */}
-            {!isGameInProgress && tableActivePlayers.length > 0 && (
-                <div className="absolute top-24 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-70 p-2 rounded">
-                    <span>Hand complete - waiting for next hand</span>
-                </div>
+                <div className="absolute top-28 right-4 text-white bg-black bg-opacity-50 p-2 sm:p-4 rounded text-xs sm:text-sm">Waiting for players to join...</div>
             )}
 
             {/* Powered by Block52 */}
@@ -859,12 +793,16 @@ const Table = () => {
                 </div>
             </div>
 
-            {/* Debug Error Panel */}
-            <div className={`debug-panel ${debugMode ? "block" : "hidden"}`}>
-                <ErrorsPanel errors={errorLogs} onClear={clearErrorLogs} />
-            </div>
+            {/* Game Start Countdown Modal */}
+            {showCountdown && gameStartTime && (
+                <GameStartCountdown 
+                    gameStartTime={gameStartTime}
+                    onCountdownComplete={handleCountdownComplete}
+                    onSkip={handleSkipCountdown}
+                />
+            )}
         </div>
     );
-};
+});
 
-export default memo(Table);
+export default Table;

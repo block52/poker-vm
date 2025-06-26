@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { Range, TurnWithSeat } from "../types";
@@ -9,8 +9,10 @@ class JoinAction extends BaseAction {
     }
 
     // Override verify method for join action
-    verify(_player: Player): Range {
-        // For joining, we don't need to verify against an existing player
+    verify(player: Player): Range {
+        if (this.game.exists(player.address)) {
+            throw new Error("Player already exists in the game.");
+        }
 
         // Now we can use the actual min/max buy-in values
         return {
@@ -38,12 +40,11 @@ class JoinAction extends BaseAction {
             const availableSeats = this.game.getAvailableSeats();
 
             // If all seats are occupied, throw an error
-            if (availableSeats.length >= this.game.maxPlayers)
+            if (availableSeats.length === 0)
                 throw new Error("No available seats to join.");
 
             // Choose randomly from the available seats
             seat = Math.floor(Math.random() * availableSeats.length);
-            // seat = this.game.findNextEmptySeat();
         } else {
             // Validate the requested seat
             const seatRegex = /^\d+$/;
@@ -56,8 +57,10 @@ class JoinAction extends BaseAction {
 
         this.game.joinAtSeat(player, seat);
 
+        this.game.dealerManager.handlePlayerJoin(seat);
+
         // Set this seat as the last acted seat to help determine next player
-        this.game.setLastActedSeat(seat);
+        // this.game.setLastActedSeat(seat);
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction(

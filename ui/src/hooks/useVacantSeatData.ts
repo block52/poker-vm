@@ -9,7 +9,7 @@ import { VacantSeatResponse } from "../types/index";
  * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing seat vacancy data
  */
-export const useVacantSeatData = (tableId?: string): VacantSeatResponse => {
+export const useVacantSeatData = (): VacantSeatResponse => {
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState, isLoading, error } = useGameStateContext();
 

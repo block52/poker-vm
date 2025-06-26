@@ -4,6 +4,9 @@
 
 The Layer 2 poker game virtual machine.
 
+![image](https://github.com/user-attachments/assets/29412b57-3419-4177-b265-1e74e7c7c2e9)
+
+
 ## CVM
 
 The CVM is a virtual card game machine that runs on the Block52 network. It is responsible for executing the card game logic.
@@ -11,10 +14,6 @@ The CVM is a virtual card game machine that runs on the Block52 network. It is r
 ## PVM
 
 The PVM is a virtual poker game machine that runs inside the CVM. It is responsible for executing the poker game logic.
-
-## Block52 Proxy Server
-
-This repository contains the Block52 proxy server that handles API requests and communicates with the Block52 node.
 
 ## Getting Started
 
@@ -26,19 +25,19 @@ This repository contains the Block52 proxy server that handles API requests and 
 ### Setup and Running
 
 1. Clone the repository:
-   ```
-   git clone https://github.com/your-org/block52-proxy.git
+   ```bash
+   git clone https://github.com/block52/poker-vm.git
    cd block52-proxy
    ```
 
-2. Start the services:
-   ```
-   docker-compose up
+3. Start the services:
+   ```bash
+   docker compose up
    ```
 
-3. The services will be available at:
-   - API: http://localhost:8080
-   - API Documentation: http://localhost:8080/docs
+4. The services will be available at:
+   - PVM RPC: http://localhost:3000
+   - API Documentation: http://localhost:3000/docs
    - MongoDB: localhost:27017
 
 ### Development
@@ -52,25 +51,25 @@ To run only specific services:
 To run the PVM locally for development and testing:
 
 1. Navigate to the PVM directory:
-   ```
+   ```bash
    cd pvm/ts
    ```
 
 2. Start the local MongoDB instance using the local Docker Compose file:
-   ```
-   docker-compose -f docker-compose.local.yml up -d
+   ```bash
+   docker compose up
    ```
 
 3. Connect to the local MongoDB database:
-   - **Connection string**: `mongodb://localhost:27019/local_pvm`
+   - **Connection string**: `DB_URL=mongodb://node1:Passw0rd123@localhost:27017`
    - **For GUI tools** (like DataGrip, MongoDB Compass):
      - Host: `localhost`
      - Port: `27019`
-     - Database: `local_pvm`
+     - Database: `pvm`
      - Authentication: None (or as configured)
 
 4. Start the PVM application:
-   ```
+   ```bash
    yarn run dev
    ```
    
@@ -78,13 +77,91 @@ To run the PVM locally for development and testing:
    - API: http://localhost:3000
 
 6. To stop the local MongoDB instance:
-   ```
-   docker-compose -f docker-compose.local.yml down
+   ```bash
+   docker compose down
    ```
 
 ## Running in Production
 
 *[Production deployment instructions and connection to Block52 network will be added in the future]*
+
+## Game Start Countdown
+
+The poker table includes a countdown timer feature for coordinating synchronized game starts. This is particularly useful for testing and tournament scenarios where multiple players need to begin at the exact same time.
+
+### Usage
+
+Add the `gameStart` URL parameter to any table link to automatically display a countdown modal:
+
+```
+http://localhost:3000/table/0x123abc?gameStart=2025-06-16T15:30:00
+```
+
+### URL Parameter Format
+
+**Parameter:** `gameStart`  
+**Value:** Any valid date/time string that JavaScript's `new Date()` can parse
+
+**⚠️ Important:** When using timezone offsets with `+`, you must URL encode the `+` as `%2B` in the browser address bar.
+
+#### Valid Examples:
+
+```bash
+# Simple format (no timezone issues)
+?gameStart=2025-06-16T15:30:00
+
+# With UTC timezone 
+?gameStart=2025-06-16T15:30:00Z
+
+# Brisbane timezone (URL encoded + sign)
+?gameStart=2025-06-16T15:30:00%2B10:00
+
+# Simple date/time
+?gameStart=2025-06-16 15:30:00
+
+# Unix timestamp (milliseconds)
+?gameStart=1718524200000
+```
+
+### Testing Examples
+
+#### Quick Test (30 seconds from now):
+
+```javascript
+// Run in browser console to generate test URL:
+const futureTime = new Date(Date.now() + 30000).toISOString();
+console.log(`/table/YOUR_TABLE_ID?gameStart=${futureTime}`);
+```
+
+#### Simple Test Examples:
+```bash
+# 5 minutes from now (no timezone issues)
+?gameStart=2025-06-16T15:35:00
+
+# Tomorrow at 2:00 PM UTC
+?gameStart=2025-06-17T14:00:00Z
+
+# Brisbane time (URL encoded)
+?gameStart=2025-06-17T14:00:00%2B10:00
+```
+
+### Coordination Workflow
+
+1. **Create a table** through the normal process
+2. **Get the table ID** from the URL: `/table/0x123abc`
+3. **Add countdown parameter:** `/table/0x123abc?gameStart=2025-06-16T20:00:00Z`
+4. **Share this URL** with all testers
+5. **All players** see synchronized countdown
+6. **Modal disappears** when countdown reaches zero
+
+### Features
+
+- ✅ **Screen lock** until countdown completes
+- ✅ **Brisbane timezone** calculation and display  
+- ✅ **Live countdown** with days, hours, minutes, seconds
+- ✅ **Auto-cleanup** - removes URL parameter when done
+- ✅ **Dev skip button** - only shows in development mode
+- ✅ **Graceful fallback** - invalid dates are ignored
 
 
 # SDK
@@ -93,7 +170,7 @@ To publish the SDK.
 
 ```bash
 cd sdk
-nvm use 20.12
+nvm use 20.18
 yarn prepare && yarn publish
 ```
 

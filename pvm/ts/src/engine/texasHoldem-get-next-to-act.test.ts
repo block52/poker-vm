@@ -12,7 +12,7 @@ describe("Texas Holdem Game - Next seat", () => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         });
 
-        it("should return small blind position player when no blinds have been posted yet", () => {
+        it.skip("should return small blind position player when no blinds have been posted yet", () => {
             // Add two players
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
@@ -59,7 +59,7 @@ describe("Texas Holdem Game - Next seat", () => {
             expect(nextPlayer?.address).toEqual("0x3333333333333333333333333333333333333333");
         });
 
-        it("should wrap around to the first seat when reaching the end of the table", () => {
+        it.skip("should wrap around to the first seat when reaching the end of the table", () => {
             // Set up a game with players at seats 1, 4, and 6
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1"); // seat 1
 

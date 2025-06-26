@@ -48,12 +48,6 @@ export enum TexasHoldemRound {
     END = "end"
 }
 
-export type Positions = {
-    dealer?: number;
-    smallBlind?: number;
-    bigBlind?: number;
-}
-
 export type GameOptions = {
     minBuyIn: bigint;
     maxBuyIn: bigint;
@@ -126,7 +120,6 @@ export type TexasHoldemGameState = {
     smallBlind: string;
     bigBlind: string;
     dealer: number;
-    positions: Positions;
     players: string[];
     deck: string;
     communityCards: string[];
@@ -143,14 +136,14 @@ export type TexasHoldemStateDTO = {
     type: "cash";
     address: string;
     gameOptions: GameOptionsDTO;
-    smallBlindPosition: number;
-    bigBlindPosition: number;
-    dealer: number;
+    smallBlindPosition?: number;
+    bigBlindPosition?: number;
+    dealer?: number;
     players: PlayerDTO[];
     communityCards: string[];
     deck: string; // Assume this will be encrypted
     pots: string[];
-    lastActedSeat: number;
+    lastActedSeat?: number;
     nextToAct: number;
     previousActions: ActionDTO[];
     actionCount: number;

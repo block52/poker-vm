@@ -14,6 +14,17 @@ class MuckAction extends BaseAction implements IAction {
             throw new Error("Game is not in showdown round.");
         }
 
+        if (this.game.getActionsForRound(TexasHoldemRound.SHOWDOWN).length === 0) {
+            throw new Error("A player must show first.");
+        }
+
+        if (player.holeCards) {
+            const cards: string[] = player.holeCards.map(card => card.mnemonic);
+            if (this.game.findWinners(cards)) {
+                throw new Error("Cannot muck winning hand.");
+            }
+        }
+
         return { minAmount: 0n, maxAmount: 0n };
     }
 

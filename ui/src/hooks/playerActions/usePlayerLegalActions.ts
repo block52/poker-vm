@@ -1,6 +1,22 @@
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerLegalActionsResult } from "./types";
 import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { useRef, useMemo, useState, useEffect } from "react";
+
+// 🔍 DEBUG: Enhanced logging utility for easy data export (same as GameStateContext)
+const debugLog = (eventType: string, data: any) => {
+  console.log(`🔄 [${eventType}]`, data);
+  
+  // Access the global debug logs array if it exists
+  if (typeof window !== "undefined" && (window as any).debugLogs) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      eventType,
+      data
+    };
+    (window as any).debugLogs.push(logEntry);
+  }
+};
 
 /**
  * Custom hook to fetch the legal actions for the current player
@@ -12,137 +28,165 @@ import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/bl
  * @returns Object containing the player's legal actions and related information
  */
 export function usePlayerLegalActions(): PlayerLegalActionsResult {
-    // Get the user's address from localStorage
-    const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+    // 🎯 PERFORMANCE FIX: Move localStorage access outside render cycle
+    const [userAddress, setUserAddress] = useState<string | null>(null);
+    
+    useEffect(() => {
+        const address = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+        setUserAddress(address || null);
+    }, []);
 
     // Get game state directly from Context - table ID managed by subscription
     const { gameState, isLoading, error } = useGameStateContext();
+    
+    // Add ref to track last logged state to prevent spam
+    const lastLoggedStateRef = useRef<string>("");
+    
+    // 🔍 DEBUG: Only log when meaningful state changes occur
+    const renderCount = useRef(0);
+    renderCount.current += 1;
 
-    // Default return value for error/loading states
-    const defaultReturn: PlayerLegalActionsResult = {
-        legalActions: [],
-        isSmallBlindPosition: false,
-        isBigBlindPosition: false,
-        isDealerPosition: false,
-        isPlayerTurn: false,
-        playerStatus: null,
-        playerSeat: null,
-        isLoading,
-        error,
-        foldActionIndex: null,
-        actionTurnIndex: 0,
-        isPlayerInGame: false
-    };
+    // 🎯 PERFORMANCE FIX: Memoize expensive calculations
+    // Only recalculate when relevant game state properties change
+    const result = useMemo((): PlayerLegalActionsResult => {
+        // Default return value for error/loading states
+        const defaultReturn: PlayerLegalActionsResult = {
+            legalActions: [],
+            isSmallBlindPosition: false,
+            isBigBlindPosition: false,
+            isDealerPosition: false,
+            isPlayerTurn: false,
+            playerStatus: null,
+            playerSeat: null,
+            isLoading,
+            error,
+            foldActionIndex: null,
+            actionTurnIndex: 0,
+            isPlayerInGame: false
+        };
 
-    // Handle loading and error states
-    if (isLoading) {
-        return defaultReturn;
-    }
-
-    if (error) {
-        return defaultReturn;
-    }
-
-    if (!gameState) {
-        return defaultReturn;
-    }
-
-    try {
-
-        // Try to find the current player in the table data
-        let currentPlayer: PlayerDTO | null = null;
-        let isPlayerInGame = false;
-
-        if (userAddress && gameState.players?.length > 0) {
-            // Try to find player with exact address match
-            currentPlayer = gameState.players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress) ?? null;
-
-            // If not found, try with case-insensitive comparison
-            if (!currentPlayer) {
-                currentPlayer = gameState.players?.find((player: PlayerDTO) => player.address?.toLowerCase().includes(userAddress.substring(0, 10).toLowerCase())) ?? null;
-            }
-
-            isPlayerInGame = !!currentPlayer;
-           
-        }
-
-        // If no player found with the user's address, use the first player with legal actions
-        // This is useful for debugging and showing actions when the address doesn't match
-        if (!currentPlayer && gameState.players?.length > 0) {
-            // Find the first player that has legal actions
-            for (const player of gameState.players) {
-                if (player.legalActions && player.legalActions.length > 0) {
-                    currentPlayer = player;
-                    break;
-                }
-            }
-
-            // If still no player with actions, just use the first player
-            if (!currentPlayer) {
-                currentPlayer = gameState.players[0];
-            }
-        }
-
-        // If there's still no player found, return default
-        if (!currentPlayer) {
+        // Handle loading and error states
+        if (isLoading || error || !gameState || !userAddress) {
             return defaultReturn;
         }
 
-        // Check if it's the player's turn
-        const isPlayerTurn: boolean = gameState.nextToAct === currentPlayer.seat;
+        try {
+            // Try to find the current player in the table data
+            let currentPlayer: PlayerDTO | null = null;
+            let isPlayerInGame = false;
 
-        // Find the fold action index
-        let foldActionIndex: number | null = null;
-        if (Array.isArray(currentPlayer.legalActions)) {
-            const foldAction = currentPlayer.legalActions.find((action: LegalActionDTO) => action.action === PlayerActionType.FOLD);
-            if (foldAction) {
-                foldActionIndex = foldAction.index;
-            }
-        }
-
-        // Calculate the common action turn index
-        // Get all indices from all legal actions
-        let actionTurnIndex: number = 0;
-        if (Array.isArray(currentPlayer.legalActions) && currentPlayer.legalActions.length > 0) {
-            // Get the first index - all actions should have the same index
-            const firstActionIndex = currentPlayer.legalActions[0].index;
-
-            // Verify that all actions have the same index (for debugging)
-            const allSameIndex = currentPlayer.legalActions.every((action: LegalActionDTO) => action.index === firstActionIndex);
-
-            if (!allSameIndex) {
-                console.warn("⚠️ WARNING: Not all legal actions have the same index!");
-                console.warn(
-                    "⚠️ Action indices:",
-                    currentPlayer.legalActions.map((a: LegalActionDTO) => `${a.action}: ${a.index}`)
-                );
+            if (gameState.players?.length > 0) {
+                // Find player with exact address match (case-insensitive)
+                currentPlayer = gameState.players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress) ?? null;
+                isPlayerInGame = !!currentPlayer;
             }
 
-            actionTurnIndex = firstActionIndex;
+
+
+            // If there's still no player found, return default
+            if (!currentPlayer) {
+                return defaultReturn;
+            }
+
+            // Check if it's the player's turn
+            const isPlayerTurn: boolean = gameState.nextToAct === currentPlayer.seat;
+
+            // Find the fold action index
+            let foldActionIndex: number | null = null;
+            if (Array.isArray(currentPlayer.legalActions)) {
+                const foldAction = currentPlayer.legalActions.find((action: LegalActionDTO) => action.action === PlayerActionType.FOLD);
+                if (foldAction) {
+                    foldActionIndex = foldAction.index;
+                }
+            }
+
+            // Calculate the common action turn index
+            let actionTurnIndex: number = 0;
+            if (Array.isArray(currentPlayer.legalActions) && currentPlayer.legalActions.length > 0) {
+                const firstActionIndex = currentPlayer.legalActions[0].index;
+
+                // Verify that all actions have the same index (for debugging)
+                const allSameIndex = currentPlayer.legalActions.every((action: LegalActionDTO) => action.index === firstActionIndex);
+
+                if (!allSameIndex) {
+                    console.warn("⚠️ WARNING: Not all legal actions have the same index!");
+                    console.warn(
+                        "⚠️ Action indices:",
+                        currentPlayer.legalActions.map((a: LegalActionDTO) => `${a.action}: ${a.index}`)
+                    );
+                }
+
+                actionTurnIndex = firstActionIndex;
+            }
+
+            // Extract and return all the relevant information
+            return {
+                legalActions: Array.isArray(currentPlayer.legalActions) ? currentPlayer.legalActions : [],
+                isSmallBlindPosition: currentPlayer.isSmallBlind || gameState.smallBlindPosition === currentPlayer.seat,
+                isBigBlindPosition: currentPlayer.isBigBlind || gameState.bigBlindPosition === currentPlayer.seat,
+                isDealerPosition: currentPlayer.isDealer || gameState.dealer === currentPlayer.seat,
+                isPlayerTurn,
+                playerStatus: currentPlayer.status || null,
+                playerSeat: currentPlayer.seat || null,
+                isLoading: false,
+                error: null,
+                foldActionIndex,
+                actionTurnIndex,
+                isPlayerInGame
+            };
+        } catch (err) {
+            console.error("⚠️ Error parsing player legal actions:", err);
+            return {
+                ...defaultReturn,
+                error: err instanceof Error ? err : new Error("Unknown error occurred")
+            };
         }
+    }, [
+        // 🎯 Only recalculate when these specific properties change
+        gameState?.nextToAct,
+        gameState?.round,
+        gameState?.players,
+        gameState?.smallBlindPosition,
+        gameState?.bigBlindPosition,
+        gameState?.dealer,
+        userAddress,
+        isLoading,
+        error
+    ]);
 
-        // Extract and return all the relevant information
-        const result: PlayerLegalActionsResult = {
-            legalActions: Array.isArray(currentPlayer.legalActions) ? currentPlayer.legalActions : [],
-            isSmallBlindPosition: currentPlayer.isSmallBlind || gameState.smallBlindPosition === currentPlayer.seat,
-            isBigBlindPosition: currentPlayer.isBigBlind || gameState.bigBlindPosition === currentPlayer.seat,
-            isDealerPosition: currentPlayer.isDealer || gameState.dealer === currentPlayer.seat,
-            isPlayerTurn,
-            playerStatus: currentPlayer.status || null,
-            playerSeat: currentPlayer.seat || null,
-            isLoading: false,
-            error: null,
-            foldActionIndex,
-            actionTurnIndex, // Add the common action turn index
-            isPlayerInGame // Add the flag indicating if the player is in the game
-        };
+    // 🔍 DEBUG: Optimized logging - only when result actually changes
+    useEffect(() => {
+        if (result.isPlayerTurn || result.legalActions.length > 0) {
+            const currentState = JSON.stringify({
+                playerSeat: result.playerSeat,
+                isPlayerTurn: result.isPlayerTurn,
+                gameRound: gameState?.round,
+                nextToAct: gameState?.nextToAct,
+                legalActionCount: result.legalActions.length,
+                renderCount: renderCount.current
+            });
 
-        return result;
-    } catch (err) {
-        console.error("⚠️ Error parsing player legal actions:", err);
-        return {
-            ...defaultReturn,
-            error: err instanceof Error ? err : new Error("Unknown error occurred")
-        };
-    }
+            // Only log if the state actually changed
+            if (currentState !== lastLoggedStateRef.current) {
+                debugLog("LEGAL ACTIONS CALCULATED", {
+                    timestamp: new Date().toISOString(),
+                    playerSeat: result.playerSeat,
+                    isPlayerTurn: result.isPlayerTurn,
+                    gameRound: gameState?.round,
+                    nextToAct: gameState?.nextToAct,
+                    legalActions: result.legalActions.map(action => ({
+                        action: action.action,
+                        min: action.min,
+                        max: action.max,
+                        index: action.index
+                    })),
+                    renderCount: renderCount.current,
+                    source: "usePlayerLegalActions (memoized)"
+                });
+                lastLoggedStateRef.current = currentState;
+            }
+        }
+    }, [result, gameState?.round, gameState?.nextToAct]);
+
+    return result;
 }

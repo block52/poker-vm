@@ -447,5 +447,19 @@ ui/.env.production.local
 ui/npm-debug.log*
 ui/yarn-debug.log*
 ui/yarn-error.log*
-ui/yarn.lock
 ui/.DS_Store
+
+
+
+
+
+# explorer
+explorer/node_modules
+explorer/dist
+explorer/build
+explorer/dist-ssr
+explorer/public
+explorer/src
+explorer/static
+explorer/templates
+explorer/.env

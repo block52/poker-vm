@@ -1,153 +1,467 @@
-# Fetch
+#!/usr/bin/env python3
+"""
+Poker Bot for joining a Texas Hold'em game and polling for legal actions.
+"""
 
-import requests
 import json
-import random
 import time
-from table import PokerTable
-from typing import Dict, Any
-from web3 import Web3
-from dotenv import load_dotenv
-import os
+import requests
+import logging
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
+from enum import Enum
 
-# Load environment variables from .env file
-load_dotenv()
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('PokerBot')
+
+
+class PlayerActionType(Enum):
+    """Player action types from the game"""
+    SMALL_BLIND = "small_blind"
+    BIG_BLIND = "big_blind"
+    FOLD = "fold"
+    CHECK = "check"
+    BET = "bet"
+    CALL = "call"
+    RAISE = "raise"
+    MUCK = "muck"
+    SHOW = "show"
+    SIT_OUT = "sit_out"
+    SIT_IN = "sit_in"
+
+
+class NonPlayerActionType(Enum):
+    """Non-player action types from the game"""
+    JOIN = "join"
+    LEAVE = "leave"
+    DEAL = "deal"
+
+
+class PlayerStatus(Enum):
+    """Player status from the game"""
+    ACTIVE = "active"
+    FOLDED = "folded"
+    ALL_IN = "all_in"
+    SITTING_OUT = "sitting_out"
+    NOT_ACTED = "not_acted"
+    SHOWING = "showing"
+
+
+@dataclass
+class LegalAction:
+    """Represents a legal action a player can take"""
+    action: str
+    min_amount: str
+    max_amount: str
+    index: int
+
+
+@dataclass
+class PlayerState:
+    """Represents a player's state in the game"""
+    address: str
+    seat: int
+    stack: str
+    is_small_blind: bool
+    is_big_blind: bool
+    is_dealer: bool
+    hole_cards: Optional[List[str]]
+    status: str
+    legal_actions: List[LegalAction]
+    sum_of_bets: str
+    timeout: int
+
+
+@dataclass
+class GameState:
+    """Represents the current game state"""
+    address: str
+    players: List[PlayerState]
+    community_cards: List[str]
+    pots: List[str]
+    round: str
+    next_to_act: int
+    dealer: int
+    small_blind_position: int
+    big_blind_position: int
 
 
 class PokerBot:
-    def __init__(self, api_url: str, bot_wallet_id: str):
+    """
+    A bot that joins a poker game and polls for legal actions.
+    """
+
+    def __init__(self,
+                 rpc_url: str,
+                 player_address: str,
+                 buy_in_amount: int = 1000000,  # Default 1M chips
+                 table_address: str = None):
         """
-        Initialize the poker bot with API URL and bot's wallet ID
+        Initialize the poker bot.
 
         Args:
-            api_url: Base URL for the poker API
-            bot_wallet_id: The wallet ID representing the bot
+            rpc_url: The RPC endpoint URL for the poker PVM
+            player_address: The player's address/ID
+            buy_in_amount: Amount of chips to buy in with
+            table_address: Specific game address to join (optional)
         """
-        self.api_url = api_url
-        self.bot_wallet_id = bot_wallet_id
-        self.table_id = None
-        self.position = None
+        self.rpc_url = rpc_url.rstrip('/')
+        self.player_address = player_address
+        self.buy_in_amount = buy_in_amount
+        self.table_address = table_address
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        })
 
-        self.w3 = Web3()
-        seed_phrase = os.getenv('WALLET_SEED')
-        if not seed_phrase:
-            raise ValueError("No seed phrase found in .env file")
-
-        # self.wallet = self.w3.eth.account.from_key(self.w3.eth.account.from_mnemonic(seed_phrase).key)
-        # print(f"Bot wallet address: {self.wallet}")
-
-
-    def join() -> int:
-        # Do call to API to join
-
-        # Set position number
-        self.position = 1
+        logger.info(f"Initialized PokerBot for player {player_address}")
+        logger.info(f"RPC URL: {rpc_url}")
+        logger.info(f"Buy-in amount: {buy_in_amount}")
 
 
-    def set_table(self, table_id: str):
-        """Set the table ID the bot is playing at"""
-        self.table_id = table_id
+    def _make_rpc_call(self, method: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Make an RPC call to the poker PVM.
 
+        Args:
+            method: The RPC method name
+            params: Parameters for the RPC call
 
-    def get_table_state(self) -> PokerTable:
-        """Get current table state from the API"""
+        Returns:
+            The response from the RPC call
+
+        Raises:
+            Exception: If the RPC call fails
+        """
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": params or {},
+            "id": int(time.time() * 1000)  # Use timestamp as ID
+        }
+
         try:
-            response = requests.get(f"{self.api_url}/table/{self.table_id}")
+            logger.debug(f"Making RPC call: {method} with params: {params}")
+            response = self.session.post(
+                self.rpc_url, json=payload, timeout=30)
             response.raise_for_status()
-            # return response.json()
 
-            table = PokerTable(response.json())
-            return table
-            
+            result = response.json()
+
+            if response.status_code != 200:
+                raise Exception(f"RPC Error: {result['error']}")
+
+            return result.get("result", {})
 
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching table state: {e}")
+            logger.error(f"Network error during RPC call {method}: {e}")
+            raise
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON response from RPC call {method}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error during RPC call {method}: {e}")
+            raise
+
+
+    def join_game(self, seat_number: Optional[int] = None) -> bool:
+        """
+        Join a poker game.
+
+        Args:
+            seat_number: Specific seat to join (optional, will find empty seat if None)
+
+        Returns:
+            True if successfully joined, False otherwise
+        """
+        try:
+            logger.info(
+                f"Attempting to join game with {self.buy_in_amount} chips...")
+
+            # params = {
+            #     "player_address": self.player_address,
+            #     "action": NonPlayerActionType.JOIN.value,
+            #     "amount": str(self.buy_in_amount),
+            #     "index": 1  # Initial join action
+            # }
+
+            index = 2  # Initial join action
+            nonce = 0
+            params = [self.player_address, self.table_address, "join", self.buy_in_amount, nonce, index, seat_number]
+
+            # if self.table_address:
+            #     params["table_address"] = self.table_address
+
+            # if seat_number is not None:
+            #     params["seat"] = seat_number
+
+            result = self._make_rpc_call("perform_action", params)
+
+            if result.get("success", False):
+                logger.info(
+                    f"Successfully joined game at seat {result.get('seat', 'unknown')}")
+                return True
+            else:
+                logger.error(
+                    f"Failed to join game: {result.get('message', 'Unknown error')}")
+                return False
+
+        except Exception as e:
+            logger.error(f"Exception while joining game: {e}")
+            return False
+
+
+    def get_game_state(self) -> Optional[GameState]:
+        """
+        Get the current game state.
+
+        Returns:
+            GameState object if successful, None otherwise
+        """
+        try:
+            # params = {
+            #     "caller": self.player_address
+            # }
+
+            params = [self.table_address, "0x0000000000000000000000000000000000000000"]
+
+            # if self.table_address:
+            #     params["table_address"] = self.table_address
+
+            result = self._make_rpc_call("get_game_state", params)
+
+            if not result:
+                logger.warning("Empty response from get_game_state")
+                return None
+
+            # Parse players
+            players = []
+            result_data = result.get("data")
+            for player_data in result_data.get("players", []):
+                legal_actions = [
+                    LegalAction(
+                        action=action["action"],
+                        min_amount=action["min"],
+                        max_amount=action["max"],
+                        index=action["index"]
+                    )
+                    for action in player_data.get("legalActions", [])
+                ]
+
+                player = PlayerState(
+                    address=player_data["address"],
+                    seat=player_data["seat"],
+                    stack=player_data["stack"],
+                    is_small_blind=player_data.get("isSmallBlind", False),
+                    is_big_blind=player_data.get("isBigBlind", False),
+                    is_dealer=player_data.get("isDealer", False),
+                    hole_cards=player_data.get("holeCards"),
+                    status=player_data["status"],
+                    legal_actions=legal_actions,
+                    sum_of_bets=player_data.get("sumOfBets", "0"),
+                    timeout=player_data.get("timeout", 0)
+                )
+                players.append(player)
+
+            # Create game state
+            game_state = GameState(
+                address=result_data["address"],
+                players=players,
+                community_cards=result_data.get("communityCards", []),
+                pots=result_data.get("pots", ["0"]),
+                round=result_data.get("round", "ante"),
+                next_to_act=result_data.get("nextToAct", -1),
+                dealer=result_data.get("dealer", 0),
+                small_blind_position=result_data.get("smallBlindPosition", 1),
+                big_blind_position=result_data.get("bigBlindPosition", 2)
+            )
+
+            return game_state
+
+        except Exception as e:
+            logger.error(f"Exception while getting game state: {e}")
             return None
 
 
-    def is_bot_turn(self, table_state: Dict[str, Any]) -> bool:
+    def get_my_player_state(self, game_state: GameState) -> Optional[PlayerState]:
         """
-        Check if it's the bot's turn to act
+        Get this bot's player state from the game state.
+
+        Args:
+            game_state: The current game state
 
         Returns:
-            bool: True if it's bot's turn, False otherwise
+            This bot's PlayerState if found, None otherwise
         """
-        # Find the bot's seat
-        bot_player = None
-        for player in table_state['players']:
-            if player['id'] == self.bot_wallet_id:
-                bot_player = player
-                break
-
-        if not bot_player:
-            return False
-
-        # Check if bot is active and needs to act
-        return bot_player['status'] == 'active' and bot_player['action'] == 'check'
+        for player in game_state.players:
+            if player.address.lower() == self.player_address.lower():
+                return player
+        return None
 
 
-    def make_action(self) -> bool:
+    def get_nonce(self) -> int:
         """
-        Make a random poker action when it's the bot's turn
+        Get the current nonce for this bot's player address.
 
-        Available actions: fold, check, call, raise
+        Returns:
+            The current nonce as an integer
         """
-        actions = {
-            'fold': {'action': 'fold', 'amount': 0},
-            'check': {'action': 'check', 'amount': 0},
-            'call': {'action': 'call', 'amount': 0},
-            'raise': {'action': 'raise', 'amount': random.uniform(2, 10)}
-        }
-
-        # Select random action
-        action = random.choice(list(actions.keys()))
-        action_data = actions[action]
-
         try:
-            response = requests.post(
-                f"{self.api_url}/table/{self.table_id}/action",
-                json={
-                    'playerId': self.bot_wallet_id,
-                    'action': action_data['action'],
-                    'amount': action_data['amount']
-                }
-            )
-            response.raise_for_status()
-            print(f"Made action: {action_data['action']} with amount: {
-                  action_data['amount']}")
-            return True
-        except requests.exceptions.RequestException as e:
-            print(f"Error making action: {e}")
-            return False
+            # params = {
+            #     "address": self.player_address
+            # }
+            params = [self.player_address]
 
+            result = self._make_rpc_call("get_account", params)
+            result_data = result.get("data")
+            return int(result_data.get("nonce", 0))
 
-    def run(self):
+        except Exception as e:
+            logger.error(f"Exception while getting nonce: {e}")
+            return 0
+        
+
+    def log_game_state(self, game_state: GameState) -> None:
         """
-        Main bot loop: continuously check table state and act when it's bot's turn
+        Log the current game state in a readable format.
+
+        Args:
+            game_state: The game state to log
         """
-        while True:
-            table_state = self.get_table_state()
-            print(table_state)
+        logger.info("=" * 50)
+        logger.info(f"GAME STATE - Round: {game_state.round.upper()}")
+        logger.info(f"Community Cards: {game_state.community_cards or 'None'}")
+        logger.info(f"Pot: {game_state.pots[0] if game_state.pots else '0'}")
+        logger.info(f"Next to Act: Seat {game_state.next_to_act}")
+        logger.info("-" * 30)
 
-            if table_state:
-                if self.is_bot_turn(table_state):
-                    # Wait a second before acting
-                    time.sleep(1)
-                    self.make_action()
+        for player in game_state.players:
+            prefix = ">>> " if player.address.lower() == self.player_address.lower() else "    "
+            blind_status = ""
+            if player.is_dealer:
+                blind_status += " [DEALER]"
+            if player.is_small_blind:
+                blind_status += " [SB]"
+            if player.is_big_blind:
+                blind_status += " [BB]"
 
-            # Wait before checking again to avoid hammering the API
-            print("Sleeping")
-            time.sleep(0.5)
+            logger.info(f"{prefix}Seat {player.seat}: {player.address[:8]}... "
+                        f"Stack: {player.stack} Status: {player.status}{blind_status}")
+
+            if player.address.lower() == self.player_address.lower():
+                if player.hole_cards and player.hole_cards[0] != "??":
+                    logger.info(f"{prefix}Hole Cards: {player.hole_cards}")
+                if player.legal_actions:
+                    actions_str = ", ".join([f"{action.action}({action.min_amount}-{action.max_amount})"
+                                             for action in player.legal_actions])
+                    logger.info(f"{prefix}Legal Actions: {actions_str}")
+
+        logger.info("=" * 50)
 
 
-# Example usage
+    def poll_for_legal_actions(self, interval: float = 2.0, max_polls: int = 10) -> List[LegalAction]:
+        """
+        Poll the game state for legal actions.
+
+        Args:
+            interval: Time between polls in seconds
+            max_polls: Maximum number of polls before giving up
+
+        Returns:
+            List of legal actions available to this bot
+        """
+        logger.info(
+            f"Starting to poll for legal actions (interval: {interval}s, max_polls: {max_polls})")
+
+        for poll_count in range(max_polls):
+            logger.info(f"Poll {poll_count + 1}/{max_polls}")
+
+            game_state = self.get_game_state()
+            if not game_state:
+                logger.warning("Failed to get game state")
+                time.sleep(interval)
+                continue
+
+            self.log_game_state(game_state)
+
+            my_player = self.get_my_player_state(game_state)
+            if not my_player:
+                logger.warning("Bot not found in game state")
+                time.sleep(interval)
+                continue
+
+            if my_player.legal_actions:
+                logger.info(
+                    f"Found {len(my_player.legal_actions)} legal actions!")
+                return my_player.legal_actions
+
+            logger.info("No legal actions available, continuing to poll...")
+            time.sleep(interval)
+
+        logger.warning(f"No legal actions found after {max_polls} polls")
+        return []
+
+
+    def run(self) -> None:
+        """
+        Main bot execution: join game, wait, then poll for legal actions.
+        """
+        logger.info("Starting Poker Bot...")
+
+        # # Step 1: Join the game
+        seat_number = 1
+        if not self.join_game(seat_number=seat_number):
+            logger.error("Failed to join game, exiting")
+            return
+
+        # Step 2: Wait for 5 seconds
+        logger.info("Waiting 5 seconds before polling...")
+        time.sleep(5)
+
+        # Step 3: Poll for legal actions
+        legal_actions = self.poll_for_legal_actions()
+
+        if legal_actions:
+            logger.info("Bot successfully found legal actions:")
+            for action in legal_actions:
+                logger.info(
+                    f"  - {action.action}: {action.min_amount} to {action.max_amount}")
+        else:
+            logger.info("No legal actions found")
+
+        logger.info("Bot execution completed")
+
+
+def main():
+    """
+    Example usage of the PokerBot.
+    """
+    # Configuration - adjust these values for your setup
+    RPC_URL = "https://node1.block52.xyz"  # Your poker PVM RPC endpoint
+    PLAYER_ADDRESS = "0xC84737526E425D7549eF20998Fa992f88EAC2484"  # Your player address
+    BUY_IN_AMOUNT = 1000000000000000000  # Chips to buy in with
+    TABLE_ADDRESS = "0xdbd48d8f8fb0612f4e5bebe43e8f351cd8dcc2a5"  # Specific game address, or None for default
+
+    # Create and run the bot
+    bot = PokerBot(
+        rpc_url=RPC_URL,
+        player_address=PLAYER_ADDRESS,
+        buy_in_amount=BUY_IN_AMOUNT,
+        table_address=TABLE_ADDRESS
+    )
+
+    try:
+        bot.run()
+    except KeyboardInterrupt:
+        logger.info("Bot interrupted by user")
+    except Exception as e:
+        logger.error(f"Bot encountered an error: {e}")
+
+
 if __name__ == "__main__":
-    API_URL = "https://proxy.block52.xyz"
-    BOT_WALLET_ID = "0xa79E6e9eF859956b948d1d310c979f22d6534b29"  # Example wallet ID
-    TABLE_ID = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
-
-    print("Starting bot for table")
-
-    bot = PokerBot(API_URL, BOT_WALLET_ID)
-    bot.set_table(TABLE_ID)
-    bot.run()
+    main()

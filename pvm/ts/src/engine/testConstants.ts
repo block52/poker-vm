@@ -1,11 +1,11 @@
-import { ActionDTO, GameOptions, Positions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
 import { Player } from "../models/player";
 
 // Constants for testing
 export const ONE_TOKEN = 100000000000000000n;
-export const TWO_TOKENS =  200000000000000000n;
+export const TWO_TOKENS = 200000000000000000n;
 export const FIVE_TOKENS = 500000000000000000n;
 export const TEN_TOKENS = 1000000000000000000n;
 export const TWENTY_TOKENS = 20000000000000000000n;
@@ -30,15 +30,9 @@ export const gameOptions: GameOptions = {
     timeout: 60000
 };
 
-export const defaultPositions: Positions = {
-    dealer: 9,
-    smallBlind: 1,
-    bigBlind: 2
-};
-
 export const baseGameConfig = {
     address: ethers.ZeroAddress,
-    positions: defaultPositions,
+    dealer: 9,
     nextToAct: 1,
     currentRound: "ante",
     communityCards: [],
@@ -47,15 +41,14 @@ export const baseGameConfig = {
     now: Date.now()
 };
 
-export const seed = "7392648510739462850173946285017394628501739462850199";
+export const seed: string = "29-34-15-41-5-21-9-23-37-5-17-13-11-1-40-44-16-21-42-46-41-23-34-30-48-36-32-33-40-7-9-3-30-42-2-19-24-34-24-46-2-31-10-43-49-11-29-49-49-23-14-2";
 
 export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasHoldemGame => {
     const previousActions: ActionDTO[] = [];
     const game = new TexasHoldemGame(
         ethers.ZeroAddress,
         gameOptions,
-        defaultPositions, // dealer
-        1, // nextToAct
+        9, // dealer
         previousActions,
         1, // handNumber
         0, // actionCount
@@ -73,8 +66,7 @@ export const getDefaultGameWithActions = (previousActions: any[] = [], playerSta
     const game = new TexasHoldemGame(
         ethers.ZeroAddress,
         gameOptions,
-        defaultPositions, // dealer
-        1, // nextToAct
+        9, // dealer
         previousActions,
         0,
         0,
@@ -94,3 +86,8 @@ export const fromTestJson = (json: any): TexasHoldemGame => {
 
     return TexasHoldemGame.fromJson(data, gameConfig);
 };
+
+// Player address constants
+export const PLAYER_1_ADDRESS = "0x1111111111111111111111111111111111111111"; // Small Blind
+export const PLAYER_2_ADDRESS = "0x2222222222222222222222222222222222222222"; // Big Blind  
+export const PLAYER_3_ADDRESS = "0x3333333333333333333333333333333333333333"; // 

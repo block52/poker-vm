@@ -20,6 +20,9 @@ class LeaveAction extends BaseAction {
 
         // Get player seat BEFORE changing any state
         const seat = this.game.getPlayerSeatNumber(player.address);
+
+        this.game.dealerManager.handlePlayerLeave(seat);
+
         const playerAddress = player.address;
         const playerChips = player.chips;
 
@@ -32,10 +35,6 @@ class LeaveAction extends BaseAction {
             index: index,
             amount: playerChips // Include chips amount in the action
         });
-
-        // Now remove player completely from the game
-        // console.log(`Removing player ${playerAddress} from seat ${seat}`);
-        // Player removal now happens in addNonPlayerAction
     }
 }
 

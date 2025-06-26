@@ -101,12 +101,40 @@ export class AccountManagement extends StateManager implements IAccountManagemen
     }
 
     public async applyTransaction(tx: Transaction): Promise<void> {
-        // Deduct from sender
+        await this.connect();
+
+        // Handle sender account (deduct balance and increment nonce)
         if (tx.from) {
-            await this.decrementBalance(tx.from, tx.value);
+            const account = await Accounts.findOne({ address: tx.from });
+            
+            // For MINT transactions or other special transactions, the sender might not exist
+            // Only process sender if account exists (normal transactions)
+            if (account) {
+                const balance = BigInt(account.balance);
+                if (balance - tx.value < 0n) {
+                    console.log("Insufficient funds");
+                    return;
+                }
+
+                const newBalance = balance - tx.value;
+                const newNonce = account.nonce + 1; // Increment nonce for sender
+
+                await Accounts.updateOne(
+                    { address: tx.from },
+                    { 
+                        $set: { 
+                            balance: newBalance.toString(),
+                            nonce: newNonce
+                        } 
+                    }
+                );
+            } else {
+                // For transactions like MINT where sender doesn't exist, just log it
+                console.log(`Sender account ${tx.from} not found - assuming special transaction (MINT, etc.)`);
+            }
         }
 
-        // Add to recipient
+        // Handle recipient account (increment balance only)
         if (tx.to) {
             await this.incrementBalance(tx.to, tx.value);
         }

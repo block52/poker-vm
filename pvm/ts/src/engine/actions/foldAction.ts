@@ -19,6 +19,8 @@ class FoldAction extends BaseAction implements IAction {
      */
     verify(player: Player): Range {
 
+        super.verify(player);
+
         if (player.status === PlayerStatus.FOLDED) {
             // Player has already folded, no need to fold again
             throw new Error("Player has already folded.");
@@ -27,6 +29,11 @@ class FoldAction extends BaseAction implements IAction {
         if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
             // Muck cards instead of folding
             throw new Error("Fold action is not allowed during showdown round.");
+        }
+
+        if (this.isLastLivePlayer(player)) {
+            // If the player is the last live player, they cannot fold
+            throw new Error("Cannot fold when you are the last live player.");
         }
 
         // No status checks needed - allow any player to fold regardless of status
@@ -52,6 +59,12 @@ class FoldAction extends BaseAction implements IAction {
         // Add the action to the game
         const round = this.game.currentRound;
         this.game.addAction({ playerId: player.address, action: PlayerActionType.FOLD, index: index }, round);
+    }
+
+    private isLastLivePlayer(player: Player): boolean {
+        // Check if the player is the last active player in the game
+        const findLivePlayers = this.game.findLivePlayers();
+        return findLivePlayers.length === 1 && findLivePlayers[0].address === player.address;
     }
 }
 

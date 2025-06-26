@@ -1,11 +1,9 @@
-import { ActionDTO, GameOptions, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
-import { IUpdate, Range, Turn } from "../types";
-import { ethers } from "ethers";
-import { defaultPositions, gameOptions, getDefaultGame, mnemonic } from "../testConstants";
-import { get } from "axios";
+import { IUpdate, Turn } from "../types";
+import { getDefaultGame, mnemonic } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -19,13 +17,9 @@ class TestAction extends BaseAction {
         const baseResult = super.verify(player);
         return this.shouldReturnRange ? { minAmount: 10n, maxAmount: 100n } : baseResult;
     }
-
-    public testGetDeductAmount(player: Player, amount?: bigint): bigint {
-        return this.getDeductAmount(player, amount);
-    }
 }
 
-describe.skip("BaseAction", () => {
+describe("BaseAction", () => {
     let game: TexasHoldemGame;
     let updateMock: IUpdate;
     let action: TestAction;
@@ -58,15 +52,14 @@ describe.skip("BaseAction", () => {
         player = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 1000n, undefined, PlayerStatus.ACTIVE);
     });
 
-    describe.skip("verify", () => {
+    describe("verify", () => {
         describe("game state validation", () => {
-            it("should throw error if game is in showdown", () => {
-                jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
-
-                expect(() => action.verify(player)).toThrow("Hand has ended.");
+            it.only("should throw error if player is not active", () => {
+                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
+                expect(() => action.verify(player)).toThrow("Must be currently active player.");
             });
 
-            it("should allow verification in non-showdown rounds", () => {
+            it.skip("should allow verification in non-showdown rounds", () => {
                 const rounds = [TexasHoldemRound.ANTE, TexasHoldemRound.PREFLOP, TexasHoldemRound.FLOP, TexasHoldemRound.TURN, TexasHoldemRound.RIVER];
 
                 rounds.forEach(round => {
@@ -92,14 +85,14 @@ describe.skip("BaseAction", () => {
 
             it("should throw error if player is not active", () => {
                 jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
+                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
-                expect(() => action.verify(player)).toThrow("Only active player can check.");
+                expect(() => action.verify(player)).toThrow("Must be currently active player.");
             });
 
-            it("should allow verification for active player on their turn", () => {
+            it.skip("should allow verification for active player on their turn", () => {
                 jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
                 expect(() => action.verify(player)).not.toThrow();
             });
@@ -183,16 +176,6 @@ describe.skip("BaseAction", () => {
                     amount: 0n
                 });
             });
-        });
-    });
-
-    describe.skip("getDeductAmount", () => {
-        it("should return 0n when no amount provided", () => {
-            expect(action.testGetDeductAmount(player)).toBe(0n);
-        });
-
-        it("should return provided amount when specified", () => {
-            expect(action.testGetDeductAmount(player, 100n)).toBe(100n);
         });
     });
 
@@ -292,25 +275,6 @@ describe.skip("BaseAction", () => {
                 const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 50n, undefined, PlayerStatus.ACTIVE);
                 action.execute(allInPlayer, 0, 50n);
                 expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
-            });
-        });
-
-        describe("getDeductAmount function", () => {
-            it("should return 0n when no amount is provided", () => {
-                expect(action.testGetDeductAmount(player)).toBe(0n);
-            });
-
-            it("should return the exact amount when provided", () => {
-                expect(action.testGetDeductAmount(player, 50n)).toBe(50n);
-            });
-
-            it("should handle zero amount", () => {
-                expect(action.testGetDeductAmount(player, 0n)).toBe(0n);
-            });
-
-            it("should handle maximum bigint value", () => {
-                const maxBigInt = BigInt(Number.MAX_SAFE_INTEGER);
-                expect(action.testGetDeductAmount(player, maxBigInt)).toBe(maxBigInt);
             });
         });
     });

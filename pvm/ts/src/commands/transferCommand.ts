@@ -3,28 +3,25 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance,getContractSchemaManagementInstance } from "../state/index";
+import { getGameManagementInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
-import contractSchemas from "../schema/contractSchemas";
-import { IContractSchemaManagement, IGameManagement } from "../state/interfaces";
+import { IGameManagement } from "../state/interfaces";
 
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly gameManagement: IGameManagement;
-    private readonly contractSchemaManagement: IContractSchemaManagement;
     private readonly mempool: Mempool;
 
     constructor(
-        private from: string,
-        private to: string,
-        private amount: bigint,
+        private readonly from: string,
+        private readonly to: string,
+        private readonly amount: bigint,
         private readonly nonce: number | 0,
         private data: string | null,
         private readonly privateKey: string
     ) {
         console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
-        this.contractSchemaManagement = getContractSchemaManagementInstance();
         this.mempool = getMempoolInstance();
     }
 
@@ -36,8 +33,8 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         const fromAccount = accountResponse.data;
         console.log(`Account balance for ${this.from}: ${fromAccount.balance} ${fromAccount.nonce}`);
 
-        if (this.nonce !== fromAccount.getNextNonce()) {
-            console.log(`Invalid nonce: expected=${fromAccount.getNextNonce()}, provided=${this.nonce}`);
+        if (this.nonce !== fromAccount.nonce) {
+            console.log(`Invalid nonce: expected=${fromAccount.nonce}, provided=${this.nonce}`);
             throw new Error("Invalid nonce");
         }
 
@@ -57,7 +54,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     throw new Error(`Game state not found for address: ${this.to}`);
                 }
 
-                const gameOptions = await this.contractSchemaManagement.getGameOptions(gameState.schemaAddress);
+                const gameOptions = await this.gameManagement.getGameOptions(gameState.address);
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
 
                 console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
@@ -83,7 +80,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
 
             if (await this.isGameTransaction(this.from)) {
                 const json = await this.gameManagement.getState(this.from);
-                const gameOptions = await this.contractSchemaManagement.getGameOptions(this.from);
+                const gameOptions = await this.gameManagement.getGameOptions(this.from);
 
                 const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 

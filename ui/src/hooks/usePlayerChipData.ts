@@ -1,71 +1,35 @@
 import { useMemo } from "react";
 import { PlayerChipDataReturn } from "../types/index";
 import { useGameStateContext } from "../context/GameStateContext";
-import { ActionDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 
 /**
  * Custom hook to fetch and provide player chip data for each seat
  *
- * SIMPLIFIED: Uses GameStateContext directly instead of useGameState
- * This prevents creating multiple WebSocket connections for the same table
+ * SIMPLIFIED: Uses the sumOfBets value directly from PlayerDTO instead of calculating
+ * This prevents complex logic and just uses what the backend already provides
  *
  * @param tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing player chip data mapped by seat
  */
-export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
+export const usePlayerChipData = (): PlayerChipDataReturn => {
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState, isLoading, error } = useGameStateContext();
 
-    // Memoized calculation of all player chip amounts
+    // Memoized calculation of all player chip amounts using sumOfBets from backend
     const playerChipAmounts = useMemo(() => {
         const amounts: Record<number, string> = {};
         
         // Handle loading, error, or invalid game state
-        if (!gameState || !gameState.players || !Array.isArray(gameState.players) || !gameState.previousActions || !Array.isArray(gameState.previousActions)) {
+        if (!gameState || !gameState.players || !Array.isArray(gameState.players)) {
             return amounts; // Return empty object for all invalid states
         }
 
-        // Define betting actions inside useMemo to avoid dependency changes
-        const bettingActions = [
-            PlayerActionType.SMALL_BLIND,
-            PlayerActionType.BIG_BLIND, 
-            PlayerActionType.BET,
-            PlayerActionType.CALL,
-            PlayerActionType.RAISE,
-            PlayerActionType.ALL_IN
-        ];
-        
+        // Simply map each player's sumOfBets to their seat - no complex calculations needed
         gameState.players.forEach(player => {
             if (!player.seat || !player.address) return;
             
-            const playerActions = gameState.previousActions.filter((action: ActionDTO) => {
-                // Validate action structure
-                if (!action || !action.playerId || !action.action) {
-                    return false;
-                }
-
-                // Only include this player's actions
-                if (action.playerId !== player.address) {
-                    return false;
-                }
-                
-                // Only include betting actions that represent chips on the table
-                return bettingActions.includes(action.action as PlayerActionType);
-            });
-            
-            let sumOfBets = BigInt(0);
-            for (const action of playerActions) {
-                try {
-                    // Only place where we need try-catch - BigInt conversion can fail
-                    const amount = BigInt(action.amount || "0");
-                    sumOfBets += amount;
-                } catch (err) {
-                    console.warn(`[usePlayerChipData] Invalid amount: ${action.amount}, ${err}`);
-                    // Continue with other actions instead of failing completely
-                }
-            }
-            
-            amounts[player.seat] = sumOfBets.toString();
+            // Use the sumOfBets value directly from the backend
+            amounts[player.seat] = player.sumOfBets || "0";
         });
         
         return amounts;
@@ -79,7 +43,7 @@ export const usePlayerChipData = (tableId?: string): PlayerChipDataReturn => {
             return "0";
         }
         
-        // Return cached value
+        // Return cached value - use sumOfBets directly from backend
         return playerChipAmounts[seatIndex] || "0";
     };
 
