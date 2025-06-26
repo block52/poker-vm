@@ -57,8 +57,8 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
-        const lastAggressor: bigint = betManager.getLastAggressor();
-        const minRaiseToAmount: bigint = playersBet + lastAggressor;
+        const currentBet: bigint = betManager.current();
+        const minRaiseToAmount: bigint = playersBet + currentBet;
 
         if (player.chips < minRaiseToAmount) {
             // Player can only go all-in

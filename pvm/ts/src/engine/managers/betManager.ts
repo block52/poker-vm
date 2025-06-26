@@ -105,11 +105,14 @@ export class BetManager implements IBetManager {
 
     /**
      * Get the last aggressor in the betting sequence
-     * @param start - The index to start searching from (default is the end of the turns array)
      * @returns The playerId of the last aggressor or null if no aggressor found
      */
-    getLastAggressor(start: number = this.turns.length): bigint {
+    getLastAggressor(): bigint {
         const sortedAggregatedBets = this.aggregatedBets.sort((a, b) => a.index - b.index);
+        if (sortedAggregatedBets.length === 0) {
+            return 0n;
+        }
+        const start = sortedAggregatedBets.length;
         return sortedAggregatedBets[start - 1]?.amount || 0n;
     }
 
