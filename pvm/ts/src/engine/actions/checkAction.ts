@@ -32,6 +32,10 @@ class CheckAction extends BaseAction implements IAction {
             newActions.push(...anteActions);
         }
 
+        if (!newActions || newActions.length === 0) {
+            throw new Error("No previous actions to check.");
+        }
+
         const betManager = new BetManager(newActions);
         const currentBetAmount: bigint = betManager.current();
 

@@ -73,9 +73,9 @@ describe("CheckAction", () => {
         });
 
         it("should throw error if no previous action exists", () => {
-            jest.spyOn(game, "getLastRoundAction").mockReturnValue(undefined);
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([]);
 
-            expect(() => action.verify(player)).toThrow("No previous action to check.");
+            expect(() => action.verify(player)).toThrow("No previous actions to check.");
         });
 
         it.skip("should return a range for check action", () => {
