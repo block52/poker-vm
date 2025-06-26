@@ -69,8 +69,8 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         return {
-            minAmount: minRaiseToAmount, // deltaToCall > this.game.bigBlind ? deltaToCall : this.game.bigBlind, // Minimum raise amount
-            maxAmount: player.chips // Total possible if going all-in
+            minAmount: minRaiseToAmount,
+            maxAmount: player.chips
         };
     }
 }
