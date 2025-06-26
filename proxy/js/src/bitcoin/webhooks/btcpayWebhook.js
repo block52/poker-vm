@@ -11,10 +11,11 @@ const router = express.Router();
 // BTCPay webhook configuration
 const WEBHOOK_SECRET = process.env.BTCPAY_WEBHOOK_SECRET;
 
-// Ethereum configuration (reuse from existing deposit system)
-const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
+// Ethereum configuration for Bitcoin deposits (calls Bridge directly)
+const BRIDGE_ADDRESS = "0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d"; // Bridge contract
+const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";   // USDC token
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
-const PRIVATE_KEY = process.env.DEPOSIT_PRIVATE_KEY;
+const PRIVATE_KEY = process.env.TEXAS_HODL_PRIVATE_KEY; // Different private key for Bitcoin deposits
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
@@ -45,48 +46,50 @@ function validateWebhookSignature(payload, signature, secret) {
 }
 
 /**
- * Calls the deposit contract to forward USDC deposit
+ * Calls the Bridge contract directly to deposit USDC
  * @param {string} userAddress - Block52 user address (0x...)
  * @param {ethers.BigNumber|string} amount - USDC amount formatted with 6 decimals
  * @returns {Promise<ContractResult>} Contract call result
  */
-async function callDepositContract(userAddress, amount) {
-    console.log("=== Calling Deposit Contract ===");
+async function callBridgeDeposit(userAddress, amount) {
+    console.log("=== Calling Bridge Contract Directly ===");
     console.log("User Address:", userAddress);
     console.log("Amount:", amount);
+    console.log("USDC Token:", USDC_ADDRESS);
 
     try {
-        // Create interface for the deposit contract
-        const depositInterface = new ethers.Interface([
+        // Create Bridge contract interface
+        const bridgeInterface = new ethers.Interface([
             {
                 "inputs": [
-                    {"internalType": "address", "name": "user", "type": "address"},
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
+                    {"internalType": "address", "name": "receiver", "type": "address"},
+                    {"internalType": "address", "name": "token", "type": "address"}
                 ],
-                "name": "forwardDepositUnderlying",
-                "outputs": [],
+                "name": "deposit",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
                 "stateMutability": "nonpayable",
                 "type": "function"
             }
         ]);
 
-        // Encode the function data
-        const data = depositInterface.encodeFunctionData("forwardDepositUnderlying", [userAddress, amount]);
+        // Encode the function data for Bridge.deposit(amount, receiver, token)
+        const data = bridgeInterface.encodeFunctionData("deposit", [amount, userAddress, USDC_ADDRESS]);
         console.log("Encoded function data:", data);
 
-        // Send transaction
+        // Send transaction to Bridge contract
         const tx = await wallet.sendTransaction({
-            to: DEPOSIT_ADDRESS,
+            to: BRIDGE_ADDRESS,
             data: data,
-            gasLimit: 300000,
+            gasLimit: 400000, // Higher gas limit for Bridge calls
             maxFeePerGas: ethers.parseUnits("3", "gwei"),
             maxPriorityFeePerGas: ethers.parseUnits("1.5", "gwei")
         });
 
-        console.log("Transaction sent:", tx.hash);
+        console.log("Bridge deposit transaction sent:", tx.hash);
         return { success: true, hash: tx.hash };
     } catch (error) {
-        console.error("Error calling deposit contract:", error);
+        console.error("Error calling bridge deposit:", error);
         return { success: false, error: error.message };
     }
 }
@@ -178,24 +181,24 @@ router.post("/", express.raw({ type: 'application/json' }), async (req, res) => 
             const usdcAmountFormatted = ethers.parseUnits(usdcAmount.toFixed(6), 6);
             console.log("USDC amount formatted for contract:", usdcAmountFormatted.toString());
 
-            // Call the deposit contract with USDC amount
-            const result = await callDepositContract(block52Address, usdcAmountFormatted);
+            // Call the Bridge contract directly with USDC amount
+            const result = await callBridgeDeposit(block52Address, usdcAmountFormatted);
             
             if (result.success) {
-                console.log("Successfully called deposit contract:", result.hash);
+                console.log("Successfully called Bridge contract:", result.hash);
                 res.status(200).json({ 
                     success: true, 
-                    message: "Bitcoin payment processed successfully",
+                    message: "Bitcoin payment processed via Bridge successfully",
                     btcAmount: btcAmount,
                     usdcAmount: usdcAmount.toFixed(6),
                     conversionRate: BTC_TO_USDC_RATE,
                     txHash: result.hash 
                 });
             } else {
-                console.error("Failed to call deposit contract:", result.error);
+                console.error("Failed to call Bridge contract:", result.error);
                 res.status(500).json({ 
                     success: false, 
-                    error: "Failed to process deposit",
+                    error: "Failed to process Bridge deposit",
                     details: result.error 
                 });
             }
@@ -211,7 +214,14 @@ router.post("/", express.raw({ type: 'application/json' }), async (req, res) => 
 
 // Health check endpoint
 router.get("/health", (req, res) => {
-    res.json({ status: "OK", message: "Bitcoin webhook handler is running" });
+    res.json({ 
+        status: "OK", 
+        message: "Bitcoin webhook handler is running",
+        bridgeAddress: BRIDGE_ADDRESS,
+        usdcAddress: USDC_ADDRESS,
+        conversionRate: BTC_TO_USDC_RATE,
+        walletAddress: wallet.address
+    });
 });
 
 module.exports = router; 
