@@ -13,7 +13,6 @@ const WEBHOOK_SECRET = process.env.BTCPAY_WEBHOOK_SECRET;
 
 // Ethereum configuration for Bitcoin deposits (calls Bridge directly)
 const BRIDGE_ADDRESS = "0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d"; // Bridge contract
-const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";   // USDC token
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 const PRIVATE_KEY = process.env.TEXAS_HODL_PRIVATE_KEY; // Different private key for Bitcoin deposits
 const provider = new ethers.JsonRpcProvider(RPC_URL);
@@ -52,10 +51,9 @@ function validateWebhookSignature(payload, signature, secret) {
  * @returns {Promise<ContractResult>} Contract call result
  */
 async function callBridgeDeposit(userAddress, amount) {
-    console.log("=== Calling Bridge Contract Directly ===");
+    console.log("=== Calling Bridge.depositUnderlying ===");
     console.log("User Address:", userAddress);
     console.log("Amount:", amount);
-    console.log("USDC Token:", USDC_ADDRESS);
 
     try {
         // Create Bridge contract interface
@@ -63,18 +61,17 @@ async function callBridgeDeposit(userAddress, amount) {
             {
                 "inputs": [
                     {"internalType": "uint256", "name": "amount", "type": "uint256"},
-                    {"internalType": "address", "name": "receiver", "type": "address"},
-                    {"internalType": "address", "name": "token", "type": "address"}
+                    {"internalType": "address", "name": "receiver", "type": "address"}
                 ],
-                "name": "deposit",
+                "name": "depositUnderlying",
                 "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
                 "stateMutability": "nonpayable",
                 "type": "function"
             }
         ]);
 
-        // Encode the function data for Bridge.deposit(amount, receiver, token)
-        const data = bridgeInterface.encodeFunctionData("deposit", [amount, userAddress, USDC_ADDRESS]);
+        // Encode the function data for Bridge.depositUnderlying(amount, receiver)
+        const data = bridgeInterface.encodeFunctionData("depositUnderlying", [amount, userAddress]);
         console.log("Encoded function data:", data);
 
         // Send transaction to Bridge contract
@@ -218,9 +215,9 @@ router.get("/health", (req, res) => {
         status: "OK", 
         message: "Bitcoin webhook handler is running",
         bridgeAddress: BRIDGE_ADDRESS,
-        usdcAddress: USDC_ADDRESS,
         conversionRate: BTC_TO_USDC_RATE,
-        walletAddress: wallet.address
+        walletAddress: wallet.address,
+        method: "depositUnderlying"
     });
 });
 
