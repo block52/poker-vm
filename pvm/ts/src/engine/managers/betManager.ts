@@ -19,19 +19,10 @@ export class BetManager implements IBetManager {
         this.addTurns(turns);
     }
 
-    count(): number {
-        // Return the number of unique players who have placed bets
-        return this.aggregatedBets.length;
-    }
-
-    /**
-     * Add a single action to the bet manager
-     * @param action The action to add
-     */
     add(action: Turn): void {
         // Implementation for adding an action to the bet manager
-        if (action.playerId && action.amount) {
-            if (action.amount === undefined || action.action === NonPlayerActionType.JOIN) {
+        if (action.playerId && action.amount !== undefined) {
+            if (action.action === NonPlayerActionType.JOIN) {
                 return;
             }
 
@@ -56,6 +47,11 @@ export class BetManager implements IBetManager {
         for (const turn of sortedTurns) {
             this.add(turn);
         }
+    }
+
+    count(): number {
+        // Count unique players who have placed bets
+        return this.aggregatedBets.length;
     }
 
     current(): bigint {
