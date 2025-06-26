@@ -70,14 +70,7 @@ export const usePlayerActionDropBox = (seatIndex: number): PlayerActionDisplay =
     if (!previousActions || previousActions.length === 0) return -1;
     
     // Find the highest index efficiently
-    let maxIndex = -1;
-    for (let i = previousActions.length - 1; i >= 0; i--) {
-      if (previousActions[i].index > maxIndex) {
-        maxIndex = previousActions[i].index;
-        break; // Since we're going backwards and found the max, we can break
-      }
-    }
-    return maxIndex;
+    return Math.max(...previousActions.map(action => action.index));
   }, [previousActions]);
 
   // Get the GLOBALLY most recent action and check if it belongs to this player
