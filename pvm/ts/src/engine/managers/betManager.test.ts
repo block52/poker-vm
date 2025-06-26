@@ -31,8 +31,8 @@ describe("Bet Manager Tests", () => {
         betManager = new BetManager(turns);
     });
 
-    it("should add a turn on construction", () => {
-        // Simply verify the function doesn't throw and returns ZeroAddress
-        expect(betManager.count()).toBe(3);
+    it("should count unique players who have placed bets", () => {
+        // Verify that the bet manager correctly counts unique players
+        expect(betManager.count()).toBe(2);
     });
 }); 
