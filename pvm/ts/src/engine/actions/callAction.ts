@@ -30,14 +30,14 @@ class CallAction extends BaseAction implements IAction {
         }
 
         const betManager = new BetManager(newActions);
-        const currentBetAmount: bigint = betManager.current();
+        const largestBetAmount: bigint = betManager.getLargestBet();
 
-        if (currentBetAmount === 0n) {
+        if (largestBetAmount === 0n) {
             throw new Error("No previous action to call.");
         }
 
         const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
-        if (playersBet === currentBetAmount) {
+        if (playersBet === largestBetAmount) {
             // Player has already matched the current bet, can check
             throw new Error("Player has already met maximum so can check instead.");
         }
