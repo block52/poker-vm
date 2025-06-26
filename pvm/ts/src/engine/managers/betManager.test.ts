@@ -3,8 +3,6 @@ import { Turn } from "../types";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
 
 describe("Bet Manager Tests", () => {
-    let betManager: BetManager;
-
     const turns: Turn[] = [
         {
             playerId: "0x1234567890123456789012345678901234567890",
