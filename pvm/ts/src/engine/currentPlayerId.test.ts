@@ -1,4 +1,3 @@
-import { GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
 import { baseGameConfig, gameOptions } from "./testConstants";

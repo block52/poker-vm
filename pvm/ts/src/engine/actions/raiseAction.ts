@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
@@ -36,7 +36,7 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise in the showdown round.");
         }
 
-        // 3. Find who has the largest bet for this round
+        // 3. Get the bets for the current round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
 
         const actions = this.game.getActionsForRound(currentRound);
@@ -69,8 +69,8 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         return {
-            minAmount: minRaiseToAmount, // deltaToCall > this.game.bigBlind ? deltaToCall : this.game.bigBlind, // Minimum raise amount
-            maxAmount: player.chips // Total possible if going all-in
+            minAmount: minRaiseToAmount,
+            maxAmount: player.chips
         };
     }
 }

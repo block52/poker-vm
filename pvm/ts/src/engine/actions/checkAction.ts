@@ -33,23 +33,20 @@ class CheckAction extends BaseAction implements IAction {
         }
 
         const betManager = new BetManager(newActions);
--        const currentBetAmount: bigint = betManager.current();
-+        const largestBet: bigint = betManager.getLargestBet();
+        const currentBetAmount: bigint = betManager.current();
 
--        if (currentBetAmount === 0n) {
-+        if (largestBet === 0n) {
-             return { minAmount: 0n, maxAmount: 0n };
-         }
+        if (currentBetAmount === 0n) {
+            return { minAmount: 0n, maxAmount: 0n };
+        }
 
-         const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
--        if (playersBet === currentBetAmount) {
-+        if (playersBet === largestBet) {
-             // Player has already matched the current bet, can check
-             return { minAmount: 0n, maxAmount: 0n };
-         }
+        const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
+        if (playersBet === currentBetAmount) {
+            // Player has already matched the current bet, can check
+            return { minAmount: 0n, maxAmount: 0n };
+        }
 
-         throw new Error("Player must match the largest bet to check.");
-     }
+        throw new Error("Player must match the largest bet to check.");
+    }
 
     verify_old(player: Player): Range {
         // Basic validation

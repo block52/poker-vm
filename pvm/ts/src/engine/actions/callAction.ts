@@ -2,6 +2,7 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
+import { BetManager } from "../managers/betManager";
 
 class CallAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -9,6 +10,47 @@ class CallAction extends BaseAction implements IAction {
     }
 
     verify(player: Player): Range {
+        // Check base conditions (hand active, player's turn, player active)
+        super.verify(player);
+
+        // 1. Round state check: Cannot call during ANTE round
+        const currentRound = this.game.currentRound;
+        if (currentRound === TexasHoldemRound.ANTE || currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error(`Call action is not allowed during ${currentRound} round.`);
+        }
+
+        // 2. Get the bets for the current round
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+
+        const actions = this.game.getActionsForRound(currentRound);
+        let newActions = [...actions];
+        if (includeBlinds) {
+            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
+            newActions.push(...anteActions);
+        }
+
+        const betManager = new BetManager(newActions);
+        const largestBetAmount: bigint = betManager.getLargestBet();
+
+        if (largestBetAmount === 0n) {
+            throw new Error("No previous action to call.");
+        }
+
+        const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
+        if (playersBet === largestBetAmount) {
+            // Player has already matched the current bet, can check
+            throw new Error("Player has already met maximum so can check instead.");
+        }
+
+        // 3. Action sequence check: Need a previous action with amount to call
+        const largestBet: bigint = betManager.getLargestBet();
+        const deductAmount: bigint = largestBet - playersBet;
+
+        // Return the exact call amount required
+        return { minAmount: deductAmount, maxAmount: deductAmount };
+    }
+    
+    verify_old(player: Player): Range {
         // Check base conditions (hand active, player's turn, player active)
         super.verify(player);
 
