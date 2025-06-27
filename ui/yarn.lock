@@ -995,24 +995,22 @@
   optionalDependencies:
     "@coinbase/wallet-sdk" "4.2.4"
 
-"@reown/appkit-adapter-wagmi@1.6.7":
-  version "1.6.7"
-  resolved "https://registry.yarnpkg.com/@reown/appkit-adapter-wagmi/-/appkit-adapter-wagmi-1.6.7.tgz#dbb6cb7b1d9d0ab338487147d3985a001db702bb"
-  integrity sha512-CS6X0OE4hfZJ6K5wpHGxCFqS7dAWnS7SSg6LsBFFtGJTflIAxL6oY84SVSvKByAigQUwGHd5DTvGPQKaFunPQA==
+"@reown/appkit-adapter-wagmi@1.7.8":
+  version "1.7.8"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-adapter-wagmi/-/appkit-adapter-wagmi-1.7.8.tgz#a4a58cb2d2edf4bf359eb329b484391d58e2f2fc"
+  integrity sha512-6W5/AILgHyKhy99d2+3N2aJOXmkuAjhItFkCi4RiAUC8TZQN3gUl9Nh2viCglnR5RL1Rb+w+Iwa/neNqh13cgg==
   dependencies:
-    "@reown/appkit" "1.6.7"
-    "@reown/appkit-common" "1.6.7"
-    "@reown/appkit-core" "1.6.7"
-    "@reown/appkit-polyfills" "1.6.7"
-    "@reown/appkit-scaffold-ui" "1.6.7"
-    "@reown/appkit-ui" "1.6.7"
-    "@reown/appkit-utils" "1.6.7"
-    "@reown/appkit-wallet" "1.6.7"
-    "@walletconnect/universal-provider" "2.18.0"
-    "@walletconnect/utils" "2.18.0"
+    "@reown/appkit" "1.7.8"
+    "@reown/appkit-common" "1.7.8"
+    "@reown/appkit-controllers" "1.7.8"
+    "@reown/appkit-polyfills" "1.7.8"
+    "@reown/appkit-scaffold-ui" "1.7.8"
+    "@reown/appkit-utils" "1.7.8"
+    "@reown/appkit-wallet" "1.7.8"
+    "@walletconnect/universal-provider" "2.21.0"
     valtio "1.13.2"
   optionalDependencies:
-    "@wagmi/connectors" ">=5.7"
+    "@wagmi/connectors" ">=5.7.11"
 
 "@reown/appkit-common@1.6.7":
   version "1.6.7"
@@ -1789,7 +1787,7 @@
     "@types/babel__core" "^7.20.5"
     react-refresh "^0.17.0"
 
-"@wagmi/connectors@5.8.5", "@wagmi/connectors@>=5.7":
+"@wagmi/connectors@5.8.5", "@wagmi/connectors@>=5.7.11":
   version "5.8.5"
   resolved "https://registry.yarnpkg.com/@wagmi/connectors/-/connectors-5.8.5.tgz#67b87998493d4ed87faaf51947ef9b8b2d3dc867"
   integrity sha512-CHh4uYP6MziCMlSVXmuAv7wMoYWdxXliuzwCRAxHNNkgXE7z37ez5XzJu0Sm39NUau3Fl8WSjwKo4a4w9BOYNA==
