@@ -198,10 +198,10 @@
     dotenv "^16.5.0"
     ethers "^6.14.1"
 
-"@coinbase/wallet-sdk@4.2.4":
-  version "4.2.4"
-  resolved "https://registry.yarnpkg.com/@coinbase/wallet-sdk/-/wallet-sdk-4.2.4.tgz#aff3a95f50f9a26950052b53620828414bd2baab"
-  integrity sha512-wJ9QOXOhRdGermKAoJSr4JgGqZm/Um0m+ecywzEC9qSOu3TXuVcG3k0XXTXW11UBgjdoPRuf5kAwRX3T9BynFA==
+"@coinbase/wallet-sdk@4.3.0":
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/@coinbase/wallet-sdk/-/wallet-sdk-4.3.0.tgz#03b8fce92ac2b3b7cf132f64d6008ac081569b4e"
+  integrity sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==
   dependencies:
     "@noble/hashes" "^1.4.0"
     clsx "^1.2.1"
@@ -976,24 +976,24 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@reown/appkit-adapter-ethers@1.6.7":
-  version "1.6.7"
-  resolved "https://registry.yarnpkg.com/@reown/appkit-adapter-ethers/-/appkit-adapter-ethers-1.6.7.tgz#e8dffd7867d10d8fb3a605e9527276b1c5a5379b"
-  integrity sha512-mspQ4BBe8EK189yXZZAFyK2LUfym23tYbr7ZCm6TBELKyHF3WrngQQOYRycR55Cl7AdRF+09XQEYJcMW/Nky3Q==
+"@reown/appkit-adapter-ethers@1.7.8":
+  version "1.7.8"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-adapter-ethers/-/appkit-adapter-ethers-1.7.8.tgz#b8fdd7467a257c18594f83a6559d6d759a2be325"
+  integrity sha512-jSg3KAHcM44FhDDad8yJzhVxaj+jMZMgINPgC8MQMSbJ/B+SB/C86xA5eExZMnXRMv0wroJsAS2lu2prcMeehg==
   dependencies:
-    "@reown/appkit" "1.6.7"
-    "@reown/appkit-common" "1.6.7"
-    "@reown/appkit-core" "1.6.7"
-    "@reown/appkit-polyfills" "1.6.7"
-    "@reown/appkit-scaffold-ui" "1.6.7"
-    "@reown/appkit-ui" "1.6.7"
-    "@reown/appkit-utils" "1.6.7"
-    "@reown/appkit-wallet" "1.6.7"
-    "@walletconnect/universal-provider" "2.18.0"
-    "@walletconnect/utils" "2.18.0"
+    "@reown/appkit" "1.7.8"
+    "@reown/appkit-common" "1.7.8"
+    "@reown/appkit-controllers" "1.7.8"
+    "@reown/appkit-polyfills" "1.7.8"
+    "@reown/appkit-scaffold-ui" "1.7.8"
+    "@reown/appkit-utils" "1.7.8"
+    "@reown/appkit-wallet" "1.7.8"
+    "@walletconnect/universal-provider" "2.21.0"
     valtio "1.13.2"
   optionalDependencies:
-    "@coinbase/wallet-sdk" "4.2.4"
+    "@coinbase/wallet-sdk" "4.3.0"
+    "@safe-global/safe-apps-provider" "0.18.6"
+    "@safe-global/safe-apps-sdk" "9.1.0"
 
 "@reown/appkit-adapter-wagmi@1.6.7":
   version "1.6.7"
