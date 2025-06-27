@@ -1,4 +1,49 @@
 import React from "react";
+import { usePlayerActionDropBox, PlayerActionDisplay } from "../../../hooks/usePlayerActionDropBox";
+import "./Badge.css";
+
+// Action display component moved into Badge
+const ActionDisplay: React.FC<{ actionDisplay: PlayerActionDisplay; playerColor?: string }> = ({ 
+    actionDisplay, 
+    playerColor = "#3b82f6" 
+}) => {
+    if (!actionDisplay.isVisible && !actionDisplay.isAnimatingOut) {
+        return null;
+    }
+
+    return (
+        <div
+            className={`action-display-container ${
+                actionDisplay.isAnimatingOut 
+                    ? "action-display-exit" 
+                    : "action-display-enter"
+            }`}
+        >
+            {/* Action Box */}
+            <div
+                className={`action-display-box ${
+                    !actionDisplay.isAnimatingOut ? "action-display-pulse" : ""
+                }`}
+                style={{
+                    backgroundColor: `${playerColor}dd`,
+                    borderColor: playerColor,
+                    boxShadow: `0 4px 12px ${playerColor}40, 0 2px 4px rgba(0,0,0,0.3)`
+                }}
+            >
+                <div className="action-display-content">
+                    <span className="action-display-text">
+                        {actionDisplay.action}
+                    </span>
+                    {actionDisplay.amount && (
+                        <span className="action-display-amount">
+                            {actionDisplay.amount}
+                        </span>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 type BadgeProps = {
     count: number; // The number displayed in the badge
@@ -12,22 +57,31 @@ type BadgeProps = {
 const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend, onExtend }) => {
     // Format the value to always show 2 decimal places
     const formattedValue = value.toFixed(2);
+    
+    // Get action display data for this player
+    const actionDisplay = usePlayerActionDropBox(count);
 
     return (
-        <div className="flex items-center bg-[#c0d6d9] rounded-full px-0.5 py-0.5 shadow-[1px_2px_6px_3px_rgba(0,0,0,0.3)]">
-            <div style={{ backgroundColor: color }} className={"flex items-center justify-center w-6 h-6 text-white text-sm font-bold rounded-full"}>
+        <div className="badge-container">
+            <div style={{ backgroundColor: color }} className="badge-number">
                 {count}
             </div>
-            <div className="ml-2 text-xl sm:text-lg font-semibold text-black flex justify-between ml-auto mr-auto">${formattedValue}</div>
+            <div className="badge-value">${formattedValue}</div>
+
+            {/* Player Action Drop Box - positioned below the price */}
+            <ActionDisplay 
+                actionDisplay={actionDisplay}
+                playerColor={color}
+            />
             
             {/* Timer Extension Icon - Timer icon inside badge */}
             {canExtend && onExtend && (
                 <div 
-                    className="ml-2 mr-1 w-5 h-5 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 transform hover:scale-110"
+                    className="timer-extension-button"
                     onClick={onExtend}
                 >
                     <svg 
-                        className="w-3 h-3 text-white" 
+                        className="timer-extension-icon" 
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
