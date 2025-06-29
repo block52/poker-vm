@@ -34,50 +34,18 @@ class BetAction extends BaseAction implements IAction {
         }
 
         const betManager = new BetManager(newActions);
-        const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
+        // const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
         const currentBet: bigint = betManager.current();
 
-        if (playersBet !== currentBet) {
-            throw new Error("Cannot bet - player has not matched the current bet.");
+        // if (playersBet === currentBet) {
+        //     throw new Error("Cannot bet - player must call or raise.");
+        // }
+
+        if (currentBet > 0n) {
+            throw new Error("Cannot bet - player must call or raise.");
         }
 
         return { minAmount: this.game.bigBlind, maxAmount: player.chips }
-        // return { minAmount: betManager.delta(), maxAmount: player.chips }
-
-        // const largestBet = this.getLargestBet(includeBlinds);
-        // const playerBets = this.game.getPlayerTotalBets(player.address);
-
-        // // 3. Round-specific checks for preflop
-        // if (currentRound === TexasHoldemRound.PREFLOP) {
-        //     if (largestBet === 0n) {
-        //         // Special case for small blind position in PREFLOP
-        //         if (this.game.getPlayerSeatNumber(player.address) === this.game.smallBlindPosition) {
-        //             throw new Error("Can only post small blind.");
-        //         }
-
-        //         // No bets yet, player can bet any amount
-        //         return { minAmount: this.game.bigBlind, maxAmount: player.chips };
-        //     }
-
-        //     if (largestBet === this.game.smallBlind) {
-        //         // Player can reopen the betting with a minimum of big blind
-        //         return { minAmount: this.game.bigBlind, maxAmount: player.chips };
-        //     }
-        // }
-
-        // if (largestBet > playerBets && largestBet > 0n) {
-        //     // console.log(`Player must call or raise - largestBet: ${largestBet}, player's bet: ${playerBets}`);
-        //     throw new Error("Player must call or raise.");
-        // }
-
-        // // 4. Chip stack check: Determine betting range based on player's chips
-        // if (player.chips < this.game.bigBlind) {
-        //     // All-in is the only option if player has less than minimum bet
-        //     return { minAmount: player.chips, maxAmount: player.chips };
-        // }
-
-        // // Return valid betting range from minimum bet to player's entire stack
-        // return { minAmount: this.game.bigBlind, maxAmount: player.chips };
     }
 
     execute(player: Player, index: number, amount: bigint): void {

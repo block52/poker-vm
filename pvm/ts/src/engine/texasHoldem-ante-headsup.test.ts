@@ -78,7 +78,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(nextToAct?.address).toEqual(PLAYER_2);
         });
 
-        it.skip("should have correct legal actions after posting the big blind", () => {
+        it("should have correct legal actions after posting the big blind", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
 
