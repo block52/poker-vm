@@ -42,9 +42,9 @@ describe("CallAction", () => {
         );
 
         const mockPlayers = [
-            new Player('player1', undefined, 1000n, undefined, PlayerStatus.ACTIVE),
-            new Player('player2', undefined, 1000n, undefined, PlayerStatus.ACTIVE),
-            new Player('player3', undefined, 1000n, undefined, PlayerStatus.ACTIVE)
+            new Player("player1", undefined, 1000n, undefined, PlayerStatus.ACTIVE),
+            new Player("player2", undefined, 1000n, undefined, PlayerStatus.ACTIVE),
+            new Player("player3", undefined, 1000n, undefined, PlayerStatus.ACTIVE)
         ];
 
         // Setup common mocks
