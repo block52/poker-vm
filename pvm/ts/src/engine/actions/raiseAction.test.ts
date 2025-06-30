@@ -3,7 +3,7 @@ import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import RaiseAction from "./raiseAction";
 import { IUpdate, TurnWithSeat } from "../types";
-import { getDefaultGame, ONE_THOUSAND_TOKENS, ONE_TOKEN, TWO_TOKENS, FIVE_TOKENS, TEN_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, ONE_TOKEN, TWO_TOKENS, FIVE_TOKENS } from "../testConstants";
 
 // Player address constants
 const PLAYER_1_ADDRESS = "0x1111111111111111111111111111111111111111"; // Small Blind
@@ -18,10 +18,11 @@ describe("Raise Action", () => {
     let player2: Player; // Big blind player
     let player3: Player; // Player who made the bet
 
-    const SEVEN_TOKENS = 700000000000000000n; // Minimum raise amount
+    const SEVEN_TOKENS = 700000000000000000n;
+    const THREE_TOKENS = 300000000000000000n;
 
     beforeEach(() => {
-    //     // Setup initial game state with 3 players
+        //     // Setup initial game state with 3 players
         const playerStates = new Map<number, Player | null>();
 
         player1 = new Player(PLAYER_1_ADDRESS, undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
@@ -40,20 +41,20 @@ describe("Raise Action", () => {
 
         action = new RaiseAction(game, updateMock);
 
-    //     // Mock game methods
-    //     jest.spyOn(game, "currentPlayerId", "get").mockReturnValue(PLAYER_1_ADDRESS);
-    //     jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-    //     jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
-    //     jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player1);
-    //     jest.spyOn(game, "smallBlindPosition", "get").mockReturnValue(1);
-    //     jest.spyOn(game, "bigBlindPosition", "get").mockReturnValue(2);
-    //     jest.spyOn(game, "bigBlind", "get").mockReturnValue(TWO_TOKENS);
+        //     // Mock game methods
+        //     jest.spyOn(game, "currentPlayerId", "get").mockReturnValue(PLAYER_1_ADDRESS);
+        //     jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+        //     jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+        //     jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player1);
+        //     jest.spyOn(game, "smallBlindPosition", "get").mockReturnValue(1);
+        //     jest.spyOn(game, "bigBlindPosition", "get").mockReturnValue(2);
+        //     jest.spyOn(game, "bigBlind", "get").mockReturnValue(TWO_TOKENS);
 
-    //     // Mock findActivePlayers to return all 3 players
-    //     jest.spyOn(game, "findActivePlayers").mockReturnValue([player1, player2, player3]);
+        //     // Mock findActivePlayers to return all 3 players
+        //     jest.spyOn(game, "findActivePlayers").mockReturnValue([player1, player2, player3]);
 
-    //     // Mock addAction method on game
-    //     game.addAction = jest.fn();
+        //     // Mock addAction method on game
+        //     game.addAction = jest.fn();
     });
 
     // describe("type", () => {
@@ -110,40 +111,59 @@ describe("Raise Action", () => {
             // });
 
             it.only("should throw error if player has largest bet (can't raise yourself)", () => {
-                // Mock so player1 has the largest bet
-                // jest.spyOn(game, "getPlayerTotalBets").mockImplementation(address => {
-                //     if (address === PLAYER_1_ADDRESS) return ONE_TOKEN; // Small blind
-                //     if (address === PLAYER_2_ADDRESS) return TWO_TOKENS; // Big blind
-                //     if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Smaller bet
-                //     return 0n;
-                // });
 
-                jest.spyOn(game, "getActionsForRound").mockReturnValue([
-                    {
-                        index: 1,
-                        playerId: PLAYER_1_ADDRESS,
-                        seat: 1,
-                        action: PlayerActionType.RAISE,
-                        amount: ONE_TOKEN, // Player 1 raised to 1 token
-                        timestamp: 0
-                    },
-                    {
-                        index: 2,
-                        playerId: PLAYER_2_ADDRESS,
-                        seat: 2,
-                        action: PlayerActionType.BET,
-                        amount: TWO_TOKENS, // Player bet 2 tokens
-                        timestamp: 0
-                    },
-                    {
-                        index: 3,
-                        playerId: PLAYER_3_ADDRESS,
-                        seat: 3,
-                        action: PlayerActionType.RAISE,
-                        amount: FIVE_TOKENS, // Player 3 bet 5 tokens
-                        timestamp: 0
+                jest.spyOn(game, "getActionsForRound").mockImplementation((round) => {
+                    if (round === TexasHoldemRound.ANTE) {
+                        // Return blind actions for ANTE round
+                        return [
+                            {
+                                index: 1,
+                                playerId: PLAYER_1_ADDRESS,
+                                seat: 1,
+                                action: PlayerActionType.SMALL_BLIND,
+                                amount: ONE_TOKEN,
+                                timestamp: 0
+                            },
+                            {
+                                index: 2,
+                                playerId: PLAYER_2_ADDRESS,
+                                seat: 2,
+                                action: PlayerActionType.BIG_BLIND,
+                                amount: TWO_TOKENS,
+                                timestamp: 0
+                            }
+                        ];
+                    } else {
+                        // Return betting actions for other rounds (PREFLOP, FLOP, etc.)
+                        return [
+                            {
+                                index: 3,
+                                playerId: PLAYER_1_ADDRESS,
+                                seat: 1,
+                                action: PlayerActionType.RAISE,
+                                amount: THREE_TOKENS, // Player 1 raised to 3 tokens (1 small blind + 2 more)
+                                timestamp: 0
+                            },
+                            {
+                                index: 4,
+                                playerId: PLAYER_2_ADDRESS,
+                                seat: 2,
+                                action: PlayerActionType.BET,
+                                amount: TWO_TOKENS, // Player bet 2 tokens
+                                timestamp: 0
+                            },
+                            {
+                                index: 5,
+                                playerId: PLAYER_3_ADDRESS,
+                                seat: 3,
+                                action: PlayerActionType.RAISE,
+                                amount: FIVE_TOKENS, // Player 3 bet 5 tokens
+                                timestamp: 0
+                            }
+                        ];
                     }
-                ]); 
+                });
+
 
                 const EIGHT_TOKENS = 800000000000000000n; // 8 tokens total
                 const range = action.verify(player1);

@@ -56,12 +56,3 @@ describe("TEST - Make sure that the First player to act AT SHOWDOWN shows his ha
         expect(game.pot).toBeGreaterThan(0n);
     });
 });
-
-/**
- * Suggested filename: test-unknown-test___make_sure_that_the_first_player_to_act_at_s.test.ts
- * 
- * To use this test:
- * 1. Copy this entire content
- * 2. Create a new file in pvm/ts/src/engine/ with the suggested filename
- * 3. Run the test with: npm test test-unknown-test___make_sure_that_the_first_player_to_act_at_s
- */
