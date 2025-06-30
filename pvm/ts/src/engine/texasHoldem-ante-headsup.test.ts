@@ -56,7 +56,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer(PLAYER_2)).toBeDefined();
         });
 
-        it("should have correct legal actions after posting the small blind", () => {
+        it("should have correct legal actions before posting blinds", () => {
             // Get legal actions for the next player
             const actual = game.getLegalActions(PLAYER_1);
             expect(actual.length).toEqual(2);
@@ -64,11 +64,20 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
         });
 
-        it("should have correct legal actions after posting the big blind", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 2, ONE_TOKEN);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 3, TWO_TOKENS);
+        it("should have correct legal actions after posting the small blind", () => {
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
+            // Get legal actions for the next player
+            const actual = game.getLegalActions(PLAYER_2);
+            expect(actual.length).toEqual(2); // FOLD, BIG_BLIND
+            expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
+            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+        });
 
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 4);
+        it("should have correct legal actions after posting the big blind", () => {
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
+
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5);
 
             // Get legal actions for the next player 1
             const actual = game.getLegalActions(PLAYER_1);
@@ -219,7 +228,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, 2);
         });
 
-        it.only("should do end to end with legal actions", () => {
+        it("should do end to end with legal actions", () => {
             // Check the initial state and positions
             expect(game.getPlayerCount()).toEqual(2);
             expect(game.exists(PLAYER_1)).toBeTruthy();
