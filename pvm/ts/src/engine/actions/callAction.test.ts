@@ -4,52 +4,8 @@ import { Player } from "../../models/player";
 import { IUpdate, Turn, TurnWithSeat } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 // Assuming you have a constants file, otherwise define TEN_TOKENS in this file
-import { getDefaultGame, ONE_THOUSAND_TOKENS, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS, TEN_TOKENS } from "../testConstants";
-
-
+import { getDefaultGame, MockBetManager, ONE_THOUSAND_TOKENS, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS, TEN_TOKENS } from "../testConstants";
 import { BetManager } from "../managers/betManager";
-
-// Create a mock BetManager class
-export class MockBetManager {
-    private mockCurrentBet: bigint = 0n;
-    private mockPlayerBets: Map<string, bigint> = new Map();
-    private mockLargestBet: bigint = 0n;
-
-    // Mock the current() method
-    current(): bigint {
-        return this.mockCurrentBet;
-    }
-
-    // Mock the getTotalBetsForPlayer() method
-    getTotalBetsForPlayer(playerId: string): bigint {
-        return this.mockPlayerBets.get(playerId) || 0n;
-    }
-
-    // Mock the getLargestBet() method
-    getLargestBet(): bigint {
-        return this.mockLargestBet;
-    }
-
-    // Helper methods to set up test scenarios
-    setCurrentBet(amount: bigint): void {
-        this.mockCurrentBet = amount;
-    }
-
-    setPlayerBet(playerId: string, amount: bigint): void {
-        this.mockPlayerBets.set(playerId, amount);
-    }
-
-    setLargestBet(amount: bigint): void {
-        this.mockLargestBet = amount;
-    }
-
-    reset(): void {
-        this.mockCurrentBet = 0n;
-        this.mockPlayerBets.clear();
-        this.mockLargestBet = 0n;
-    }
-}
-
 
 // Updated test file using the mock BetManager
 describe("CallAction", () => {
