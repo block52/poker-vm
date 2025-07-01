@@ -57,11 +57,11 @@ describe("Raise Action", () => {
         //     game.addAction = jest.fn();
     });
 
-    // describe("type", () => {
-    //     it("should return RAISE action type", () => {
-    //         expect(action.type).toBe(PlayerActionType.RAISE);
-    //     });
-    // });
+    describe("type", () => {
+        it("should return RAISE action type", () => {
+            expect(action.type).toBe(PlayerActionType.RAISE);
+        });
+    });
 
     describe("verify", () => {
         describe("PREFLOP scenarios", () => {
@@ -110,7 +110,7 @@ describe("Raise Action", () => {
             //     expect(range.minAmount).toBe(EIGHT_TOKENS); // Should not allow raise
             // });
 
-            it.only("should throw error if player has largest bet (can't raise yourself)", () => {
+            it.only("should have correct three bet range", () => {
 
                 jest.spyOn(game, "getActionsForRound").mockImplementation((round) => {
                     if (round === TexasHoldemRound.ANTE) {
@@ -148,18 +148,18 @@ describe("Raise Action", () => {
                                 index: 4,
                                 playerId: PLAYER_2_ADDRESS,
                                 seat: 2,
-                                action: PlayerActionType.BET,
+                                action: PlayerActionType.CALL,
                                 amount: TWO_TOKENS, // Player bet 2 tokens
                                 timestamp: 0
                             },
-                            {
-                                index: 5,
-                                playerId: PLAYER_3_ADDRESS,
-                                seat: 3,
-                                action: PlayerActionType.RAISE,
-                                amount: FIVE_TOKENS, // Player 3 bet 5 tokens
-                                timestamp: 0
-                            }
+                            // {
+                            //     index: 5,
+                            //     playerId: PLAYER_3_ADDRESS,
+                            //     seat: 3,
+                            //     action: PlayerActionType.RAISE,
+                            //     amount: FIVE_TOKENS, // Player 3 bet 5 tokens
+                            //     timestamp: 0
+                            // }
                         ];
                     }
                 });
@@ -168,7 +168,6 @@ describe("Raise Action", () => {
                 const EIGHT_TOKENS = 800000000000000000n; // 8 tokens total
                 const range = action.verify(player1);
                 expect(range.minAmount).toBe(EIGHT_TOKENS); // Should not allow raise
-                // console.log("Range:", range);
             });
 
             it("should handle all-in scenario when player has insufficient chips", () => {
