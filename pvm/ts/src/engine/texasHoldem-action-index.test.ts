@@ -131,7 +131,7 @@ describe("Texas Holdem - Action Index", () => {
             });
         });
 
-        it.skip("should update turn index in legal actions after each action", () => {
+        it("should update turn index in legal actions after each action", () => {
             // Post small blind
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3);
             
@@ -179,13 +179,15 @@ describe("Texas Holdem - Action Index", () => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 3);
             }).not.toThrow();
 
-            // // Turn index should increment
-            // expect(game.getActionIndex()).toBe(4);
+            // Turn index should increment
+            expect(game.getActionIndex()).toBe(4);
         });
 
-        it.skip("should throw an error if action is performed with an outdated index", () => {
+        it("should throw an error if action is performed with an outdated index", () => {
             // Post small blind
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3);
+
+            expect(game.getActionIndex()).toBe(4);
 
             // Attempt to perform another action with the same index (should be 2 now)
             expect(() => {
@@ -193,7 +195,7 @@ describe("Texas Holdem - Action Index", () => {
             }).toThrow("Invalid action index.");
 
             // Turn index should remain unchanged
-            // expect(game.getActionIndex()).toBe(3);
+            expect(game.getActionIndex()).toBe(4);
         });
     });
 }); 
