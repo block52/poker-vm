@@ -168,7 +168,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actions.length).toEqual(3);
             expect(actions[0].action).toEqual(PlayerActionType.FOLD);
             expect(actions[1].action).toEqual(PlayerActionType.CALL);
-            expect(actions[2].action).toEqual(PlayerActionType.BET);
+            expect(actions[2].action).toEqual(PlayerActionType.RAISE);
 
             // Both check
             game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, 0n);
