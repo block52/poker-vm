@@ -1,12 +1,26 @@
 import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS } from "../src/engine/testConstants";
-import { test_json, test_735, test_753, test_792, test_870, test_873, test_873_2, test_877, test_899, test_899_2, test_902, test_913, test_971 } from "./senarios/data";
+import {
+    test_json,
+    test_735,
+    test_753,
+    test_792,
+    test_870,
+    test_873,
+    test_873_2,
+    test_877,
+    test_899,
+    test_899_2,
+    test_902,
+    test_913,
+    test_971,
+    test_753_3
+} from "./senarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Data driven", () => {
     describe("Turn tests", () => {
-
         const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
         const SEAT_2 = "0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD";
 
@@ -25,8 +39,8 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual).toBeDefined();
         });
 
-        it.only("should test bug 735", () => {
-            game = fromTestJson(test_735)
+        it("should test bug 735", () => {
+            game = fromTestJson(test_735);
             // Check the current round
             expect(game.currentRound).toEqual(TexasHoldemRound.END);
 
@@ -35,19 +49,27 @@ describe("Texas Holdem - Data driven", () => {
             expect(actual).toBeDefined();
         });
 
-        it.skip("should test bug 753", () => {
-            const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
-            const SEAT_2 = "0xc264FEDe83B081C089530BA0b8770C98266d058a";
-
-            game = fromTestJson(test_753);
-            // Check who is next to act (seat 2 after dealing)
-            expect(game.currentPlayerId).toEqual(SEAT_2);
-            expect(game.smallBlindPosition).toEqual(2);
-            expect(game.bigBlindPosition).toEqual(1);
-
-            const actual = game.getLegalActions(SEAT_2);
-            expect(actual).toBeDefined();
+        it.only("should test bug 735 3", () => {
+            game = fromTestJson(test_753_3);
+            // Check the current round
+            expect(game.currentPlayerId).toEqual("0xC84737526E425D7549eF20998Fa992f88EAC2484"); // Seat 2 has checked
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct?.address).toEqual("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8"); // Seat 1 is next to act
         });
+
+        // it.only("should test bug 753", () => {
+        //     const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
+        //     // const SEAT_2 = "0xc264FEDe83B081C089530BA0b8770C98266d058a";
+
+        //     game = fromTestJson(test_753);
+        //     // Check who is next to act (seat 2 after dealing)
+        //     expect(game.currentPlayerId).toEqual(SEAT_1);
+        //     expect(game.smallBlindPosition).toEqual(2);
+        //     expect(game.bigBlindPosition).toEqual(1);
+
+        //     const actual = game.getLegalActions(SEAT_1);
+        //     expect(actual).toBeDefined();
+        // });
 
         it("should test bug 792", () => {
             const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
@@ -151,7 +173,7 @@ describe("Texas Holdem - Data driven", () => {
             const SEAT_1 = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
 
             game = fromTestJson(test_913);
-            
+
             const previousActions = game.getPreviousActions();
             // Sanity check to ensure we have the expected number of previous actions
             expect(previousActions.length).toEqual(7);
