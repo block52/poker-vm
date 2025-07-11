@@ -30,7 +30,7 @@ describe("Texas Holdem - Join and Leave", () => {
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
             expect(() => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
-            }).toThrow("Player already joined.");
+            }).toThrow("Player already exists in the game.");
         });
 
         it("should not allow duplicate players", () => {

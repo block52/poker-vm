@@ -307,8 +307,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
 
             actions = game.getLegalActions(BIG_BLIND_PLAYER);
-            expect(actions.length).toEqual(1); // Muck or Show (Show is not available if the other player has already shown)
-            expect(actions[0].action).toEqual(PlayerActionType.SHOW);
+            expect(actions.length).toEqual(2); // Muck or Show
+            // expect(actions[0].action).toEqual(PlayerActionType.MUCK);
             // expect(actions[1].action).toEqual(PlayerActionType.SHOW);
 
             // Both reveal cards

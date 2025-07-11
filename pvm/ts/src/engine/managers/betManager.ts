@@ -28,6 +28,7 @@ export class BetManager implements IBetManager {
 
             const currentBet = this.bets.get(action.playerId) || 0n;
             this.bets.set(action.playerId, currentBet + action.amount);
+            this.turns.push(action);
 
             const aggregatedBet = this.aggregatedBets.find(b => b.playerId === action.playerId);
             if (aggregatedBet) {
@@ -49,12 +50,27 @@ export class BetManager implements IBetManager {
         }
     }
 
+    count(): number {
+        // Count unique players who have placed bets
+        return this.aggregatedBets.length;
+    }
+
     current(): bigint {
-        if (this.aggregatedBets.length === 0) {
+        if (this.aggregatedBets.length === 0 || this.turns.length === 0) {
             return 0n;
         }
         // Return the last aggregated bet amount
-        return this.aggregatedBets[this.aggregatedBets.length - 1].amount || 0n;
+        const lastPlayer = this.turns[this.turns.length - 1].playerId;
+        return this.bets.get(lastPlayer) || 0n;
+    }
+
+    previous(): bigint {
+        if (this.aggregatedBets.length < 2 || this.turns.length < 2) {
+            return 0n;
+        }
+        // Return the second last aggregated bet amount
+        const secondLastPlayer = this.turns[this.turns.length - 2].playerId;
+        return this.bets.get(secondLastPlayer) || 0n;
     }
 
     delta(): bigint {
@@ -89,21 +105,15 @@ export class BetManager implements IBetManager {
 
     /**
      * Get the last aggressor in the betting sequence
-     * @param start - The index to start searching from (default is the end of the turns array)
      * @returns The playerId of the last aggressor or null if no aggressor found
      */
-    getLastAggressor(start: number = this.turns.length): bigint {
-        const sortedTurns = this.turns.sort((a, b) => a.index - b.index);
-
-        // Find the last action that was a bet or raise
-        for (let i = start - 1; i >= 0; i--) {
-            const turn = sortedTurns[i];
-            if (turn.action === PlayerActionType.BET || turn.action === PlayerActionType.RAISE) {
-                return turn.amount || 0n;
-            }
+    getLastAggressor(): bigint {
+        const sortedAggregatedBets = this.aggregatedBets.sort((a, b) => a.index - b.index);
+        if (sortedAggregatedBets.length === 0) {
+            return 0n;
         }
-
-        return 0n;
+        const start = sortedAggregatedBets.length;
+        return sortedAggregatedBets[start - 1]?.amount || 0n;
     }
 
     // /**

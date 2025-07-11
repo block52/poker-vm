@@ -27,6 +27,39 @@ describe("Texas Holdem - Preflop - Heads Up", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
         });
 
+        it("should have correct legal actions after calling the small blind", () => {
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
+            
+            // Add a DEAL action to advance from ANTE to PREFLOP
+            expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 5);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            // Now we're in PREFLOP round, so CALL is a valid action
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 6, ONE_TOKEN);
+
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
+
+            const legalActions = game.getLegalActions(BIG_BLIND_PLAYER);
+            expect(legalActions.length).toEqual(3);
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.FOLD
+            }));
+
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.CHECK
+            }));
+
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.RAISE
+            }));
+        });
+
         it("should have correct legal actions after raising the small blind", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
@@ -35,15 +68,18 @@ describe("Texas Holdem - Preflop - Heads Up", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 5);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            let legalActions = game.getLegalActions(SMALL_BLIND_PLAYER);
+            expect(legalActions.length).toEqual(3); // Fold, Call, Raise
             
             // Now we're in PREFLOP round, so CALL is a valid action
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.RAISE, 6, THREE_TOKENS);
 
-            const nextToAct = game.getNextPlayerToAct();
+            let nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(BIG_BLIND_PLAYER);
 
-            const legalActions = game.getLegalActions(BIG_BLIND_PLAYER);
+            legalActions = game.getLegalActions(BIG_BLIND_PLAYER);
             expect(legalActions.length).toEqual(3);
             expect(legalActions).toContainEqual(expect.objectContaining({
                 action: PlayerActionType.CALL
@@ -56,6 +92,12 @@ describe("Texas Holdem - Preflop - Heads Up", () => {
             expect(legalActions).toContainEqual(expect.objectContaining({
                 action: PlayerActionType.FOLD
             }));
+
+            game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CALL, 7, TWO_TOKENS);
+            expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
+
+            legalActions = game.getLegalActions(BIG_BLIND_PLAYER);
+            nextToAct = game.getNextPlayerToAct();
         });
     });
 });

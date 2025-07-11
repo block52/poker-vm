@@ -2,6 +2,8 @@ import { ActionDTO, GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block
 import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
 import { Player } from "../models/player";
+import { IBetManager } from "../types/interfaces";
+import { Turn } from "./types";
 
 // Constants for testing
 export const ONE_TOKEN = 100000000000000000n;
@@ -91,3 +93,73 @@ export const fromTestJson = (json: any): TexasHoldemGame => {
 export const PLAYER_1_ADDRESS = "0x1111111111111111111111111111111111111111"; // Small Blind
 export const PLAYER_2_ADDRESS = "0x2222222222222222222222222222222222222222"; // Big Blind  
 export const PLAYER_3_ADDRESS = "0x3333333333333333333333333333333333333333"; // 
+
+// Create a mock BetManager class
+export class MockBetManager implements IBetManager {
+
+    private mockCurrentBet: bigint = 0n;
+    private mockPlayerBets: Map<string, bigint> = new Map();
+    private mockLargestBet: bigint = 0n;
+
+    add(action: Turn): void {
+        throw new Error("Method not implemented.");
+    }
+
+    addTurns(turns: Turn[]): void {
+        throw new Error("Method not implemented.");
+    }
+
+    count(): number {
+        throw new Error("Method not implemented.");
+    }
+
+    delta(): bigint {
+        throw new Error("Method not implemented.");
+    }
+
+    getBets(): Map<string, bigint> {
+        throw new Error("Method not implemented.");
+    }
+
+    getLastAggressor(start?: number): bigint {
+        throw new Error("Method not implemented.");
+    }
+    
+    previous(): bigint {
+        throw new Error("Method not implemented.");
+    }
+
+    // Mock the current() method
+    current(): bigint {
+        return this.mockCurrentBet;
+    }
+
+    // Mock the getTotalBetsForPlayer() method
+    getTotalBetsForPlayer(playerId: string): bigint {
+        return this.mockPlayerBets.get(playerId) || 0n;
+    }
+
+    // Mock the getLargestBet() method
+    getLargestBet(): bigint {
+        return this.mockLargestBet;
+    }
+
+    // Helper methods to set up test scenarios
+    setCurrentBet(amount: bigint): void {
+        this.mockCurrentBet = amount;
+    }
+
+    setPlayerBet(playerId: string, amount: bigint): void {
+        this.mockPlayerBets.set(playerId, amount);
+    }
+
+    setLargestBet(amount: bigint): void {
+        this.mockLargestBet = amount;
+    }
+
+    reset(): void {
+        this.mockCurrentBet = 0n;
+        this.mockPlayerBets.clear();
+        this.mockLargestBet = 0n;
+    }
+}
