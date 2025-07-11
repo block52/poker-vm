@@ -26,15 +26,15 @@ class CheckAction extends BaseAction implements IAction {
         // 2. Get the bets for the current round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
         const actions = this.game.getActionsForRound(currentRound);
-        let newActions = [...actions];
+        const newActions = [...actions];
         if (includeBlinds) {
             const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
             newActions.push(...anteActions);
         }
 
-        if (!newActions || newActions.length === 0) {
-            throw new Error("No previous actions to check.");
-        }
+        // if (!newActions || newActions.length === 0) {
+        //     throw new Error("No previous actions to check.");
+        // }
 
         const betManager = new BetManager(newActions);
         const currentBetAmount: bigint = betManager.current();

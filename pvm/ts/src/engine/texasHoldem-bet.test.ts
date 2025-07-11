@@ -28,7 +28,7 @@ describe("Texas Holdem Game - Bet after flop", () => {
         game.performAction(PLAYER_2_ADDRESS, PlayerActionType.CHECK, 7, 0n);
     });
 
-    it("should have correct bet values for sb", () => {
+    it("should have correct bet values for small blind", () => {
         // Should be on the flop
         expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         expect(game.communityCards).toHaveLength(3);
@@ -37,8 +37,9 @@ describe("Texas Holdem Game - Bet after flop", () => {
         // After small blind calls, big blind acts next
         const legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(2);
+        expect(legalActions.length).toEqual(3);
         expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
-        expect(legalActions[1].action).toEqual(PlayerActionType.BET);
+        expect(legalActions[1].action).toEqual(PlayerActionType.CHECK);
+        expect(legalActions[2].action).toEqual(PlayerActionType.BET);
     });
 });

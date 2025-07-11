@@ -190,6 +190,7 @@ describe("Texas Holdem - Data driven", () => {
 
             const legalActions = game.getLegalActions("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
             expect(legalActions).toBeDefined();
+            expect(legalActions.length).toEqual(3);
         });
     });
 });
