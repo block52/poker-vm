@@ -163,6 +163,13 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
+            // Get legal actions for the next player
+            let actions = game.getLegalActions(PLAYER_1);
+            expect(actions.length).toEqual(3);
+            expect(actions[0].action).toEqual(PlayerActionType.FOLD);
+            expect(actions[1].action).toEqual(PlayerActionType.CALL);
+            expect(actions[2].action).toEqual(PlayerActionType.RAISE);
+
             // Both check
             game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, 0n);
             game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, 0n);
