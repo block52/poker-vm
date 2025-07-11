@@ -27,7 +27,7 @@ describe("Texas Holdem - Preflop - Heads Up", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
         });
 
-        it.only("should have correct legal actions after calling the small blind", () => {
+        it("should have correct legal actions after calling the small blind", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
             
@@ -48,19 +48,19 @@ describe("Texas Holdem - Preflop - Heads Up", () => {
             const legalActions = game.getLegalActions(BIG_BLIND_PLAYER);
             expect(legalActions.length).toEqual(3);
             expect(legalActions).toContainEqual(expect.objectContaining({
-                action: PlayerActionType.CALL
+                action: PlayerActionType.FOLD
+            }));
+
+            expect(legalActions).toContainEqual(expect.objectContaining({
+                action: PlayerActionType.CHECK
             }));
 
             expect(legalActions).toContainEqual(expect.objectContaining({
                 action: PlayerActionType.RAISE
             }));
-
-            expect(legalActions).toContainEqual(expect.objectContaining({
-                action: PlayerActionType.FOLD
-            }));
         });
 
-        it.only("should have correct legal actions after raising the small blind", () => {
+        it("should have correct legal actions after raising the small blind", () => {
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
             
