@@ -569,7 +569,70 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Gets the next player who should act
      */
     getNextPlayerToAct(): Player | undefined {
-        return this.findNextPlayerToAct();
+        const round = this.currentRound;
+        return this.findNextPlayerToActForRound(round);
+    }
+
+    /**
+     * Finds the next player to act for a round
+     */
+    private findNextPlayerToActForRound(round: TexasHoldemRound): Player | undefined {
+        const actions: Turn[] = [];
+        actions.push(...this._rounds.get(round) || []);
+
+        // Special logic for ante round - prioritize blind posting order
+        if (round === TexasHoldemRound.ANTE) { 
+            const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
+            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
+
+            // If small blind hasn't been posted yet, small blind player should act
+            if (!hasSmallBlind) {
+                const smallBlindPlayer = this.getPlayerAtSeat(this.smallBlindPosition);
+                if (smallBlindPlayer && (smallBlindPlayer.status === PlayerStatus.ACTIVE || smallBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                    return smallBlindPlayer;
+                }
+            }
+
+            // If small blind posted but big blind hasn't, big blind player should act
+            if (hasSmallBlind && !hasBigBlind) {
+                const bigBlindPlayer = this.getPlayerAtSeat(this.bigBlindPosition);
+                if (bigBlindPlayer && (bigBlindPlayer.status === PlayerStatus.ACTIVE || bigBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                    return bigBlindPlayer;
+                }
+            }
+        }
+
+        if (round === TexasHoldemRound.PREFLOP) {
+            const blinds = this._rounds.get(TexasHoldemRound.ANTE) || [];
+            actions.push(...blinds);
+        }
+
+        // Filter out any non player actions
+        const filteredActions = actions.filter(a => a.action !== NonPlayerActionType.JOIN && a.action !== NonPlayerActionType.DEAL);
+
+        let start = filteredActions.sort((a, b) => b.index - a.index)[0]?.seat + 1 || this.lastActedSeat + 1;
+        if (filteredActions.length === 0) {
+            // If no actions yet, start from dealer position
+            start = this.dealerPosition + 1 > this.maxPlayers ? 1 : this.dealerPosition + 1;
+        }
+
+        // Search from start position to end
+        for (let i = start; i <= this.maxPlayers; i++) {
+            const player = this.getPlayerAtSeat(i);
+            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
+                return player;
+            }
+        }
+
+        // Wrap around and search from beginning to start
+        for (let i = 1; i < start; i++) {
+            const player = this.getPlayerAtSeat(i);
+            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
+                return player;
+            }
+        }
+
+        return undefined;
     }
 
     /**
@@ -1210,7 +1273,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Converts the game state to a DTO for serialization
      */
     toJson(caller?: string): TexasHoldemStateDTO {
-        const nextPlayerToAct = this.findNextPlayerToAct();
+        const nextPlayerToAct = this.findNextPlayerToActForRound(this.currentRound);
 
         // Create player DTOs
         const players: PlayerDTO[] = Array.from(this._playersMap.entries())
