@@ -577,7 +577,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Finds the next player to act for a round
      */
     private findNextPlayerToActForRound(round: TexasHoldemRound): Player | undefined {
-        const actions: Turn[] = [];
+        const actions: TurnWithSeat[] = [];
         actions.push(...this._rounds.get(round) || []);
 
         // Special logic for ante round - prioritize blind posting order
