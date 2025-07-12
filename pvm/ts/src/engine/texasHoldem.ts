@@ -577,7 +577,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Finds the next player to act for a round
      */
     private findNextPlayerToActForRound(round: TexasHoldemRound): Player | undefined {
-        const actions = this._rounds.get(round) || [];
+        const actions: Turn[] = [];
+        actions.push(...this._rounds.get(round) || []);
 
         // Special logic for ante round - prioritize blind posting order
         if (round === TexasHoldemRound.ANTE) { 
@@ -601,8 +602,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        let start = this.lastActedSeat + 1 > this.maxPlayers ? 1 : this.lastActedSeat + 1;
-        if (actions.length === 0) {
+        if (round === TexasHoldemRound.PREFLOP) {
+            const blinds = this._rounds.get(TexasHoldemRound.ANTE) || [];
+            actions.push(...blinds);
+        }
+
+        // Filter out any non player actions
+        const filteredActions = actions.filter(a => a.action !== NonPlayerActionType.JOIN && a.action !== NonPlayerActionType.DEAL);
+
+        let start = filteredActions.sort((a, b) => b.index - a.index)[0]?.seat + 1 || this.lastActedSeat + 1;
+        if (filteredActions.length === 0) {
+            // If no actions yet, start from dealer position
             start = this.dealerPosition + 1 > this.maxPlayers ? 1 : this.dealerPosition + 1;
         }
 

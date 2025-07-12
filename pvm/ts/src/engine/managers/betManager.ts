@@ -115,23 +115,4 @@ export class BetManager implements IBetManager {
         const start = sortedAggregatedBets.length;
         return sortedAggregatedBets[start - 1]?.amount || 0n;
     }
-
-    // /**
-    //  * Get the last aggressor in the betting sequence
-    //  * @param start - The index to start searching from (default is the end of the turns array)
-    //  * @returns The playerId of the last aggressor or null if no aggressor found
-    //  */
-    // getLastAggressor(start: number = this.turns.length): string | null {
-    //     const sortedTurns = this.turns.sort((a, b) => a.index - b.index);
-
-    //     // Find the last action that was a bet or raise
-    //     for (let i = start - 1; i >= 0; i--) {
-    //         const turn = sortedTurns[i];
-    //         if (turn.action === PlayerActionType.BET || turn.action === PlayerActionType.RAISE) {
-    //             return turn.playerId || null;
-    //         }
-    //     }
-
-    //     return null;
-    // }
 }
