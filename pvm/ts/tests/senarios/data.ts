@@ -425,7 +425,7 @@ export const test_735 = {
     }
 }
 
-export const test_753_2 = {
+export const test_735_2 = {
     "id": "1",
     "result": {
         "data": {
@@ -544,7 +544,7 @@ export const test_753_2 = {
     }
 };
 
-export const test_753_3 = {
+export const test_735_3 = {
     "id": "1",
     "result": {
         "data": {
