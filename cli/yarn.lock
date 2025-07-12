@@ -7,15 +7,15 @@
   resolved "https://registry.yarnpkg.com/@adraffy/ens-normalize/-/ens-normalize-1.10.1.tgz#63430d04bd8c5e74f8d7d049338f1cd9d4f02069"
   integrity sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==
 
-"@bitcoinbrisbane/block52@1.0.142":
-  version "1.0.142"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.142.tgz#f2843df0df4e136ca27344b4a0c1040fc339b09f"
-  integrity sha512-D4EL0rz7jJF82HzATN0b8BrqVivCeW2U/vvWf7lRr76awDIM1xZBwy+cnah5t5/veUbXCtdmS32TP61mBuaIFQ==
+"@bitcoinbrisbane/block52@1.0.147":
+  version "1.0.147"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.147.tgz#c0a5cdfa1cd2cdbf5012dcc3cdbb154468f9f52b"
+  integrity sha512-B9ayoWtIIPNNa4C9PM+yCTHDBfSGH8QHZoZevJANT2OYUBRsBFLWPIYgtAq/15U8ECZX1+192ZNVUBh08a3h2w==
   dependencies:
     axios "^1.8.1"
     bigunit "^1.2.5"
     dotenv "^16.5.0"
-    ethers "^6.13.4"
+    ethers "^6.14.1"
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -346,10 +346,10 @@ escape-string-regexp@^1.0.5:
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
   integrity sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==
 
-ethers@^6.13.4:
-  version "6.13.5"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.13.5.tgz#8c1d6ac988ac08abc3c1d8fabbd4b8b602851ac4"
-  integrity sha512-+knKNieu5EKRThQJWwqaJ10a6HE9sSehGeqWN65//wE7j47ZpFhKAnHB/JJFibwwg61I/koxaPsXbXpD/skNOQ==
+ethers@^6.14.1:
+  version "6.15.0"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.15.0.tgz#2980f2a3baf0509749b7e21f8692fa8a8349c0e3"
+  integrity sha512-Kf/3ZW54L4UT0pZtsY/rf+EkBU7Qi5nnhonjUb8yTXcxH3cdcWrV2cRyk0Xk/4jK6OoHhxxZHriyhje20If2hQ==
   dependencies:
     "@adraffy/ens-normalize" "1.10.1"
     "@noble/curves" "1.2.0"
