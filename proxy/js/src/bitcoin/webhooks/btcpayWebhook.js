@@ -5,6 +5,7 @@ require("dotenv").config();
 
 // Import type definitions
 require("../../types/btcpay");
+const axios = require("axios");
 
 const router = express.Router();
 
@@ -18,10 +19,6 @@ const PRIVATE_KEY = process.env.TEXAS_HODL_PRIVATE_KEY; // Different private key
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
-// Hardcoded BTC to USDC conversion rate 
-// TODO: Replace with live price feed in production
-const BTC_TO_USDC_RATE = 97000; // 1 BTC = 97,000 USDC (update this rate as needed)
-
 /**
  * Validates BTCPay webhook signature using HMAC-SHA256
  * @param {Buffer|string} payload - Raw webhook payload
@@ -31,13 +28,10 @@ const BTC_TO_USDC_RATE = 97000; // 1 BTC = 97,000 USDC (update this rate as need
  */
 function validateWebhookSignature(payload, signature, secret) {
     try {
-        const hmac = crypto.createHmac('sha256', secret);
+        const hmac = crypto.createHmac("sha256", secret);
         hmac.update(payload);
-        const expectedSignature = `sha256=${hmac.digest('hex')}`;
-        return crypto.timingSafeEqual(
-            Buffer.from(signature),
-            Buffer.from(expectedSignature)
-        );
+        const expectedSignature = `sha256=${hmac.digest("hex")}`;
+        return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
     } catch (error) {
         console.error("Error validating webhook signature:", error);
         return false;
@@ -59,14 +53,14 @@ async function callBridgeDeposit(userAddress, amount) {
         // Create Bridge contract interface
         const bridgeInterface = new ethers.Interface([
             {
-                "inputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
-                    {"internalType": "address", "name": "receiver", "type": "address"}
+                inputs: [
+                    { internalType: "uint256", name: "amount", type: "uint256" },
+                    { internalType: "address", name: "receiver", type: "address" }
                 ],
-                "name": "depositUnderlying",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "nonpayable",
-                "type": "function"
+                name: "depositUnderlying",
+                outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+                stateMutability: "nonpayable",
+                type: "function"
             }
         ]);
 
@@ -92,111 +86,72 @@ async function callBridgeDeposit(userAddress, amount) {
 }
 
 /**
- * Extracts Block52 address from BTCPay invoice metadata
- * @param {Block52Metadata|Object|null} metadata - Invoice metadata
- * @returns {string|null} Block52 address or null if not found
- */
-function extractBlock52Address(metadata) {
-    if (!metadata) return null;
-    
-    // Look for b52address in metadata
-    if (metadata.b52address) {
-        return metadata.b52address;
-    }
-    
-    // Also check if it's nested in other properties
-    for (const key in metadata) {
-        if (typeof metadata[key] === 'object' && metadata[key].b52address) {
-            return metadata[key].b52address;
-        }
-    }
-    
-    return null;
-}
-
-/**
  * Main BTCPay webhook handler
  * Processes webhook events and calls deposit contract for settled payments
  */
-router.post("/", express.raw({ type: 'application/json' }), async (req, res) => {
+router.post("/", express.raw({ type: "application/json" }), async (req, res) => {
     console.log("=== BTCPay Webhook Received ===");
-    
+
     try {
         // Validate webhook signature if secret is provided
         if (WEBHOOK_SECRET) {
-            const signature = req.headers['btcpay-sig'];
+            const signature = req.headers["btcpay-sig"];
             if (!signature || !validateWebhookSignature(req.body, signature, WEBHOOK_SECRET)) {
                 console.error("Invalid webhook signature");
                 return res.status(401).json({ error: "Invalid signature" });
             }
         }
 
-        // Parse the webhook payload
-        const payload = JSON.parse(req.body.toString());
-        console.log("Webhook payload:", JSON.stringify(payload, null, 2));
+        let { type, invoiceId, metadata } = req.body;
 
-        const { type, invoiceId, metadata } = payload;
-        
         console.log("Event type:", type);
         console.log("Invoice ID:", invoiceId);
         console.log("Metadata:", metadata);
 
         // Only process settlement events
-        if (type === "InvoiceSettled" || type === "InvoiceProcessing") {
+        if (type === "InvoiceReceivedPayment") {
             console.log("Processing payment event:", type);
-            
-            // Extract Block52 address from metadata
-            const block52Address = extractBlock52Address(metadata);
-            
-            if (!block52Address) {
-                console.error("No Block52 address found in metadata");
-                return res.status(400).json({ error: "No Block52 address in metadata" });
-            }
 
-            console.log("Found Block52 address:", block52Address);
+            const basic_auth = process.env.BTCPAY_BASIC_AUTH;
 
-            // Validate the address format
-            if (!ethers.isAddress(block52Address)) {
-                console.error("Invalid Block52 address format:", block52Address);
-                return res.status(400).json({ error: "Invalid Block52 address format" });
-            }
+            const config = {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Basic ${basic_auth}`
+                }
+            };
 
-            // Get the BTC amount from the payload
-            let btcAmount = payload.amount || payload.price;
-            if (!btcAmount) {
-                console.error("No amount found in webhook payload");
-                return res.status(400).json({ error: "No amount found in payload" });
-            }
+            invoiceId = "T9vemfxo3nBoCws6MsVfr4";
+            const btcPayResponse = await axios.get(
+                `${process.env.BTC_PAY_SERVER}/api/v1/stores/${process.env.BTC_PAY_SERVER_STORE_ID}/invoices?invoiceid=${invoiceId}`,
+                config
+            );
 
-            console.log("BTC amount from payload:", btcAmount);
-
-            // Convert BTC to USDC using hardcoded rate
-            const usdcAmount = parseFloat(btcAmount) * BTC_TO_USDC_RATE;
-            console.log("Converted USDC amount:", usdcAmount);
+            const amount = btcPayResponse.data.amount;
+            console.log("BTC amount from payload:", amount);
 
             // Format USDC amount with 6 decimals (USDC has 6 decimal places)
-            const usdcAmountFormatted = ethers.parseUnits(usdcAmount.toFixed(6), 6);
+            const usdcAmountFormatted = ethers.parseUnits(amount.toFixed(6), 6);
             console.log("USDC amount formatted for contract:", usdcAmountFormatted.toString());
 
             // Call the Bridge contract directly with USDC amount
+            const block52Address = btcPayResponse.data?.address;
             const result = await callBridgeDeposit(block52Address, usdcAmountFormatted);
-            
+
             if (result.success) {
                 console.log("Successfully called Bridge contract:", result.hash);
-                res.status(200).json({ 
-                    success: true, 
+                res.status(200).json({
+                    success: true,
                     message: "Bitcoin payment processed via Bridge successfully",
-                    btcAmount: btcAmount,
-                    usdcAmount: usdcAmount.toFixed(6),
-                    conversionRate: BTC_TO_USDC_RATE,
-                    txHash: result.hash 
+                    usdcAmount: amount.toFixed(6),
+                    txHash: result.hash
                 });
             } else {
                 console.error("Failed to call Bridge contract:", result.error);
-                res.status(500).json({ 
-                    success: false, 
+                res.status(500).json({
+                    success: false,
                     error: "Failed to process Bridge deposit",
-                    details: result.error 
+                    details: result.error
                 });
             }
         } else {
@@ -209,16 +164,63 @@ router.post("/", express.raw({ type: 'application/json' }), async (req, res) => 
     }
 });
 
+router.post("/create", async (req, res) => {
+    const basic_auth = process.env.BTCPAY_BASIC_AUTH;
+
+    const config = {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Basic ${basic_auth}`
+        }
+    };
+
+    const b52address = req.body.b52address;
+
+    const invoice = {
+        orderId: "test",
+        itemDesc: "buy in",
+        metadata: {
+            itemCode: "test item code",
+            orderUrl: "https://bitcoin.texashodl.net",
+            itemDesc: b52address,
+        },
+        checkout: {
+            speedPolicy: "HighSpeed",
+            // paymentMethods: ["string"],
+            defaultPaymentMethod: "BTC-CHAIN",
+            lazyPaymentMethods: true,
+            expirationMinutes: 90,
+            monitoringMinutes: 90,
+            paymentTolerance: 0,
+            //redirectURL: "string",
+            redirectAutomatically: true,
+            //defaultLanguage: "string"
+        },
+        // receipt: {
+        //     enabled: true,
+        //     showQR: null,
+        //     showPayments: null
+        // },
+        amount: "5.00",
+        currency: "USD"
+    };
+
+    const response = await axios.post(`https://btcpay.bitcoinpokertour.com/api/v1/stores/${process.env.BTC_PAY_SERVER_STORE_ID}/invoices`, invoice, config);
+    console.log(response.data);
+
+    res.status(200);
+    return;
+});
+
 // Health check endpoint
 router.get("/health", (req, res) => {
-    res.json({ 
-        status: "OK", 
+    res.json({
+        status: "OK",
         message: "Bitcoin webhook handler is running",
         bridgeAddress: BRIDGE_ADDRESS,
-        conversionRate: BTC_TO_USDC_RATE,
         walletAddress: wallet.address,
         method: "depositUnderlying"
     });
 });
 
-module.exports = router; 
+module.exports = router;
