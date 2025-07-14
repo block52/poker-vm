@@ -178,9 +178,9 @@ router.post("/create", async (req, res) => {
 
     const invoice = {
         orderId: "test",
-        itemDesc: "buy in",
+        itemDesc: "Bitcoin Buy In",
         metadata: {
-            itemCode: "test item code",
+            itemCode: "Texas Hodl BuyIn",
             orderUrl: "https://bitcoin.texashodl.net",
             itemDesc: b52address,
         },
@@ -196,19 +196,14 @@ router.post("/create", async (req, res) => {
             redirectAutomatically: true,
             //defaultLanguage: "string"
         },
-        // receipt: {
-        //     enabled: true,
-        //     showQR: null,
-        //     showPayments: null
-        // },
-        amount: "5.00",
+        amount: req.body.amount,
         currency: "USD"
     };
 
     const response = await axios.post(`https://btcpay.bitcoinpokertour.com/api/v1/stores/${process.env.BTC_PAY_SERVER_STORE_ID}/invoices`, invoice, config);
     console.log(response.data);
 
-    res.status(200);
+    res.status(200).json("");
     return;
 });
 
