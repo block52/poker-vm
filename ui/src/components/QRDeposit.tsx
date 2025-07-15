@@ -13,9 +13,9 @@ import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
 const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
-
-const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
-const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
+const ETHERSCAN_API_KEY = process.env.VITE_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
+const RPC_URL = process.env.VITE_MAINNET_RPC_URL || "https://mainnet.infura.io/v3/";
+const BITCOIN_PAYMENTS = "https://btcpay.bitcoinpokertour.com/api/v1/stores/5pbziTF6RNULeiQaUnfwPeFCMWWCWEH9fhyk7C6YX4EX"; //process.env.VITE_BTCPAY_SERVER_URL;
 
 // Add USDC contract ABI (just the transfer method)
 const USDC_ABI = [
@@ -170,7 +170,6 @@ const QRDeposit: React.FC = () => {
             return;
         }
 
-
         const timer = setInterval(() => {
             setTimeLeft(prevTime => {
                 const newTime = prevTime - 1;
@@ -232,28 +231,75 @@ const QRDeposit: React.FC = () => {
             return;
         }
 
-        try {
-            const payload = {
-                userAddress: loggedInAccount,
-                depositAddress: DEPOSIT_ADDRESS
-            };
-            const response = await axios.post(`${PROXY_URL}/deposit-sessions`, payload);
+        if (BITCOIN_PAYMENTS) {
+            const basic_auth = "YWRtaW5AYml0Y29pbnBva2VydG91ci5jb206ZHVmdHU1LXN1bW1vay14ZWhnYUM=";
 
-            setCurrentSession(response.data);
-            setSessionId(response.data._id);
-            setShowQR(true);
-            setTimeLeft(300); // 5 minutes
-            startPolling();
-            setError(null);
-            setTransactionStatus(null);
-            setProgressPercentage(0);
-        } catch (error: unknown) {
-            console.error("Failed to create deposit session:", error);
-            if (error && typeof error === "object" && "response" in error) {
-                const axiosError = error as { response?: { data?: { error?: string } } };
-                setError(axiosError.response?.data?.error || "Failed to create deposit session");
-            } else {
-                setError("Failed to create deposit session");
+            const config = {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Basic ${basic_auth}`
+                }
+            };
+
+            const payload = {
+                orderId: "test",
+                itemDesc: "Bitcoin Buy In",
+                metadata: {
+                    itemCode: "Texas Hodl BuyIn",
+                    orderUrl: "https://payments.texashodl.net",
+                    itemDesc: loggedInAccount
+                },
+                checkout: {
+                    speedPolicy: "HighSpeed",
+                    defaultPaymentMethod: "BTC-CHAIN",
+                    lazyPaymentMethods: true,
+                    expirationMinutes: 90,
+                    monitoringMinutes: 90,
+                    paymentTolerance: 0,
+                    redirectAutomatically: true
+                },
+                amount: "100",
+                currency: "USD"
+            };
+
+            try {
+                const response = await axios.post(`${BITCOIN_PAYMENTS}/invoices`, payload, config);
+                console.log("🔷 QRDeposit: Bitcoin payment response:", response.data);
+
+                // Navigate to the payment URL
+                if (response.data && response.data.checkoutLink) {
+                    window.location.href = response.data.checkoutLink;
+                }
+            } catch (error) {
+                console.error("🔷 QRDeposit: Bitcoin payment error:", error);
+            }
+        }
+
+        if (!BITCOIN_PAYMENTS) {
+            try {
+                const payload = {
+                    userAddress: loggedInAccount,
+                    depositAddress: DEPOSIT_ADDRESS
+                };
+
+                const response = await axios.post(`${PROXY_URL}/deposit-sessions`, payload);
+
+                setCurrentSession(response.data);
+                setSessionId(response.data._id);
+                setShowQR(true);
+                setTimeLeft(300); // 5 minutes
+                startPolling();
+                setError(null);
+                setTransactionStatus(null);
+                setProgressPercentage(0);
+            } catch (error: unknown) {
+                console.error("Failed to create deposit session:", error);
+                if (error && typeof error === "object" && "response" in error) {
+                    const axiosError = error as { response?: { data?: { error?: string } } };
+                    setError(axiosError.response?.data?.error || "Failed to create deposit session");
+                } else {
+                    setError("Failed to create deposit session");
+                }
             }
         }
     };
@@ -700,7 +746,7 @@ const QRDeposit: React.FC = () => {
                         disabled={!loggedInAccount}
                         className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300 shadow-md"
                     >
-                        Generate Deposit QR Code
+                        {BITCOIN_PAYMENTS ? "Pay with Bitcoin" : "Generate Deposit QR Code"}
                     </button>
                 ) : (
                     <>
