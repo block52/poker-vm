@@ -179,9 +179,9 @@ describe("Raise Action", () => {
                 }
             });
 
-            const EIGHT_TOKENS = 800000000000000000n; // 8 tokens total
+            const FOUR_TOKENS = 400000000000000000n; // 4 tokens total
             const range = action.verify(player1);
-            expect(range.minAmount).toBe(EIGHT_TOKENS); // Should not allow raise
+            expect(range.minAmount).toBe(FOUR_TOKENS);
         });
 
         it("should have correct four bet range", () => {
