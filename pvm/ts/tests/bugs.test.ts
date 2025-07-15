@@ -1,6 +1,6 @@
 import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
-import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS } from "../src/engine/testConstants";
+import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS, TWO_TOKENS } from "../src/engine/testConstants";
 import {
     test_json,
     test_735,
@@ -16,7 +16,8 @@ import {
     test_902,
     test_913,
     test_971,
-    test_949
+    test_949,
+    test_984
 } from "./senarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -224,13 +225,13 @@ describe("Texas Holdem - Data driven", () => {
             expect(legalActions.length).toEqual(3);
         });
 
-        it.only("should test bug 949", () => {
+        it("should test bug 949", () => {
             game = fromTestJson(test_949);
 
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct?.address).toEqual("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
 
-            const legalActions = game.getLegalActions(nextToAct?.address || "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
+            const legalActions = game.getLegalActions("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
             expect(legalActions).toBeDefined();
             expect(legalActions.length).toEqual(3);
 
@@ -238,6 +239,19 @@ describe("Texas Holdem - Data driven", () => {
             expect(legalActions[1].action).toEqual("call");
             expect(legalActions[2].action).toEqual("raise");
             expect(legalActions[2].min).toEqual("60000000000000000");
+        });
+
+        it.only("should test bug 984 second test", () => {
+            game = fromTestJson(test_984);
+
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct?.address).toEqual("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
+
+            const legalActions = game.getLegalActions("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
+            expect(legalActions).toBeDefined();
+            expect(legalActions.length).toEqual(3);
+            expect(legalActions[1].min).toEqual("20000000000000000");
+            expect(legalActions[2].min).toEqual("40000000000000000");
         });
     });
 });
