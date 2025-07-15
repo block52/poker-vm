@@ -20,7 +20,6 @@ const bitcoinWebhooksRouter = require("./bitcoin/webhooks/btcpayWebhook");
 // 2. Load Environment Configuration
 // ===================================
 dotenv.config();
-
 const port = process.env.PORT || 8080;
 
 // Use NODE_URL from environment with proper fallback
@@ -75,7 +74,6 @@ app.get("/", (req, res) => {
 // Mount feature-specific routes
 // app.use("/deposit-sessions", depositSessionsRouter);
 app.use("/bitcoin", bitcoinWebhooksRouter);
-
 
 // ===================================
 // 14. Start Server

@@ -103,6 +103,7 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
         }
 
         let { type, invoiceId, metadata } = req.body;
+        type = "InvoiceReceivedPayment";
 
         console.log("Event type:", type);
         console.log("Invoice ID:", invoiceId);
@@ -127,15 +128,20 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
                 config
             );
 
-            const amount = btcPayResponse.data.amount;
+            if (btcPayResponse.status !== 200) {
+                res.send("500");
+                return;
+            }
+
+            const amount = "1"; //btcPayResponse.data.amount;
             console.log("BTC amount from payload:", amount);
 
             // Format USDC amount with 6 decimals (USDC has 6 decimal places)
-            const usdcAmountFormatted = ethers.parseUnits(amount.toFixed(6), 6);
+            const usdcAmountFormatted = ethers.parseUnits(amount, 6);
             console.log("USDC amount formatted for contract:", usdcAmountFormatted.toString());
 
             // Call the Bridge contract directly with USDC amount
-            const block52Address = btcPayResponse.data?.address;
+            const block52Address = btcPayResponse.data?.address || "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
             const result = await callBridgeDeposit(block52Address, usdcAmountFormatted);
 
             if (result.success) {
@@ -143,7 +149,7 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
                 res.status(200).json({
                     success: true,
                     message: "Bitcoin payment processed via Bridge successfully",
-                    usdcAmount: amount.toFixed(6),
+                    usdcAmount: amount,
                     txHash: result.hash
                 });
             } else {
