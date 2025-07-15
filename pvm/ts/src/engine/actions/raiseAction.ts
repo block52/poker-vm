@@ -56,8 +56,10 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
+        const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
         // 4. Calculate the minimum raise amount
-        const delta: bigint = betManager.delta();
+        const delta = currentBet - playersBet;
+        // const delta: bigint = betManager.delta();
         const minRaiseToAmount: bigint = delta + currentBet;
 
         if (player.chips < minRaiseToAmount) {
