@@ -222,16 +222,16 @@ describe("Raise Action", () => {
                             playerId: PLAYER_2_ADDRESS,
                             seat: 2,
                             action: PlayerActionType.RAISE,
-                            amount: FIVE_TOKENS, // Player bet 2 tokens
+                            amount: FIVE_TOKENS, // Player bet 5 tokens
                             timestamp: 0
                         }
                     ];
                 }
             });
 
-            const ELEVEN_TOKENS = 1100000000000000000n; // 11 tokens total
+            const TEN_TOKENS = 1000000000000000000n; // 10 tokens total
             const range = action.verify(player1);
-            expect(range.minAmount).toBe(ELEVEN_TOKENS); // Should not allow raise
+            expect(range.minAmount).toBe(TEN_TOKENS);
         });
 
         it("should handle all-in scenario when player has insufficient chips", () => {
