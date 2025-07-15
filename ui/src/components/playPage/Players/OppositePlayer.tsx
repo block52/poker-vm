@@ -115,7 +115,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
             {/* Main player display */}
             <div
                 key={index}
-                className={`${opacityClass} absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
+                className={`${opacityClass} absolute flex flex-col justify-center text-gray-600 w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
                 style={{
                     left: left,
                     top: top,
@@ -131,14 +131,14 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                         isShowingCards && showingCards ? (
                             // Show the actual cards if player is showing
                             <>
-                                <img src={`/cards/${showingCards[0]}.svg`} alt="Player Card 1" className="w-[35%] h-[auto]" />
-                                <img src={`/cards/${showingCards[1]}.svg`} alt="Player Card 2" className="w-[35%] h-[auto]" />
+                                <img src={`/cards/${showingCards[0]}.svg`} alt="Player Card 1" width={60} height={80} className="mb-[11px]" />
+                                <img src={`/cards/${showingCards[1]}.svg`} alt="Player Card 2" width={60} height={80} className="mb-[11px]" />
                             </>
                         ) : (
                             // Show card backs if not showing
                             <>
-                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
-                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
                             </>
                         )
                     ) : (
