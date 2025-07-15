@@ -75,12 +75,12 @@ export class BetManager implements IBetManager {
 
     delta(): bigint {
         const currentBet = this.current();
-        const biggestBet = this.getLargestBet();
-        if (currentBet === 0n || biggestBet === 0n) {
+        const largestBet = this.getLargestBet();
+        if (currentBet === 0n || largestBet === 0n) {
             return 0n;
         }
         // The last raise is the difference between the current bet and the largest bet
-        return currentBet - biggestBet;
+        return currentBet - largestBet;
     }
 
     getTotalBetsForPlayer(playerId: string): bigint {

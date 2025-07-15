@@ -164,7 +164,7 @@ describe("Raise Action", () => {
                             playerId: PLAYER_1_ADDRESS,
                             seat: 1,
                             action: PlayerActionType.RAISE,
-                            amount: THREE_TOKENS, // Player 1 raised to 3 tokens (1 small blind + 2 more)
+                            amount: THREE_TOKENS, // Player 1 raised 3 tokens
                             timestamp: 0
                         },
                         {
@@ -172,7 +172,7 @@ describe("Raise Action", () => {
                             playerId: PLAYER_2_ADDRESS,
                             seat: 2,
                             action: PlayerActionType.CALL,
-                            amount: TWO_TOKENS, // Player bet 2 tokens
+                            amount: TWO_TOKENS, // Player calls 2 tokens
                             timestamp: 0
                         }
                     ];
