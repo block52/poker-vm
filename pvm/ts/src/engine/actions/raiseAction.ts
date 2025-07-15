@@ -57,12 +57,13 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
-        if (playersBet >= currentBet) {
-            throw new Error("Cannot raise - you already have the largest bet.");
-        }
+        // if (playersBet >= currentBet) {
+        //     throw new Error("Cannot raise - you already have the largest bet.");
+        // }
 
         // 4. Calculate the minimum raise amount
         const delta = currentBet - playersBet;
+        // const delta: bigint = betManager.delta();
         const minRaiseToAmount: bigint = delta + currentBet;
 
         if (player.chips < minRaiseToAmount) {
