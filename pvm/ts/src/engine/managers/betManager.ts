@@ -75,12 +75,12 @@ export class BetManager implements IBetManager {
 
     delta(): bigint {
         const currentBet = this.current();
-        const biggestBet = this.getLargestBet();
-        if (currentBet === 0n || biggestBet === 0n) {
+        const previousBet = this.previous();
+        if (currentBet === 0n || previousBet === 0n) {
             return 0n;
         }
-        // The last raise is the difference between the current bet and the largest bet
-        return currentBet - biggestBet;
+        // The last raise is the difference between the current bet and the previous bet
+        return currentBet - previousBet;
     }
 
     getTotalBetsForPlayer(playerId: string): bigint {
@@ -103,11 +103,21 @@ export class BetManager implements IBetManager {
         return largestBet?.amount || 0n;
     }
 
+    getLastAggressor(): string | null {
+        const sortedAggregatedBets = this.aggregatedBets.sort((a, b) => a.index - b.index);
+        if (sortedAggregatedBets.length === 0) {
+            return null;
+        }
+        const start = sortedAggregatedBets.length;
+        return sortedAggregatedBets[start - 1]?.playerId || null;
+    }
+
     /**
      * Get the last aggressor in the betting sequence
-     * @returns The playerId of the last aggressor or null if no aggressor found
+     * @returns The amount of the last aggressor's bet
+     * @description The last aggressor is the player who made the last bet or raise in
      */
-    getLastAggressor(): bigint {
+    getLastAggressorBet(): bigint {
         const sortedAggregatedBets = this.aggregatedBets.sort((a, b) => a.index - b.index);
         if (sortedAggregatedBets.length === 0) {
             return 0n;

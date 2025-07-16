@@ -44,10 +44,10 @@ class CallAction extends BaseAction implements IAction {
 
         // 3. Action sequence check: Need a previous action with amount to call
         // const largestBet: bigint = betManager.getLargestBet();
-        const deductAmount: bigint = currentBet - playersBet;
+        const delta: bigint = currentBet - playersBet;
 
         // Return the exact call amount required
-        return { minAmount: deductAmount, maxAmount: deductAmount };
+        return { minAmount: delta, maxAmount: delta };
     }
     
     // verify_old(player: Player): Range {

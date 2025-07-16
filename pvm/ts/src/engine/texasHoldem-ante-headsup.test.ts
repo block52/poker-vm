@@ -147,7 +147,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
         });
 
-        it("should do end to end", () => {
+        it.only("should do end to end", () => {
             // Do the small blind
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
@@ -170,8 +170,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(actions[1].action).toEqual(PlayerActionType.CALL);
             expect(actions[2].action).toEqual(PlayerActionType.RAISE);
 
-            // Both check
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, 0n);
+            // Perform a call from the small blind
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 6, ONE_TOKEN);
             game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, 0n);
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);

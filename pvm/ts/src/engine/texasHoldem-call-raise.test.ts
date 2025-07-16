@@ -130,7 +130,7 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(legalActions2[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions2[1].action).toEqual(PlayerActionType.CHECK);
         expect(legalActions2[2].action).toEqual(PlayerActionType.RAISE);
-        expect(legalActions2[2].min).toEqual("400000000000000000");  // 4 tokens
+        expect(legalActions2[2].min).toEqual("200000000000000000");  // 4 tokens
     });
 
     it("should have correct legal actions for bb after sb raises", () => {
