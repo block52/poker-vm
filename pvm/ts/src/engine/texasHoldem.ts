@@ -1317,10 +1317,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 }
 
                 // Handle timeout
-                if (_player.status === PlayerStatus.ACTIVE && this.expired(_player.address)) {
-                    _player.updateStatus(PlayerStatus.SITTING_OUT);
-                    _player.holeCards = undefined;
-                }
+                // if (_player.status === PlayerStatus.ACTIVE && this.expired(_player.address)) {
+                //     _player.updateStatus(PlayerStatus.SITTING_OUT);
+                //     _player.holeCards = undefined;
+                // }
 
                 return {
                     address: _player.address,
