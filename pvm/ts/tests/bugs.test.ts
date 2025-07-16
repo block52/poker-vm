@@ -17,7 +17,8 @@ import {
     test_913,
     test_971,
     test_949,
-    test_984
+    test_984,
+    test_985
 } from "./senarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -241,7 +242,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(legalActions[2].min).toEqual("60000000000000000");
         });
 
-        it.only("should test bug 984 second test", () => {
+        it("should test bug 984 second test", () => {
             game = fromTestJson(test_984);
 
             const nextToAct = game.getNextPlayerToAct();
@@ -252,6 +253,16 @@ describe("Texas Holdem - Data driven", () => {
             expect(legalActions.length).toEqual(3);
             expect(legalActions[1].min).toEqual("20000000000000000");
             expect(legalActions[2].min).toEqual("40000000000000000");
+        });
+
+        it.only("should test bug 985", () => {
+            game = fromTestJson(test_985);
+
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct?.address).toEqual("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
+
+            const legalActions = game.getLegalActions("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
+            expect(legalActions).toBeDefined();
         });
     });
 });
