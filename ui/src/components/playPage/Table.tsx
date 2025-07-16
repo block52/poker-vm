@@ -56,6 +56,7 @@ import Player from "./Players/Player";
 import Chip from "./common/Chip";
 import TurnAnimation from "./Animations/TurnAnimation";
 import WinAnimation from "./Animations/WinAnimation";
+import DealerButton from "./Animations/DealerButton";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import placeholderLogo from "../../assets/YOUR_CLUB.png";
@@ -102,6 +103,10 @@ import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
+//Animations
+import { useAnimationContext } from "../../context/AnimationContext";
+import { useDealerPosition } from "../../hooks/useDealerPosition";
+
 // Game Start Countdown
 import GameStartCountdown from "./common/GameStartCountdown";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
@@ -137,10 +142,10 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
-    
+
     // Game Start Countdown
     const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
-    
+
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [balanceError, setBalanceError] = useState<Error | null>(null);
@@ -151,6 +156,10 @@ const Table = React.memo(() => {
 
     // invoke hook for seat loop
     const { winnerInfo } = useWinnerInfo();
+
+    // Animation Hooks
+    const { startAnimation } = useAnimationContext();
+    const { dealerSeat } = useDealerPosition();
 
     // Define calculateZoom first, before any usage
     const calculateZoom = useCallback(() => {
@@ -177,7 +186,7 @@ const Table = React.memo(() => {
             // For desktop: original scaling
             calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
         }
-        
+
         return Math.min(calculatedScale, 2);
     }, []);
 
@@ -231,10 +240,8 @@ const Table = React.memo(() => {
         timeRemaining
     } = useNextToActInfo(id);
 
-
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot, tableSize } = useTableState();
-
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
@@ -273,8 +280,6 @@ const Table = React.memo(() => {
 
     // Use utility function for formatted address
     const formattedAddress = getFormattedAddress();
-
-
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
@@ -414,6 +419,16 @@ const Table = React.memo(() => {
         [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex, updateBalanceOnPlayerJoin]
     );
 
+    useEffect(() => {
+        if (dealerSeat) {
+            startAnimation("dealerMove", {
+                newSeat: dealerSeat,
+                tableSize,
+                startIndex
+            });
+        }
+    }, [dealerSeat, tableSize, startIndex, startAnimation]);
+
     const copyToClipboard = useCallback((text: string) => {
         navigator.clipboard.writeText(text);
     }, []);
@@ -430,8 +445,6 @@ const Table = React.memo(() => {
             subscribeToTable(id);
         }
     }, [id]);
-
-
 
     return (
         <div className="table-container">
@@ -466,9 +479,7 @@ const Table = React.memo(() => {
                                 <>
                                     {/* Address */}
                                     <div className="flex items-center mr-2 sm:mr-4">
-                                        <span className="font-mono text-blue-400 text-[10px] sm:text-xs">
-                                            {formattedAddress}
-                                        </span>
+                                        <span className="font-mono text-blue-400 text-[10px] sm:text-xs">{formattedAddress}</span>
                                         <FaCopy
                                             className="ml-1 sm:ml-1.5 cursor-pointer text-blue-400 hover:text-blue-300 transition-colors duration-200"
                                             size={9}
@@ -561,7 +572,10 @@ const Table = React.memo(() => {
                                 // Check player status
                                 if (
                                     tableDataValues.tableDataPlayers?.some(
-                                        (p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.SITTING_OUT
+                                        (p: PlayerDTO) =>
+                                            p.address?.toLowerCase() === userWalletAddress &&
+                                            p.status !== PlayerStatus.FOLDED &&
+                                            p.status !== PlayerStatus.SITTING_OUT
                                     )
                                 ) {
                                     alert("You must fold your hand before leaving the table.");
@@ -698,7 +712,8 @@ const Table = React.memo(() => {
                                                     </div>
                                                 );
                                             })}
-                                    
+                                            {/* DEALER */}
+                                            <DealerButton dealerSeat={dealerSeat} tableSize={tableSize} startIndex={startIndex} />
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
@@ -755,7 +770,7 @@ const Table = React.memo(() => {
                         You are seated at position {currentUserSeat}
                     </div>
                 )}
-                
+
                 {/* Add an indicator for whose turn it is */}
                 {nextToActSeat && isGameInProgress && (
                     <div className="text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm text-center">
@@ -763,13 +778,13 @@ const Table = React.memo(() => {
                             <span className="text-white">Your turn to act!</span>
                         ) : (
                             <span>
-                                Waiting for {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to
-                                act
+                                Waiting for{" "}
+                                {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to act
                             </span>
                         )}
                     </div>
                 )}
-                
+
                 {/* Show a message when the hand is over */}
                 {!isGameInProgress && tableActivePlayers.length > 0 && (
                     <div className="text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm text-center">
@@ -780,7 +795,9 @@ const Table = React.memo(() => {
 
             {/* Add a message for empty table if needed */}
             {tableActivePlayers.length === 0 && (
-                <div className="absolute top-28 right-4 text-white bg-black bg-opacity-50 p-2 sm:p-4 rounded text-xs sm:text-sm">Waiting for players to join...</div>
+                <div className="absolute top-28 right-4 text-white bg-black bg-opacity-50 p-2 sm:p-4 rounded text-xs sm:text-sm">
+                    Waiting for players to join...
+                </div>
             )}
 
             {/* Powered by Block52 */}
@@ -795,11 +812,7 @@ const Table = React.memo(() => {
 
             {/* Game Start Countdown Modal */}
             {showCountdown && gameStartTime && (
-                <GameStartCountdown 
-                    gameStartTime={gameStartTime}
-                    onCountdownComplete={handleCountdownComplete}
-                    onSkip={handleSkipCountdown}
-                />
+                <GameStartCountdown gameStartTime={gameStartTime} onCountdownComplete={handleCountdownComplete} onSkip={handleSkipCountdown} />
             )}
         </div>
     );

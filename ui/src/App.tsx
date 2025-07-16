@@ -10,6 +10,7 @@ import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import QRDeposit from "./components/QRDeposit";
 import { GameStateProvider } from "./context/GameStateContext";
+import { AnimationProvider } from "./context/AnimationContext"; 
 
 const queryClient = new QueryClient();
 
@@ -63,7 +64,9 @@ function App() {
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiAdapter.wagmiConfig}>
                     <GameStateProvider>
-                        <AppContent />
+                        <AnimationProvider>
+                            <AppContent />
+                        </AnimationProvider>
                     </GameStateProvider>
                 </WagmiProvider>
             </QueryClientProvider>
