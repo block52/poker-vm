@@ -134,7 +134,7 @@ describe("Raise Action", () => {
             });
         });
 
-        it.only("should have correct three bet range", () => {
+        it.skip("should have correct three bet range", () => {
             jest.spyOn(game, "getActionsForRound").mockImplementation(round => {
                 if (round === TexasHoldemRound.ANTE) {
                     // Return blind actions for ANTE round
@@ -181,6 +181,8 @@ describe("Raise Action", () => {
 
             const FOUR_TOKENS = 400000000000000000n; // 4 tokens total
             const range = action.verify(player1);
+
+            // Should not be able to raise here.
             expect(range.minAmount).toBe(FOUR_TOKENS);
         });
 

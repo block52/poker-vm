@@ -121,7 +121,7 @@ export class MockBetManager implements IBetManager {
         throw new Error("Method not implemented.");
     }
 
-    getLastAggressor(start?: number): bigint {
+    getLastAggressor(start?: number): string {
         throw new Error("Method not implemented.");
     }
     

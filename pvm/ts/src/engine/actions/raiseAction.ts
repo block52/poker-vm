@@ -56,8 +56,17 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
+        // const lastAggressor = betManager.getLastAggressor();
+        // if (lastAggressor === player.address) {
+        //     throw new Error("Cannot raise - you already have the largest bet.");
+        // }
+
         const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
         // 4. Calculate the minimum raise amount
+        // let delta = currentBet - playersBet;
+        // if (delta === 0n) {
+        //     delta = this.game.bigBlind;
+        // }
         const delta = currentBet - playersBet;
         const minRaiseToAmount: bigint = delta + currentBet;
 
