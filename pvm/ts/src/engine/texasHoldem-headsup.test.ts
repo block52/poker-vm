@@ -163,8 +163,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 5);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
-            // Both check
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 6, 0n);
+            // Perform actions for the small blind player
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 6, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 7, 0n);
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);

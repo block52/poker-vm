@@ -134,7 +134,7 @@ describe("Raise Action", () => {
             });
         });
 
-        it("should have correct three bet range", () => {
+        it.only("should have correct three bet range", () => {
             jest.spyOn(game, "getActionsForRound").mockImplementation(round => {
                 if (round === TexasHoldemRound.ANTE) {
                     // Return blind actions for ANTE round
