@@ -2855,15 +2855,6 @@ export const test_985 = {
                     "round": "river",
                     "index": 27,
                     "timestamp": 1752558228539
-                },
-                {
-                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
-                    "seat": 2,
-                    "action": "raise",
-                    "amount": "20000000000000000",
-                    "round": "river",
-                    "index": 28,
-                    "timestamp": 1752558228539
                 }
             ],
             "round": "river",

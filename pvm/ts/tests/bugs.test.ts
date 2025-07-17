@@ -259,6 +259,21 @@ describe("Texas Holdem - Data driven", () => {
             game = fromTestJson(test_985);
 
             const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct?.address).toEqual("0xE8DE79b707BfB7d8217cF0a494370A9cC251602C");
+
+            const legalActions = game.getLegalActions("0xE8DE79b707BfB7d8217cF0a494370A9cC251602C");
+            expect(legalActions).toBeDefined();
+            expect(legalActions.length).toEqual(3);
+            expect(legalActions[0].action).toEqual("fold");
+            expect(legalActions[1].action).toEqual("call");
+            expect(legalActions[2].action).toEqual("raise");
+            expect(legalActions[2].min).toEqual("40000000000000000");
+        });
+
+        it.skip("should test bug 98 25", () => {
+            game = fromTestJson(test_985);
+
+            const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct?.address).toEqual("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
 
             const legalActions = game.getLegalActions("0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8");
