@@ -137,8 +137,8 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                         ) : (
                             // Show card backs if not showing
                             <>
-                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
-                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"/>
+                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"/>
                             </>
                         )
                     ) : (
@@ -178,11 +178,6 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                     </div>
 
                     {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}
-                    {isDealer && (
-                        <div className="absolute top-[-85px] right-[-40px] w-12 h-12 z-20">
-                            <img src={CustomDealer} alt="Dealer Button" className="w-full h-full" />
-                        </div>
-                    )}
                 </div>
             </div>
 

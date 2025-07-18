@@ -195,11 +195,6 @@ const Player: React.FC<PlayerProps> = memo(
           </div>
 
           {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}
-          {isDealer && (
-              <div className="absolute top-[-85px] right-[-40px] w-12 h-12 z-20">
-                  <img src={CustomDealer} alt="Dealer Button" className="w-full h-full" />
-              </div>
-          )}
         </div>
       </div>
     );
