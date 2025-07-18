@@ -16,7 +16,8 @@ const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 const ETHERSCAN_API_KEY = process.env.VITE_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
 const RPC_URL = process.env.VITE_MAINNET_RPC_URL || "https://mainnet.infura.io/v3/";
-const BITCOIN_PAYMENTS = "https://btcpay.bitcoinpokertour.com/api/v1/stores/5pbziTF6RNULeiQaUnfwPeFCMWWCWEH9fhyk7C6YX4EX"; //process.env.VITE_BTCPAY_SERVER_URL;
+const BITCOIN_PAYMENTS = "https://btcpay.bitcoinpokertour.com/api/v1/stores/5pbziTF6RNULeiQaUnfwPeFCMWWCWEH9fhyk7C6YX4EX"; // process.env.VITE_BTCPAY_SERVER_URL;
+const CLUB_NAME = process.env.VITE_CLUB_NAME || "Block 52";
 
 // Add USDC contract ABI (just the transfer method)
 const USDC_ABI = [
@@ -715,10 +716,12 @@ const QRDeposit: React.FC = () => {
                     <span>Back to Dashboard</span>
                 </Link>
 
-                <h1 className="text-2xl font-extrabold text-center text-white mb-6 mt-5">Deposit {BITCOIN_PAYMENTS ? "Bitcoin" : "USDC"} in to Block52</h1>
+                <h1 className="text-2xl font-extrabold text-center text-white mb-6 mt-5">
+                    Deposit {BITCOIN_PAYMENTS ? "Bitcoin" : "USDC"} in to {CLUB_NAME}
+                </h1>
 
                 <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
-                    <p className="text-lg mb-2 text-white">Block 52 Balance:</p>
+                    <p className="text-lg mb-2 text-white">{CLUB_NAME} Balance:</p>
                     <p className="text-xl font-bold text-blue-400">${formatBalance(displayBalance || "0")} USDC</p>
                     {b52Nonce !== null && (
                         <p className="text-sm text-gray-300 mt-2 border-t border-gray-600 pt-2">
