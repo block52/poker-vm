@@ -16,7 +16,7 @@ const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 const ETHERSCAN_API_KEY = process.env.VITE_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
 const RPC_URL = process.env.VITE_MAINNET_RPC_URL || "https://mainnet.infura.io/v3/";
-const BITCOIN_PAYMENTS = "https://btcpay.bitcoinpokertour.com/api/v1/stores/5pbziTF6RNULeiQaUnfwPeFCMWWCWEH9fhyk7C6YX4EX"; // process.env.VITE_BTCPAY_SERVER_URL;
+const BITCOIN_PAYMENTS = process.env.VITE_BTCPAY_SERVER_URL;
 const CLUB_NAME = process.env.VITE_CLUB_NAME || "Block 52";
 
 // Add USDC contract ABI (just the transfer method)
@@ -230,12 +230,13 @@ const QRDeposit: React.FC = () => {
         }
     }, [fetchWeb3Balance, web3Address]);
 
+    // Handle form submission for Bitcoin payments.
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (BITCOIN_PAYMENTS) {
             const formData = new FormData(e.currentTarget);
-            const basic_auth = "YWRtaW5AYml0Y29pbnBva2VydG91ci5jb206ZHVmdHU1LXN1bW1vay14ZWhnYUM=";
+            const basic_auth = process.env.VITE_BTCPAY_BASIC_AUTH;
 
             const config = {
                 headers: {
@@ -288,7 +289,7 @@ const QRDeposit: React.FC = () => {
         }
 
         if (BITCOIN_PAYMENTS) {
-            const basic_auth = "YWRtaW5AYml0Y29pbnBva2VydG91ci5jb206ZHVmdHU1LXN1bW1vay14ZWhnYUM=";
+            const basic_auth = process.env.VITE_BTCPAY_BASIC_AUTH;
 
             const config = {
                 headers: {
@@ -531,6 +532,7 @@ const QRDeposit: React.FC = () => {
 
                     if (response.data) {
                         setCurrentSession(response.data);
+
                         if (response.data.txStatus) {
                             setTransactionStatus(response.data.txStatus);
                         } else {
@@ -817,6 +819,13 @@ const QRDeposit: React.FC = () => {
                             {BITCOIN_PAYMENTS ? "Pay with Bitcoin" : "Generate Deposit QR Code"}
                             {isBitcoinLoading && <img src={spinner} />}
                         </button>
+                        // <button
+                        //     type="submit"
+                        //     className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-md mt-4"
+                        // >
+                        //     {BITCOIN_PAYMENTS ? "Pay with Bitcoin" : "Generate Deposit QR Code"}
+                        //     {isBitcoinLoading && <img src={spinner} />}
+                        // </button>
                     ) : (
                         <>
                             {/* Only show QR if no transaction is in progress */}
@@ -862,11 +871,15 @@ const QRDeposit: React.FC = () => {
                                         <p>
                                             Hash: {latestTransaction.hash.slice(0, 10)}...{latestTransaction.hash.slice(-8)}
                                         </p>
-                                        <p>Amount: {ethers.formatEther(latestTransaction.value)} ETH</p>
+                                        <p>
+                                            Amount: {ethers.formatEther(latestTransaction.value)} ETH
+                                        </p>
                                         <p>
                                             From: {latestTransaction.from.slice(0, 6)}...{latestTransaction.from.slice(-4)}
                                         </p>
-                                        <p>Age: {new Date(Number(latestTransaction.timeStamp) * 1000).toLocaleString()}</p>
+                                        <p>
+                                            Age: {new Date(Number(latestTransaction.timeStamp) * 1000).toLocaleString()}
+                                        </p>
                                     </div>
                                 </div>
                             )}
