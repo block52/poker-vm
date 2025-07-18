@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { Range, TurnWithSeat } from "../types";
@@ -9,8 +9,10 @@ class JoinAction extends BaseAction {
     }
 
     // Override verify method for join action
-    verify(_player: Player): Range {
-        // For joining, we don't need to verify against an existing player
+    verify(player: Player): Range {
+        if (this.game.exists(player.address)) {
+            throw new Error("Player already exists in the game.");
+        }
 
         // Now we can use the actual min/max buy-in values
         return {

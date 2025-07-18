@@ -2,6 +2,7 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
+import { BetManager } from "../managers/betManager";
 
 class CheckAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -9,6 +10,49 @@ class CheckAction extends BaseAction implements IAction {
     }
 
     verify(player: Player): Range {
+        // Basic validation
+        super.verify(player);
+
+        const currentRound = this.game.currentRound;
+        // 1. Round state check: Cannot check in the ante round
+        if (currentRound === TexasHoldemRound.ANTE) {
+            throw new Error("Cannot check in the ante round.");
+        }
+
+        if (currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error("Cannot check in the showdown round.");
+        }
+
+        // 2. Get the bets for the current round
+        const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        const actions = this.game.getActionsForRound(currentRound);
+        const newActions = [...actions];
+        if (includeBlinds) {
+            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
+            newActions.push(...anteActions);
+        }
+
+        // if (!newActions || newActions.length === 0) {
+        //     throw new Error("No previous actions to check.");
+        // }
+
+        const betManager = new BetManager(newActions);
+        const currentBetAmount: bigint = betManager.current();
+
+        if (currentBetAmount === 0n) {
+            return { minAmount: 0n, maxAmount: 0n };
+        }
+
+        const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
+        if (playersBet === currentBetAmount) {
+            // Player has already matched the current bet, can check
+            return { minAmount: 0n, maxAmount: 0n };
+        }
+
+        throw new Error("Player must match the largest bet to check.");
+    }
+
+    verify_old(player: Player): Range {
         // Basic validation
         super.verify(player);
 

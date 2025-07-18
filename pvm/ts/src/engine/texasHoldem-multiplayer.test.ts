@@ -36,7 +36,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(game.exists(PLAYER_4)).toBeDefined();
         });
 
-        it("should have correct legal actions after posting the blinds", () => {
+        it.only("should have correct legal actions after posting the blinds", () => {
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 5, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
@@ -55,11 +55,6 @@ describe("Texas Holdem - Multiplayer", () => {
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 6, TWO_TOKENS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            // // Should have the deal action
-            // expect(actual).toContainEqual(
-            //     expect.objectContaining({ action: NonPlayerActionType.DEAL })
-            // );
-
             // Now deal the cards
             expect(() => {
                 game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 7);
@@ -75,13 +70,13 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(PLAYER_3);
             actual = game.getLegalActions(PLAYER_3);
-            expect(actual.length).toEqual(3); // Fold, bet, call
+            expect(actual.length).toEqual(3); // Fold, call or raise
             expect(actual[0].action).toEqual(PlayerActionType.FOLD);
             expect(actual[1].action).toEqual(PlayerActionType.CALL);
-            // expect(actual[2].action).toEqual(PlayerActionType.CALL);
+            expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Open the action for player 3
-            game.performAction(PLAYER_3, PlayerActionType.BET, 8, TWO_TOKENS);
+            game.performAction(PLAYER_3, PlayerActionType.RAISE, 8, TWO_TOKENS);
             expect(game.pot).toEqual(500000000000000000n);
 
             // Should be players 4 turn

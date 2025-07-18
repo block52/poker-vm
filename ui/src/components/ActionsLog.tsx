@@ -4,6 +4,70 @@ import { useGameProgress } from "../hooks/useGameProgress";
 import { formatPlayerId, formatAmount } from "../utils/accountUtils";
 import { ActionDTO } from "@bitcoinbrisbane/block52";
 
+// Function to format action names with proper capitalization and spacing
+const formatActionName = (action: string): string => {
+    switch (action.toLowerCase()) {
+        case 'join':
+            return 'Join';
+        case 'post-small-blind':
+            return 'Post Small Blind';
+        case 'post-big-blind':
+            return 'Post Big Blind';
+        case 'deal':
+            return 'Deal';
+        case 'call':
+            return 'Call';
+        case 'check':
+            return 'Check';
+        case 'bet':
+            return 'Bet';
+        case 'raise':
+            return 'Raise';
+        case 'fold':
+            return 'Fold';
+        case 'show':
+            return 'Show';
+        case 'muck':
+            return 'Muck';
+        case 'all-in':
+            return 'All In';
+        case 'leave':
+            return 'Leave';
+        case 'sit-out':
+            return 'Sit Out';
+        case 'sit-in':
+            return 'Sit In';
+        case 'new-hand':
+            return 'New Hand';
+        default:
+            // Fallback: capitalize first letter and replace hyphens with spaces
+            return action.charAt(0).toUpperCase() + action.slice(1).replace(/-/g, ' ');
+    }
+};
+
+// Function to format round names with proper poker terminology
+const formatRoundName = (round: string): string => {
+    switch (round.toLowerCase()) {
+        case 'ante':
+            return 'Ante';
+        case 'preflop':
+            return 'Pre-flop';
+        case 'flop':
+            return 'Flop';
+        case 'turn':
+            return 'Turn';
+        case 'river':
+            return 'River';
+        case 'showdown':
+            return 'Showdown';
+        case 'end':
+            return 'End';
+        default:
+            // Fallback: capitalize first letter
+            return round.charAt(0).toUpperCase() + round.slice(1);
+    }
+};
+
 // Simple component to display only the action log
 const ActionsLog: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -29,11 +93,11 @@ const ActionsLog: React.FC = () => {
                             </div>
                             <div className="flex justify-between mt-0.5">
                                 <span className="text-gray-200">
-                                    {action.action}
-                                    {action.amount && formatAmount(action.amount)}
+                                    {formatActionName(action.action)}
+                                    {action.amount && ` ${formatAmount(action.amount)}`}
                                 </span>
                                 <span className="text-gray-400 text-[10px]">
-                                    {action.round}
+                                    {formatRoundName(action.round)}
                                 </span>
                             </div>
                         </div>

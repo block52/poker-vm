@@ -359,6 +359,48 @@
     transition: all 0.3s ease-out;
 }
 
+/* Player Action Drop Box Animations */
+@keyframes dropDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes rollAway {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+}
+
+.action-box-enter {
+    animation: dropDown 0.3s ease-out forwards;
+}
+
+.action-box-exit {
+    animation: rollAway 0.5s ease-in forwards;
+}
+
+/* Action box pulse effect for emphasis */
+@keyframes actionPulse {
+    0% { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0,0,0,0.3); }
+    50% { box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6), 0 4px 8px rgba(0,0,0,0.4); }
+    100% { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0,0,0,0.3); }
+}
+
+.action-box-pulse {
+    animation: actionPulse 1s ease-in-out;
+}
+
 /* Performance mode - disable expensive animations */
 @media (prefers-reduced-motion: reduce) {
     .background-animated-static {
@@ -375,6 +417,13 @@
         background-clip: text;
         -webkit-background-clip: text;
         color: transparent;
+    }
+    
+    /* Disable action box animations for reduced motion */
+    .action-box-enter,
+    .action-box-exit,
+    .action-box-pulse {
+        animation: none;
     }
 }
 

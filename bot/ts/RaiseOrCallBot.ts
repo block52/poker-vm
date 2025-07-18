@@ -22,40 +22,10 @@ export class RaiseOrCallBot extends BaseBot implements IBot {
             return;
         }
 
-        // If we can deal, then deal
-        const canDeal = actions.some(action => action.action === NonPlayerActionType.DEAL);
-        if (canDeal) {
-            console.log(chalk.cyan("Dealing cards..."));
-            const response = await this.client.deal(this.tableAddress, "", this.me);
-            console.log(chalk.cyan("Deal action posted successfully:", response?.hash));
-            return; // Skip to next iteration after dealing
-        }
-
-        // If legal actions contain post-small-blind, we can post small blind
-        const hasPostSmallBlind = actions.some(action => action.action === PlayerActionType.SMALL_BLIND);
-        if (hasPostSmallBlind) {
-            console.log(chalk.cyan("Posting small blind..."));
-            const action = actions.find(action => action.action === PlayerActionType.SMALL_BLIND);
-            if (!action) {
-                console.error(chalk.red("No small blind action found!"));
-                return; // Exit if no small blind action is found
-            }
-            const response = await this.client.playerAction(this.tableAddress, PlayerActionType.SMALL_BLIND, action.max || "1");
-            console.log(chalk.cyan("Small blind posted successfully:", response?.hash));
-            return; // Skip to next iteration after posting small blind
-        }
-
-        const hasPostBigBlind = actions.some(action => action.action === PlayerActionType.BIG_BLIND);
-        if (hasPostBigBlind) {
-            console.log(chalk.cyan("Posting big blind..."));
-            const action = actions.find(action => action.action === PlayerActionType.BIG_BLIND);
-            if (!action) {
-                console.error(chalk.red("No big blind action found!"));
-                return; // Exit if no big blind action is found
-            }
-            const response = await this.client.playerAction(this.tableAddress, PlayerActionType.BIG_BLIND, action.max || "0");
-            console.log(chalk.cyan("Big blind posted successfully:", response?.hash));
-            return; // Skip to next iteration after posting big blind
+        const baseAction = await super.standardActions(actions);
+        if (baseAction) {
+            console.log(chalk.cyan("Performing base action:", baseAction));
+            return; // Skip to next iteration after base action
         }
 
         // Can check?
@@ -66,7 +36,7 @@ export class RaiseOrCallBot extends BaseBot implements IBot {
             const action = actions.find(action => action.action === PlayerActionType.RAISE);
             if (action) {
                 const response = await this.client.playerAction(this.tableAddress, PlayerActionType.RAISE, action.min || "0");
-                console.log(chalk.cyan("Check posted successfully:", response?.hash));
+                console.log(chalk.cyan("Raising successfully:", response?.hash));
 
                 return; // Skip to next iteration after check
             }
@@ -78,7 +48,7 @@ export class RaiseOrCallBot extends BaseBot implements IBot {
             console.log(chalk.cyan("Calling..."));
             const amount = actions.find(action => action.action === PlayerActionType.CALL)?.min || "0";
             const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CALL, amount);
-            console.log(chalk.cyan("Call posted successfully:", response?.hash));
+            console.log(chalk.cyan("Calling successfully:", response?.hash));
             return; // Skip to next iteration after call
         }
 
@@ -87,7 +57,7 @@ export class RaiseOrCallBot extends BaseBot implements IBot {
 
         if (canCheck) {
             const response = await this.client.playerAction(this.tableAddress, PlayerActionType.CHECK, "0");
-            console.log(chalk.cyan("Check posted successfully:", response?.hash));
+            console.log(chalk.cyan("Checking successfully:", response?.hash));
 
             return; // Skip to next iteration after check
         }

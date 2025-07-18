@@ -1,7 +1,8 @@
 import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
-import { IAction, Range } from "../types";
+import { IAction, Range, Turn } from "../types";
+import { BetManager } from "../managers/betManager";
 
 class RaiseAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -35,87 +36,52 @@ class RaiseAction extends BaseAction implements IAction {
             throw new Error("Cannot raise in the showdown round.");
         }
 
-        // 3. Find who has the largest bet for this round
+        // 3. Get the bets for the current round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
 
-        let largestBet = 0n;
-        let largestBetPlayer = "";
-
-        const activePlayers = this.game.findActivePlayers();
-        for (const activePlayer of activePlayers) {
-            const playerBet = this.game.getPlayerTotalBets(activePlayer.address, currentRound, includeBlinds);
-            if (playerBet > largestBet) {
-                largestBet = playerBet;
-                largestBetPlayer = activePlayer.address;
-            }
+        const actions = this.game.getActionsForRound(currentRound);
+        let newActions = [...actions];
+        if (includeBlinds) {
+            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
+            newActions.push(...anteActions);
         }
 
-        // 4. Cannot raise if I have the largest bet (can't raise myself)
-        if (largestBetPlayer === player.address) {
-
-            // Special case for PREFLOP round, and the player is the big blind
-            if (currentRound === TexasHoldemRound.PREFLOP && this.game.getPlayerSeatNumber(player.address) === this.game.bigBlindPosition) {
-                return {
-                    minAmount: this.game.bigBlind, // Must raise by at least big blind
-                    maxAmount: player.chips // Can go all-in
-                };
-            }
-
-            throw new Error("Cannot raise - you already have the largest bet.");
-        }
-
-        // 5. Calculate minimum raise amount
-        const playerBets = this.game.getPlayerTotalBets(player.address, currentRound, includeBlinds);
-
-        if (largestBet === 0n) {
+        if (newActions.length < 2 && includeBlinds === true || newActions.length === 0 && includeBlinds === false) {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
-        let minimumRaiseAmount = largestBet > 0n ? largestBet + this.game.bigBlind : this.game.bigBlind;
-        const deltaToCall = minimumRaiseAmount - playerBets;
+        const betManager = new BetManager(newActions);
+        const currentBet: bigint = betManager.current();
+        if (currentBet === 0n) {
+            throw new Error("Cannot raise - no bets have been placed yet.");
+        }
 
-        // Find the last raise size in this round
-        const lastRaiseSize = this.getLastRaiseSize(currentRound, includeBlinds); // two tokens
-        // let minimumRaiseAmount = lastRaiseSize > 0n ? lastRaiseSize + this.game.bigBlind : this.game.bigBlind;  // four tokens
+        // const lastAggressor = betManager.getLastAggressor();
+        // if (lastAggressor === player.address) {
+        //     throw new Error("Cannot raise - you already have the largest bet.");
+        // }
 
-        // const deltaToCall = minimumRaiseAmount - playerBets;
+        const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
+        // 4. Calculate the minimum raise amount
+        // let delta = currentBet - playersBet;
+        // if (delta === 0n) {
+        //     delta = this.game.bigBlind;
+        // }
+        const delta = currentBet - playersBet;
+        const minRaiseToAmount: bigint = delta + currentBet;
 
-        if (player.chips < minimumRaiseAmount) {
+        if (player.chips < minRaiseToAmount) {
             // Player can only go all-in
             return {
-                minAmount: playerBets + player.chips, // Total amount if going all-in
-                maxAmount: playerBets + player.chips
+                minAmount: player.chips, // Total amount if going all-in
+                maxAmount: player.chips
             };
         }
 
         return {
-            minAmount: deltaToCall > this.game.bigBlind ? deltaToCall : this.game.bigBlind, // Minimum raise amount
-            maxAmount: player.chips // Total possible if going all-in
+            minAmount: minRaiseToAmount,
+            maxAmount: player.chips
         };
-    }
-
-    private getLastRaiseSize(round: TexasHoldemRound, includeBlinds: boolean): bigint {
-        const actions = this.game.getActionsForRound(round);
-        const betActions = actions.filter(a =>
-            a.action === PlayerActionType.BET ||
-            a.action === PlayerActionType.RAISE
-        );
-
-        if (includeBlinds) {
-            const smallBlindAction = actions.find(a => a.action === PlayerActionType.SMALL_BLIND);
-            const bigBlindAction = actions.find(a => a.action === PlayerActionType.BIG_BLIND);
-            if (smallBlindAction) betActions.push(smallBlindAction);
-            if (bigBlindAction) betActions.push(bigBlindAction);
-        }
-
-        if (betActions.length === 0) return 0n;
-        if (betActions.length === 1) return betActions[0].amount || 0n;
-
-        // Return the difference between last two betting actions
-        const lastAction = betActions[betActions.length - 1];
-        const prevAction = betActions[betActions.length - 2];
-
-        return (lastAction.amount || 0n) - (prevAction.amount || 0n);
     }
 }
 

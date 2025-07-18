@@ -1,6 +1,6 @@
 import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, mnemonic, ONE_HUNDRED_TOKENS, ONE_TOKEN } from "./testConstants";
+import { baseGameConfig, gameOptions, mnemonic, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 
 /**
  * This test suite was implemented to address and verify the fix for a double increment issue
@@ -32,8 +32,8 @@ describe("Texas Holdem - Action Index", () => {
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "2");
 
             // Post blinds
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3, gameOptions.smallBlind);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 4, gameOptions.bigBlind);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
 
             // Turn index should be 5 now
             expect(game.getActionIndex()).toBe(5);
@@ -138,7 +138,7 @@ describe("Texas Holdem - Action Index", () => {
             // Get legal actions for second player
             const legalActions = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             
-            // All legal actions should have the current turn index (1)
+            // All legal actions should have the current turn index (4)
             legalActions.forEach(action => {
                 expect(action.index).toBe(4);
             });
@@ -149,7 +149,7 @@ describe("Texas Holdem - Action Index", () => {
             // Get legal actions for first player again
             const updatedLegalActions = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             
-            // All legal actions should have the new turn index (2)
+            // All legal actions should have the new turn index (5)
             updatedLegalActions.forEach(action => {
                 expect(action.index).toBe(5);
             });
@@ -179,13 +179,15 @@ describe("Texas Holdem - Action Index", () => {
                 game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 3);
             }).not.toThrow();
 
-            // // Turn index should increment
-            // expect(game.getActionIndex()).toBe(4);
+            // Turn index should increment
+            expect(game.getActionIndex()).toBe(4);
         });
 
-        it.skip("should throw an error if action is performed with an outdated index", () => {
+        it("should throw an error if action is performed with an outdated index", () => {
             // Post small blind
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3);
+
+            expect(game.getActionIndex()).toBe(4);
 
             // Attempt to perform another action with the same index (should be 2 now)
             expect(() => {
@@ -193,7 +195,7 @@ describe("Texas Holdem - Action Index", () => {
             }).toThrow("Invalid action index.");
 
             // Turn index should remain unchanged
-            // expect(game.getActionIndex()).toBe(3);
+            expect(game.getActionIndex()).toBe(4);
         });
     });
 }); 
