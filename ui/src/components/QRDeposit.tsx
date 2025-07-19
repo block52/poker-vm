@@ -10,13 +10,14 @@ import { Link } from "react-router-dom";
 import { formatBalance } from "./common/utils";
 import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types";
 import spinner from "../assets/spinning-circles.svg";
+import { uuid } from "crypto"
 
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
 const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 const ETHERSCAN_API_KEY = process.env.VITE_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
 const RPC_URL = process.env.VITE_MAINNET_RPC_URL || "https://mainnet.infura.io/v3/";
-const BITCOIN_PAYMENTS = process.env.VITE_BTCPAY_SERVER_URL;
+const BITCOIN_PAYMENTS = process.env.VITE_BTCPAY_SERVER_URL || "https://paymentservice.texashodl.net/api/v1/stores/5pbziTF6RNULeiQaUnfwPeFCMWWCWEH9fhyk7C6YX4EX";
 const CLUB_NAME = process.env.VITE_CLUB_NAME || "Block 52";
 
 // Add USDC contract ABI (just the transfer method)
@@ -246,11 +247,11 @@ const QRDeposit: React.FC = () => {
             };
 
             const payload = {
-                orderId: "test",
+                orderId: uuid(),
                 itemDesc: "Bitcoin Buy In",
                 metadata: {
-                    itemCode: "Texas Hodl BuyIn",
-                    orderUrl: "https://payments.texashodl.net",
+                    itemCode: `${CLUB_NAME} Buy In`,
+                    orderUrl: `${BITCOIN_PAYMENTS}/invoices`,
                     itemDesc: loggedInAccount
                 },
                 checkout: {
@@ -302,7 +303,7 @@ const QRDeposit: React.FC = () => {
                 orderId: "test",
                 itemDesc: "Bitcoin Buy In",
                 metadata: {
-                    itemCode: "Texas Hodl BuyIn",
+                    itemCode: `${process.env.VITE_CLUB_NAME} BuyIn`,
                     orderUrl: "https://payments.texashodl.net",
                     itemDesc: loggedInAccount
                 },
