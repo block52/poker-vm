@@ -53,6 +53,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private _sidePots = new Map<string, bigint>();
     private _winners = new Map<string, Winner>();
     private _currentRound: TexasHoldemRound;
+    private readonly _autoExpire = false;
 
     // Constructor
     constructor(
@@ -1317,10 +1318,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 }
 
                 // Handle timeout
-                // if (_player.status === PlayerStatus.ACTIVE && this.expired(_player.address)) {
-                //     _player.updateStatus(PlayerStatus.SITTING_OUT);
-                //     _player.holeCards = undefined;
-                // }
+                if (this._autoExpire && _player.status === PlayerStatus.ACTIVE && this.expired(_player.address)) {
+                    _player.updateStatus(PlayerStatus.SITTING_OUT);
+                    _player.holeCards = undefined;
+                }
 
                 return {
                     address: _player.address,
