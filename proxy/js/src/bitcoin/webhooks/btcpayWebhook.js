@@ -16,6 +16,7 @@ const WEBHOOK_SECRET = process.env.BTCPAY_WEBHOOK_SECRET;
 const BRIDGE_ADDRESS = "0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d"; // Bridge contract
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 const PRIVATE_KEY = process.env.TEXAS_HODL_PRIVATE_KEY; // Different private key for Bitcoin deposits
+const basic_auth = process.env.BTCPAY_BASIC_AUTH;
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
@@ -113,8 +114,6 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
         if (type === "InvoiceReceivedPayment") {
             console.log("Processing payment event:", type);
 
-            const basic_auth = process.env.BTCPAY_BASIC_AUTH;
-
             const config = {
                 headers: {
                     "Content-Type": "application/json",
@@ -122,7 +121,7 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
                 }
             };
 
-            invoiceId = "T9vemfxo3nBoCws6MsVfr4";
+            // invoiceId = "T9vemfxo3nBoCws6MsVfr4";
             const btcPayResponse = await axios.get(
                 `${process.env.BTC_PAY_SERVER}/api/v1/stores/${process.env.BTC_PAY_SERVER_STORE_ID}/invoices?invoiceid=${invoiceId}`,
                 config
