@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { formatBalance } from "./common/utils";
 import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types";
 import spinner from "../assets/spinning-circles.svg";
-import { uuid } from "crypto"
+import { randomUUID } from "crypto"
 
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
 const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
@@ -247,7 +247,7 @@ const QRDeposit: React.FC = () => {
             };
 
             const payload = {
-                orderId: uuid(),
+                orderId: randomUUID(),
                 itemDesc: "Bitcoin Buy In",
                 metadata: {
                     itemCode: `${CLUB_NAME} Buy In`,
