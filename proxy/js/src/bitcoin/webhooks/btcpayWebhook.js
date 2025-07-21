@@ -6,19 +6,20 @@ require("dotenv").config();
 // Import type definitions
 require("../../types/btcpay");
 const axios = require("axios");
-
 const router = express.Router();
 
-// BTCPay webhook configuration
-const WEBHOOK_SECRET = process.env.BTCPAY_WEBHOOK_SECRET;
 
 // Ethereum configuration for Bitcoin deposits (calls Bridge directly)
 const BRIDGE_ADDRESS = "0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d"; // Bridge contract
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
 const PRIVATE_KEY = process.env.TEXAS_HODL_PRIVATE_KEY; // Different private key for Bitcoin deposits
-const basic_auth = process.env.BTCPAY_BASIC_AUTH;
+
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+
+// BTCPay webhook configuration
+const basic_auth = process.env.BTCPAY_BASIC_AUTH;
+const WEBHOOK_SECRET = process.env.BTC_PAY_SERVER_WEBHOOK_SECRET || "";
 
 /**
  * Validates BTCPay webhook signature using HMAC-SHA256
@@ -103,8 +104,7 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
             }
         }
 
-        let { type, invoiceId, metadata } = req.body;
-        type = "InvoiceReceivedPayment";
+        const { type, invoiceId, metadata } = req.body;
 
         console.log("Event type:", type);
         console.log("Invoice ID:", invoiceId);
@@ -123,7 +123,7 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
 
             // invoiceId = "T9vemfxo3nBoCws6MsVfr4";
             const btcPayResponse = await axios.get(
-                `${process.env.BTC_PAY_SERVER}/api/v1/stores/${process.env.BTC_PAY_SERVER_STORE_ID}/invoices?invoiceid=${invoiceId}`,
+                `${process.env.BTC_PAY_SERVER}/api/v1/stores/${process.env.BTC_PAY_SERVER_STORE_ID}/invoices/${invoiceId}`,
                 config
             );
 
@@ -132,15 +132,25 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
                 return;
             }
 
-            const amount = "1"; //btcPayResponse.data.amount;
+            const amount = btcPayResponse.data?.paidAmount;
             console.log("BTC amount from payload:", amount);
+
+            if (!amount) {
+                res.status(500);
+                return;
+            }
 
             // Format USDC amount with 6 decimals (USDC has 6 decimal places)
             const usdcAmountFormatted = ethers.parseUnits(amount, 6);
             console.log("USDC amount formatted for contract:", usdcAmountFormatted.toString());
 
             // Call the Bridge contract directly with USDC amount
-            const block52Address = btcPayResponse.data?.address || "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
+            const block52Address = metadata?.itemDesc;
+            if (!block52Address) {
+                res.status("500");
+                return;
+            }
+
             const result = await callBridgeDeposit(block52Address, usdcAmountFormatted);
 
             if (result.success) {

@@ -15,11 +15,11 @@ import { v4 as uuidv4 } from "uuid";
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
 const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
-const ETHERSCAN_API_KEY = process.env.VITE_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
-const RPC_URL = process.env.VITE_MAINNET_RPC_URL || "https://mainnet.infura.io/v3/";
-const BITCOIN_PAYMENTS =
-    process.env.VITE_BTCPAY_SERVER_URL || "https://paymentservice.texashodl.net/api/v1/stores/5pbziTF6RNULeiQaUnfwPeFCMWWCWEH9fhyk7C6YX4EX";
-const CLUB_NAME = process.env.VITE_CLUB_NAME || "Block 52";
+const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
+const RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL;
+const BITCOIN_PAYMENTS = import.meta.env.VITE_BTCPAY_SERVER_URL;
+const basic_auth = import.meta.env.VITE_BTCPAY_BASIC_AUTH;
+const CLUB_NAME = import.meta.env.VITE_CLUB_NAME || "Block 52";
 
 // Add USDC contract ABI (just the transfer method)
 const USDC_ABI = [
@@ -238,7 +238,8 @@ const QRDeposit: React.FC = () => {
 
         if (BITCOIN_PAYMENTS) {
             const formData = new FormData(e.currentTarget);
-            const basic_auth = process.env.VITE_BTCPAY_BASIC_AUTH;
+
+            debugger;
 
             const config = {
                 headers: {

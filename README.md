@@ -148,8 +148,8 @@ console.log(`/table/YOUR_TABLE_ID?gameStart=${futureTime}`);
 ### Coordination Workflow
 
 1. **Create a table** through the normal process
-2. **Get the table ID** from the URL: `/table/0x123abc`
-3. **Add countdown parameter:** `/table/0x123abc?gameStart=2025-06-16T20:00:00Z`
+2. **Get the table ID** from the URL: `/table/0x00000`
+3. **Add countdown parameter:** `/table/0x00000?gameStart=2025-06-16T20:00:00Z`
 4. **Share this URL** with all testers
 5. **All players** see synchronized countdown
 6. **Modal disappears** when countdown reaches zero
@@ -162,6 +162,13 @@ console.log(`/table/YOUR_TABLE_ID?gameStart=${futureTime}`);
 - ✅ **Auto-cleanup** - removes URL parameter when done
 - ✅ **Dev skip button** - only shows in development mode
 - ✅ **Graceful fallback** - invalid dates are ignored
+
+
+### Enable Bitcoin Payments
+
+From the .env
+
+* BTC_PAY_SERVER_URL=http://localhost:3001
 
 
 # SDK
