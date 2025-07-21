@@ -48,7 +48,6 @@ import ProgressBar from "../common/ProgressBar";
 import PlayerPopUpCard from "./PlayerPopUpCard";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
-import { useParams } from "react-router-dom";
 import { useShowingCardsByAddress } from "../../../hooks/useShowingCardsByAddress";
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";

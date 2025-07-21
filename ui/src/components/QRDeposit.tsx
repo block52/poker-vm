@@ -9,13 +9,17 @@ import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
 import { Link } from "react-router-dom";
 import { formatBalance } from "./common/utils";
 import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types";
+import spinner from "../assets/spinning-circles.svg";
+import { v4 as uuidv4 } from "uuid";
 
 const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
 const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
-
-const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY || "6PJHUB57D1GDFJ4SHUI5ZRI2VU3944IQP2";
-const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
+const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
+const RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL;
+const BITCOIN_PAYMENTS = import.meta.env.VITE_BTCPAY_SERVER_URL;
+const basic_auth = import.meta.env.VITE_BTCPAY_BASIC_AUTH;
+const CLUB_NAME = import.meta.env.VITE_CLUB_NAME || "Block 52";
 
 // Add USDC contract ABI (just the transfer method)
 const USDC_ABI = [
@@ -62,6 +66,9 @@ const QRDeposit: React.FC = () => {
     const [progressPercentage, setProgressPercentage] = useState<number>(0);
     const [completionCountdown, setCompletionCountdown] = useState<number>(0);
     const [isDepositCompleted, setIsDepositCompleted] = useState<boolean>(false);
+
+    const [isBitcoinLoading, setIsBitcoinLoading] = useState<boolean>(false);
+    // const [usdcAmount, setUSDCAmount] = useState("100.00"); // Default value for USDC input
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -170,7 +177,6 @@ const QRDeposit: React.FC = () => {
             return;
         }
 
-
         const timer = setInterval(() => {
             setTimeLeft(prevTime => {
                 const newTime = prevTime - 1;
@@ -226,34 +232,136 @@ const QRDeposit: React.FC = () => {
         }
     }, [fetchWeb3Balance, web3Address]);
 
+    // Handle form submission for Bitcoin payments.
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if (BITCOIN_PAYMENTS) {
+            const formData = new FormData(e.currentTarget);
+
+            debugger;
+
+            const config = {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Basic ${basic_auth}`
+                }
+            };
+
+            const payload = {
+                orderId: uuidv4(),
+                itemDesc: "Bitcoin Buy In",
+                metadata: {
+                    itemCode: `${CLUB_NAME} Buy In`,
+                    orderUrl: `${BITCOIN_PAYMENTS}/invoices`,
+                    itemDesc: loggedInAccount
+                },
+                checkout: {
+                    speedPolicy: "HighSpeed",
+                    defaultPaymentMethod: "BTC-CHAIN",
+                    lazyPaymentMethods: true,
+                    expirationMinutes: 90,
+                    monitoringMinutes: 90,
+                    paymentTolerance: 0,
+                    redirectAutomatically: true
+                },
+                amount: formData.get("usdcAmount"),
+                currency: "USD"
+            };
+
+            try {
+                setIsBitcoinLoading(true);
+                const response = await axios.post(`${BITCOIN_PAYMENTS}/invoices`, payload, config);
+                setIsBitcoinLoading(false);
+                console.log("🔷 QRDeposit: Bitcoin payment response:", response.data);
+
+                // Navigate to the payment URL
+                if (response.data && response.data.checkoutLink) {
+                    window.location.href = response.data.checkoutLink;
+                }
+            } catch (error) {
+                console.error("🔷 QRDeposit: Bitcoin payment error:", error);
+            }
+        }
+    };
+
     const handleGenerateQR = async () => {
         if (!loggedInAccount) {
             setError("Please connect your wallet first");
             return;
         }
 
-        try {
-            const payload = {
-                userAddress: loggedInAccount,
-                depositAddress: DEPOSIT_ADDRESS
-            };
-            const response = await axios.post(`${PROXY_URL}/deposit-sessions`, payload);
+        if (BITCOIN_PAYMENTS) {
+            const basic_auth = process.env.VITE_BTCPAY_BASIC_AUTH;
 
-            setCurrentSession(response.data);
-            setSessionId(response.data._id);
-            setShowQR(true);
-            setTimeLeft(300); // 5 minutes
-            startPolling();
-            setError(null);
-            setTransactionStatus(null);
-            setProgressPercentage(0);
-        } catch (error: unknown) {
-            console.error("Failed to create deposit session:", error);
-            if (error && typeof error === "object" && "response" in error) {
-                const axiosError = error as { response?: { data?: { error?: string } } };
-                setError(axiosError.response?.data?.error || "Failed to create deposit session");
-            } else {
-                setError("Failed to create deposit session");
+            const config = {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Basic ${basic_auth}`
+                }
+            };
+
+            const payload = {
+                orderId: "test",
+                itemDesc: "Bitcoin Buy In",
+                metadata: {
+                    itemCode: `${process.env.VITE_CLUB_NAME} BuyIn`,
+                    orderUrl: "https://payments.texashodl.net",
+                    itemDesc: loggedInAccount
+                },
+                checkout: {
+                    speedPolicy: "HighSpeed",
+                    defaultPaymentMethod: "BTC-CHAIN",
+                    lazyPaymentMethods: true,
+                    expirationMinutes: 90,
+                    monitoringMinutes: 90,
+                    paymentTolerance: 0,
+                    redirectAutomatically: true
+                },
+                amount: "0", // Use the USDC amount entered by the user
+                currency: "USD"
+            };
+
+            try {
+                setIsBitcoinLoading(true);
+                const response = await axios.post(`${BITCOIN_PAYMENTS}/invoices`, payload, config);
+                setIsBitcoinLoading(false);
+                console.log("🔷 QRDeposit: Bitcoin payment response:", response.data);
+
+                // Navigate to the payment URL
+                if (response.data && response.data.checkoutLink) {
+                    window.location.href = response.data.checkoutLink;
+                }
+            } catch (error) {
+                console.error("🔷 QRDeposit: Bitcoin payment error:", error);
+            }
+        }
+
+        if (!BITCOIN_PAYMENTS) {
+            try {
+                const payload = {
+                    userAddress: loggedInAccount,
+                    depositAddress: DEPOSIT_ADDRESS
+                };
+
+                const response = await axios.post(`${PROXY_URL}/deposit-sessions`, payload);
+
+                setCurrentSession(response.data);
+                setSessionId(response.data._id);
+                setShowQR(true);
+                setTimeLeft(300); // 5 minutes
+                startPolling();
+                setError(null);
+                setTransactionStatus(null);
+                setProgressPercentage(0);
+            } catch (error: unknown) {
+                console.error("Failed to create deposit session:", error);
+                if (error && typeof error === "object" && "response" in error) {
+                    const axiosError = error as { response?: { data?: { error?: string } } };
+                    setError(axiosError.response?.data?.error || "Failed to create deposit session");
+                } else {
+                    setError("Failed to create deposit session");
+                }
             }
         }
     };
@@ -427,6 +535,7 @@ const QRDeposit: React.FC = () => {
 
                     if (response.data) {
                         setCurrentSession(response.data);
+
                         if (response.data.txStatus) {
                             setTransactionStatus(response.data.txStatus);
                         } else {
@@ -612,10 +721,12 @@ const QRDeposit: React.FC = () => {
                     <span>Back to Dashboard</span>
                 </Link>
 
-                <h1 className="text-2xl font-extrabold text-center text-white mb-6 mt-5">Deposit USDC in to Block52</h1>
+                <h1 className="text-2xl font-extrabold text-center text-white mb-6 mt-5">
+                    Deposit {BITCOIN_PAYMENTS ? "Bitcoin" : "USDC"} in to {CLUB_NAME}
+                </h1>
 
                 <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
-                    <p className="text-lg mb-2 text-white">Block 52 Balance:</p>
+                    <p className="text-lg mb-2 text-white">{CLUB_NAME} Balance:</p>
                     <p className="text-xl font-bold text-blue-400">${formatBalance(displayBalance || "0")} USDC</p>
                     {b52Nonce !== null && (
                         <p className="text-sm text-gray-300 mt-2 border-t border-gray-600 pt-2">
@@ -686,77 +797,94 @@ const QRDeposit: React.FC = () => {
                 )}
 
                 {/* Block52 Account Display */}
-                {!showQR && (
-                    <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
-                        <h2 className="text-lg font-semibold mb-2 text-white">Block52 Account</h2>
-                        <p className="text-sm text-gray-300 break-all">{b52Address || loggedInAccount || "Not logged in"}</p>
-                    </div>
-                )}
+                <form onSubmit={handleSubmit}>
+                    {!showQR && (
+                        <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
+                            <h2 className="text-lg font-semibold mb-2 text-white">Block52 Account</h2>
+                            <p className="text-sm text-gray-300 break-all">{b52Address || loggedInAccount || "Not logged in"}</p>
+                        </div>
+                    )}
 
-                {/* Generate QR / Main Content Area */}
-                {!showQR ? (
-                    <button
-                        onClick={handleGenerateQR}
-                        disabled={!loggedInAccount}
-                        className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300 shadow-md"
-                    >
-                        Generate Deposit QR Code
-                    </button>
-                ) : (
-                    <>
-                        {/* Only show QR if no transaction is in progress */}
-                        {!transactionStatus && (
-                            <>
-                                <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
-                                    <h2 className="text-lg font-semibold mb-2 text-white">Pay with USDC ERC20</h2>
-                                    <p className="text-sm text-gray-300 mb-4">Only send USDC using the Ethereum network</p>
-                                </div>
+                    {BITCOIN_PAYMENTS && (
+                        <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
+                            <p className="text-sm text-gray-300 mb-2">Amount in USD:</p>
+                            <input name="usdcAmount" type="text" placeholder="100.00" className="w-full p-2 bg-gray-800 text-white rounded-lg" />
+                        </div>
+                    )}
 
-                                {/* QR Code */}
-                                <div className="flex justify-center mb-6">
-                                    <div className="bg-white p-4 rounded-lg shadow-lg">
-                                        <QRCodeSVG value={`ethereum:${DEPOSIT_ADDRESS}`} size={200} level="H" />
+                    {/* Generate QR / Main Content Area */}
+                    {!showQR ? (
+                        <button
+                            onClick={handleGenerateQR}
+                            disabled={!loggedInAccount}
+                            className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition duration-300 shadow-md"
+                        >
+                            {BITCOIN_PAYMENTS ? "Pay with Bitcoin" : "Generate Deposit QR Code"}
+                            {isBitcoinLoading && <img src={spinner} />}
+                        </button>
+                    ) : (
+                        // <button
+                        //     type="submit"
+                        //     className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-md mt-4"
+                        // >
+                        //     {BITCOIN_PAYMENTS ? "Pay with Bitcoin" : "Generate Deposit QR Code"}
+                        //     {isBitcoinLoading && <img src={spinner} />}
+                        // </button>
+                        <>
+                            {/* Only show QR if no transaction is in progress */}
+                            {!transactionStatus && (
+                                <>
+                                    <div className="bg-gray-700/90 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
+                                        <h2 className="text-lg font-semibold mb-2 text-white">Pay with USDC ERC20</h2>
+                                        <p className="text-sm text-gray-300 mb-4">Only send USDC using the Ethereum network</p>
                                     </div>
-                                </div>
 
-                                {/* Payment Details */}
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-sm text-gray-400">Payment address</label>
-                                        <div
-                                            className="flex items-center justify-between bg-gray-700/90 p-2 rounded cursor-pointer border border-blue-500/10"
-                                            onClick={() => copyToClipboard(DEPOSIT_ADDRESS)}
-                                        >
-                                            <span className="text-sm text-white">{`${DEPOSIT_ADDRESS}`}</span>
+                                    {/* QR Code */}
+                                    <div className="flex justify-center mb-6">
+                                        <div className="bg-white p-4 rounded-lg shadow-lg">
+                                            <QRCodeSVG value={`ethereum:${DEPOSIT_ADDRESS}`} size={200} level="H" />
                                         </div>
                                     </div>
-                                </div>
-                            </>
-                        )}
 
-                        {/* Latest Transaction */}
-                        {latestTransaction && !transactionStatus && (
-                            <div className="mt-6">
-                                <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-lg font-semibold text-white">Latest Transaction</h3>
-                                    <span className={`text-xs ${isQuerying ? "text-green-400" : "text-gray-400"}`}>
-                                        {isQuerying ? "🔄 Checking for new transactions..." : "Last checked just now"}
-                                    </span>
+                                    {/* Payment Details */}
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-sm text-gray-400">Payment address</label>
+                                            <div
+                                                className="flex items-center justify-between bg-gray-700/90 p-2 rounded cursor-pointer border border-blue-500/10"
+                                                onClick={() => copyToClipboard(DEPOSIT_ADDRESS)}
+                                            >
+                                                <span className="text-sm text-white">{`${DEPOSIT_ADDRESS}`}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Latest Transaction */}
+                            {latestTransaction && !transactionStatus && (
+                                <div className="mt-6">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="text-lg font-semibold text-white">Latest Transaction</h3>
+                                        <span className={`text-xs ${isQuerying ? "text-green-400" : "text-gray-400"}`}>
+                                            {isQuerying ? "🔄 Checking for new transactions..." : "Last checked just now"}
+                                        </span>
+                                    </div>
+                                    <div className="bg-gray-700/90 p-3 rounded text-sm text-white border border-blue-500/10">
+                                        <p>
+                                            Hash: {latestTransaction.hash.slice(0, 10)}...{latestTransaction.hash.slice(-8)}
+                                        </p>
+                                        <p>Amount: {ethers.formatEther(latestTransaction.value)} ETH</p>
+                                        <p>
+                                            From: {latestTransaction.from.slice(0, 6)}...{latestTransaction.from.slice(-4)}
+                                        </p>
+                                        <p>Age: {new Date(Number(latestTransaction.timeStamp) * 1000).toLocaleString()}</p>
+                                    </div>
                                 </div>
-                                <div className="bg-gray-700/90 p-3 rounded text-sm text-white border border-blue-500/10">
-                                    <p>
-                                        Hash: {latestTransaction.hash.slice(0, 10)}...{latestTransaction.hash.slice(-8)}
-                                    </p>
-                                    <p>Amount: {ethers.formatEther(latestTransaction.value)} ETH</p>
-                                    <p>
-                                        From: {latestTransaction.from.slice(0, 6)}...{latestTransaction.from.slice(-4)}
-                                    </p>
-                                    <p>Age: {new Date(Number(latestTransaction.timeStamp) * 1000).toLocaleString()}</p>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
+                            )}
+                        </>
+                    )}
+                </form>
 
                 {/* Web3 Wallet Connection Section - Now placed below as alternative */}
                 <div className="mt-8 pt-6 border-t border-gray-700">
