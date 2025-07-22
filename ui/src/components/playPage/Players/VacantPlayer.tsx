@@ -107,10 +107,17 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 return;
             }
 
-            const storedAmount = localStorage.getItem("buy_in_amount");
-            if (!storedAmount) {
-                setJoinError("Missing buy-in amount");
-                return;
+            let buyInAmount = localStorage.getItem("buy_in_amount");
+            if (!buyInAmount) {
+                // No saved amount, use max buy-in from game options
+                const maxBuyInWei = gameOptions?.maxBuyIn;
+                if (!maxBuyInWei) {
+                    setJoinError("Unable to determine buy-in amount");
+                    return;
+                }
+                // Convert from Wei to regular units and save it
+                buyInAmount = ethers.formatUnits(maxBuyInWei, 18);
+                localStorage.setItem("buy_in_amount", buyInAmount);
             }
 
             setIsJoining(true);
@@ -119,7 +126,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             try {
                 // Convert amount to Wei for the join function
-                const buyInWei = ethers.parseUnits(storedAmount, 18).toString();
+                const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
                 
                 // Use actual maxPlayers from game options, fallback to 9 if not available
                 const maxPlayers = gameOptions?.maxPlayers || 9;
@@ -143,7 +150,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxPlayers]);
+        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxPlayers, gameOptions?.maxBuyIn]);
+
 
         // Memoize container styles
         const containerStyle = useMemo(() => ({
