@@ -11,15 +11,23 @@ const router = express.Router();
 
 // Ethereum configuration for Bitcoin deposits (calls Bridge directly)
 const BRIDGE_ADDRESS = "0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d"; // Bridge contract
-const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
-const PRIVATE_KEY = process.env.TEXAS_HODL_PRIVATE_KEY; // Different private key for Bitcoin deposits
+const RPC_URL = process.env.RPC_URL;
+const TEXAS_HODL_PRIVATE_KEY = process.env.TEXAS_HODL_PRIVATE_KEY; // Different private key for Bitcoin deposits
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const wallet = new ethers.Wallet(TEXAS_HODL_PRIVATE_KEY, provider);
 
 // BTCPay webhook configuration
 const basic_auth = process.env.BTCPAY_BASIC_AUTH;
 const WEBHOOK_SECRET = process.env.BTC_PAY_SERVER_WEBHOOK_SECRET || "";
+
+// ERC-20 ABI (just the functions we need)
+const ERC20_ABI = [
+    "function approve(address spender, uint256 amount) external returns (bool)",
+    "function allowance(address owner, address spender) external view returns (uint256)",
+    "function balanceOf(address account) external view returns (uint256)",
+    "function decimals() external view returns (uint8)"
+];
 
 /**
  * Validates BTCPay webhook signature using HMAC-SHA256
@@ -39,6 +47,57 @@ function validateWebhookSignature(payload, signature, secret) {
         return false;
     }
 }
+
+// const callApproval = async (amount) => {
+//     try {
+        
+//         const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+//         const tokenContract = new ethers.Contract(USDC_ADDRESS, ERC20_ABI, wallet);
+
+//         // Check current allowance
+//         const currentAllowance = await tokenContract.allowance(wallet.address, spenderAddress);
+//         console.log(`Current allowance: ${ethers.formatUnits(currentAllowance, decimals)}`);
+
+//         console.log("Bridge deposit transaction sent:", tx.hash);
+//         return { success: true, hash: tx.hash };
+//     } catch (error) {
+//         console.error("Error calling bridge deposit:", error);
+//         return { success: false, error: error.message };
+//     }
+// }
+
+// /**
+//  * 
+//  * @param {*} amount 
+//  * @param {*} receiver 
+//  * @returns 
+//  */
+// const callDepositUnderlying = async (amount, receiver) => {
+//     try {
+        
+//         const abi = [
+//             {
+//                 inputs: [
+//                     { internalType: "uint256", name: "amount", type: "uint256" },
+//                     { internalType: "address", name: "receiver", type: "address" }
+//                 ],
+//                 name: "depositUnderlying",
+//                 outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+//                 stateMutability: "nonpayable",
+//                 type: "function"
+//             }
+//         ];
+
+//         const bridgeContract = new ethers.Contract(abi, ERC20_ABI, wallet);
+//         const tx = await bridgeContract.depositUnderlying(wallet.address, receiver);
+
+//         console.log("Bridge deposit transaction sent:", tx.hash);
+//         return { success: true, hash: tx.hash };
+//     } catch (error) {
+//         console.error("Error calling bridge deposit:", error);
+//         return { success: false, error: error.message };
+//     }
+// }
 
 /**
  * Calls the Bridge contract directly to deposit USDC
@@ -177,6 +236,14 @@ router.post("/", express.raw({ type: "application/json" }), async (req, res) => 
         console.error("Error processing webhook:", error);
         res.status(500).json({ error: "Internal server error" });
     }
+});
+
+router.post("/test", async (req, res) => {
+    const address = "0x2B6be678D732346c364c98905A285C938056b0A8";
+    const amount = ethers.parseUnits("10", 6);
+
+    const result = await callBridgeDeposit(address, amount);
+    console.log(result);
 });
 
 router.post("/create", async (req, res) => {
