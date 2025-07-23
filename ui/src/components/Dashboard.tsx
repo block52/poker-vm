@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react"; // Import React, useEffect, and useRef
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"; // Import React, useEffect, and useRef
 import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
 
 import "./Dashboard.css"; // Import the CSS file with animations
@@ -25,31 +25,83 @@ import {
     handlePasswordKeyPress as utilHandlePasswordKeyPress 
 } from "../utils/passwordProtectionUtils";
 
-// Add network display component
-const NetworkDisplay = ({ isMainnet = false }) => {
+// Club branding imports
+import defaultLogo from "../assets/YOUR_CLUB.png";
+import { colors, getAnimationGradient, getHexagonStroke, hexToRgba } from "../utils/colorConfig";
+
+// Add network display component - Memoized to prevent re-renders
+const NetworkDisplay = React.memo(({ isMainnet = false }: { isMainnet?: boolean }) => {
+    const containerStyle = useMemo(() => ({ 
+        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+    }), []);
+    
+    const dotStyle = useMemo(() => 
+        !isMainnet ? { backgroundColor: colors.brand.primary } : {}, 
+    [isMainnet]);
+    
     return (
-        <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-800/60 rounded-full text-xs border border-blue-500/20">
-            <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : "bg-blue-400"}`}></div>
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs" style={containerStyle}>
+            <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : ""}`}
+                 style={dotStyle}></div>
             <span className="text-gray-300">Block52 Chain</span>
         </div>
     );
-};
+});
+
+// Memoized Deposit button component
+const DepositButton = React.memo(() => {
+    const buttonStyle = useMemo(() => ({ 
+        background: `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)` 
+    }), []);
+    
+    return (
+        <Link
+            to="/qr-deposit"
+            className="block flex-1 text-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+            style={buttonStyle}
+        >
+            Deposit
+        </Link>
+    );
+});
+
+// Memoized Create New Table button component
+const CreateTableButton = React.memo(({ onClick }: { onClick: () => void }) => {
+    const buttonStyle = useMemo(() => ({ 
+        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)` 
+    }), []);
+    
+    const handleClick = useCallback(() => {
+        onClick();
+    }, [onClick]);
+    
+    return (
+        <button
+            onClick={handleClick}
+            className="block flex-1 text-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+            style={buttonStyle}
+        >
+            Create New Table
+        </button>
+    );
+});
 
 // Add hexagon pattern SVG background
-const HexagonPattern = () => {
+const HexagonPattern = React.memo(() => {
     return (
         <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
-                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
+                        <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" stroke={getHexagonStroke()} strokeWidth="0.6" fill="none" />
                     </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#hexagons)" />
             </svg>
         </div>
     );
-};
+});
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -113,13 +165,19 @@ const Dashboard: React.FC = () => {
         }
     }, []);
 
-    // Add effect to track mouse movement
+    // Add effect to track mouse movement - throttled to reduce re-renders
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!animationFrameRef.current) {
             animationFrameRef.current = requestAnimationFrame(() => {
-                const x = (e.clientX / window.innerWidth) * 100;
-                const y = (e.clientY / window.innerHeight) * 100;
-                setMousePosition({ x, y });
+                const x = Math.round((e.clientX / window.innerWidth) * 100);
+                const y = Math.round((e.clientY / window.innerHeight) * 100);
+                // Only update if position changed significantly (2% threshold)
+                setMousePosition(prev => {
+                    if (Math.abs(prev.x - x) > 2 || Math.abs(prev.y - y) > 2) {
+                        return { x, y };
+                    }
+                    return prev;
+                });
                 animationFrameRef.current = undefined;
             });
         }
@@ -258,6 +316,46 @@ const Dashboard: React.FC = () => {
 
     // CSS for disabled buttons
     const disabledButtonClass = "text-gray-300 bg-gradient-to-br from-gray-600 to-gray-700 cursor-not-allowed shadow-inner border border-gray-600/30";
+    
+    // Memoized background styles to prevent re-renders
+    const backgroundStyle1 = useMemo(() => ({
+        backgroundImage: getAnimationGradient(mousePosition.x, mousePosition.y),
+        backgroundColor: colors.table.bgBase,
+        filter: "blur(40px)",
+        transition: "all 0.3s ease-out"
+    }), [mousePosition.x, mousePosition.y]);
+    
+    const backgroundStyle2 = useMemo(() => ({
+        backgroundImage: `
+            repeating-linear-gradient(
+                ${45 + mousePosition.x / 10}deg,
+                ${hexToRgba(colors.animation.color2, 0.1)} 0%,
+                ${hexToRgba(colors.animation.color1, 0.1)} 25%,
+                ${hexToRgba(colors.animation.color4, 0.1)} 50%,
+                ${hexToRgba(colors.animation.color5, 0.1)} 75%,
+                ${hexToRgba(colors.animation.color2, 0.1)} 100%
+            )
+        `,
+        backgroundSize: "400% 400%",
+        animation: "gradient 15s ease infinite",
+        transition: "background 0.5s ease"
+    }), [mousePosition.x]);
+    
+    const backgroundStyle3 = useMemo(() => ({
+        backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${hexToRgba(colors.brand.primary, 0.1)} 25%, rgba(0,0,0,0) 50%, ${hexToRgba(colors.brand.primary, 0.1)} 75%, rgba(0,0,0,0) 100%)`,
+        backgroundSize: "200% 100%",
+        animation: "shimmer 8s infinite linear"
+    }), []);
+    
+    // Memoized card styles
+    const mainCardStyle = useMemo(() => ({
+        borderColor: hexToRgba(colors.brand.primary, 0.2)
+    }), []);
+    
+    const walletSectionStyle = useMemo(() => ({
+        backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
+        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+    }), []);
 
     useEffect(() => {
         setLimitTypeSelected("no-limit"); // Default when changing variant
@@ -271,24 +369,64 @@ const Dashboard: React.FC = () => {
             setTypeSelected("tournament");
         }
     };
+    
+    // Memoized hover handlers
+    const handleWalletMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
+    }, []);
+    
+    const handleWalletMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
+    }, []);
+    
+    // Memoized BuyInModal callbacks
+    const handleBuyInModalClose = useCallback(() => {
+        setShowBuyInModal(false);
+    }, []);
+    
+    const handleBuyInModalJoin = useCallback((buyInAmount: string, waitForBigBlind: boolean) => {
+        localStorage.setItem("buy_in_amount", buyInAmount);
+        localStorage.setItem("wait_for_big_blind", JSON.stringify(waitForBigBlind));
+        navigate(`/table/${buyInTableId}`);
+    }, [navigate, buyInTableId]);
+    
+    // Memoized Create Table callback
+    const handleCreateTableClick = useCallback(() => {
+        setShowCreateGameModal(true);
+    }, []);
+    
+    // Memoized Import Modal callback
+    const handleImportModalClick = useCallback(() => {
+        setShowImportModal(true);
+    }, []);
+    
+    // Memoized game selection callbacks
+    const handleCashGameClick = useCallback(() => {
+        handleGameType(GameType.CASH);
+    }, []);
+    
+    const handleTexasHoldemClick = useCallback(() => {
+        handleGameVariant(Variant.TEXAS_HOLDEM);
+    }, []);
+    
+    const handleHeadsUpClick = useCallback(() => {
+        handleSeat(2);
+    }, []);
+    
+    // Memoized Choose Table callback
+    const handleChooseTableClick = useCallback(() => {
+        if (games && games.length > 0) {
+            setShowBuyInModal(true);
+            setBuyInTableId(games[0].address);
+        }
+    }, [games]);
 
     return (
         <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
             {/* Background animations */}
             <div
                 className="fixed inset-0 z-0"
-                style={{
-                    backgroundImage: `
-                        radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
-                        radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%),
-                        radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
-                        radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%)
-                    `,
-                    backgroundColor: "#111827",
-                    filter: "blur(40px)",
-                    transition: "all 0.3s ease-out"
-                }}
+                style={backgroundStyle1}
             />
 
             {/* Add hexagon pattern overlay */}
@@ -297,41 +435,29 @@ const Dashboard: React.FC = () => {
             {/* Animated pattern overlay */}
             <div
                 className="fixed inset-0 z-0 opacity-20"
-                style={{
-                    backgroundImage: `
-                        repeating-linear-gradient(
-                            ${45 + mousePosition.x / 10}deg,
-                            rgba(42, 72, 143, 0.1) 0%,
-                            rgba(61, 89, 161, 0.1) 25%,
-                            rgba(30, 52, 107, 0.1) 50%,
-                            rgba(50, 79, 151, 0.1) 75%,
-                            rgba(42, 72, 143, 0.1) 100%
-                        )
-                    `,
-                    backgroundSize: "400% 400%",
-                    animation: "gradient 15s ease infinite",
-                    transition: "background 0.5s ease"
-                }}
+                style={backgroundStyle2}
             />
 
             {/* Moving light animation */}
             <div
                 className="fixed inset-0 z-0 opacity-30"
-                style={{
-                    backgroundImage:
-                        "linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%)",
-                    backgroundSize: "200% 100%",
-                    animation: "shimmer 8s infinite linear"
-                }}
+                style={backgroundStyle3}
             />
 
             {/* Password Protection Modal */}
             {!isAuthenticated && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                    <div className="bg-gray-800/90 backdrop-blur-md p-8 rounded-xl w-96 shadow-2xl border border-blue-400/20 relative overflow-hidden">
+                    <div className="backdrop-blur-md p-8 rounded-xl w-96 shadow-2xl relative overflow-hidden" style={{ 
+                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.9),
+                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                    }}>
                         {/* Web3 styled background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 rounded-xl"></div>
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 animate-pulse"></div>
+                        <div className="absolute inset-0 rounded-xl" style={{ 
+                            background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.1)} 0%, ${hexToRgba(colors.brand.secondary, 0.1)} 100%)`
+                        }}></div>
+                        <div className="absolute top-0 left-0 w-full h-1 animate-pulse" style={{ 
+                            background: `linear-gradient(90deg, ${colors.brand.primary}, ${colors.accent.glow}, ${colors.brand.primary})`
+                        }}></div>
                         
                         <div className="relative z-10">
                             <div className="flex items-center justify-center mb-4">
@@ -339,8 +465,11 @@ const Dashboard: React.FC = () => {
                             </div>
                             
                             <div className="flex items-center justify-center mb-6">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-blue-400/30">
-                                    <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{
+                                    background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.2)} 0%, ${hexToRgba(colors.brand.secondary, 0.2)} 100%)`,
+                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
+                                }}>
+                                    <svg className="w-8 h-8" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
                                 </div>
@@ -356,8 +485,15 @@ const Dashboard: React.FC = () => {
                                         placeholder="Enter password"
                                         value={passwordInput}
                                         onChange={e => setPasswordInput(e.target.value)}
-                                        onKeyPress={handlePasswordKeyPress}
-                                        className="w-full p-3 rounded-lg bg-gray-700/80 backdrop-blur-sm text-white border border-blue-500/30 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 pr-12"
+                                        onKeyDown={handlePasswordKeyPress}
+                                        className="w-full p-3 rounded-lg backdrop-blur-sm text-white focus:outline-none transition-all duration-200 pr-12"
+                                        style={{
+                                            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.8),
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`,
+                                            boxShadow: `0 0 0 2px ${hexToRgba(colors.brand.primary, 0.5)}`
+                                        }}
+                                        onFocus={(e) => e.target.style.border = `1px solid ${colors.brand.primary}`}
+                                        onBlur={(e) => e.target.style.border = `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`}
                                         autoFocus
                                     />
                                     <button
@@ -386,7 +522,17 @@ const Dashboard: React.FC = () => {
                                 
                                 <button
                                     onClick={handlePasswordSubmit}
-                                    className="w-full py-3 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20 font-semibold"
+                                    className="w-full py-3 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md font-semibold"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`,
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        (e.target as HTMLButtonElement).style.background = `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.9)} 0%, ${hexToRgba(colors.brand.primary, 0.7)} 100%)`;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        (e.target as HTMLButtonElement).style.background = `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`;
+                                    }}
                                 >
                                     <div className="flex items-center justify-center gap-2">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,7 +546,7 @@ const Dashboard: React.FC = () => {
                             <div className="mt-6 text-center">
                                 <p className="text-xs text-gray-400">Block52 Blockchain Infrastructure Demo</p>
                                 <div className="flex items-center justify-center gap-1 mt-2">
-                                    <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.brand.primary }}></div>
                                     <span className="text-xs text-gray-400">Secured by Block52</span>
                                 </div>
                             </div>
@@ -415,7 +561,7 @@ const Dashboard: React.FC = () => {
                     {/* Import Private Key Modal */}
                     {showImportModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                            <div className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20">
+                            <div className="p-6 rounded-xl w-96 shadow-2xl border" style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}>
                                 <h3 className="text-xl font-bold text-white mb-4">Import Private Key</h3>
                                 <div className="space-y-4">
                                     <input
@@ -439,7 +585,8 @@ const Dashboard: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={handleImportPrivateKey}
-                                            className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300 shadow-md"
+                                            className="px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
+                                            style={{ backgroundColor: colors.brand.primary }}
                                         >
                                             Import
                                         </button>
@@ -452,7 +599,7 @@ const Dashboard: React.FC = () => {
                     {/* Create New Game Modal */}
                     {showCreateGameModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                            <div className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20">
+                            <div className="p-6 rounded-xl w-96 shadow-2xl border" style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}>
                                 <h3 className="text-xl font-bold text-white mb-4">Create New Table</h3>
                                 <div className="space-y-4">
                                     <div>
@@ -487,9 +634,10 @@ const Dashboard: React.FC = () => {
                                         <button
                                             onClick={handleCreateNewGame}
                                             disabled={isCreatingTable || accountLoading}
-                                            className={`px-4 py-2 text-sm ${
-                                                isCreatingTable || accountLoading ? "bg-gray-500" : "bg-blue-600 hover:bg-blue-700"
-                                            } text-white rounded-lg transition duration-300 shadow-md flex items-center`}
+                                            className={`px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md flex items-center ${
+                                                isCreatingTable || accountLoading ? "bg-gray-500" : "hover:opacity-90"
+                                            }`}
+                                            style={isCreatingTable || accountLoading ? {} : { backgroundColor: colors.brand.primary }}
                                         >
                                             {isCreatingTable ? (
                                                 <>
@@ -520,14 +668,29 @@ const Dashboard: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="bg-gray-800/80 backdrop-blur-md p-10 rounded-xl shadow-2xl w-full max-w-xl border border-blue-400/20 z-10 transition-all duration-300 hover:shadow-blue-500/10">
+                    <div className="bg-gray-800/80 backdrop-blur-md p-10 rounded-xl shadow-2xl w-full max-w-xl border z-10 transition-all duration-300 hover:shadow-blue-500/10" style={mainCardStyle}>
+                        {/* Club Logo and Name */}
+                        <div className="flex flex-col items-center mb-6">
+                            <img 
+                                src={import.meta.env.VITE_CLUB_LOGO || defaultLogo} 
+                                alt="Club Logo" 
+                                className="w-24 h-24 object-contain mb-2"
+                            />
+                            <h2 className="text-2xl font-bold text-white opacity-90">
+                                {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                            </h2>
+                        </div>
+                        
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
                             <NetworkDisplay isMainnet={false} />
                         </div>
 
                         {/* Block52 Wallet Section */}
-                        <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
+                        <div className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300" 
+                             style={walletSectionStyle}
+                             onMouseEnter={handleWalletMouseEnter}
+                             onMouseLeave={handleWalletMouseLeave}>
                             <div className="flex items-center gap-2 mb-2">
                                 <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
                                 <div className="relative group">
@@ -544,12 +707,15 @@ const Dashboard: React.FC = () => {
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 border border-blue-500/20">
-                                        <h3 className="text-blue-400 font-bold mb-2">Layer 2 Gaming Wallet</h3>
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20" style={{
+                                        backgroundColor: colors.ui.bgDark,
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                    }}>
+                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>Layer 2 Gaming Wallet</h3>
                                         <p className="mb-2">This is your Layer 2 gaming wallet, automatically created for you with no Web3 wallet required!</p>
                                         <p className="mb-2">You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.</p>
                                         <p>All your in-game funds are secured on the blockchain and can be withdrawn at any time.</p>
-                                        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+                                        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent" style={{ borderTopColor: colors.ui.bgDark }}></div>
                                     </div>
                                 </div>
                             </div>
@@ -561,8 +727,11 @@ const Dashboard: React.FC = () => {
                                             <span className="text-gray-400 text-xs mr-2">Address</span>
                                             <div className="flex-1"></div>
                                         </div>
-                                        <div className="flex items-center justify-between p-2 bg-gray-800/60 rounded-lg border border-blue-500/10">
-                                            <p className="font-mono text-blue-400 text-sm tracking-wider">{formatAddress(publicKey)}</p>
+                                        <div className="flex items-center justify-between p-2 rounded-lg" style={{
+                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                        }}>
+                                            <p className="font-mono text-sm tracking-wider" style={{ color: colors.brand.primary }}>{formatAddress(publicKey)}</p>
                                             <div className="flex items-center">
                                                 <button
                                                     onClick={() => {
@@ -571,7 +740,7 @@ const Dashboard: React.FC = () => {
                                                     className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
                                                     title="Copy address"
                                                 >
-                                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
@@ -584,10 +753,13 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between p-3 bg-gray-800/60 rounded-lg border border-blue-500/10">
+                                    <div className="flex items-center justify-between p-3 rounded-lg" style={{
+                                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                    }}>
                                         <div className="flex items-center">
-                                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
-                                                <span className="text-blue-400 font-bold">$</span>
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}>
+                                                <span className="font-bold" style={{ color: colors.brand.primary }}>$</span>
                                             </div>
                                             <div>
                                                 <p className="text-white text-sm font-bold">USDC</p>
@@ -608,7 +780,7 @@ const Dashboard: React.FC = () => {
                                             </p>
                                             <button
                                                 onClick={() => setShowPrivateKey(!showPrivateKey)}
-                                                className="text-xs text-blue-400 hover:text-blue-300 transition duration-300"
+                                                className="text-xs transition duration-300 hover:opacity-80" style={{ color: colors.brand.primary }}
                                             >
                                                 {showPrivateKey ? "Hide Private Key" : "Show Private Key"}
                                             </button>
@@ -624,7 +796,7 @@ const Dashboard: React.FC = () => {
                                                     className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
                                                     title="Copy private key"
                                                 >
-                                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
@@ -637,23 +809,14 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     )}
                                     <div className="flex gap-2 pt-2">
-                                        <Link
-                                            to="/qr-deposit"
-                                            className="block flex-1 text-center text-white bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
-                                        >
-                                            Deposit
-                                        </Link>
-                                        <button
-                                            onClick={() => setShowCreateGameModal(true)}
-                                            className="block flex-1 text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
-                                        >
-                                            Create New Table
-                                        </button>
+                                        <DepositButton />
+                                        <CreateTableButton onClick={handleCreateTableClick} />
                                     </div>
                                     <div className="mt-2 flex justify-center">
                                         <button
-                                            onClick={() => setShowImportModal(true)}
-                                            className="text-blue-400 hover:text-blue-300 text-sm underline transition duration-300"
+                                            onClick={handleImportModalClick}
+                                            className="text-sm underline transition duration-300 hover:opacity-80"
+                                            style={{ color: colors.brand.primary }}
                                         >
                                             Import Private Key
                                         </button>
@@ -663,7 +826,7 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Web3 Wallet Section */}
-                        <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300 opacity-80">
+                        <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:hexToRgba(colors.brand.primary, 0.2) transition-all duration-300 opacity-80">
                             <div className="flex items-center gap-2 mb-2">
                                 <h2 className="text-xl font-bold text-white">
                                     Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span>
@@ -682,12 +845,12 @@ const Dashboard: React.FC = () => {
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 border border-blue-500/20">
-                                        <h3 className="text-blue-400 font-bold mb-2">External Web3 Wallet</h3>
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 border hexToRgba(colors.brand.primary, 0.2)">
+                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>External Web3 Wallet</h3>
                                         <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
                                         <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
                                         <p>Having a connected wallet provides additional features and easier withdrawals in the future.</p>
-                                        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+                                        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent" style={{ borderTopColor: colors.ui.bgDark }}></div>
                                     </div>
                                 </div>
                             </div>
@@ -697,16 +860,21 @@ const Dashboard: React.FC = () => {
                                     <div className="flex items-center gap-2">
                                         <span className="text-gray-400 text-sm">Status:</span>
                                         <span
-                                            className={`text-xs px-2 py-0.5 rounded-full ${
-                                                isConnected ? "bg-green-500/20 text-green-400" : "bg-blue-500/10 text-blue-400"
-                                            }`}
+                                            className="text-xs px-2 py-0.5 rounded-full"
+                                            style={{
+                                                backgroundColor: isConnected ? hexToRgba(colors.accent.success, 0.2) : hexToRgba(colors.brand.primary, 0.1),
+                                                color: isConnected ? colors.accent.success : colors.brand.primary
+                                            }}
                                         >
                                             {isConnected ? "Connected" : "Not Connected"}
                                         </span>
                                     </div>
                                     {isConnected && address && (
-                                        <div className="flex items-center mt-2 bg-gray-800/40 rounded p-1.5 border border-blue-500/10">
-                                            <span className="font-mono text-blue-400 text-xs">{formatAddress(address)}</span>
+                                        <div className="flex items-center mt-2 rounded p-1.5" style={{
+                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                        }}>
+                                            <span className="font-mono text-xs" style={{ color: colors.brand.primary }}>{formatAddress(address)}</span>
                                             <button
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(address || "");
@@ -729,7 +897,8 @@ const Dashboard: React.FC = () => {
                                     {!isConnected ? (
                                         <button
                                             onClick={open}
-                                            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-gradient-to-br from-blue-500/70 to-blue-600/70 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 shadow-md"
+                                            className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
+                                            style={{ background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)` }}
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -758,14 +927,14 @@ const Dashboard: React.FC = () => {
 
                         {/* Available Games Section */}
                         {games && games.length > 0 && (
-                            <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300">
+                            <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:hexToRgba(colors.brand.primary, 0.2) transition-all duration-300">
                                 <h3 className="text-lg font-bold text-white mb-2">Available Tables</h3>
                                 <div className="space-y-3">
                                     {games.slice(0, 3).map((game, index) => (
                                         <div key={index} className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}>
+                                                    <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
@@ -778,9 +947,9 @@ const Dashboard: React.FC = () => {
                                                     <p className="text-gray-300 text-xs">Texas Hold'em</p>
                                                     <p className="text-gray-500 text-xs font-mono mb-1">{formatAddress(game.address)}</p>
                                                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-                                                        <span className="text-xs text-blue-400">Min: ${game.gameOptions?.minBuyIn ? formatBalance(game.gameOptions.minBuyIn) : "0.01"}</span>
-                                                        <span className="text-xs text-blue-400">Max: ${game.gameOptions?.maxBuyIn ? formatBalance(game.gameOptions.maxBuyIn) : "1.0"}</span>
-                                                        <span className="text-xs text-blue-400">Blinds: ${game.gameOptions?.smallBlind ? formatBalance(game.gameOptions.smallBlind) : "0.01"}/${game.gameOptions?.bigBlind ? formatBalance(game.gameOptions.bigBlind) : "0.02"}</span>
+                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>Min: ${game.gameOptions?.minBuyIn ? formatBalance(game.gameOptions.minBuyIn) : "0.01"}</span>
+                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>Max: ${game.gameOptions?.maxBuyIn ? formatBalance(game.gameOptions.maxBuyIn) : "1.0"}</span>
+                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>Blinds: ${game.gameOptions?.smallBlind ? formatBalance(game.gameOptions.smallBlind) : "0.01"}/${game.gameOptions?.bigBlind ? formatBalance(game.gameOptions.bigBlind) : "0.02"}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -790,7 +959,8 @@ const Dashboard: React.FC = () => {
                                                     setBuyInTableId(game.address);
                                                 }}
                                                 title="Join this table"
-                                                className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-300 shadow-md"
+                                                className="px-3 py-1 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
+                                                style={{ backgroundColor: colors.brand.primary }}
                                             >
                                                 Join Table
                                             </button>
@@ -799,7 +969,7 @@ const Dashboard: React.FC = () => {
                                 </div>
                                 {gamesLoading && (
                                     <div className="flex justify-center items-center py-3">
-                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderBottomColor: colors.brand.primary }}></div>
                                     </div>
                                 )}
                                 {gamesError && (
@@ -809,7 +979,7 @@ const Dashboard: React.FC = () => {
                                 )}
                                 {games.length > 3 && (
                                     <div className="mt-2 flex justify-center">
-                                        <button className="text-sm text-blue-400 hover:text-blue-300">
+                                        <button className="text-sm transition duration-300 hover:opacity-80" style={{ color: colors.brand.primary }}>
                                             View more tables ({games.length - 3} more)
                                         </button>
                                     </div>
@@ -895,10 +1065,12 @@ const Dashboard: React.FC = () => {
                             {/* Game options always visible */}
                             <div className="flex justify-between gap-6">
                                 <button
-                                    onClick={() => handleGameType(GameType.CASH)}
-                                    className={`text-white hover:bg-blue-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                        typeSelected === "cash" ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
-                                    }`}
+                                    onClick={handleCashGameClick}
+                                    className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
+                                    style={{ 
+                                        backgroundColor: typeSelected === "cash" ? colors.brand.primary : colors.ui.bgMedium,
+                                        opacity: typeSelected === "cash" ? 1 : 0.7
+                                    }}
                                 >
                                     Cash
                                 </button>
@@ -909,10 +1081,12 @@ const Dashboard: React.FC = () => {
 
                             <div className="flex justify-between gap-6">
                                 <button
-                                    onClick={() => handleGameVariant(Variant.TEXAS_HOLDEM)}
-                                    className={`text-white hover:bg-blue-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                        variantSelected === "texas-holdem" ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
-                                    }`}
+                                    onClick={handleTexasHoldemClick}
+                                    className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
+                                    style={{ 
+                                        backgroundColor: variantSelected === "texas-holdem" ? colors.brand.primary : colors.ui.bgMedium,
+                                        opacity: variantSelected === "texas-holdem" ? 1 : 0.7
+                                    }}
                                 >
                                     Texas Holdem
                                 </button>
@@ -928,9 +1102,11 @@ const Dashboard: React.FC = () => {
                                             setLimitTypeSelected(limit);
                                             // TODO: Wire limitTypeSelected into game creation logic
                                         }}
-                                        className={`text-white capitalize hover:bg-blue-700 rounded-xl py-3 px-4 w-[33%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                            limitTypeSelected === limit ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
-                                        }`}
+                                        className="text-white capitalize hover:opacity-90 rounded-xl py-3 px-4 w-[33%] text-center transition duration-300 transform hover:scale-105 shadow-md"
+                                        style={{ 
+                                            backgroundColor: limitTypeSelected === limit ? colors.brand.primary : colors.ui.bgMedium,
+                                            opacity: limitTypeSelected === limit ? 1 : 0.7
+                                        }}
                                     >
                                         {limit.replace("-", " ")}
                                     </button>
@@ -938,10 +1114,12 @@ const Dashboard: React.FC = () => {
                             </div>
                             <div className="flex justify-between gap-6">
                                 <button
-                                    onClick={() => handleSeat(2)}
-                                    className={`text-white hover:bg-blue-700 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md ${
-                                        seatSelected === 2 ? "bg-gradient-to-br from-blue-500 to-blue-600" : "bg-gray-600"
-                                    }`}
+                                    onClick={handleHeadsUpClick}
+                                    className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
+                                    style={{ 
+                                        backgroundColor: seatSelected === 2 ? colors.brand.primary : colors.ui.bgMedium,
+                                        opacity: seatSelected === 2 ? 1 : 0.7
+                                    }}
                                 >
                                     Heads Up
                                 </button>
@@ -955,12 +1133,13 @@ const Dashboard: React.FC = () => {
                             {games && games.length > 0 && (
                                 <div className="flex justify-between gap-6">
                                     <button
-                                        onClick={() => {
-                                            setShowBuyInModal(true);
-                                            setBuyInTableId(games[0].address);
-                                        }}
+                                        onClick={handleChooseTableClick}
                                         title="Join this table"
-                                        className="w-full block text-center text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20"
+                                        className="w-full block text-center text-white rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`,
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                        }}
                                     >
                                         Choose Table
                                     </button>
@@ -977,18 +1156,14 @@ const Dashboard: React.FC = () => {
                             <div className="text-left mb-1">
                                 <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
                             </div>
-                            <img src="/block52.png" alt="Block52 Logo" className="h-12 w-auto object-contain interaction-none" />
+                            <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                         </div>
                     </div>
                     {showBuyInModal && (
                         <BuyInModal
                             tableId={buyInTableId}
-                            onClose={() => setShowBuyInModal(false)}
-                            onJoin={(buyInAmount, waitForBigBlind) => {
-                                localStorage.setItem("buy_in_amount", buyInAmount);
-                                localStorage.setItem("wait_for_big_blind", JSON.stringify(waitForBigBlind));
-                                navigate(`/table/${buyInTableId}`);
-                            }}
+                            onClose={handleBuyInModalClose}
+                            onJoin={handleBuyInModalJoin}
                         />
                     )}
                 </>

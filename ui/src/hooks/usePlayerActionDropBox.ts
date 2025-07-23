@@ -12,38 +12,38 @@ export interface PlayerActionDisplay {
 // Map action types to display text using the actual enum values
 const ACTION_DISPLAY_MAP: Record<string, string> = {
   // Use PlayerActionType enum values
-  [PlayerActionType.BET]: 'BET',
-  [PlayerActionType.CALL]: 'CALL', 
-  [PlayerActionType.RAISE]: 'RAISE',
-  [PlayerActionType.FOLD]: 'FOLD',
-  [PlayerActionType.ALL_IN]: 'ALL IN',
-  [PlayerActionType.SMALL_BLIND]: 'POST SB',
-  [PlayerActionType.BIG_BLIND]: 'POST BB',
-  [PlayerActionType.CHECK]: 'CHECK',
-  [PlayerActionType.SHOW]: 'SHOW',
-  [PlayerActionType.MUCK]: 'MUCK',
-  [PlayerActionType.SIT_OUT]: 'SITTING OUT',
-  [PlayerActionType.SIT_IN]: 'SIT IN',
+  [PlayerActionType.BET]: "BET",
+  [PlayerActionType.CALL]: "CALL", 
+  [PlayerActionType.RAISE]: "RAISE",
+  [PlayerActionType.FOLD]: "FOLD",
+  [PlayerActionType.ALL_IN]: "ALL IN",
+  [PlayerActionType.SMALL_BLIND]: "POST SB",
+  [PlayerActionType.BIG_BLIND]: "POST BB",
+  [PlayerActionType.CHECK]: "CHECK",
+  [PlayerActionType.SHOW]: "SHOW",
+  [PlayerActionType.MUCK]: "MUCK",
+  [PlayerActionType.SIT_OUT]: "SITTING OUT",
+  [PlayerActionType.SIT_IN]: "SIT IN",
   
   // Non-player actions - we'll filter these out mostly
-  'join': 'JOINED',
-  'leave': 'LEFT',
-  'deal': 'DEAL',
-  'new-hand': 'NEW HAND',
+  "join": "JOINED",
+  "leave": "LEFT",
+  "deal": "DEAL",
+  "new-hand": "NEW HAND",
   
   // Status indicators (for potential future use)
-  'winner': 'WINNER'
+  "winner": "WINNER"
 };
 
 // Actions that should NOT trigger the display (too frequent/not relevant)
-const FILTERED_ACTIONS = ['join', 'deal', 'new-hand'];
+const FILTERED_ACTIONS = ["join", "deal", "new-hand"];
 
 // Format amount for display
 const formatActionAmount = (action: string, amount?: string): string => {
-  if (!amount || amount === '0') return '';
+  if (!amount || amount === "0") return "";
   
   const numAmount = parseFloat(amount);
-  if (numAmount === 0) return '';
+  if (numAmount === 0) return "";
   
   // Convert from wei to readable format (assuming 18 decimals)
   const formatted = (numAmount / Math.pow(10, 18)).toFixed(2);
@@ -55,8 +55,8 @@ export const usePlayerActionDropBox = (seatIndex: number): PlayerActionDisplay =
   const { previousActions, handNumber, actionCount } = useGameProgress();
   
   const [displayState, setDisplayState] = useState<PlayerActionDisplay>({
-    action: '',
-    amount: '',
+    action: "",
+    amount: "",
     isVisible: false,
     isAnimatingOut: false
   });
@@ -116,8 +116,8 @@ export const usePlayerActionDropBox = (seatIndex: number): PlayerActionDisplay =
     // If no action, hide the display
     if (!latestAction || !actionKey || !displayValues) {
       setDisplayState({
-        action: '',
-        amount: '',
+        action: "",
+        amount: "",
         isVisible: false,
         isAnimatingOut: false
       });
@@ -147,8 +147,8 @@ export const usePlayerActionDropBox = (seatIndex: number): PlayerActionDisplay =
         // Fully hide after animation completes (500ms animation)
         setTimeout(() => {
           setDisplayState({
-            action: '',
-            amount: '',
+            action: "",
+            amount: "",
             isVisible: false,
             isAnimatingOut: false
           });

@@ -1,9 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
 import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
 import { getAccountBalance } from "../../utils/b52AccountUtils";
+import { colors, getHexagonStroke } from "../../utils/colorConfig";
+
+// Memoized hexagon pattern component
+const HexagonPattern = React.memo(() => (
+    <div className="absolute inset-0 opacity-5 overflow-hidden pointer-events-none">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="hexagons-buyin" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
+                    <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" stroke={getHexagonStroke()} strokeWidth="0.6" fill="none" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hexagons-buyin)" />
+        </svg>
+    </div>
+));
 
 interface BuyInModalProps {
     tableId: string;
@@ -11,7 +26,7 @@ interface BuyInModalProps {
     onJoin: (buyInAmount: string, waitForBigBlind: boolean) => void;
 }
 
-const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => {
+const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, onJoin }) => {
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [, setIsBalanceLoading] = useState<boolean>(true);
     const [, setBalanceError] = useState<Error | null>(null);
@@ -35,6 +50,54 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
 
     const navigate = useNavigate();
     const balanceFormatted = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
+    
+    // Memoized styles to prevent re-renders
+    const modalStyle = useMemo(() => ({
+        backgroundColor: colors.ui.bgDark,
+        border: `1px solid ${colors.ui.borderColor}`
+    }), []);
+    
+    const dividerStyle = useMemo(() => ({
+        background: `linear-gradient(to right, transparent, ${colors.brand.primary}, transparent)`
+    }), []);
+    
+    const playableBalanceStyle = useMemo(() => ({
+        backgroundColor: colors.ui.bgDark + "/60",
+        border: `1px solid ${colors.ui.borderColor}`
+    }), []);
+    
+    const balanceIconStyle = useMemo(() => ({
+        backgroundColor: colors.brand.primary + "/20"
+    }), []);
+    
+    const selectStyle = useMemo(() => ({
+        backgroundColor: colors.ui.bgMedium,
+        border: `1px solid ${colors.ui.textSecondary}`
+    }), []);
+    
+    const buttonStyle = useMemo(() => ({
+        backgroundColor: colors.ui.bgMedium,
+        border: `1px solid ${colors.ui.borderColor}`
+    }), []);
+    
+    const inputStyle = useMemo(() => ({
+        backgroundColor: colors.ui.bgMedium,
+        border: `1px solid ${colors.ui.textSecondary}`
+    }), []);
+    
+    const checkboxStyle = useMemo(() => ({
+        accentColor: colors.brand.primary,
+        backgroundColor: colors.ui.bgMedium,
+        borderColor: colors.ui.textSecondary
+    }), []);
+    
+    const joinButtonGradient = useMemo(() => 
+        `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`,
+    []);
+    
+    const joinButtonGradientHover = useMemo(() => 
+        `linear-gradient(to bottom right, ${colors.brand.primary}aa, ${colors.brand.secondary}aa)`,
+    []);
 
     const fetchAccountBalance = async () => {
         try {
@@ -63,13 +126,50 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
         }
     }, [publicKey]);
 
-    const handleBuyInChange = (amount: string) => {
+    // Memoized event handlers
+    const handleBuyInChange = useCallback((amount: string) => {
         setBuyInAmount(amount);
         setBuyInError("");
         localStorage.setItem("buy_in_amount", amount);
-    };
+    }, []);
+    
+    const handleMaxClick = useCallback(() => {
+        handleBuyInChange(maxBuyInFormatted);
+    }, [maxBuyInFormatted, handleBuyInChange]);
+    
+    const handleMinClick = useCallback(() => {
+        handleBuyInChange(minBuyInFormatted);
+    }, [minBuyInFormatted, handleBuyInChange]);
+    
+    const handleButtonMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = colors.ui.textSecondary;
+    }, []);
+    
+    const handleButtonMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = colors.ui.bgMedium;
+    }, []);
+    
+    const handleInputFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+        e.currentTarget.style.borderColor = colors.brand.primary;
+    }, []);
+    
+    const handleInputBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+        e.currentTarget.style.borderColor = colors.ui.textSecondary;
+    }, []);
+    
+    const handleCancelMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = colors.ui.bgMedium;
+    }, []);
+    
+    const handleCancelMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = colors.ui.textSecondary;
+    }, []);
+    
+    const handleDepositClick = useCallback(() => {
+        navigate("/qr-deposit");
+    }, [navigate]);
 
-    const handleJoinClick = () => {
+    const handleJoinClick = useCallback(() => {
         try {
             const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
 
@@ -95,41 +195,44 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
         } catch (error) {
             setBuyInError("Invalid input amount.");
         }
-    };
+    }, [buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, balanceFormatted, waitForBigBlind, onJoin]);
 
     const isDisabled = balanceFormatted < parseFloat(minBuyInFormatted);
 
     return (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-            <div className="bg-gray-800/90 backdrop-blur-md p-8 rounded-xl shadow-2xl w-96 border border-blue-400/20 overflow-hidden relative">
+            <div 
+                className="p-8 rounded-xl shadow-2xl w-96 overflow-hidden relative"
+                style={modalStyle}
+            >
                 {/* Hexagon pattern background */}
-                <div className="absolute inset-0 opacity-5 overflow-hidden pointer-events-none">
-                    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
-                                <path d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.6" fill="none" />
-                            </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#hexagons)" />
-                    </svg>
-                </div>
+                <HexagonPattern />
                 
                 <div className="absolute -right-8 -top-8 text-6xl opacity-10 rotate-12">♠</div>
                 <div className="absolute -left-8 -bottom-8 text-6xl opacity-10 -rotate-12">♥</div>
 
                 <h2 className="text-2xl font-bold mb-4 text-white flex items-center">
-                    <span className="text-blue-400 mr-2">♣</span>
+                    <span style={{ color: colors.brand.primary }} className="mr-2">♣</span>
                     Buy In
-                    <span className="text-red-400 ml-2">♦</span>
+                    <span style={{ color: colors.accent.danger }} className="ml-2">♦</span>
                 </h2>
-                <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent mb-4 opacity-50"></div>
+                <div 
+                    className="w-full h-0.5 mb-4 opacity-50"
+                    style={dividerStyle}
+                ></div>
 
                 {/* Playable Balance */}
-                <div className="mb-5 p-3 bg-gray-800/60 rounded-lg border border-blue-500/10">
-                    <p className="text-gray-400 text-sm mb-1">Playable Balance:</p>
+                <div 
+                    className="mb-5 p-3 rounded-lg"
+                    style={playableBalanceStyle}
+                >
+                    <p style={{ color: colors.ui.textSecondary }} className="text-sm mb-1">Playable Balance:</p>
                     <div className="flex items-center">
-                        <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center mr-2">
-                            <span className="text-blue-400 font-bold text-xs">$</span>
+                        <div 
+                            className="w-6 h-6 rounded-full flex items-center justify-center mr-2"
+                            style={balanceIconStyle}
+                        >
+                            <span style={{ color: colors.brand.primary }} className="font-bold text-xs">$</span>
                         </div>
                         <p className="text-white text-xl font-bold">{balanceFormatted.toFixed(2)}</p>
                     </div>
@@ -141,7 +244,8 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                     <select 
                         disabled 
                         value={stakeLabel} 
-                        className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-sm"
+                        className="w-full p-2 rounded text-white focus:outline-none text-sm"
+                        style={selectStyle}
                     >
                         <option>{stakeLabel}</option>
                     </select>
@@ -152,40 +256,50 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                     <label className="block text-gray-300 mb-2 font-medium text-sm">Select Buy-In Amount</label>
                     <div className="flex justify-between gap-2 mb-2">
                         <button 
-                            onClick={() => handleBuyInChange(maxBuyInFormatted)} 
-                            className="flex-1 py-2 text-sm text-white bg-gray-700 hover:bg-gray-600 rounded border border-blue-500/10 transition duration-200"
+                            onClick={handleMaxClick} 
+                            className="flex-1 py-2 text-sm text-white rounded transition duration-200"
+                            style={buttonStyle}
+                            onMouseEnter={handleButtonMouseEnter}
+                            onMouseLeave={handleButtonMouseLeave}
                         >
                             MAX
                             <br />
                             {maxBuyInFormatted}
                         </button>
                         <button 
-                            onClick={() => handleBuyInChange(minBuyInFormatted)} 
-                            className="flex-1 py-2 text-sm text-white bg-gray-700 hover:bg-gray-600 rounded border border-blue-500/10 transition duration-200"
+                            onClick={handleMinClick} 
+                            className="flex-1 py-2 text-sm text-white rounded transition duration-200"
+                            style={buttonStyle}
+                            onMouseEnter={handleButtonMouseEnter}
+                            onMouseLeave={handleButtonMouseLeave}
                         >
                             MIN
                             <br />
                             {minBuyInFormatted}
                         </button>
                         <div className="flex-1">
-                            <label className="text-xs text-gray-400 block mb-1 text-center">OTHER</label>
+                            <label style={{ color: colors.ui.textSecondary }} className="text-xs block mb-1 text-center">OTHER</label>
                             <input
                                 type="number"
                                 value={buyInAmount}
                                 onChange={e => handleBuyInChange(e.target.value)}
-                                className="w-full p-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                                className="w-full p-2 text-white rounded-lg text-sm text-center focus:outline-none"
+                                style={inputStyle}
+                                onFocus={handleInputFocus}
+                                onBlur={handleInputBlur}
                                 placeholder="0.00"
                             />
                         </div>
                     </div>
-                    {buyInError && <p className="text-red-400 mt-2">⚠️ {buyInError}</p>}
+                    {buyInError && <p style={{ color: colors.accent.danger }} className="mt-2">⚠️ {buyInError}</p>}
                 </div>
 
                 {/* Wait for Big Blind */}
                 <div className="flex items-center mb-6">
                     <input 
                         type="checkbox" 
-                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-offset-gray-800 mr-2"
+                        className="w-4 h-4 rounded mr-2"
+                        style={checkboxStyle}
                         checked={waitForBigBlind}
                         onChange={() => setWaitForBigBlind(!waitForBigBlind)} 
                     />
@@ -196,39 +310,60 @@ const BuyInModal: React.FC<BuyInModalProps> = ({ tableId, onClose, onJoin }) => 
                 <div className="flex justify-between space-x-4 mb-4">
                     <button 
                         onClick={onClose} 
-                        className="px-5 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-medium flex-1 transition-all duration-200"
+                        className="px-5 py-3 rounded-lg text-white font-medium flex-1 transition-all duration-200"
+                        style={{ backgroundColor: colors.ui.textSecondary }}
+                        onMouseEnter={handleCancelMouseEnter}
+                        onMouseLeave={handleCancelMouseLeave}
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleJoinClick}
                         disabled={isDisabled}
-                        className={`px-5 py-3 rounded-lg font-medium flex-1 ${
-                            isDisabled
-                                ? "bg-gray-500 cursor-not-allowed text-white"
-                                : "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-md hover:scale-[1.02] transition-all duration-200"
-                        }`}
+                        className="px-5 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200"
+                        style={{
+                            background: isDisabled 
+                                ? colors.ui.textSecondary 
+                                : joinButtonGradient,
+                            cursor: isDisabled ? "not-allowed" : "pointer"
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isDisabled) {
+                                e.currentTarget.style.transform = "scale(1.02)";
+                                e.currentTarget.style.background = joinButtonGradientHover;
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!isDisabled) {
+                                e.currentTarget.style.transform = "scale(1)";
+                                e.currentTarget.style.background = joinButtonGradient;
+                            }
+                        }}
                     >
                         Take My Seat
                     </button>
                 </div>
 
                 {isDisabled && (
-                    <div className="text-red-400 text-sm mb-4">
+                    <div style={{ color: colors.accent.danger }} className="text-sm mb-4">
                         Your available balance does not reach the minimum buy-in amount for this game. Please{" "}
-                        <span className="underline cursor-pointer text-blue-400 hover:text-blue-300" onClick={() => navigate("/qr-deposit")}>
+                        <span 
+                            className="underline cursor-pointer"
+                            style={{ color: colors.brand.primary }}
+                            onClick={handleDepositClick}
+                        >
                             deposit
                         </span>{" "}
                         to continue.
                     </div>
                 )}
 
-                <div className="text-xs text-gray-400">
+                <div style={{ color: colors.ui.textSecondary }} className="text-xs">
                     <strong>Please Note:</strong> This table has no all-in protection.
                 </div>
             </div>
         </div>
     );
-};
+});
 
 export default BuyInModal;

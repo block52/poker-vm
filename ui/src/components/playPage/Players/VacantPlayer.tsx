@@ -59,6 +59,7 @@ import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import { joinTable } from "../../../hooks/playerActions/joinTable";
 import { useGameOptions } from "../../../hooks/useGameOptions";
 import CustomDealer from "../../../assets/CustomDealer.svg";
+import { colors } from "../../../utils/colorConfig";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index, onJoin }) => {
@@ -190,7 +191,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                     <div className="flex justify-center mb-2">
                         <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
                     </div>
-                    <div className="text-white text-center">
+                    <div className="text-center" style={{ color: "white" }}>
                         <div className="text-lg sm:text-sm mb-1 whitespace-nowrap font-medium">{seatText.title}</div>
                         {seatText.subtitle && <div className="text-base sm:text-xs whitespace-nowrap">{seatText.subtitle}</div>}
                     </div>
@@ -231,25 +232,46 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                         onClick={() => !isJoining && setShowConfirmModal(false)}
                     >
                         <div
-                            className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20"
+                            className="p-6 rounded-xl w-96 shadow-2xl"
+                            style={{
+                                backgroundColor: colors.ui.bgDark,
+                                border: `1px solid ${colors.ui.borderColor}`
+                            }}
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-bold text-white mb-4">Join Seat {index}</h3>
+                            <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>Join Seat {index}</h3>
                             
                             {joinError && (
-                                <div className="mb-4 p-3 bg-red-900/30 text-red-200 rounded-lg text-sm border border-red-500/20">
+                                <div 
+                                    className="mb-4 p-3 rounded-lg text-sm"
+                                    style={{
+                                        backgroundColor: colors.accent.danger + "30",
+                                        color: colors.accent.danger + "aa",
+                                        border: `1px solid ${colors.accent.danger}20`
+                                    }}
+                                >
                                     {joinError}
                                 </div>
                             )}
                             
-                            <p className="text-gray-300 mb-6 text-center">
+                            <p className="mb-6 text-center" style={{ color: colors.ui.textSecondary + "dd" }}>
                                 Ready to join at seat {index}?
                             </p>
 
                             <div className="flex justify-center space-x-3">
                                 <button
                                     onClick={() => setShowConfirmModal(false)}
-                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
+                                    className="px-4 py-2 text-sm rounded-lg transition duration-300 shadow-inner"
+                                    style={{
+                                        backgroundColor: colors.ui.textSecondary,
+                                        color: "white"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = colors.ui.bgMedium;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = colors.ui.textSecondary;
+                                    }}
                                     disabled={isJoining}
                                 >
                                     Cancel
@@ -257,7 +279,24 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                 <button
                                     onClick={handleConfirmSeat}
                                     disabled={isJoining}
-                                    className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20 flex items-center"
+                                    className="px-4 py-2 text-sm rounded-lg transition duration-300 transform shadow-md flex items-center"
+                                    style={{
+                                        background: `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`,
+                                        color: "white",
+                                        border: `1px solid ${colors.brand.primary}20`
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!isJoining) {
+                                            e.currentTarget.style.transform = "scale(1.05)";
+                                            e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.primary}aa, ${colors.brand.secondary}aa)`;
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isJoining) {
+                                            e.currentTarget.style.transform = "scale(1)";
+                                            e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`;
+                                        }
+                                    }}
                                 >
                                     {isJoining ? (
                                         <>

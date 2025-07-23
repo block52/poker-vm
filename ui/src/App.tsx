@@ -10,6 +10,9 @@ import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import QRDeposit from "./components/QRDeposit";
 import { GameStateProvider } from "./context/GameStateContext";
+import { generateCSSVariables } from "./utils/colorConfig";
+import { useEffect } from "react";
+import FaviconSetter from "./components/FaviconSetter";
 
 const queryClient = new QueryClient();
 
@@ -31,8 +34,20 @@ createAppKit({
 
 // Main App content to be wrapped with providers
 function AppContent() {
+    // Inject CSS variables on mount
+    useEffect(() => {
+        const style = document.createElement("style");
+        style.innerHTML = generateCSSVariables();
+        document.head.appendChild(style);
+        
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
     return (
         <div className="bg-[#2c3245] min-h-screen">
+            <FaviconSetter />
             <Routes>
                 <Route path="/table/:id" element={<Table />} />
                 <Route path="/deposit" element={<Deposit />} />

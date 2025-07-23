@@ -51,6 +51,7 @@ import { usePlayerData } from "../../../hooks/usePlayerData";
 import { useShowingCardsByAddress } from "../../../hooks/useShowingCardsByAddress";
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
+import { colors } from "../../../utils/colorConfig";
 
 type OppositePlayerProps = {
     left?: string;
@@ -114,11 +115,12 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
             {/* Main player display */}
             <div
                 key={index}
-                className={`${opacityClass} absolute flex flex-col justify-center text-gray-600 w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
+                className={`${opacityClass} absolute flex flex-col justify-center w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
                 style={{
                     left: left,
                     top: top,
-                    transition: "top 1s ease, left 1s ease"
+                    transition: "top 1s ease, left 1s ease",
+                    color: colors.ui.textSecondary
                 }}
                 onClick={() => {
                     console.log("OppositePlayer clicked:", index);
@@ -146,7 +148,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                 </div>
                 <div className="relative flex flex-col justify-end mt-[-6px] mx-1">
                     <div
-                        style={{ backgroundColor: isWinner ? "#2c8a3c" : color }}
+                        style={{ backgroundColor: isWinner ? colors.accent.success : color }}
                         className={`b-[0%] mt-[auto] w-full h-[55px] shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${
                             isWinner 
                         }`}
@@ -154,20 +156,20 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                         {/* Progress bar is not shown in showdown */}
                         {!isWinner && round !== "showdown" && <ProgressBar index={index} />}
                         {!isWinner && isFolded && (
-                            <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">FOLD</span>
+                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>FOLD</span>
                         )}
                         {!isWinner && isAllIn && (
-                            <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
+                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
                                 ALL IN
                             </span>
                         )}
                         {isShowingCards && !isWinner && (
-                            <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
+                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
                                 SHOWING
                             </span>
                         )}
                         {isWinner && winnerAmount && (
-                            <span className="text-white font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base">
+                            <span className="font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base" style={{ color: "white" }}>
                                 WINS: {winnerAmount}
                             </span>
                         )}

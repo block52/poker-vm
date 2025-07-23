@@ -10,6 +10,7 @@ import type { PlayerProps } from "../../../types/index";
 import { useGameStateContext } from "../../../context/GameStateContext";
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
+import { colors } from "../../../utils/colorConfig";
 
 const Player: React.FC<PlayerProps> = memo(
   ({ left, top, index, currentIndex, color, status }) => {
@@ -124,21 +125,21 @@ const Player: React.FC<PlayerProps> = memo(
     const statusText = useMemo(() => {
       if (isWinner && winnerAmount) {
         return (
-          <span className="text-white font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base">
+          <span className="font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base" style={{ color: "white" }}>
             WINS: {winnerAmount}
           </span>
         );
       }
       if (isFolded) {
         return (
-          <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
+          <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
             FOLD
           </span>
         );
       }
       if (isAllIn) {
         return (
-          <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
+          <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
             ALL IN
           </span>
         );
@@ -159,7 +160,7 @@ const Player: React.FC<PlayerProps> = memo(
     // 8) status bar style (no pulse)
     const statusBarStyle = useMemo(
       () => ({
-        backgroundColor: isWinner ? "#2c8a3c" : color,
+        backgroundColor: isWinner ? colors.accent.success : color,
       }),
       [isWinner, color]
     );
@@ -172,8 +173,8 @@ const Player: React.FC<PlayerProps> = memo(
     return (
       <div
         key={index}
-        className={`${opacityClass} absolute flex flex-col justify-center text-gray-600 w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
-        style={containerStyle}
+        className={`${opacityClass} absolute flex flex-col justify-center w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
+        style={{ ...containerStyle, color: colors.ui.textSecondary }}
       >
         <div className="flex justify-center gap-1">{renderCards()}</div>
         <div className="relative flex flex-col justify-end mt-[-6px] mx-1s">

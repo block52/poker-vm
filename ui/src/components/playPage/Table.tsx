@@ -59,6 +59,7 @@ import WinAnimation from "./Animations/WinAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import defaultLogo from "../../assets/YOUR_CLUB.png";
+import { colors, getTableHeaderGradient, getHexagonStroke, hexToRgba } from "../../utils/colorConfig";
 
 // Use environment variable for club logo with fallback to default
 const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
@@ -73,6 +74,7 @@ import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtil
 import { ethers } from "ethers";
 
 import "./Table.css"; // Import the Table CSS file
+import ColorDebug from "../ColorDebug"; // Temporary debug component
 
 //// TODO get these hooks to subscribe to the wss connection
 
@@ -126,9 +128,18 @@ interface NetworkDisplayProps {
 
 // Memoize the NetworkDisplay component
 const NetworkDisplay = memo(({ isMainnet = false }: NetworkDisplayProps) => {
+    const networkStyle = useMemo(() => ({
+        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+    }), []);
+
+    const dotStyle = useMemo(() => 
+        !isMainnet ? { backgroundColor: colors.brand.primary } : {}
+    , [isMainnet]);
+
     return (
-        <div className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-1 bg-gray-800/60 rounded-lg text-[10px] sm:text-xs border border-blue-500/20">
-            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isMainnet ? "bg-green-500" : "bg-blue-400"}`}></div>
+        <div className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs" style={networkStyle}>
+            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isMainnet ? "bg-green-500" : ""}`} style={dotStyle}></div>
             <span className="text-gray-300 whitespace-nowrap">Block52 Chain</span>
         </div>
     );
@@ -255,6 +266,45 @@ const Table = React.memo(() => {
         [gameOptions]
     );
 
+    // Memoize all inline styles to prevent re-renders
+    const headerStyle = useMemo(() => ({
+        background: getTableHeaderGradient(),
+        borderColor: colors.table.borderColor
+    }), []);
+
+    const networkDisplayStyle = useMemo(() => ({
+        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+    }), []);
+
+    const walletInfoStyle = useMemo(() => ({
+        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+    }), []);
+
+    const balanceIconStyle = useMemo(() => ({
+        backgroundColor: hexToRgba(colors.brand.primary, 0.2)
+    }), []);
+
+    const depositButtonStyle = useMemo(() => ({
+        backgroundColor: colors.ui.bgMedium,
+        borderColor: hexToRgba(colors.brand.primary, 0.3),
+        color: colors.brand.primary
+    }), []);
+
+    const subHeaderStyle = useMemo(() => ({
+        background: getTableHeaderGradient()
+    }), []);
+
+    const sidebarToggleStyle = useMemo(() => ({
+        backgroundColor: openSidebar ? hexToRgba(colors.brand.primary, 0.3) : "transparent",
+        color: openSidebar ? "white" : colors.brand.primary
+    }), [openSidebar]);
+
+    const tableBoxShadowStyle = useMemo(() => ({
+        boxShadow: `0 7px 15px ${hexToRgba("#000000", 0.6)}`
+    }), []);
+
     // Add any variables we need
     const [seat, setSeat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
@@ -373,6 +423,47 @@ const Table = React.memo(() => {
     // Memoize formatted balance
     const balanceFormatted = useMemo(() => (accountBalance ? formatWeiToUSD(accountBalance) : "0.00"), [accountBalance]);
 
+    // Memoize expensive pot calculations
+    const potDisplayValues = useMemo(() => {
+        const totalPotCalculated = tableDataValues.tableDataPots?.[0] === "0"
+            ? "0.00"
+            : tableDataValues.tableDataPots
+                ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
+                .toFixed(2) || formattedTotalPot;
+
+        const mainPotCalculated = tableDataValues.tableDataPots?.[0] === "0"
+            ? "0.00"
+            : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2);
+
+        return {
+            totalPot: totalPotCalculated,
+            mainPot: mainPotCalculated
+        };
+    }, [tableDataValues.tableDataPots, formattedTotalPot]);
+
+    // Memoize community cards rendering
+    const communityCardsElements = useMemo(() => {
+        const communityCards = tableDataValues.tableDataCommunityCards || [];
+        
+        return Array.from({ length: 5 }).map((_, idx) => {
+            if (idx < communityCards.length) {
+                const card = communityCards[idx];
+                return (
+                    <div key={idx} className="card animate-fall">
+                        <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped />
+                    </div>
+                );
+            } else {
+                return (
+                    <div
+                        key={idx}
+                        className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
+                    />
+                );
+            }
+        });
+    }, [tableDataValues.tableDataCommunityCards]);
+
     // Memoize the component renderer
     const getComponentToRender = useCallback(
         (position: PositionArray, positionIndex: number) => {
@@ -422,6 +513,60 @@ const Table = React.memo(() => {
         navigator.clipboard.writeText(text);
     }, []);
 
+    // Memoize event handlers to prevent re-renders
+    const handleLobbyClick = useCallback(() => {
+        window.location.href = "/";
+    }, []);
+
+    const handleDepositClick = useCallback(() => {
+        window.location.href = "/qr-deposit";
+    }, []);
+
+    const handleDepositMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        e.currentTarget.style.borderColor = colors.brand.primary;
+        e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.1);
+    }, []);
+
+    const handleDepositMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.3);
+        e.currentTarget.style.backgroundColor = colors.ui.bgMedium;
+    }, []);
+
+    const handleLeaveTableMouseEnter = useCallback((e: React.MouseEvent<HTMLSpanElement>) => {
+        e.currentTarget.style.color = "white";
+    }, []);
+
+    const handleLeaveTableMouseLeave = useCallback((e: React.MouseEvent<HTMLSpanElement>) => {
+        e.currentTarget.style.color = colors.ui.textSecondary;
+    }, []);
+
+    const handleLeaveTableClick = useCallback(() => {
+        // Check player status
+        if (
+            tableDataValues.tableDataPlayers?.some(
+                (p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.SITTING_OUT
+            )
+        ) {
+            alert("You must fold your hand before leaving the table.");
+        } else {
+            // Get player's current stack if they are seated
+            const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
+
+            if (id && playerData) {
+                leaveTable(id, playerData.stack || "0")
+                    .then(() => {
+                        window.location.href = "/";
+                    })
+                    .catch((err: any) => {
+                        console.error("Error leaving table:", err);
+                        window.location.href = "/";
+                    });
+            } else {
+                window.location.href = "/";
+            }
+        }
+    }, [tableDataValues.tableDataPlayers, userWalletAddress, id]);
+
     if (tableDataValues.error) {
         console.error("Error loading table data:", tableDataValues.error);
         // Continue rendering instead of returning early
@@ -439,22 +584,23 @@ const Table = React.memo(() => {
 
     return (
         <div className="table-container">
+            {/* Temporary Color Debug Component */}
+            {/* <ColorDebug /> */}
+            
             {/*//! HEADER - CASINO STYLE */}
             <div className="flex-shrink-0">
-                <div className="w-[100vw] h-[50px] sm:h-[65px] bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2 border-[#3a546d]">
+                <div className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2" style={headerStyle}>
                     {/* Subtle animated background */}
                     <div className="absolute inset-0 z-0">
                         {/* Bottom edge glow */}
-                        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#64ffda] to-transparent opacity-50"></div>
+                        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent to-transparent opacity-50" style={{ backgroundImage: `linear-gradient(to right, transparent, ${colors.accent.glow}, transparent)` }}></div>
                     </div>
 
                     {/* Left Section - Lobby button and Network display */}
                     <div className="flex items-center space-x-2 sm:space-x-4 z-10">
                         <span
                             className="text-white text-sm sm:text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
-                            onClick={() => {
-                                window.location.href = "/";
-                            }}
+                            onClick={handleLobbyClick}
                         >
                             Lobby
                         </span>
@@ -463,18 +609,19 @@ const Table = React.memo(() => {
 
                     {/* Right Section - Wallet info - UPDATED to use NodeRpc balance */}
                     <div className="flex items-center z-10">
-                        <div className="flex items-center bg-gray-800/60 rounded-lg border border-blue-500/10 py-1 px-1 sm:px-2 mr-2 sm:mr-3">
+                        <div className="flex items-center rounded-lg py-1 px-1 sm:px-2 mr-2 sm:mr-3" style={walletInfoStyle}>
                             {isBalanceLoading ? (
                                 <span className="text-xs sm:text-sm">Loading...</span>
                             ) : (
                                 <>
                                     {/* Address */}
                                     <div className="flex items-center mr-2 sm:mr-4">
-                                        <span className="font-mono text-blue-400 text-[10px] sm:text-xs">
+                                        <span className="font-mono text-[10px] sm:text-xs" style={{ color: colors.brand.primary }}>
                                             {formattedAddress}
                                         </span>
                                         <FaCopy
-                                            className="ml-1 sm:ml-1.5 cursor-pointer text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                                            className="ml-1 sm:ml-1.5 cursor-pointer transition-colors duration-200 hover:opacity-80"
+                                            style={{ color: colors.brand.primary }}
                                             size={9}
                                             onClick={() => copyToClipboard(publicKey || "")}
                                             title="Copy full address"
@@ -483,8 +630,8 @@ const Table = React.memo(() => {
 
                                     {/* Balance - UPDATED to use direct utility */}
                                     <div className="flex items-center">
-                                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-blue-500/20 flex items-center justify-center mr-1 sm:mr-1.5">
-                                            <span className="text-blue-400 font-bold text-[8px] sm:text-[10px]">$</span>
+                                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center mr-1 sm:mr-1.5" style={balanceIconStyle}>
+                                            <span className="font-bold text-[8px] sm:text-[10px]" style={{ color: colors.brand.primary }}>$</span>
                                         </div>
                                         <div>
                                             <p className="text-white font-medium text-[10px] sm:text-xs">
@@ -496,7 +643,8 @@ const Table = React.memo(() => {
                                         <button
                                             onClick={fetchAccountBalance}
                                             disabled={isBalanceLoading}
-                                            className="ml-1 text-blue-400 hover:text-blue-300 transition-colors duration-200 disabled:opacity-50"
+                                            className="ml-1 transition-colors duration-200 disabled:opacity-50 hover:opacity-80"
+                                            style={{ color: colors.brand.primary }}
                                             title="Refresh balance"
                                         >
                                             <span className="text-[8px]">↻</span>
@@ -507,18 +655,19 @@ const Table = React.memo(() => {
                         </div>
 
                         <div
-                            className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 cursor-pointer bg-gradient-to-br from-[#2c3e50] to-[#1e293b] rounded-full shadow-md border border-[#3a546d] hover:border-[#ffffff] transition-all duration-300"
-                            onClick={() => {
-                                window.location.href = "/qr-deposit";
-                            }}
+                            className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 cursor-pointer rounded-full shadow-md border transition-all duration-300"
+                            style={depositButtonStyle}
+                            onClick={handleDepositClick}
+                            onMouseEnter={handleDepositMouseEnter}
+                            onMouseLeave={handleDepositMouseLeave}
                         >
-                            <RiMoneyDollarCircleLine className="text-[#ffffff] hover:scale-110 transition-transform duration-200" size={16} />
+                            <RiMoneyDollarCircleLine className="hover:scale-110 transition-transform duration-200" size={16} />
                         </div>
                     </div>
                 </div>
 
                 {/* SUB HEADER */}
-                <div className="bg-gradient-to-r from-[#1a2639] via-[#2a3f5f] to-[#1a2639] text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header">
+                <div className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header" style={subHeaderStyle}>
                     {/* Animated background overlay */}
                     <div className="sub-header-overlay shimmer-animation" />
 
@@ -529,17 +678,17 @@ const Table = React.memo(() => {
                     <div className="flex items-center z-20">
                         <div className="flex flex-col">
                             <div className="flex items-center space-x-1 sm:space-x-2">
-                                <span className="px-1 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
                                     ${formattedValues.smallBlindFormatted} / ${formattedValues.bigBlindFormatted}
                                 </span>
 
-                                <span className="px-1 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
                                     Hand #{handNumber}
                                 </span>
-                                <span className="hidden sm:inline-block px-2 py-1 rounded text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                <span className="hidden sm:inline-block text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
                                     <span className="ml-2">Actions # {actionCount}</span>
                                 </span>
-                                <span className="px-1 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-[15px] text-gradient bg-gradient-to-r from-blue-300 via-white to-blue-300">
+                                <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
                                     <span className="sm:ml-2">Seat {nextToAct}</span>
                                 </span>
                             </div>
@@ -549,9 +698,8 @@ const Table = React.memo(() => {
                     {/* Right Section */}
                     <div className="flex items-center z-10 mr-1 sm:mr-3">
                         <span
-                            className={`cursor-pointer transition-colors duration-200 px-1 sm:px-2 py-0.5 sm:py-1 rounded ${
-                                openSidebar ? "bg-blue-500/30 text-white" : "text-gray-400 hover:text-blue-400"
-                            }`}
+                            className="cursor-pointer transition-colors duration-200 px-1 sm:px-2 py-0.5 sm:py-1 rounded hover:opacity-80"
+                            style={sidebarToggleStyle}
                             onClick={onCloseSideBar}
                             title="Toggle Action Log"
                         >
@@ -560,33 +708,11 @@ const Table = React.memo(() => {
                         </span>
 
                         <span
-                            className="text-gray-400 text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 hover:text-white transition-colors duration-300 ml-2 sm:ml-3"
-                            onClick={() => {
-                                // Check player status
-                                if (
-                                    tableDataValues.tableDataPlayers?.some(
-                                        (p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.SITTING_OUT
-                                    )
-                                ) {
-                                    alert("You must fold your hand before leaving the table.");
-                                } else {
-                                    // Get player's current stack if they are seated
-                                    const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
-
-                                    if (id && playerData) {
-                                        leaveTable(id, playerData.stack || "0")
-                                            .then(() => {
-                                                window.location.href = "/";
-                                            })
-                                            .catch((err: any) => {
-                                                console.error("Error leaving table:", err);
-                                                window.location.href = "/";
-                                            });
-                                    } else {
-                                        window.location.href = "/";
-                                    }
-                                }
-                            }}
+                            className="text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 transition-colors duration-300 ml-2 sm:ml-3"
+                            style={{ color: colors.ui.textSecondary }}
+                            onMouseEnter={handleLeaveTableMouseEnter}
+                            onMouseLeave={handleLeaveTableMouseLeave}
+                            onClick={handleLeaveTableClick}
                             title="Return to Lobby"
                         >
                             <span className="hidden sm:inline">Leave Table</span>
@@ -607,7 +733,7 @@ const Table = React.memo(() => {
                                 <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
                                     <path
                                         d="M25,3.4 L45,17 L45,43.4 L25,56.7 L5,43.4 L5,17 L25,3.4 z"
-                                        stroke="rgba(59, 130, 246, 0.5)"
+                                        stroke={getHexagonStroke()}
                                         strokeWidth="0.6"
                                         fill="none"
                                     />
@@ -635,54 +761,28 @@ const Table = React.memo(() => {
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
                                 <div className="w-[900px] h-[450px] relative text-center block transform translate-y-[30px]">
                                     <div className="h-full flex align-center justify-center">
-                                        <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center shadow-[0_7px_15px_rgba(0,0,0,0.6)]">
+                                        <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center" style={tableBoxShadowStyle}>
                                             {/* //! Table */}
                                             <div className="table-logo">
                                                 <img src={clubLogo} alt="Club Logo" />
-                                                <div className="text-white text-sm mt-2 opacity-80">{clubName}</div>
                                             </div>
                                             <div className="flex flex-col items-center justify-center -mt-20">
                                                 <div className="pot-display">
                                                     Total Pot:
                                                     <span style={{ fontWeight: "700px" }}>
                                                         {" "}
-                                                        $
-                                                        {tableDataValues.tableDataPots?.[0] === "0"
-                                                            ? "0.00"
-                                                            : tableDataValues.tableDataPots
-                                                                  ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
-                                                                  .toFixed(2) || formattedTotalPot}
+                                                        ${potDisplayValues.totalPot}
                                                     </span>
                                                 </div>
                                                 <div className="pot-display-secondary">
                                                     Main Pot:
                                                     <span style={{ fontWeight: "700px" }}>
                                                         {" "}
-                                                        $
-                                                        {tableDataValues.tableDataPots?.[0] === "0"
-                                                            ? "0.00"
-                                                            : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2)}
+                                                        ${potDisplayValues.mainPot}
                                                     </span>
                                                 </div>
                                                 <div className="flex gap-2 mt-8">
-                                                    {Array.from({ length: 5 }).map((_, idx) => {
-                                                        const communityCards = tableDataValues.tableDataCommunityCards || [];
-                                                        if (idx < communityCards.length) {
-                                                            const card = communityCards[idx];
-                                                            return (
-                                                                <div key={idx} className="card animate-fall">
-                                                                    <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped />
-                                                                </div>
-                                                            );
-                                                        } else {
-                                                            return (
-                                                                <div
-                                                                    key={idx}
-                                                                    className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
-                                                                />
-                                                            );
-                                                        }
-                                                    })}
+                                                    {communityCardsElements}
                                                 </div>
                                             </div>
 
@@ -806,6 +906,13 @@ const Table = React.memo(() => {
                     onSkip={handleSkipCountdown}
                 />
             )}
+
+            {/* Club Name at Bottom Center */}
+            <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-10">
+                <div className="text-xs opacity-60" style={{ color: colors.ui.textSecondary, fontSize: "20px" }}>
+                    {clubName}
+                </div>
+            </div>
         </div>
     );
 });
