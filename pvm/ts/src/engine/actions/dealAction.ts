@@ -44,16 +44,6 @@ class DealAction extends BaseAction implements IAction {
             throw new Error("Big blind must be posted before dealing.");
         }
 
-        // 4. Dealer position check: In traditional poker, the dealer initiates the deal
-        // However, the small blind also commonly does this in online poker
-        const playerSeat = this.game.getPlayerSeatNumber(player.address);
-        const isDealer = playerSeat === this.game.dealerPosition;
-        const isSmallBlind = playerSeat === this.game.smallBlindPosition;
-        
-        if (!isDealer && !isSmallBlind) {
-            throw new Error("Only the dealer or small blind can initiate the deal.");
-        }
-
         return { minAmount: 0n, maxAmount: 0n };
     }
 
