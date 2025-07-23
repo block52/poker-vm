@@ -58,7 +58,11 @@ import TurnAnimation from "./Animations/TurnAnimation";
 import WinAnimation from "./Animations/WinAnimation";
 import { LuPanelLeftOpen } from "react-icons/lu";
 import { RiMoneyDollarCircleLine } from "react-icons/ri";
-import placeholderLogo from "../../assets/YOUR_CLUB.png";
+import defaultLogo from "../../assets/YOUR_CLUB.png";
+
+// Use environment variable for club logo with fallback to default
+const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
+const clubName = import.meta.env.VITE_CLUB_NAME || "Block 52";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
@@ -634,7 +638,8 @@ const Table = React.memo(() => {
                                         <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center shadow-[0_7px_15px_rgba(0,0,0,0.6)]">
                                             {/* //! Table */}
                                             <div className="table-logo">
-                                                <img src={placeholderLogo} alt="Placeholder Logo" />
+                                                <img src={clubLogo} alt="Club Logo" />
+                                                <div className="text-white text-sm mt-2 opacity-80">{clubName}</div>
                                             </div>
                                             <div className="flex flex-col items-center justify-center -mt-20">
                                                 <div className="pot-display">
