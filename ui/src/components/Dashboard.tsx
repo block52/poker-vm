@@ -564,7 +564,6 @@ const Dashboard: React.FC = () => {
                                         <div className="flex items-center justify-between p-2 bg-gray-800/60 rounded-lg border border-blue-500/10">
                                             <p className="font-mono text-blue-400 text-sm tracking-wider">{formatAddress(publicKey)}</p>
                                             <div className="flex items-center">
-                                                <span className="text-xs text-gray-400 mr-2">Nonce: {account?.nonce || 0}</span>
                                                 <button
                                                     onClick={() => {
                                                         navigator.clipboard.writeText(publicKey || "");
