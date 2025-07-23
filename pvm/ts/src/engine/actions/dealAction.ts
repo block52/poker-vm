@@ -9,8 +9,8 @@ class DealAction extends BaseAction implements IAction {
     }
 
     verify(player: Player): Range {
-        // Check base conditions (hand active, player's turn, player active)
-        super.verify(player);
+        // Any one can deal
+        // super.verify(player);
 
         // 6. Card state check: Make sure cards haven't been dealt already
         const anyPlayerHasCards = Array.from(this.game.players.values()).some(p => p !== null && p.holeCards !== undefined);
