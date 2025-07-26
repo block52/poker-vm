@@ -578,7 +578,7 @@ const Table = React.memo(() => {
         if (id) {
             subscribeToTable(id);
         }
-    }, [id]);
+    }, [id, subscribeToTable]);
 
 
 
