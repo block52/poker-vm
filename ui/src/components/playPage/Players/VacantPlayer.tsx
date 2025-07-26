@@ -63,7 +63,7 @@ import { colors } from "../../../utils/colorConfig";
 
 const VacantPlayer: React.FC<VacantPlayerProps> = memo(
     ({ left, top, index, onJoin }) => {
-        const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
+        const { isUserAlreadyPlaying, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
         const userAddress = localStorage.getItem("user_eth_public_key");
@@ -73,7 +73,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
         const [joinSuccess, setJoinSuccess] = useState(false);
-        const [joinResponse, setJoinResponse] = useState<any>(null);
+        const [, setJoinResponse] = useState<any>(null);
         const [isCardVisible, setIsCardVisible] = useState(false);
 
         const { dealerSeat } = useDealerPosition();
@@ -82,7 +82,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const isDealer = dealerSeat === index;
 
         // Memoize seat status checks
-        const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
 
         // Memoize handlers

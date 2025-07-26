@@ -43,7 +43,7 @@
  * - ActionsLog: Game history
  */
 
-import { useEffect, useState, useRef, useMemo, useCallback, memo } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import ActionsLog from "../ActionsLog";
@@ -64,6 +64,8 @@ import { colors, getTableHeaderGradient, getHexagonStroke, hexToRgba } from "../
 // Use environment variable for club logo with fallback to default
 const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
 const clubName = import.meta.env.VITE_CLUB_NAME || "Block 52";
+const randomSeat = import.meta.env.VITE_RANDOM_SEAT === "true" ? true : false;
+
 import { LuPanelLeftClose } from "react-icons/lu";
 import { useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
@@ -103,7 +105,6 @@ import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalA
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { getAccountBalance, getPublicKey, getFormattedAddress } from "../../utils/b52AccountUtils";
 import { PositionArray } from "../../types/index";
-import { motion } from "framer-motion";
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";

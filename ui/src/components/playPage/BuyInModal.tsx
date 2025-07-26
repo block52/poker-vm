@@ -21,16 +21,15 @@ const HexagonPattern = React.memo(() => (
 ));
 
 interface BuyInModalProps {
-    tableId: string;
     onClose: () => void;
     onJoin: (buyInAmount: string, waitForBigBlind: boolean) => void;
 }
 
-const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, onJoin }) => {
+const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) => {
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [, setIsBalanceLoading] = useState<boolean>(true);
     const [, setBalanceError] = useState<Error | null>(null);
-    const [publicKey, ] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
+    const [publicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
 
     const { minBuyInWei, maxBuyInWei } = useMinAndMaxBuyIns();
 
@@ -50,81 +49,98 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
 
     const navigate = useNavigate();
     const balanceFormatted = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
-    
+
     // Memoized styles to prevent re-renders
-    const modalStyle = useMemo(() => ({
-        backgroundColor: colors.ui.bgDark,
-        border: `1px solid ${colors.ui.borderColor}`
-    }), []);
-    
-    const dividerStyle = useMemo(() => ({
-        background: `linear-gradient(to right, transparent, ${colors.brand.primary}, transparent)`
-    }), []);
-    
-    const playableBalanceStyle = useMemo(() => ({
-        backgroundColor: colors.ui.bgDark + "/60",
-        border: `1px solid ${colors.ui.borderColor}`
-    }), []);
-    
-    const balanceIconStyle = useMemo(() => ({
-        backgroundColor: colors.brand.primary + "/20"
-    }), []);
-    
-    const selectStyle = useMemo(() => ({
-        backgroundColor: colors.ui.bgMedium,
-        border: `1px solid ${colors.ui.textSecondary}`
-    }), []);
-    
-    const buttonStyle = useMemo(() => ({
-        backgroundColor: colors.ui.bgMedium,
-        border: `1px solid ${colors.ui.borderColor}`
-    }), []);
-    
-    const inputStyle = useMemo(() => ({
-        backgroundColor: colors.ui.bgMedium,
-        border: `1px solid ${colors.ui.textSecondary}`
-    }), []);
-    
-    const checkboxStyle = useMemo(() => ({
-        accentColor: colors.brand.primary,
-        backgroundColor: colors.ui.bgMedium,
-        borderColor: colors.ui.textSecondary
-    }), []);
-    
-    const joinButtonGradient = useMemo(() => 
-        `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`,
-    []);
-    
-    const joinButtonGradientHover = useMemo(() => 
-        `linear-gradient(to bottom right, ${colors.brand.primary}aa, ${colors.brand.secondary}aa)`,
-    []);
+    const modalStyle = useMemo(
+        () => ({
+            backgroundColor: colors.ui.bgDark,
+            border: `1px solid ${colors.ui.borderColor}`
+        }),
+        []
+    );
 
-    const fetchAccountBalance = async () => {
-        try {
-            setIsBalanceLoading(true);
+    const dividerStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, transparent, ${colors.brand.primary}, transparent)`
+        }),
+        []
+    );
 
-            if (!publicKey) {
-                setBalanceError(new Error("No address available"));
-                setIsBalanceLoading(false);
-                return;
-            }
+    const playableBalanceStyle = useMemo(
+        () => ({
+            backgroundColor: colors.ui.bgDark + "/60",
+            border: `1px solid ${colors.ui.borderColor}`
+        }),
+        []
+    );
 
-            const balance = await getAccountBalance();
-            setAccountBalance(balance);
-            setBalanceError(null);
-        } catch (err) {
-            console.error("Error fetching account balance:", err);
-            setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
-        } finally {
-            setIsBalanceLoading(false);
-        }
-    };
+    const balanceIconStyle = useMemo(
+        () => ({
+            backgroundColor: colors.brand.primary + "/20"
+        }),
+        []
+    );
+
+    const selectStyle = useMemo(
+        () => ({
+            backgroundColor: colors.ui.bgMedium,
+            border: `1px solid ${colors.ui.textSecondary}`
+        }),
+        []
+    );
+
+    const buttonStyle = useMemo(
+        () => ({
+            backgroundColor: colors.ui.bgMedium,
+            border: `1px solid ${colors.ui.borderColor}`
+        }),
+        []
+    );
+
+    const inputStyle = useMemo(
+        () => ({
+            backgroundColor: colors.ui.bgMedium,
+            border: `1px solid ${colors.ui.textSecondary}`
+        }),
+        []
+    );
+
+    const checkboxStyle = useMemo(
+        () => ({
+            accentColor: colors.brand.primary,
+            backgroundColor: colors.ui.bgMedium,
+            borderColor: colors.ui.textSecondary
+        }),
+        []
+    );
+
+    const joinButtonGradient = useMemo(() => `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`, []);
+    const joinButtonGradientHover = useMemo(() => `linear-gradient(to bottom right, ${colors.brand.primary}aa, ${colors.brand.secondary}aa)`, []);
 
     useEffect(() => {
-        if (publicKey) {
-            fetchAccountBalance();
-        }
-    }, [publicKey]);
+        const fetchBalance = async () => {
+            try {
+                setIsBalanceLoading(true);
+
+                if (!publicKey) {
+                    setBalanceError(new Error("No address available"));
+                    setIsBalanceLoading(false);
+                    return;
+                }
+
+                const balance = await getAccountBalance();
+                setAccountBalance(balance);
+                setBalanceError(null);
+            } catch (err) {
+                console.error("Error fetching account balance:", err);
+                setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
+            } finally {
+                setIsBalanceLoading(false);
+            }
+        };
+
+        fetchBalance();
+    }, [publicKey]); // Only depend on publicKey directly
 
     // Memoized event handlers
     const handleBuyInChange = useCallback((amount: string) => {
@@ -132,39 +148,39 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
         setBuyInError("");
         localStorage.setItem("buy_in_amount", amount);
     }, []);
-    
+
     const handleMaxClick = useCallback(() => {
         handleBuyInChange(maxBuyInFormatted);
     }, [maxBuyInFormatted, handleBuyInChange]);
-    
+
     const handleMinClick = useCallback(() => {
         handleBuyInChange(minBuyInFormatted);
     }, [minBuyInFormatted, handleBuyInChange]);
-    
+
     const handleButtonMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = colors.ui.textSecondary;
     }, []);
-    
+
     const handleButtonMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = colors.ui.bgMedium;
     }, []);
-    
+
     const handleInputFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
         e.currentTarget.style.borderColor = colors.brand.primary;
     }, []);
-    
+
     const handleInputBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
         e.currentTarget.style.borderColor = colors.ui.textSecondary;
     }, []);
-    
+
     const handleCancelMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = colors.ui.bgMedium;
     }, []);
-    
+
     const handleCancelMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = colors.ui.textSecondary;
     }, []);
-    
+
     const handleDepositClick = useCallback(() => {
         navigate("/qr-deposit");
     }, [navigate]);
@@ -192,7 +208,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
             localStorage.setItem("wait_for_big_blind", JSON.stringify(waitForBigBlind));
 
             onJoin(buyInAmount, waitForBigBlind);
-        } catch (error) {
+        } catch {
             setBuyInError("Invalid input amount.");
         }
     }, [buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, balanceFormatted, waitForBigBlind, onJoin]);
@@ -201,38 +217,34 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
 
     return (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-            <div 
-                className="p-8 rounded-xl shadow-2xl w-96 overflow-hidden relative"
-                style={modalStyle}
-            >
+            <div className="p-8 rounded-xl shadow-2xl w-96 overflow-hidden relative" style={modalStyle}>
                 {/* Hexagon pattern background */}
                 <HexagonPattern />
-                
+
                 <div className="absolute -right-8 -top-8 text-6xl opacity-10 rotate-12">♠</div>
                 <div className="absolute -left-8 -bottom-8 text-6xl opacity-10 -rotate-12">♥</div>
 
                 <h2 className="text-2xl font-bold mb-4 text-white flex items-center">
-                    <span style={{ color: colors.brand.primary }} className="mr-2">♣</span>
+                    <span style={{ color: colors.brand.primary }} className="mr-2">
+                        ♣
+                    </span>
                     Buy In
-                    <span style={{ color: colors.accent.danger }} className="ml-2">♦</span>
+                    <span style={{ color: colors.accent.danger }} className="ml-2">
+                        ♦
+                    </span>
                 </h2>
-                <div 
-                    className="w-full h-0.5 mb-4 opacity-50"
-                    style={dividerStyle}
-                ></div>
+                <div className="w-full h-0.5 mb-4 opacity-50" style={dividerStyle}></div>
 
                 {/* Playable Balance */}
-                <div 
-                    className="mb-5 p-3 rounded-lg"
-                    style={playableBalanceStyle}
-                >
-                    <p style={{ color: colors.ui.textSecondary }} className="text-sm mb-1">Playable Balance:</p>
+                <div className="mb-5 p-3 rounded-lg" style={playableBalanceStyle}>
+                    <p style={{ color: colors.ui.textSecondary }} className="text-sm mb-1">
+                        Playable Balance:
+                    </p>
                     <div className="flex items-center">
-                        <div 
-                            className="w-6 h-6 rounded-full flex items-center justify-center mr-2"
-                            style={balanceIconStyle}
-                        >
-                            <span style={{ color: colors.brand.primary }} className="font-bold text-xs">$</span>
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2" style={balanceIconStyle}>
+                            <span style={{ color: colors.brand.primary }} className="font-bold text-xs">
+                                $
+                            </span>
                         </div>
                         <p className="text-white text-xl font-bold">{balanceFormatted.toFixed(2)}</p>
                     </div>
@@ -241,12 +253,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
                 {/* Stake Dropdown (now dynamic) */}
                 <div className="mb-6">
                     <label className="block text-gray-300 mb-1 font-medium text-sm">Select Stake</label>
-                    <select 
-                        disabled 
-                        value={stakeLabel} 
-                        className="w-full p-2 rounded text-white focus:outline-none text-sm"
-                        style={selectStyle}
-                    >
+                    <select disabled value={stakeLabel} className="w-full p-2 rounded text-white focus:outline-none text-sm" style={selectStyle}>
                         <option>{stakeLabel}</option>
                     </select>
                 </div>
@@ -255,8 +262,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
                 <div className="mb-6">
                     <label className="block text-gray-300 mb-2 font-medium text-sm">Select Buy-In Amount</label>
                     <div className="flex justify-between gap-2 mb-2">
-                        <button 
-                            onClick={handleMaxClick} 
+                        <button
+                            onClick={handleMaxClick}
                             className="flex-1 py-2 text-sm text-white rounded transition duration-200"
                             style={buttonStyle}
                             onMouseEnter={handleButtonMouseEnter}
@@ -266,8 +273,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
                             <br />
                             {maxBuyInFormatted}
                         </button>
-                        <button 
-                            onClick={handleMinClick} 
+                        <button
+                            onClick={handleMinClick}
                             className="flex-1 py-2 text-sm text-white rounded transition duration-200"
                             style={buttonStyle}
                             onMouseEnter={handleButtonMouseEnter}
@@ -278,7 +285,9 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
                             {minBuyInFormatted}
                         </button>
                         <div className="flex-1">
-                            <label style={{ color: colors.ui.textSecondary }} className="text-xs block mb-1 text-center">OTHER</label>
+                            <label style={{ color: colors.ui.textSecondary }} className="text-xs block mb-1 text-center">
+                                OTHER
+                            </label>
                             <input
                                 type="number"
                                 value={buyInAmount}
@@ -291,25 +300,29 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
                             />
                         </div>
                     </div>
-                    {buyInError && <p style={{ color: colors.accent.danger }} className="mt-2">⚠️ {buyInError}</p>}
+                    {buyInError && (
+                        <p style={{ color: colors.accent.danger }} className="mt-2">
+                            ⚠️ {buyInError}
+                        </p>
+                    )}
                 </div>
 
                 {/* Wait for Big Blind */}
                 <div className="flex items-center mb-6">
-                    <input 
-                        type="checkbox" 
+                    <input
+                        type="checkbox"
                         className="w-4 h-4 rounded mr-2"
                         style={checkboxStyle}
                         checked={waitForBigBlind}
-                        onChange={() => setWaitForBigBlind(!waitForBigBlind)} 
+                        onChange={() => setWaitForBigBlind(!waitForBigBlind)}
                     />
                     <label className="text-gray-300 text-sm">Wait for Big Blind</label>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex justify-between space-x-4 mb-4">
-                    <button 
-                        onClick={onClose} 
+                    <button
+                        onClick={onClose}
                         className="px-5 py-3 rounded-lg text-white font-medium flex-1 transition-all duration-200"
                         style={{ backgroundColor: colors.ui.textSecondary }}
                         onMouseEnter={handleCancelMouseEnter}
@@ -322,18 +335,16 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
                         disabled={isDisabled}
                         className="px-5 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200"
                         style={{
-                            background: isDisabled 
-                                ? colors.ui.textSecondary 
-                                : joinButtonGradient,
+                            background: isDisabled ? colors.ui.textSecondary : joinButtonGradient,
                             cursor: isDisabled ? "not-allowed" : "pointer"
                         }}
-                        onMouseEnter={(e) => {
+                        onMouseEnter={e => {
                             if (!isDisabled) {
                                 e.currentTarget.style.transform = "scale(1.02)";
                                 e.currentTarget.style.background = joinButtonGradientHover;
                             }
                         }}
-                        onMouseLeave={(e) => {
+                        onMouseLeave={e => {
                             if (!isDisabled) {
                                 e.currentTarget.style.transform = "scale(1)";
                                 e.currentTarget.style.background = joinButtonGradient;
@@ -347,11 +358,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ tableId, onClose, on
                 {isDisabled && (
                     <div style={{ color: colors.accent.danger }} className="text-sm mb-4">
                         Your available balance does not reach the minimum buy-in amount for this game. Please{" "}
-                        <span 
-                            className="underline cursor-pointer"
-                            style={{ color: colors.brand.primary }}
-                            onClick={handleDepositClick}
-                        >
+                        <span className="underline cursor-pointer" style={{ color: colors.brand.primary }} onClick={handleDepositClick}>
                             deposit
                         </span>{" "}
                         to continue.
