@@ -64,7 +64,6 @@ import { colors, getTableHeaderGradient, getHexagonStroke, hexToRgba } from "../
 // Use environment variable for club logo with fallback to default
 const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
 const clubName = import.meta.env.VITE_CLUB_NAME || "Block 52";
-const randomSeat = import.meta.env.VITE_RANDOM_SEAT === "true" ? true : false;
 
 import { LuPanelLeftClose } from "react-icons/lu";
 import { useParams } from "react-router-dom";
@@ -112,6 +111,7 @@ import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 // Game Start Countdown
 import GameStartCountdown from "./common/GameStartCountdown";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
+import SitInAndOutOptions from "./common/SitInAndOutOptions";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -853,6 +853,10 @@ const Table = React.memo(() => {
                         <div className="flex justify-end mr-3 mb-1">
                             {/* Debug feature removed - hand_strength is not part of PlayerDTO */}
                             {/* {userData && <span className="text-white bg-[#0c0c0c80] rounded-full px-2">{userData.hand_strength}</span>} */}
+                        </div>
+
+                        <div>
+                            <SitInAndOutOptions />
                         </div>
                     </div>
                     {/* Live Hand Strength Display */}
