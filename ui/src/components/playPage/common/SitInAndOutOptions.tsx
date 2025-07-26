@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
+import { sitOut } from "../../../hooks/playerActions/sitOut";
 
-const SitInAndOutOptions: React.FC = () => {
+const SitInAndOutOptions: React.FC<{ tableId: string }> = ({ tableId }) => {
     const [sitOutNextHand, setSitOutNextHand] = useState(false);
     const [sitOutNextBigBlind, setSitOutNextBigBlind] = useState(false);
 
@@ -8,23 +9,7 @@ const SitInAndOutOptions: React.FC = () => {
     const handleSitOutNextHand = useCallback(async (enabled: boolean) => {
         try {
             console.log(`Setting sit out next hand: ${enabled}`);
-
-            // Mock API call
-            const response = await fetch("/api/player/sit-out-next-hand", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    playerId: localStorage.getItem("user_eth_public_key"),
-                    sitOutNextHand: enabled
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to update sit out preference");
-            }
-
+            await sitOut(tableId);
             console.log(`Successfully ${enabled ? "enabled" : "disabled"} sit out next hand`);
 
             // Update local storage for persistence
@@ -34,7 +19,7 @@ const SitInAndOutOptions: React.FC = () => {
             // Revert the checkbox state on error
             setSitOutNextHand(!enabled);
         }
-    }, []);
+    }, [tableId]);
 
     // Mock function to handle sit out next big blind
     const handleSitOutNextBigBlind = useCallback(async (enabled: boolean) => {
