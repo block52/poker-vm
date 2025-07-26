@@ -128,13 +128,10 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 // Convert amount to Wei for the join function
                 const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
                 
-                // Use actual maxPlayers from game options, fallback to 9 if not available
-                const maxPlayers = gameOptions?.maxPlayers || 9;
-                
                 const response = await joinTable(tableId, {
                     buyInAmount: buyInWei,
                     seatNumber: index
-                }, maxPlayers);
+                });
                 
                 setJoinResponse(response);
                 setJoinSuccess(true);

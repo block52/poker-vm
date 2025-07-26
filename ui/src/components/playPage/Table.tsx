@@ -129,14 +129,15 @@ interface NetworkDisplayProps {
 
 // Memoize the NetworkDisplay component
 const NetworkDisplay = memo(({ isMainnet = false }: NetworkDisplayProps) => {
-    const networkStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-    }), []);
+    const networkStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+        }),
+        []
+    );
 
-    const dotStyle = useMemo(() => 
-        !isMainnet ? { backgroundColor: colors.brand.primary } : {}
-    , [isMainnet]);
+    const dotStyle = useMemo(() => (!isMainnet ? { backgroundColor: colors.brand.primary } : {}), [isMainnet]);
 
     return (
         <div className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 py-1 rounded-lg text-[10px] sm:text-xs" style={networkStyle}>
@@ -153,13 +154,13 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
-    
+
     // Game Start Countdown
     const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
-    
+
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
-    const [balanceError, setBalanceError] = useState<Error | null>(null);
+    const [, setBalanceError] = useState<Error | null>(null);
     const publicKey = getPublicKey();
 
     // Update to use the imported hook
@@ -193,7 +194,7 @@ const Table = React.memo(() => {
             // For desktop: original scaling
             calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
         }
-        
+
         return Math.min(calculatedScale, 2);
     }, []);
 
@@ -236,7 +237,7 @@ const Table = React.memo(() => {
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
 
     // Add the usePlayerSeatInfo hook
-    const { currentUserSeat, userDataBySeat } = usePlayerSeatInfo();
+    const { currentUserSeat } = usePlayerSeatInfo();
 
     // Add the useNextToActInfo hook
     const {
@@ -247,10 +248,8 @@ const Table = React.memo(() => {
         timeRemaining
     } = useNextToActInfo(id);
 
-
     // Add the useTableState hook to get table state properties
-    const { currentRound, formattedTotalPot, tableSize } = useTableState();
-
+    const { formattedTotalPot, tableSize } = useTableState();
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
@@ -268,46 +267,70 @@ const Table = React.memo(() => {
     );
 
     // Memoize all inline styles to prevent re-renders
-    const headerStyle = useMemo(() => ({
-        background: getTableHeaderGradient(),
-        borderColor: colors.table.borderColor
-    }), []);
+    const headerStyle = useMemo(
+        () => ({
+            background: getTableHeaderGradient(),
+            borderColor: colors.table.borderColor
+        }),
+        []
+    );
 
-    const networkDisplayStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-    }), []);
+    const networkDisplayStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+        }),
+        []
+    );
 
-    const walletInfoStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-    }), []);
+    const walletInfoStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+        }),
+        []
+    );
 
-    const balanceIconStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.brand.primary, 0.2)
-    }), []);
+    const balanceIconStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.brand.primary, 0.2)
+        }),
+        []
+    );
 
-    const depositButtonStyle = useMemo(() => ({
-        backgroundColor: colors.ui.bgMedium,
-        borderColor: hexToRgba(colors.brand.primary, 0.3),
-        color: colors.brand.primary
-    }), []);
+    const depositButtonStyle = useMemo(
+        () => ({
+            backgroundColor: colors.ui.bgMedium,
+            borderColor: hexToRgba(colors.brand.primary, 0.3),
+            color: colors.brand.primary
+        }),
+        []
+    );
 
-    const subHeaderStyle = useMemo(() => ({
-        background: getTableHeaderGradient()
-    }), []);
+    const subHeaderStyle = useMemo(
+        () => ({
+            background: getTableHeaderGradient()
+        }),
+        []
+    );
 
-    const sidebarToggleStyle = useMemo(() => ({
-        backgroundColor: openSidebar ? hexToRgba(colors.brand.primary, 0.3) : "transparent",
-        color: openSidebar ? "white" : colors.brand.primary
-    }), [openSidebar]);
+    const sidebarToggleStyle = useMemo(
+        () => ({
+            backgroundColor: openSidebar ? hexToRgba(colors.brand.primary, 0.3) : "transparent",
+            color: openSidebar ? "white" : colors.brand.primary
+        }),
+        [openSidebar]
+    );
 
-    const tableBoxShadowStyle = useMemo(() => ({
-        boxShadow: `0 7px 15px ${hexToRgba("#000000", 0.6)}`
-    }), []);
+    const tableBoxShadowStyle = useMemo(
+        () => ({
+            boxShadow: `0 7px 15px ${hexToRgba("#000000", 0.6)}`
+        }),
+        []
+    );
 
     // Add any variables we need
-    const [seat, setSeat] = useState<number>(0);
+    const [seat, ] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0);
 
     const [currentIndex, setCurrentIndex] = useState<number>(1);
@@ -328,8 +351,6 @@ const Table = React.memo(() => {
 
     // Use utility function for formatted address
     const formattedAddress = getFormattedAddress();
-
-
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
@@ -426,15 +447,14 @@ const Table = React.memo(() => {
 
     // Memoize expensive pot calculations
     const potDisplayValues = useMemo(() => {
-        const totalPotCalculated = tableDataValues.tableDataPots?.[0] === "0"
-            ? "0.00"
-            : tableDataValues.tableDataPots
-                ?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0)
-                .toFixed(2) || formattedTotalPot;
+        const totalPotCalculated =
+            tableDataValues.tableDataPots?.[0] === "0"
+                ? "0.00"
+                : tableDataValues.tableDataPots?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0).toFixed(2) ||
+                  formattedTotalPot;
 
-        const mainPotCalculated = tableDataValues.tableDataPots?.[0] === "0"
-            ? "0.00"
-            : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2);
+        const mainPotCalculated =
+            tableDataValues.tableDataPots?.[0] === "0" ? "0.00" : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2);
 
         return {
             totalPot: totalPotCalculated,
@@ -445,7 +465,7 @@ const Table = React.memo(() => {
     // Memoize community cards rendering
     const communityCardsElements = useMemo(() => {
         const communityCards = tableDataValues.tableDataCommunityCards || [];
-        
+
         return Array.from({ length: 5 }).map((_, idx) => {
             if (idx < communityCards.length) {
                 const card = communityCards[idx];
@@ -455,12 +475,7 @@ const Table = React.memo(() => {
                     </div>
                 );
             } else {
-                return (
-                    <div
-                        key={idx}
-                        className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]"
-                    />
-                );
+                return <div key={idx} className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]" />;
             }
         });
     }, [tableDataValues.tableDataCommunityCards]);
@@ -581,20 +596,24 @@ const Table = React.memo(() => {
         }
     }, [id, subscribeToTable]);
 
-
-
     return (
         <div className="table-container">
             {/* Temporary Color Debug Component */}
             {/* <ColorDebug /> */}
-            
+
             {/*//! HEADER - CASINO STYLE */}
             <div className="flex-shrink-0">
-                <div className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2" style={headerStyle}>
+                <div
+                    className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2"
+                    style={headerStyle}
+                >
                     {/* Subtle animated background */}
                     <div className="absolute inset-0 z-0">
                         {/* Bottom edge glow */}
-                        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent to-transparent opacity-50" style={{ backgroundImage: `linear-gradient(to right, transparent, ${colors.accent.glow}, transparent)` }}></div>
+                        <div
+                            className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent to-transparent opacity-50"
+                            style={{ backgroundImage: `linear-gradient(to right, transparent, ${colors.accent.glow}, transparent)` }}
+                        ></div>
                     </div>
 
                     {/* Left Section - Lobby button and Network display */}
@@ -631,8 +650,13 @@ const Table = React.memo(() => {
 
                                     {/* Balance - UPDATED to use direct utility */}
                                     <div className="flex items-center">
-                                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center mr-1 sm:mr-1.5" style={balanceIconStyle}>
-                                            <span className="font-bold text-[8px] sm:text-[10px]" style={{ color: colors.brand.primary }}>$</span>
+                                        <div
+                                            className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center mr-1 sm:mr-1.5"
+                                            style={balanceIconStyle}
+                                        >
+                                            <span className="font-bold text-[8px] sm:text-[10px]" style={{ color: colors.brand.primary }}>
+                                                $
+                                            </span>
                                         </div>
                                         <div>
                                             <p className="text-white font-medium text-[10px] sm:text-xs">
@@ -668,7 +692,10 @@ const Table = React.memo(() => {
                 </div>
 
                 {/* SUB HEADER */}
-                <div className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header" style={subHeaderStyle}>
+                <div
+                    className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header"
+                    style={subHeaderStyle}
+                >
                     {/* Animated background overlay */}
                     <div className="sub-header-overlay shimmer-animation" />
 
@@ -762,7 +789,10 @@ const Table = React.memo(() => {
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
                                 <div className="w-[900px] h-[450px] relative text-center block transform translate-y-[30px]">
                                     <div className="h-full flex align-center justify-center">
-                                        <div className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center" style={tableBoxShadowStyle}>
+                                        <div
+                                            className="z-20 relative flex flex-col w-[900px] h-[350px] left-1/2 top-0 transform -translate-x-1/2 text-center border-[3px] border-rgba(255, 255, 255, 0.2) border-solid rounded-full items-center justify-center"
+                                            style={tableBoxShadowStyle}
+                                        >
                                             {/* //! Table */}
                                             <div className="table-logo">
                                                 <img src={clubLogo} alt="Club Logo" />
@@ -770,21 +800,13 @@ const Table = React.memo(() => {
                                             <div className="flex flex-col items-center justify-center -mt-20">
                                                 <div className="pot-display">
                                                     Total Pot:
-                                                    <span style={{ fontWeight: "700px" }}>
-                                                        {" "}
-                                                        ${potDisplayValues.totalPot}
-                                                    </span>
+                                                    <span style={{ fontWeight: "700px" }}> ${potDisplayValues.totalPot}</span>
                                                 </div>
                                                 <div className="pot-display-secondary">
                                                     Main Pot:
-                                                    <span style={{ fontWeight: "700px" }}>
-                                                        {" "}
-                                                        ${potDisplayValues.mainPot}
-                                                    </span>
+                                                    <span style={{ fontWeight: "700px" }}> ${potDisplayValues.mainPot}</span>
                                                 </div>
-                                                <div className="flex gap-2 mt-8">
-                                                    {communityCardsElements}
-                                                </div>
+                                                <div className="flex gap-2 mt-8">{communityCardsElements}</div>
                                             </div>
 
                                             {/*//! CHIP */}
@@ -804,7 +826,6 @@ const Table = React.memo(() => {
                                                     </div>
                                                 );
                                             })}
-                                    
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
@@ -861,7 +882,7 @@ const Table = React.memo(() => {
                         You are seated at position {currentUserSeat}
                     </div>
                 )}
-                
+
                 {/* Add an indicator for whose turn it is */}
                 {nextToActSeat && isGameInProgress && (
                     <div className="text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm text-center">
@@ -869,13 +890,13 @@ const Table = React.memo(() => {
                             <span className="text-white">Your turn to act!</span>
                         ) : (
                             <span>
-                                Waiting for {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to
-                                act
+                                Waiting for{" "}
+                                {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to act
                             </span>
                         )}
                     </div>
                 )}
-                
+
                 {/* Show a message when the hand is over */}
                 {!isGameInProgress && tableActivePlayers.length > 0 && (
                     <div className="text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm text-center">
@@ -886,7 +907,9 @@ const Table = React.memo(() => {
 
             {/* Add a message for empty table if needed */}
             {tableActivePlayers.length === 0 && (
-                <div className="absolute top-28 right-4 text-white bg-black bg-opacity-50 p-2 sm:p-4 rounded text-xs sm:text-sm">Waiting for players to join...</div>
+                <div className="absolute top-28 right-4 text-white bg-black bg-opacity-50 p-2 sm:p-4 rounded text-xs sm:text-sm">
+                    Waiting for players to join...
+                </div>
             )}
 
             {/* Powered by Block52 */}
@@ -901,11 +924,7 @@ const Table = React.memo(() => {
 
             {/* Game Start Countdown Modal */}
             {showCountdown && gameStartTime && (
-                <GameStartCountdown 
-                    gameStartTime={gameStartTime}
-                    onCountdownComplete={handleCountdownComplete}
-                    onSkip={handleSkipCountdown}
-                />
+                <GameStartCountdown gameStartTime={gameStartTime} onCountdownComplete={handleCountdownComplete} onSkip={handleSkipCountdown} />
             )}
 
             {/* Club Name at Bottom Center */}

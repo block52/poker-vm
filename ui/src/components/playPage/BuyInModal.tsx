@@ -5,6 +5,46 @@ import { useNavigate } from "react-router-dom";
 import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
 import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, getHexagonStroke } from "../../utils/colorConfig";
+import { useVacantSeatData } from "../../hooks/useVacantSeatData";
+import { joinTable } from "../../hooks/playerActions/joinTable";
+import { join } from "path";
+
+// Move static styles outside component to avoid recreation
+const STATIC_STYLES = {
+    modal: {
+        backgroundColor: colors.ui.bgDark,
+        border: `1px solid ${colors.ui.borderColor}`
+    },
+    divider: {
+        background: `linear-gradient(to right, transparent, ${colors.brand.primary}, transparent)`
+    },
+    playableBalance: {
+        backgroundColor: colors.ui.bgDark + "/60",
+        border: `1px solid ${colors.ui.borderColor}`
+    },
+    balanceIcon: {
+        backgroundColor: colors.brand.primary + "/20"
+    },
+    select: {
+        backgroundColor: colors.ui.bgMedium,
+        border: `1px solid ${colors.ui.textSecondary}`
+    },
+    button: {
+        backgroundColor: colors.ui.bgMedium,
+        border: `1px solid ${colors.ui.borderColor}`
+    },
+    input: {
+        backgroundColor: colors.ui.bgMedium,
+        border: `1px solid ${colors.ui.textSecondary}`
+    },
+    checkbox: {
+        accentColor: colors.brand.primary,
+        backgroundColor: colors.ui.bgMedium,
+        borderColor: colors.ui.textSecondary
+    },
+    joinButtonGradient: `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`,
+    joinButtonGradientHover: `linear-gradient(to bottom right, ${colors.brand.primary}aa, ${colors.brand.secondary}aa)`
+};
 
 // Memoized hexagon pattern component
 const HexagonPattern = React.memo(() => (
@@ -21,102 +61,66 @@ const HexagonPattern = React.memo(() => (
 ));
 
 interface BuyInModalProps {
+    tableId?: string; // Optional tableId for joining specific table
     onClose: () => void;
     onJoin: (buyInAmount: string, waitForBigBlind: boolean) => void;
 }
 
-const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) => {
+const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tableId }) => {
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [, setIsBalanceLoading] = useState<boolean>(true);
     const [, setBalanceError] = useState<Error | null>(null);
-    const [publicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
-
-    const { minBuyInWei, maxBuyInWei } = useMinAndMaxBuyIns();
-
-    // Format the buy-in values using utility functions
-    const minBuyInFormatted = formatWeiToSimpleDollars(minBuyInWei);
-    const maxBuyInFormatted = formatWeiToSimpleDollars(maxBuyInWei);
-
-    // ──────────── derive big/small blind ────────────
-    // maxBuyIn = 100 × bigBlind  ⇒  bigBlind = maxBuyIn / 100
-    const bigBlind = parseFloat(maxBuyInFormatted) / 100;
-    const smallBlind = bigBlind / 2;
-    const stakeLabel = `$${smallBlind.toFixed(2)} / $${bigBlind.toFixed(2)}`;
-
-    const [buyInAmount, setBuyInAmount] = useState("" + maxBuyInFormatted);
     const [buyInError, setBuyInError] = useState("");
     const [waitForBigBlind, setWaitForBigBlind] = useState(true);
+    const [isJoiningRandomSeat, setIsJoiningRandomSeat] = useState(false);
 
+    // Get publicKey once and memoize it
+    const publicKey = useMemo(() => localStorage.getItem("user_eth_public_key") || undefined, []);
+
+    const { minBuyInWei, maxBuyInWei } = useMinAndMaxBuyIns();
+    const { emptySeatIndexes, isUserAlreadyPlaying } = useVacantSeatData();
     const navigate = useNavigate();
-    const balanceFormatted = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
 
-    // Memoized styles to prevent re-renders
-    const modalStyle = useMemo(
-        () => ({
-            backgroundColor: colors.ui.bgDark,
-            border: `1px solid ${colors.ui.borderColor}`
-        }),
-        []
-    );
+    // Memoize formatted values and calculations
+    const { minBuyInFormatted, maxBuyInFormatted, balanceFormatted, stakeLabel, minBuyInNumber, maxBuyInNumber } = useMemo(() => {
+        const minFormatted = formatWeiToSimpleDollars(minBuyInWei);
+        const maxFormatted = formatWeiToSimpleDollars(maxBuyInWei);
+        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
 
-    const dividerStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, transparent, ${colors.brand.primary}, transparent)`
-        }),
-        []
-    );
+        // Calculate stake label
+        const bigBlind = parseFloat(maxFormatted) / 100;
+        const smallBlind = bigBlind / 2;
+        const stake = `$${smallBlind.toFixed(2)} / $${bigBlind.toFixed(2)}`;
 
-    const playableBalanceStyle = useMemo(
-        () => ({
-            backgroundColor: colors.ui.bgDark + "/60",
-            border: `1px solid ${colors.ui.borderColor}`
-        }),
-        []
-    );
+        return {
+            minBuyInFormatted: minFormatted,
+            maxBuyInFormatted: maxFormatted,
+            balanceFormatted: balance,
+            stakeLabel: stake,
+            minBuyInNumber: parseFloat(minFormatted),
+            maxBuyInNumber: parseFloat(maxFormatted)
+        };
+    }, [minBuyInWei, maxBuyInWei, accountBalance]);
 
-    const balanceIconStyle = useMemo(
-        () => ({
-            backgroundColor: colors.brand.primary + "/20"
-        }),
-        []
-    );
+    // Initialize buyInAmount with maxBuyInFormatted
+    const [buyInAmount, setBuyInAmount] = useState(() => maxBuyInFormatted);
 
-    const selectStyle = useMemo(
-        () => ({
-            backgroundColor: colors.ui.bgMedium,
-            border: `1px solid ${colors.ui.textSecondary}`
-        }),
-        []
-    );
+    // Update buyInAmount when maxBuyInFormatted changes
+    useEffect(() => {
+        setBuyInAmount(maxBuyInFormatted);
+    }, [maxBuyInFormatted]);
 
-    const buttonStyle = useMemo(
-        () => ({
-            backgroundColor: colors.ui.bgMedium,
-            border: `1px solid ${colors.ui.borderColor}`
-        }),
-        []
-    );
+    // Memoize isDisabled calculation
+    const isDisabled = useMemo(() => {
+        return balanceFormatted < minBuyInNumber;
+    }, [balanceFormatted, minBuyInNumber]);
 
-    const inputStyle = useMemo(
-        () => ({
-            backgroundColor: colors.ui.bgMedium,
-            border: `1px solid ${colors.ui.textSecondary}`
-        }),
-        []
-    );
+    // Check if random seat join is available
+    const canJoinRandomSeat = useMemo(() => {
+        return !isUserAlreadyPlaying && emptySeatIndexes.length > 0 && !isDisabled && !isJoiningRandomSeat;
+    }, [isUserAlreadyPlaying, emptySeatIndexes.length, isDisabled, isJoiningRandomSeat]);
 
-    const checkboxStyle = useMemo(
-        () => ({
-            accentColor: colors.brand.primary,
-            backgroundColor: colors.ui.bgMedium,
-            borderColor: colors.ui.textSecondary
-        }),
-        []
-    );
-
-    const joinButtonGradient = useMemo(() => `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`, []);
-    const joinButtonGradientHover = useMemo(() => `linear-gradient(to bottom right, ${colors.brand.primary}aa, ${colors.brand.secondary}aa)`, []);
-
+    // Fetch balance effect
     useEffect(() => {
         const fetchBalance = async () => {
             try {
@@ -140,7 +144,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
         };
 
         fetchBalance();
-    }, [publicKey]); // Only depend on publicKey directly
+    }, [publicKey]);
 
     // Memoized event handlers
     const handleBuyInChange = useCallback((amount: string) => {
@@ -157,6 +161,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
         handleBuyInChange(minBuyInFormatted);
     }, [minBuyInFormatted, handleBuyInChange]);
 
+    // Simplified mouse event handlers
     const handleButtonMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = colors.ui.textSecondary;
     }, []);
@@ -199,7 +204,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
                 return;
             }
 
-            if (balanceFormatted < parseFloat(minBuyInFormatted)) {
+            if (balanceFormatted < minBuyInNumber) {
                 setBuyInError("Your available balance does not reach the minimum buy-in amount for this game. Please deposit to continue.");
                 return;
             }
@@ -211,13 +216,57 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
         } catch {
             setBuyInError("Invalid input amount.");
         }
-    }, [buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, balanceFormatted, waitForBigBlind, onJoin]);
+    }, [buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, balanceFormatted, minBuyInNumber, waitForBigBlind, onJoin]);
 
-    const isDisabled = balanceFormatted < parseFloat(minBuyInFormatted);
+    const handleRandomSeatJoin = useCallback(async () => {
+        try {
+            setBuyInError("");
+            setIsJoiningRandomSeat(true);
+
+            // Validate buy-in amount first
+            const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
+
+            if (BigInt(buyInWei) < BigInt(minBuyInWei)) {
+                setBuyInError(`Minimum buy-in is ${minBuyInFormatted}`);
+                return;
+            }
+
+            if (BigInt(buyInWei) > BigInt(maxBuyInWei)) {
+                setBuyInError(`Maximum buy-in is ${maxBuyInFormatted}`);
+                return;
+            }
+
+            if (balanceFormatted < minBuyInNumber) {
+                setBuyInError("Your available balance does not reach the minimum buy-in amount for this game. Please deposit to continue.");
+                return;
+            }
+
+            // Get a random empty seat
+            if (emptySeatIndexes.length === 0) {
+                setBuyInError("No empty seats available.");
+                return;
+            }
+
+            const joinOptions = {
+                buyInAmount: buyInWei,
+                seatNumber: undefined // Let the server handle random seat assignment
+            };
+
+            joinTable(tableId || ethers.ZeroAddress, joinOptions);
+
+            // Navigate to table
+            navigate(`/table/${tableId}`);
+        } catch (error) {
+            console.error("Error joining random seat:", error);
+            setBuyInError("Failed to join table. Please try again.");
+        } finally {
+            setIsJoiningRandomSeat(false);
+        }
+    }, [buyInAmount, minBuyInWei, maxBuyInWei, balanceFormatted, minBuyInNumber, emptySeatIndexes.length, navigate, tableId, minBuyInFormatted, maxBuyInFormatted]);
 
     return (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-            <div className="p-8 rounded-xl shadow-2xl w-96 overflow-hidden relative" style={modalStyle}>
+            <div className="p-8 rounded-xl shadow-2xl w-96 overflow-hidden relative" style={STATIC_STYLES.modal}>
                 {/* Hexagon pattern background */}
                 <HexagonPattern />
 
@@ -233,15 +282,15 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
                         ♦
                     </span>
                 </h2>
-                <div className="w-full h-0.5 mb-4 opacity-50" style={dividerStyle}></div>
+                <div className="w-full h-0.5 mb-4 opacity-50" style={STATIC_STYLES.divider}></div>
 
                 {/* Playable Balance */}
-                <div className="mb-5 p-3 rounded-lg" style={playableBalanceStyle}>
+                <div className="mb-5 p-3 rounded-lg" style={STATIC_STYLES.playableBalance}>
                     <p style={{ color: colors.ui.textSecondary }} className="text-sm mb-1">
                         Playable Balance:
                     </p>
                     <div className="flex items-center">
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2" style={balanceIconStyle}>
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2" style={STATIC_STYLES.balanceIcon}>
                             <span style={{ color: colors.brand.primary }} className="font-bold text-xs">
                                 $
                             </span>
@@ -250,10 +299,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
                     </div>
                 </div>
 
-                {/* Stake Dropdown (now dynamic) */}
+                {/* Stake Dropdown */}
                 <div className="mb-6">
                     <label className="block text-gray-300 mb-1 font-medium text-sm">Select Stake</label>
-                    <select disabled value={stakeLabel} className="w-full p-2 rounded text-white focus:outline-none text-sm" style={selectStyle}>
+                    <select disabled value={stakeLabel} className="w-full p-2 rounded text-white focus:outline-none text-sm" style={STATIC_STYLES.select}>
                         <option>{stakeLabel}</option>
                     </select>
                 </div>
@@ -265,7 +314,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
                         <button
                             onClick={handleMaxClick}
                             className="flex-1 py-2 text-sm text-white rounded transition duration-200"
-                            style={buttonStyle}
+                            style={STATIC_STYLES.button}
                             onMouseEnter={handleButtonMouseEnter}
                             onMouseLeave={handleButtonMouseLeave}
                         >
@@ -276,7 +325,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
                         <button
                             onClick={handleMinClick}
                             className="flex-1 py-2 text-sm text-white rounded transition duration-200"
-                            style={buttonStyle}
+                            style={STATIC_STYLES.button}
                             onMouseEnter={handleButtonMouseEnter}
                             onMouseLeave={handleButtonMouseLeave}
                         >
@@ -293,7 +342,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
                                 value={buyInAmount}
                                 onChange={e => handleBuyInChange(e.target.value)}
                                 className="w-full p-2 text-white rounded-lg text-sm text-center focus:outline-none"
-                                style={inputStyle}
+                                style={STATIC_STYLES.input}
                                 onFocus={handleInputFocus}
                                 onBlur={handleInputBlur}
                                 placeholder="0.00"
@@ -312,7 +361,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
                     <input
                         type="checkbox"
                         className="w-4 h-4 rounded mr-2"
-                        style={checkboxStyle}
+                        style={STATIC_STYLES.checkbox}
                         checked={waitForBigBlind}
                         onChange={() => setWaitForBigBlind(!waitForBigBlind)}
                     />
@@ -335,23 +384,48 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin }) =
                         disabled={isDisabled}
                         className="px-5 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200"
                         style={{
-                            background: isDisabled ? colors.ui.textSecondary : joinButtonGradient,
+                            background: isDisabled ? colors.ui.textSecondary : STATIC_STYLES.joinButtonGradient,
                             cursor: isDisabled ? "not-allowed" : "pointer"
                         }}
                         onMouseEnter={e => {
                             if (!isDisabled) {
                                 e.currentTarget.style.transform = "scale(1.02)";
-                                e.currentTarget.style.background = joinButtonGradientHover;
+                                e.currentTarget.style.background = STATIC_STYLES.joinButtonGradientHover;
                             }
                         }}
                         onMouseLeave={e => {
                             if (!isDisabled) {
                                 e.currentTarget.style.transform = "scale(1)";
-                                e.currentTarget.style.background = joinButtonGradient;
+                                e.currentTarget.style.background = STATIC_STYLES.joinButtonGradient;
                             }
                         }}
                     >
                         Take My Seat
+                    </button>
+                    <button
+                        onClick={handleRandomSeatJoin}
+                        disabled={!canJoinRandomSeat}
+                        className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200 text-sm"
+                        style={{
+                            background: !canJoinRandomSeat
+                                ? colors.ui.textSecondary
+                                : `linear-gradient(to bottom right, ${colors.brand.secondary}, ${colors.brand.primary})`,
+                            cursor: !canJoinRandomSeat ? "not-allowed" : "pointer"
+                        }}
+                        onMouseEnter={e => {
+                            if (canJoinRandomSeat) {
+                                e.currentTarget.style.transform = "scale(1.02)";
+                                e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.secondary}aa, ${colors.brand.primary}aa)`;
+                            }
+                        }}
+                        onMouseLeave={e => {
+                            if (canJoinRandomSeat) {
+                                e.currentTarget.style.transform = "scale(1)";
+                                e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.secondary}, ${colors.brand.primary})`;
+                            }
+                        }}
+                    >
+                        {isJoiningRandomSeat ? "Joining..." : "Join Random Seat"}
                     </button>
                 </div>
 
