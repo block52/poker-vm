@@ -39,9 +39,17 @@ describe("Creating a Test for proof of correct actions pre flop with 2 players. 
         
         // Add more specific assertions based on the scenario requirements
         // TODO: Add assertions specific to this test case
+        const nextToAct = game.getNextPlayerToAct();
+        expect(nextToAct).toBeDefined();
+        expect(nextToAct?.address).toBeDefined();
+        
+        // Add more specific assertions based on the scenario requirements
+        // TODO: Add assertions specific to this test case
+        const legalActions = game.getLegalActions(nextToAct?.address);
+        expect(legalActions).toBeDefined();
+        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
     });
 });
-
 
 /**
  * Test file generated from poker scenario: TEST - Make sure that the First player to act AT SHOWDOWN shows his hand automatically. - 903 incorrect option to muck winning hand at showdown after opponent shows
@@ -137,7 +145,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
     });
 });
 
-describe("Creating a Test for proof of correct actions pre flop with 2 players. #924", () => {
+describe("Checking the betting system values after each action #927 + #568", () => {
     const PLAYER_1 = "0x1111111111111111111111111111111111111111";
     const PLAYER_2 = "0x2222222222222222222222222222222222222222";
 
@@ -151,20 +159,31 @@ describe("Creating a Test for proof of correct actions pre flop with 2 players. 
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
     });
 
-    it("creating a test for proof of correct actions pre flop with 2 players. #924", () => {
+    it("checking the betting system values after each action #927 + #568", () => {
         // Execute the setup actions
         game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
         game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
         game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5);
         game.performAction(PLAYER_1, PlayerActionType.CALL, 6, ONE_TOKEN);
         game.performAction(PLAYER_2, PlayerActionType.RAISE, 7, TWO_TOKENS);
-        game.performAction(PLAYER_1, PlayerActionType.CALL, 8, TWO_TOKENS);
 
         // Verify the game executed correctly
         expect(game.currentRound).toBeDefined();
         expect(game.getPlayerCount()).toEqual(2);
         
+        const nextToAct = game.getNextPlayerToAct();
+        
         // Add more specific assertions based on the scenario requirements
         // TODO: Add assertions specific to this test case
+        const legalActions = game.getLegalActions(nextToAct?.address);
+        expect(legalActions).toBeDefined();
+        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
+
+        expect(legalActions[1].action).toEqual(PlayerActionType.CALL);
+        expect(legalActions[1].min).toEqual("200000000000000000");
+        expect(legalActions[1].max).toEqual("200000000000000000");
+
+        expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
+        expect(legalActions[2].min).toEqual("600000000000000000");
     });
 });
