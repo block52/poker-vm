@@ -31,7 +31,17 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
         game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
         game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5);
+
         game.performAction(PLAYER_1, PlayerActionType.RAISE, 6, THREE_TOKENS);
+        const legalActions = game.getLegalActions(PLAYER_2);
+        expect(legalActions).toBeDefined();
+        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
+        expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
+        expect(legalActions[1].action).toEqual(PlayerActionType.CALL);
+        expect(legalActions[1].min).toEqual("200000000000000000");
+        expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
+        expect(legalActions[2].min).toEqual("600000000000000000");
+
         game.performAction(PLAYER_2, PlayerActionType.CALL, 7, TWO_TOKENS);
 
         // Verify the game executed correctly
