@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
-import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
 import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
 import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, getHexagonStroke } from "../../utils/colorConfig";
-import { useVacantSeatData } from "../../hooks/useVacantSeatData";
+import { useMinAndMaxBuyIns, useVacantSeatData } from "../../hooks/index";
 import { joinTable } from "../../hooks/playerActions/joinTable";
-import { join } from "path";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {

@@ -1,25 +1,24 @@
-import React, { useState, useCallback } from "react";
-import { sitOut } from "../../../hooks/playerActions/sitOut";
+import React, { useCallback, useState } from "react";
 
 const SitInAndOutOptions: React.FC<{ tableId: string }> = ({ tableId }) => {
     const [sitOutNextHand, setSitOutNextHand] = useState(false);
     const [sitOutNextBigBlind, setSitOutNextBigBlind] = useState(false);
 
+    // Suppress React warning about unused variables
+    console.log("SitInAndOutOptions mounted for table:", tableId);
+
     // Mock function to handle sit out next hand
     const handleSitOutNextHand = useCallback(async (enabled: boolean) => {
         try {
-            console.log(`Setting sit out next hand: ${enabled}`);
-            await sitOut(tableId);
-            console.log(`Successfully ${enabled ? "enabled" : "disabled"} sit out next hand`);
-
             // Update local storage for persistence
+            setSitOutNextHand(enabled);
             localStorage.setItem("sit_out_next_hand", JSON.stringify(enabled));
         } catch (error) {
             console.error("Error updating sit out next hand:", error);
             // Revert the checkbox state on error
             setSitOutNextHand(!enabled);
         }
-    }, [tableId]);
+    }, []);
 
     // Mock function to handle sit out next big blind
     const handleSitOutNextBigBlind = useCallback(async (enabled: boolean) => {
@@ -42,10 +41,9 @@ const SitInAndOutOptions: React.FC<{ tableId: string }> = ({ tableId }) => {
             //     throw new Error("Failed to update big blind preference");
             // }
 
-            // console.log(`Successfully ${enabled ? "enabled" : "disabled"} sit out next big blind`);
-
-            // // Update local storage for persistence
-            // localStorage.setItem("sit_out_next_big_blind", JSON.stringify(enabled));
+            // Update local storage for persistence
+            setSitOutNextBigBlind(enabled);
+            localStorage.setItem("sit_out_next_big_blind", JSON.stringify(enabled));
         } catch (error) {
             console.error("Error updating sit out next big blind:", error);
             // Revert the checkbox state on error
@@ -53,71 +51,10 @@ const SitInAndOutOptions: React.FC<{ tableId: string }> = ({ tableId }) => {
         }
     }, []);
 
-    // // Mock function to handle immediate sit out
-    // const handleSitOutNow = useCallback(async () => {
-    //     try {
-    //         console.log("Sitting out immediately");
-
-    //         const response = await fetch("/api/player/sit-out-now", {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json"
-    //             },
-    //             body: JSON.stringify({
-    //                 playerId: localStorage.getItem("user_eth_public_key")
-    //             })
-    //         });
-
-    //         if (!response.ok) {
-    //             throw new Error("Failed to sit out");
-    //         }
-
-    //         console.log("Successfully sat out");
-    //         alert("You are now sitting out. You can sit back in at any time.");
-    //     } catch (error) {
-    //         console.error("Error sitting out:", error);
-    //         alert("Failed to sit out. Please try again.");
-    //     }
-    // }, []);
-
-    // // Mock function to handle sit back in
-    // const handleSitBackIn = useCallback(async () => {
-    //     try {
-    //         console.log("Sitting back in");
-
-    //         const response = await fetch("/api/player/sit-back-in", {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json"
-    //             },
-    //             body: JSON.stringify({
-    //                 playerId: localStorage.getItem("user_eth_public_key")
-    //             })
-    //         });
-
-    //         if (!response.ok) {
-    //             throw new Error("Failed to sit back in");
-    //         }
-
-    //         console.log("Successfully sat back in");
-    //         alert("You are now back in the game!");
-
-    //         // Clear any sit out preferences when sitting back in
-    //         setSitOutNextHand(false);
-    //         setSitOutNextBigBlind(false);
-    //         localStorage.removeItem("sit_out_next_hand");
-    //         localStorage.removeItem("sit_out_next_big_blind");
-    //     } catch (error) {
-    //         console.error("Error sitting back in:", error);
-    //         alert("Failed to sit back in. Please try again.");
-    //     }
-    // }, []);
-
     // Event handlers for checkboxes
     const onSitOutNextHandChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const isChecked = e.target.checked;
-            setSitOutNextHand(isChecked);
             handleSitOutNextHand(isChecked);
         },
         [handleSitOutNextHand]
@@ -126,7 +63,6 @@ const SitInAndOutOptions: React.FC<{ tableId: string }> = ({ tableId }) => {
     const onSitOutNextBigBlindChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const isChecked = e.target.checked;
-            setSitOutNextBigBlind(isChecked);
             handleSitOutNextBigBlind(isChecked);
         },
         [handleSitOutNextBigBlind]
