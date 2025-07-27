@@ -43,15 +43,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
     });
 });
 
-/**
- * Suggested filename: test-unknown-ensure_there_is_no_check_option_when_facing_a_bet_.test.ts
- * 
- * To use this test:
- * 1. Copy this entire content
- * 2. Create a new file in pvm/ts/src/engine/ with the suggested filename
- * 3. Run the test with: npm test test-unknown-ensure_there_is_no_check_option_when_facing_a_bet_
- */
-
+// This test suite is for the Texas Holdem game engine, specifically for call and raise actions in preflop.
 describe("Texas Holdem - Call raise preflop", () => {
     // Initialize game with base configuration and options
     let game: TexasHoldemGame;
