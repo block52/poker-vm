@@ -557,29 +557,20 @@ const Table = React.memo(() => {
     }, []);
 
     const handleLeaveTableClick = useCallback(() => {
-        // Check player status
-        if (
-            tableDataValues.tableDataPlayers?.some(
-                (p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.SITTING_OUT
-            )
-        ) {
-            alert("You must fold your hand before leaving the table.");
-        } else {
-            // Get player's current stack if they are seated
-            const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
+        // Get player's current stack if they are seated
+        const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
 
-            if (id && playerData) {
-                leaveTable(id, playerData.stack || "0")
-                    .then(() => {
-                        window.location.href = "/";
-                    })
-                    .catch((err: any) => {
-                        console.error("Error leaving table:", err);
-                        window.location.href = "/";
-                    });
-            } else {
-                window.location.href = "/";
-            }
+        if (id && playerData) {
+            leaveTable(id, playerData.stack || "0")
+                .then(() => {
+                    window.location.href = "/";
+                })
+                .catch((err: any) => {
+                    console.error("Error leaving table:", err);
+                    window.location.href = "/";
+                });
+        } else {
+            window.location.href = "/";
         }
     }, [tableDataValues.tableDataPlayers, userWalletAddress, id]);
 
