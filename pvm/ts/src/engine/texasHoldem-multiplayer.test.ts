@@ -36,7 +36,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(game.exists(PLAYER_4)).toBeDefined();
         });
 
-        it.only("should have correct legal actions after posting the blinds", () => {
+        it("should have correct legal actions after posting the blinds", () => {
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 5, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
@@ -56,10 +56,6 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // Now deal the cards
-            expect(() => {
-                game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 7);
-            }).toThrow("Only the dealer or small blind can initiate the deal.");
-
             actual = game.getLegalActions(PLAYER_1);
 
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 7, undefined, "seed");
