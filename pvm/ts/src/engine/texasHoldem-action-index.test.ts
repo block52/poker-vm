@@ -19,7 +19,6 @@ describe("Texas Holdem - Action Index", () => {
     const PLAYER_1 = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
     const PLAYER_2 = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
     const PLAYER_3 = "0x3333333333333333333333333333333333333333";
-    const PLAYER_4 = "0x4444444444444444444444444444444444444444";
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);

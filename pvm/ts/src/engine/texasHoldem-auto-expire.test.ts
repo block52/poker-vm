@@ -24,6 +24,7 @@ describe.skip("Texas Holdem - Auto Expire", () => {
 
         it("should have correct legal actions after turn", () => {
             const actual = game.toJson();
+            expect(actual).toBeDefined();
         });
     });
 });

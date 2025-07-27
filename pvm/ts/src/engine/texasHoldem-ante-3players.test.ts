@@ -1,7 +1,6 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
-import { N } from "ethers";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in with 3 players.
 describe("Texas Holdem - Ante - 3 Players", () => {
@@ -9,7 +8,6 @@ describe("Texas Holdem - Ante - 3 Players", () => {
     const PLAYER_1 = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
     const PLAYER_2 = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
     const PLAYER_3 = "0x3333333333333333333333333333333333333333";
-    const PLAYER_4 = "0x4444444444444444444444444444444444444444";
 
     describe("3 Players", () => {
         let game: TexasHoldemGame;
