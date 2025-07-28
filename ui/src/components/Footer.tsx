@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import * as React from "react";
-import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 import { colors, hexToRgba } from "../utils/colorConfig";
@@ -193,219 +193,312 @@ const PokerActionPanel: React.FC = React.memo(() => {
     }, [extendTime, canExtend, timeoutDuration]);
 
     // Memoize all button styles to prevent re-renders
-    const dealButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${hexToRgba(colors.brand.primary, 0.9)}, ${hexToRgba(colors.brand.primary, 0.9)})`,
-        borderColor: hexToRgba(colors.brand.primary, 0.5),
-        boxShadow: `0 0 15px ${hexToRgba(colors.brand.primary, 0.3)}`
-    }), []);
+    const dealButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${hexToRgba(colors.brand.primary, 0.9)}, ${hexToRgba(colors.brand.primary, 0.9)})`,
+            borderColor: hexToRgba(colors.brand.primary, 0.5),
+            boxShadow: `0 0 15px ${hexToRgba(colors.brand.primary, 0.3)}`
+        }),
+        []
+    );
 
-    const newHandButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.brand.secondary}, ${colors.brand.primary})`,
-        borderColor: hexToRgba(colors.brand.primary, 0.6)
-    }), []);
+    const newHandButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.brand.secondary}, ${colors.brand.primary})`,
+            borderColor: hexToRgba(colors.brand.primary, 0.6)
+        }),
+        []
+    );
 
-    const muckButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-        borderColor: colors.ui.borderColor
-    }), []);
+    const muckButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
+            borderColor: colors.ui.borderColor
+        }),
+        []
+    );
 
-    const showButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.brand.primary}, ${colors.brand.primary})`,
-        borderColor: colors.brand.primary
-    }), []);
+    const showButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.brand.primary}, ${colors.brand.primary})`,
+            borderColor: colors.brand.primary
+        }),
+        []
+    );
 
-    const smallBlindButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.accent.success}, ${hexToRgba(colors.accent.success, 0.8)})`,
-        borderColor: colors.accent.success
-    }), []);
+    const smallBlindButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.accent.success}, ${hexToRgba(colors.accent.success, 0.8)})`,
+            borderColor: colors.accent.success
+        }),
+        []
+    );
 
-    const smallBlindAmountStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
-        color: colors.brand.primary,
-        borderColor: hexToRgba(colors.accent.success, 0.2)
-    }), []);
+    const smallBlindAmountStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
+            color: colors.brand.primary,
+            borderColor: hexToRgba(colors.accent.success, 0.2)
+        }),
+        []
+    );
 
-    const bigBlindButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.accent.success}, ${hexToRgba(colors.accent.success, 0.8)})`,
-        borderColor: colors.accent.success
-    }), []);
+    const bigBlindButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.accent.success}, ${hexToRgba(colors.accent.success, 0.8)})`,
+            borderColor: colors.accent.success
+        }),
+        []
+    );
 
-    const bigBlindAmountStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
-        color: colors.brand.primary,
-        borderColor: hexToRgba(colors.accent.success, 0.2)
-    }), []);
+    const bigBlindAmountStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
+            color: colors.brand.primary,
+            borderColor: hexToRgba(colors.accent.success, 0.2)
+        }),
+        []
+    );
 
-    const foldButtonDefaultStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.borderColor})`,
-        borderColor: colors.ui.borderColor,
-        color: "white"
-    }), []);
+    const foldButtonDefaultStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.borderColor})`,
+            borderColor: colors.ui.borderColor,
+            color: "white"
+        }),
+        []
+    );
 
-    const foldButtonHoverStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.accent.danger}, ${hexToRgba(colors.accent.danger, 0.8)})`,
-        borderColor: colors.accent.danger,
-        boxShadow: `0 0 10px ${hexToRgba(colors.accent.danger, 0.4)}`
-    }), []);
+    const foldButtonHoverStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.accent.danger}, ${hexToRgba(colors.accent.danger, 0.8)})`,
+            borderColor: colors.accent.danger,
+            boxShadow: `0 0 10px ${hexToRgba(colors.accent.danger, 0.4)}`
+        }),
+        []
+    );
 
-    const callButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-        borderColor: colors.ui.borderColor,
-        color: "white"
-    }), []);
+    const callButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
+            borderColor: colors.ui.borderColor,
+            color: "white"
+        }),
+        []
+    );
 
-    const callButtonHoverStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.brand.primary}, ${hexToRgba(colors.brand.primary, 0.9)})`,
-        borderColor: colors.brand.primary,
-        boxShadow: `0 0 15px ${hexToRgba(colors.brand.primary, 0.2)}`
-    }), []);
+    const callButtonHoverStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.brand.primary}, ${hexToRgba(colors.brand.primary, 0.9)})`,
+            borderColor: colors.brand.primary,
+            boxShadow: `0 0 15px ${hexToRgba(colors.brand.primary, 0.2)}`
+        }),
+        []
+    );
 
-    const raiseButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-        borderColor: colors.ui.borderColor,
-        color: "white"
-    }), []);
+    const raiseButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
+            borderColor: colors.ui.borderColor,
+            color: "white"
+        }),
+        []
+    );
 
-    const raiseButtonHoverStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.accent.glow}, ${hexToRgba(colors.accent.glow, 0.9)})`,
-        borderColor: colors.accent.glow,
-        boxShadow: `0 0 15px ${hexToRgba(colors.accent.glow, 0.2)}`
-    }), []);
+    const raiseButtonHoverStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.accent.glow}, ${hexToRgba(colors.accent.glow, 0.9)})`,
+            borderColor: colors.accent.glow,
+            boxShadow: `0 0 15px ${hexToRgba(colors.accent.glow, 0.2)}`
+        }),
+        []
+    );
 
-    const sliderButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-        borderColor: colors.ui.borderColor,
-        color: "white"
-    }), []);
+    const sliderButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
+            borderColor: colors.ui.borderColor,
+            color: "white"
+        }),
+        []
+    );
 
-    const sliderButtonHoverStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgDark}, ${colors.ui.bgMedium})`,
-        borderColor: colors.accent.glow
-    }), []);
+    const sliderButtonHoverStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgDark}, ${colors.ui.bgMedium})`,
+            borderColor: colors.accent.glow
+        }),
+        []
+    );
 
-    const inputFieldStyle = useMemo(() => ({
-        backgroundColor: colors.ui.bgMedium,
-        borderColor: isRaiseAmountInvalid ? colors.accent.danger : colors.ui.borderColor,
-        color: isRaiseAmountInvalid ? colors.accent.danger : "white"
-    }), [isRaiseAmountInvalid]);
+    const inputFieldStyle = useMemo(
+        () => ({
+            backgroundColor: colors.ui.bgMedium,
+            borderColor: isRaiseAmountInvalid ? colors.accent.danger : colors.ui.borderColor,
+            color: isRaiseAmountInvalid ? colors.accent.danger : "white"
+        }),
+        [isRaiseAmountInvalid]
+    );
 
-    const minMaxTextStyle = useMemo(() => ({
-        color: isRaiseAmountInvalid ? colors.accent.danger : colors.ui.textSecondary
-    }), [isRaiseAmountInvalid]);
+    const minMaxTextStyle = useMemo(
+        () => ({
+            color: isRaiseAmountInvalid ? colors.accent.danger : colors.ui.textSecondary
+        }),
+        [isRaiseAmountInvalid]
+    );
 
-    const potButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-        borderColor: colors.ui.borderColor,
-        color: "white"
-    }), []);
+    const potButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
+            borderColor: colors.ui.borderColor,
+            color: "white"
+        }),
+        []
+    );
 
-    const potButtonHoverStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgDark}, ${colors.ui.bgMedium})`,
-        borderColor: colors.accent.glow
-    }), []);
+    const potButtonHoverStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgDark}, ${colors.ui.bgMedium})`,
+            borderColor: colors.accent.glow
+        }),
+        []
+    );
 
-    const allInButtonStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-        borderColor: colors.ui.borderColor,
-        color: "white"
-    }), []);
+    const allInButtonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
+            borderColor: colors.ui.borderColor,
+            color: "white"
+        }),
+        []
+    );
 
-    const allInButtonHoverStyle = useMemo(() => ({
-        background: `linear-gradient(to right, ${colors.accent.glow}, ${hexToRgba(colors.accent.glow, 0.9)})`,
-        borderColor: colors.accent.glow
-    }), []);
-
+    const allInButtonHoverStyle = useMemo(
+        () => ({
+            background: `linear-gradient(to right, ${colors.accent.glow}, ${hexToRgba(colors.accent.glow, 0.9)})`,
+            borderColor: colors.accent.glow
+        }),
+        []
+    );
 
     // Memoize expensive computations
-    const formattedSmallBlindAmount = useMemo(() => 
-        Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2)
-    , [smallBlindAction?.min]);
+    const formattedSmallBlindAmount = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
 
-    const formattedBigBlindAmount = useMemo(() => 
-        Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2)
-    , [bigBlindAction?.min]);
+    const formattedBigBlindAmount = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
 
-    const formattedCallAmount = useMemo(() => 
-        callAmount.toFixed(2)
-    , [callAmount]);
+    const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
 
-    const formattedRaiseAmount = useMemo(() => 
-        getRaiseToAmount(gameState?.previousActions || [], currentRound, userAddress || "").toFixed(2)
-    , [gameState?.previousActions, currentRound, userAddress]);
+    const formattedRaiseAmount = useMemo(
+        () => getRaiseToAmount(gameState?.previousActions || [], currentRound, userAddress || "").toFixed(2),
+        [gameState?.previousActions, currentRound, userAddress]
+    );
 
-    const formattedMaxBetAmount = useMemo(() => 
-        hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)
-    , [hasBetAction, maxBet, maxRaise]);
-
+    const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
 
     // Memoize event handlers to prevent re-renders
-    const handleFoldMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = foldButtonHoverStyle.background;
-        e.currentTarget.style.borderColor = foldButtonHoverStyle.borderColor;
-        e.currentTarget.style.boxShadow = foldButtonHoverStyle.boxShadow || "none";
-    }, [foldButtonHoverStyle]);
+    const handleFoldMouseEnter = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = foldButtonHoverStyle.background;
+            e.currentTarget.style.borderColor = foldButtonHoverStyle.borderColor;
+            e.currentTarget.style.boxShadow = foldButtonHoverStyle.boxShadow || "none";
+        },
+        [foldButtonHoverStyle]
+    );
 
-    const handleFoldMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = foldButtonDefaultStyle.background;
-        e.currentTarget.style.borderColor = foldButtonDefaultStyle.borderColor;
-        e.currentTarget.style.boxShadow = "none";
-    }, [foldButtonDefaultStyle]);
+    const handleFoldMouseLeave = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = foldButtonDefaultStyle.background;
+            e.currentTarget.style.borderColor = foldButtonDefaultStyle.borderColor;
+            e.currentTarget.style.boxShadow = "none";
+        },
+        [foldButtonDefaultStyle]
+    );
 
-    const handleCallMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = callButtonHoverStyle.background;
-        e.currentTarget.style.borderColor = callButtonHoverStyle.borderColor;
-        e.currentTarget.style.boxShadow = callButtonHoverStyle.boxShadow || "none";
-    }, [callButtonHoverStyle]);
+    const handleCallMouseEnter = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = callButtonHoverStyle.background;
+            e.currentTarget.style.borderColor = callButtonHoverStyle.borderColor;
+            e.currentTarget.style.boxShadow = callButtonHoverStyle.boxShadow || "none";
+        },
+        [callButtonHoverStyle]
+    );
 
-    const handleCallMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = callButtonStyle.background;
-        e.currentTarget.style.borderColor = callButtonStyle.borderColor;
-        e.currentTarget.style.boxShadow = "none";
-    }, [callButtonStyle]);
+    const handleCallMouseLeave = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = callButtonStyle.background;
+            e.currentTarget.style.borderColor = callButtonStyle.borderColor;
+            e.currentTarget.style.boxShadow = "none";
+        },
+        [callButtonStyle]
+    );
 
-    const handleRaiseMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        if (!isRaiseAmountInvalid && isPlayerTurn) {
-            e.currentTarget.style.background = raiseButtonHoverStyle.background;
-            e.currentTarget.style.borderColor = raiseButtonHoverStyle.borderColor;
-            e.currentTarget.style.boxShadow = raiseButtonHoverStyle.boxShadow || "none";
-        }
-    }, [raiseButtonHoverStyle, isRaiseAmountInvalid, isPlayerTurn]);
+    const handleRaiseMouseEnter = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            if (!isRaiseAmountInvalid && isPlayerTurn) {
+                e.currentTarget.style.background = raiseButtonHoverStyle.background;
+                e.currentTarget.style.borderColor = raiseButtonHoverStyle.borderColor;
+                e.currentTarget.style.boxShadow = raiseButtonHoverStyle.boxShadow || "none";
+            }
+        },
+        [raiseButtonHoverStyle, isRaiseAmountInvalid, isPlayerTurn]
+    );
 
-    const handleRaiseMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = raiseButtonStyle.background;
-        e.currentTarget.style.borderColor = raiseButtonStyle.borderColor;
-        e.currentTarget.style.boxShadow = "none";
-    }, [raiseButtonStyle]);
+    const handleRaiseMouseLeave = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = raiseButtonStyle.background;
+            e.currentTarget.style.borderColor = raiseButtonStyle.borderColor;
+            e.currentTarget.style.boxShadow = "none";
+        },
+        [raiseButtonStyle]
+    );
 
-    const handleSliderButtonMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = sliderButtonHoverStyle.background;
-        e.currentTarget.style.borderColor = sliderButtonHoverStyle.borderColor;
-    }, [sliderButtonHoverStyle]);
+    const handleSliderButtonMouseEnter = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = sliderButtonHoverStyle.background;
+            e.currentTarget.style.borderColor = sliderButtonHoverStyle.borderColor;
+        },
+        [sliderButtonHoverStyle]
+    );
 
-    const handleSliderButtonMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = sliderButtonStyle.background;
-        e.currentTarget.style.borderColor = sliderButtonStyle.borderColor;
-    }, [sliderButtonStyle]);
+    const handleSliderButtonMouseLeave = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = sliderButtonStyle.background;
+            e.currentTarget.style.borderColor = sliderButtonStyle.borderColor;
+        },
+        [sliderButtonStyle]
+    );
 
-    const handlePotButtonMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = potButtonHoverStyle.background;
-        e.currentTarget.style.borderColor = potButtonHoverStyle.borderColor;
-    }, [potButtonHoverStyle]);
+    const handlePotButtonMouseEnter = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = potButtonHoverStyle.background;
+            e.currentTarget.style.borderColor = potButtonHoverStyle.borderColor;
+        },
+        [potButtonHoverStyle]
+    );
 
-    const handlePotButtonMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = potButtonStyle.background;
-        e.currentTarget.style.borderColor = potButtonStyle.borderColor;
-    }, [potButtonStyle]);
+    const handlePotButtonMouseLeave = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = potButtonStyle.background;
+            e.currentTarget.style.borderColor = potButtonStyle.borderColor;
+        },
+        [potButtonStyle]
+    );
 
-    const handleAllInMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = allInButtonHoverStyle.background;
-        e.currentTarget.style.borderColor = allInButtonHoverStyle.borderColor;
-    }, [allInButtonHoverStyle]);
+    const handleAllInMouseEnter = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = allInButtonHoverStyle.background;
+            e.currentTarget.style.borderColor = allInButtonHoverStyle.borderColor;
+        },
+        [allInButtonHoverStyle]
+    );
 
-    const handleAllInMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.background = potButtonStyle.background;
-        e.currentTarget.style.borderColor = potButtonStyle.borderColor;
-    }, [potButtonStyle]);
+    const handleAllInMouseLeave = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.background = potButtonStyle.background;
+            e.currentTarget.style.borderColor = potButtonStyle.borderColor;
+        },
+        [potButtonStyle]
+    );
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
@@ -430,14 +523,14 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         const newRaiseAmount = currentRaiseAmount + delta;
         setRaiseAmount(newRaiseAmount);
-    }
+    };
 
     // Min Raise Text Prefill
     useEffect(() => {
         if (hasRaiseAction && minRaise > 0) {
             setRaiseAmount(minRaise);
             setRaiseInputRaw(minRaise.toFixed(2));
-        } 
+        }
         if (hasBetAction && minBet > 0) {
             setRaiseAmount(minBet);
             setRaiseInputRaw(minBet.toFixed(2));
@@ -684,7 +777,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 )}
 
                 {/* New Hand Button - Show when the round is "end" */}
-                {currentRound === "end" && (
+                {currentRound === TexasHoldemRound.END && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={() => handleStartNewHand(tableId)}
@@ -767,7 +860,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                 >
                                     <span className="mr-1">Post Small Blind</span>
                                     <span className="backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border" style={smallBlindAmountStyle}>
-${formattedSmallBlindAmount}
+                                        ${formattedSmallBlindAmount}
                                     </span>
                                 </button>
                             )}
@@ -781,7 +874,7 @@ ${formattedSmallBlindAmount}
                                 >
                                     <span className="mr-1">Post Big Blind</span>
                                     <span className="backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border" style={bigBlindAmountStyle}>
-${formattedBigBlindAmount}
+                                        ${formattedBigBlindAmount}
                                     </span>
                                 </button>
                             )}
@@ -864,7 +957,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             onMouseEnter={handleRaiseMouseEnter}
                                             onMouseLeave={handleRaiseMouseLeave}
                                         >
-                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span style={{ color: colors.brand.primary }}>${formatBalance(raiseActionAmount)}</span>
+                                            {hasRaiseAction ? "RAISE TO" : "BET"}{" "}
+                                            <span style={{ color: colors.brand.primary }}>${formatBalance(raiseActionAmount)}</span>
                                         </button>
                                     )}
                                 </div>
@@ -957,10 +1051,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     disabled={!isPlayerTurn}
                                                 />
 
-                                                <div
-                                                    className="text-[8px] lg:text-[10px] w-full text-right leading-snug"
-                                                    style={minMaxTextStyle}
-                                                >
+                                                <div className="text-[8px] lg:text-[10px] w-full text-right leading-snug" style={minMaxTextStyle}>
                                                     <div>Min: ${formattedRaiseAmount}</div>
                                                     <div>Max: ${formattedMaxBetAmount}</div>
                                                 </div>
