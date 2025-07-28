@@ -158,6 +158,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Handle raise amount changes from slider or input
     const raiseActionAmount = getRaiseToAmount(gameState?.previousActions || [], currentRound, userAddress || "");
+    console.log(`Raise action amount: ${raiseActionAmount}`);
+
     const isRaiseAmountInvalid = hasRaiseAction
         ? raiseActionAmount < minRaise || raiseActionAmount > maxRaise
         : hasBetAction
@@ -327,9 +329,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
         callAmount.toFixed(2)
     , [callAmount]);
 
-    // const formattedRaiseAmount = useMemo(() => 
-    //     getRaiseToAmount().toFixed(2)
-    // , [getRaiseToAmount]);
+    const formattedRaiseAmount = useMemo(() => 
+        getRaiseToAmount(gameState?.previousActions || [], currentRound, userAddress || "").toFixed(2)
+    , [gameState?.previousActions, currentRound, userAddress]);
 
     const formattedMaxBetAmount = useMemo(() => 
         hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)
@@ -926,7 +928,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 <input
                                                     type="text"
                                                     inputMode="decimal"
-                                                    value={formatWeiToDollars(raiseActionAmount)}
+                                                    value={formattedRaiseAmount}
                                                     onChange={e => {
                                                         const raw = e.target.value;
 
