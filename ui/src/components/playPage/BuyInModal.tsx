@@ -7,7 +7,6 @@ import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, getHexagonStroke } from "../../utils/colorConfig";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { joinTable } from "../../hooks/playerActions/joinTable";
-import { join } from "path";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {

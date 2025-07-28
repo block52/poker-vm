@@ -20,9 +20,10 @@ import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
-import { formatBalance, getActionByType, getRaiseToAmount, hasAction } from "./common/utils";
+import { formatBalance } from "./common/utils";
 import { handleDeal, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
-import { formatWeiToDollars } from "../utils/numberUtils";
+import { getActionByType, hasAction } from "../utils/actionUtils";
+import { getRaiseToAmount } from "../utils/raiseUtils";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -106,7 +107,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
     };
 
-    // These are the delta amounts
+    // These are the default amounts
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
     const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
@@ -157,7 +158,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // }, [gameState, minRaise, raiseAmount, userAddress]);
 
     // Handle raise amount changes from slider or input
-    const raiseActionAmount = getRaiseToAmount(gameState?.previousActions || [], currentRound, userAddress || "");
+    const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], currentRound, userAddress || "");
     console.log(`Raise action amount: ${raiseActionAmount}`);
 
     const isRaiseAmountInvalid = hasRaiseAction
@@ -383,9 +384,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Memoize expensive computations
     const formattedSmallBlindAmount = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
-
     const formattedBigBlindAmount = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
-
     const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
 
     const formattedRaiseAmount = useMemo(
