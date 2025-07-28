@@ -1,13 +1,12 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import * as React from "react";
-import { ActionDTO, NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 import { colors, hexToRgba } from "../utils/colorConfig";
 
 // Import our custom hooks
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
-import { dealCards } from "../hooks/playerActions/dealCards";
 import { checkHand } from "../hooks/playerActions/checkHand";
 import { foldHand } from "../hooks/playerActions/foldHand";
 import { raiseHand } from "../hooks/playerActions/raiseHand";
@@ -16,15 +15,14 @@ import { postBigBlind } from "../hooks/playerActions/postBigBlind";
 import { useNextToActInfo } from "../hooks/useNextToActInfo";
 import { callHand } from "../hooks/playerActions/callHand";
 import { betHand } from "../hooks/playerActions/betHand";
-import { muckCards } from "../hooks/playerActions/muckCards";
-import { showCards } from "../hooks/playerActions/showCards";
-import { startNewHand } from "../hooks/playerActions/startNewHand";
 import { usePlayerTimer } from "../hooks/usePlayerTimer";
 import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
-;
+import { formatBalance, getActionByType, getRaiseToAmount, hasAction } from "./common/utils";
+import { handleDeal, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
+import { formatWeiToDollars } from "../utils/numberUtils";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -60,22 +58,22 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Replace userPlayer with direct checks from our hook data
     const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
 
-    // Helper function to check if an action exists in legal actions (handles both string and enum types)
-    const hasAction = (actionType: string | PlayerActionType | NonPlayerActionType) => {
-        return legalActions?.some(action => action.action === actionType || action.action?.toString() === actionType?.toString());
-    };
+    // // Helper function to check if an action exists in legal actions (handles both string and enum types)
+    // const hasAction = (actionType: PlayerActionType | NonPlayerActionType) => {
+    //     return legalActions?.some(action => action.action === actionType);
+    // };
 
     // Check if actions are available using the helper function
-    const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND);
-    const hasBigBlindAction = hasAction(PlayerActionType.BIG_BLIND);
-    const hasFoldAction = hasAction(PlayerActionType.FOLD);
-    const hasCheckAction = hasAction(PlayerActionType.CHECK);
-    const hasCallAction = hasAction(PlayerActionType.CALL);
-    const hasBetAction = hasAction(PlayerActionType.BET);
-    const hasRaiseAction = hasAction(PlayerActionType.RAISE);
-    const hasMuckAction = hasAction(PlayerActionType.MUCK);
-    const hasShowAction = hasAction(PlayerActionType.SHOW);
-    const hasDealAction = hasAction(NonPlayerActionType.DEAL);
+    const hasSmallBlindAction = hasAction(legalActions, PlayerActionType.SMALL_BLIND);
+    const hasBigBlindAction = hasAction(legalActions, PlayerActionType.BIG_BLIND);
+    const hasFoldAction = hasAction(legalActions, PlayerActionType.FOLD);
+    const hasCheckAction = hasAction(legalActions, PlayerActionType.CHECK);
+    const hasCallAction = hasAction(legalActions, PlayerActionType.CALL);
+    const hasBetAction = hasAction(legalActions, PlayerActionType.BET);
+    const hasRaiseAction = hasAction(legalActions, PlayerActionType.RAISE);
+    const hasMuckAction = hasAction(legalActions, PlayerActionType.MUCK);
+    const hasShowAction = hasAction(legalActions, PlayerActionType.SHOW);
+    const hasDealAction = hasAction(legalActions, NonPlayerActionType.DEAL);
 
     // Show deal button if player has the deal action
     const shouldShowDealButton = hasDealAction && isUsersTurn;
@@ -83,16 +81,16 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Hide other buttons when deal is available since dealing should be prioritized
     const hideOtherButtons = shouldShowDealButton;
 
-    // Find the specific actions
-    const getActionByType = (actionType: string | PlayerActionType | NonPlayerActionType) => {
-        return legalActions?.find(action => action.action === actionType || action.action?.toString() === actionType?.toString());
-    };
+    // // Find the specific actions
+    // const getActionByType = (actionType: string | PlayerActionType | NonPlayerActionType) => {
+    //     return legalActions?.find(action => action.action === actionType || action.action?.toString() === actionType?.toString());
+    // };
 
-    const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND);
-    const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND);
-    const callAction = getActionByType(PlayerActionType.CALL);
-    const betAction = getActionByType(PlayerActionType.BET);
-    const raiseAction = getActionByType(PlayerActionType.RAISE);
+    const smallBlindAction = getActionByType(legalActions, PlayerActionType.SMALL_BLIND);
+    const bigBlindAction = getActionByType(legalActions, PlayerActionType.BIG_BLIND);
+    const callAction = getActionByType(legalActions, PlayerActionType.CALL);
+    const betAction = getActionByType(legalActions, PlayerActionType.BET);
+    const raiseAction = getActionByType(legalActions, PlayerActionType.RAISE);
 
     // Convert values to USDC for faster display
     const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
@@ -106,51 +104,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     const getStep = () => {
         return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
-    }
-
-    const getRaiseToAmount = (): number => {
-        // Get players previous actions
-        const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
-
-        if (!previousActions || previousActions.length === 0) {
-            // If no previous actions, return the minimum raise amount
-            return minRaise;
-        }
-
-        if (!gameState || !gameState.round) {
-            console.error("Game state is not available");
-            return minRaise;
-        }
-
-        const currentRoundActions: ActionDTO[] = previousActions.filter(action => action.round === gameState.round);
-
-        // If the current round is PREFLOP, include ante actions
-        if (gameState.round === TexasHoldemRound.PREFLOP) {
-            const anteAction = previousActions.find(action => action.action === PlayerActionType.SMALL_BLIND || action.action === PlayerActionType.BIG_BLIND);
-            if (anteAction) {
-                // Add ante action to the current round actions
-                currentRoundActions.push(anteAction);
-            }
-        }
-
-        // Filter by bet and raise actions only
-        const previousBetsAndRaises: ActionDTO[] = currentRoundActions.filter(
-            action =>
-                action.action === PlayerActionType.BET ||
-                action.action === PlayerActionType.RAISE ||
-                action.action === PlayerActionType.CALL ||
-                action.action === PlayerActionType.SMALL_BLIND ||
-                action.action === PlayerActionType.BIG_BLIND
-        );
-
-        // Sum the raise amount and previous bets/raises
-        const totalPreviousBetsAndRaises: number = previousBetsAndRaises.reduce((sum, action) => {
-            const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
-            return sum + amount;
-        }, 0);
-
-        // Calculate the raise amount based on previous bets/raises
-        return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
     };
 
     // These are the delta amounts
@@ -158,11 +111,57 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
+    // const getRaiseToAmount = useCallback((): number => {
+    //     // Get players previous actions
+    //     const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
+
+    //     if (!previousActions || previousActions.length === 0) {
+    //         // If no previous actions, return the minimum raise amount
+    //         return minRaise;
+    //     }
+
+    //     if (!gameState || !gameState.round) {
+    //         console.error("Game state is not available");
+    //         return minRaise;
+    //     }
+
+    //     const currentRoundActions: ActionDTO[] = previousActions.filter(action => action.round === gameState.round);
+
+    //     // If the current round is PREFLOP, include ante actions
+    //     if (gameState.round === TexasHoldemRound.PREFLOP) {
+    //         const anteAction = previousActions.find(action => action.action === PlayerActionType.SMALL_BLIND || action.action === PlayerActionType.BIG_BLIND);
+    //         if (anteAction) {
+    //             // Add ante action to the current round actions
+    //             currentRoundActions.push(anteAction);
+    //         }
+    //     }
+
+    //     // Filter by bet and raise actions only
+    //     const previousBetsAndRaises: ActionDTO[] = currentRoundActions.filter(
+    //         action =>
+    //             action.action === PlayerActionType.BET ||
+    //             action.action === PlayerActionType.RAISE ||
+    //             action.action === PlayerActionType.CALL ||
+    //             action.action === PlayerActionType.SMALL_BLIND ||
+    //             action.action === PlayerActionType.BIG_BLIND
+    //     );
+
+    //     // Sum the raise amount and previous bets/raises
+    //     const totalPreviousBetsAndRaises: number = previousBetsAndRaises.reduce((sum, action) => {
+    //         const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
+    //         return sum + amount;
+    //     }, 0);
+
+    //     // Calculate the raise amount based on previous bets/raises
+    //     return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
+    // }, [gameState, minRaise, raiseAmount, userAddress]);
+
     // Handle raise amount changes from slider or input
+    const raiseActionAmount = getRaiseToAmount(gameState?.previousActions || [], currentRound, userAddress || "");
     const isRaiseAmountInvalid = hasRaiseAction
-        ? getRaiseToAmount() < minRaise || getRaiseToAmount() > maxRaise
+        ? raiseActionAmount < minRaise || raiseActionAmount > maxRaise
         : hasBetAction
-        ? getRaiseToAmount() < minBet || getRaiseToAmount() > maxBet
+        ? raiseActionAmount < minBet || raiseActionAmount > maxBet
         : false;
 
     // Get total pot for percentage calculations
@@ -171,8 +170,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Direct function imports - no hook destructuring needed for sit in/out
 
     // Add timer extension functionality for the footer button
-    const userSeat = userPlayer?.seat;
-    const { extendTime, canExtend } = usePlayerTimer(tableId, userSeat);
+    const { extendTime, canExtend } = usePlayerTimer(tableId, userPlayer?.seat);
 
     // Get the timeout duration from game options for display
     const timeoutDuration = useMemo(() => {
@@ -315,6 +313,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         borderColor: colors.accent.glow
     }), []);
 
+
     // Memoize expensive computations
     const formattedSmallBlindAmount = useMemo(() => 
         Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2)
@@ -328,13 +327,14 @@ const PokerActionPanel: React.FC = React.memo(() => {
         callAmount.toFixed(2)
     , [callAmount]);
 
-    const formattedRaiseAmount = useMemo(() => 
-        getRaiseToAmount().toFixed(2)
-    , [getRaiseToAmount]);
+    // const formattedRaiseAmount = useMemo(() => 
+    //     getRaiseToAmount().toFixed(2)
+    // , [getRaiseToAmount]);
 
     const formattedMaxBetAmount = useMemo(() => 
         hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)
     , [hasBetAction, maxBet, maxRaise]);
+
 
     // Memoize event handlers to prevent re-renders
     const handleFoldMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -558,56 +558,56 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
 
-    // Handler for muck action
-    const handleMuck = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
+    // // Handler for muck action
+    // const handleMuck = async () => {
+    //     if (!tableId) {
+    //         console.error("Table ID not available");
+    //         return;
+    //     }
 
-        try {
-            await muckCards(tableId);
-        } catch (error: any) {
-            console.error("Failed to muck cards:", error);
-        }
-    };
+    //     try {
+    //         await muckCards(tableId);
+    //     } catch (error: any) {
+    //         console.error("Failed to muck cards:", error);
+    //     }
+    // };
 
-    // Handler for show action
-    const handleShow = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
+    // // Handler for show action
+    // const handleShow = async () => {
+    //     if (!tableId) {
+    //         console.error("Table ID not available");
+    //         return;
+    //     }
 
-        try {
-            await showCards(tableId);
-        } catch (error: any) {
-            console.error("Failed to show cards:", error);
-        }
-    };
+    //     try {
+    //         await showCards(tableId);
+    //     } catch (error: any) {
+    //         console.error("Failed to show cards:", error);
+    //     }
+    // };
 
-    // Handler for deal action
-    const handleDeal = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
+    // // Handler for deal action
+    // const handleDeal = async () => {
+    //     if (!tableId) {
+    //         console.error("Table ID not available");
+    //         return;
+    //     }
 
-        try {
-            await dealCards(tableId);
-            console.log("Deal completed successfully");
-        } catch (error: any) {
-            console.error("Failed to deal:", error);
-        }
-    };
+    //     try {
+    //         await dealCards(tableId);
+    //         console.log("Deal completed successfully");
+    //     } catch (error: any) {
+    //         console.error("Failed to deal:", error);
+    //     }
+    // };
 
-    // Add the handleStartNewHand function after the other handler functions
-    const handleStartNewHand = async () => {
-        if (!tableId) return;
+    // // Add the handleStartNewHand function after the other handler functions
+    // const handleStartNewHand = async () => {
+    //     if (!tableId) return;
 
-        // Simple call - let errors bubble up naturally
-        await startNewHand(tableId);
-    };
+    //     // Simple call - let errors bubble up naturally
+    //     await startNewHand(tableId);
+    // };
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
@@ -661,7 +661,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={handleDeal}
+                            onClick={() => handleDeal(tableId)}
                             className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base
                             backdrop-blur-sm transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
@@ -685,7 +685,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {currentRound === "end" && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={handleStartNewHand}
+                            onClick={() => handleStartNewHand(tableId)}
                             className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
@@ -708,7 +708,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {hasMuckAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={handleMuck}
+                            onClick={() => handleMuck(tableId)}
                             className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
@@ -731,7 +731,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {hasShowAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={handleShow}
+                            onClick={() => handleShow(tableId)}
                             className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
@@ -797,7 +797,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                 </button>
                             )}
                             {/* Show a message if the player has folded */}
-                            {userPlayer?.status === "folded" && (
+                            {userPlayer?.status === PlayerStatus.FOLDED && (
                                 <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">
                                     You have folded this hand
                                 </div>
@@ -822,7 +822,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                         </button>
                                     )}
                                     {/* Show a message if the player has folded */}
-                                    {userPlayer?.status === "folded" && (
+                                    {userPlayer?.status === PlayerStatus.FOLDED && (
                                         <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">
                                             You have folded this hand
                                         </div>
@@ -862,7 +862,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             onMouseEnter={handleRaiseMouseEnter}
                                             onMouseLeave={handleRaiseMouseLeave}
                                         >
-                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span style={{ color: colors.brand.primary }}>${formattedRaiseAmount}</span>
+                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span style={{ color: colors.brand.primary }}>${formatBalance(raiseActionAmount)}</span>
                                         </button>
                                     )}
                                 </div>
@@ -887,10 +887,10 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
-                                                min={hasBetAction ? getRaiseToAmount() : minRaise}
+                                                min={hasBetAction ? raiseActionAmount : minRaise}
                                                 max={hasBetAction ? maxBet : maxRaise}
                                                 step={step}
-                                                value={getRaiseToAmount()}
+                                                value={raiseActionAmount}
                                                 onChange={e => {
                                                     handleRaiseChange(Number(e.target.value));
                                                     setLastAmountSource("slider");
@@ -898,11 +898,11 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 className="flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
-                                                        ((getRaiseToAmount() - (hasBetAction ? minBet : minRaise)) /
-                                                            ((getRaiseToAmount() ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
+                                                        ((raiseActionAmount - (hasBetAction ? minBet : minRaise)) /
+                                                            ((raiseActionAmount ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b ${
-                                                        ((getRaiseToAmount() - (hasBetAction ? minBet : minRaise)) /
+                                                        ((raiseActionAmount - (hasBetAction ? minBet : minRaise)) /
                                                             ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b 100%)`
@@ -926,7 +926,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 <input
                                                     type="text"
                                                     inputMode="decimal"
-                                                    value={formattedRaiseAmount}
+                                                    value={formatWeiToDollars(raiseActionAmount)}
                                                     onChange={e => {
                                                         const raw = e.target.value;
 
