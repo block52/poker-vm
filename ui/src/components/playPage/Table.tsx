@@ -195,7 +195,7 @@ const Table = React.memo(() => {
             calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
         } else {
             // For large desktop: original scaling
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
+            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
         }
 
         return Math.min(calculatedScale, 2);
