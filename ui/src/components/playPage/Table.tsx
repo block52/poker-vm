@@ -181,22 +181,22 @@ const Table = React.memo(() => {
 
         // More conservative scaling to prevent cutoff
         let calculatedScale;
-        if (window.innerWidth <= 414) {
-            // For small mobile: very conservative scaling to prevent cutoff
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.3;
-        } else if (window.innerWidth <= 768) {
-            // For tablets/large mobile: moderate scaling
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.4;
-        } else if (window.innerWidth <= 1024) {
-            // For iPad/small desktop: slightly increased
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.45;
-        } else if (window.innerWidth <= 1400) {
-            // For smaller desktop: more conservative
+        // if (window.innerWidth <= 414) {
+        //     // For small mobile: very conservative scaling to prevent cutoff
+        //     calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.3;
+        // } else if (window.innerWidth <= 768) {
+        //     // For tablets/large mobile: moderate scaling
+        //     calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.4;
+        // } else if (window.innerWidth <= 1024) {
+        //     // For iPad/small desktop: slightly increased
+        //     calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.45;
+        // } else if (window.innerWidth <= 1400) {
+        //     // For smaller desktop: more conservative
+        //     calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
+        // } else {
+        //     // For large desktop: original scaling
             calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
-        } else {
-            // For large desktop: original scaling
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
-        }
+        // }
 
         return Math.min(calculatedScale, 2);
     }, []);
