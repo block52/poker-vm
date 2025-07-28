@@ -179,21 +179,8 @@ const Table = React.memo(() => {
         const scaleWidth = window.innerWidth / baseWidth;
         const scaleHeight = availableHeight / baseHeight;
 
-        // More conservative scaling to prevent cutoff
-        let calculatedScale;
-        if (window.innerWidth <= 414) {
-            // For small mobile: very conservative scaling to prevent cutoff
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.6;
-        } else if (window.innerWidth <= 768) {
-            // For tablets/large mobile: moderate scaling
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.8;
-        } else if (window.innerWidth <= 1024) {
-            // For iPad/small desktop: slightly increased
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.75;
-        } else {
-            // For desktop: original scaling
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
-        }
+        // Conservative scaling to prevent player cutoff
+        const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
 
         return Math.min(calculatedScale, 2);
     }, []);
