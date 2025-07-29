@@ -1,0 +1,146 @@
+/* Button styles for poker actions */
+
+/* Deal button */
+.btn-deal {
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.9), rgba(59, 130, 246, 0.9));
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+/* New hand button */
+.btn-new-hand {
+  background: linear-gradient(to right, var(--brand-secondary), var(--brand-primary));
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+/* Muck button */
+.btn-muck {
+  background: linear-gradient(to right, var(--ui-bg-medium), var(--ui-bg-dark));
+  border-color: var(--ui-border-color);
+}
+
+/* Show button */
+.btn-show {
+  background: linear-gradient(to right, var(--brand-primary), var(--brand-primary));
+  border-color: var(--brand-primary);
+}
+
+/* Small blind button */
+.btn-small-blind {
+  background: linear-gradient(to right, var(--accent-success), rgba(16, 185, 129, 0.8));
+  border-color: var(--accent-success);
+}
+
+.btn-small-blind-amount {
+  background-color: rgba(31, 41, 55, 0.8);
+  color: var(--brand-primary);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+/* Big blind button */
+.btn-big-blind {
+  background: linear-gradient(to right, var(--accent-success), rgba(16, 185, 129, 0.8));
+  border-color: var(--accent-success);
+}
+
+.btn-big-blind-amount {
+  background-color: rgba(31, 41, 55, 0.8);
+  color: var(--brand-primary);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+/* Fold button */
+.btn-fold {
+  background: linear-gradient(to right, var(--ui-bg-medium), var(--ui-border-color));
+  border-color: var(--ui-border-color);
+  color: white;
+}
+
+.btn-fold:hover {
+  background: linear-gradient(to right, var(--accent-danger), rgba(239, 68, 68, 0.8));
+  border-color: var(--accent-danger);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+/* Call button */
+.btn-call {
+  background: linear-gradient(to right, var(--ui-bg-medium), var(--ui-bg-dark));
+  border-color: var(--ui-border-color);
+  color: white;
+}
+
+.btn-call:hover {
+  background: linear-gradient(to right, var(--brand-primary), rgba(59, 130, 246, 0.9));
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
+/* Raise button */
+.btn-raise {
+  background: linear-gradient(to right, var(--ui-bg-medium), var(--ui-bg-dark));
+  border-color: var(--ui-border-color);
+  color: white;
+}
+
+.btn-raise:hover {
+  background: linear-gradient(to right, var(--accent-glow), rgba(100, 255, 218, 0.9));
+  border-color: var(--accent-glow);
+  box-shadow: 0 0 15px rgba(100, 255, 218, 0.2);
+}
+
+/* Slider buttons */
+.btn-slider {
+  background: linear-gradient(to right, var(--ui-bg-medium), var(--ui-bg-dark));
+  border-color: var(--ui-border-color);
+  color: white;
+}
+
+.btn-slider:hover {
+  background: linear-gradient(to right, var(--ui-bg-dark), var(--ui-bg-medium));
+  border-color: var(--accent-glow);
+}
+
+/* Pot buttons */
+.btn-pot {
+  background: linear-gradient(to right, var(--ui-bg-medium), var(--ui-bg-dark));
+  border-color: var(--ui-border-color);
+  color: white;
+}
+
+.btn-pot:hover {
+  background: linear-gradient(to right, var(--ui-bg-dark), var(--ui-bg-medium));
+  border-color: var(--accent-glow);
+}
+
+/* All-in button */
+.btn-all-in {
+  background: linear-gradient(to right, var(--ui-bg-medium), var(--ui-bg-dark));
+  border-color: var(--ui-border-color);
+  color: white;
+}
+
+.btn-all-in:hover {
+  background: linear-gradient(to right, var(--accent-glow), rgba(100, 255, 218, 0.9));
+  border-color: var(--accent-glow);
+}
+
+/* Dynamic input styles */
+.input-field {
+  background-color: var(--ui-bg-medium);
+  border-color: var(--ui-border-color);
+  color: white;
+}
+
+.input-field.invalid {
+  border-color: var(--accent-danger);
+  color: var(--accent-danger);
+}
+
+/* Min/max text styles */
+.min-max-text {
+  color: var(--ui-text-secondary);
+}
+
+.min-max-text.invalid {
+  color: var(--accent-danger);
+}
