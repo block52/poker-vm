@@ -1,39 +1,20 @@
 import { BigUnit } from "bigunit";
 import { ethers } from "ethers";
 
-export const toDollar = (amount: bigint): string => {
-    const dollar = amount.toString();
-
-    // truncate the amount to 2 decimal places
-    const [whole, decimal] = dollar.split(".");
-    if (!decimal) return dollar;
-
-    return `${whole}.${decimal.slice(0, 2)}`;
+// Modify formatBalance to add logging
+export const formatBalance = (balance: string | number) => {
+    const value = Number(balance) / 1e18;
+    const formatted = value.toFixed(2);
+    return formatted;
 };
 
-export const toDollarFromString = (amount: string | null): string => {
-    if (!amount) return "0.00";
-
-    // truncate the amount to 2 decimal places, if regex
-
-    if (amount.match(/\d+\.\d{3,}/)) {
-        const [whole, decimal] = amount.split(".");
-        if (!decimal) return whole;
-
-        return `${whole}.${decimal.slice(0, 2)}`;
-    }
-
-    return toDollar(BigInt(amount));
+export const formatToFixed = (value: number | number): string => {
+    return value.toFixed(2);
 };
 
-export const toDollarFromBigUnit = (amount: BigUnit): string => {
-    return toDollar(amount.toBigInt());
-};
-
-export const formatUSDC = (amount: string): string => {
-    const usdc = ethers.parseUnits(amount, 6);
-    return toDollar(usdc);
-};
+export const formatToFixedFromString = (value: string | number): string => {
+    return Number(ethers.formatUnits(value || "0", 18)).toFixed(2);
+}
 
 // Update the formatting function to ensure two decimal places
 export const formatWeiToDollars = (weiAmount: string | bigint | undefined | null): string => {
@@ -42,7 +23,7 @@ export const formatWeiToDollars = (weiAmount: string | bigint | undefined | null
         if (weiAmount === undefined || weiAmount === null) {
             return "0.00";
         }
-        
+
         // Convert from Wei (18 decimals) to standard units
         const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
 
@@ -64,7 +45,7 @@ export const formatWeiToSimpleDollars = (weiAmount: string | bigint | undefined 
         if (weiAmount === undefined || weiAmount === null) {
             return "0.00";
         }
-        
+
         const etherValue = ethers.formatUnits(weiAmount.toString(), 18);
         return parseFloat(etherValue).toFixed(2);
     } catch (error) {
@@ -79,7 +60,7 @@ export const formatWeiToUSD = (weiAmount: string | number | undefined | null): s
         if (weiAmount === undefined || weiAmount === null) {
             return "0.00";
         }
-        
+
         // Convert from Wei (18 decimals) to standard units
         const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
         // Format to 2 decimal places and add commas
@@ -125,7 +106,7 @@ export const formatUSDCToSimpleDollars = (usdcAmount: string | bigint | undefine
         if (usdcAmount === undefined || usdcAmount === null) {
             return "0.00";
         }
-        
+
         const usdcValue = ethers.formatUnits(usdcAmount.toString(), 6);
         return parseFloat(usdcValue).toFixed(2);
     } catch (error) {
@@ -135,12 +116,12 @@ export const formatUSDCToSimpleDollars = (usdcAmount: string | bigint | undefine
 };
 
 // Format chip amounts that are stored in Wei format but represent USDC values
-// 
+//
 // The poker system stores chip amounts in Wei format (18 decimals) internally,
 // but these represent USDC values which use 6 decimals. To convert properly:
 // 1. Divide by 10^14 to convert from 18-decimal format to 6-decimal format
 // 2. Format using ethers.formatUnits with 6 decimals
-// 
+//
 // Example: 960000000000000000000 (Wei format) -> 9.60 (USDC)
 export const formatChipAmount = (chipAmount: string | bigint | undefined | null): string => {
     try {
@@ -148,7 +129,7 @@ export const formatChipAmount = (chipAmount: string | bigint | undefined | null)
         if (chipAmount === undefined || chipAmount === null) {
             return "0.00";
         }
-        
+
         // Convert from Wei format (18 decimals) to USDC-compatible format
         // Divide by 10^14 to get the correct USDC amount, then format with 6 decimals
         const converted = BigInt(chipAmount.toString()) / BigInt("100000000000000");

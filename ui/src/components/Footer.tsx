@@ -6,22 +6,17 @@ import { useParams } from "react-router-dom";
 import { colors, hexToRgba } from "../utils/colorConfig";
 
 // Import our custom hooks
-import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
-import { checkHand } from "../hooks/playerActions/checkHand";
-import { foldHand } from "../hooks/playerActions/foldHand";
-import { raiseHand } from "../hooks/playerActions/raiseHand";
-import { postSmallBlind } from "../hooks/playerActions/postSmallBlind";
-import { postBigBlind } from "../hooks/playerActions/postBigBlind";
+import { betHand, callHand, checkHand, foldHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks/playerActions/index";
+
 import { useNextToActInfo } from "../hooks/useNextToActInfo";
-import { callHand } from "../hooks/playerActions/callHand";
-import { betHand } from "../hooks/playerActions/betHand";
+import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
+
 import { usePlayerTimer } from "../hooks/usePlayerTimer";
 import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
-import { formatBalance } from "./common/utils";
-import { handleDeal, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
+import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 
@@ -59,11 +54,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Replace userPlayer with direct checks from our hook data
     const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
 
-    // // Helper function to check if an action exists in legal actions (handles both string and enum types)
-    // const hasAction = (actionType: PlayerActionType | NonPlayerActionType) => {
-    //     return legalActions?.some(action => action.action === actionType);
-    // };
-
     // Check if actions are available using the helper function
     const hasSmallBlindAction = hasAction(legalActions, PlayerActionType.SMALL_BLIND);
     const hasBigBlindAction = hasAction(legalActions, PlayerActionType.BIG_BLIND);
@@ -81,11 +71,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Hide other buttons when deal is available since dealing should be prioritized
     const hideOtherButtons = shouldShowDealButton;
-
-    // // Find the specific actions
-    // const getActionByType = (actionType: string | PlayerActionType | NonPlayerActionType) => {
-    //     return legalActions?.find(action => action.action === actionType || action.action?.toString() === actionType?.toString());
-    // };
 
     const smallBlindAction = getActionByType(legalActions, PlayerActionType.SMALL_BLIND);
     const bigBlindAction = getActionByType(legalActions, PlayerActionType.BIG_BLIND);
@@ -111,51 +96,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
     const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
-
-    // const getRaiseToAmount = useCallback((): number => {
-    //     // Get players previous actions
-    //     const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
-
-    //     if (!previousActions || previousActions.length === 0) {
-    //         // If no previous actions, return the minimum raise amount
-    //         return minRaise;
-    //     }
-
-    //     if (!gameState || !gameState.round) {
-    //         console.error("Game state is not available");
-    //         return minRaise;
-    //     }
-
-    //     const currentRoundActions: ActionDTO[] = previousActions.filter(action => action.round === gameState.round);
-
-    //     // If the current round is PREFLOP, include ante actions
-    //     if (gameState.round === TexasHoldemRound.PREFLOP) {
-    //         const anteAction = previousActions.find(action => action.action === PlayerActionType.SMALL_BLIND || action.action === PlayerActionType.BIG_BLIND);
-    //         if (anteAction) {
-    //             // Add ante action to the current round actions
-    //             currentRoundActions.push(anteAction);
-    //         }
-    //     }
-
-    //     // Filter by bet and raise actions only
-    //     const previousBetsAndRaises: ActionDTO[] = currentRoundActions.filter(
-    //         action =>
-    //             action.action === PlayerActionType.BET ||
-    //             action.action === PlayerActionType.RAISE ||
-    //             action.action === PlayerActionType.CALL ||
-    //             action.action === PlayerActionType.SMALL_BLIND ||
-    //             action.action === PlayerActionType.BIG_BLIND
-    //     );
-
-    //     // Sum the raise amount and previous bets/raises
-    //     const totalPreviousBetsAndRaises: number = previousBetsAndRaises.reduce((sum, action) => {
-    //         const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
-    //         return sum + amount;
-    //     }, 0);
-
-    //     // Calculate the raise amount based on previous bets/raises
-    //     return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
-    // }, [gameState, minRaise, raiseAmount, userAddress]);
 
     // Handle raise amount changes from slider or input
     const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], currentRound, userAddress || "");
@@ -365,14 +305,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
         []
     );
 
-    const allInButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-            borderColor: colors.ui.borderColor,
-            color: "white"
-        }),
-        []
-    );
+    const allInButtonStyle = {
+        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
+        borderColor: colors.ui.borderColor,
+        color: "white"
+    };
 
     const allInButtonHoverStyle = useMemo(
         () => ({
@@ -557,51 +494,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
         await postBigBlind(tableId, bigBlindAmount);
     };
 
-    const handleCheck = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await checkHand(tableId);
-        } catch (error: any) {
-            console.error("Failed to check:", error);
-        }
-    };
-
-    const handleFold = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await foldHand(tableId);
-        } catch (error: any) {
-            console.error("Failed to fold:", error);
-        }
-    };
-
-    const handleCall = async () => {
-        if (!tableId) {
-            console.error("Private key or table ID not available");
-            return;
-        }
-
-        if (callAction) {
-            try {
-                // Use our function to bet with the current raiseAmount
-                const amountWei = ethers.parseUnits(callAmount.toString(), 18).toString();
-                await callHand(tableId, amountWei);
-            } catch (error: any) {
-                console.error("Failed to call:", error);
-            }
-        } else {
-            console.error("Call action not available");
-        }
-    };
-
     const handleBet = async () => {
         if (!tableId) {
             console.error("Table ID not available");
@@ -651,57 +543,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Show blinds buttons when needed
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
-
-    // // Handler for muck action
-    // const handleMuck = async () => {
-    //     if (!tableId) {
-    //         console.error("Table ID not available");
-    //         return;
-    //     }
-
-    //     try {
-    //         await muckCards(tableId);
-    //     } catch (error: any) {
-    //         console.error("Failed to muck cards:", error);
-    //     }
-    // };
-
-    // // Handler for show action
-    // const handleShow = async () => {
-    //     if (!tableId) {
-    //         console.error("Table ID not available");
-    //         return;
-    //     }
-
-    //     try {
-    //         await showCards(tableId);
-    //     } catch (error: any) {
-    //         console.error("Failed to show cards:", error);
-    //     }
-    // };
-
-    // // Handler for deal action
-    // const handleDeal = async () => {
-    //     if (!tableId) {
-    //         console.error("Table ID not available");
-    //         return;
-    //     }
-
-    //     try {
-    //         await dealCards(tableId);
-    //         console.log("Deal completed successfully");
-    //     } catch (error: any) {
-    //         console.error("Failed to deal:", error);
-    //     }
-    // };
-
-    // // Add the handleStartNewHand function after the other handler functions
-    // const handleStartNewHand = async () => {
-    //     if (!tableId) return;
-
-    //     // Simple call - let errors bubble up naturally
-    //     await startNewHand(tableId);
-    // };
 
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
@@ -910,7 +751,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             style={foldButtonDefaultStyle}
                                             onMouseEnter={handleFoldMouseEnter}
                                             onMouseLeave={handleFoldMouseLeave}
-                                            onClick={handleFold}
+                                            onClick={() => handleFold(tableId)}
                                         >
                                             FOLD
                                         </button>
@@ -927,7 +768,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
                                             px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                                            onClick={handleCheck}
+                                            onClick={() => handleCheck(tableId)}
                                         >
                                             CHECK
                                         </button>
@@ -939,7 +780,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             style={callButtonStyle}
                                             onMouseEnter={handleCallMouseEnter}
                                             onMouseLeave={handleCallMouseLeave}
-                                            onClick={handleCall}
+                                            onClick={() => handleCall(callAction, callAmount, tableId)}
                                         >
                                             CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span>
                                         </button>
@@ -957,7 +798,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             onMouseLeave={handleRaiseMouseLeave}
                                         >
                                             {hasRaiseAction ? "RAISE TO" : "BET"}{" "}
-                                            <span style={{ color: colors.brand.primary }}>${formatBalance(raiseActionAmount)}</span>
+                                            <span style={{ color: colors.brand.primary }}>${raiseActionAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
@@ -972,7 +813,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 style={sliderButtonStyle}
                                                 onMouseEnter={handleSliderButtonMouseEnter}
                                                 onMouseLeave={handleSliderButtonMouseLeave}
-                                                // onClick={() => handleRaiseChange(Math.max(getRaiseToAmount() - step, hasBetAction ? minBet : minRaise))}
                                                 onClick={() => handleRaiseChange(-getStep())}
                                                 disabled={!isPlayerTurn}
                                             >
@@ -1009,7 +849,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 style={sliderButtonStyle}
                                                 onMouseEnter={handleSliderButtonMouseEnter}
                                                 onMouseLeave={handleSliderButtonMouseLeave}
-                                                // onClick={() => handleRaiseChange(Math.min(getRaiseToAmount() + step, hasBetAction ? maxBet : maxRaise))}
                                                 onClick={() => handleRaiseChange(getStep())}
                                                 disabled={!isPlayerTurn}
                                             >
