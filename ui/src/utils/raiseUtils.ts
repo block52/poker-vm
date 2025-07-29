@@ -1,13 +1,18 @@
 import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 
-export const getRaiseToAmount = (minRaise: number, actions: ActionDTO[], currentRound: TexasHoldemRound, userAddress: string): number => {
+export const getRaiseToAmount = (raiseAmount: number, actions: ActionDTO[], currentRound: TexasHoldemRound, userAddress: string): number => {
+    // If no actions, return raiseAmount
+    if (!actions || actions.length === 0) {
+        return raiseAmount;
+    }
+
     // Get players previous actions
     const previousActions = actions.filter(action => action.playerId?.toLowerCase() === userAddress.toLowerCase());
 
     if (!previousActions || previousActions.length === 0) {
-        // If no previous actions, return 0
-        return minRaise;
+        // If no previous actions, return raiseAmount
+        return raiseAmount;
     }
 
     const currentRoundActions: ActionDTO[] = previousActions.filter(action => action.round === currentRound);
@@ -40,5 +45,5 @@ export const getRaiseToAmount = (minRaise: number, actions: ActionDTO[], current
     // Calculate the raise amount based on previous bets/raises
     // return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
 
-    return 0;
+    return raiseAmount + totalPreviousBetsAndRaises;
 };

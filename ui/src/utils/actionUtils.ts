@@ -8,3 +8,9 @@ export const hasAction = (legalActions: LegalActionDTO[], action: PlayerActionTy
 export const getActionByType = (legalActions: LegalActionDTO[], actionType: PlayerActionType | NonPlayerActionType): LegalActionDTO | undefined => {
     return legalActions.find(action => action.action === actionType || action.action?.toString() === actionType?.toString());
 };
+
+// export const getAction = (legalActions: LegalActionDTO[], actionType: PlayerActionType | NonPlayerActionType): ( LegalActionDTO | undefined, boolean) => {
+//     const action = getActionByType(legalActions, actionType);
+//     const isActionAvailable = hasAction(legalActions, actionType);
+//     return [action, isActionAvailable];
+// };

@@ -388,8 +388,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
 
     const formattedRaiseAmount = useMemo(
-        () => getRaiseToAmount(gameState?.previousActions || [], currentRound, userAddress || "").toFixed(2),
-        [gameState?.previousActions, currentRound, userAddress]
+        () => getRaiseToAmount(minRaise, gameState?.previousActions || [], currentRound, userAddress || "").toFixed(2),
+        [minRaise, gameState?.previousActions, currentRound, userAddress]
     );
 
     const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
