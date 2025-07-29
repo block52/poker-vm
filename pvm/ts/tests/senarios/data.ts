@@ -24,7 +24,7 @@ export const test_json = {
                     "isSmallBlind": true,
                     "isBigBlind": false,
                     "isDealer": false,
-                    "deck": "2S-KH-3C-7C-3D-KC-4C-7S-10S-JD-10D-2D-[2C]-6C-6S-QH-7D-9S-5D-7H-5H-8D-9D-JC-QS-8H-6H-KD-5C-AC-4D-JS-10C-AH-AS-10H-KS-8C-8S-JH-9C-3S-4H-4S-3H-6D-9H-5S-AD-QC-2H-QD",
+                    "deck": "2S-KH-3C-7C-3D-KC-4C-7S-TS-JD-TD-2D-[2C]-6C-6S-QH-7D-9S-5D-7H-5H-8D-9D-JC-QS-8H-6H-KD-5C-AC-4D-JS-TC-AH-AS-TH-KS-8C-8S-JH-9C-3S-4H-4S-3H-6D-9H-5S-AD-QC-2H-QD",
                     "holeCards": [
                         "2S",
                         "3C"
@@ -49,7 +49,7 @@ export const test_json = {
                     "isSmallBlind": false,
                     "isBigBlind": true,
                     "isDealer": false,
-                    "deck": "2S-KH-3C-7C-3D-KC-4C-7S-10S-JD-10D-2D-[2C]-6C-6S-QH-7D-9S-5D-7H-5H-8D-9D-JC-QS-8H-6H-KD-5C-AC-4D-JS-10C-AH-AS-10H-KS-8C-8S-JH-9C-3S-4H-4S-3H-6D-9H-5S-AD-QC-2H-QD",
+                    "deck": "2S-KH-3C-7C-3D-KC-4C-7S-TS-JD-TD-2D-[2C]-6C-6S-QH-7D-9S-5D-7H-5H-8D-9D-JC-QS-8H-6H-KD-5C-AC-4D-JS-TC-AH-AS-TH-KS-8C-8S-JH-9C-3S-4H-4S-3H-6D-9H-5S-AD-QC-2H-QD",
                     "holeCards": [
                         "KH",
                         "7C"
@@ -82,11 +82,11 @@ export const test_json = {
             ],
             "communityCards": [
                 "7S",
-                "10S",
+                "TS",
                 "JD",
                 "2D"
             ],
-            "deck": "2S-KH-3C-7C-3D-KC-4C-7S-10S-JD-10D-2D-[2C]-6C-6S-QH-7D-9S-5D-7H-5H-8D-9D-JC-QS-8H-6H-KD-5C-AC-4D-JS-10C-AH-AS-10H-KS-8C-8S-JH-9C-3S-4H-4S-3H-6D-9H-5S-AD-QC-2H-QD",
+            "deck": "2S-KH-3C-7C-3D-KC-4C-7S-TS-JD-TD-2D-[2C]-6C-6S-QH-7D-9S-5D-7H-5H-8D-9D-JC-QS-8H-6H-KD-5C-AC-4D-JS-TC-AH-AS-TH-KS-8C-8S-JH-9C-3S-4H-4S-3H-6D-9H-5S-AD-QC-2H-QD",
             "pots": [
                 "1700000000000000000"
             ],
@@ -193,7 +193,7 @@ export const test_735 = {
                     "isBigBlind": false,
                     "isDealer": false,
                     "holeCards": [
-                        "10D",
+                        "TD",
                         "5C"
                     ],
                     "status": "showing",
@@ -249,11 +249,11 @@ export const test_735 = {
             "communityCards": [
                 "7D",
                 "3C",
-                "10C",
+                "TC",
                 "6D",
                 "8H"
             ],
-            "deck": "10D-5D-5C-5H-JC-AC-AH-7D-3C-10C-9S-6D-KS-8H-[2C]-QS-9H-AD-JS-6S-8C-10S-7C-KD-2D-7H-4H-5S-7S-9C-4C-8D-2H-2S-4S-3S-3D-QD-9D-4D-QH-AS-JH-QC-JD-6C-8S-3H-KH-6H-KC-10H",
+            "deck": "TD-5D-5C-5H-JC-AC-AH-7D-3C-TC-9S-6D-KS-8H-[2C]-QS-9H-AD-JS-6S-8C-TS-7C-KD-2D-7H-4H-5S-7S-9C-4C-8D-2H-2S-4S-3S-3D-QD-9D-4D-QH-AS-JH-QC-JD-6C-8S-3H-KH-6H-KC-TH",
             "pots": [
                 "80000000000000000"
             ],
@@ -412,7 +412,7 @@ export const test_735 = {
                     "address": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
                     "amount": "80000000000000000",
                     "cards": [
-                        "10D",
+                        "TD",
                         "5C"
                     ],
                     "name": "Pair",
@@ -500,7 +500,7 @@ export const test_735_2 = {
                 }
             ],
             "communityCards": [],
-            "deck": "2D-KC-QC-AH-[5S]-JD-AS-7D-JC-6D-AD-3D-JH-5D-8D-4D-KD-10D-9D-4S-7C-10H-3H-QD-4H-6H-2H-3S-6S-5H-7H-8H-2S-9H-KH-AC-QH-JS-4C-3C-9C-8S-KS-9S-7S-2C-QS-10S-5C-8C-6C-10C",
+            "deck": "2D-KC-QC-AH-[5S]-JD-AS-7D-JC-6D-AD-3D-JH-5D-8D-4D-KD-TD-9D-4S-7C-TH-3H-QD-4H-6H-2H-3S-6S-5H-7H-8H-2S-9H-KH-AC-QH-JS-4C-3C-9C-8S-KS-9S-7S-2C-QS-TS-5C-8C-6C-TC",
             "pots": [
                 "30000000000000000"
             ],
@@ -572,7 +572,7 @@ export const test_735_3 = {
                     "isDealer": true,
                     "holeCards": [
                         "2H",
-                        "10H"
+                        "TH"
                     ],
                     "status": "active",
                     "legalActions": [
@@ -628,10 +628,10 @@ export const test_735_3 = {
             ],
             "communityCards": [
                 "KS",
-                "10S",
+                "TS",
                 "JS"
             ],
-            "deck": "2H-KH-10H-5C-QC-9S-AH-KS-10S-JS-[JD]-QD-QH-AD-8H-2D-8D-3D-2C-4H-4S-8C-5H-3S-7D-6S-5D-4D-6H-KD-AC-6C-4C-10D-KC-3H-9D-3C-JH-7H-AS-9H-10C-QS-6D-9C-JC-5S-8S-2S-7C-7S",
+            "deck": "2H-KH-TH-5C-QC-9S-AH-KS-TS-JS-[JD]-QD-QH-AD-8H-2D-8D-3D-2C-4H-4S-8C-5H-3S-7D-6S-5D-4D-6H-KD-AC-6C-4C-TD-KC-3H-9D-3C-JH-7H-AS-9H-TC-QS-6D-9C-JC-5S-8S-2S-7C-7S",
             "pots": [
                 "40000000000000000"
             ],
@@ -759,7 +759,7 @@ export const test_792 = {
                 }
             ],
             "communityCards": [],
-            "deck": "[9S]-8D-10H-JC-8S-5C-JH-AS-4S-9H-5S-9D-JD-10S-7C-6S-QS-AH-3H-10D-6C-8C-KD-2D-5H-AC-4D-7D-7S-2C-5D-KH-QC-KC-9C-7H-10C-3C-3D-2S-JS-KS-6H-2H-4C-6D-QH-3S-QD-4H-AD-8H",
+            "deck": "[9S]-8D-TH-JC-8S-5C-JH-AS-4S-9H-5S-9D-JD-TS-7C-6S-QS-AH-3H-TD-6C-8C-KD-2D-5H-AC-4D-7D-7S-2C-5D-KH-QC-KC-9C-7H-TC-3C-3D-2S-JS-KS-6H-2H-4C-6D-QH-3S-QD-4H-AD-8H",
             "pots": [
                 "0"
             ],
@@ -814,7 +814,7 @@ export const test_870 = {
                     "isDealer": false,
                     "holeCards": [
                         "6D",
-                        "10S"
+                        "TS"
                     ],
                     "status": "active",
                     "legalActions": [
@@ -861,7 +861,7 @@ export const test_870 = {
                 }
             ],
             "communityCards": [],
-            "deck": "6D-5S-10S-KD-[2C]-JC-2S-8C-2D-8S-QS-3H-KH-QH-9H-5C-3S-5D-AD-7H-QD-AH-4C-3D-KS-JH-4D-7D-7S-JS-6S-KC-5H-7C-JD-4H-AC-6C-8D-3C-10D-9C-QC-4S-2H-9D-10C-AS-9S-6H-8H-10H",
+            "deck": "6D-5S-TS-KD-[2C]-JC-2S-8C-2D-8S-QS-3H-KH-QH-9H-5C-3S-5D-AD-7H-QD-AH-4C-3D-KS-JH-4D-7D-7S-JS-6S-KC-5H-7C-JD-4H-AC-6C-8D-3C-TD-9C-QC-4S-2H-9D-TC-AS-9S-6H-8H-TH",
             "pots": [
                 "30000000000000000"
             ],
@@ -952,7 +952,7 @@ export const test_873 = {
                     "isDealer": true,
                     "holeCards": [
                         "4D",
-                        "10D"
+                        "TD"
                     ],
                     "status": "showing",
                     "lastAction": {
@@ -1003,7 +1003,7 @@ export const test_873 = {
                 "AD",
                 "9D"
             ],
-            "deck": "4D-6C-10D-2H-6D-JC-2D-QC-3D-KC-8H-AD-5D-9D-[8D]-7D-JD-KD-5C-10S-QD-KS-AH-4H-5H-3H-7H-10H-6H-AS-JH-9H-3S-QS-QH-7S-KH-2S-5S-6S-JS-4S-3C-10C-9S-8S-9C-4C-7C-2C-8C-AC",
+            "deck": "4D-6C-TD-2H-6D-JC-2D-QC-3D-KC-8H-AD-5D-9D-[8D]-7D-JD-KD-5C-TS-QD-KS-AH-4H-5H-3H-7H-TH-6H-AS-JH-9H-3S-QS-QH-7S-KH-2S-5S-6S-JS-4S-3C-TC-9S-8S-9C-4C-7C-2C-8C-AC",
             "pots": [
                 "80000000000000000"
             ],
@@ -1146,7 +1146,7 @@ export const test_873 = {
                     "amount": "80000000000000000",
                     "cards": [
                         "4D",
-                        "10D"
+                        "TD"
                     ],
                     "name": "Flush",
                     "description": "Flush, Ad High"
@@ -1237,7 +1237,7 @@ export const test_873_2 = {
                 "5D",
                 "7S"
             ],
-            "deck": "QC-AD-8H-7D-2D-JC-10H-4D-KC-8D-10D-5D-3D-7S-[9D]-AH-6D-KD-7C-7H-JD-5H-QD-2H-KH-AC-3H-6H-4H-9H-3S-5S-4S-JH-QH-9S-AS-2S-4C-6C-8S-6S-10C-10S-5C-8C-QS-9C-JS-KS-2C-3C",
+            "deck": "QC-AD-8H-7D-2D-JC-TH-4D-KC-8D-TD-5D-3D-7S-[9D]-AH-6D-KD-7C-7H-JD-5H-QD-2H-KH-AC-3H-6H-4H-9H-3S-5S-4S-JH-QH-9S-AS-2S-4C-6C-8S-6S-TC-TS-5C-8C-QS-9C-JS-KS-2C-3C",
             "pots": [
                 "120000000000000000"
             ],
@@ -1448,7 +1448,7 @@ export const test_877 = {
                 }
             ],
             "communityCards": [],
-            "deck": "[JC]-3D-QC-AS-3H-4H-5D-2D-9D-KC-AD-KD-JD-4D-QD-10H-6D-8D-7D-10D-2H-6H-7H-KH-AH-8H-9H-2S-5H-7C-3S-JH-QH-QS-10C-8C-8S-4S-6S-4C-7S-5S-KS-9S-9C-10S-JS-5C-3C-AC-6C-2C",
+            "deck": "[JC]-3D-QC-AS-3H-4H-5D-2D-9D-KC-AD-KD-JD-4D-QD-TH-6D-8D-7D-TD-2H-6H-7H-KH-AH-8H-9H-2S-5H-7C-3S-JH-QH-QS-TC-8C-8S-4S-6S-4C-7S-5S-KS-9S-9C-TS-JS-5C-3C-AC-6C-2C",
             "pots": [
                 "0"
             ],
@@ -1589,7 +1589,7 @@ export const test_899 = {
                 }
             ],
             "communityCards": [],
-            "deck": "2H-10C-JH-4H-[JD]-8S-7S-9D-2D-3H-KC-QH-4C-4S-5H-AC-10D-4D-3D-6C-9C-2S-6D-QD-5S-8C-8D-KD-9S-6H-AH-9H-7C-KS-10S-5C-7D-QC-JS-3S-AD-8H-6S-7H-AS-JC-KH-2C-10H-QS-5D-3C",
+            "deck": "2H-TC-JH-4H-[JD]-8S-7S-9D-2D-3H-KC-QH-4C-4S-5H-AC-TD-4D-3D-6C-9C-2S-6D-QD-5S-8C-8D-KD-9S-6H-AH-9H-7C-KS-TS-5C-7D-QC-JS-3S-AD-8H-6S-7H-AS-JC-KH-2C-TH-QS-5D-3C",
             "pots": [
                 "50000000000000000"
             ],
@@ -1753,7 +1753,7 @@ export const test_899_2 = {
                 }
             ],
             "communityCards": [],
-            "deck": "3H-7H-AC-9D-[KC]-6S-10H-9C-QD-JH-KH-10C-4D-2H-5D-8H-KS-4S-6D-QH-10S-3S-JS-3D-6H-AH-2C-5H-2S-10D-QC-9H-7S-KD-6C-8S-5S-5C-7C-8D-AD-JC-8C-4H-3C-2D-QS-7D-4C-AS-JD-9S",
+            "deck": "3H-7H-AC-9D-[KC]-6S-TH-9C-QD-JH-KH-TC-4D-2H-5D-8H-KS-4S-6D-QH-TS-3S-JS-3D-6H-AH-2C-5H-2S-TD-QC-9H-7S-KD-6C-8S-5S-5C-7C-8D-AD-JC-8C-4H-3C-2D-QS-7D-4C-AS-JD-9S",
             "pots": [
                 "60000000000000000"
             ],
@@ -1908,7 +1908,7 @@ export const test_902 = {
                 }
             ],
             "communityCards": [],
-            "deck": "7H-10S-6D-5S-[AD]-10D-2H-9H-KC-QH-JC-4D-QC-3S-4C-9C-2S-6C-8D-5C-8H-10C-6S-7D-JD-3C-9S-7S-3D-9D-KD-10H-AC-2D-KS-6H-JS-QS-JH-7C-8S-8C-5H-KH-3H-2C-AS-AH-QD-4H-4S-5D",
+            "deck": "7H-TS-6D-5S-[AD]-TD-2H-9H-KC-QH-JC-4D-QC-3S-4C-9C-2S-6C-8D-5C-8H-TC-6S-7D-JD-3C-9S-7S-3D-9D-KD-TH-AC-2D-KS-6H-JS-QS-JH-7C-8S-8C-5H-KH-3H-2C-AS-AH-QD-4H-4S-5D",
             "pots": [
                 "60000000000000000"
             ],
@@ -2084,7 +2084,7 @@ export const test_913 = {
                 }
             ],
             "communityCards": [],
-            "deck": "AC-QS-KC-AH-[5D]-JD-4D-9D-7H-7S-QH-6S-7C-10C-JS-9C-KH-3C-QC-3H-6D-AS-9H-4S-4H-KS-10H-3D-6C-6H-2H-2S-5S-8S-JH-10D-8H-KD-10S-2C-9S-QD-JC-4C-AD-7D-5C-8C-3S-5H-2D-8D",
+            "deck": "AC-QS-KC-AH-[5D]-JD-4D-9D-7H-7S-QH-6S-7C-TC-JS-9C-KH-3C-QC-3H-6D-AS-9H-4S-4H-KS-TH-3D-6C-6H-2H-2S-5S-8S-JH-TD-8H-KD-TS-2C-9S-QD-JC-4C-AD-7D-5C-8C-3S-5H-2D-8D",
             "pots": [
                 "90000000000000000"
             ],
@@ -2237,7 +2237,7 @@ export const test_971 = {
                 "AC",
                 "2H"
             ],
-            "deck": "QC-2S-JD-9H-6H-3D-8D-9D-AC-2H-[KC]-AH-QH-10S-4H-7D-5D-JH-10H-QD-6D-6S-3S-5S-2C-KD-4S-JC-7S-10D-6C-5C-KS-10C-5H-7C-8S-8H-AD-8C-9C-3H-4C-4D-KH-AS-3C-QS-9S-JS-7H-2D",
+            "deck": "QC-2S-JD-9H-6H-3D-8D-9D-AC-2H-[KC]-AH-QH-TS-4H-7D-5D-JH-TH-QD-6D-6S-3S-5S-2C-KD-4S-JC-7S-TD-6C-5C-KS-TC-5H-7C-8S-8H-AD-8C-9C-3H-4C-4D-KH-AS-3C-QS-9S-JS-7H-2D",
             "pots": [
                 "80000000000000000"
             ],
@@ -2346,7 +2346,7 @@ export const test_949 = {
                     "isDealer": false,
                     "holeCards": [
                         "8D",
-                        "10C"
+                        "TC"
                     ],
                     "status": "active",
                     "lastAction": {
@@ -2410,7 +2410,7 @@ export const test_949 = {
                 }
             ],
             "communityCards": [],
-            "deck": "8D-KH-10C-4D-[AC]-6D-9S-KS-9H-3C-JD-9D-4S-6H-6S-KD-2D-4H-JC-10D-8H-QH-7C-3S-3H-5D-8C-7H-8S-5H-QS-2C-2S-6C-5C-JS-AH-10H-AS-JH-9C-5S-KC-10S-4C-7D-3D-2H-AD-QC-7S-QD",
+            "deck": "8D-KH-TC-4D-[AC]-6D-9S-KS-9H-3C-JD-9D-4S-6H-6S-KD-2D-4H-JC-TD-8H-QH-7C-3S-3H-5D-8C-7H-8S-5H-QS-2C-2S-6C-5C-JS-AH-TH-AS-JH-9C-5S-KC-TS-4C-7D-3D-2H-AD-QC-7S-QD",
             "pots": [
                 "60000000000000000"
             ],
@@ -2554,7 +2554,7 @@ export const test_984 = {
                     "isBigBlind": false,
                     "isDealer": false,
                     "holeCards": [
-                        "10S",
+                        "TS",
                         "9C"
                     ],
                     "status": "active",
@@ -2574,11 +2574,11 @@ export const test_984 = {
                 }
             ],
             "communityCards": [
-                "10D",
+                "TD",
                 "JH",
                 "9H"
             ],
-            "deck": "QC-10S-JC-9C-6S-2S-AC-10D-JH-9H-[8C]-JS-3S-8S-KS-8D-QS-2H-9S-AD-KD-QH-3C-5H-KH-4H-7C-KC-4S-5S-AS-6C-AH-4D-QD-8H-3D-4C-7D-6H-JD-2C-10C-5C-2D-7S-7H-10H-3H-6D-9D-5D",
+            "deck": "QC-TS-JC-9C-6S-2S-AC-TD-JH-9H-[8C]-JS-3S-8S-KS-8D-QS-2H-9S-AD-KD-QH-3C-5H-KH-4H-7C-KC-4S-5S-AS-6C-AH-4D-QD-8H-3D-4C-7D-6H-JD-2C-TC-5C-2D-7S-7H-TH-3H-6D-9D-5D",
             "pots": [
                 "100000000000000000"
             ],
@@ -2751,7 +2751,7 @@ export const test_1006 = {
                 }
             ],
             "communityCards": [],
-            "deck": "[4S]-4C-2H-QH-3H-6S-7H-5S-9C-8S-10D-AH-10S-5H-8H-JH-KC-2C-2S-3C-4D-AD-7C-QD-5C-KD-2D-4H-JS-9H-7D-9S-8D-3D-5D-QS-QC-AC-AS-10C-6C-6D-7S-10H-KH-KS-JD-3S-6H-JC-9D-8C",
+            "deck": "[4S]-4C-2H-QH-3H-6S-7H-5S-9C-8S-TD-AH-TS-5H-8H-JH-KC-2C-2S-3C-4D-AD-7C-QD-5C-KD-2D-4H-JS-9H-7D-9S-8D-3D-5D-QS-QC-AC-AS-TC-6C-6D-7S-TH-KH-KS-JD-3S-6H-JC-9D-8C",
             "pots": [
                 "30000000000000000"
             ],

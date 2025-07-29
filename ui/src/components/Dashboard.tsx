@@ -12,7 +12,8 @@ import BuyInModal from "./playPage/BuyInModal";
 // game wallet and SDK imports
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { GameType, Variant } from "./types";
-import { formatAddress, formatBalance } from "./common/utils";
+import { formatAddress } from "./common/utils";
+import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
@@ -773,7 +774,7 @@ const Dashboard: React.FC = () => {
                                                 ) : accountError ? (
                                                     <span className="text-red-400">Error</span>
                                                 ) : account ? (
-                                                    `$${formatBalance(account.balance || "0")}`
+                                                    `$${formatBalance(account.balance)}`
                                                 ) : (
                                                     <span className="text-gray-400">No data</span>
                                                 )}

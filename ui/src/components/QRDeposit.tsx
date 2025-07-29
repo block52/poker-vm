@@ -3,18 +3,15 @@ import "./QRDeposit.css"; // Import the CSS file with animations
 import { QRCodeSVG } from "qrcode.react";
 import { Eip1193Provider, ethers, parseUnits } from "ethers";
 import axios from "axios";
-import { PROXY_URL } from "../config/constants";
+import { DEPOSIT_ADDRESS, PROXY_URL, TOKEN_ADDRESS } from "../config/constants";
 import useUserWallet from "../hooks/useUserWallet";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
 import { Link } from "react-router-dom";
-import { formatBalance } from "./common/utils";
+import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
 import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types";
 import spinner from "../assets/spinning-circles.svg";
 import { v4 as uuidv4 } from "uuid";
 import { colors, getAnimationGradient, hexToRgba, getHexagonStroke } from "../utils/colorConfig";
-
-const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";
-const TOKEN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_API_KEY;
 const RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL;
@@ -754,7 +751,7 @@ const QRDeposit: React.FC = () => {
                     }}
                 >
                     <p className="text-lg mb-2" style={{ color: "white" }}>{CLUB_NAME} Balance:</p>
-                    <p className="text-xl font-bold" style={{ color: colors.brand.primary }}>${formatBalance(displayBalance || "0")} USDC</p>
+                    <p className="text-xl font-bold" style={{ color: colors.brand.primary }}>${formatBalance(displayBalance)} USDC</p>
                     {b52Nonce !== null && (
                         <p 
                             className="text-sm mt-2 border-t pt-2"

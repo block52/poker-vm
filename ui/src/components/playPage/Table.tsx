@@ -179,21 +179,8 @@ const Table = React.memo(() => {
         const scaleWidth = window.innerWidth / baseWidth;
         const scaleHeight = availableHeight / baseHeight;
 
-        // More conservative scaling to prevent cutoff
-        let calculatedScale;
-        if (window.innerWidth <= 414) {
-            // For small mobile: very conservative scaling to prevent cutoff
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.6;
-        } else if (window.innerWidth <= 768) {
-            // For tablets/large mobile: moderate scaling
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.8;
-        } else if (window.innerWidth <= 1024) {
-            // For iPad/small desktop: slightly increased
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.75;
-        } else {
-            // For desktop: original scaling
-            calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.7;
-        }
+        // Conservative scaling to prevent player cutoff
+        const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
 
         return Math.min(calculatedScale, 2);
     }, []);
@@ -557,29 +544,20 @@ const Table = React.memo(() => {
     }, []);
 
     const handleLeaveTableClick = useCallback(() => {
-        // Check player status
-        if (
-            tableDataValues.tableDataPlayers?.some(
-                (p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress && p.status !== PlayerStatus.FOLDED && p.status !== PlayerStatus.SITTING_OUT
-            )
-        ) {
-            alert("You must fold your hand before leaving the table.");
-        } else {
-            // Get player's current stack if they are seated
-            const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
+        // Get player's current stack if they are seated
+        const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
 
-            if (id && playerData) {
-                leaveTable(id, playerData.stack || "0")
-                    .then(() => {
-                        window.location.href = "/";
-                    })
-                    .catch((err: any) => {
-                        console.error("Error leaving table:", err);
-                        window.location.href = "/";
-                    });
-            } else {
-                window.location.href = "/";
-            }
+        if (id && playerData) {
+            leaveTable(id, playerData.stack || "0")
+                .then(() => {
+                    window.location.href = "/";
+                })
+                .catch((err: any) => {
+                    console.error("Error leaving table:", err);
+                    window.location.href = "/";
+                });
+        } else {
+            window.location.href = "/";
         }
     }, [tableDataValues.tableDataPlayers, userWalletAddress, id]);
 
