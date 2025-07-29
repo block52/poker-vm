@@ -3,10 +3,10 @@ import * as React from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
-import { colors, hexToRgba } from "../utils/colorConfig";
+import { colors } from "../utils/colorConfig";
 
 // Import our custom hooks
-import { betHand, callHand, checkHand, foldHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks/playerActions/index";
+import { betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks/playerActions/index";
 
 import { useNextToActInfo } from "../hooks/useNextToActInfo";
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
@@ -19,6 +19,7 @@ import { ethers } from "ethers";
 import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
+import { BUTTON_STYLES } from "../styles";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -31,7 +32,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions();
     const { gameOptions } = useGameOptions();
-    // Direct function imports - no hook destructuring needed
 
     // Use the useNextToActInfo hook
     const { isCurrentUserTurn, timeRemaining } = useNextToActInfo(tableId);
@@ -94,7 +94,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // These are the default amounts
     const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
-    const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
+    const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2));
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
     // Handle raise amount changes from slider or input
@@ -109,8 +109,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
-
-    // Direct function imports - no hook destructuring needed for sit in/out
 
     // Add timer extension functionality for the footer button
     const { extendTime, canExtend } = usePlayerTimer(tableId, userPlayer?.seat);
@@ -133,145 +131,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         console.log(`⏰ Time extended by ${timeoutDuration} seconds from footer button`);
     }, [extendTime, canExtend, timeoutDuration]);
 
-    // Memoize all button styles to prevent re-renders
-    const dealButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${hexToRgba(colors.brand.primary, 0.9)}, ${hexToRgba(colors.brand.primary, 0.9)})`,
-            borderColor: hexToRgba(colors.brand.primary, 0.5),
-            boxShadow: `0 0 15px ${hexToRgba(colors.brand.primary, 0.3)}`
-        }),
-        []
-    );
-
-    const newHandButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.brand.secondary}, ${colors.brand.primary})`,
-            borderColor: hexToRgba(colors.brand.primary, 0.6)
-        }),
-        []
-    );
-
-    const muckButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-            borderColor: colors.ui.borderColor
-        }),
-        []
-    );
-
-    const showButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.brand.primary}, ${colors.brand.primary})`,
-            borderColor: colors.brand.primary
-        }),
-        []
-    );
-
-    const smallBlindButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.accent.success}, ${hexToRgba(colors.accent.success, 0.8)})`,
-            borderColor: colors.accent.success
-        }),
-        []
-    );
-
-    const smallBlindAmountStyle = useMemo(
-        () => ({
-            backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
-            color: colors.brand.primary,
-            borderColor: hexToRgba(colors.accent.success, 0.2)
-        }),
-        []
-    );
-
-    const bigBlindButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.accent.success}, ${hexToRgba(colors.accent.success, 0.8)})`,
-            borderColor: colors.accent.success
-        }),
-        []
-    );
-
-    const bigBlindAmountStyle = useMemo(
-        () => ({
-            backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
-            color: colors.brand.primary,
-            borderColor: hexToRgba(colors.accent.success, 0.2)
-        }),
-        []
-    );
-
-    const foldButtonDefaultStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.borderColor})`,
-            borderColor: colors.ui.borderColor,
-            color: "white"
-        }),
-        []
-    );
-
-    const foldButtonHoverStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.accent.danger}, ${hexToRgba(colors.accent.danger, 0.8)})`,
-            borderColor: colors.accent.danger,
-            boxShadow: `0 0 10px ${hexToRgba(colors.accent.danger, 0.4)}`
-        }),
-        []
-    );
-
-    const callButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-            borderColor: colors.ui.borderColor,
-            color: "white"
-        }),
-        []
-    );
-
-    const callButtonHoverStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.brand.primary}, ${hexToRgba(colors.brand.primary, 0.9)})`,
-            borderColor: colors.brand.primary,
-            boxShadow: `0 0 15px ${hexToRgba(colors.brand.primary, 0.2)}`
-        }),
-        []
-    );
-
-    const raiseButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-            borderColor: colors.ui.borderColor,
-            color: "white"
-        }),
-        []
-    );
-
-    const raiseButtonHoverStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.accent.glow}, ${hexToRgba(colors.accent.glow, 0.9)})`,
-            borderColor: colors.accent.glow,
-            boxShadow: `0 0 15px ${hexToRgba(colors.accent.glow, 0.2)}`
-        }),
-        []
-    );
-
-    const sliderButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-            borderColor: colors.ui.borderColor,
-            color: "white"
-        }),
-        []
-    );
-
-    const sliderButtonHoverStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgDark}, ${colors.ui.bgMedium})`,
-            borderColor: colors.accent.glow
-        }),
-        []
-    );
-
+    // Only keep useMemo for truly dynamic styles
     const inputFieldStyle = useMemo(
         () => ({
             backgroundColor: colors.ui.bgMedium,
@@ -288,37 +148,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
         [isRaiseAmountInvalid]
     );
 
-    const potButtonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-            borderColor: colors.ui.borderColor,
-            color: "white"
-        }),
-        []
-    );
-
-    const potButtonHoverStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.ui.bgDark}, ${colors.ui.bgMedium})`,
-            borderColor: colors.accent.glow
-        }),
-        []
-    );
-
-    const allInButtonStyle = {
-        background: `linear-gradient(to right, ${colors.ui.bgMedium}, ${colors.ui.bgDark})`,
-        borderColor: colors.ui.borderColor,
-        color: "white"
-    };
-
-    const allInButtonHoverStyle = useMemo(
-        () => ({
-            background: `linear-gradient(to right, ${colors.accent.glow}, ${hexToRgba(colors.accent.glow, 0.9)})`,
-            borderColor: colors.accent.glow
-        }),
-        []
-    );
-
     // Memoize expensive computations
     const formattedSmallBlindAmount = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
     const formattedBigBlindAmount = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
@@ -331,122 +160,69 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
 
-    // Memoize event handlers to prevent re-renders
-    const handleFoldMouseEnter = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = foldButtonHoverStyle.background;
-            e.currentTarget.style.borderColor = foldButtonHoverStyle.borderColor;
-            e.currentTarget.style.boxShadow = foldButtonHoverStyle.boxShadow || "none";
-        },
-        [foldButtonHoverStyle]
-    );
+    // Simplified event handlers using static styles
+    const handleFoldMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.fold.hover);
+    }, []);
 
-    const handleFoldMouseLeave = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = foldButtonDefaultStyle.background;
-            e.currentTarget.style.borderColor = foldButtonDefaultStyle.borderColor;
-            e.currentTarget.style.boxShadow = "none";
-        },
-        [foldButtonDefaultStyle]
-    );
+    const handleFoldMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.fold.default);
+    }, []);
 
-    const handleCallMouseEnter = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = callButtonHoverStyle.background;
-            e.currentTarget.style.borderColor = callButtonHoverStyle.borderColor;
-            e.currentTarget.style.boxShadow = callButtonHoverStyle.boxShadow || "none";
-        },
-        [callButtonHoverStyle]
-    );
+    const handleCallMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.call.hover);
+    }, []);
 
-    const handleCallMouseLeave = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = callButtonStyle.background;
-            e.currentTarget.style.borderColor = callButtonStyle.borderColor;
-            e.currentTarget.style.boxShadow = "none";
-        },
-        [callButtonStyle]
-    );
+    const handleCallMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.call.default);
+    }, []);
 
     const handleRaiseMouseEnter = useCallback(
         (e: React.MouseEvent<HTMLButtonElement>) => {
             if (!isRaiseAmountInvalid && isPlayerTurn) {
-                e.currentTarget.style.background = raiseButtonHoverStyle.background;
-                e.currentTarget.style.borderColor = raiseButtonHoverStyle.borderColor;
-                e.currentTarget.style.boxShadow = raiseButtonHoverStyle.boxShadow || "none";
+                Object.assign(e.currentTarget.style, BUTTON_STYLES.raise.hover);
             }
         },
-        [raiseButtonHoverStyle, isRaiseAmountInvalid, isPlayerTurn]
+        [isRaiseAmountInvalid, isPlayerTurn]
     );
 
-    const handleRaiseMouseLeave = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = raiseButtonStyle.background;
-            e.currentTarget.style.borderColor = raiseButtonStyle.borderColor;
-            e.currentTarget.style.boxShadow = "none";
-        },
-        [raiseButtonStyle]
-    );
+    const handleRaiseMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.raise.default);
+    }, []);
 
-    const handleSliderButtonMouseEnter = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = sliderButtonHoverStyle.background;
-            e.currentTarget.style.borderColor = sliderButtonHoverStyle.borderColor;
-        },
-        [sliderButtonHoverStyle]
-    );
+    const handleSliderButtonMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.slider.hover);
+    }, []);
 
-    const handleSliderButtonMouseLeave = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = sliderButtonStyle.background;
-            e.currentTarget.style.borderColor = sliderButtonStyle.borderColor;
-        },
-        [sliderButtonStyle]
-    );
+    const handleSliderButtonMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.slider.default);
+    }, []);
 
-    const handlePotButtonMouseEnter = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = potButtonHoverStyle.background;
-            e.currentTarget.style.borderColor = potButtonHoverStyle.borderColor;
-        },
-        [potButtonHoverStyle]
-    );
+    const handlePotButtonMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.pot.hover);
+    }, []);
 
-    const handlePotButtonMouseLeave = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = potButtonStyle.background;
-            e.currentTarget.style.borderColor = potButtonStyle.borderColor;
-        },
-        [potButtonStyle]
-    );
+    const handlePotButtonMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.pot.default);
+    }, []);
 
-    const handleAllInMouseEnter = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = allInButtonHoverStyle.background;
-            e.currentTarget.style.borderColor = allInButtonHoverStyle.borderColor;
-        },
-        [allInButtonHoverStyle]
-    );
+    const handleAllInMouseEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.allIn.hover);
+    }, []);
 
-    const handleAllInMouseLeave = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = potButtonStyle.background;
-            e.currentTarget.style.borderColor = potButtonStyle.borderColor;
-        },
-        [potButtonStyle]
-    );
+    const handleAllInMouseLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        Object.assign(e.currentTarget.style, BUTTON_STYLES.allIn.default);
+    }, []);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
         if (!localKey) return setPublicKey(undefined);
-
         setPublicKey(localKey);
     }, [publicKey]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_private_key");
         if (!localKey) return setPrivateKey(undefined);
-
         setPrivateKey(localKey);
     }, [privateKey]);
 
@@ -480,7 +256,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
         const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
         if (!smallBlindAmount) return;
 
-        // Simple call - let errors bubble up naturally
         await postSmallBlind(tableId, smallBlindAmount);
     };
 
@@ -490,7 +265,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
         const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
         if (!bigBlindAmount) return;
 
-        // Simple call - let errors bubble up naturally
         await postBigBlind(tableId, bigBlindAmount);
     };
 
@@ -500,7 +274,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
-        // Use our function to bet with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         try {
@@ -516,7 +289,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
-        // Use our function to raise with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         try {
@@ -547,48 +319,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Check if player is sitting out
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
 
-    // Auto-deal logic: Automatically deal when DEAL action is available for current user
-    // useEffect(() => {
-    //     // Early return if it's not the user's turn - no need to check anything else
-    //     if (!isCurrentUserTurn) {
-    //         return;
-    //     }
-
-    //     // Only proceed if we have the necessary data
-    //     if (!legalActions || !dealCards || isDealing || attemptToAutoDeal.current) {
-    //         return;
-    //     }
-
-    //     // Check if DEAL action is available in legal actions
-    //     const hasDealAction = legalActions.some(action => action.action === NonPlayerActionType.DEAL);
-
-    //     if (hasDealAction) {
-    //         // Set flag to prevent multiple attempts
-    //         attemptToAutoDeal.current = true;
-
-    //         // Small delay to ensure state is settled before dealing
-    //         const dealTimeout = setTimeout(() => {
-    //             dealCards()
-    //                 .then(() => {
-    //                     console.log("✅ Auto-deal completed successfully");
-    //                 })
-    //                 .catch(error => {
-    //                     console.error("❌ Auto-deal failed:", error);
-    //                 })
-    //                 .finally(() => {
-    //                     // Reset flag after attempt
-    //                     attemptToAutoDeal.current = false;
-    //                 });
-    //         }, 100);
-
-    //         // Cleanup timeout if component unmounts or dependencies change
-    //         return () => {
-    //             clearTimeout(dealTimeout);
-    //             attemptToAutoDeal.current = false;
-    //         };
-    //     }
-    // }, [dealCards, isCurrentUserTurn, isDealing, legalActions]); // Reduced dependencies - only what we actually need
-
     return (
         <div className="fixed bottom-12 lg:bottom-1 left-0 right-0 text-white p-2 lg:p-1 pb-4 lg:pb-1 flex justify-center items-center relative">
             <div className="flex flex-col w-full lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 justify-center rounded-lg relative z-10">
@@ -600,7 +330,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base
                             backdrop-blur-sm transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
-                            style={dealButtonStyle}
+                            style={BUTTON_STYLES.deal}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -624,7 +354,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
-                            style={newHandButtonStyle}
+                            style={BUTTON_STYLES.newHand}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -647,7 +377,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
-                            style={muckButtonStyle}
+                            style={BUTTON_STYLES.muck}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -670,7 +400,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
                             border-2 transition-all duration-300 
                             flex items-center justify-center gap-2 transform hover:scale-105"
-                            style={showButtonStyle}
+                            style={BUTTON_STYLES.show}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -696,10 +426,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                     onClick={handlePostSmallBlind}
                                     className="text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm
                                     border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
-                                    style={smallBlindButtonStyle}
+                                    style={BUTTON_STYLES.smallBlind}
                                 >
                                     <span className="mr-1">Post Small Blind</span>
-                                    <span className="backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border" style={smallBlindAmountStyle}>
+                                    <span className="backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border" style={BUTTON_STYLES.smallBlindAmount}>
                                         ${formattedSmallBlindAmount}
                                     </span>
                                 </button>
@@ -710,10 +440,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                     onClick={handlePostBigBlind}
                                     className="text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm
                                     border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
-                                    style={bigBlindButtonStyle}
+                                    style={BUTTON_STYLES.bigBlind}
                                 >
                                     <span className="mr-1">Post Big Blind</span>
-                                    <span className="backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border" style={bigBlindAmountStyle}>
+                                    <span className="backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border" style={BUTTON_STYLES.bigBlindAmount}>
                                         ${formattedBigBlindAmount}
                                     </span>
                                 </button>
@@ -723,10 +453,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                     className="cursor-pointer active:scale-105
 px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border text-xs lg:text-sm
 transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
-                                    style={foldButtonDefaultStyle}
+                                    style={BUTTON_STYLES.fold.default}
                                     onMouseEnter={handleFoldMouseEnter}
                                     onMouseLeave={handleFoldMouseLeave}
-                                    onClick={handleFold}
+                                    onClick={() => handleFold(tableId)}
                                 >
                                     FOLD
                                 </button>
@@ -748,7 +478,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             className="cursor-pointer active:scale-105
 px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border text-xs lg:text-sm
 transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
-                                            style={foldButtonDefaultStyle}
+                                            style={BUTTON_STYLES.fold.default}
                                             onMouseEnter={handleFoldMouseEnter}
                                             onMouseLeave={handleFoldMouseLeave}
                                             onClick={() => handleFold(tableId)}
@@ -777,7 +507,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                         <button
                                             className="cursor-pointer px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border shadow-md backdrop-blur-sm text-xs lg:text-sm
                                             transition-all duration-200 font-medium transform active:scale-105"
-                                            style={callButtonStyle}
+                                            style={BUTTON_STYLES.call.default}
                                             onMouseEnter={handleCallMouseEnter}
                                             onMouseLeave={handleCallMouseLeave}
                                             onClick={() => handleCall(callAction, callAmount, tableId)}
@@ -793,7 +523,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
                                             } px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border shadow-md backdrop-blur-sm text-xs lg:text-sm
     transition-all duration-200 font-medium`}
-                                            style={raiseButtonStyle}
+                                            style={BUTTON_STYLES.raise.default}
                                             onMouseEnter={handleRaiseMouseEnter}
                                             onMouseLeave={handleRaiseMouseLeave}
                                         >
@@ -810,7 +540,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                         <div className="flex items-center space-x-2 lg:space-x-4 bg-[#0f172a40] backdrop-blur-sm p-2 lg:p-3 rounded-lg border border-[#3a546d]/50 shadow-inner">
                                             <button
                                                 className="py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
-                                                style={sliderButtonStyle}
+                                                style={BUTTON_STYLES.slider.default}
                                                 onMouseEnter={handleSliderButtonMouseEnter}
                                                 onMouseLeave={handleSliderButtonMouseLeave}
                                                 onClick={() => handleRaiseChange(-getStep())}
@@ -846,7 +576,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             />
                                             <button
                                                 className="py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
-                                                style={sliderButtonStyle}
+                                                style={BUTTON_STYLES.slider.default}
                                                 onMouseEnter={handleSliderButtonMouseEnter}
                                                 onMouseLeave={handleSliderButtonMouseLeave}
                                                 onClick={() => handleRaiseChange(getStep())}
@@ -867,7 +597,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                         // Always allow clearing the field
                                                         if (raw === "") {
                                                             setRaiseInputRaw("");
-                                                            // setRaiseToAmount(0);
                                                             setRaiseAmount(0);
                                                             return;
                                                         }
@@ -878,7 +607,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
 
                                                             // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
                                                             if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
-                                                                // setRaiseToAmount(parseFloat(raw));
                                                                 setRaiseAmount(parseFloat(raw));
                                                                 setLastAmountSource("input");
                                                             }
@@ -901,7 +629,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             <button
                                                 className="px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                 transition-all duration-200 transform hover:scale-105"
-                                                style={potButtonStyle}
+                                                style={BUTTON_STYLES.pot.default}
                                                 onMouseEnter={handlePotButtonMouseEnter}
                                                 onMouseLeave={handlePotButtonMouseLeave}
                                                 onClick={() => {
@@ -916,7 +644,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             <button
                                                 className="px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                 transition-all duration-200 transform hover:scale-105"
-                                                style={potButtonStyle}
+                                                style={BUTTON_STYLES.pot.default}
                                                 onMouseEnter={handlePotButtonMouseEnter}
                                                 onMouseLeave={handlePotButtonMouseLeave}
                                                 onClick={() => {
@@ -931,7 +659,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             <button
                                                 className="px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                 transition-all duration-200 transform hover:scale-105"
-                                                style={potButtonStyle}
+                                                style={BUTTON_STYLES.pot.default}
                                                 onMouseEnter={handlePotButtonMouseEnter}
                                                 onMouseLeave={handlePotButtonMouseLeave}
                                                 onClick={() => {
@@ -946,7 +674,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             <button
                                                 className="px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                 transition-all duration-200 transform hover:scale-105"
-                                                style={potButtonStyle}
+                                                style={BUTTON_STYLES.pot.default}
                                                 onMouseEnter={handlePotButtonMouseEnter}
                                                 onMouseLeave={handlePotButtonMouseLeave}
                                                 onClick={() => {
@@ -961,7 +689,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             <button
                                                 className="px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                 transition-all duration-200 font-medium transform active:scale-105"
-                                                style={allInButtonStyle}
+                                                style={BUTTON_STYLES.allIn.default}
                                                 onMouseEnter={handleAllInMouseEnter}
                                                 onMouseLeave={handleAllInMouseLeave}
                                                 onClick={() => {
@@ -973,29 +701,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             >
                                                 ALL-IN
                                             </button>
-                                            {/* COMMENTED OUT - Time extension button disabled
-                                            {canExtend && isUsersTurn && (
-                                                <button
-                                                    onClick={handleExtendTimeFromFooter}
-                                                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600
-                                                    px-2 py-1.5 rounded-lg w-full border border-blue-400 hover:border-blue-300 shadow-md
-                                                    transition-all duration-200 text-xs font-medium transform hover:scale-105 flex items-center justify-center gap-1"
-                                                >
-                                                    <svg 
-                                                        className="w-3 h-3 text-white" 
-                                                        fill="none" 
-                                                        stroke="currentColor" 
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <circle cx="12" cy="12" r="8" strokeWidth="2"/>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2"/>
-                                                        <circle cx="18" cy="6" r="3" fill="currentColor"/>
-                                                        <path stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 6h2M18 5v2"/>
-                                                    </svg>
-                                                    +{timeoutDuration}s
-                                                </button>
-                                            )}
-                                            */}
                                         </div>
                                     </>
                                 )}
@@ -1009,29 +714,3 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
 });
 
 export default PokerActionPanel;
-
-/*
- * ======================== MIGRATION SUMMARY ========================
- * We've successfully migrated these features from TableContext to custom hooks:
- *
- * 1. playerLegalActions -> usePlayerLegalActions().legalActions
- * 2. isPlayerTurn -> usePlayerLegalActions().isPlayerTurn
- * 3. canDeal -> Now uses currentUserCanDeal (from legalActions)
- * 4. dealCards -> useTableDeal().dealCards (replaced dealTable)
- * 5. nonce -> useTableNonce().nonce
- * 6. refreshNonce -> useTableNonce().refreshNonce
- *
- * All user actions now use their respective hooks:
- * - Check: useTableCheck().checkHand
- * - Fold: useTableFold().foldHand
- * - Post Small Blind: useTablePostSmallBlind().postSmallBlind
- * - Post Big Blind: useTablePostBigBlind().postBigBlind
- * - Call: useTableCall().callHand
- * - Bet: useTableBet().betHand
- * - Raise: useTableRaise().raiseHand
- * - Deal: useTableDeal().dealCards
- *
- * TO DO:
- * - Remove the TableContext dependency completely
- * - Potentially consolidate these hooks into a more organized structure
- */
