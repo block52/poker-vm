@@ -30,7 +30,7 @@ export const useMinAndMaxBuyIns = (): MinAndMaxBuyInsReturn => {
   try {
     // Extract game options from the game state
     const gameOptions = gameState.gameOptions;
-    
+
     if (!gameOptions) {
       console.warn("No game options found in game state");
       return defaultValues;
