@@ -64,6 +64,7 @@ export class Deck implements IDeck, IJSONModel {
         // Define the mapping for special ranks
         const rankMap: Record<number, string> = {
             1: "A",
+            10: "T",
             11: "J",
             12: "Q",
             13: "K"
@@ -133,7 +134,7 @@ export class Deck implements IDeck, IJSONModel {
     }
 
     public static fromString(mnemonic: string): Card {
-        const match = mnemonic.match(/^([AJQKajqk]|[0-9]+)([CDHS])$/i);
+        const match = mnemonic.match(/^([AJQKTajqkt]|[0-9]+)([CDHS])$/i);
 
         if (!match) {
             throw new Error(`Invalid card mnemonic: ${mnemonic}`);
@@ -146,6 +147,7 @@ export class Deck implements IDeck, IJSONModel {
         let rank: number;
         switch (rankStr) {
             case "A": rank = 1; break;
+            case "T": rank = 10; break;
             case "J": rank = 11; break;
             case "Q": rank = 12; break;
             case "K": rank = 13; break;
