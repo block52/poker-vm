@@ -15,10 +15,10 @@ describe("Deck", () => {
         });
 
         it("should initialize with standard 52-card deck", () => {
-            const mnemonic = "AC-2C-3C-4C-5C-6C-7C-8C-9C-10C-JC-QC-KC-" +
-                "AD-2D-3D-4D-5D-6D-7D-8D-9D-10D-JD-QD-KD-" +
-                "AH-2H-3H-4H-5H-6H-7H-8H-9H-10H-JH-QH-KH-" +
-                "AS-2S-3S-4S-5S-6S-7S-8S-9S-10S-JS-QS-KS";
+            const mnemonic = "AC-2C-3C-4C-5C-6C-7C-8C-9C-TC-JC-QC-KC-" +
+                "AD-2D-3D-4D-5D-6D-7D-8D-9D-TD-JD-QD-KD-" +
+                "AH-2H-3H-4H-5H-6H-7H-8H-9H-TH-JH-QH-KH-" +
+                "AS-2S-3S-4S-5S-6S-7S-8S-9S-TS-JS-QS-KS";
 
             const deck = new Deck(mnemonic);
             const json = deck.toJson();
@@ -26,10 +26,10 @@ describe("Deck", () => {
         });
 
         it("should serialize to string", () => {
-            const mnemonic = "[AC]-2C-3C-4C-5C-6C-7C-8C-9C-10C-JC-QC-KC-" +
-                "AD-2D-3D-4D-5D-6D-7D-8D-9D-10D-JD-QD-KD-" +
-                "AH-2H-3H-4H-5H-6H-7H-8H-9H-10H-JH-QH-KH-" +
-                "AS-2S-3S-4S-5S-6S-7S-8S-9S-10S-JS-QS-KS";
+            const mnemonic = "[AC]-2C-3C-4C-5C-6C-7C-8C-9C-TC-JC-QC-KC-" +
+                "AD-2D-3D-4D-5D-6D-7D-8D-9D-TD-JD-QD-KD-" +
+                "AH-2H-3H-4H-5H-6H-7H-8H-9H-TH-JH-QH-KH-" +
+                "AS-2S-3S-4S-5S-6S-7S-8S-9S-TS-JS-QS-KS";
 
             const deck = new Deck(mnemonic);
             expect(deck.toString()).toEqual(mnemonic);
@@ -67,7 +67,7 @@ describe("Deck", () => {
             const shuffledCards = deck.toJson().cards;            
             expect(shuffledCards).toHaveLength(52);
             expect(deck.hash).toBeDefined();
-            expect(deck.hash).toEqual("966d008669a45807ecf663de2c8e72503c1e3cd7892a33032b6eb6e2bd1f99d5")
+            expect(deck.hash).toEqual("9d1ea8d620b6e6b29d44d884c3c789ebdbfcd2c8e88d50465c10a0c7d5c6ff0f")
             expect(deck.seedHash).toBeDefined();
             expect(deck.seedHash).toEqual("e0c15743a12c6a792080510757ff0103714f36700d44bd0fe0d28405aaff1c35");
         });
@@ -76,7 +76,7 @@ describe("Deck", () => {
     describe("getCardMnemonic", () => {
         it("should convert number cards correctly", () => {
             expect(deck.getCardMnemonic(SUIT.SPADES, 2)).toBe("2S");
-            expect(deck.getCardMnemonic(SUIT.HEARTS, 10)).toBe("10H");
+            expect(deck.getCardMnemonic(SUIT.HEARTS, 10)).toBe("TH");
         });
 
         it("should convert face cards correctly", () => {

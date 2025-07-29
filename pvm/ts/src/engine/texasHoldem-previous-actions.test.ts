@@ -85,7 +85,7 @@ const json = {
                 }
             ],
             "communityCards": [],
-            "deck": "7H-10S-6D-5S-[AD]-10D-2H-9H-KC-QH-JC-4D-QC-3S-4C-9C-2S-6C-8D-5C-8H-10C-6S-7D-JD-3C-9S-7S-3D-9D-KD-10H-AC-2D-KS-6H-JS-QS-JH-7C-8S-8C-5H-KH-3H-2C-AS-AH-QD-4H-4S-5D",
+            "deck": "7H-TS-6D-5S-[AD]-TD-2H-9H-KC-QH-JC-4D-QC-3S-4C-9C-2S-6C-8D-5C-8H-TC-6S-7D-JD-3C-9S-7S-3D-9D-KD-TH-AC-2D-KS-6H-JS-QS-JH-7C-8S-8C-5H-KH-3H-2C-AS-AH-QD-4H-4S-5D",
             "pots": [
                 "60000000000000000"
             ],

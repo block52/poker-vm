@@ -1184,19 +1184,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     findWinners(cards: string[]): boolean {
         const players = this.getSeatedPlayers();
 
-        // Prepare hands for poker solver
-        function toPokerSolverMnemonic(card: Card): string {
-            return card.mnemonic.replace("10", "T");
-        }
-
         if (players.length === 0) {
             return false;
         }
 
-        const hands = players.map(p => PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic)));
-        const communityCards: string[] = this._communityCards.map(toPokerSolverMnemonic);
+        const hands = players.map(p => PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic)));
+        const communityCards: string[] = this._communityCards.map(c => c.mnemonic);
 
-        const heroCards = cards.map(card => card.replace("10", "T"));
+        const heroCards = cards;
         heroCards.concat(communityCards);
         const heroSolution = PokerSolver.Hand.solve(heroCards);
 
@@ -1215,13 +1210,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private calculateWinner(): void {
         const players = this.getSeatedPlayers();
 
-        // Prepare hands for poker solver
-        function toPokerSolverMnemonic(card: Card): string {
-            return card.mnemonic.replace("10", "T");
-        }
-
         const hands = new Map<string, any>(
-            players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(toPokerSolverMnemonic))])
+            players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic))])
         );
 
         const activePlayers = this.findLivePlayers();
