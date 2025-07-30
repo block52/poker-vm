@@ -290,9 +290,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={() => handleStartNewHand(tableId)}
-                            className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
-                            border-2 transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105"
                             className="btn-new-hand text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -313,9 +310,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={() => handleMuck(tableId)}
-                            className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
-                            border-2 transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105"
                             className="btn-muck text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -336,9 +330,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={() => handleShow(tableId)}
-                            className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
-                            border-2 transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105"
                             className="btn-show text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -363,8 +354,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             {showSmallBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostSmallBlind}
-                                    className="text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm
-                                    border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
                                     className="btn-small-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
                                 >
                                     <span className="mr-1">Post Small Blind</span>
@@ -377,8 +366,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             {showBigBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostBigBlind}
-                                    className="text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm
-                                    border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
                                     className="btn-big-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
                                 >
                                     <span className="mr-1">Post Big Blind</span>
