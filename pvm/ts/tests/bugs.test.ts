@@ -1,4 +1,4 @@
-import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS, TWO_TOKENS } from "../src/engine/testConstants";
 import {
@@ -20,6 +20,7 @@ import {
     test_984,
     test_1006
 } from "./senarios/data";
+import { N } from "ethers";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Data driven", () => {
@@ -263,9 +264,10 @@ describe("Texas Holdem - Data driven", () => {
 
             const legalActions = game.getLegalActions("0x4260E88e81E60113146092Fb9474b61C59f7552e");
             expect(legalActions).toBeDefined();
-            expect(legalActions.length).toEqual(2);
-            expect(legalActions[0].action).toEqual("deal");
-            expect(legalActions[1].action).toEqual("fold");
+            expect(legalActions.length).toEqual(3);
+            expect(legalActions[0].action).toEqual(NonPlayerActionType.DEAL);
+            expect(legalActions[1].action).toEqual(PlayerActionType.FOLD);
+            expect(legalActions[2].action).toEqual(PlayerActionType.SIT_OUT);
         });
     });
 });
