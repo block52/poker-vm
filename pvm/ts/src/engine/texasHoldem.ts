@@ -36,6 +36,7 @@ import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./dealerManager";
 import { BetManager } from "./managers/betManager";
+import SitOutAction from "./actions/sitOutAction";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
@@ -127,7 +128,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new RaiseAction(this, this._update),
             new MuckAction(this, this._update),
             new ShowAction(this, this._update),
-            new NewHandAction(this, this._update, "")
+            new NewHandAction(this, this._update, ""),
+            new SitOutAction(this, this._update),
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
