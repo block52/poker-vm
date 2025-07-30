@@ -55,6 +55,9 @@ class BetAction extends BaseAction implements IAction {
         }
 
         super.execute(player, index, amount);
+
+        // Set player state to ALL_IN if they have no chips left after the bet
+        this.setAllInWhenBalanceIsZero(player);
     }
 }
 
