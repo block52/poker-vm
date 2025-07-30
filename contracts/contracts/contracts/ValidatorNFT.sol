@@ -3,11 +3,12 @@ pragma solidity ^0.8.24;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IValidator } from "../IValidator.sol";
 
-contract ValidatorNFT is IValidator, ERC721, Ownable {
+contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     // Card order matches deck.test.ts: Clubs -> Diamonds -> Hearts -> Spades
     enum Suit {
         Clubs,      // 0: First suit in deck order
@@ -33,7 +34,7 @@ contract ValidatorNFT is IValidator, ERC721, Ownable {
         King        // 12: K (position 12, 25, 38, 51)
     }
 
-    uint256 public constant MAX_VALIDATORS = 52;
+    uint8 public constant MAX_VALIDATORS = 52;
     
     // Track which cards (token IDs) have been minted to validators
     mapping(uint256 => bool) public cardMinted;
@@ -46,54 +47,47 @@ contract ValidatorNFT is IValidator, ERC721, Ownable {
         // No pre-minting - cards are minted on demand
     }
 
-    function mint(address to, uint256 cardPosition) external onlyOwner {
-        require(cardPosition < MAX_VALIDATORS, "ValidatorNFT: Card position out of range");
-        require(!cardMinted[cardPosition], "ValidatorNFT: Card already minted");
-        require(!cardDisabled[cardPosition], "ValidatorNFT: Card is disabled");
+    function mint(address to, uint256 tokenId) external onlyOwner {
+        require(tokenId < MAX_VALIDATORS, "ValidatorNFT: Token ID out of range");
+        require(!cardMinted[tokenId], "ValidatorNFT: Card already minted");
         
-        _safeMint(to, cardPosition);
-        cardMinted[cardPosition] = true;
+        _safeMint(to, tokenId);
+        cardMinted[tokenId] = true;
+        cardDisabled[tokenId] = true; // Default to disabled
 
-        emit ValidatorAdded(to, cardPosition, getMintedCardCount());
+        emit ValidatorAdded(to, tokenId, totalSupply());
     }
     
-    function disableCard(uint256 cardPosition) external onlyOwner {
-        require(cardPosition < MAX_VALIDATORS, "ValidatorNFT: Card position out of range");
-        cardDisabled[cardPosition] = true;
-        emit CardDisabled(cardPosition);
-    }
-    
-    function enableCard(uint256 cardPosition) external onlyOwner {
-        require(cardPosition < MAX_VALIDATORS, "ValidatorNFT: Card position out of range");
-        cardDisabled[cardPosition] = false;
-        emit CardEnabled(cardPosition);
-    }
-    
-    function getMintedCardCount() public view returns (uint256) {
-        uint256 count = 0;
-        for (uint256 i = 0; i < MAX_VALIDATORS; i++) {
-            if (cardMinted[i]) {
-                count++;
-            }
+    function toggleX(uint256 tokenId) external {
+        require(tokenId < MAX_VALIDATORS, "ValidatorNFT: Token ID out of range");
+        require(cardMinted[tokenId], "ValidatorNFT: Token not minted");
+        require(ownerOf(tokenId) == msg.sender, "ValidatorNFT: Not token owner");
+        
+        cardDisabled[tokenId] = !cardDisabled[tokenId];
+        
+        if (cardDisabled[tokenId]) {
+            emit CardDisabled(tokenId);
+        } else {
+            emit CardEnabled(tokenId);
         }
-        return count;
-    }
-
-    function getSuitAndRank(uint256 cardPosition) external pure returns (Suit suit, Rank rank) {
-        require(cardPosition < MAX_VALIDATORS, "ValidatorNFT: Card position out of range");
-        
-        // Card position to suit/rank mapping following deck.test.ts order:
-        // Clubs: 0-12, Diamonds: 13-25, Hearts: 26-38, Spades: 39-51
-        suit = Suit(cardPosition / 13);
-        rank = Rank(cardPosition % 13);
     }
     
-    function getCardMnemonic(uint256 cardPosition) external pure returns (string memory) {
-        require(cardPosition < MAX_VALIDATORS, "ValidatorNFT: Card position out of range");
+
+    function getSuitAndRank(uint256 tokenId) external pure returns (Suit suit, Rank rank) {
+        require(tokenId < MAX_VALIDATORS, "ValidatorNFT: Token ID out of range");
+        
+        // Token ID to suit/rank mapping following deck.test.ts order:
+        // Clubs: 0-12, Diamonds: 13-25, Hearts: 26-38, Spades: 39-51
+        suit = Suit(tokenId / 13);
+        rank = Rank(tokenId % 13);
+    }
+    
+    function getCardMnemonic(uint256 tokenId) external pure returns (string memory) {
+        require(tokenId < MAX_VALIDATORS, "ValidatorNFT: Token ID out of range");
         
         // Calculate suit and rank directly without calling external function
-        Suit suit = Suit(cardPosition / 13);
-        Rank rank = Rank(cardPosition % 13);
+        Suit suit = Suit(tokenId / 13);
+        Rank rank = Rank(tokenId % 13);
         
         string memory rankStr;
         if (rank == Rank.Ace) rankStr = "A";
@@ -120,11 +114,13 @@ contract ValidatorNFT is IValidator, ERC721, Ownable {
     }
 
     function isValidator(address account) external view returns (bool) {
-        if (super.balanceOf(account) == 0) return false;
+        uint256 balance = balanceOf(account);
+        if (balance == 0) return false;
         
         // Check if any of the account's cards are enabled
-        for (uint256 i = 0; i < MAX_VALIDATORS; i++) {
-            if (cardMinted[i] && ownerOf(i) == account && !cardDisabled[i]) {
+        for (uint256 i = 0; i < balance; i++) {
+            uint256 tokenId = tokenOfOwnerByIndex(account, i);
+            if (!cardDisabled[tokenId]) {
                 return true;
             }
         }
@@ -132,15 +128,15 @@ contract ValidatorNFT is IValidator, ERC721, Ownable {
     }
 
     function validatorCount() external view returns (uint256) {
-        return getMintedCardCount();
+        return totalSupply();
     }
 
-    function getValidatorAddress(uint256 cardPosition) external view returns (address) {
-        require(cardMinted[cardPosition], "ValidatorNFT: Card not minted");
-        return super.ownerOf(cardPosition);
+    function getValidatorAddress(uint256 tokenId) external view returns (address) {
+        require(cardMinted[tokenId], "ValidatorNFT: Card not minted");
+        return super.ownerOf(tokenId);
     }
 
     event ValidatorAdded(address indexed validator, uint256 indexed tokenId, uint256 indexed count);
-    event CardDisabled(uint256 indexed cardPosition);
-    event CardEnabled(uint256 indexed cardPosition);
+    event CardDisabled(uint256 indexed tokenId);
+    event CardEnabled(uint256 indexed tokenId);
 }
