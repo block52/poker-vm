@@ -12,9 +12,10 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             chainId: 1337,
-            forking: {
-                url: `${process.env.RPC_URL}`
-            }
+            // Temporarily disable forking for tests
+            // forking: {
+            //     url: `${process.env.RPC_URL}`
+            // }
         },
         sepolia: {
             url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
