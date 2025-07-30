@@ -216,7 +216,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
-        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+        const amountWei = ethers.parseUnits(minBet.toString(), 18).toString();
 
         try {
             await betHand(tableId, amountWei);
