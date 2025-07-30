@@ -132,15 +132,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
     }, [extendTime, canExtend, timeoutDuration]);
 
     // Dynamic class names based on validation state
-    const inputFieldClassName = useMemo(
-        () => `input-field ${isRaiseAmountInvalid ? "invalid" : ""}`,
-        [isRaiseAmountInvalid]
-    );
+    const inputFieldClassName = useMemo(() => `input-field ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
-    const minMaxTextClassName = useMemo(
-        () => `min-max-text ${isRaiseAmountInvalid ? "invalid" : ""}`,
-        [isRaiseAmountInvalid]
-    );
+    const minMaxTextClassName = useMemo(() => `min-max-text ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
     // Memoize expensive computations
     const formattedSmallBlindAmount = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
@@ -451,14 +445,13 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                     {(hasRaiseAction || hasBetAction) && (
                                         <button
                                             onClick={hasRaiseAction ? handleRaise : handleBet}
-                                            disabled={isRaiseAmountInvalid || !isPlayerTurn}
-                                            className={`${
-                                                isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
-                                            } btn-raise px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border shadow-md backdrop-blur-sm text-xs lg:text-sm
-    transition-all duration-200 font-medium`}
+                                            disabled={hasRaiseAction ? isRaiseAmountInvalid : !hasBetAction || !isPlayerTurn}
+                                            className="cursor-pointer hover:scale-105 btn-raise px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border shadow-md backdrop-blur-sm text-xs lg:text-sm transition-all duration-200 font-medium"
                                         >
                                             {hasRaiseAction ? "RAISE TO" : "BET"}{" "}
-                                            <span style={{ color: colors.brand.primary }}>${raiseActionAmount.toFixed(2)}</span>
+                                            <span style={{ color: colors.brand.primary }}>
+                                                ${hasRaiseAction ? raiseActionAmount.toFixed(2) : minBet.toFixed(2)}
+                                            </span>
                                         </button>
                                     )}
                                 </div>
@@ -479,7 +472,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
-                                                min={hasBetAction ? raiseActionAmount : minRaise}
+                                                min={hasBetAction ? minBet : raiseActionAmount}
                                                 max={hasBetAction ? maxBet : maxRaise}
                                                 step={step}
                                                 value={raiseActionAmount}
