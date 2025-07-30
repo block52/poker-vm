@@ -269,9 +269,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={() => handleDeal(tableId)}
-                            className="text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base
-                            backdrop-blur-sm transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105"
                             className="btn-deal text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -44,6 +44,7 @@
  */
 
 import { useEffect, useState, useMemo, useCallback, memo } from "react";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import ActionsLog from "../ActionsLog";
@@ -104,6 +105,8 @@ import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner in
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { getAccountBalance, getPublicKey, getFormattedAddress } from "../../utils/b52AccountUtils";
+import { handleSitOut } from "../common/actionHandlers";
+import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
@@ -222,6 +225,9 @@ const Table = React.memo(() => {
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
+    
+    // Check if sit out action is available
+    const hasSitOutAction = hasAction(playerLegalActions, PlayerActionType.SIT_OUT);
 
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat } = usePlayerSeatInfo();
@@ -887,6 +893,23 @@ const Table = React.memo(() => {
             {tableActivePlayers.length === 0 && (
                 <div className="absolute top-28 right-4 text-white bg-black bg-opacity-50 p-2 sm:p-4 rounded text-xs sm:text-sm">
                     Waiting for players to join...
+                </div>
+            )}
+
+            {/* Sit Out Button - Bottom Left */}
+            {hasSitOutAction && (
+                <div className="fixed bottom-20 left-4 z-30">
+                    <button
+                        onClick={() => handleSitOut(id)}
+                        className="btn-sit-out text-white font-medium py-2 px-4 rounded-lg shadow-md text-sm
+                        backdrop-blur-sm transition-all duration-300 border
+                        flex items-center justify-center gap-2 transform hover:scale-105"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        SIT OUT
+                    </button>
                 </div>
             )}
 
