@@ -144,3 +144,16 @@
 .min-max-text.invalid {
   color: var(--accent-danger);
 }
+
+/* Sit out button */
+.btn-sit-out {
+  background: linear-gradient(to right, var(--brand-secondary), var(--ui-bg-medium));
+  border-color: var(--ui-border-color);
+  color: white;
+}
+
+.btn-sit-out:hover {
+  background: linear-gradient(to right, var(--ui-bg-medium), var(--brand-secondary));
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}

@@ -105,9 +105,15 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
   const wsUrl = import.meta.env.VITE_NODE_WS_URL || "wss://node1.block52.xyz";
 
   const subscribeToTable = useCallback((tableId: string) => {
-    // Simple duplicate check
+    // Enhanced duplicate check to prevent re-subscription loops
     if (currentTableId === tableId && wsRef.current?.readyState === WebSocket.OPEN) {
       console.log(`[GameStateContext] Already subscribed to table: ${tableId}`);
+      return;
+    }
+
+    // Prevent rapid re-connection attempts
+    if (wsRef.current?.readyState === WebSocket.CONNECTING) {
+      console.log(`[GameStateContext] WebSocket already connecting to table: ${tableId}`);
       return;
     }
 
@@ -248,7 +254,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
       setError(new Error(`WebSocket connection error for table ${tableId}`));
       setIsLoading(false);
     };
-  }, [currentTableId, wsUrl]);
+  }, [wsUrl]); // Remove currentTableId from dependencies to prevent infinite loops
 
   const unsubscribeFromTable = useCallback(() => {
     if (currentTableId) {
@@ -265,7 +271,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
     setGameState(undefined);
     setIsLoading(false);
     setError(null);
-  }, [currentTableId]);
+  }, []); // Remove currentTableId dependency to prevent recreation
 
   // Cleanup on unmount
   useEffect(() => {
