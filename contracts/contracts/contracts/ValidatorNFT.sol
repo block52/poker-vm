@@ -99,7 +99,7 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
         if (rank == Rank.Seven) rankStr = "7";
         if (rank == Rank.Eight) rankStr = "8";
         if (rank == Rank.Nine) rankStr = "9";
-        if (rank == Rank.Ten) rankStr = "T";  // Use "T" for Ten as per deck.test.ts
+        if (rank == Rank.Ten) rankStr = "T";
         if (rank == Rank.Jack) rankStr = "J";
         if (rank == Rank.Queen) rankStr = "Q";
         if (rank == Rank.King) rankStr = "K";
