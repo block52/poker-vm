@@ -91,24 +91,24 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
         
         string memory rankStr;
         if (rank == Rank.Ace) rankStr = "A";
-        else if (rank == Rank.Two) rankStr = "2";
-        else if (rank == Rank.Three) rankStr = "3";
-        else if (rank == Rank.Four) rankStr = "4";
-        else if (rank == Rank.Five) rankStr = "5";
-        else if (rank == Rank.Six) rankStr = "6";
-        else if (rank == Rank.Seven) rankStr = "7";
-        else if (rank == Rank.Eight) rankStr = "8";
-        else if (rank == Rank.Nine) rankStr = "9";
-        else if (rank == Rank.Ten) rankStr = "T";  // Use "T" for Ten as per deck.test.ts
-        else if (rank == Rank.Jack) rankStr = "J";
-        else if (rank == Rank.Queen) rankStr = "Q";
-        else if (rank == Rank.King) rankStr = "K";
+        if (rank == Rank.Two) rankStr = "2";
+        if (rank == Rank.Three) rankStr = "3";
+        if (rank == Rank.Four) rankStr = "4";
+        if (rank == Rank.Five) rankStr = "5";
+        if (rank == Rank.Six) rankStr = "6";
+        if (rank == Rank.Seven) rankStr = "7";
+        if (rank == Rank.Eight) rankStr = "8";
+        if (rank == Rank.Nine) rankStr = "9";
+        if (rank == Rank.Ten) rankStr = "T";  // Use "T" for Ten as per deck.test.ts
+        if (rank == Rank.Jack) rankStr = "J";
+        if (rank == Rank.Queen) rankStr = "Q";
+        if (rank == Rank.King) rankStr = "K";
         
         string memory suitStr;
         if (suit == Suit.Clubs) suitStr = "C";
-        else if (suit == Suit.Diamonds) suitStr = "D";
-        else if (suit == Suit.Hearts) suitStr = "H";
-        else if (suit == Suit.Spades) suitStr = "S";
+        if (suit == Suit.Diamonds) suitStr = "D";
+        if (suit == Suit.Hearts) suitStr = "H";
+        if (suit == Suit.Spades) suitStr = "S";
         
         return string(abi.encodePacked(rankStr, suitStr));
     }
