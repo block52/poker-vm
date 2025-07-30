@@ -107,4 +107,92 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             expect(await validatorNFT.MAX_VALIDATORS()).to.equal(52);
         });
     });
+
+    describe("Enable/Disable functionality", function () {
+        it("should allow owner to disable cards", async function () {
+            // Disable Ace of Clubs (position 0)
+            await expect(validatorNFT.disableCard(0))
+                .to.emit(validatorNFT, "CardDisabled")
+                .withArgs(0);
+            
+            expect(await validatorNFT.cardDisabled(0)).to.be.true;
+            
+            // Try to mint disabled card - should fail
+            await expect(validatorNFT.mint(validator1.address, 0))
+                .to.be.revertedWith("ValidatorNFT: Card is disabled");
+        });
+
+        it("should allow owner to enable cards", async function () {
+            // Disable then enable a card
+            await validatorNFT.disableCard(0);
+            expect(await validatorNFT.cardDisabled(0)).to.be.true;
+            
+            await expect(validatorNFT.enableCard(0))
+                .to.emit(validatorNFT, "CardEnabled")
+                .withArgs(0);
+            
+            expect(await validatorNFT.cardDisabled(0)).to.be.false;
+            
+            // Should be able to mint after enabling
+            await validatorNFT.mint(validator1.address, 0);
+            expect(await validatorNFT.ownerOf(0)).to.equal(validator1.address);
+        });
+
+        it("should allow disabling already minted cards", async function () {
+            // Mint a card first
+            await validatorNFT.mint(validator1.address, 0);
+            expect(await validatorNFT.isValidator(validator1.address)).to.be.true;
+            
+            // Disable the minted card
+            await expect(validatorNFT.disableCard(0))
+                .to.emit(validatorNFT, "CardDisabled")
+                .withArgs(0);
+            
+            // Validator should no longer be valid
+            expect(await validatorNFT.isValidator(validator1.address)).to.be.false;
+            
+            // Re-enable the card
+            await validatorNFT.enableCard(0);
+            expect(await validatorNFT.isValidator(validator1.address)).to.be.true;
+        });
+
+        it("should only allow owner to enable/disable cards", async function () {
+            // Try to disable as non-owner
+            await expect(validatorNFT.connect(validator1).disableCard(0))
+                .to.be.revertedWithCustomError(validatorNFT, "OwnableUnauthorizedAccount");
+            
+            // Try to enable as non-owner
+            await expect(validatorNFT.connect(validator1).enableCard(0))
+                .to.be.revertedWithCustomError(validatorNFT, "OwnableUnauthorizedAccount");
+        });
+
+        it("should reject invalid card positions for enable/disable", async function () {
+            await expect(validatorNFT.disableCard(52))
+                .to.be.revertedWith("ValidatorNFT: Card position out of range");
+            
+            await expect(validatorNFT.enableCard(100))
+                .to.be.revertedWith("ValidatorNFT: Card position out of range");
+        });
+
+        it("should handle multiple cards with mixed enabled/disabled states", async function () {
+            // Mint multiple cards to same validator
+            await validatorNFT.mint(validator1.address, 0);  // Ace of Clubs
+            await validatorNFT.mint(validator1.address, 13); // Ace of Diamonds
+            await validatorNFT.mint(validator1.address, 26); // Ace of Hearts
+            
+            expect(await validatorNFT.isValidator(validator1.address)).to.be.true;
+            
+            // Disable one card
+            await validatorNFT.disableCard(0);
+            expect(await validatorNFT.isValidator(validator1.address)).to.be.true; // Still valid due to other cards
+            
+            // Disable another card
+            await validatorNFT.disableCard(13);
+            expect(await validatorNFT.isValidator(validator1.address)).to.be.true; // Still valid due to remaining card
+            
+            // Disable last card
+            await validatorNFT.disableCard(26);
+            expect(await validatorNFT.isValidator(validator1.address)).to.be.false; // No enabled cards left
+        });
+    });
 });

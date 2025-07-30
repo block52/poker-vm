@@ -37,6 +37,9 @@ contract ValidatorNFT is IValidator, ERC721, Ownable {
     
     // Track which cards (token IDs) have been minted to validators
     mapping(uint256 => bool) public cardMinted;
+    
+    // Track which cards are enabled/disabled by owner
+    mapping(uint256 => bool) public cardDisabled;
 
     constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) Ownable(msg.sender) {
         // Contract starts with all 52 cards available for minting
@@ -46,11 +49,24 @@ contract ValidatorNFT is IValidator, ERC721, Ownable {
     function mint(address to, uint256 cardPosition) external onlyOwner {
         require(cardPosition < MAX_VALIDATORS, "ValidatorNFT: Card position out of range");
         require(!cardMinted[cardPosition], "ValidatorNFT: Card already minted");
+        require(!cardDisabled[cardPosition], "ValidatorNFT: Card is disabled");
         
         _safeMint(to, cardPosition);
         cardMinted[cardPosition] = true;
 
         emit ValidatorAdded(to, cardPosition, getMintedCardCount());
+    }
+    
+    function disableCard(uint256 cardPosition) external onlyOwner {
+        require(cardPosition < MAX_VALIDATORS, "ValidatorNFT: Card position out of range");
+        cardDisabled[cardPosition] = true;
+        emit CardDisabled(cardPosition);
+    }
+    
+    function enableCard(uint256 cardPosition) external onlyOwner {
+        require(cardPosition < MAX_VALIDATORS, "ValidatorNFT: Card position out of range");
+        cardDisabled[cardPosition] = false;
+        emit CardEnabled(cardPosition);
     }
     
     function getMintedCardCount() public view returns (uint256) {
@@ -104,7 +120,15 @@ contract ValidatorNFT is IValidator, ERC721, Ownable {
     }
 
     function isValidator(address account) external view returns (bool) {
-        return super.balanceOf(account) > 0;
+        if (super.balanceOf(account) == 0) return false;
+        
+        // Check if any of the account's cards are enabled
+        for (uint256 i = 0; i < MAX_VALIDATORS; i++) {
+            if (cardMinted[i] && ownerOf(i) == account && !cardDisabled[i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function validatorCount() external view returns (uint256) {
@@ -117,4 +141,6 @@ contract ValidatorNFT is IValidator, ERC721, Ownable {
     }
 
     event ValidatorAdded(address indexed validator, uint256 indexed tokenId, uint256 indexed count);
+    event CardDisabled(uint256 indexed cardPosition);
+    event CardEnabled(uint256 indexed cardPosition);
 }
