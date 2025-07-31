@@ -43,69 +43,69 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
             throw new Error("Insufficient balance");
         }
 
-        // Check if from is a game account
-        try {
-            if (await this.isGameTransaction(this.to)) {
-                console.log(`Processing game transaction: data=${this.data}, to=${this.to}`);
+        // // Check if from is a game account
+        // try {
+        //     if (await this.isGameTransaction(this.to)) {
+        //         console.log(`Processing game transaction: data=${this.data}, to=${this.to}`);
 
-                const gameState = await this.gameManagement.getByAddress(this.to);
+        //         const gameState = await this.gameManagement.getByAddress(this.to);
 
-                if (!gameState) {
-                    throw new Error(`Game state not found for address: ${this.to}`);
-                }
+        //         if (!gameState) {
+        //             throw new Error(`Game state not found for address: ${this.to}`);
+        //         }
 
-                const gameOptions = await this.gameManagement.getGameOptions(gameState.address);
-                const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
+        //         const gameOptions = await this.gameManagement.getGameOptions(gameState.address);
+        //         const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
 
-                console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
-                game.performAction(this.from, NonPlayerActionType.JOIN, game.getActionIndex(), this.amount);
-                console.log(`Join successful`);
+        //         console.log(`Player ${this.from} joining game with ${this.amount} chips...`);
+        //         game.performAction(this.from, NonPlayerActionType.JOIN, game.getActionIndex(), this.amount);
+        //         console.log(`Join successful`);
 
-                const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, "JOIN");
-                await this.mempool.add(gameTx);
+        //         const gameTx: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, "JOIN");
+        //         await this.mempool.add(gameTx);
 
-                const txResponse: TransactionResponse = {
-                    nonce: this.nonce.toString(),
-                    from: this.from,
-                    to: this.to,
-                    value: this.amount.toString(),
-                    hash: gameTx.hash,
-                    signature: gameTx.signature,
-                    timestamp: gameTx.timestamp.toString(),
-                    data: gameTx.data ?? ""
-                };
+        //         const txResponse: TransactionResponse = {
+        //             nonce: this.nonce.toString(),
+        //             from: this.from,
+        //             to: this.to,
+        //             value: this.amount.toString(),
+        //             hash: gameTx.hash,
+        //             signature: gameTx.signature,
+        //             timestamp: gameTx.timestamp.toString(),
+        //             data: gameTx.data ?? ""
+        //         };
 
-                return signResult(txResponse, this.privateKey);
-            }
+        //         return signResult(txResponse, this.privateKey);
+        //     }
 
-            if (await this.isGameTransaction(this.from)) {
-                const json = await this.gameManagement.getState(this.from);
-                const gameOptions = await this.gameManagement.getGameOptions(this.from);
+        //     if (await this.isGameTransaction(this.from)) {
+        //         const json = await this.gameManagement.getState(this.from);
+        //         const gameOptions = await this.gameManagement.getGameOptions(this.from);
 
-                const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
+        //         const game: TexasHoldemGame = TexasHoldemGame.fromJson(json, gameOptions);
 
-                // Assume player is leaving the game
-                console.log(`Player ${this.to} leaving game...`);
-                const player = game.getPlayer(this.from);
-                const stack = player?.chips ?? 0n;
-                game.performAction(this.to, NonPlayerActionType.LEAVE, game.getActionIndex(), stack);
-                console.log(`Leave successful, returning ${stack} chips`);
+        //         // Assume player is leaving the game
+        //         console.log(`Player ${this.to} leaving game...`);
+        //         const player = game.getPlayer(this.from);
+        //         const stack = player?.chips ?? 0n;
+        //         game.performAction(this.to, NonPlayerActionType.LEAVE, game.getActionIndex(), stack);
+        //         console.log(`Leave successful, returning ${stack} chips`);
 
-                const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "leave");
-                await this.mempool.add(gameTx);
+        //         const gameTx: Transaction = await Transaction.create(this.to, this.from, stack, 0n, this.privateKey, "leave");
+        //         await this.mempool.add(gameTx);
 
-                const txResponse: TransactionResponse = {
-                    nonce: this.nonce.toString(),
-                    from: this.from,
-                    to: this.to,
-                    value: stack.toString(),
-                    hash: gameTx.hash,
-                    signature: gameTx.signature,
-                    timestamp: gameTx.timestamp.toString(),
-                    data: gameTx.data ?? ""
-                };
-                return signResult(txResponse, this.privateKey);
-            }
+        //         const txResponse: TransactionResponse = {
+        //             nonce: this.nonce.toString(),
+        //             from: this.from,
+        //             to: this.to,
+        //             value: stack.toString(),
+        //             hash: gameTx.hash,
+        //             signature: gameTx.signature,
+        //             timestamp: gameTx.timestamp.toString(),
+        //             data: gameTx.data ?? ""
+        //         };
+        //         return signResult(txResponse, this.privateKey);
+        //     }
 
             console.log(`Processing EUA transaction...`);
 
@@ -131,14 +131,14 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         }
     }
 
-    private async isGameTransaction(address: string): Promise<Boolean> {
-        console.log(`Checking if ${address} is a game transaction...`);
-        const game = await this.gameManagement.getByAddress(address);
+    // private async isGameTransaction(address: string): Promise<Boolean> {
+    //     console.log(`Checking if ${address} is a game transaction...`);
+    //     const game = await this.gameManagement.getByAddress(address);
 
-        console.log(`Game found:`, address);
-        const found: Boolean = game !== null;
+    //     console.log(`Game found:`, address);
+    //     const found: Boolean = game !== null;
 
-        console.log(`Is game transaction: ${found}`);
-        return found;
+    //     console.log(`Is game transaction: ${found}`);
+    //     return found;
     }
 }

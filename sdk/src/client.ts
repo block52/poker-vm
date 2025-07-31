@@ -31,10 +31,10 @@ export interface IClient {
     newHand(gameAddress: string, nonce?: number): Promise<TransactionResponse>;
     newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
-    playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
-    playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
-    playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
-    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
+    playerJoin(gameAddress: string, amount: bigint, seat: number, txHash: string, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinAtNextSeat(gameAddress: string, amount: bigint, txHash: string, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinRandomSeat(gameAddress: string, amount: bigint, txHash: string, nonce?: number): Promise<PerformActionResponse>;
+    playerLeave(gameAddress: string, amount: bigint, txHash: string, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
@@ -391,10 +391,11 @@ export class NodeRpcClient implements IClient {
      * @param gameAddress The address of the game
      * @param amount The amount to join with
      * @param seat The seat number to join
+     * @param txHash The transaction hash
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
+    public async playerJoin(gameAddress: string, amount: bigint, seat: number, txHash: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
 
         if (!nonce) {
@@ -408,6 +409,7 @@ export class NodeRpcClient implements IClient {
         params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.DATA, seat.toString());
+        params.set(KEYS.TX_HASH, txHash);
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
@@ -424,10 +426,11 @@ export class NodeRpcClient implements IClient {
      * Join a Texas Holdem game
      * @param gameAddress The address of the game
      * @param amount The amount to join with
+     * @param txHash The transaction hash
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+    public async playerJoinAtNextSeat(gameAddress: string, amount: bigint, txHash: string, nonce?: number): Promise<PerformActionResponse> {
 
         const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
         if (!gameState) {
@@ -448,17 +451,18 @@ export class NodeRpcClient implements IClient {
             throw new Error("No available seats to join");
         }
 
-        return this.playerJoin(gameAddress, amount, seats[0], nonce);
+        return this.playerJoin(gameAddress, amount, seats[0], txHash, nonce);
     }
 
     /**
      * Join a Texas Holdem game
      * @param gameAddress The address of the game
      * @param amount The amount to join with
+     * @param txHash The transaction hash
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+    public async playerJoinRandomSeat(gameAddress: string, amount: bigint, txHash: string, nonce?: number): Promise<PerformActionResponse> {
 
         const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
         if (!gameState) {
@@ -480,7 +484,7 @@ export class NodeRpcClient implements IClient {
         }
 
         const randomIndex = Math.floor(Math.random() * seats.length);
-        return this.playerJoin(gameAddress, amount, seats[randomIndex], nonce);
+        return this.playerJoin(gameAddress, amount, seats[randomIndex], txHash, nonce);
     }
 
     /**
@@ -601,6 +605,17 @@ export class NodeRpcClient implements IClient {
 
         const timestamp = Math.floor(Date.now());
         const message = `${timestamp}-${nonce}`;
+        const signature = await this.wallet.signMessage(message);
+        return signature;
+    }
+
+    private async getSignature2(nonce: number, args: any[]): Promise<string> {
+        if (!this.wallet) {
+            throw new Error("Cannot transfer funds without a private key");
+        }
+
+        const timestamp = Math.floor(Date.now());
+        const message = `${timestamp}-${nonce}-${JSON.stringify(args)}`;
         const signature = await this.wallet.signMessage(message);
         return signature;
     }

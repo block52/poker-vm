@@ -7,4 +7,5 @@ export enum KEYS {
     INDEX = "index",
     ACTION_TYPE = "actiontype",
     DATA = "data",
+    TX_HASH = "txHash",
 }
