@@ -4,8 +4,12 @@ import { PerformActionCommand } from "./performActionCommand";
 import { GameStateCommand } from "./gameStateCommand";
 import { signResult } from "./abstractSignedCommand";
 import { getSocketService } from "../core/socketserver";
+import JoinAction from "../engine/actions/joinAction";
 
 export class PerformActionCommandWithResult extends PerformActionCommand implements ICommand<ISignedResponse<PerformActionResponse>> {
+
+    private readonly actions: any[] = [JoinAction];
+
     constructor(
         readonly from: string,
         readonly to: string,
