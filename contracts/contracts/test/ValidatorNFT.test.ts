@@ -70,8 +70,8 @@ describe("ValidatorNFT Card Deck Mapping", function () {
         });
 
         it("should reject invalid token IDs", async function () {
-            await expect(validatorNFT.getCardMnemonic(52)).to.be.revertedWith("ValidatorNFT: Token ID out of range");
-            await expect(validatorNFT.getCardMnemonic(100)).to.be.revertedWith("ValidatorNFT: Token ID out of range");
+            await expect(validatorNFT.getCardMnemonic(52)).to.be.revertedWith("getCardMnemonic: Token ID out of range");
+            await expect(validatorNFT.getCardMnemonic(100)).to.be.revertedWith("getCardMnemonic: Token ID out of range");
         });
     });
 
@@ -98,7 +98,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
 
         it("should prevent double minting of same card", async function () {
             await validatorNFT.mint(validator1.address, 0);
-            await expect(validatorNFT.mint(validator1.address, 0)).to.be.revertedWith("ValidatorNFT: Card already minted");
+            await expect(validatorNFT.mint(validator1.address, 0)).to.be.revertedWith("mint: Card already minted");
         });
 
         it("should track minted card count correctly", async function () {
@@ -114,13 +114,45 @@ describe("ValidatorNFT Card Deck Mapping", function () {
         it("should have maximum of 52 validators", async function () {
             expect(await validatorNFT.MAX_VALIDATORS()).to.equal(52);
         });
+
+        it("should return correct tokenURI", async function () {
+            // Initially empty URI
+            expect(await validatorNFT.tokenURI(0)).to.equal("");
+            
+            // Set individual token URIs
+            await validatorNFT.setTokenURI(0, "https://nft.block52.xyz/tokenid/0");
+            await validatorNFT.setTokenURI(1, "https://api.example.com/metadata/1.json");
+            await validatorNFT.setTokenURI(51, "ipfs://QmHash/51");
+            
+            expect(await validatorNFT.tokenURI(0)).to.equal("https://nft.block52.xyz/tokenid/0");
+            expect(await validatorNFT.tokenURI(1)).to.equal("https://api.example.com/metadata/1.json");
+            expect(await validatorNFT.tokenURI(51)).to.equal("ipfs://QmHash/51");
+        });
+
+        it("should reject invalid token IDs for tokenURI", async function () {
+            await expect(validatorNFT.tokenURI(52))
+                .to.be.revertedWith("tokenURI: Token ID out of range");
+            
+            await expect(validatorNFT.tokenURI(100))
+                .to.be.revertedWith("tokenURI: Token ID out of range");
+        });
+
+        it("should only allow owner to set token URI", async function () {
+            // Non-owner should not be able to set token URI
+            await expect(validatorNFT.connect(validator1).setTokenURI(0, "https://example.com/0"))
+                .to.be.revertedWithCustomError(validatorNFT, "OwnableUnauthorizedAccount");
+            
+            // Owner should be able to set token URI
+            await validatorNFT.setTokenURI(0, "https://example.com/0");
+            expect(await validatorNFT.tokenURI(0)).to.equal("https://example.com/0");
+        });
     });
 
     describe("Enable/Disable functionality", function () {
         it("should not allow toggling unminted tokens", async function () {
             // Try to toggle an unminted token - should fail
             await expect(validatorNFT.toggleX(0))
-                .to.be.revertedWith("ValidatorNFT: Token not minted");
+                .to.be.revertedWith("toggleX: Token not minted");
         });
 
         it("should allow token owner to toggle their tokens", async function () {
@@ -152,21 +184,21 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             
             // Contract owner (different from token owner) should not be able to toggle
             await expect(validatorNFT.toggleX(0))
-                .to.be.revertedWith("ValidatorNFT: Not token owner");
+                .to.be.revertedWith("toggleX: Not token owner");
             
             // Another user should not be able to toggle
             const [, , validator2] = await ethers.getSigners();
             await expect(validatorNFT.connect(validator2).toggleX(0))
-                .to.be.revertedWith("ValidatorNFT: Not token owner");
+                .to.be.revertedWith("toggleX: Not token owner");
         });
 
 
         it("should reject invalid token IDs for toggle", async function () {
             await expect(validatorNFT.toggleX(52))
-                .to.be.revertedWith("ValidatorNFT: Token ID out of range");
+                .to.be.revertedWith("toggleX: Token ID out of range");
             
             await expect(validatorNFT.toggleX(100))
-                .to.be.revertedWith("ValidatorNFT: Token ID out of range");
+                .to.be.revertedWith("toggleX: Token ID out of range");
         });
 
         it("should handle multiple cards with mixed enabled/disabled states", async function () {

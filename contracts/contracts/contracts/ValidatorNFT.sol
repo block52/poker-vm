@@ -41,6 +41,9 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     
     // Track which cards are enabled/disabled by owner
     mapping(uint256 => bool) public cardDisabled;
+    
+    // Token URI mapping
+    mapping(uint256 => string) private _tokenURIs;
 
     constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) Ownable(msg.sender) {
         // Contract starts with all 52 cards available for minting
@@ -48,8 +51,8 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     }
 
     function mint(address to, uint256 tokenId) external onlyOwner {
-        require(tokenId < MAX_VALIDATORS, "ValidatorNFT: Token ID out of range");
-        require(!cardMinted[tokenId], "ValidatorNFT: Card already minted");
+        require(tokenId < MAX_VALIDATORS, "mint: Token ID out of range");
+        require(!cardMinted[tokenId], "mint: Card already minted");
         
         _safeMint(to, tokenId);
         cardMinted[tokenId] = true;
@@ -59,9 +62,9 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     }
     
     function toggleX(uint256 tokenId) external {
-        require(tokenId < MAX_VALIDATORS, "ValidatorNFT: Token ID out of range");
-        require(cardMinted[tokenId], "ValidatorNFT: Token not minted");
-        require(ownerOf(tokenId) == msg.sender, "ValidatorNFT: Not token owner");
+        require(tokenId < MAX_VALIDATORS, "toggleX: Token ID out of range");
+        require(cardMinted[tokenId], "toggleX: Token not minted");
+        require(ownerOf(tokenId) == msg.sender, "toggleX: Not token owner");
         
         cardDisabled[tokenId] = !cardDisabled[tokenId];
         
@@ -74,7 +77,7 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     
 
     function getSuitAndRank(uint256 tokenId) external pure returns (Suit suit, Rank rank) {
-        require(tokenId < MAX_VALIDATORS, "ValidatorNFT: Token ID out of range");
+        require(tokenId < MAX_VALIDATORS, "getSuitAndRank: Token ID out of range");
         
         // Token ID to suit/rank mapping following deck.test.ts order:
         // Clubs: 0-12, Diamonds: 13-25, Hearts: 26-38, Spades: 39-51
@@ -83,7 +86,7 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     }
     
     function getCardMnemonic(uint256 tokenId) external pure returns (string memory) {
-        require(tokenId < MAX_VALIDATORS, "ValidatorNFT: Token ID out of range");
+        require(tokenId < MAX_VALIDATORS, "getCardMnemonic: Token ID out of range");
         
         // Calculate suit and rank directly without calling external function
         Suit suit = Suit(tokenId / 13);
@@ -112,6 +115,16 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
         
         return string(abi.encodePacked(rankStr, suitStr));
     }
+    
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(tokenId < MAX_VALIDATORS, "tokenURI: Token ID out of range");
+        return _tokenURIs[tokenId];
+    }
+    
+    function setTokenURI(uint256 tokenId, string memory uri) external onlyOwner {
+        require(tokenId < MAX_VALIDATORS, "setTokenURI: Token ID out of range");
+        _tokenURIs[tokenId] = uri;
+    }
 
     function isValidator(address account) external view returns (bool) {
         uint256 balance = balanceOf(account);
@@ -132,7 +145,7 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     }
 
     function getValidatorAddress(uint256 tokenId) external view returns (address) {
-        require(cardMinted[tokenId], "ValidatorNFT: Card not minted");
+        require(cardMinted[tokenId], "getValidatorAddress: Card not minted");
         return super.ownerOf(tokenId);
     }
 
