@@ -23,6 +23,9 @@ contract ValidatorSale is Ownable {
 
     uint256 private constant PRICE = 52_000;
 
+    // todo: work out how to manage the rest of the usdc on this account , might have a slashing contract becuase we are going to have a bonding system, and also a penalty if the node doesnt do their job, and also a cooling off perioed for the node operator to object.
+    // todo: have a failsafe withdraw function to treasury
+
     constructor(address nft_) Ownable(msg.sender) {
         require(nft_ != address(0), "NFT address cannot be zero");
         nft = IERC721(nft_);
@@ -35,28 +38,16 @@ contract ValidatorSale is Ownable {
 
     function buy(uint256 tokenId) external {
         require(nft.ownerOf(tokenId) == address(this), "buy: NFT not for sale");
-        IERC20(underlying).transferFrom(msg.sender, address(this), 1 ether);
+        IERC20(underlying).transferFrom(msg.sender, address(this), PRICE);
 
-        // Transfer 50% to treasury
+        // Transfer 50% to treasury - change to mint and transfer to msg.sender
+        // update Validator NFT to allow for minting and transfer to msg.sender
         nft.safeTransferFrom(address(this), msg.sender, tokenId);
+
+        //todo: send 52% or usdc to treasury
+
     }
 
-    function quote(address token, uint24 fee) external returns (uint256) {
-        require(token != address(0), "quote: Token address cannot be zero");
-        require(fee == 3000 || fee == 500 || fee == 10000, "quote: Invalid fee");
-
-        IQuoterV2.QuoteExactOutputSingleParams memory params = IQuoterV2.QuoteExactOutputSingleParams({
-            tokenIn: token,
-            tokenOut: underlying,
-            amount: getPrice(),
-            fee: uint24(fee),
-            sqrtPriceLimitX96: 0
-        });
-
-        // Use the quoter to get the price
-        (uint256 amountIn,,,) = quoter.quoteExactOutputSingle(params);
-        return amountIn;
-    }
 
     function getPrice() private view returns (uint256) {
         return PRICE * 10 ** IERC20Metadata(underlying).decimals();

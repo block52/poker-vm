@@ -8,6 +8,8 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IValidator } from "../IValidator.sol";
 
+// todo: have a minter role that can use mintAndTransferFrom on the vallidator sale contract
+
 contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     // Card order matches deck.test.ts: Clubs -> Diamonds -> Hearts -> Spades
     enum Suit {
