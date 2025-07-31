@@ -61,10 +61,10 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
         emit ValidatorAdded(to, tokenId, totalSupply());
     }
     
-    function toggleX(uint256 tokenId) external {
-        require(tokenId < MAX_VALIDATORS, "toggleX: Token ID out of range");
-        require(cardMinted[tokenId], "toggleX: Token not minted");
-        require(ownerOf(tokenId) == msg.sender, "toggleX: Not token owner");
+    function toggleEnable(uint256 tokenId) external {
+        require(tokenId < MAX_VALIDATORS, "toggleEnable: Token ID out of range");
+        require(cardMinted[tokenId], "toggleEnable: Token not minted");
+        require(ownerOf(tokenId) == msg.sender, "toggleEnable: Not token owner");
         
         cardDisabled[tokenId] = !cardDisabled[tokenId];
         

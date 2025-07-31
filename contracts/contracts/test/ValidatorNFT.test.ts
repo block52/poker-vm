@@ -85,7 +85,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             expect(await validatorNFT.isValidator(validator1.address)).to.be.false; // Not a validator until enabled
             
             // Token owner toggles the card to enable it
-            await validatorNFT.connect(validator1).toggleX(0);
+            await validatorNFT.connect(validator1).toggleEnable(0);
             expect(await validatorNFT.cardDisabled(0)).to.be.false;
             expect(await validatorNFT.isValidator(validator1.address)).to.be.true; // Now a validator
             
@@ -151,8 +151,8 @@ describe("ValidatorNFT Card Deck Mapping", function () {
     describe("Enable/Disable functionality", function () {
         it("should not allow toggling unminted tokens", async function () {
             // Try to toggle an unminted token - should fail
-            await expect(validatorNFT.toggleX(0))
-                .to.be.revertedWith("toggleX: Token not minted");
+            await expect(validatorNFT.toggleEnable(0))
+                .to.be.revertedWith("toggleEnable: Token not minted");
         });
 
         it("should allow token owner to toggle their tokens", async function () {
@@ -162,7 +162,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             expect(await validatorNFT.isValidator(validator1.address)).to.be.false;
             
             // Token owner toggles to enable their token
-            await expect(validatorNFT.connect(validator1).toggleX(0))
+            await expect(validatorNFT.connect(validator1).toggleEnable(0))
                 .to.emit(validatorNFT, "CardEnabled")
                 .withArgs(0);
             
@@ -170,7 +170,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             expect(await validatorNFT.isValidator(validator1.address)).to.be.true;
             
             // Token owner toggles again to disable their token
-            await expect(validatorNFT.connect(validator1).toggleX(0))
+            await expect(validatorNFT.connect(validator1).toggleEnable(0))
                 .to.emit(validatorNFT, "CardDisabled")
                 .withArgs(0);
             
@@ -183,22 +183,22 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             await validatorNFT.mint(validator1.address, 0);
             
             // Contract owner (different from token owner) should not be able to toggle
-            await expect(validatorNFT.toggleX(0))
-                .to.be.revertedWith("toggleX: Not token owner");
+            await expect(validatorNFT.toggleEnable(0))
+                .to.be.revertedWith("toggleEnable: Not token owner");
             
             // Another user should not be able to toggle
             const [, , validator2] = await ethers.getSigners();
-            await expect(validatorNFT.connect(validator2).toggleX(0))
-                .to.be.revertedWith("toggleX: Not token owner");
+            await expect(validatorNFT.connect(validator2).toggleEnable(0))
+                .to.be.revertedWith("toggleEnable: Not token owner");
         });
 
 
         it("should reject invalid token IDs for toggle", async function () {
-            await expect(validatorNFT.toggleX(52))
-                .to.be.revertedWith("toggleX: Token ID out of range");
+            await expect(validatorNFT.toggleEnable(52))
+                .to.be.revertedWith("toggleEnable: Token ID out of range");
             
-            await expect(validatorNFT.toggleX(100))
-                .to.be.revertedWith("toggleX: Token ID out of range");
+            await expect(validatorNFT.toggleEnable(100))
+                .to.be.revertedWith("toggleEnable: Token ID out of range");
         });
 
         it("should handle multiple cards with mixed enabled/disabled states", async function () {
@@ -210,19 +210,19 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             expect(await validatorNFT.isValidator(validator1.address)).to.be.false; // All disabled by default
             
             // Token owner toggles one card to enable it
-            await validatorNFT.connect(validator1).toggleX(0);
+            await validatorNFT.connect(validator1).toggleEnable(0);
             expect(await validatorNFT.isValidator(validator1.address)).to.be.true; // Valid due to one enabled card
             
             // Token owner toggles another card to enable it
-            await validatorNFT.connect(validator1).toggleX(13);
+            await validatorNFT.connect(validator1).toggleEnable(13);
             expect(await validatorNFT.isValidator(validator1.address)).to.be.true; // Still valid
             
             // Token owner toggles first card to disable it
-            await validatorNFT.connect(validator1).toggleX(0);
+            await validatorNFT.connect(validator1).toggleEnable(0);
             expect(await validatorNFT.isValidator(validator1.address)).to.be.true; // Still valid due to card 13
             
             // Token owner toggles second card to disable it
-            await validatorNFT.connect(validator1).toggleX(13);
+            await validatorNFT.connect(validator1).toggleEnable(13);
             expect(await validatorNFT.isValidator(validator1.address)).to.be.false; // No enabled cards left (26 never enabled)
         });
     });
