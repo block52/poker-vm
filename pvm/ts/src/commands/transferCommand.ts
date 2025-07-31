@@ -1,15 +1,11 @@
-import { NonPlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
+import { TransactionResponse } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
-import TexasHoldemGame from "../engine/texasHoldem";
 import { AccountCommand } from "./accountCommand";
-import { IGameManagement } from "../state/interfaces";
 
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
-    private readonly gameManagement: IGameManagement;
     private readonly mempool: Mempool;
 
     constructor(
@@ -21,7 +17,6 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         private readonly privateKey: string
     ) {
         console.log(`Creating TransferCommand: from=${from}, to=${to}, amount=${amount}, data=${data}`);
-        this.gameManagement = getGameManagementInstance();
         this.mempool = getMempoolInstance();
     }
 
@@ -107,7 +102,6 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         //         return signResult(txResponse, this.privateKey);
         //     }
 
-            console.log(`Processing EUA transaction...`);
 
             // If we haven't thrown an error, then we can create the transaction
             const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
@@ -128,7 +122,6 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         } catch (e) {
             console.error(`Error in transfer command:`, e);
             throw new Error("Error transferring funds");
-        }
     }
 
     // private async isGameTransaction(address: string): Promise<Boolean> {
@@ -140,5 +133,5 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
 
     //     console.log(`Is game transaction: ${found}`);
     //     return found;
-    }
+    //}
 }

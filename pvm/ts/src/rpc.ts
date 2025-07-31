@@ -40,7 +40,6 @@ import { GameManagement } from "./state/mongodb/gameManagement";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
-        // console.log(request);
         if (!request) {
             throw new Error("Null request");
         }
