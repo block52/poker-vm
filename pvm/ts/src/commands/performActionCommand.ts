@@ -43,24 +43,26 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         if (this.actionTypes.includes(this.action as NonPlayerActionType)) {
 
-            if (this.txHash) {
-                console.log(`Using provided transaction hash: ${this.txHash}`);
-
-                // Check if the transaction exists in the mempool or the transaction management
-                const existingTransaction = await this.findTransactionByHash(this.txHash);
-
-                if (existingTransaction.value !== this.amount) {
-                    console.log(`Transaction found in transaction management with different amount: ${existingTransaction.value} !== ${this.amount}`);
-                    throw new Error("Transaction amount mismatch");
-                }
-
-                if (existingTransaction.to !== this.to || existingTransaction.from !== this.from) {
-                    console.log(`Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`);
-                    throw new Error("Transaction address mismatch");
-                }
+            if (!this.txHash) {
+                console.log(`No transaction hash provided, creating a new transaction...`);
+                throw new Error(`Invalid action type: ${this.action}. Must be one of ${this.actionTypes.join(", ")} or provide a transaction hash.`);
             }
 
-            throw new Error(`Invalid action type: ${this.action}. Must be one of ${this.actionTypes.join(", ")} or provide a transaction hash.`);
+            console.log(`Using provided transaction hash: ${this.txHash}`);
+
+            // Check if the transaction exists in the mempool or the transaction management
+            const existingTransaction = await this.findTransactionByHash(this.txHash);
+
+            if (existingTransaction.value !== this.amount) {
+                console.log(`Transaction found in transaction management with different amount: ${existingTransaction.value} !== ${this.amount}`);
+                throw new Error("Transaction amount mismatch");
+            }
+
+            if (existingTransaction.to !== this.to || existingTransaction.from !== this.from) {
+                console.log(`Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`);
+                throw new Error("Transaction address mismatch");
+            }
+
         }
 
         console.log(`Processing game transaction: action=${this.action} data=${this.data}, to=${this.to}`);
