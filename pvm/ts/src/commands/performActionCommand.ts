@@ -2,18 +2,19 @@ import { KEYS, NonPlayerActionType, PlayerActionType, TransactionResponse } from
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { ICommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
+import { getGameManagementInstance, getTransactionInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
-import { IGameManagement } from "../state/interfaces";
-import { toOrderedTransaction, extractDataFromParams } from "../utils/parsers";
+import { IGameManagement, ITransactionManagement } from "../state/interfaces";
+import { toOrderedTransaction } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     protected readonly gameManagement: IGameManagement;
+    protected readonly transactionManagement: ITransactionManagement;
     protected readonly mempool: Mempool;
 
     // Check if the action is a game to account transaction
-    private readonly actionTypes: (PlayerActionType | NonPlayerActionType)[] = [NonPlayerActionType.JOIN, NonPlayerActionType.LEAVE];
+    private readonly actionTypes: NonPlayerActionType[] = [NonPlayerActionType.JOIN, NonPlayerActionType.LEAVE];
 
     constructor(
         protected readonly from: string,
@@ -28,6 +29,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, action=${action}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
+        this.transactionManagement = getTransactionInstance();
         this.mempool = getMempoolInstance();
     }
 
@@ -39,7 +41,20 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error("Not a game transaction");
         }
 
-        if (!this.actionTypes.includes(this.action as PlayerActionType | NonPlayerActionType) && !this.txHash) {
+        if (this.actionTypes.includes(this.action as NonPlayerActionType)) {
+
+            if (this.txHash) {
+                console.log(`Using provided transaction hash: ${this.txHash}`);
+
+                // Check if the transaction exists in the mempool or the transaction management
+                const existingTransaction = await this.findTransactionByHash(this.txHash);
+
+                if (existingTransaction && existingTransaction.value !== this.amount) {
+                    console.log(`Transaction found in transaction management with different amount: ${existingTransaction.value} !== ${this.amount}`);
+                    throw new Error("Transaction amount mismatch");
+                }
+            }
+
             throw new Error(`Invalid action type: ${this.action}. Must be one of ${this.actionTypes.join(", ")} or provide a transaction hash.`);
         }
 
@@ -82,7 +97,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const params = new URLSearchParams();
         params.set(KEYS.ACTION_TYPE, this.action);
         params.set(KEYS.INDEX, this.index.toString());
-        if (this.txHash) 
+        if (this.txHash)
             params.set(KEYS.TX_HASH, this.txHash); // Optional transaction hash
 
         // Extract clean data using the parser (single responsibility)
@@ -173,5 +188,23 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         console.log(`Is game transaction: ${found}`);
         return found;
+    }
+
+    private async findTransactionByHash(txHash: string): Promise<Transaction> {
+        console.log(`Finding transaction by hash: ${txHash}`);
+        const existingTransaction = await this.transactionManagement.getTransaction(txHash);
+
+        if (existingTransaction) {
+            console.log(`Transaction found in transaction management: ${existingTransaction.hash}`);
+            return existingTransaction;
+        }
+
+        const mempoolTransaction = this.mempool.find(tx => tx.hash === txHash);
+        if (mempoolTransaction) {
+            console.log(`Transaction found in mempool: ${mempoolTransaction.hash}`);
+            return mempoolTransaction;
+        }
+
+        throw new Error("Transaction not found");
     }
 }
