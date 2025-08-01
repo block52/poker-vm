@@ -6,11 +6,10 @@ import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IValidator } from "../IValidator.sol";
 
-// todo: have a minter role that can use mintAndTransferFrom on the vallidator sale contract
-
-contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
+contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable, AccessControl {
     // Card order matches deck.test.ts: Clubs -> Diamonds -> Hearts -> Spades
     enum Suit {
         Clubs,      // 0: First suit in deck order
@@ -37,6 +36,7 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     }
 
     uint8 public constant MAX_VALIDATORS = 52;
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     
     // Track which cards (token IDs) have been minted to validators
     mapping(uint256 => bool) public cardMinted;
@@ -50,11 +50,23 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) Ownable(msg.sender) {
         // Contract starts with all 52 cards available for minting
         // No pre-minting - cards are minted on demand
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function mint(address to, uint256 tokenId) external onlyOwner {
         require(tokenId < MAX_VALIDATORS, "mint: Token ID out of range");
         require(!cardMinted[tokenId], "mint: Card already minted");
+        
+        _safeMint(to, tokenId);
+        cardMinted[tokenId] = true;
+        cardDisabled[tokenId] = true; // Default to disabled
+
+        emit ValidatorAdded(to, tokenId, totalSupply());
+    }
+    
+    function mintAndTransfer(address to, uint256 tokenId) external onlyRole(MINTER_ROLE) {
+        require(tokenId < MAX_VALIDATORS, "mintAndTransfer: Token ID out of range");
+        require(!cardMinted[tokenId], "mintAndTransfer: Card already minted");
         
         _safeMint(to, tokenId);
         cardMinted[tokenId] = true;
@@ -149,6 +161,15 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable {
     function getValidatorAddress(uint256 tokenId) external view returns (address) {
         require(cardMinted[tokenId], "getValidatorAddress: Card not minted");
         return super.ownerOf(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721Enumerable, AccessControl)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 
     event ValidatorAdded(address indexed validator, uint256 indexed tokenId, uint256 indexed count);
