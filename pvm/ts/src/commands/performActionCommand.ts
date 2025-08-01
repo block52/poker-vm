@@ -62,7 +62,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 console.log(`Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`);
                 throw new Error("Transaction address mismatch");
             }
-
         }
 
         console.log(`Processing game transaction: action=${this.action} data=${this.data}, to=${this.to}`);

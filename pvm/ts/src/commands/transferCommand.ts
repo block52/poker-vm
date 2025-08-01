@@ -39,7 +39,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         }
 
         // // Check if from is a game account
-        // try {
+        try {
         //     if (await this.isGameTransaction(this.to)) {
         //         console.log(`Processing game transaction: data=${this.data}, to=${this.to}`);
 
@@ -122,6 +122,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         } catch (e) {
             console.error(`Error in transfer command:`, e);
             throw new Error("Error transferring funds");
+        }
     }
 
     // private async isGameTransaction(address: string): Promise<Boolean> {
