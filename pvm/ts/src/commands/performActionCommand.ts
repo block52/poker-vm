@@ -49,9 +49,14 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 // Check if the transaction exists in the mempool or the transaction management
                 const existingTransaction = await this.findTransactionByHash(this.txHash);
 
-                if (existingTransaction && existingTransaction.value !== this.amount) {
+                if (existingTransaction.value !== this.amount) {
                     console.log(`Transaction found in transaction management with different amount: ${existingTransaction.value} !== ${this.amount}`);
                     throw new Error("Transaction amount mismatch");
+                }
+
+                if (existingTransaction.to !== this.to || existingTransaction.from !== this.from) {
+                    console.log(`Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`);
+                    throw new Error("Transaction address mismatch");
                 }
             }
 
