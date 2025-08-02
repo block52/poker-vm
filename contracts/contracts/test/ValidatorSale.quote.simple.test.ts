@@ -35,14 +35,11 @@ describe("ValidatorSale Quote Function (Simple Tests)", function () {
             const randomAddress = "0x1234567890123456789012345678901234567890";
             
             // Test invalid fee values
-            await expect(validatorSale.quote(randomAddress, 100))
-                .to.be.revertedWith("quote: Invalid fee");
-            
             await expect(validatorSale.quote(randomAddress, 2500))
-                .to.be.revertedWith("quote: Invalid fee");
+                .to.be.revertedWith("quote: Invalid fee tier");
             
             await expect(validatorSale.quote(randomAddress, 15000))
-                .to.be.revertedWith("quote: Invalid fee");
+                .to.be.revertedWith("quote: Invalid fee tier");
         });
 
         it("should accept valid fee tiers", async function () {
@@ -50,31 +47,34 @@ describe("ValidatorSale Quote Function (Simple Tests)", function () {
             
             // These should not revert on fee validation
             // They will fail on the actual Uniswap call, but that's expected without forking
+            await expect(validatorSale.quote(randomAddress, 100))
+                .to.be.revertedWith("quote: No liquidity or invalid pair");
+            
             await expect(validatorSale.quote(randomAddress, 500))
-                .to.be.reverted; // Will fail on Uniswap call, not on our validation
+                .to.be.revertedWith("quote: No liquidity or invalid pair");
             
             await expect(validatorSale.quote(randomAddress, 3000))
-                .to.be.reverted; // Will fail on Uniswap call, not on our validation
+                .to.be.revertedWith("quote: No liquidity or invalid pair");
             
             await expect(validatorSale.quote(randomAddress, 10000))
-                .to.be.reverted; // Will fail on Uniswap call, not on our validation
+                .to.be.revertedWith("quote: No liquidity or invalid pair");
         });
     });
 
     describe("Quote Function Properties", function () {
-        it("should be a view function", async function () {
-            // This test verifies that quote is properly marked as view
-            // by checking that it doesn't modify state
+        it("should revert when quoting USDC to USDC", async function () {
+            const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+            
+            await expect(validatorSale.quote(USDC_ADDRESS, 3000))
+                .to.be.revertedWith("quote: Cannot quote USDC to USDC");
+        });
+        
+        it("should handle failed quotes gracefully", async function () {
             const randomAddress = "0x1234567890123456789012345678901234567890";
             
-            // If this was not a view function, it would cost gas
-            // View functions return data without costing gas when called off-chain
-            try {
-                await validatorSale.quote(randomAddress, 3000);
-            } catch (error) {
-                // Expected to fail due to missing Uniswap contracts
-                // But the important thing is it's callable as a view function
-            }
+            // Without mainnet forking, this will fail with our custom error
+            await expect(validatorSale.quote(randomAddress, 3000))
+                .to.be.revertedWith("quote: No liquidity or invalid pair");
         });
     });
 });

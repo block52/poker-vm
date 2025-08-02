@@ -53,19 +53,28 @@ contract ValidatorSale is Ownable {
 
     function quote(address token, uint24 fee) external returns (uint256) {
         require(token != address(0), "quote: Token address cannot be zero");
-        require(fee == 3000 || fee == 500 || fee == 10000, "quote: Invalid fee");
+        require(token != underlying, "quote: Cannot quote USDC to USDC");
+        require(fee == 100 || fee == 500 || fee == 3000 || fee == 10000, "quote: Invalid fee tier");
 
         IQuoterV2.QuoteExactOutputSingleParams memory params = IQuoterV2.QuoteExactOutputSingleParams({
             tokenIn: token,
             tokenOut: underlying,
             amount: getPrice(),
-            fee: uint24(fee),
+            fee: fee,
             sqrtPriceLimitX96: 0
         });
 
-        // Use the quoter to get the price
-        (uint256 amountIn,,,) = quoter.quoteExactOutputSingle(params);
-        return amountIn;
+        try quoter.quoteExactOutputSingle(params) returns (
+            uint256 amountIn,
+            uint160,
+            uint32,
+            uint256
+        ) {
+            require(amountIn > 0, "quote: Invalid quote returned");
+            return amountIn;
+        } catch {
+            revert("quote: No liquidity or invalid pair");
+        }
     }
 
     function getPrice() private view returns (uint256) {
