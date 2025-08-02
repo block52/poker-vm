@@ -132,7 +132,7 @@ export class RPC {
                     if (!request.params) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-                    let command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
+                    const command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
