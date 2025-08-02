@@ -74,7 +74,6 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable, AccessControl {
         }
     }
     
-
     function getSuitAndRank(uint256 tokenId) external pure returns (Suit suit, Rank rank) {
         require(tokenId < MAX_VALIDATORS, "getSuitAndRank: Token ID out of range");
         
