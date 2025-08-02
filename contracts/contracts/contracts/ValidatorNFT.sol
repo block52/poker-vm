@@ -38,9 +38,6 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable, AccessControl {
     uint8 public constant MAX_VALIDATORS = 52;
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     
-    // Track which cards (token IDs) have been minted to validators
-    mapping(uint256 => bool) public cardMinted;
-    
     // Track which cards are enabled/disabled by owner
     mapping(uint256 => bool) public cardDisabled;
     
@@ -55,10 +52,9 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable, AccessControl {
 
     function mintAndTransfer(address to, uint256 tokenId) external onlyRole(MINTER_ROLE) {
         require(tokenId < MAX_VALIDATORS, "mintAndTransfer: Token ID out of range");
-        require(!cardMinted[tokenId], "mintAndTransfer: Card already minted");
+        require(_ownerOf(tokenId) == address(0), "mintAndTransfer: Card already minted");
         
         _safeMint(to, tokenId);
-        cardMinted[tokenId] = true;
         cardDisabled[tokenId] = true; // Default to disabled
 
         emit ValidatorAdded(to, tokenId, totalSupply());
@@ -66,7 +62,7 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable, AccessControl {
     
     function toggleEnable(uint256 tokenId) external {
         require(tokenId < MAX_VALIDATORS, "toggleEnable: Token ID out of range");
-        require(cardMinted[tokenId], "toggleEnable: Token not minted");
+        require(_ownerOf(tokenId) != address(0), "toggleEnable: Token not minted");
         require(ownerOf(tokenId) == msg.sender, "toggleEnable: Not token owner");
         
         cardDisabled[tokenId] = !cardDisabled[tokenId];
@@ -148,8 +144,8 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable, AccessControl {
     }
 
     function getValidatorAddress(uint256 tokenId) external view returns (address) {
-        require(cardMinted[tokenId], "getValidatorAddress: Card not minted");
-        return super.ownerOf(tokenId);
+        require(_ownerOf(tokenId) != address(0), "getValidatorAddress: Card not minted");
+        return ownerOf(tokenId);
     }
 
     function supportsInterface(bytes4 interfaceId)

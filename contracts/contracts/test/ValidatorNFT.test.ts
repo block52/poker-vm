@@ -84,7 +84,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             // Mint Ace of Clubs (token ID 0)
             await validatorNFT.mintAndTransfer(validator1.address, 0);
             expect(await validatorNFT.ownerOf(0)).to.equal(validator1.address);
-            expect(await validatorNFT.cardMinted(0)).to.be.true;
+            // Token exists check is implicit - ownerOf would revert if not minted
             expect(await validatorNFT.cardDisabled(0)).to.be.true; // Should be disabled by default
             expect(await validatorNFT.isValidator(validator1.address)).to.be.false; // Not a validator until enabled
             
@@ -96,7 +96,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             // Mint King of Spades (token ID 51) - also disabled by default
             await validatorNFT.mintAndTransfer(validator1.address, 51);
             expect(await validatorNFT.ownerOf(51)).to.equal(validator1.address);
-            expect(await validatorNFT.cardMinted(51)).to.be.true;
+            // Token exists check is implicit - ownerOf would revert if not minted
             expect(await validatorNFT.cardDisabled(51)).to.be.true; // Also disabled by default
         });
 

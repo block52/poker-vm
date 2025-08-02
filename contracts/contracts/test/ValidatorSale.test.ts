@@ -40,18 +40,9 @@ describe("ValidatorSale Integration", function () {
         // Get USDC contract
         usdc = await ethers.getContractAt("IERC20", USDC_ADDRESS);
 
-        // For testing on local hardhat, we'll deploy a mock USDC
-        // In production or forked mainnet, you'd use the real USDC
-        const MockERC20Factory = await ethers.getContractFactory("Token");
-        const mockUsdc = await MockERC20Factory.deploy("USD Coin", "USDC", 6);
-        await mockUsdc.waitForDeployment();
-        
-        // Override USDC address for testing
-        usdc = mockUsdc as any;
-        
-        // Mint USDC to buyers for testing
-        await mockUsdc.mint(buyer1.address, PRICE_WITH_DECIMALS * 2);
-        await mockUsdc.mint(buyer2.address, PRICE_WITH_DECIMALS * 2);
+        // For testing on local hardhat, we'll need mainnet forking
+        // to use real USDC. For now, tests will fail without forking.
+        // See Mainnet-Forking-Guide.md for setup instructions.
     });
 
     describe("Deployment and Setup", function () {
@@ -85,7 +76,7 @@ describe("ValidatorSale Integration", function () {
             
             // Verify NFT ownership
             expect(await validatorNFT.ownerOf(0)).to.equal(buyer1.address);
-            expect(await validatorNFT.cardMinted(0)).to.be.true;
+            // Token exists check is implicit - ownerOf would revert if not minted
             expect(await validatorNFT.cardDisabled(0)).to.be.true; // Disabled by default
             
             // Verify treasury received 52%

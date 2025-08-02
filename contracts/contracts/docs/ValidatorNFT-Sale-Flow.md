@@ -42,7 +42,6 @@ sequenceDiagram
     
     ValidatorSale->>ValidatorNFT: mintAndTransfer(Buyer, tokenId: 0)
     ValidatorNFT-->>ValidatorNFT: _safeMint(Buyer, 0)
-    ValidatorNFT-->>ValidatorNFT: cardMinted 0 equals true
     ValidatorNFT-->>ValidatorNFT: cardDisabled 0 equals true
     ValidatorNFT-->>Buyer: NFT 0 transferred
     
