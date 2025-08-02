@@ -13,6 +13,10 @@ describe("ValidatorNFT Card Deck Mapping", function () {
         const ValidatorNFTFactory = await ethers.getContractFactory("ValidatorNFT");
         validatorNFT = await ValidatorNFTFactory.deploy("Poker Validators", "PVAL");
         await validatorNFT.waitForDeployment();
+        
+        // Grant MINTER_ROLE to owner for testing
+        const MINTER_ROLE = await validatorNFT.MINTER_ROLE();
+        await validatorNFT.grantRole(MINTER_ROLE, owner.address);
     });
 
     describe("Token ID mapping", function () {
@@ -78,7 +82,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
     describe("Minting functionality", function () {
         it("should mint cards by token ID and default to disabled", async function () {
             // Mint Ace of Clubs (token ID 0)
-            await validatorNFT.mint(validator1.address, 0);
+            await validatorNFT.mintAndTransfer(validator1.address, 0);
             expect(await validatorNFT.ownerOf(0)).to.equal(validator1.address);
             expect(await validatorNFT.cardMinted(0)).to.be.true;
             expect(await validatorNFT.cardDisabled(0)).to.be.true; // Should be disabled by default
@@ -90,24 +94,24 @@ describe("ValidatorNFT Card Deck Mapping", function () {
             expect(await validatorNFT.isValidator(validator1.address)).to.be.true; // Now a validator
             
             // Mint King of Spades (token ID 51) - also disabled by default
-            await validatorNFT.mint(validator1.address, 51);
+            await validatorNFT.mintAndTransfer(validator1.address, 51);
             expect(await validatorNFT.ownerOf(51)).to.equal(validator1.address);
             expect(await validatorNFT.cardMinted(51)).to.be.true;
             expect(await validatorNFT.cardDisabled(51)).to.be.true; // Also disabled by default
         });
 
         it("should prevent double minting of same card", async function () {
-            await validatorNFT.mint(validator1.address, 0);
-            await expect(validatorNFT.mint(validator1.address, 0)).to.be.revertedWith("mint: Card already minted");
+            await validatorNFT.mintAndTransfer(validator1.address, 0);
+            await expect(validatorNFT.mintAndTransfer(validator1.address, 0)).to.be.revertedWith("mintAndTransfer: Card already minted");
         });
 
         it("should track minted card count correctly", async function () {
             expect(await validatorNFT.totalSupply()).to.equal(0);
             
-            await validatorNFT.mint(validator1.address, 0);
+            await validatorNFT.mintAndTransfer(validator1.address, 0);
             expect(await validatorNFT.totalSupply()).to.equal(1);
             
-            await validatorNFT.mint(validator1.address, 13);
+            await validatorNFT.mintAndTransfer(validator1.address, 13);
             expect(await validatorNFT.totalSupply()).to.equal(2);
         });
 
@@ -157,7 +161,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
 
         it("should allow token owner to toggle their tokens", async function () {
             // Mint a token to validator1 (will be disabled by default)
-            await validatorNFT.mint(validator1.address, 0);
+            await validatorNFT.mintAndTransfer(validator1.address, 0);
             expect(await validatorNFT.cardDisabled(0)).to.be.true;
             expect(await validatorNFT.isValidator(validator1.address)).to.be.false;
             
@@ -180,7 +184,7 @@ describe("ValidatorNFT Card Deck Mapping", function () {
 
         it("should not allow non-owners to toggle tokens", async function () {
             // Mint a token to validator1
-            await validatorNFT.mint(validator1.address, 0);
+            await validatorNFT.mintAndTransfer(validator1.address, 0);
             
             // Contract owner (different from token owner) should not be able to toggle
             await expect(validatorNFT.toggleEnable(0))
@@ -203,9 +207,9 @@ describe("ValidatorNFT Card Deck Mapping", function () {
 
         it("should handle multiple cards with mixed enabled/disabled states", async function () {
             // Mint multiple cards to same validator (all disabled by default)
-            await validatorNFT.mint(validator1.address, 0);  // Ace of Clubs
-            await validatorNFT.mint(validator1.address, 13); // Ace of Diamonds
-            await validatorNFT.mint(validator1.address, 26); // Ace of Hearts
+            await validatorNFT.mintAndTransfer(validator1.address, 0);  // Ace of Clubs
+            await validatorNFT.mintAndTransfer(validator1.address, 13); // Ace of Diamonds
+            await validatorNFT.mintAndTransfer(validator1.address, 26); // Ace of Hearts
             
             expect(await validatorNFT.isValidator(validator1.address)).to.be.false; // All disabled by default
             

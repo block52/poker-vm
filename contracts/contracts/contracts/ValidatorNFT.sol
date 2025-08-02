@@ -53,17 +53,6 @@ contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable, AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function mint(address to, uint256 tokenId) external onlyOwner {
-        require(tokenId < MAX_VALIDATORS, "mint: Token ID out of range");
-        require(!cardMinted[tokenId], "mint: Card already minted");
-        
-        _safeMint(to, tokenId);
-        cardMinted[tokenId] = true;
-        cardDisabled[tokenId] = true; // Default to disabled
-
-        emit ValidatorAdded(to, tokenId, totalSupply());
-    }
-    
     function mintAndTransfer(address to, uint256 tokenId) external onlyRole(MINTER_ROLE) {
         require(tokenId < MAX_VALIDATORS, "mintAndTransfer: Token ID out of range");
         require(!cardMinted[tokenId], "mintAndTransfer: Card already minted");

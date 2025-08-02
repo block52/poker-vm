@@ -106,7 +106,7 @@ graph LR
 
 ### ValidatorNFT
 - **52 unique NFTs** representing a deck of cards
-- **Access Control**: Only addresses with MINTER_ROLE can mint
+- **Access Control**: Only addresses with MINTER_ROLE can mint using mintAndTransfer function
 - **Default Disabled**: NFTs are disabled when minted
 - **Owner Control**: Only token owners can enable/disable their NFTs
 
@@ -267,7 +267,7 @@ npm run hh:coverage
 
 | Test File | Description | Forking Required |
 |-----------|-------------|------------------|
-| `ValidatorNFT.test.ts` | Core NFT functionality, minting, toggling | No |
+| `ValidatorNFT.test.ts` | Core NFT functionality, mintAndTransfer, toggling | No |
 | `ValidatorSale.test.ts` | Purchase flow with mocked USDC | No |
 | `ValidatorNFTSale.integration.test.ts` | Integration between NFT and Sale contracts | No |
 | `ValidatorSale.quote.simple.test.ts` | Basic quote validation tests | No |

@@ -21,6 +21,8 @@ describe("ValidatorNFT and ValidatorSale Integration", function () {
         // Grant MINTER_ROLE to sale contract (simulating ValidatorSale)
         const MINTER_ROLE = await validatorNFT.MINTER_ROLE();
         await validatorNFT.grantRole(MINTER_ROLE, saleContract.address);
+        // Also grant to owner for direct minting tests
+        await validatorNFT.grantRole(MINTER_ROLE, owner.address);
     });
 
     describe("Integration Flow", function () {
@@ -70,8 +72,8 @@ describe("ValidatorNFT and ValidatorSale Integration", function () {
             await expect(validatorNFT.connect(buyer1).mintAndTransfer(buyer1.address, 0))
                 .to.be.reverted;
             
-            // Owner can still use regular mint function
-            await validatorNFT.connect(owner).mint(buyer1.address, 0);
+            // Owner can still use mintAndTransfer function
+            await validatorNFT.connect(owner).mintAndTransfer(buyer1.address, 0);
             expect(await validatorNFT.ownerOf(0)).to.equal(buyer1.address);
         });
 
