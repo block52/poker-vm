@@ -18,7 +18,12 @@
         "hh:wipe:vault": "npx hardhat ignition wipe chain-8453 VaultModule#Vault",
         "hh:wipe:bridge": "npx hardhat ignition wipe chain-1 BridgeModule#Bridge",
         "hh:deploy:hello": "npx hardhat ignition deploy ./ignition/modules/HelloWorld.ts --network sepolia --verify",
-        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify"
+        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify",
+        "hh:deploy:validatornft:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorNFT.ts --network base --verify",
+        "hh:deploy:validatorsale:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorSale.ts --network base --verify",
+        "hh:deploy:mockusdc:basesepolia": "npx hardhat ignition deploy ./ignition/modules/MockUSDC.ts --network baseSepolia --verify",
+        "hh:deploy:validatornft:basesepolia": "npx hardhat ignition deploy ./ignition/modules/ValidatorNFT.ts --network baseSepolia --verify",
+        "hh:deploy:validatorsale:basesepolia": "npx hardhat ignition deploy ./ignition/modules/ValidatorSaleTestnet.ts --network baseSepolia --verify"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
