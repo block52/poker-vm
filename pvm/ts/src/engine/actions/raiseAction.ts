@@ -85,7 +85,7 @@ class RaiseAction extends BaseAction implements IAction {
     }
 
     execute(player: Player, index: number, amount: bigint): void {
-        // Verify the player can perform the call action
+        // Verify the player can perform the raise action
         if (amount <= 0n) {
             throw new Error("Bet amount must be greater than zero.");
         }
