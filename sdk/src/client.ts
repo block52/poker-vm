@@ -410,9 +410,9 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with seat information
         const params = new URLSearchParams();
-        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
+        // params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
         params.set(KEYS.INDEX, index.toString());
-        params.set(KEYS.DATA, seat.toString());
+        params.set(KEYS.SEAT, seat.toString());
         params.set(KEYS.TX_HASH, transferResponse.hash);
         const formattedData = params.toString();
 

@@ -4,8 +4,9 @@ export * from "./types/game";
 export * from "./client";
 
 export enum KEYS {
-    INDEX = "index",
     ACTION_TYPE = "actiontype",
     DATA = "data",
+    INDEX = "index",
+    SEAT = "seat",
     TX_HASH = "txHash",
 }

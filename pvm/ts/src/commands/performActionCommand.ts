@@ -24,8 +24,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         protected readonly action: PlayerActionType | NonPlayerActionType,
         protected readonly nonce: number,
         protected readonly privateKey: string,
-        protected readonly data?: string,
-        protected readonly txHash?: string // Optional transaction hash for reference
+        protected readonly data?: string
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, action=${action}, data=${data}`);
         this.gameManagement = getGameManagementInstance();
@@ -41,17 +40,18 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error("Not a game transaction");
         }
 
-        if (this.actionTypes.includes(this.action as NonPlayerActionType)) {
+        const txHash = this.getTxHash();
 
-            if (!this.txHash) {
+        if (this.actionTypes.includes(this.action as NonPlayerActionType)) {
+            if (!txHash) {
                 console.log(`No transaction hash provided, creating a new transaction...`);
                 throw new Error(`Invalid action type: ${this.action}. Must be one of ${this.actionTypes.join(", ")} or provide a transaction hash.`);
             }
 
-            console.log(`Using provided transaction hash: ${this.txHash}`);
+            console.log(`Using provided transaction hash: ${txHash}`);
 
             // Check if the transaction exists in the mempool or the transaction management
-            const existingTransaction = await this.findTransactionByHash(this.txHash);
+            const existingTransaction = await this.findTransactionByHash(txHash);
 
             if (existingTransaction.value !== this.amount) {
                 console.log(`Transaction found in transaction management with different amount: ${existingTransaction.value} !== ${this.amount}`);
@@ -59,7 +59,9 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             }
 
             if (existingTransaction.to !== this.to || existingTransaction.from !== this.from) {
-                console.log(`Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`);
+                console.log(
+                    `Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`
+                );
                 throw new Error("Transaction address mismatch");
             }
         }
@@ -71,50 +73,39 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error(`Game state not found for address: ${this.to}`);
         }
 
-        const gameOptions = await this.gameManagement.getGameOptions(gameState.address);
-        const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
-
         // Get mempool transactions for the game
-        const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.to && tx.data !== undefined);
+        const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.to && tx.data !== undefined && tx.data !== null && tx.data !== "");
         console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
         // Sort transactions by index
         const orderedTransactions = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
-        orderedTransactions.forEach(tx => {
-            try {
-                {
-                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+        if (orderedTransactions.length > 0) {
+            // Only load the game state if there are transactions to process
+            const gameOptions = await this.gameManagement.getGameOptions(gameState.address);
+            const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
+
+            orderedTransactions.forEach(tx => {
+                try {
+                    {
+                        console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
+                        game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                    }
+                } catch (error) {
+                    console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
+                    // Continue with other transactions, don't let this error propagate up
                 }
-            } catch (error) {
-                console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
-                // Continue with other transactions, don't let this error propagate up
-            }
-        });
+            });
+        }
 
         const nonce = BigInt(this.nonce);
-
-        // const _to = this.action === NonPlayerActionType.LEAVE ? this.from : this.to;
-        // const _from = this.action === NonPlayerActionType.LEAVE ? this.to : this.from;
-
-        // Create transaction with correct direction of funds flow
-        // For all other actions: URLSearchParams format
         const params = new URLSearchParams();
         params.set(KEYS.ACTION_TYPE, this.action);
         params.set(KEYS.INDEX, this.index.toString());
-        if (this.txHash)
-            params.set(KEYS.TX_HASH, this.txHash); // Optional transaction hash
-
-        // Extract clean data using the parser (single responsibility)
-        // const paramsString = extractDataFromParams(this.data);
-
-        // console.log(`Performing action ${this.action} with index ${this.index} data ${paramsString}`);
-        // game.performAction(this.from, this.action, this.index, this.amount, paramsString);
-        // if (paramsString) {
-        //     params.set(KEYS.DATA, paramsString); // Use KEYS.DATA instead of hardcoded "data"
-        // }
-
+        params.set(KEYS.TX_HASH, txHash || "");
+        if (this.data) {
+            params.set(KEYS.DATA, this.data); // Use KEYS.DATA instead of hardcoded "data"
+        }
         const data = params.toString();
 
         // if (this.action !== NonPlayerActionType.LEAVE) {
@@ -141,48 +132,16 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         };
 
         return signResult(txResponse, this.privateKey);
-        // }
+    }
 
-        // if (this.action === NonPlayerActionType.LEAVE) {
-        //     const tx: Transaction = await Transaction.create(
-        //         _to, // game receives funds (to)
-        //         _from, // player sends funds (from)
-        //         this.amount,
-        //         nonce,
-        //         this.privateKey,
-        //         "" // No data for regular transactions
-        //     );
-
-        //     const actionTx = await Transaction.create(
-        //         this.to,
-        //         this.from,
-        //         this.amount,
-        //         nonce + 1n, // Increment nonce for action transaction
-        //         this.privateKey,
-        //         data
-        //     );
-
-        //     // Add both transactions to the mempool
-        //     const txs = await Promise.all([tx, actionTx]);
-
-        //     const txResponse: TransactionResponse = {
-        //         nonce: tx.nonce.toString(),
-        //         to: tx.to,
-        //         from: tx.from,
-        //         value: tx.value.toString(),
-        //         hash: tx.hash,
-        //         signature: tx.signature,
-        //         timestamp: tx.timestamp.toString(),
-        //         data: tx.data
-        //     };
-
-        //     const mempoolTxs = [this.mempool.add(txs[0]), this.mempool.add(txs[1])];
-        //     await Promise.all(mempoolTxs);
-
-        //     return signResult(txResponse, this.privateKey);
-        // }
-
-        // throw new Error(`Unsupported action type: ${this.action}`);
+    private getTxHash(): string | undefined {
+        if (this.data) {
+            const params = new URLSearchParams(this.data);
+            if (params.has(KEYS.TX_HASH)) {
+                return params.get(KEYS.TX_HASH) || undefined; // Optional transaction hash
+            }
+        }
+        return undefined;
     }
 
     private async isGameTransaction(address: string): Promise<Boolean> {

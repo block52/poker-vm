@@ -1,5 +1,4 @@
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
-import { ITransaction } from "../models/interfaces";
 import { extractDataFromParams, toOrderedTransaction } from "./parsers";
 
 describe("Parser", () => {
