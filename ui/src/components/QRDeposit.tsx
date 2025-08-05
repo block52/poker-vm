@@ -271,9 +271,9 @@ const QRDeposit: React.FC = () => {
                 setIsBitcoinLoading(false);
                 console.log("🔷 QRDeposit: Bitcoin payment response:", response.data);
 
-                // Navigate to the payment URL
+                // Navigate to the payment URL in a new tab
                 if (response.data && response.data.checkoutLink) {
-                    window.location.href = response.data.checkoutLink;
+                    window.open(response.data.checkoutLink, '_blank');
                 }
             } catch (error) {
                 console.error("🔷 QRDeposit: Bitcoin payment error:", error);
@@ -324,9 +324,9 @@ const QRDeposit: React.FC = () => {
                 setIsBitcoinLoading(false);
                 console.log("🔷 QRDeposit: Bitcoin payment response:", response.data);
 
-                // Navigate to the payment URL
+                // Navigate to the payment URL in a new tab
                 if (response.data && response.data.checkoutLink) {
-                    window.location.href = response.data.checkoutLink;
+                    window.open(response.data.checkoutLink, '_blank');
                 }
             } catch (error) {
                 console.error("🔷 QRDeposit: Bitcoin payment error:", error);
@@ -891,7 +891,7 @@ const QRDeposit: React.FC = () => {
                                 className="w-full p-2 rounded-lg"
                                 style={{
                                     backgroundColor: colors.ui.bgDark,
-                                    color: "white"
+                                    color: "black"
                                 }}
                             />
                         </div>
