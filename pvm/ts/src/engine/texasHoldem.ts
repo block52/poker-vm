@@ -1259,6 +1259,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 this._winners.set(player.address, _winner);
             }
         }
+
+        // Check all players, if they have no chips left, set them to SITTING_OUT
+        for (const player of players) {
+            if (player.chips <= 0n) {
+                player.updateStatus(PlayerStatus.SITTING_OUT);
+            }
+        }
     }
 
     // ==================== SERIALIZATION METHODS ====================
