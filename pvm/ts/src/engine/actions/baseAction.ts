@@ -16,13 +16,8 @@ abstract class BaseAction {
             if (nextPlayerAddress?.address !== player.address) throw new Error("Must be currently active player.");
         }
         
-        if (!this.zeroChipsAllowed.includes(this.type)) {
-            if (player.chips <= 0n) {
-                // If player has no chips, they cannot perform any action except sit out
-                if (this.type !== PlayerActionType.SIT_OUT) {
-                    throw new Error("Player has no chips left and cannot perform this action.");
-                }
-            }
+        if (player.chips <= 0n && !this.zeroChipsAllowed.includes(this.type)) {
+            throw new Error("Player has no chips left and cannot perform this action.");
         }
 
         // 3. Player status check: Player must be active (not folded/all-in)
