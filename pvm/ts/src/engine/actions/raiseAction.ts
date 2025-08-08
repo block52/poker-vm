@@ -83,6 +83,18 @@ class RaiseAction extends BaseAction implements IAction {
             maxAmount: player.chips
         };
     }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        // Verify the player can perform the raise action
+        if (amount <= 0n) {
+            throw new Error("Bet amount must be greater than zero.");
+        }
+
+        super.execute(player, index, amount);
+
+        // Set player state to ALL_IN if they have no chips left after the bet
+        this.setAllInWhenBalanceIsZero(player);
+    }
 }
 
 export default RaiseAction;
