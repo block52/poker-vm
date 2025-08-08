@@ -18,9 +18,6 @@ class SitOutAction extends BaseAction implements IAction {
      * @returns A Range object with min and max amount both set to 0 (sitting out costs nothing)
      */
     verify(player: Player): Range {
-
-        // super.verify(player);
-
         if (player.status === PlayerStatus.FOLDED) {
             return { minAmount: 0n, maxAmount: 0n };
         }
