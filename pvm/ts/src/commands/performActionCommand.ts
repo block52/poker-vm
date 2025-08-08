@@ -108,8 +108,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         }
         const data = params.toString();
 
-        // if (this.action !== NonPlayerActionType.LEAVE) {
-        if (!this.actionTypes.includes(this.action as NonPlayerActionType)) {
+        // if (!this.actionTypes.includes(this.action as NonPlayerActionType)) {
             const tx: Transaction = await Transaction.create(
                 this.to, // game receives funds (to)
                 this.from, // player sends funds (from)
@@ -120,7 +119,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             );
 
             await this.mempool.add(tx);
-        }
+        //}
 
         const txResponse: TransactionResponse = {
             nonce: tx.nonce.toString(),
