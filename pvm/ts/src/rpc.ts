@@ -40,7 +40,6 @@ import { GameManagement } from "./state/mongodb/gameManagement";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
-        // console.log(request);
         if (!request) {
             throw new Error("Null request");
         }
@@ -133,7 +132,7 @@ export class RPC {
                     if (!request.params) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-                    let command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
+                    const command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

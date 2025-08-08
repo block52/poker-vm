@@ -396,6 +396,11 @@ export class NodeRpcClient implements IClient {
      */
     public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
+        const transferResponse = await this.transfer(gameAddress, amount.toString());
+
+        if (!transferResponse) {
+            throw new Error("Failed to transfer funds to the game");
+        }
 
         if (!nonce) {
             nonce = await this.getNonce(address);
@@ -405,9 +410,10 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with seat information
         const params = new URLSearchParams();
-        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
+        // params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
         params.set(KEYS.INDEX, index.toString());
-        params.set(KEYS.DATA, seat.toString());
+        params.set(KEYS.SEAT, seat.toString());
+        params.set(KEYS.TX_HASH, transferResponse.hash);
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
@@ -594,13 +600,14 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
-    private async getSignature(nonce: number): Promise<string> {
+    private async getSignature(nonce: number, args?: any[]): Promise<string> {
         if (!this.wallet) {
-            throw new Error("Cannot transfer funds without a private key");
+            throw new Error("Cannot sign without a private key");
         }
 
         const timestamp = Math.floor(Date.now());
-        const message = `${timestamp}-${nonce}`;
+        const paramsString = args ? args.map(arg => (arg).join("-")) : [];
+        const message = `${timestamp}-${nonce}-${paramsString}`;
         const signature = await this.wallet.signMessage(message);
         return signature;
     }

@@ -1,4 +1,4 @@
-import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { KEYS, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { Range, TurnWithSeat } from "../types";
@@ -33,34 +33,9 @@ class JoinAction extends BaseAction {
         }
 
         // Find an available seat or use the requested one
-        let seat: number;
-        if (requestedSeat === undefined || requestedSeat === "") {
-
-            // get all available seats
-            const availableSeats = this.game.getAvailableSeats();
-
-            // If all seats are occupied, throw an error
-            if (availableSeats.length === 0)
-                throw new Error("No available seats to join.");
-
-            // Choose randomly from the available seats
-            seat = Math.floor(Math.random() * availableSeats.length);
-        } else {
-            // Validate the requested seat
-            const seatRegex = /^\d+$/;
-            const seatMatch = requestedSeat.toString().match(seatRegex);
-            if (!seatMatch) {
-                throw new Error("Invalid seat number.");
-            }
-            seat = parseInt(seatMatch[0]);
-        }
-
+        const seat: number = this.getSeat(requestedSeat);
         this.game.joinAtSeat(player, seat);
-
         this.game.dealerManager.handlePlayerJoin(seat);
-
-        // Set this seat as the last acted seat to help determine next player
-        // this.game.setLastActedSeat(seat);
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction(
@@ -72,6 +47,27 @@ class JoinAction extends BaseAction {
             },
             seat.toString()
         );
+    }
+
+    private getSeat(data?: string): number {
+        // Find an available seat or use the requested one
+        let seat: number = 1;
+        if (data === undefined || data === "" || data === null) {
+            // get all available seats
+            const availableSeats = this.game.getAvailableSeats();
+
+            // If all seats are occupied, throw an error
+            if (availableSeats.length === 0)
+                throw new Error("No available seats to join.");
+
+            // Choose randomly from the available seats
+            seat = Math.floor(Math.random() * availableSeats.length);
+        } else {
+            const params = new URLSearchParams(data);
+            seat = parseInt(params.get(KEYS.SEAT) || "1");
+        }
+
+        return seat;
     }
 }
 
