@@ -45,8 +45,7 @@ describe("Creating a Test for proof of correct actions pre flop with 2 players. 
         
         // Add more specific assertions based on the scenario requirements
         // TODO: Add assertions specific to this test case
-        // @ts-ignore
-        const legalActions = game.getLegalActions(nextToAct?.address);
+        const legalActions = game.getLegalActions(nextToAct!.address);
         expect(legalActions).toBeDefined();
         expect(legalActions.length).toEqual(3); // Fold, Call or Raise
     });
@@ -175,9 +174,8 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         const nextToAct = game.getNextPlayerToAct();
         expect(nextToAct).toBeDefined();
         expect(nextToAct?.address).toBeDefined();
-        
-        // @ts-ignore
-        const legalActions = game.getLegalActions(nextToAct?.address);
+
+        const legalActions = game.getLegalActions(nextToAct!.address);
         expect(legalActions).toBeDefined();
         expect(legalActions.length).toEqual(3);
     });
@@ -220,8 +218,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
 
         // Add more specific assertions based on the scenario requirements
         // TODO: Add assertions specific to this test case
-        // @ts-ignore
-        legalActions = game.getLegalActions(nextToAct?.address);
+        legalActions = game.getLegalActions(nextToAct!.address);
         expect(legalActions).toBeDefined();
         expect(legalActions.length).toEqual(3); // Fold, Call or Raise
     });
@@ -258,8 +255,7 @@ describe("Checking the betting system values after each action #927 + #568", () 
 
         // Add more specific assertions based on the scenario requirements
         // TODO: Add assertions specific to this test case
-        // @ts-ignore
-        const legalActions = game.getLegalActions(nextToAct?.address);
+        const legalActions = game.getLegalActions(nextToAct!.address);
         expect(legalActions).toBeDefined();
         expect(legalActions.length).toEqual(3); // Fold, Call or Raise
 
