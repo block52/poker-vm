@@ -12,9 +12,10 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             chainId: 1337,
-            forking: {
-                url: `${process.env.RPC_URL}`
-            }
+            // Temporarily disable forking for tests
+            // forking: {
+            //     url: `${process.env.RPC_URL}`
+            // }
         },
         sepolia: {
             url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
@@ -26,6 +27,11 @@ const config: HardhatUserConfig = {
 			chainId: 8453,
 			url: "https://mainnet.base.org",
 		},
+        baseSepolia: {
+            accounts: PK ? [PK] : [],
+            chainId: 84532,
+            url: "https://sepolia.base.org",
+        },
         mainnet: {
             chainId: 1,
             url: `${process.env.RPC_URL}`,
@@ -46,6 +52,7 @@ const config: HardhatUserConfig = {
         apiKey: {
             sepolia: process.env.ETHERSCAN_API_KEY || "",
             base: process.env.ETHERSCAN_API_KEY || "",
+            baseSepolia: process.env.ETHERSCAN_API_KEY || "",
             mainnet: process.env.ETHERSCAN_API_KEY || ""
         },
         customChains: [
@@ -55,6 +62,14 @@ const config: HardhatUserConfig = {
                 urls: {
                     apiURL: "https://api.basescan.org/api",
                     browserURL: "https://basescan.org"
+                }
+            },
+            {
+                network: "baseSepolia",
+                chainId: 84532,
+                urls: {
+                    apiURL: "https://api-sepolia.basescan.org/api",
+                    browserURL: "https://sepolia.basescan.org"
                 }
             }
         ]
