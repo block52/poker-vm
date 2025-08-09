@@ -106,20 +106,20 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         if (this.data) {
             params.set(KEYS.DATA, this.data); // Use KEYS.DATA instead of hardcoded "data"
         }
+
         const data = params.toString();
+        const tx: Transaction = await Transaction.create(
+            this.to, // game receives funds (to)
+            this.from, // player sends funds (from)
+            this.amount,
+            nonce,
+            this.privateKey,
+            data
+        );
 
-        // if (!this.actionTypes.includes(this.action as NonPlayerActionType)) {
-            const tx: Transaction = await Transaction.create(
-                this.to, // game receives funds (to)
-                this.from, // player sends funds (from)
-                this.amount,
-                nonce,
-                this.privateKey,
-                data
-            );
-
+        if (!this.actionTypes.includes(this.action as NonPlayerActionType)) {
             await this.mempool.add(tx);
-        //}
+        }
 
         const txResponse: TransactionResponse = {
             nonce: tx.nonce.toString(),
