@@ -6,6 +6,8 @@ const accountSchema = new Schema<IAccountDocument>(
         address: {
             required: true,
             type: String,
+            index: true, // Indexing 'address' field for faster queries
+            unique: true, // Ensuring 'address' is unique
         },
         balance: {
             required: true,

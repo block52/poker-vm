@@ -103,10 +103,21 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
             orderedTransactions.forEach(tx => {
                 try {
-                    {
-                        console.log(`Processing ${tx.type} action from ${tx.from} with value ${value}, index ${tx.index}, and data ${tx.data}`);
-                        game.performAction(tx.from, tx.type, tx.index, value, tx.data);
+                    
+                    // Check if the amount is packed in the transaction data
+                    if (tx.data) {
+                        const params = new URLSearchParams(tx.data);
+                        if (params.has(KEYS.VALUE)) {
+                            const valueStr = params.get(KEYS.VALUE);
+                            if (valueStr) {
+                                value = BigInt(valueStr);
+                            }
+                        }
                     }
+
+                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${value}, index ${tx.index}, and data ${tx.data}`);
+                    game.performAction(tx.from, tx.type, tx.index, value, tx.data);
+                    
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                     // Continue with other transactions, don't let this error propagate up
@@ -133,7 +144,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const tx: Transaction = await Transaction.create(
             this.to, // game receives funds (to)
             this.from, // player sends funds (from)
-            0n, // no value for game actions
+            value, // no value for game actions
             nonce,
             this.privateKey,
             data
