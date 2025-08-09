@@ -149,9 +149,9 @@ export class AccountManagement extends StateManager implements IAccountManagemen
 
 let instance: AccountManagement;
 export const getMongoAccountManagementInstance = (): IAccountManagement => {
-    const connString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
+    const connString = process.env.DB_URL;
     if (!instance) {
-        instance = new AccountManagement(connString);
+        instance = new AccountManagement(connString!);
     }
     return instance;
 };
