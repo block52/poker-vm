@@ -270,7 +270,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                     }}
                                     disabled={isJoining}
                                 >
-                                    Cancel
+                                    No
                                 </button>
                                 <button
                                     onClick={handleConfirmSeat}
@@ -312,7 +312,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                             Joining...
                                         </>
                                     ) : (
-                                        "Join Seat"
+                                        "Yes"
                                     )}
                                 </button>
                             </div>
