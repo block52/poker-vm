@@ -106,7 +106,7 @@ export class AccountManagement extends StateManager implements IAccountManagemen
         // Handle sender account (deduct balance and increment nonce)
         if (tx.from) {
             const account = await Accounts.findOne({ address: tx.from });
-            
+
             // For MINT transactions or other special transactions, the sender might not exist
             // Only process sender if account exists (normal transactions)
             if (account) {
@@ -121,11 +121,11 @@ export class AccountManagement extends StateManager implements IAccountManagemen
 
                 await Accounts.updateOne(
                     { address: tx.from },
-                    { 
-                        $set: { 
+                    {
+                        $set: {
                             balance: newBalance.toString(),
                             nonce: newNonce
-                        } 
+                        }
                     }
                 );
             } else {
@@ -150,6 +150,9 @@ export class AccountManagement extends StateManager implements IAccountManagemen
 let instance: AccountManagement;
 export const getMongoAccountManagementInstance = (): IAccountManagement => {
     const connString = process.env.DB_URL;
+    if (!connString) {
+        throw new Error("No database connection string provided. Please set the DB_URL environment variable.");
+    }
     if (!instance) {
         instance = new AccountManagement(connString!);
     }

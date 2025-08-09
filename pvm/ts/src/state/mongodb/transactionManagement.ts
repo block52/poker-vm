@@ -85,7 +85,11 @@ export class TransactionManagement extends StateManager implements ITransactionM
 let instance: TransactionManagement;
 export const getTransactionInstance = (): ITransactionManagement => {
     if (!instance) {
-        instance = new TransactionManagement();
+        const connString = process.env.DB_URL;
+        if (!connString) {
+            throw new Error("No database connection string provided. Please set the DB_URL environment variable.");
+        }
+        instance = new TransactionManagement(connString!);
     }
     return instance;
 };

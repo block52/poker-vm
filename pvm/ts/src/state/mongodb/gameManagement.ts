@@ -201,6 +201,9 @@ let instance: GameManagement;
 export const getGameManagementInstance = (): IGameManagement => {
     if (!instance) {
         const connString = process.env.DB_URL;
+        if (!connString) {
+            throw new Error("No database connection string provided. Please set the DB_URL environment variable.");
+        }
         instance = new GameManagement(connString!);
     }
     return instance;
