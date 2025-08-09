@@ -262,12 +262,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                         backgroundColor: colors.ui.textSecondary,
                                         color: "white"
                                     }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundColor = colors.ui.bgMedium;
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = colors.ui.textSecondary;
-                                    }}
                                     disabled={isJoining}
                                 >
                                     No
@@ -277,21 +271,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                     disabled={isJoining}
                                     className="px-4 py-2 text-sm rounded-lg transition duration-300 transform shadow-md flex items-center"
                                     style={{
-                                        background: `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`,
+                                        background: colors.brand.primary,
                                         color: "white",
-                                        border: `1px solid ${colors.brand.primary}20`
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (!isJoining) {
-                                            e.currentTarget.style.transform = "scale(1.05)";
-                                            e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.primary}aa, ${colors.brand.secondary}aa)`;
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (!isJoining) {
-                                            e.currentTarget.style.transform = "scale(1)";
-                                            e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.primary}, ${colors.brand.secondary})`;
-                                        }
                                     }}
                                 >
                                     {isJoining ? (
