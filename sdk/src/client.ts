@@ -348,7 +348,7 @@ export class NodeRpcClient implements IClient {
         // Generate URLSearchParams formatted data with seed information
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
-        params.set(KEYS.DATA, seed);
+        params.set(KEYS.SEED, seed);
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
@@ -410,7 +410,6 @@ export class NodeRpcClient implements IClient {
 
         // Generate URLSearchParams formatted data with seat information
         const params = new URLSearchParams();
-        // params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEAT, seat.toString());
         params.set(KEYS.TX_HASH, transferResponse.hash);
@@ -517,10 +516,15 @@ export class NodeRpcClient implements IClient {
             // Generate URLSearchParams formatted data
             const params = new URLSearchParams();
             params.set(KEYS.INDEX, index.toString());
-            if (data) {
-                params.set(KEYS.DATA, data);
-            }
             const formattedData = params.toString();
+
+            // If data is provided, append it to the params
+            if (data) {
+                const dataParams = new URLSearchParams(data);
+                for (const [key, value] of dataParams.entries()) {
+                    params.set(key, value);
+                }
+            }
 
             const { data: body } = await axios.post(this.url, {
                 id: 1, // this.getRequestId(),
@@ -585,9 +589,8 @@ export class NodeRpcClient implements IClient {
         // Generate URLSearchParams formatted data with publicKey information
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
-        if (publicKey) {
-            params.set(KEYS.DATA, publicKey);
-        }
+        params.set(KEYS.SEED, seed);
+        params.set(KEYS.PUBLIC_KEY, publicKey);
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {

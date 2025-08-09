@@ -7,6 +7,7 @@ import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { IGameManagement, ITransactionManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
+import { AccountCommand } from "./accountCommand";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     protected readonly gameManagement: IGameManagement;
@@ -27,6 +28,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         protected readonly data?: string
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, action=${action}, data=${data}`);
+        
         this.gameManagement = getGameManagementInstance();
         this.transactionManagement = getTransactionInstance();
         this.mempool = getMempoolInstance();
@@ -35,12 +37,23 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         console.log(`Executing ${this.action} command...`);
 
+        const accountCommand = new AccountCommand(this.from, this.privateKey);
+        const accountResponse = await accountCommand.execute();
+        const fromAccount = accountResponse.data;
+        console.log(`Account balance for ${this.from}: ${fromAccount.balance} ${fromAccount.nonce}`);
+
+        if (this.nonce !== fromAccount.nonce) {
+            console.log(`Invalid nonce: expected=${fromAccount.nonce}, provided=${this.nonce}`);
+            throw new Error("Invalid nonce");
+        }
+
         if (await !this.isGameTransaction(this.to)) {
             console.log(`Not a game transaction, checking if ${this.to} is a game...`);
             throw new Error("Not a game transaction");
         }
 
         const txHash = this.getTxHash();
+        let value = this.amount;
 
         if (this.actionTypes.includes(this.action as NonPlayerActionType)) {
             if (!txHash) {
@@ -64,6 +77,9 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
                 );
                 throw new Error("Transaction address mismatch");
             }
+
+            // Get the amount from the existing transaction
+            value = existingTransaction.value;
         }
 
         console.log(`Processing game transaction: action=${this.action} data=${this.data}, to=${this.to}`);
@@ -88,8 +104,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             orderedTransactions.forEach(tx => {
                 try {
                     {
-                        console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                        game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+                        console.log(`Processing ${tx.type} action from ${tx.from} with value ${value}, index ${tx.index}, and data ${tx.data}`);
+                        game.performAction(tx.from, tx.type, tx.index, value, tx.data);
                     }
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
@@ -103,23 +119,29 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         params.set(KEYS.ACTION_TYPE, this.action);
         params.set(KEYS.INDEX, this.index.toString());
         params.set(KEYS.TX_HASH, txHash || "");
+        
+        // params.set(KEYS.VALUE, this.amount.toString());  // Will be part of 1057
         if (this.data) {
-            params.set(KEYS.DATA, this.data); // Use KEYS.DATA instead of hardcoded "data"
+            const dataParams = new URLSearchParams(this.data);
+            const keys: Record<string, string> = {};
+            for (const [key, value] of dataParams.entries()) {
+                params.set(key, value);
+            }
         }
 
         const data = params.toString();
         const tx: Transaction = await Transaction.create(
             this.to, // game receives funds (to)
             this.from, // player sends funds (from)
-            this.amount,
+            0n, // no value for game actions
             nonce,
             this.privateKey,
             data
         );
 
-        if (!this.actionTypes.includes(this.action as NonPlayerActionType)) {
+        //if (!this.actionTypes.includes(this.action as NonPlayerActionType)) {
             await this.mempool.add(tx);
-        }
+        //}
 
         const txResponse: TransactionResponse = {
             nonce: tx.nonce.toString(),

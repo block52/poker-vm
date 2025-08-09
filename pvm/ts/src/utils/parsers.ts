@@ -6,29 +6,13 @@ export const toGameOptions = (data: string): GameOptions => {
     throw new Error("Not implemented");
 };
 
-/**
- * Extracts the data field from URLSearchParams formatted string
- * This ensures we have a single place that knows about URLSearchParams format
- */
-export const extractDataFromParams = (paramsString?: string): string | undefined => {
-    if (!paramsString) {
-        return undefined;
+export const toKeys = (data: string): Record<string, string> => {
+    const params = new URLSearchParams(data);
+    const keys: Record<string, string> = {};
+    for (const [key, value] of params.entries()) {
+        keys[key] = value;
     }
-
-    try {
-        // Parse URLSearchParams format
-        const params = new URLSearchParams(paramsString);
-        let data = params.get(KEYS.DATA);
-        
-        if (data === "undefined" || data === null) {
-            return undefined;
-        }
-        
-        return data;
-    } catch (error) {
-        // Fallback: assume the string is the data itself (backward compatibility)
-        return paramsString === "undefined" ? undefined : paramsString;
-    }
+    return keys;
 };
 
 export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
@@ -54,19 +38,13 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
             throw new Error(`Invalid index in transaction data: ${indexStr}`);
         }
 
-        // Get additional data if present
-        let data = params.get(KEYS.DATA);
-        if (data === "undefined" || data === null) {
-            data = null;
-        }
-
         return {
             from: tx.from,
             to: tx.to,
             value: tx.value,
             type: action,
             index: index,
-            data
+            data: tx.data
         };
     } catch (error) {
         // Fallback to old comma-separated format for backward compatibility
