@@ -261,7 +261,18 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         } finally {
             setIsJoiningRandomSeat(false);
         }
-    }, [buyInAmount, minBuyInWei, maxBuyInWei, balanceFormatted, minBuyInNumber, emptySeatIndexes.length, navigate, tableId, minBuyInFormatted, maxBuyInFormatted]);
+    }, [
+        buyInAmount,
+        minBuyInWei,
+        maxBuyInWei,
+        balanceFormatted,
+        minBuyInNumber,
+        emptySeatIndexes.length,
+        navigate,
+        tableId,
+        minBuyInFormatted,
+        maxBuyInFormatted
+    ]);
 
     return (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
@@ -380,51 +391,24 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                     </button>
                     <button
                         onClick={handleJoinClick}
-                        disabled={isDisabled}
-                        className="px-5 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200"
+                        className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: isDisabled ? colors.ui.textSecondary : STATIC_STYLES.joinButtonGradient,
-                            cursor: isDisabled ? "not-allowed" : "pointer"
-                        }}
-                        onMouseEnter={e => {
-                            if (!isDisabled) {
-                                e.currentTarget.style.transform = "scale(1.02)";
-                                e.currentTarget.style.background = STATIC_STYLES.joinButtonGradientHover;
-                            }
-                        }}
-                        onMouseLeave={e => {
-                            if (!isDisabled) {
-                                e.currentTarget.style.transform = "scale(1)";
-                                e.currentTarget.style.background = STATIC_STYLES.joinButtonGradient;
-                            }
+                            background: `${colors.brand.primary}`,
+                            cursor: !canJoinRandomSeat ? "not-allowed" : "pointer"
                         }}
                     >
-                        Take My Seat
+                        View Table
                     </button>
                     <button
                         onClick={handleRandomSeatJoin}
                         disabled={!canJoinRandomSeat}
-                        className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200 text-sm"
+                        className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: !canJoinRandomSeat
-                                ? colors.ui.textSecondary
-                                : `linear-gradient(to bottom right, ${colors.brand.secondary}, ${colors.brand.primary})`,
+                            background: !canJoinRandomSeat ? `${colors.brand.primary}`: `${colors.brand.secondary}, ${colors.brand.primary}`,
                             cursor: !canJoinRandomSeat ? "not-allowed" : "pointer"
                         }}
-                        onMouseEnter={e => {
-                            if (canJoinRandomSeat) {
-                                e.currentTarget.style.transform = "scale(1.02)";
-                                e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.secondary}aa, ${colors.brand.primary}aa)`;
-                            }
-                        }}
-                        onMouseLeave={e => {
-                            if (canJoinRandomSeat) {
-                                e.currentTarget.style.transform = "scale(1)";
-                                e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.secondary}, ${colors.brand.primary})`;
-                            }
-                        }}
                     >
-                        {isJoiningRandomSeat ? "Joining..." : "Join Random Seat"}
+                        {isJoiningRandomSeat ? "Joining..." : "Take My Seat"}
                     </button>
                 </div>
 
