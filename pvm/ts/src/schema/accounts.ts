@@ -6,8 +6,8 @@ const accountSchema = new Schema<IAccountDocument>(
         address: {
             required: true,
             type: String,
-            index: true, // Indexing 'address' field for faster queries
-            unique: true, // Ensuring 'address' is unique
+            unique: true, // Ensure address is unique
+            index: true, // Indexing for faster queries
         },
         balance: {
             required: true,
@@ -22,5 +22,7 @@ const accountSchema = new Schema<IAccountDocument>(
         timestamps: true,
     }
 );
+
+accountSchema.index({ address: 1, nonce: 1 }, { unique: true }); // Unique constraint on address + nonce combination
 
 export default model("Accounts", accountSchema);
