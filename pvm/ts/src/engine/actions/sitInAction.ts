@@ -35,12 +35,12 @@ class SitInAction extends BaseAction implements IAction {
         // First verify the action
         this.verify(player);
 
-        // Set player status to SITTING_OUT
-        player.updateStatus(PlayerStatus.SITTING_OUT);
+        // Set player status to SITTING_IN
+        player.updateStatus(PlayerStatus.SITTING_IN);
 
         // Add the action to the game
         const round = this.game.currentRound;
-        this.game.addAction({ playerId: player.address, action: PlayerActionType.SIT_OUT, index: index }, round);
+        this.game.addAction({ playerId: player.address, action: PlayerActionType.SIT_IN, index: index }, round);
     }
 }
 
