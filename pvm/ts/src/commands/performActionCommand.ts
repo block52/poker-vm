@@ -103,10 +103,21 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
             orderedTransactions.forEach(tx => {
                 try {
-                    {
-                        console.log(`Processing ${tx.type} action from ${tx.from} with value ${value}, index ${tx.index}, and data ${tx.data}`);
-                        game.performAction(tx.from, tx.type, tx.index, value, tx.data);
+                    
+                    // Check if the amount is packed in the transaction data
+                    if (tx.data) {
+                        const params = new URLSearchParams(tx.data);
+                        if (params.has(KEYS.VALUE)) {
+                            const valueStr = params.get(KEYS.VALUE);
+                            if (valueStr) {
+                                value = BigInt(valueStr);
+                            }
+                        }
                     }
+
+                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${value}, index ${tx.index}, and data ${tx.data}`);
+                    game.performAction(tx.from, tx.type, tx.index, value, tx.data);
+                    
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                     // Continue with other transactions, don't let this error propagate up
@@ -119,15 +130,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         params.set(KEYS.ACTION_TYPE, this.action);
         params.set(KEYS.INDEX, this.index.toString());
         params.set(KEYS.TX_HASH, txHash || "");
-        
-        // params.set(KEYS.VALUE, this.amount.toString());  // Will be part of 1057
-        if (this.data) {
-            const dataParams = new URLSearchParams(this.data);
-            const keys: Record<string, string> = {};
-            for (const [key, value] of dataParams.entries()) {
-                params.set(key, value);
-            }
-        }
+        params.set(KEYS.VALUE, value.toString());
+
 
         const data = params.toString();
         const tx: Transaction = await Transaction.create(
@@ -147,7 +151,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             nonce: tx.nonce.toString(),
             to: tx.to,
             from: tx.from,
-            value: tx.value.toString(),
+            value: value.toString(),
             hash: tx.hash,
             signature: tx.signature,
             timestamp: tx.timestamp.toString(),

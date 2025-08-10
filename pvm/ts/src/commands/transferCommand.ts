@@ -51,7 +51,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
 
         try {
             // If we haven't thrown an error, then we can create the transaction
-            const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, 0n, this.privateKey, this.data ?? "");
+            const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, BigInt(this.nonce), this.privateKey, this.data ?? "");
             await this.mempool.add(transaction);
 
             const txResponse: TransactionResponse = {
