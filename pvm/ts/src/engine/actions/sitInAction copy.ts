@@ -18,12 +18,12 @@ class SitInAction extends BaseAction implements IAction {
      * @returns A Range object with min and max amount both set to 0 (sitting in costs nothing)
      */
     verify(player: Player): Range {
-        if (player.status === PlayerStatus.FOLDED) {
-            return { minAmount: 0n, maxAmount: 0n };
+        if (player.status !== PlayerStatus.SITTING_OUT) {
+            throw new Error("Player must be sitting out to sit in.");
         }
 
         if (this.game.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Sit out action is not allowed during showdown round.");
+            throw new Error("Sit in action is not allowed during showdown round.");
         }
 
         return { minAmount: 0n, maxAmount: 0n };
