@@ -7,12 +7,20 @@ import { AccountCommand } from "./accountCommand";
 
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly mempool: Mempool;
-
+    /**
+     * Creates a new TransferCommand instance.
+     * @param from The address sending the funds.
+     * @param to The address receiving the funds.
+     * @param amount The amount of funds to transfer.
+     * @param nonce The nonce for the transaction.
+     * @param data Optional data to include with the transaction.
+     * @param privateKey The private key of the sender's account.
+     */
     constructor(
         private readonly from: string,
         private readonly to: string,
         private readonly amount: bigint,
-        private readonly nonce: number | 0,
+        private readonly nonce: number,
         private data: string | null,
         private readonly privateKey: string
     ) {
@@ -21,6 +29,9 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
     }
 
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
+        if (!Number.isInteger(this.nonce) || this.nonce < 0) {
+            throw new Error("Invalid nonce: must be a non-negative integer");
+        }
         console.log(`Executing transfer command...`);
 
         const accountCommand = new AccountCommand(this.from, this.privateKey);
