@@ -1,4 +1,4 @@
-import { GameOptions, PlayerActionType, KEYS } from "@bitcoinbrisbane/block52";
+import { GameOptions, PlayerActionType, KEYS, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { OrderedTransaction } from "../engine/types";
 import { ITransaction } from "../models/interfaces";
 
@@ -15,6 +15,8 @@ export const toKeys = (data: string): Record<string, string> => {
     return keys;
 };
 
+
+// Assume they're game transactions
 export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
     if (!tx.data) {
         throw new Error("Transaction data is undefined");
@@ -31,17 +33,27 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
             throw new Error(`Invalid transaction data format: missing ${KEYS.ACTION_TYPE} or ${KEYS.INDEX} in ${tx.data}`);
         }
 
-        const action = actionType.trim() as PlayerActionType;
+        const action = actionType.trim() as PlayerActionType | NonPlayerActionType;
         const index = parseInt(indexStr.trim());
         
         if (isNaN(index)) {
             throw new Error(`Invalid index in transaction data: ${indexStr}`);
         }
 
+        // Hack for now until we implement 1057
+        let value = tx.value;
+        if (action === NonPlayerActionType.JOIN ) {
+            const dataParams = new URLSearchParams(tx.data);
+            const valueStr = dataParams.get(KEYS.VALUE);
+            if (valueStr) {
+                value = BigInt(valueStr);
+            }
+        }
+
         return {
             from: tx.from,
             to: tx.to,
-            value: tx.value,
+            value: value,
             type: action,
             index: index,
             data: tx.data

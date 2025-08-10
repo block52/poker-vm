@@ -130,21 +130,14 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         params.set(KEYS.ACTION_TYPE, this.action);
         params.set(KEYS.INDEX, this.index.toString());
         params.set(KEYS.TX_HASH, txHash || "");
-        
-        // params.set(KEYS.VALUE, this.amount.toString());  // Will be part of 1057
-        if (this.data) {
-            const dataParams = new URLSearchParams(this.data);
-            const keys: Record<string, string> = {};
-            for (const [key, value] of dataParams.entries()) {
-                params.set(key, value);
-            }
-        }
+        params.set(KEYS.VALUE, value.toString());
+
 
         const data = params.toString();
         const tx: Transaction = await Transaction.create(
             this.to, // game receives funds (to)
             this.from, // player sends funds (from)
-            value, // no value for game actions
+            0n, // no value for game actions
             nonce,
             this.privateKey,
             data
@@ -158,7 +151,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             nonce: tx.nonce.toString(),
             to: tx.to,
             from: tx.from,
-            value: tx.value.toString(),
+            value: value.toString(),
             hash: tx.hash,
             signature: tx.signature,
             timestamp: tx.timestamp.toString(),
